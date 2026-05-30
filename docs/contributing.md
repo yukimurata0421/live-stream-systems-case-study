@@ -1,9 +1,12 @@
 # Contributing
 
-Contributions are welcome when they improve the public repository as an
-engineering case study.
+This repository is not a general-purpose OSS project. It is a public
+engineering case study for a personal 24/7 streaming system.
 
-## Good Contributions
+## Acceptable Scope
+
+Small pull requests may be considered when they improve the public evidence
+without turning the repository into a supported product:
 
 - clearer documentation
 - safer examples
@@ -12,6 +15,9 @@ engineering case study.
 - portability notes
 - observability examples
 - small bug fixes with focused scope
+
+Large rewrites, installer work, generic productization, production environment
+support, and feature requests for unrelated deployments are out of scope.
 
 ## Pull Request Checklist
 

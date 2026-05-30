@@ -1,0 +1,38 @@
+name: Public snapshot report
+description: Report a documentation issue, validation failure, or sanitized portability note.
+title: "[public-snapshot] "
+labels: ["public-snapshot"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This repository is a public case study, not a supported streaming product. Do not include stream keys, OAuth tokens, Discord webhooks, SSH keys, private hostnames, internal IPs, or raw `.state/` runtime data.
+  - type: dropdown
+    id: report_type
+    attributes:
+      label: Report type
+      options:
+        - Documentation issue
+        - Public validation failure
+        - Sanitized portability note
+    validations:
+      required: true
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: Describe the issue without secrets or private runtime data.
+    validations:
+      required: true
+  - type: textarea
+    id: commands
+    attributes:
+      label: Commands run
+      description: Include the exact public validation command, if applicable.
+      render: shell
+  - type: textarea
+    id: sanitized_output
+    attributes:
+      label: Sanitized output
+      description: Paste only sanitized output that does not contain credentials, private hostnames, internal IPs, or raw runtime state.
+      render: text

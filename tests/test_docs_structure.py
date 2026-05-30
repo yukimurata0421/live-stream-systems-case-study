@@ -35,6 +35,10 @@ class PublicDocsStructureTests(unittest.TestCase):
             "## External Validation",
             "r/ADSB",
             "stats reuse bug",
+            "not a supported OSS project",
+            "## What This Repository Demonstrates",
+            "docs/hiring-reviewer-guide.md",
+            "docs/design-decisions-for-review.md",
         ):
             self.assertIn(marker, text)
 
@@ -46,7 +50,8 @@ class PublicDocsStructureTests(unittest.TestCase):
         for marker in (
             "## Support",
             "## Contributions",
-            "GitHub Issues",
+            "not a supported package",
+            "Issues, if enabled",
             "Do not post",
             "validate_k3s_manifests.py",
             "v3_shadow_acceptance.py",
@@ -60,6 +65,8 @@ class PublicDocsStructureTests(unittest.TestCase):
         required = (
             "00_INDEX.md",
             "README.md",
+            "hiring-reviewer-guide.md",
+            "design-decisions-for-review.md",
             "evolution.md",
             "architecture.md",
             "physical-topology.md",
@@ -94,6 +101,8 @@ class PublicDocsStructureTests(unittest.TestCase):
         for marker in (
             "Documentation Index",
             "Reading Order",
+            "hiring-reviewer-guide.md",
+            "design-decisions-for-review.md",
             "evolution.md",
             "architecture.md",
             "physical-topology.md",
@@ -107,6 +116,25 @@ class PublicDocsStructureTests(unittest.TestCase):
             "v3/README.md",
         ):
             self.assertIn(marker, text)
+
+    def test_k3s_readme_points_to_public_docs(self) -> None:
+        text = read(ROOT / "deploy" / "k3s" / "README.md")
+
+        for marker in (
+            "docs/v3/current-runtime-contract.md",
+            "docs/v3/decisions.md",
+            "docs/v3/runbooks.md",
+            "HP ProDesk observability host",
+            "Dell delivery node",
+        ):
+            self.assertIn(marker, text)
+
+        for stale in (
+            "docs/v3/10_current/",
+            "docs/v3/25_decisions/",
+            "docs/v3/50_ops_logs/",
+        ):
+            self.assertNotIn(stale, text)
 
     def test_runtime_docs_preserve_core_architecture_claims(self) -> None:
         runtime = read(DOCS / "runtime-contract.md")

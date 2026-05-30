@@ -7,17 +7,19 @@ incident logs.
 
 ## Reading Order
 
-1. `evolution.md`
-2. `architecture.md`
-3. `physical-topology.md`
-4. `runtime-contract.md`
-5. `observability.md`
-6. `operations.md`
-7. `security-and-secrets.md`
-8. `support.md`
-9. `contributing.md`
-10. `v2/README.md`
-11. `v3/README.md`
+1. `hiring-reviewer-guide.md`
+2. `design-decisions-for-review.md`
+3. `evolution.md`
+4. `architecture.md`
+5. `physical-topology.md`
+6. `runtime-contract.md`
+7. `observability.md`
+8. `operations.md`
+9. `security-and-secrets.md`
+10. `support.md`
+11. `contributing.md`
+12. `v2/README.md`
+13. `v3/README.md`
 
 ## Scope
 

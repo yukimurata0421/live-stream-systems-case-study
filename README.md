@@ -7,6 +7,23 @@
 Production-shaped ADS-B YouTube streaming platform with a k3s delivery plane
 and a separate HP ProDesk observability plane.
 
+This repository is a public case study, not a supported OSS project. It is
+published to document operational design decisions, failure handling, and
+reliability engineering practices for a personal 24/7 streaming system.
+
+## What This Repository Demonstrates
+
+- 24/7 YouTube Live delivery operation.
+- Failure classification across rendering, audio, FFmpeg, RTMPS, API, and
+  monitoring paths.
+- Delivery-plane / observability-plane separation across Dell, HP ProDesk, and
+  Raspberry Pi hardware.
+- Recovery guard design that keeps monitors from directly owning FFmpeg.
+- Shadow mode and cutover safety before destructive actions.
+- Prometheus/Loki/Grafana-style observability and SLI evidence.
+- YouTube API quota-aware monitoring.
+- Contract tests for unsafe recovery prevention and stale evidence handling.
+
 | What breaks | How stream_v3 protects it |
 | --- | --- |
 | ADS-B source or map data gets stale. | The Raspberry Pi source tier is isolated from delivery and classified as source evidence. |
@@ -42,6 +59,8 @@ The single-host versions made browser rendering, audio, FFmpeg, watchdogs, and r
 ## Architecture
 
 The main design decisions are summarized in `docs/v3/decisions.md`.
+The hiring-oriented review path is in `docs/hiring-reviewer-guide.md`.
+The compact design decision table is in `docs/design-decisions-for-review.md`.
 The physical deployment topology is documented in `docs/physical-topology.md`.
 The short evolution narrative is in `docs/evolution.md`.
 
@@ -105,21 +124,22 @@ The public runtime contract is documented in `docs/runtime-contract.md`.
 
 ## Support
 
-This is a public case-study repository, not a supported production package.
-Questions, portability reports, and documentation issues are welcome through
-GitHub Issues once the repository is published.
+This is a public case-study repository, not a supported package, service, or
+starter template. Issues, if enabled after publication, are limited to public
+documentation defects, reproducible validation failures, and sanitized
+portability notes.
 
-When asking for help, include the command you ran, the expected result, the
-actual result, and the relevant sanitized logs or config snippets. Do not post
+There is no uptime promise, incident response promise, installation support, or
+guarantee that this system fits another production environment. Do not post
 stream keys, OAuth tokens, Discord webhooks, SSH keys, private hostnames, or
 runtime state copied from `.state/`.
 
 ## Contributions
 
-Contributions are welcome when they make the public snapshot easier to read,
-test, or adapt. Good first areas are documentation, manifest validation,
-observability examples, test coverage, and portability notes for non-k3s
-clusters.
+This repository is not trying to become a general-purpose OSS project. Small
+pull requests may be considered when they improve the public case study without
+changing its operational boundary: documentation clarity, safer examples,
+manifest validation, focused tests, and sanitized portability notes.
 
 Before opening a pull request:
 

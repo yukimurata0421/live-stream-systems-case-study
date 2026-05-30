@@ -22,10 +22,10 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install test runner
+      - name: Install public snapshot dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install pytest
+          python -m pip install -e ".[dev]"
 
       - name: Restore executable bits
         run: |

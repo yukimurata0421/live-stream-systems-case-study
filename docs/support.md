@@ -1,10 +1,13 @@
 # Support
 
-This repository is a public case study, not a supported product.
+This repository is a public case study, not a supported product, service, or
+starter template.
 
-## Asking Questions
+## Issue Boundary
 
-Use GitHub Issues after publication. Include:
+Issues, if enabled after publication, are limited to public documentation
+defects, reproducible validation failures, and sanitized portability notes.
+Include:
 
 - the command you ran;
 - the expected behavior;
@@ -16,6 +19,7 @@ Do not include secrets, private hostnames, internal IPs, or raw runtime state.
 
 ## Support Boundary
 
-Maintainers may answer questions about architecture, documentation, validation,
-and portability. There is no uptime promise, incident response promise, or
-guarantee that the system fits a different production environment.
+There is no uptime promise, incident response promise, installation support, or
+guarantee that the system fits a different production environment. The public
+repository exists to show operational judgment, safety boundaries, and
+reliability engineering trade-offs.
