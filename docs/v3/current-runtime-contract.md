@@ -1,0 +1,53 @@
+# Current Runtime Contract
+
+## Purpose
+
+`stream_v3` runs the live streaming delivery path on k3s and keeps monitoring on
+the arena/prodesk side.
+
+The current physical split is Dell workstation for delivery, HP ProDesk for
+observability, and Raspberry Pi for ADS-B edge/source data.
+
+## Delivery Owner
+
+- `stream-v3-runtime` deployment
+- `stream-engine` container
+- `auto-dj` container
+- `fast-recovery-loop` container
+- browser rendering and overlay
+- PulseAudio
+- FFmpeg RTMPS ingest
+- NVIDIA NVENC
+
+## Monitoring Owner
+
+- arena monitor systemd unit
+- YouTube resolver and watchdog
+- stream watchdog
+- notification loop
+- subsystem status
+- recovery orchestrator
+- shadow SLI
+- Prometheus, Loki, and Grafana
+
+## Encoder Baseline
+
+```text
+h264_nvenc
+30 fps
+3300k CBR video
+6600k buffer
+192k audio
+48 kHz audio sample rate
+```
+
+## Audio Baseline
+
+PulseAudio runs with shared memory disabled in the container path:
+
+```text
+--disable-shm=yes
+--enable-memfd=no
+```
+
+This avoids container-specific `memblock` assertion failures.
