@@ -50,6 +50,8 @@ class PublicDocsStructureTests(unittest.TestCase):
             "Do not post",
             "validate_k3s_manifests.py",
             "v3_shadow_acceptance.py",
+            "public-snapshot-check.yml",
+            "public evidence check",
             "delivery-plane / observability-plane",
         ):
             self.assertIn(marker, text)

@@ -89,6 +89,12 @@ pytest tests/test_v3_k3s_preflight.py tests/test_stream_v3_control_loop.py
 Production-like use requires local secrets and host-specific devices, so the
 public repository intentionally defaults to examples and shadow/test paths.
 
+The GitHub Actions workflow
+`.github/workflows/public-snapshot-check.yml` is a public evidence check, not a
+production deployment pipeline. It runs compile checks, k3s manifest validation,
+shadow acceptance, and focused safety/freshness tests without secrets or live
+YouTube mutation.
+
 ## Public Snapshot Notes
 
 This tree excludes runtime state, logs, media files, local capture artifacts,

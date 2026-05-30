@@ -1,0 +1,56 @@
+name: public-snapshot-check
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  snapshot-check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install test runner
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pytest
+
+      - name: Restore executable bits
+        run: |
+          chmod +x bin/stream bin/stream-new bin/stream-prod bin/organize-time || true
+          chmod +x ops/scripts/*.py ops/scripts/*.sh || true
+          chmod +x src/stream_v3/runtime_entrypoint.sh || true
+
+      - name: Compile check
+        run: |
+          python -m compileall -q src tests ops/scripts
+
+      - name: Validate k3s manifests
+        run: |
+          python ops/scripts/validate_k3s_manifests.py
+
+      - name: Shadow acceptance
+        run: |
+          python ops/scripts/v3_shadow_acceptance.py
+
+      - name: Focused public tests
+        run: |
+          python -m pytest -q \
+            tests/test_docs_structure.py \
+            tests/test_v3_k3s_preflight.py \
+            tests/test_stream_v3_control_loop.py \
+            tests/test_v3_shadow_acceptance.py \
+            tests/test_youtube_video_id_resolver_cache_freshness.py \
+            tests/test_youtube_watchdog_cache_freshness.py
