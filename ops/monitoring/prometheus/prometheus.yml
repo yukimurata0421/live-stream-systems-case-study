@@ -1,0 +1,22 @@
+global:
+  scrape_interval: 60s
+  scrape_timeout: 50s
+  evaluation_interval: 60s
+
+rule_files:
+  - /etc/prometheus/rules/*.yml
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets:
+          - 127.0.0.1:9090
+
+  - job_name: stream_v3_arena_monitor
+    static_configs:
+      - targets:
+          - 127.0.0.1:9108
+        labels:
+          service: stream-v3-arena-monitor
+          repo: stream_v3
+          role: arena-monitor

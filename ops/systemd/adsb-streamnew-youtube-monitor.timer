@@ -1,0 +1,13 @@
+[Unit]
+Description=Run Stream-New YouTube health monitor every 45 seconds
+
+[Timer]
+OnBootSec=3min
+OnActiveSec=45s
+OnUnitActiveSec=45s
+AccuracySec=10s
+Persistent=true
+Unit=adsb-streamnew-youtube-monitor.service
+
+[Install]
+WantedBy=timers.target

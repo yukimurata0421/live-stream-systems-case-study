@@ -1,0 +1,13 @@
+[Unit]
+Description=ADS-B Stream-New Discord incident notification status loop
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=yuki
+Group=yuki
+EnvironmentFile=-/home/yuki/projects/stream_v2/.state/env/adsb-streamnew.env
+EnvironmentFile=-/home/yuki/projects/stream_v2/.state/env/adsb-streamnew-notify.env
+Environment=PYTHONPATH=/home/yuki/projects/stream_v2/src
+ExecStart=/home/yuki/projects/stream_v2/bin/stream-new notify-status

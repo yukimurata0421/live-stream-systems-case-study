@@ -1,0 +1,12 @@
+[Unit]
+Description=Run ADS-B Stream-New Discord incident notification status loop every minute
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=1min
+AccuracySec=10s
+Persistent=true
+Unit=adsb-streamnew-notify.service
+
+[Install]
+WantedBy=timers.target

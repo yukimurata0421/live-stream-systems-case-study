@@ -1,0 +1,23 @@
+[Unit]
+Description=ADS-B Stream-New YouTube Live Stream Engine
+After=network-online.target sound.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=yuki
+Group=yuki
+WorkingDirectory=/home/yuki/projects/stream_v2
+EnvironmentFile=/home/yuki/projects/stream_v2/.state/env/adsb-streamnew.env
+Environment=XDG_RUNTIME_DIR=/run/user/1000
+Environment=STREAM_LAUNCH_MODE=systemd
+Environment=PYTHONPATH=/home/yuki/projects/stream_v2/src
+ExecStartPre=/bin/bash /home/yuki/projects/stream_v2/ops/scripts/ensure-pulse.sh
+ExecStart=/home/yuki/projects/stream_v2/src/stream_core/stream.sh
+KillMode=control-group
+TimeoutStopSec=20
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

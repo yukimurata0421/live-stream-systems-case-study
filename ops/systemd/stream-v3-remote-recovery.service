@@ -1,0 +1,16 @@
+[Unit]
+Description=stream_v3 remote k3s recovery check
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=yuki
+WorkingDirectory=/home/yuki/projects/stream_v3
+Environment=STREAM_K8S_NAMESPACE=stream-v3
+Environment=STREAM_V3_RECOVERY_PROMETHEUS_URL=http://127.0.0.1:9090
+Environment=STREAM_V3_RECOVERY_JOB=stream_v3_arena_monitor
+Environment=STREAM_V3_REMOTE_RECOVERY_APPLY=1
+Environment=STREAM_V3_REMOTE_RECOVERY_COOLDOWN_SEC=600
+Environment=STREAM_V3_RECOVERY_WORKLOADS=deployment/stream-v3-runtime
+ExecStart=/usr/bin/python3 /home/yuki/projects/stream_v3/ops/scripts/stream_v3_remote_recovery.py

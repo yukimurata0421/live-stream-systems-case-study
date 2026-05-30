@@ -1,0 +1,186 @@
+logging {
+  level  = "info"
+  format = "logfmt"
+}
+
+loki.write "local" {
+  endpoint {
+    url = "http://127.0.0.1:3100/loki/api/v1/push"
+  }
+}
+
+loki.process "jsonl" {
+  forward_to = [loki.write.local.receiver]
+
+  stage.json {
+    expressions = {
+      ts_utc   = "ts_utc",
+      event_id = "event_id",
+      kind     = "kind",
+    }
+  }
+
+  stage.timestamp {
+    source            = "ts_utc"
+    format            = "RFC3339"
+    fallback_formats  = ["RFC3339Nano"]
+    action_on_failure = "fudge"
+  }
+}
+
+loki.source.file "stream_v3_state_jsonl" {
+  targets = [
+    {
+      __path__ = "/stream_v3/.state/arena-monitor/logs/*.jsonl",
+      app      = "stream_v3",
+      source   = "arena_monitor_jsonl",
+      host     = "yuki",
+    },
+    {
+      __path__ = "/stream_v3/.state/arena-monitor/reports/youtube_api_cost/*.jsonl",
+      app      = "stream_v3",
+      source   = "youtube_api_cost_jsonl",
+      host     = "yuki",
+    },
+  ]
+  forward_to    = [loki.process.jsonl.receiver]
+  tail_from_end = false
+  file_match {
+    enabled     = true
+    sync_period = "30s"
+  }
+}
+
+loki.source.file "stream_v2_state_jsonl" {
+  targets = [
+    {
+      __path__ = "/stream_v2/.state/adsb-streamnew-v2/logs/*.jsonl",
+      app      = "stream_v2",
+      source   = "state_jsonl",
+      host     = "yuki",
+    },
+    {
+      __path__ = "/stream_v2/.state/adsb-streamnew-v2/reports/youtube_api_cost/*.jsonl",
+      app      = "stream_v2",
+      source   = "youtube_api_cost_jsonl",
+      host     = "yuki",
+    },
+  ]
+  forward_to    = [loki.process.jsonl.receiver]
+  tail_from_end = false
+  file_match {
+    enabled     = true
+    sync_period = "30s"
+  }
+}
+
+loki.source.file "stream_text_logs" {
+  targets = [
+    {
+      __path__ = "/stream_v2/logs/*.log",
+      app      = "stream_v2",
+      source   = "text_log",
+      host     = "yuki",
+    },
+    {
+      __path__ = "/stream_v2/.state/adsb-streamnew-v2/watchdog/*.log",
+      app      = "stream_v2",
+      source   = "watchdog_text_log",
+      host     = "yuki",
+    },
+  ]
+  forward_to    = [loki.write.local.receiver]
+  tail_from_end = false
+  file_match {
+    enabled     = true
+    sync_period = "30s"
+  }
+}
+
+loki.process "nginx_access" {
+  forward_to = [loki.write.local.receiver]
+
+  stage.regex {
+    expression = "^(?P<remote_addr>[^ ]+) [^ ]+ [^ ]+ \\[(?P<time_local>[^\\]]+)\\] \"(?P<method>[^ ]+) (?P<path>[^ ]+) (?P<protocol>[^\"]+)\" (?P<status>[0-9]{3}) (?P<body_bytes_sent>[0-9]+)"
+  }
+
+  stage.timestamp {
+    source            = "time_local"
+    format            = "02/Jan/2006:15:04:05 -0700"
+    action_on_failure = "fudge"
+  }
+}
+
+loki.source.file "nginx_logs" {
+  targets = [
+    {
+      __path__ = "/host/var/log/nginx/access.log",
+      app      = "nginx",
+      source   = "access_log",
+      host     = "yuki",
+    },
+    {
+      __path__ = "/host/var/log/nginx/access.log.1",
+      app      = "nginx",
+      source   = "access_log",
+      host     = "yuki",
+    },
+    {
+      __path__ = "/host/var/log/nginx/error.log.1",
+      app      = "nginx",
+      source   = "error_log",
+      host     = "yuki",
+    },
+  ]
+  forward_to    = [loki.process.nginx_access.receiver]
+  tail_from_end = false
+  file_match {
+    enabled     = true
+    sync_period = "30s"
+  }
+}
+
+loki.source.file "nginx_gz_logs" {
+  targets = [
+    {
+      __path__ = "/host/var/log/nginx/access.log.*.gz",
+      app      = "nginx",
+      source   = "access_log_gz",
+      host     = "yuki",
+    },
+    {
+      __path__ = "/host/var/log/nginx/error.log.*.gz",
+      app      = "nginx",
+      source   = "error_log_gz",
+      host     = "yuki",
+    },
+  ]
+  forward_to    = [loki.process.nginx_access.receiver]
+  tail_from_end = false
+  file_match {
+    enabled     = true
+    sync_period = "30s"
+  }
+  decompression {
+    enabled       = true
+    initial_delay = "10s"
+    format        = "gz"
+  }
+}
+
+loki.source.file "syslog" {
+  targets = [
+    {
+      __path__ = "/host/var/log/syslog",
+      app      = "host",
+      source   = "syslog",
+      host     = "yuki",
+    },
+  ]
+  forward_to    = [loki.write.local.receiver]
+  tail_from_end = false
+  file_match {
+    enabled     = true
+    sync_period = "30s"
+  }
+}

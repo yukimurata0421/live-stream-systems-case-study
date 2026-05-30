@@ -1,0 +1,12 @@
+[Unit]
+Description=Run Stream-New YouTube API cost open-day report every 10 minutes
+
+[Timer]
+OnBootSec=10min
+OnUnitActiveSec=10min
+AccuracySec=2min
+Persistent=true
+Unit=adsb-streamnew-youtube-api-cost-open-day-report.service
+
+[Install]
+WantedBy=timers.target

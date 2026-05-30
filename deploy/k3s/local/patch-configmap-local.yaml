@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: stream-v3-shadow-env
+  namespace: stream-v3
+data:
+  STREAM1090_URL: http://stream1090.lan/tar1090/
+  BROWSER_URL: http://stream1090.lan/tar1090/
+  TEST_OUTPUT: "null"

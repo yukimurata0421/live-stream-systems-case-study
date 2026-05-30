@@ -1,0 +1,9 @@
+# Install as /etc/sudoers.d/adsb-streamnew (mode 0440) via visudo:
+#
+#   sudo visudo -f /etc/sudoers.d/adsb-streamnew
+#
+# Purpose:
+#   Allow non-root watchdog services (User=yuki) to restart only required units.
+
+yuki ALL=(root) NOPASSWD: /usr/bin/systemctl restart adsb-streamnew-youtube-stream.service
+yuki ALL=(root) NOPASSWD: /usr/bin/systemctl restart adsb-streamnew-auto-dj.service

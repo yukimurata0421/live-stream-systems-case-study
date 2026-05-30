@@ -1,0 +1,13 @@
+[Unit]
+Description=ADS-B Stream-New resource memory diagnostic snapshot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=yuki
+Group=yuki
+WorkingDirectory=/home/yuki/projects/stream_v3
+EnvironmentFile=-/etc/default/stream-v3-arena-monitor
+Environment=PYTHONPATH=/home/yuki/projects/stream_v3/src
+ExecStart=/home/yuki/projects/stream_v3/bin/stream-prod resource-memory

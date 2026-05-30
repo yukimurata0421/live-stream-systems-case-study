@@ -1,0 +1,91 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SOURCE_PATH="$(readlink -f "${BASH_SOURCE[0]}")"
+SCRIPT_DIR="$(cd "$(dirname "${SOURCE_PATH}")" && pwd)"
+BASE_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+export STREAM_BASE_DIR="${BASE_DIR}"
+export STREAM_RUNTIME_STATE_DIR="${STREAM_RUNTIME_STATE_DIR:-${BASE_DIR}/.state/adsb-streamnew-v3}"
+export STREAM_RUNTIME_LOG_DIR="${STREAM_RUNTIME_LOG_DIR:-${STREAM_RUNTIME_STATE_DIR}/logs}"
+export STREAM_V2_STATE_ROOT="${STREAM_V2_STATE_ROOT:-${STREAM_RUNTIME_STATE_DIR}}"
+export STREAM_V2_SOURCE_STATE_ROOT="${STREAM_V2_SOURCE_STATE_ROOT:-/home/yuki/projects/stream_v2/.state/adsb-streamnew-v2}"
+export STREAM_V3_MODE="${STREAM_V3_MODE:-shadow}"
+
+stream_v3_positionals() {
+  local skip_next=0
+  local arg
+  for arg in "$@"; do
+    if [[ "$skip_next" == "1" ]]; then
+      skip_next=0
+      continue
+    fi
+    case "$arg" in
+      -h|--help)
+        return 0
+        ;;
+      --)
+        continue
+        ;;
+      --lines|--windows|--state-root|--state-dir|--since|--until)
+        skip_next=1
+        continue
+        ;;
+      --lines=*|--windows=*|--state-root=*|--state-dir=*|--since=*|--until=*)
+        continue
+        ;;
+      -*)
+        continue
+        ;;
+      *)
+        printf '%s\n' "$arg"
+        ;;
+    esac
+  done
+}
+
+stream_v3_is_mutating_command() {
+  local positionals=()
+  local item
+  while IFS= read -r item; do
+    positionals+=("$item")
+  done < <(stream_v3_positionals "$@")
+
+  local command="${positionals[0]:-}"
+  local action="${positionals[1]:-status}"
+
+  case "$command" in
+    install|start|stop|restart|enable|watch)
+      return 0
+      ;;
+    maintenance|maint|m)
+      case "$action" in
+        status|show|s)
+          return 1
+          ;;
+        *)
+          return 0
+          ;;
+      esac
+      ;;
+    pause|resume)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+if [[ "${STREAM_V3_CUTOVER_ENABLE:-0}" == "1" ]]; then
+  export STREAM_V2_ALLOW_MUTATING_SYSTEMD=1
+elif stream_v3_is_mutating_command "$@"; then
+  printf '%s\n' \
+    "refusing stream_v3 mutating command in ${STREAM_V3_MODE} mode: $*" \
+    "set STREAM_V3_CUTOVER_ENABLE=1 only during an explicit cutover window" >&2
+  exit 2
+else
+  export STREAM_V2_ALLOW_MUTATING_SYSTEMD=0
+fi
+
+exec "${BASE_DIR}/bin/stream-new" "$@"

@@ -1,0 +1,13 @@
+[Unit]
+Description=ADS-B Stream-New YouTube API cost daily report
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=yuki
+Group=yuki
+EnvironmentFile=-/etc/default/adsb-streamnew-youtube-monitor
+EnvironmentFile=-/etc/default/stream-v3-arena-monitor
+Environment=PYTHONPATH=/home/yuki/projects/stream_v3/src
+ExecStart=/bin/bash -lc '/usr/bin/python3 /home/yuki/projects/stream_v3/ops/scripts/report_youtube_api_cost.py --tz "$${YTW_API_COST_REPORT_TZ:-America/Los_Angeles}" --lag-sec "$${YTW_API_COST_REPORT_LAG_SEC:-120}" --near-boundary-guard-sec "$${YTW_API_COST_REPORT_BOUNDARY_GUARD_SEC:-180}" --coverage-gap-grace-sec "$${YTW_API_COST_REPORT_START_GAP_GRACE_SEC:-300}" --coverage-start-gap-mode "$${YTW_API_COST_REPORT_START_GAP_MODE:-warn}" --coverage-end-gap-grace-sec "$${YTW_API_COST_REPORT_END_GAP_GRACE_SEC:-900}" --deferred-exit-code 0 --output-dir "$${YTW_API_COST_REPORT_OUTPUT_DIR:-$${STREAM_RUNTIME_STATE_DIR:-/home/yuki/projects/stream_v3/.state/arena-monitor}/reports/youtube_api_cost}" --output-latest-file "$${YTW_API_COST_REPORT_LATEST_FILE:-$${STREAM_RUNTIME_STATE_DIR:-/home/yuki/projects/stream_v3/.state/arena-monitor}/reports/youtube_api_cost/latest.json}"'

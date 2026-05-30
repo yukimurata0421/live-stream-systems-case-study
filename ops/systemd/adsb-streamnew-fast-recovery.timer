@@ -1,0 +1,12 @@
+[Unit]
+Description=Run ADS-B Stream-New fast recovery every 5 seconds
+
+[Timer]
+OnBootSec=20s
+OnUnitActiveSec=5s
+AccuracySec=1s
+Persistent=true
+Unit=adsb-streamnew-fast-recovery.service
+
+[Install]
+WantedBy=timers.target

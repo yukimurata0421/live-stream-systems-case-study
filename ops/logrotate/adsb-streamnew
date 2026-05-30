@@ -1,0 +1,13 @@
+/home/yuki/projects/stream_v2/.state/adsb-streamnew-v2/logs/*.log
+/home/yuki/projects/stream_v2/.state/adsb-streamnew-v2/logs/*.jsonl
+/home/yuki/projects/stream_v2/logs/*.log
+/home/yuki/projects/stream_v2/logs/*.jsonl {
+    su yuki yuki
+    daily
+    rotate 14
+    compress
+    delaycompress
+    missingok
+    notifempty
+    copytruncate
+}

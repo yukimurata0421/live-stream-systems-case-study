@@ -1,0 +1,13 @@
+[Unit]
+Description=ADS-B Stream-New fast recovery check
+After=network-online.target adsb-streamnew-youtube-stream.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=yuki
+Group=yuki
+EnvironmentFile=-/home/yuki/projects/stream_v2/.state/env/adsb-streamnew-fast-recovery.env
+Environment=WATCHDOG_SYSTEMCTL_USE_SUDO=1
+Environment=PYTHONPATH=/home/yuki/projects/stream_v2/src
+ExecStart=/home/yuki/projects/stream_v2/venv/bin/python3 /home/yuki/projects/stream_v2/src/watchers/fast_recovery.py

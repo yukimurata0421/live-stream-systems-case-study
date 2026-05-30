@@ -1,0 +1,45 @@
+{
+  "_schema": "auto_dj_classification_overrides_v1",
+  "_notes": [
+    "Only entries with confidence=confirmed are applied when regenerating time_tags.",
+    "candidate entries appear in others-report but do not change rotation.",
+    "track_overrides keys are matched against normalized track titles without the trailing genre.",
+    "artist_overrides keys are matched against normalized artist tokens."
+  ],
+  "track_overrides": {
+    "Hyri - Nocturnal": {
+      "slot": "night",
+      "confidence": "candidate",
+      "reason": "Initial candidate; confirm by listening before applying."
+    }
+  },
+  "artist_overrides": {
+    "JOXION": {
+      "slot": "evening",
+      "confidence": "candidate",
+      "reason": "Unclassified cluster; confirm by listening before applying."
+    }
+  },
+  "exclude_patterns": [
+    {
+      "pattern": "behind the scenes",
+      "confidence": "confirmed",
+      "reason": "Program asset, not normal music rotation."
+    },
+    {
+      "pattern": "thank you",
+      "confidence": "confirmed",
+      "reason": "Program asset, not normal music rotation."
+    },
+    {
+      "pattern": "twitchcon",
+      "confidence": "confirmed",
+      "reason": "Event/live asset, not normal music rotation."
+    },
+    {
+      "pattern": "keeps getting faster",
+      "confidence": "confirmed",
+      "reason": "Meme/novelty asset, not normal music rotation."
+    }
+  ]
+}

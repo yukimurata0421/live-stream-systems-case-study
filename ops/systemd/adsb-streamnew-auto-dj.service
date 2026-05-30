@@ -1,0 +1,21 @@
+[Unit]
+Description=ADS-B Stream-New Auto DJ
+After=network-online.target sound.target adsb-streamnew-youtube-stream.service
+Wants=network-online.target adsb-streamnew-youtube-stream.service
+
+[Service]
+Type=simple
+User=yuki
+Group=yuki
+WorkingDirectory=/home/yuki/projects/stream_v2
+EnvironmentFile=-/home/yuki/projects/stream_v2/.state/env/adsb-streamnew.env
+Environment=XDG_RUNTIME_DIR=/run/user/1000
+Environment=PYTHONPATH=/home/yuki/projects/stream_v2/src
+ExecStartPre=/bin/bash /home/yuki/projects/stream_v2/ops/scripts/ensure-pulse.sh
+ExecStart=/home/yuki/projects/stream_v2/venv/bin/python3 /home/yuki/projects/stream_v2/src/dj/auto_dj.py --player ffmpeg --pulse-sink stream_sink --history-jsonl-file /home/yuki/projects/stream_v2/.state/adsb-streamnew-v2/logs/play_history.jsonl --snapshot-heartbeat-sec 10 --log-level INFO
+KillMode=process
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

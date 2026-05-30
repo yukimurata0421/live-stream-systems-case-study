@@ -1,0 +1,12 @@
+[Unit]
+Description=Run Stream-New YouTube video id resolver every 5 seconds
+
+[Timer]
+OnBootSec=20s
+OnUnitActiveSec=5s
+AccuracySec=1s
+Persistent=true
+Unit=adsb-streamnew-youtube-video-resolver.service
+
+[Install]
+WantedBy=timers.target

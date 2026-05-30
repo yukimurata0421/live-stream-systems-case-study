@@ -1,0 +1,73 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: stream-v2-state-mirror
+  namespace: stream-v3
+  labels:
+    app.kubernetes.io/name: stream-v3
+    app.kubernetes.io/component: v2-state-mirror
+spec:
+  schedule: "*/1 * * * *"
+  suspend: true
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: stream-v3
+            app.kubernetes.io/component: v2-state-mirror
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: rsync-state
+              image: stream-v3:local
+              imagePullPolicy: IfNotPresent
+              command: ["/bin/sh", "-lc"]
+              args:
+                - |
+                  set -eu
+                  mkdir -p /root/.ssh /source-v2-readonly
+                  if [ -f /secrets/v2-mirror/ssh_private_key ]; then
+                    cp /secrets/v2-mirror/ssh_private_key /root/.ssh/id_v2_mirror
+                    chmod 600 /root/.ssh/id_v2_mirror
+                    SSH_KEY_OPT="-i /root/.ssh/id_v2_mirror"
+                  else
+                    SSH_KEY_OPT=""
+                  fi
+                  if [ -f /secrets/v2-mirror/known_hosts ]; then
+                    cp /secrets/v2-mirror/known_hosts /root/.ssh/known_hosts
+                  else
+                    touch /root/.ssh/known_hosts
+                  fi
+                  : "${STREAM_V2_MIRROR_SOURCE:?set STREAM_V2_MIRROR_SOURCE to current v2 state rsync source}"
+                  rsync -az --delete \
+                    -e "ssh ${SSH_KEY_OPT} ${STREAM_V2_MIRROR_SSH_OPTS:-}" \
+                    "${STREAM_V2_MIRROR_SOURCE%/}/" \
+                    /source-v2-readonly/
+              envFrom:
+                - configMapRef:
+                    name: stream-v3-shadow-env
+              volumeMounts:
+                - name: source-v2-readonly
+                  mountPath: /source-v2-readonly
+                - name: v2-mirror-secret
+                  mountPath: /secrets/v2-mirror
+                  readOnly: true
+              resources:
+                requests:
+                  cpu: "50m"
+                  memory: 64Mi
+                limits:
+                  cpu: "500m"
+                  memory: 256Mi
+          volumes:
+            - name: source-v2-readonly
+              persistentVolumeClaim:
+                claimName: stream-v2-state-mirror
+            - name: v2-mirror-secret
+              secret:
+                secretName: stream-v2-state-mirror
+                optional: true

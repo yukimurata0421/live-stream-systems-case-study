@@ -1,0 +1,56 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../base
+  - ../v3-runtime/state-pvc.yaml
+  - ../v3-runtime/music-pvc.yaml
+  - ../v3-runtime/deployment.yaml
+  - ../local/recovery-rbac.yaml
+  - ../local/recovery-token-secret.yaml
+patches:
+  - path: patch-configmap-streaming.yaml
+  - target:
+      group: apps
+      version: v1
+      kind: Deployment
+      name: stream-v3-runtime
+      namespace: stream-v3
+    patch: |-
+      - op: add
+        path: /spec/template/spec/serviceAccountName
+        value: stream-v3-recovery
+      - op: replace
+        path: /spec/template/spec/volumes/2
+        value:
+          name: music
+          hostPath:
+            path: /home/yuki/projects/stream_v3/ncs_music
+            type: Directory
+      - op: remove
+        path: /spec/template/spec/containers/2
+      - op: add
+        path: /spec/template/spec/containers/-
+        value:
+          name: fast-recovery-loop
+          image: stream-v3:local
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh", "-lc"]
+          args:
+            - >-
+              PYTHONPATH=/app/src python3 -m stream_v3.control_loop --mode streaming
+          envFrom:
+            - configMapRef:
+                name: stream-v3-shadow-env
+            - secretRef:
+                name: stream-v3-secrets
+                optional: true
+          volumeMounts:
+            - name: state
+              mountPath: /state
+          resources:
+            requests:
+              cpu: "100m"
+              memory: 128Mi
+            limits:
+              cpu: "500m"
+              memory: 512Mi

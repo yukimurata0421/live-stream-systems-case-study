@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: stream-v2-state-mirror
+  namespace: stream-v3
+  labels:
+    app.kubernetes.io/name: stream-v3
+    app.kubernetes.io/component: v2-state-mirror
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi

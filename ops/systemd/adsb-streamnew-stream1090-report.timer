@@ -1,0 +1,12 @@
+[Unit]
+Description=Run ADS-B Stream-New local stream1090 report-only baseline every 15 minutes
+
+[Timer]
+OnBootSec=7min
+OnUnitActiveSec=15min
+AccuracySec=2min
+Persistent=true
+Unit=adsb-streamnew-stream1090-report.service
+
+[Install]
+WantedBy=timers.target

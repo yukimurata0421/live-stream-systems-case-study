@@ -1,0 +1,22 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../shadow
+  - recovery-rbac.yaml
+  - recovery-token-secret.yaml
+patches:
+  - path: patch-configmap-local.yaml
+  - target:
+      group: apps
+      version: v1
+      kind: Deployment
+      name: stream-v3-runtime
+      namespace: stream-v3
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/volumes/2
+        value:
+          name: music
+          hostPath:
+            path: /home/yuki/projects/stream_v3/ncs_music
+            type: Directory

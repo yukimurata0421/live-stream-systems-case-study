@@ -1,0 +1,495 @@
+<!doctype html>
+<html lang="en" class="notranslate" translate="no">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="google" content="notranslate">
+  <title>Stream1090 Overlay</title>
+  <style>
+    :root {
+      --panel-bg: #080e17;
+      --panel-text: #f6fbff;
+      --panel-sub: #b6c7d6;
+      --panel-border: rgba(255, 255, 255, 0.14);
+      --accent: #6de3ff;
+      --ok: #66e08a;
+      --warn: #ffb15c;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      background: #000;
+      overflow: hidden;
+      font-family: "Segoe UI", "Noto Sans JP", sans-serif;
+      cursor: none;
+    }
+    #map {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      background: #000;
+      cursor: none;
+    }
+    .panel {
+      position: fixed;
+      padding: 12px 14px;
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
+      background: var(--panel-bg);
+      color: var(--panel-text);
+      z-index: 10000;
+      backdrop-filter: none;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    }
+    .kicker {
+      font-size: 12px;
+      letter-spacing: 0;
+      color: var(--accent);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+    #adsb {
+      top: 12px;
+      left: 12px;
+      width: min(360px, calc(100vw - 24px));
+    }
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px 12px;
+      margin-top: 8px;
+    }
+    .metric {
+      min-width: 0;
+      border-top: 1px solid rgba(255, 255, 255, 0.15);
+      padding-top: 8px;
+    }
+    .metric span {
+      display: block;
+      color: var(--panel-sub);
+      font-size: 12px;
+    }
+    .metric strong {
+      display: block;
+      margin-top: 2px;
+      font-size: 20px;
+      line-height: 1.1;
+    }
+    .status-ok { color: var(--ok); }
+    .status-warn { color: var(--warn); }
+    #np {
+      top: 18px;
+      right: 18px;
+      width: min(42vw, 700px);
+      min-width: 360px;
+      text-align: center;
+    }
+    #np .kicker,
+    #np .credit {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    #np .title {
+      font-size: 22px;
+      line-height: 1.26;
+      font-weight: 700;
+      text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      word-break: normal;
+    }
+    #np .credit {
+      margin-top: 5px;
+      color: var(--panel-sub);
+      font-size: 12px;
+    }
+    #np.stale .title,
+    #np.stale .credit {
+      color: var(--warn);
+    }
+    #info {
+      left: 0;
+      bottom: 0;
+      width: auto;
+      max-width: calc(100vw - 16px);
+      padding-bottom: 10px;
+    }
+    #arenaFooter {
+      position: fixed;
+      right: 14px;
+      bottom: 14px;
+      z-index: 10000;
+      background: rgba(0, 0, 0, 0.42);
+      color: #f0f6ff;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 8px;
+      padding: 5px 9px;
+      font: 500 12px "Trebuchet MS", "Noto Sans", sans-serif;
+      letter-spacing: 0.01em;
+      text-align: right;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    .map-mask {
+      position: fixed;
+      z-index: 9999;
+      pointer-events: none;
+      background: #080e17;
+    }
+    #scaleMask {
+      left: 0;
+      bottom: 0;
+      width: 128px;
+      height: 16px;
+    }
+    .time-row {
+      display: flex;
+      flex-wrap: nowrap;
+      align-items: center;
+      gap: 10px 14px;
+      white-space: nowrap;
+    }
+    .time-row {
+      color: #dfe8ee;
+      font-size: 12px;
+    }
+    .time-row strong {
+      color: var(--panel-text);
+      font-size: 14px;
+    }
+    @media (max-width: 820px) {
+      #adsb,
+      #np,
+      #info {
+        left: 10px;
+        right: auto;
+        width: calc(100vw - 20px);
+        max-width: none;
+        text-align: center;
+      }
+      #adsb { top: 10px; }
+      #np { top: 174px; }
+      #info { bottom: 10px; }
+    }
+  </style>
+</head>
+<body class="notranslate" translate="no">
+  <iframe id="map" title="tar1090-stream"></iframe>
+  <aside id="adsb" class="panel" aria-live="polite">
+    <div class="kicker">Local ADS-B Receiver</div>
+    <div class="metric-grid">
+      <div class="metric"><span>Targets</span><strong id="aircraftCount">--</strong></div>
+      <div class="metric"><span>Positions</span><strong id="positionCount">--</strong></div>
+      <div class="metric"><span>Msg/sec</span><strong id="messageRate">--</strong></div>
+      <div class="metric"><span>Coverage</span><strong id="coverageRadius">--</strong></div>
+      <div class="metric"><span>Receiver</span><strong id="receiverStatus" class="status-warn">WAIT</strong></div>
+    </div>
+  </aside>
+  <aside id="np" class="panel" aria-live="polite">
+    <div class="kicker">Background Music</div>
+    <div class="title">Initializing...</div>
+    <div class="credit">Music provided by NoCopyrightSounds</div>
+  </aside>
+  <aside id="info" class="panel">
+    <div class="time-row">
+      <span>JST <strong id="jstClock">--:--:--</strong></span>
+      <span>UTC <strong id="utcClock">--:--:--</strong></span>
+      <span>Last update <strong id="lastUpdate">--</strong></span>
+    </div>
+  </aside>
+  <aside id="arenaFooter" aria-hidden="true">
+    Evaluated with ARENA | Data: Local ADS-B | Map: Natural Earth | Not for navigation
+  </aside>
+  <div id="scaleMask" class="map-mask" aria-hidden="true"></div>
+  <script>
+    (() => {
+      const params = new URLSearchParams(window.location.search);
+      const legacyMapUrl = params.get("map_url");
+      const mapBase = params.get("map_base") || "./stream1090/";
+      const mapLat = params.get("lat") || "36.35";
+      const mapLon = params.get("lon") || "140.75";
+      const mapZoom = params.get("zoom") || "7.6";
+      const mapScale = params.get("scale") || "0.82";
+      const mapIconScale = params.get("iconScale") || "0.72";
+      const mapLabelScale = params.get("labelScale") || "0.82";
+      const mapLargeMode = params.get("largeMode") || "1";
+      const mapBaseMap = params.get("baseMap") || "natural_earth";
+      const frame = document.getElementById("map");
+      const mapUrl = buildMapUrl();
+      const panel = document.getElementById("np");
+      const titleEl = panel.querySelector(".title");
+      const mockTitle = params.get("mockTitle");
+      const site = { lat: null, lon: null };
+      let messageHistory = [];
+      let lastAdsbOkMs = 0;
+      let lastMapReloadMs = Date.now();
+      let lastMapLoadMs = 0;
+      const STALE_MS = 30_000;
+      const MAP_RELOAD_MIN_MS = 30_000;
+      const MAP_STUCK_MS = 60_000;
+
+      function buildMapUrl() {
+        if (legacyMapUrl) return legacyMapUrl;
+        const u = new URL(mapBase, window.location.href);
+        u.searchParams.set("lat", mapLat);
+        u.searchParams.set("lon", mapLon);
+        u.searchParams.set("zoom", mapZoom);
+        u.searchParams.set("hideSidebar", "1");
+        u.searchParams.set("hideButtons", "1");
+        u.searchParams.set("largeMode", mapLargeMode);
+        u.searchParams.set("scale", mapScale);
+        u.searchParams.set("iconScale", mapIconScale);
+        u.searchParams.set("labelScale", mapLabelScale);
+        u.searchParams.set("baseMap", mapBaseMap);
+        u.searchParams.set("altitudeChart", "0");
+        u.searchParams.set("hideStreamCounter", "1");
+        u.searchParams.set("hideScaleLine", "1");
+        u.searchParams.set("hideCursor", "1");
+        u.searchParams.set("hideAttribution", "1");
+        return u.toString();
+      }
+
+      function mapUrlWithReloadTag() {
+        const u = new URL(mapUrl, window.location.href);
+        u.searchParams.set("overlayReload", String(Date.now()));
+        return u.toString();
+      }
+
+      function reloadMapFrame(reason) {
+        const now = Date.now();
+        if (now - lastMapReloadMs < MAP_RELOAD_MIN_MS) return;
+        lastMapReloadMs = now;
+        console.warn(`Reloading stream1090 iframe: ${reason}`);
+        frame.src = mapUrlWithReloadTag();
+      }
+
+      function mapFrameLooksRecoverable() {
+        try {
+          const doc = frame.contentDocument;
+          if (!doc || !doc.body) return false;
+          const text = doc.body.textContent || "";
+          if (/bad gateway|502|service unavailable|gateway timeout/i.test(text)) return true;
+          if (Date.now() - lastMapReloadMs < MAP_STUCK_MS) return false;
+          return !doc.querySelector("canvas, .leaflet-overlay-pane svg, .leaflet-tile-loaded");
+        } catch (_err) {
+          return false;
+        }
+      }
+
+      function muteMapErrorBoxes() {
+        try {
+          const doc = frame.contentDocument;
+          if (!doc || !doc.head) return;
+          if (!doc.getElementById("stream_overlay_error_silencer")) {
+            const style = doc.createElement("style");
+            style.id = "stream_overlay_error_silencer";
+            style.textContent = [
+              "#update_error",
+              "#update_error_detail",
+              "#generic_error",
+              "#generic_error_detail",
+              "#js_error",
+              "#js_error_detail",
+              "#timers_paused",
+              ".error_box",
+              "{display:none!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important;}",
+            ].join("");
+            doc.head.appendChild(style);
+          }
+        } catch (_err) {
+          return;
+        }
+      }
+
+      frame.addEventListener("load", () => {
+        lastMapLoadMs = Date.now();
+        muteMapErrorBoxes();
+      });
+      frame.src = mapUrl;
+
+      function setText(id, value) {
+        const el = document.getElementById(id);
+        if (el) el.textContent = value;
+      }
+
+      function pad2(value) {
+        return String(value).padStart(2, "0");
+      }
+
+      function clock(date, utc) {
+        const h = utc ? date.getUTCHours() : date.getHours();
+        const m = utc ? date.getUTCMinutes() : date.getMinutes();
+        const s = utc ? date.getUTCSeconds() : date.getSeconds();
+        return `${pad2(h)}:${pad2(m)}:${pad2(s)}`;
+      }
+
+      function updateClocks() {
+        const now = new Date();
+        setText("utcClock", clock(now, true));
+        setText("jstClock", clock(new Date(now.getTime() + 9 * 60 * 60 * 1000), true));
+      }
+
+      function toEpochMs(isoUtc) {
+        if (!isoUtc) return 0;
+        const t = Date.parse(isoUtc);
+        return Number.isFinite(t) ? t : 0;
+      }
+
+      function fitNowPlayingTitle() {
+        const maxSize = 22;
+        const minSize = 16;
+        titleEl.style.fontSize = `${maxSize}px`;
+        titleEl.style.letterSpacing = "0";
+        for (let size = maxSize; size >= minSize; size -= 1) {
+          titleEl.style.fontSize = `${size}px`;
+          if (titleEl.scrollWidth <= titleEl.clientWidth) return;
+        }
+        titleEl.style.fontSize = `${minSize}px`;
+      }
+
+      function cleanNowPlayingTitle(value) {
+        return String(value || "")
+          .replace(/^\s*[▶>.-]*\s*/u, "")
+          .replace(/^now\s*playing\s*:\s*/iu, "")
+          .trim();
+      }
+
+      async function fetchNowPlayingJson() {
+        const res = await fetch(`./now_playing.json?ts=${Date.now()}`, { cache: "no-store" });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      }
+
+      async function fetchNowPlayingText() {
+        const res = await fetch(`./now_playing.txt?ts=${Date.now()}`, { cache: "no-store" });
+        if (!res.ok) return "";
+        return res.text();
+      }
+
+      function messageRate(data) {
+        if (Number.isFinite(data.messageRate) && data.messageRate > 0) return data.messageRate;
+        if (!Number.isFinite(data.messages) || !Number.isFinite(data.now)) return null;
+        messageHistory.push({ time: data.now, messages: data.messages });
+        messageHistory = messageHistory.filter((p) => data.now - p.time <= 10.5);
+        if (messageHistory.length < 2) return null;
+        const first = messageHistory[0];
+        const last = messageHistory[messageHistory.length - 1];
+        if (last.messages < first.messages || last.time <= first.time) {
+          messageHistory = [last];
+          return null;
+        }
+        return (last.messages - first.messages) / (last.time - first.time);
+      }
+
+      function distanceNmi(lat1, lon1, lat2, lon2) {
+        const toRad = Math.PI / 180;
+        const dLat = (lat2 - lat1) * toRad;
+        const dLon = (lon2 - lon1) * toRad;
+        const a = Math.sin(dLat / 2) ** 2
+          + Math.cos(lat1 * toRad) * Math.cos(lat2 * toRad) * Math.sin(dLon / 2) ** 2;
+        return 3440.065 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      }
+
+      async function refreshReceiver() {
+        try {
+          const res = await fetch(`./stream1090/data/receiver.json?ts=${Date.now()}`, { cache: "no-store" });
+          if (!res.ok) return;
+          const data = await res.json();
+          if (Number.isFinite(data.lat) && Number.isFinite(data.lon)) {
+            site.lat = data.lat;
+            site.lon = data.lon;
+          }
+        } catch (_err) {
+          site.lat = null;
+          site.lon = null;
+        }
+      }
+
+      async function refreshAdsb() {
+        const statusEl = document.getElementById("receiverStatus");
+        try {
+          if (!Number.isFinite(site.lat) || !Number.isFinite(site.lon)) {
+            await refreshReceiver();
+          }
+          const res = await fetch(`./adsb/aircraft.json?ts=${Date.now()}`, { cache: "no-store" });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const data = await res.json();
+          const aircraft = Array.isArray(data.aircraft) ? data.aircraft : [];
+          let positions = 0;
+          let coverage = 0;
+
+          for (const ac of aircraft) {
+            if (Number.isFinite(ac.lat) && Number.isFinite(ac.lon)) {
+              positions += 1;
+              if (Number.isFinite(site.lat) && Number.isFinite(site.lon)) {
+                coverage = Math.max(coverage, distanceNmi(site.lat, site.lon, ac.lat, ac.lon));
+              }
+            }
+          }
+
+          const rate = messageRate(data);
+          const stale = !Number.isFinite(data.now) || Date.now() / 1000 - data.now > 15;
+          setText("aircraftCount", String(aircraft.length));
+          setText("positionCount", String(positions));
+          setText("messageRate", rate === null ? "--" : rate.toFixed(1));
+          setText("coverageRadius", coverage > 0 ? `${Math.round(coverage)} nmi` : "--");
+          setText("receiverStatus", stale ? "STALE" : "OK");
+          setText("lastUpdate", Number.isFinite(data.now) ? `${clock(new Date(data.now * 1000), true)}Z` : "--");
+          statusEl.classList.toggle("status-ok", !stale);
+          statusEl.classList.toggle("status-warn", stale);
+          if (!stale) lastAdsbOkMs = Date.now();
+        } catch (_err) {
+          setText("receiverStatus", "OFFLINE");
+          statusEl.classList.remove("status-ok");
+          statusEl.classList.add("status-warn");
+        }
+      }
+
+      async function refresh() {
+        const [jsonResult, textResult] = await Promise.allSettled([
+          fetchNowPlayingJson(),
+          fetchNowPlayingText(),
+        ]);
+        const data = jsonResult.status === "fulfilled" ? jsonResult.value : null;
+        const np = (data && data.now_playing) || {};
+        const textTitle = textResult.status === "fulfilled"
+          ? cleanNowPlayingTitle(textResult.value)
+          : "";
+        const jsonTitle = cleanNowPlayingTitle(np.title || np.title_line);
+        const title = mockTitle || textTitle || jsonTitle || "Unknown title";
+        const updatedAt = data && data.updated_at_utc ? data.updated_at_utc : "";
+        const stale = !textTitle && (!updatedAt || Date.now() - toEpochMs(updatedAt) > STALE_MS);
+
+        titleEl.textContent = title;
+        titleEl.title = title;
+        fitNowPlayingTitle();
+        panel.classList.toggle("stale", stale);
+      }
+
+      updateClocks();
+      refreshReceiver();
+      refreshAdsb();
+      refresh();
+      window.addEventListener("resize", fitNowPlayingTitle);
+      setInterval(updateClocks, 1000);
+      setInterval(refreshReceiver, 30_000);
+      setInterval(refreshAdsb, 1000);
+      setInterval(refresh, 1000);
+      setInterval(muteMapErrorBoxes, 1000);
+      setInterval(() => {
+        if (Date.now() - lastAdsbOkMs > 15_000) return;
+        if (!lastMapLoadMs || mapFrameLooksRecoverable()) {
+          reloadMapFrame("adsb data is fresh but map iframe is not rendered");
+        }
+      }, 10_000);
+    })();
+  </script>
+</body>
+</html>

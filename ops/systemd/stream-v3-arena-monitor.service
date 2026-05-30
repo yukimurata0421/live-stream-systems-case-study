@@ -1,0 +1,28 @@
+[Unit]
+Description=stream_v3 arena monitoring control loop
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=yuki
+WorkingDirectory=/home/yuki/projects/stream_v3
+EnvironmentFile=-/etc/default/adsb-streamnew-youtube-monitor
+EnvironmentFile=-/etc/default/adsb-streamnew-notify
+EnvironmentFile=-/etc/default/stream-v3-arena-monitor
+Environment=PYTHONPATH=/home/yuki/projects/stream_v3/src
+Environment=STREAM_V3_MODE=monitor
+Environment=STREAM_V3_CUTOVER_ENABLE=1
+Environment=STREAM_RUNTIME_SUPERVISOR=k8s
+Environment=STREAM_K8S_NAMESPACE=stream-v3
+Environment=STREAM_K8S_DRY_RUN=0
+Environment=STREAM_RUNTIME_STATE_DIR=/home/yuki/projects/stream_v3/.state/arena-monitor
+Environment=STREAM_RUNTIME_LOG_DIR=/home/yuki/projects/stream_v3/.state/arena-monitor/logs
+Environment=STREAM_V3_STREAM_CLI_BIN=/home/yuki/projects/stream_v3/bin/stream-prod
+Environment=FR_STREAM_SERVICE=adsb-streamnew-youtube-stream.service
+Restart=always
+RestartSec=10s
+ExecStart=/usr/bin/python3 -m stream_v3.control_loop --mode monitor
+
+[Install]
+WantedBy=multi-user.target

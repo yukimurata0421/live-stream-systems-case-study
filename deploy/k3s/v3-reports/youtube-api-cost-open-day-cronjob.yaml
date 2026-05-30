@@ -1,0 +1,62 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: stream-v3-youtube-api-cost-open-day
+  namespace: stream-v3
+  labels:
+    app.kubernetes.io/name: stream-v3
+    app.kubernetes.io/component: reports
+spec:
+  schedule: "*/10 * * * *"
+  suspend: true
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: stream-v3
+            app.kubernetes.io/component: reports
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: youtube-api-cost-open-day
+              image: stream-v3:local
+              imagePullPolicy: IfNotPresent
+              command: ["/bin/sh", "-lc"]
+              args:
+                - >-
+                  python3 /app/ops/scripts/report_youtube_api_cost.py
+                  --tz "${YTW_API_COST_REPORT_TZ:-America/Los_Angeles}"
+                  --include-open-day
+                  --lag-sec "${YTW_API_COST_REPORT_LAG_SEC:-120}"
+                  --near-boundary-guard-sec "${YTW_API_COST_REPORT_BOUNDARY_GUARD_SEC:-180}"
+                  --coverage-gap-grace-sec "${YTW_API_COST_REPORT_START_GAP_GRACE_SEC:-300}"
+                  --coverage-start-gap-mode "${YTW_API_COST_REPORT_START_GAP_MODE:-warn}"
+                  --coverage-end-gap-grace-sec "${YTW_API_COST_REPORT_END_GAP_GRACE_SEC:-900}"
+                  --allow-near-boundary
+                  --deferred-exit-code 0
+                  --log-file "${YTW_API_CALL_LOG_FILE:-${STREAM_RUNTIME_LOG_DIR:-/state/logs}/youtube_api_calls.jsonl}"
+                  --output-latest-file "${YTW_API_COST_BURN_RATE_LATEST_FILE:-/state/reports/youtube_api_cost/open_day_latest.json}"
+              envFrom:
+                - configMapRef:
+                    name: stream-v3-shadow-env
+                - secretRef:
+                    name: stream-v3-secrets
+                    optional: true
+              volumeMounts:
+                - name: state
+                  mountPath: /state
+              resources:
+                requests:
+                  cpu: "50m"
+                  memory: 64Mi
+                limits:
+                  cpu: "500m"
+                  memory: 256Mi
+          volumes:
+            - name: state
+              persistentVolumeClaim:
+                claimName: stream-v3-state

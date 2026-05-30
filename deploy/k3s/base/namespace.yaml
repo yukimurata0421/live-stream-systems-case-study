@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: stream-v3
+  labels:
+    app.kubernetes.io/name: stream-v3
+    app.kubernetes.io/part-of: adsb-stream

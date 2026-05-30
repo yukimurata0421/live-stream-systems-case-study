@@ -1,0 +1,12 @@
+[Unit]
+Description=Run Stream-New YouTube API cost report every hour
+
+[Timer]
+OnBootSec=15min
+OnUnitActiveSec=1h
+AccuracySec=5min
+Persistent=true
+Unit=adsb-streamnew-youtube-api-cost-report.service
+
+[Install]
+WantedBy=timers.target

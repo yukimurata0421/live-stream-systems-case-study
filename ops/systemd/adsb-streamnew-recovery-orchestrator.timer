@@ -1,0 +1,12 @@
+[Unit]
+Description=Run ADS-B Stream-New recovery orchestrator shadow decision every minute
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=1min
+AccuracySec=15s
+Persistent=true
+Unit=adsb-streamnew-recovery-orchestrator.service
+
+[Install]
+WantedBy=timers.target

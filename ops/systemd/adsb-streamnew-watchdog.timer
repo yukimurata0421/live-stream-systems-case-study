@@ -1,0 +1,13 @@
+[Unit]
+Description=Run ADS-B Stream-New watchdog every minute
+
+[Timer]
+OnBootSec=2min
+OnActiveSec=1min
+OnUnitActiveSec=1min
+AccuracySec=10s
+Persistent=true
+Unit=adsb-streamnew-watchdog.service
+
+[Install]
+WantedBy=timers.target

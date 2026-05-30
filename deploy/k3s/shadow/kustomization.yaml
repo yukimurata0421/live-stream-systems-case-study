@@ -1,0 +1,12 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../base
+  - ../v3-runtime/state-pvc.yaml
+  - ../v3-runtime/music-pvc.yaml
+  - ../v2-state-mirror
+  - ../v3-reports
+  - ../v3-runtime/deployment.yaml
+  - ../v3-control/deployment.yaml
+  - ../v3-observer/deployment.yaml
+  - ../v3-observer/service.yaml

@@ -1,0 +1,234 @@
+{
+  "_schema": "auto_dj_classification_overrides_v1",
+  "_notes": [
+    "Only entries with confidence=confirmed are applied when regenerating time_tags.",
+    "confirmed exclude patterns remove non-rotation assets from time_tags.",
+    "others tracks are classified after operator approval on 2026-05-10 JST."
+  ],
+  "track_overrides": {
+    "Alva Gracia - Emotions Like": {
+      "slot": "night",
+      "confidence": "confirmed",
+      "reason": "Emotional/spacious title; better fit for night than peak rotation."
+    },
+    "Blackryst - Trust Me": {
+      "slot": "evening",
+      "confidence": "confirmed",
+      "reason": "Darker emotional title; fit for evening energy."
+    },
+    "Chris Later & Dany Yeager - There's Nobody Else": {
+      "slot": "day",
+      "confidence": "confirmed",
+      "reason": "Vocal dance/pop title; work-friendly day rotation."
+    },
+    "D'Amico & Valax - Mirage Of My Heart (ft. Fayzone)": {
+      "slot": "evening",
+      "confidence": "confirmed",
+      "reason": "Emotional vocal title; fit for evening depth."
+    },
+    "DJ Nansuya - Gang": {
+      "slot": "evening",
+      "confidence": "confirmed",
+      "reason": "jedag jedug / hype signal; fit for heavier evening rotation."
+    },
+    "Donkong - Binary (feat. HANNY)": {
+      "slot": "evening",
+      "confidence": "confirmed",
+      "reason": "Bass/electronic leaning artist/title; fit for evening."
+    },
+    "Dwonji - COME UP": {
+      "slot": "evening",
+      "confidence": "confirmed",
+      "reason": "Hype/come-up title; fit for evening energy."
+    },
+    "EXXO - Tension": {
+      "slot": "evening",
+      "confidence": "confirmed",
+      "reason": "Tension title suggests heavier energy; fit for evening."
+    },
+    "Fourier, Reverse Prodigy, ZAM - Ares (Tear Up My Horizon)": {
+      "slot": "evening",
+      "confidence": "confirmed",
+      "reason": "Heavy/mythic title; fit for evening intensity."
+    },
+    "God's Warrior - By Your Side": {
+      "slot": "morning",
+      "confidence": "confirmed",
+      "reason": "Uplifting/supportive title; fit for morning build-up."
+    },
+    "Hyri - Nocturnal": {
+      "slot": "night",
+      "confidence": "confirmed",
+      "reason": "Nocturnal title directly fits night bucket."
+    },
+    "Isolated - Circus": {
+      "slot": "evening",
+      "confidence": "confirmed",
+      "reason": "Darker/quirky title; fit for evening rather than morning/day."
+    },
+    "JB Hain - feel": {
+      "slot": "night",
+      "confidence": "confirmed",
+      "reason": "Lower-intensity emotional title; fit for night."
+    },
+    "Kaivon - First Love (feat. Pauline Herr)": {
+      "slot": "night",
+      "confidence": "confirmed",
+      "reason": "Emotional/spacious title; fit for night."
+    },
+    "Kato, Spyker, TOBSIK - Odyssey": {
+      "slot": "day",
+      "confidence": "confirmed",
+      "reason": "Forward-moving/adventure title; fit for day propulsion."
+    },
+    "Lochlainn - The Garden": {
+      "slot": "morning",
+      "confidence": "confirmed",
+      "reason": "Open/natural title; fit for morning."
+    },
+    "Luke Carpenter & John Ross - California (feat. Corey Saxon)": {
+      "slot": "morning",
+      "confidence": "confirmed",
+      "reason": "Light/sunny vocal title; fit for morning."
+    },
+    "METR & Adrian Benson - Broken Love (feat. Ima Sobé)": {
+      "slot": "evening",
+      "confidence": "confirmed",
+      "reason": "Emotional title with heavier feel; fit for evening."
+    },
+    "NO QVLT - Neomorph": {
+      "slot": "evening",
+      "confidence": "confirmed",
+      "reason": "Dark/heavy title; fit for evening."
+    },
+    "Olly Walker - Sorry (I Had To Leave)": {
+      "slot": "night",
+      "confidence": "confirmed",
+      "reason": "Reflective emotional title; fit for night."
+    },
+    "Omri - Dis/Honest": {
+      "slot": "night",
+      "confidence": "confirmed",
+      "reason": "Reflective/darker title; fit for night."
+    },
+    "SPIRIT LINK x Swole Sauce - Stay With Me (feat. Tom The Gaffer)": {
+      "slot": "evening",
+      "confidence": "confirmed",
+      "reason": "Emotional vocal title; fit for evening."
+    },
+    "Simon Says! - one more time (feat. Devonte)": {
+      "slot": "day",
+      "confidence": "confirmed",
+      "reason": "Repeat/party title; fit for day energy."
+    },
+    "Thymen Wiendels - Erased (ft. Barmuda)": {
+      "slot": "night",
+      "confidence": "confirmed",
+      "reason": "Reflective/darker title; fit for night."
+    },
+    "Vaskan - Your Love": {
+      "slot": "morning",
+      "confidence": "confirmed",
+      "reason": "Light vocal/emotional title; fit for morning."
+    },
+    "joegarratt - aya": {
+      "slot": "night",
+      "confidence": "confirmed",
+      "reason": "Minimal lowercase title; fit for night."
+    }
+  },
+  "artist_overrides": {
+    "JOXION": {
+      "slot": "evening",
+      "confidence": "confirmed",
+      "reason": "High-energy/hype artist cluster; fit for evening."
+    },
+    "iFeature": {
+      "slot": "evening",
+      "confidence": "confirmed",
+      "reason": "Party/Rush/Insanity cluster; fit for evening."
+    },
+    "Almost Weekend": {
+      "slot": "morning",
+      "confidence": "confirmed",
+      "reason": "Light vocal/pop cluster; fit for morning."
+    },
+    "Max Vermeulen": {
+      "slot": "morning",
+      "confidence": "confirmed",
+      "reason": "Light vocal/pop cluster paired with Almost Weekend; fit for morning."
+    },
+    "CENTRIC": {
+      "slot": "evening",
+      "confidence": "confirmed",
+      "reason": "Emotional/hype cluster; fit for evening."
+    },
+    "Dread Pitt": {
+      "slot": "evening",
+      "confidence": "confirmed",
+      "reason": "Pyro/Reckless cluster suggests heavier evening bucket."
+    },
+    "Steve Hartz": {
+      "slot": "day",
+      "confidence": "confirmed",
+      "reason": "Uplifting vocal cluster; fit for day."
+    },
+    "Thorne": {
+      "slot": "day",
+      "confidence": "confirmed",
+      "reason": "Neutral energetic cluster; fit for day."
+    },
+    "Toxic Joy": {
+      "slot": "evening",
+      "confidence": "confirmed",
+      "reason": "Darker/nightlife cluster; fit for evening."
+    },
+    "VERB": {
+      "slot": "evening",
+      "confidence": "confirmed",
+      "reason": "Ignite/Catching Feelings cluster suggests emotional energy; fit for evening."
+    }
+  },
+  "exclude_patterns": [
+    {
+      "pattern": "behind the scenes",
+      "confidence": "confirmed",
+      "reason": "Program asset, not normal music rotation."
+    },
+    {
+      "pattern": "thank you",
+      "confidence": "confirmed",
+      "reason": "Program asset, not normal music rotation."
+    },
+    {
+      "pattern": "twitchcon",
+      "confidence": "confirmed",
+      "reason": "Event/live asset, not normal music rotation."
+    },
+    {
+      "pattern": "is live",
+      "confidence": "confirmed",
+      "reason": "Event/live asset, not normal music rotation."
+    },
+    {
+      "pattern": "keeps getting faster",
+      "confidence": "confirmed",
+      "reason": "Meme/novelty asset, not normal music rotation."
+    },
+    {
+      "pattern": "mashup",
+      "confidence": "confirmed",
+      "reason": "Mashup asset, not normal one-track rotation."
+    },
+    {
+      "pattern": "10 years of ncs",
+      "confidence": "confirmed",
+      "reason": "Anniversary/program asset, not normal music rotation."
+    },
+    {
+      "pattern": "wreck out ep mix",
+      "confidence": "confirmed",
+      "reason": "EP mix/program asset, not normal one-track rotation."
+    }
+  ]
+}

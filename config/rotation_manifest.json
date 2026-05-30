@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "logs": [
+    {
+      "path": "logs/subsystems_status.jsonl",
+      "rotate": "daily_or_size",
+      "compress": true,
+      "latest_snapshot": false,
+      "min_retention_days": 30
+    },
+    {
+      "path": "logs/recovery_orchestrator.jsonl",
+      "rotate": "daily_or_size",
+      "compress": true,
+      "latest_snapshot": false,
+      "min_retention_days": 90
+    },
+    {
+      "path": "logs/objective_sli.jsonl",
+      "rotate": "daily_or_size",
+      "compress": true,
+      "latest_snapshot": false,
+      "min_retention_days": 90
+    }
+  ],
+  "snapshots_not_rotated": [
+    "subsystems_status.json",
+    "objective_sli.json"
+  ]
+}
