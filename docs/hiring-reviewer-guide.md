@@ -29,7 +29,8 @@ plug-and-play streaming package.
 4. Recovery is staged through guards before destructive actions.
 5. API quota exhaustion is treated as degraded evidence, not immediate stream
    failure.
-6. Shadow mode exists before destructive cutover.
+6. Shadow mode existed before destructive cutover and remains the safe
+   validation path.
 7. Public validation excludes secrets, live YouTube mutation, and production
    k3s apply.
 

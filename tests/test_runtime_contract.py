@@ -96,7 +96,7 @@ class RuntimeContractTests(unittest.TestCase):
         self.assertEqual(cfg.rtmp_url, "rtmps://a.rtmps.youtube.com:443/live2/REPLACE_WITH_TEST_STREAM_KEY")
         self.assertEqual(args[-1], cfg.rtmp_url)
 
-    def test_env_example_encoding_contract_uses_low_bandwidth_5fps_profile(self) -> None:
+    def test_env_example_encoding_contract_uses_low_bandwidth_4fps_nvenc_profile(self) -> None:
         env = parse_env_file(ENV_EXAMPLE)
         with tempfile.TemporaryDirectory() as td:
             patched_env = dict(env)
@@ -113,20 +113,21 @@ class RuntimeContractTests(unittest.TestCase):
                 engine = stream_engine.StreamEngine(cfg)
                 args = engine.ffmpeg_args(":99", "stream_sink.monitor")
 
-        self.assertEqual(cfg.frame_rate, 5)
-        self.assertEqual(cfg.video_encoder, "libx264")
+        self.assertEqual(cfg.frame_rate, 4)
+        self.assertEqual(cfg.video_encoder, "h264_nvenc")
         self.assertEqual(cfg.video_nvenc_preset, "p4")
-        self.assertEqual(cfg.video_bitrate, "3500k")
-        self.assertEqual(cfg.video_maxrate, "3500k")
-        self.assertEqual(cfg.video_bufsize, "7000k")
-        self.assertEqual(args[args.index("-c:v") + 1], "libx264")
-        self.assertEqual(args[args.index("-preset") + 1], "ultrafast")
-        self.assertEqual(args[args.index("-r") + 1], "5")
-        self.assertEqual(args[args.index("-g") + 1], "10")
-        self.assertEqual(args[args.index("-keyint_min") + 1], "10")
-        self.assertEqual(args[args.index("-b:v") + 1], "3500k")
-        self.assertEqual(args[args.index("-maxrate") + 1], "3500k")
-        self.assertEqual(args[args.index("-bufsize") + 1], "7000k")
+        self.assertEqual(cfg.video_bitrate, "3400k")
+        self.assertEqual(cfg.video_maxrate, "3400k")
+        self.assertEqual(cfg.video_bufsize, "6800k")
+        self.assertEqual(args[args.index("-c:v") + 1], "h264_nvenc")
+        self.assertEqual(args[args.index("-preset") + 1], "p4")
+        self.assertEqual(args[args.index("-rc") + 1], "cbr")
+        self.assertEqual(args[args.index("-r") + 1], "4")
+        self.assertEqual(args[args.index("-g") + 1], "8")
+        self.assertEqual(args[args.index("-keyint_min") + 1], "8")
+        self.assertEqual(args[args.index("-b:v") + 1], "3400k")
+        self.assertEqual(args[args.index("-maxrate") + 1], "3400k")
+        self.assertEqual(args[args.index("-bufsize") + 1], "6800k")
 
     def test_nvenc_encoder_uses_separate_preset_without_changing_bitrate_contract(self) -> None:
         env = parse_env_file(ENV_EXAMPLE)
@@ -154,9 +155,9 @@ class RuntimeContractTests(unittest.TestCase):
         self.assertEqual(args[args.index("-rc") + 1], "cbr")
         self.assertNotIn("-cq", args)
         self.assertNotIn("ultrafast", args)
-        self.assertEqual(args[args.index("-b:v") + 1], "3500k")
-        self.assertEqual(args[args.index("-maxrate") + 1], "3500k")
-        self.assertEqual(args[args.index("-bufsize") + 1], "7000k")
+        self.assertEqual(args[args.index("-b:v") + 1], "3400k")
+        self.assertEqual(args[args.index("-maxrate") + 1], "3400k")
+        self.assertEqual(args[args.index("-bufsize") + 1], "6800k")
 
     def test_nvenc_vbr_quality_knobs_are_configurable(self) -> None:
         with tempfile.TemporaryDirectory() as td:

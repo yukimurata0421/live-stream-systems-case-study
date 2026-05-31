@@ -163,7 +163,7 @@ def load_config() -> Config:
         test_output_file=Path(e("TEST_OUTPUT_FILE", str(base_dir / "test_capture.mkv"))),
         display_name=display_name,
         video_size=e("VIDEO_SIZE", "1920x1080"),
-        frame_rate=max(1, to_int(e("FRAME_RATE", "5"), 5)),
+        frame_rate=max(1, to_int(e("FRAME_RATE", "4"), 4)),
         output_size=e("OUTPUT_SIZE", "1920x1080"),
         draw_mouse=to_int(e("DRAW_MOUSE", "0"), 0),
         display_input=e("DISPLAY_INPUT", ""),
@@ -228,9 +228,9 @@ def load_config() -> Config:
         video_nvenc_temporal_aq=to_bool(e("VIDEO_NVENC_TEMPORAL_AQ", "0")),
         video_nvenc_bframes=max(0, to_int(e("VIDEO_NVENC_BFRAMES", "0"), 0)),
         video_nvenc_b_ref_mode=e("VIDEO_NVENC_B_REF_MODE", ""),
-        video_bitrate=e("VIDEO_BITRATE", "3500k"),
-        video_maxrate=e("VIDEO_MAXRATE", "3500k"),
-        video_bufsize=e("VIDEO_BUFSIZE", "7000k"),
+        video_bitrate=e("VIDEO_BITRATE", "3400k"),
+        video_maxrate=e("VIDEO_MAXRATE", "3400k"),
+        video_bufsize=e("VIDEO_BUFSIZE", "6800k"),
         emergency_low_upload_enabled=to_bool(e("EMERGENCY_LOW_UPLOAD_ENABLED", "1"), True),
         emergency_low_upload_triggers=tuple(
             item.strip()

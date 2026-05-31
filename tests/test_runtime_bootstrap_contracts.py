@@ -164,12 +164,12 @@ class FfmpegArgumentContractTests(unittest.TestCase):
             "fifo_drop_pkts_on_overflow": False,
             "fifo_restart_with_keyframe": True,
             "rtmp_url": "rtmps://a.rtmps.youtube.com:443/live2/key",
-            "video_bitrate": "3500k",
-            "video_maxrate": "3500k",
-            "video_bufsize": "7000k",
+            "video_bitrate": "3400k",
+            "video_maxrate": "3400k",
+            "video_bufsize": "6800k",
             "audio_bitrate": "192k",
             "draw_mouse": 0,
-            "frame_rate": 5,
+            "frame_rate": 4,
             "video_size": "1920x1080",
             "audio_queue_size": 8192,
             "output_size": "1920x1080",
@@ -219,8 +219,8 @@ class FfmpegArgumentContractTests(unittest.TestCase):
         self.assertIn("stream_sink.monitor", args)
         self.assertEqual(args[args.index("-c:v") + 1], "libx264")
         self.assertEqual(args[args.index("-preset") + 1], "ultrafast")
-        self.assertEqual(args[args.index("-r") + 1], "5")
-        self.assertEqual(args[args.index("-g") + 1], "10")
+        self.assertEqual(args[args.index("-r") + 1], "4")
+        self.assertEqual(args[args.index("-g") + 1], "8")
         self.assertEqual(args[args.index("-b:v") + 1], "2500k")
         self.assertEqual(args[args.index("-maxrate") + 1], "2500k")
         self.assertEqual(args[args.index("-bufsize") + 1], "5000k")
@@ -240,9 +240,9 @@ class FfmpegArgumentContractTests(unittest.TestCase):
         self.assertEqual(args[args.index("-preset") + 1], "p4")
         self.assertEqual(args[args.index("-rc") + 1], "cbr")
         self.assertNotIn("ultrafast", args)
-        self.assertEqual(args[args.index("-b:v") + 1], "3500k")
-        self.assertEqual(args[args.index("-maxrate") + 1], "3500k")
-        self.assertEqual(args[args.index("-bufsize") + 1], "7000k")
+        self.assertEqual(args[args.index("-b:v") + 1], "3400k")
+        self.assertEqual(args[args.index("-maxrate") + 1], "3400k")
+        self.assertEqual(args[args.index("-bufsize") + 1], "6800k")
 
     def test_build_ffmpeg_args_can_use_quality_bounded_nvenc_vbr(self) -> None:
         args = ffmpeg_args.build_ffmpeg_args(

@@ -174,7 +174,7 @@ class PublicDocsStructureTests(unittest.TestCase):
             "observability-plane",
             "stream-v3-runtime",
             "h264_nvenc",
-            "VIDEO_BITRATE=3300k",
+            "VIDEO_BITRATE=3400k",
             "STREAM_V3_CUTOVER_ENABLE=1",
             "STREAM_K8S_DRY_RUN=1",
             "Dell workstation",

@@ -35,6 +35,16 @@ The v3 exporter focuses on runtime and decision evidence:
 - `stream_v3_recovery_action_pending`
 - `stream_v3_recovery_action_executable`
 
+Metric names and dashboard queries must keep production and shadow sources
+separate. v3 evidence uses `stream_v3_*` metrics and the v3 arena monitor job;
+v2-compatible names should not be aggregated with broad `max()` queries unless
+the job/source label is intentionally scoped. A red panel is a prompt to inspect
+the raw series and source labels, not proof that the delivery plane is down.
+
+Exporter mappings are treated as contracts. If a health summary JSON shape
+changes, the exporter and dashboard tests must verify the exact path being read;
+otherwise a panel can show a convincing but false `PASS` or `FAIL`.
+
 ## Dashboards
 
 Dashboard state should separate current failures from historical degradation.
