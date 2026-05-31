@@ -7,9 +7,10 @@
 Production-shaped ADS-B YouTube streaming platform with a k3s delivery plane
 and a separate HP ProDesk observability plane.
 
-This repository is a public case study, not a supported OSS project. It is
-published to document operational design decisions, failure handling, and
-reliability engineering practices for a personal 24/7 streaming system.
+This is open-source code published as a case study, not a supported OSS product
+or general-purpose starter. It documents operational design decisions, failure
+handling, and reliability engineering practices for a personal 24/7 streaming
+system.
 
 ## What This Repository Demonstrates
 
@@ -77,7 +78,9 @@ Use these entry points instead of reading the full tree:
 
 ## External Validation
 
-- The live ADS-B stream reached #1 on Reddit r/ADSB, giving the output public feedback outside the local lab.
+- A Reddit post introducing the livestream reached the #1 post position on
+  r/ADSB for the day, according to Reddit Post Insights. The insight screen
+  showed the post title "24/7 ADS-B livestream from Japan with custom evaluation pipeline (ARENA)" and about 1.2K views.
 - An external reviewer found a stats reuse bug in the YouTube resolver/watchdog path; the fix now prefers per-probe checked timestamps over the top-level stats timestamp and is covered by cache freshness tests.
 
 ## What To Look At

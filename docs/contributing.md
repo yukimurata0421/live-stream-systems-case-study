@@ -1,7 +1,7 @@
 # Contributing
 
-This repository is not a general-purpose OSS project. It is a public
-engineering case study for a personal 24/7 streaming system.
+This repository contains open-source code published as a public engineering
+case study. It is not a supported OSS product or general-purpose starter.
 
 ## Acceptable Scope
 

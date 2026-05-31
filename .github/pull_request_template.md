@@ -1,8 +1,9 @@
 ## Scope
 
-This repository is a public case study, not a supported OSS product. Keep the
-change focused on documentation clarity, public validation, sanitized examples,
-or narrow safety fixes.
+This repository contains open-source code published as a public case study, not
+a supported OSS product or general-purpose starter. Keep the change focused on
+documentation clarity, public validation, sanitized examples, or narrow safety
+fixes.
 
 ## Checklist
 
