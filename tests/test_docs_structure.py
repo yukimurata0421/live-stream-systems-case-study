@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import unittest
 from pathlib import Path
 
@@ -11,6 +12,18 @@ README = ROOT / "README.md"
 
 def read(path: Path) -> str:
     return path.read_text(encoding="utf-8")
+
+
+def parse_assignment_lines(text: str, keys: tuple[str, ...]) -> dict[str, str]:
+    pattern = re.compile(rf"^\s*({'|'.join(map(re.escape, keys))})\s*[:=]\s*(.+?)\s*$")
+    values: dict[str, str] = {}
+    for line in text.splitlines():
+        match = pattern.match(line)
+        if not match:
+            continue
+        raw = match.group(2).strip().strip('"').strip("'")
+        values[match.group(1)] = raw
+    return values
 
 
 class PublicDocsStructureTests(unittest.TestCase):
@@ -291,6 +304,30 @@ class PublicDocsStructureTests(unittest.TestCase):
             "stream_v3_prometheus_exporter.py",
         ):
             self.assertIn(marker, program_map)
+
+    def test_documented_encoder_contract_matches_public_config_examples(self) -> None:
+        keys = ("FRAME_RATE", "VIDEO_BITRATE", "VIDEO_MAXRATE", "VIDEO_BUFSIZE", "AUDIO_BITRATE")
+        documented = parse_assignment_lines(read(DOCS / "runtime-contract.md"), keys)
+        self.assertEqual(
+            documented,
+            {
+                "FRAME_RATE": "5",
+                "VIDEO_BITRATE": "3400k",
+                "VIDEO_MAXRATE": "3400k",
+                "VIDEO_BUFSIZE": "6800k",
+                "AUDIO_BITRATE": "192k",
+            },
+        )
+
+        sources = (
+            ROOT / "configs" / "production.env.example",
+            ROOT / "configs" / "v3.shadow.env.example",
+            ROOT / "ops" / "systemd" / "adsb-streamnew.env.example",
+            ROOT / "deploy" / "k3s" / "base" / "configmap-shadow.yaml",
+        )
+        for path in sources:
+            with self.subTest(path=path.relative_to(ROOT)):
+                self.assertEqual(parse_assignment_lines(read(path), keys), documented)
 
     def test_docs_and_readme_do_not_contain_japanese_text(self) -> None:
         targets = [README, *sorted(DOCS.rglob("*.md"))]
