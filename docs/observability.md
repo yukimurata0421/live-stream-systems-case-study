@@ -11,8 +11,9 @@ The observability layer exists to answer three questions:
 Key signal groups:
 
 - local FFmpeg process and TCP ingest state
+- k3s runtime status and in-container probes
 - upload throughput, `notsent`, `unacked`, and `lastsnd` samples
-- YouTube Data API and public watch-page state
+- YouTube Data API, OAuth, and public watch-page state
 - resolver cache freshness
 - now-playing metadata freshness
 - PulseAudio route and RMS checks

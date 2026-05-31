@@ -19,6 +19,8 @@ Airspy USB on HP ProDesk
 
 runtime evidence
   -> HP ProDesk observability / arena services
+  -> YouTube Data API / OAuth / public watch-page probes
+  -> k3s runtime, state, and log evidence
   -> watchdogs
   -> subsystem classification
   -> SLI summaries
@@ -34,8 +36,8 @@ logical roles:
 - HP ProDesk source role: Airspy USB receiver, `airspy_adsb`, and ProDesk-side
   readsb.
 - HP ProDesk observability role: YouTube monitoring, watchdogs, SLI,
-  notifications, staged recovery requests, and the `ops/monitoring` evidence
-  presentation stack when deployed there.
+  notifications, Prometheus exporter, staged recovery requests, and the
+  `ops/monitoring` evidence presentation stack when deployed there.
 - Dell workstation delivery role: Dell-side readsb and modified tar1090 map
   endpoint, k3s `stream-v3-runtime`, browser rendering, PulseAudio, AutoDJ,
   FFmpeg, NVENC, and local fast recovery.
@@ -51,9 +53,16 @@ Delivery-plane components are optimized for keeping video and audio alive.
 Observability-plane components are optimized for retaining evidence, explaining
 faults, and deciding whether a recovery action is safe.
 
+The HP ProDesk observability plane runs `stream_v3.control_loop --mode monitor`.
+That monitor mode runs the YouTube video resolver, YouTube watchdog, stream
+watchdog, notification status loop, subsystem status summary, recovery
+orchestrator, and shadow SLI tasks. It pulls read-only YouTube Data API, OAuth,
+public watch-page, k3s runtime, state-file, and log evidence before recovery is
+planned.
+
 The split prevents a monitoring failure from automatically becoming a delivery
-failure. It also prevents delivery recovery code from owning dashboard and
-long-window SLI state.
+failure. It also prevents delivery recovery code from owning dashboard,
+long-window SLI state, or YouTube API decision state.
 
 `ops/monitoring/` defines Prometheus, Loki, Grafana, and Alloy as a
 host-local evidence and presentation stack. It is not a third delivery plane and
@@ -62,14 +71,12 @@ does not own FFmpeg or k3s recovery directly.
 ## Source Boundary
 
 The Airspy/readsb source path is not managed by the k3s manifests in this public
-snapshot. The delivery runtime consumes it through `STREAM1090_URL` and
-`BROWSER_URL`, which point at the Dell readsb / modified tar1090 endpoint.
+snapshot. The delivery runtime consumes it through a browser map upstream URL,
+which points at the Dell readsb / modified tar1090 endpoint.
 
 `src/stream_core/overlay_server.py` proxies the upstream map and ADS-B JSON for
-the stream overlay. `src/stream_core/commands/stream1090_report.py` checks both
-the overlay path and the upstream readsb / modified tar1090 path. The
-`stream1090` spelling here is an internal legacy probe name, not the name of a
-separate public project.
+the stream overlay and report-only checks validate both the overlay path and the
+upstream readsb / modified tar1090 path.
 
 ## Deployment Model
 

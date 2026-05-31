@@ -8,7 +8,7 @@ the observability host.
 
 | Host | Runtime role | Responsibility |
 | --- | --- | --- |
-| HP ProDesk | ADS-B source and observability | Airspy USB receiver, `airspy_adsb`, ProDesk-side readsb, monitoring, SLI, notifications, recovery orchestration, staged recovery requests, and the `ops/monitoring` evidence stack when deployed there |
+| HP ProDesk | ADS-B source and observability | Airspy USB receiver, `airspy_adsb`, ProDesk-side readsb, YouTube resolver/watchdog, stream watchdog, subsystem SLI, notifications, Prometheus exporter, recovery orchestration, staged recovery requests, and the `ops/monitoring` evidence stack when deployed there |
 | Dell workstation | Delivery and local ADS-B mirror | Dell-side readsb and modified tar1090 map endpoint, k3s `stream-v3-runtime`, browser rendering, PulseAudio, AutoDJ, FFmpeg, NVIDIA NVENC, and local fast recovery |
 
 ## ADS-B Data Flow
@@ -28,7 +28,7 @@ Airspy USB on HP ProDesk
 
 This repository does not manage the Airspy device or the ProDesk readsb process
 directly. In the public code, that source chain appears as the
-`STREAM1090_URL` / `BROWSER_URL` upstream contract used by the delivery runtime.
+browser map upstream contract used by the delivery runtime.
 
 ## Why It Matters
 
@@ -36,8 +36,9 @@ The physical split makes the delivery/observability split real:
 
 - the Dell workstation spends its resources on local readsb/tar1090 serving,
   browser rendering, audio, GPU encoding, and YouTube ingest;
-- the HP ProDesk keeps RF ingestion, monitoring state, dashboards, long-window
-  SLI, and staged recovery logic away from the k3s delivery workload;
+- the HP ProDesk keeps RF ingestion, YouTube API/public watch evidence,
+  monitoring state, dashboards, long-window SLI, and staged recovery logic away
+  from the k3s delivery workload;
 - ADS-B source freshness, map availability, media delivery, and recovery
   decision quality can be classified as separate failure domains.
 
@@ -56,15 +57,14 @@ the FFmpeg process.
 
 ## Code Boundary
 
-- `deploy/k3s/base/configmap-shadow.yaml` defines `STREAM1090_URL` and
-  `BROWSER_URL`.
+- `deploy/k3s/base/configmap-shadow.yaml` contains the browser map upstream
+  URL defaults consumed by the delivery runtime.
 - `deploy/k3s/streaming/patch-configmap-streaming.yaml` points the live
   delivery path at the Dell-side modified tar1090 endpoint.
-- `src/stream_core/overlay_server.py` proxies `/stream1090/` and ADS-B JSON
-  from that upstream endpoint and sanitizes receiver location fields. The
-  `/stream1090/` path is an internal legacy route name.
-- `src/stream_core/commands/stream1090_report.py` validates overlay and
-  upstream readsb / modified tar1090 availability.
+- `src/stream_core/overlay_server.py` proxies the browser map and ADS-B JSON
+  from that upstream endpoint and sanitizes receiver location fields.
+- report-only delivery checks validate overlay and upstream readsb / modified
+  tar1090 availability.
 
 ## Failure-Domain Boundary
 

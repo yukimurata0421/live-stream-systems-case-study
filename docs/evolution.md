@@ -37,7 +37,9 @@ Delivery plane:
 Observability plane:
 
 - YouTube resolver and monitor
+- read-only YouTube Data API, OAuth, and public watch-page probes
 - stream watchdog
+- k3s runtime, state-file, and log evidence
 - recovery orchestrator
 - notify loop
 - SLI summaries

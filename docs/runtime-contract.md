@@ -32,10 +32,8 @@ The delivery plane runs the live output path:
 - local fast recovery loop
 
 The delivery runtime consumes ADS-B map/source data through the
-`STREAM1090_URL` and `BROWSER_URL` environment contract. It does not manage the
-Airspy device directly. The `STREAM1090_URL` spelling is retained as an internal
-environment variable name for compatibility; the public map component is a
-modified tar1090 endpoint.
+browser map upstream environment contract. It does not manage the Airspy device
+directly. The public map component is a modified tar1090 endpoint.
 
 The production-oriented encoder target is:
 
@@ -58,8 +56,10 @@ CPU encoding is retained only as a fallback and local debug path.
 The observability plane owns health classification and recovery requests:
 
 - YouTube video resolver
-- YouTube watchdog and public probe
+- YouTube watchdog
+- read-only YouTube Data API, OAuth, and public watch-page probes
 - stream watchdog
+- k3s runtime, state-file, and log evidence collection
 - subsystem status summary
 - recovery orchestrator
 - notification status loop

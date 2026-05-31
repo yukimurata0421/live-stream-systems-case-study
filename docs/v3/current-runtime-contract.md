@@ -31,7 +31,9 @@ browser rendering.
 
 - arena monitor systemd unit
 - YouTube resolver and watchdog
+- read-only YouTube Data API, OAuth, and public watch-page evidence
 - stream watchdog
+- k3s runtime, state-file, and log evidence
 - notification loop
 - subsystem status
 - recovery orchestrator

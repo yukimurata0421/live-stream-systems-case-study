@@ -22,6 +22,8 @@ or general-purpose starter.
   monitoring paths.
 - Delivery-plane / observability-plane separation across Dell workstation and
   HP ProDesk hardware.
+- HP ProDesk observability role: YouTube resolver/watchdog, stream watchdog,
+  subsystem SLI, notifications, Prometheus exporter, and recovery orchestrator.
 - Recovery guard design that keeps monitors from directly owning FFmpeg.
 - Shadow mode and cutover safety before destructive actions.
 - `ops/monitoring` evidence path with Prometheus, Loki, Grafana, and Alloy
@@ -33,29 +35,41 @@ or general-purpose starter.
 | --- | --- |
 | Airspy, `airspy_adsb`, ProDesk readsb, or the Dell readsb / modified tar1090 map feed gets stale. | Source freshness is treated as ADS-B evidence, separate from browser/audio/encoder failure. |
 | Browser, audio, FFmpeg, RTMPS, or GPU encoding stalls. | The Dell `stream_v3` k3s delivery tier owns local runtime recovery without giving monitors direct FFmpeg ownership. |
-| Monitoring evidence gets stale, becomes misleading, or requests the wrong action. | The HP ProDesk observability tier stages recovery through guards, shadow checks, SLI, and freshness tests; `ops/monitoring` presents evidence without owning FFmpeg. |
+| YouTube API/public evidence, k3s runtime evidence, or monitoring state gets stale or misleading. | The HP ProDesk observability tier pulls read-only YouTube and runtime evidence, applies quota/freshness guards, and only then requests staged k3s recovery. |
 
 ```mermaid
 flowchart LR
-    PRODESK["HP ProDesk<br/>ADS-B source + observability"]
-    DELL_MAP["Dell workstation<br/>readsb + modified tar1090"]
-    DELL_K3S["Dell workstation<br/>k3s delivery"]
-    YT["YouTube Live"]
-    OPS["ops/monitoring<br/>Prometheus + Loki + Grafana + Alloy"]
+    subgraph HP["HP ProDesk"]
+        ADSB["ADS-B source<br/>Airspy USB + airspy_adsb + readsb"]
+        MON["Observability control loop<br/>resolver + watchdogs + SLI + notify"]
+        GUARD["Recovery guards<br/>orchestrator + action lock"]
+        OPS["ops/monitoring<br/>Prometheus + Loki + Grafana + Alloy"]
+    end
 
-    PRODESK -->|Airspy / airspy_adsb / readsb feed| DELL_MAP
-    DELL_MAP -->|STREAM1090_URL / BROWSER_URL| DELL_K3S
-    DELL_K3S -->|browser + overlay + audio + FFmpeg/NVENC| YT
-    DELL_K3S -. runtime evidence .-> PRODESK
-    PRODESK -->|guarded recovery request| DELL_K3S
-    PRODESK -. metrics + logs .-> OPS
+    subgraph DELL["Dell workstation"]
+        MAP["readsb + modified tar1090"]
+        K3S["k3s delivery<br/>browser/overlay + audio + FFmpeg/NVENC"]
+    end
+
+    YT["YouTube Live<br/>Data API + OAuth + public watch"]
+
+    ADSB -->|readsb feed| MAP
+    MAP -->|browser map endpoint| K3S
+    K3S -->|RTMPS| YT
+    K3S -. k8s/state/runtime evidence .-> MON
+    YT -. read-only API and public-page evidence .-> MON
+    MON -->|classify + summarize| GUARD
+    GUARD -->|guarded k3s recovery request| K3S
+    MON -. exporter + log evidence .-> OPS
 ```
 
 The Mermaid diagram intentionally shows the ownership boundary at a readable
 level. The concrete ADS-B data path is Airspy on HP ProDesk -> `airspy_adsb` ->
 ProDesk readsb -> Dell workstation readsb -> Dell modified tar1090 ->
-`stream_v3`; `ops/monitoring` is the evidence/presentation stack, not another
-delivery owner.
+`stream_v3`. The HP ProDesk observability loop also pulls YouTube Data API,
+OAuth, public watch-page, k3s, state, and log evidence before a guarded recovery
+request can touch the Dell delivery workload. `ops/monitoring` is the
+evidence/presentation stack, not another delivery owner.
 
 This repository is a sanitized public snapshot of a system that evolved through
 three stages:
@@ -82,13 +96,11 @@ The compact design decision table is in `docs/design-decisions-for-review.md`.
 The physical deployment topology is documented in `docs/physical-topology.md`.
 The short evolution narrative is in `docs/evolution.md`.
 
-In code, the Airspy/readsb source chain is represented by the upstream
-`STREAM1090_URL` / `BROWSER_URL` contract. The k3s runtime does not manage the
-Airspy device directly; it renders and proxies the Dell readsb / modified
-tar1090 endpoint through `src/stream_core/overlay_server.py` and validates that
-path with report-only overlay and upstream checks. `STREAM1090_URL` and
-`stream1090-report` are legacy internal identifiers in this repository, not the
-name of a separate public project.
+In code, the Airspy/readsb source chain is represented by the browser map
+upstream contract. The k3s runtime does not manage the Airspy device directly;
+it renders and proxies the Dell readsb / modified tar1090 endpoint through
+`src/stream_core/overlay_server.py` and validates that path with report-only
+overlay and upstream checks.
 
 ## Reviewer Shortcuts
 

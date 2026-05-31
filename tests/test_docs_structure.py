@@ -27,10 +27,13 @@ class PublicDocsStructureTests(unittest.TestCase):
             "airspy_adsb",
             "Dell workstation readsb",
             "modified tar1090",
-            "STREAM1090_URL",
-            "BROWSER_URL",
+            "browser map endpoint",
+            "Data API + OAuth + public watch",
+            "Observability control loop",
+            "Recovery guards",
+            "guarded k3s recovery request",
             "Prometheus + Loki + Grafana + Alloy",
-            "`ops/monitoring` is the evidence/presentation stack",
+            "`ops/monitoring` is the",
             "Dell workstation",
             "HP ProDesk",
             "## Why k3s",
@@ -169,8 +172,9 @@ class PublicDocsStructureTests(unittest.TestCase):
             "airspy_adsb",
             "readsb on Dell workstation",
             "modified tar1090",
-            "STREAM1090_URL",
-            "BROWSER_URL",
+            "browser map upstream environment contract",
+            "read-only YouTube Data API, OAuth, and public watch-page probes",
+            "k3s runtime, state-file, and log evidence collection",
         ):
             self.assertIn(marker, runtime)
 
@@ -186,6 +190,8 @@ class PublicDocsStructureTests(unittest.TestCase):
             "Airspy USB on HP ProDesk",
             "Dell-side readsb",
             "Source Boundary",
+            "YouTube Data API / OAuth / public watch-page probes",
+            "k3s runtime, state, and log evidence",
         ):
             self.assertIn(marker, architecture)
 
@@ -199,6 +205,7 @@ class PublicDocsStructureTests(unittest.TestCase):
             "k3s is used for the `stream_v3` delivery workload",
             "Visualization Boundary",
             "Prometheus, Loki, Grafana, and Alloy",
+            "YouTube API/public watch evidence",
             "Failure-Domain Boundary",
         ):
             self.assertIn(marker, topology)
@@ -207,6 +214,7 @@ class PublicDocsStructureTests(unittest.TestCase):
             "stream_v3_upload_latest_mbps",
             "stream_v3_network_ffmpeg_socket_lastsnd_ms",
             "stream_v3_recovery_action_executable",
+            "YouTube Data API, OAuth, and public watch-page state",
             "API Cost Guard",
         ):
             self.assertIn(marker, observability)
@@ -275,7 +283,7 @@ class PublicDocsStructureTests(unittest.TestCase):
             with self.subTest(path=path.relative_to(ROOT)):
                 self.assertNotIn("Raspberry Pi", text)
 
-    def test_public_docs_do_not_brand_map_endpoint_as_stream1090_project(self) -> None:
+    def test_public_docs_do_not_use_legacy_map_project_name(self) -> None:
         targets = [README, *sorted(DOCS.rglob("*.md"))]
         required_modified_tar1090_docs = {
             README,
@@ -295,6 +303,7 @@ class PublicDocsStructureTests(unittest.TestCase):
             with self.subTest(path=path.relative_to(ROOT)):
                 if path in required_modified_tar1090_docs:
                     self.assertIn("modified tar1090", text)
+                self.assertNotRegex(text, r"(?i)stream1090")
                 for phrase in forbidden:
                     self.assertNotIn(phrase, text)
 
