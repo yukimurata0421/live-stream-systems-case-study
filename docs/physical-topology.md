@@ -8,7 +8,7 @@ the observability host.
 
 | Host | Runtime role | Responsibility |
 | --- | --- | --- |
-| HP ProDesk | ADS-B source and observability | Airspy USB receiver, `airspy_adsb`, ProDesk-side readsb, monitoring, SLI, Prometheus/Loki/Grafana, notifications, recovery orchestration, and staged recovery requests |
+| HP ProDesk | ADS-B source and observability | Airspy USB receiver, `airspy_adsb`, ProDesk-side readsb, monitoring, SLI, notifications, recovery orchestration, staged recovery requests, and the `ops/monitoring` evidence stack when deployed there |
 | Dell workstation | Delivery and local ADS-B mirror | Dell-side readsb and modified tar1090 map endpoint, k3s `stream-v3-runtime`, browser rendering, PulseAudio, AutoDJ, FFmpeg, NVIDIA NVENC, and local fast recovery |
 
 ## ADS-B Data Flow
@@ -40,6 +40,13 @@ The physical split makes the delivery/observability split real:
   SLI, and staged recovery logic away from the k3s delivery workload;
 - ADS-B source freshness, map availability, media delivery, and recovery
   decision quality can be classified as separate failure domains.
+
+## Visualization Boundary
+
+`ops/monitoring/docker-compose.yml` defines Prometheus, Loki, Grafana, and Alloy
+with host networking and local scrape targets. That stack presents evidence from
+the observability side; it is not part of the k3s delivery workload and does not
+directly own FFmpeg recovery.
 
 ## k3s Boundary
 

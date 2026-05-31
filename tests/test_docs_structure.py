@@ -29,6 +29,8 @@ class PublicDocsStructureTests(unittest.TestCase):
             "modified tar1090",
             "STREAM1090_URL",
             "BROWSER_URL",
+            "Prometheus + Loki + Grafana + Alloy",
+            "`ops/monitoring` is the evidence/presentation stack",
             "Dell workstation",
             "HP ProDesk",
             "## Why k3s",
@@ -195,6 +197,8 @@ class PublicDocsStructureTests(unittest.TestCase):
             "Dell workstation",
             "HP ProDesk",
             "k3s is used for the `stream_v3` delivery workload",
+            "Visualization Boundary",
+            "Prometheus, Loki, Grafana, and Alloy",
             "Failure-Domain Boundary",
         ):
             self.assertIn(marker, topology)

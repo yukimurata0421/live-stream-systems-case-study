@@ -64,7 +64,8 @@ The observability plane owns health classification and recovery requests:
 - recovery orchestrator
 - notification status loop
 - Prometheus exporter
-- Loki and Grafana configuration
+- `ops/monitoring` Prometheus, Loki, Grafana, and Alloy configuration for
+  evidence presentation
 - staged remote recovery request tooling
 
 The observability plane may request recovery, but it does not directly own the

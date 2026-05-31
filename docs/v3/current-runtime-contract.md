@@ -36,7 +36,8 @@ browser rendering.
 - subsystem status
 - recovery orchestrator
 - shadow SLI
-- Prometheus, Loki, and Grafana
+- Prometheus exporter
+- `ops/monitoring` Prometheus, Loki, Grafana, and Alloy evidence presentation
 
 ## Encoder Baseline
 

@@ -41,6 +41,11 @@ For example, a stale long-window field must not override a fresh local ingest
 sample. The monitoring layer records both so an operator can tell whether the
 fault is current, historical, or a dashboard false positive.
 
+`ops/monitoring/` contains the Prometheus, Loki, Grafana, and Alloy
+configuration used to present this evidence. It is an observability display and
+retention stack; recovery ownership still flows through the monitor guard and
+staged request path.
+
 ## API Cost Guard
 
 YouTube API usage is tracked separately from stream health. The watchdog can use

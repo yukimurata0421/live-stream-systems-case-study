@@ -22,7 +22,7 @@ runtime evidence
   -> watchdogs
   -> subsystem classification
   -> SLI summaries
-  -> Prometheus / Loki / Grafana
+  -> ops/monitoring evidence presentation
   -> staged recovery request
 ```
 
@@ -34,7 +34,8 @@ logical roles:
 - HP ProDesk source role: Airspy USB receiver, `airspy_adsb`, and ProDesk-side
   readsb.
 - HP ProDesk observability role: YouTube monitoring, watchdogs, SLI,
-  Prometheus/Loki/Grafana, notifications, and staged recovery requests.
+  notifications, staged recovery requests, and the `ops/monitoring` evidence
+  presentation stack when deployed there.
 - Dell workstation delivery role: Dell-side readsb and modified tar1090 map
   endpoint, k3s `stream-v3-runtime`, browser rendering, PulseAudio, AutoDJ,
   FFmpeg, NVENC, and local fast recovery.
@@ -53,6 +54,10 @@ faults, and deciding whether a recovery action is safe.
 The split prevents a monitoring failure from automatically becoming a delivery
 failure. It also prevents delivery recovery code from owning dashboard and
 long-window SLI state.
+
+`ops/monitoring/` defines Prometheus, Loki, Grafana, and Alloy as a
+host-local evidence and presentation stack. It is not a third delivery plane and
+does not own FFmpeg or k3s recovery directly.
 
 ## Source Boundary
 

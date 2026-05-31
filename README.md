@@ -24,7 +24,8 @@ or general-purpose starter.
   HP ProDesk hardware.
 - Recovery guard design that keeps monitors from directly owning FFmpeg.
 - Shadow mode and cutover safety before destructive actions.
-- Prometheus/Loki/Grafana-style observability and SLI evidence.
+- `ops/monitoring` evidence path with Prometheus, Loki, Grafana, and Alloy
+  configuration.
 - YouTube API quota-aware monitoring.
 - Contract tests for unsafe recovery prevention and stale evidence handling.
 
@@ -32,19 +33,29 @@ or general-purpose starter.
 | --- | --- |
 | Airspy, `airspy_adsb`, ProDesk readsb, or the Dell readsb / modified tar1090 map feed gets stale. | Source freshness is treated as ADS-B evidence, separate from browser/audio/encoder failure. |
 | Browser, audio, FFmpeg, RTMPS, or GPU encoding stalls. | The Dell `stream_v3` k3s delivery tier owns local runtime recovery without giving monitors direct FFmpeg ownership. |
-| Monitoring evidence gets stale, becomes misleading, or requests the wrong action. | The HP ProDesk observability tier stages recovery through guards, shadow checks, SLI, and freshness tests. |
+| Monitoring evidence gets stale, becomes misleading, or requests the wrong action. | The HP ProDesk observability tier stages recovery through guards, shadow checks, SLI, and freshness tests; `ops/monitoring` presents evidence without owning FFmpeg. |
 
 ```mermaid
 flowchart LR
-    AIRSPY["Airspy USB<br/>on HP ProDesk"] --> AIRSPY_ADSB["airspy_adsb<br/>RF decode"]
-    AIRSPY_ADSB --> PRODESK_READSB["HP ProDesk readsb<br/>ADS-B source feed"]
-    PRODESK_READSB -->|readsb feed| DELL_READSB["Dell workstation readsb<br/>modified tar1090 map endpoint"]
-    DELL_READSB -->|STREAM1090_URL / BROWSER_URL| DELL_K3S["Dell workstation<br/>stream_v3 k3s delivery plane"]
-    DELL_K3S -->|browser + overlay + PulseAudio + AutoDJ + FFmpeg/NVENC| YT["YouTube Live"]
-    DELL_K3S -. runtime evidence / metrics .-> PRODESK_OBS["HP ProDesk<br/>observability plane"]
-    PRODESK_OBS -->|staged recovery request| DELL_K3S
-    PRODESK_OBS -. dashboards / SLI / alerts .-> OP["Operator"]
+    PRODESK["HP ProDesk<br/>ADS-B source + observability"]
+    DELL_MAP["Dell workstation<br/>readsb + modified tar1090"]
+    DELL_K3S["Dell workstation<br/>k3s delivery"]
+    YT["YouTube Live"]
+    OPS["ops/monitoring<br/>Prometheus + Loki + Grafana + Alloy"]
+
+    PRODESK -->|Airspy / airspy_adsb / readsb feed| DELL_MAP
+    DELL_MAP -->|STREAM1090_URL / BROWSER_URL| DELL_K3S
+    DELL_K3S -->|browser + overlay + audio + FFmpeg/NVENC| YT
+    DELL_K3S -. runtime evidence .-> PRODESK
+    PRODESK -->|guarded recovery request| DELL_K3S
+    PRODESK -. metrics + logs .-> OPS
 ```
+
+The Mermaid diagram intentionally shows the ownership boundary at a readable
+level. The concrete ADS-B data path is Airspy on HP ProDesk -> `airspy_adsb` ->
+ProDesk readsb -> Dell workstation readsb -> Dell modified tar1090 ->
+`stream_v3`; `ops/monitoring` is the evidence/presentation stack, not another
+delivery owner.
 
 This repository is a sanitized public snapshot of a system that evolved through
 three stages:
@@ -106,7 +117,7 @@ Use these entry points instead of reading the full tree:
 - `src/watchers/`: YouTube, stream, network, evidence, and recovery monitors.
 - `deploy/k3s/`: k3s manifests, shadow mode, streaming overlay, observer, and
   cutover guard.
-- `ops/monitoring/`: Prometheus, Loki, Grafana/Alloy-style monitoring config.
+- `ops/monitoring/`: Prometheus, Loki, Grafana, and Alloy monitoring config.
 - `ops/systemd/stream-v3-arena-monitor.service`: observability-plane task owner.
 - `ops/prodesk-monitoring/`: sanitized legacy prodesk service checks.
 - `docs/v3/`: current runtime contracts, decisions, runbooks, SLI notes, and

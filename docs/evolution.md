@@ -41,7 +41,7 @@ Observability plane:
 - recovery orchestrator
 - notify loop
 - SLI summaries
-- Prometheus, Loki, and Grafana
+- Prometheus exporter and `ops/monitoring` dashboards
 - remote recovery requests into the k3s workload
 
 The split reduces recovery blast radius: delivery can focus on producing video
