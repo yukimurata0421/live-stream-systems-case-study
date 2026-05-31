@@ -4,13 +4,13 @@
 
 **Live stream:** <https://www.youtube.com/@yukimurata0421/live>
 
-Production-shaped ADS-B YouTube streaming platform with a k3s delivery plane
-and a separate HP ProDesk observability plane.
+This repository publishes `stream_v3` as a public systems case study for a
+self-built 24/7 YouTube Live pipeline. ADS-B visualization and NCS music are the
+workload; the primary focus is pipeline development, SLI-based monitoring,
+observability, recovery guard design, and operational decision-making.
 
 This is open-source code published as a case study, not a supported OSS product
-or general-purpose starter. It documents operational design decisions, failure
-handling, and reliability engineering practices for a personal 24/7 streaming
-system.
+or general-purpose starter.
 
 ## What This Repository Demonstrates
 
