@@ -81,6 +81,7 @@ Use these entry points instead of reading the full tree:
 - A Reddit post introducing the livestream reached the #1 post position on
   r/ADSB for the day, according to Reddit Post Insights. The insight screen
   showed the post title "24/7 ADS-B livestream from Japan with custom evaluation pipeline (ARENA)" and about 1.2K views.
+  Evidence: [`docs/assets/reddit-adsb-post-insights-2026-05.png`](docs/assets/reddit-adsb-post-insights-2026-05.png).
 - An external reviewer found a stats reuse bug in the YouTube resolver/watchdog path; the fix now prefers per-probe checked timestamps over the top-level stats timestamp and is covered by cache freshness tests.
 
 ## What To Look At

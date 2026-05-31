@@ -37,6 +37,7 @@ class PublicDocsStructureTests(unittest.TestCase):
             "Reddit Post Insights",
             "24/7 ADS-B livestream from Japan with custom evaluation pipeline (ARENA)",
             "1.2K views",
+            "docs/assets/reddit-adsb-post-insights-2026-05.png",
             "stats reuse bug",
             "open-source code published as a case study",
             "not a supported OSS product",
@@ -47,6 +48,7 @@ class PublicDocsStructureTests(unittest.TestCase):
             self.assertIn(marker, text)
 
         self.assertTrue((ROOT / "docs" / "assets" / "live-stream-screenshot.png").exists())
+        self.assertTrue((ROOT / "docs" / "assets" / "reddit-adsb-post-insights-2026-05.png").exists())
 
     def test_readme_has_support_and_contribution_sections(self) -> None:
         text = read(README)
