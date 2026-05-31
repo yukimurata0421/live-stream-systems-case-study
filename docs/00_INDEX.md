@@ -13,14 +13,15 @@ incident logs.
 4. `architecture.md`
 5. `physical-topology.md`
 6. `runtime-contract.md`
-7. `observability.md`
-8. `operations.md`
-9. `security-and-secrets.md`
-10. `support.md`
-11. `contributing.md`
-12. `v2/README.md`
-13. `v3/README.md`
-14. `v3/encoder-fps-tuning-2026-05-31.md`
+7. `sli-methodology.md`
+8. `observability.md`
+9. `operations.md`
+10. `security-and-secrets.md`
+11. `support.md`
+12. `contributing.md`
+13. `v2/README.md`
+14. `v3/README.md`
+15. `v3/encoder-fps-tuning-2026-05-31.md`
 
 ## Scope
 

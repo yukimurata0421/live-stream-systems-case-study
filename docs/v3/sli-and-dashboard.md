@@ -2,26 +2,36 @@
 
 The dashboard separates present state from historical degradation.
 
-## Primary SLIs
+## Metric Classes
 
-- YouTube availability
-- same URL preservation
-- local ingest connected
-- FFmpeg TCP send health
-- audio route and RMS health
-- now-playing freshness
-- runtime memory guardrail
-- recovery action safety
+The dashboard must keep objective classes separate:
+
+| Class | Dashboard signals | Reading rule |
+| --- | --- | --- |
+| Production Invariant | same URL preservation, same watch URL continuity, replacement broadcast count, single-publisher safety | Preserve identity and block destructive actions. Do not average these into availability. |
+| Primary SLI | YouTube availability, YouTube public/live/ingest state, ADS-B source freshness, local ingest connected, visual correctness, audio route and RMS health | Product health. Report ratios only with a clear window, denominator, and evidence source. |
+| Guardrail | FFmpeg TCP send budget, YouTube API daily units, runtime memory, recovery action safety | Operating boundary. A pass means the system stayed inside a constraint, not that viewers saw perfect output. |
+| Secondary SLI | now-playing freshness, notification delivery, public gateway/dashboard reachability | Supporting behavior. Important to operate, but not automatically a delivery outage. |
+| Event / Incident Metric | FFmpeg exits and restarts, TCP stalls, TLS failures, resolver fast mode, recovery requests | Count, cluster, root-cause, and measure MTTR. Do not turn raw attempts into a fake availability percentage. |
 
 ## Error Budget Rule
 
-Availability and same-URL preservation are higher priority than visual quality
-warnings. Encoder changes should not sacrifice delivery continuity unless the
-operator explicitly accepts that tradeoff.
+Same-watch-URL continuity is a production invariant, not merely another primary
+SLI. A short local restart can be less damaging than replacing the public YouTube
+watch URL, because the URL carries viewers, bookmarks, embeds, and external
+links.
+
+Availability and URL identity are higher priority than visual quality warnings.
+Encoder changes should not sacrifice delivery continuity unless the operator
+explicitly accepts that tradeoff.
 
 The upload ceiling is a warning boundary, not the tuning target. The current
 5fps/3400k contract was accepted because the measured windows stayed below
 5.0 Mbps while avoiding the larger per-frame quality loss of 10fps.
+
+The measured v2 baseline that established this classification is summarized in
+[`../sli-methodology.md`](../sli-methodology.md). That page is historical
+evidence for the method, not a current v3 uptime statement.
 
 ## Dashboard Caution
 

@@ -130,6 +130,7 @@ When reviewing the project, the highest-signal questions are:
 - `docs/architecture.md`
 - `docs/evolution.md`
 - `docs/runtime-contract.md`
+- `docs/sli-methodology.md`
 - `docs/observability.md`
 - `docs/operations.md`
 - `docs/security-and-secrets.md`

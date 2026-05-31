@@ -6,6 +6,11 @@ The observability layer exists to answer three questions:
 2. Is YouTube receiving and serving the expected live URL?
 3. Is a recovery action safe, necessary, and scoped to the right subsystem?
 
+The measured SLI baseline and classification rules are summarized in
+[`sli-methodology.md`](sli-methodology.md). That page uses v2 production evidence
+as a historical baseline for the method; current v3 dashboard panels must still
+use v3 source labels and current runtime evidence.
+
 ## Signals
 
 Key signal groups:

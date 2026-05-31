@@ -151,6 +151,7 @@ Use these entry points instead of reading the full tree:
 | What prevents unsafe staged recovery? | [`src/stream_v2/recovery_orchestrator/gate.py`](src/stream_v2/recovery_orchestrator/gate.py), [`ops/scripts/v3_shadow_acceptance.py`](ops/scripts/v3_shadow_acceptance.py) |
 | Where is shadow safety asserted? | [`tests/test_v3_shadow_acceptance.py`](tests/test_v3_shadow_acceptance.py), [`deploy/k3s/README.md`](deploy/k3s/README.md) |
 | Where is the physical split documented? | [`docs/physical-topology.md`](docs/physical-topology.md), [`docs/runtime-contract.md`](docs/runtime-contract.md) |
+| Where is the measured SLI baseline? | [`docs/sli-methodology.md`](docs/sli-methodology.md), [`docs/v3/sli-and-dashboard.md`](docs/v3/sli-and-dashboard.md) |
 | Where was the stats reuse bug fixed? | [`src/watchers/video_resolver/cache.py`](src/watchers/video_resolver/cache.py), [`src/watchers/youtube_watchdog_core/cache.py`](src/watchers/youtube_watchdog_core/cache.py), [`tests/test_youtube_video_id_resolver_cache_freshness.py`](tests/test_youtube_video_id_resolver_cache_freshness.py), [`tests/test_youtube_watchdog_cache_freshness.py`](tests/test_youtube_watchdog_cache_freshness.py) |
 
 ## External Validation
@@ -172,6 +173,8 @@ Use these entry points instead of reading the full tree:
 - `ops/monitoring/`: Prometheus, Loki, Grafana, and Alloy monitoring config.
 - `ops/systemd/stream-v3-arena-monitor.service`: observability-plane task owner.
 - `ops/prodesk-monitoring/`: sanitized legacy prodesk service checks.
+- `docs/sli-methodology.md`: measured v2 SLI baseline and the metric
+  classification inherited by v3.
 - `docs/v3/`: current runtime contracts, decisions, runbooks, SLI notes, and
   program map.
 - `tests/`: contract and policy tests for runtime safety and monitoring logic.

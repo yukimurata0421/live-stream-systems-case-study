@@ -40,18 +40,21 @@ plug-and-play streaming package.
 2. `docs/design-decisions-for-review.md`
 3. `docs/v3/decisions.md`
 4. `docs/runtime-contract.md`
-5. `docs/v3/runtime-state-and-evidence.md`
-6. `src/stream_v2/recovery_orchestrator/gate.py`
-7. `ops/scripts/v3_shadow_acceptance.py`
-8. `tests/test_v3_shadow_acceptance.py`
-9. `tests/test_youtube_video_id_resolver_cache_freshness.py`
-10. `.github/workflows/public-snapshot-check.yml`
+5. `docs/sli-methodology.md`
+6. `docs/v3/runtime-state-and-evidence.md`
+7. `src/stream_v2/recovery_orchestrator/gate.py`
+8. `ops/scripts/v3_shadow_acceptance.py`
+9. `tests/test_v3_shadow_acceptance.py`
+10. `tests/test_youtube_video_id_resolver_cache_freshness.py`
+11. `.github/workflows/public-snapshot-check.yml`
 
 ## What To Evaluate
 
 - Whether the failure domains are named clearly.
 - Whether recovery actions are blocked when evidence is stale, ambiguous, or in
   shadow mode.
+- Whether the SLI story includes measured windows, denominators, and explicit
+  unknowns instead of only conceptual dashboard language.
 - Whether public validation proves the snapshot boundary without requiring
   credentials or live production mutation.
 - Whether the system shows operational judgment rather than only code volume.

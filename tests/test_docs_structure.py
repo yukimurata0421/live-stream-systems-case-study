@@ -111,6 +111,7 @@ class PublicDocsStructureTests(unittest.TestCase):
             "architecture.md",
             "physical-topology.md",
             "runtime-contract.md",
+            "sli-methodology.md",
             "observability.md",
             "operations.md",
             "security-and-secrets.md",
@@ -147,6 +148,7 @@ class PublicDocsStructureTests(unittest.TestCase):
             "architecture.md",
             "physical-topology.md",
             "runtime-contract.md",
+            "sli-methodology.md",
             "observability.md",
             "operations.md",
             "security-and-secrets.md",
@@ -304,6 +306,31 @@ class PublicDocsStructureTests(unittest.TestCase):
             "stream_v3_prometheus_exporter.py",
         ):
             self.assertIn(marker, program_map)
+
+    def test_sli_methodology_captures_measured_baseline(self) -> None:
+        text = read(DOCS / "sli-methodology.md")
+
+        for marker in (
+            "v2 baseline, 2026-05, 14-day observation snapshot",
+            "They are not presented as current `stream_v3` uptime",
+            "Do not collapse every signal into one availability percentage",
+            "Production Invariant",
+            "Primary SLI",
+            "Guardrail",
+            "Secondary SLI",
+            "Event / Incident Metric",
+            "`3608 / 3656` samples, `98.687%`",
+            "`850586 / 852128` seconds, `99.819%`",
+            "`3561 / 3563` definitive samples, `99.944%`",
+            "replacement broadcasts observed locally: `0`",
+            "FFmpeg child self-recovery, exit `224`",
+            "Fast-recovery clusters, `tcp_stall` primary trigger",
+            "Limitations And Unknowns",
+            "Viewer-visible interruption seconds were unknown",
+            "Direct ADS-B age was unknown",
+            "should not copy the v2 numbers as current production status",
+        ):
+            self.assertIn(marker, text)
 
     def test_documented_encoder_contract_matches_public_config_examples(self) -> None:
         keys = ("FRAME_RATE", "VIDEO_BITRATE", "VIDEO_MAXRATE", "VIDEO_BUFSIZE", "AUDIO_BITRATE")

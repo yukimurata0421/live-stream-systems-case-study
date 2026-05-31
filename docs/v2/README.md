@@ -3,6 +3,10 @@
 `stream_v2` was the refactored single-host runtime. It introduced the subsystem
 model that later made the v3 split possible.
 
+The measured 14-day SLI baseline from the v2 production period is summarized in
+[`../sli-methodology.md`](../sli-methodology.md). It is included as historical
+evidence for the SLI method, not as current v3 production status.
+
 ## What v2 Added
 
 - clearer runtime ownership

@@ -12,6 +12,7 @@
 - `decisions.md`
 - `program-map.md`
 - `open-followups.md`
+- `../sli-methodology.md`
 
 ## Core Claim
 
