@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 import os
 import json
 import sys
@@ -409,28 +410,34 @@ class StreamEngineWaitModeTests(unittest.TestCase):
             def stop_after_restart_sleep(_seconds: float) -> None:
                 engine.stop_requested = True
 
-            with (
-                mock.patch.object(engine, "ensure_commands"),
-                mock.patch.object(engine, "assert_systemd_launch"),
-                mock.patch.object(engine, "configure_target_runtime_paths"),
-                mock.patch.object(engine, "ensure_pulse_server"),
-                mock.patch.object(engine, "acquire_single_instance_lock"),
-                mock.patch.object(engine, "acquire_capture_lock"),
-                mock.patch.object(engine, "cleanup_stale_rtmp_ffmpeg"),
-                mock.patch.object(engine, "cleanup_stale_capture_helpers"),
-                mock.patch.object(engine, "assert_rtmp_health_gate"),
-                mock.patch.object(engine, "ensure_x_display"),
-                mock.patch.object(engine, "start_overlay_server"),
-                mock.patch.object(engine, "ensure_virtual_sink"),
-                mock.patch.object(engine, "detect_pulse_monitor", return_value="stream_sink.monitor"),
-                mock.patch.object(engine, "ensure_local_audio_monitor"),
-                mock.patch.object(engine, "start_browser"),
-                mock.patch.object(engine, "wait_for_render_ready"),
-                mock.patch.object(engine, "emit_startup_restart_context"),
-                mock.patch.object(engine, "ensure_capture_helpers_running", return_value=[]),
-                mock.patch.object(stream_engine.subprocess, "Popen", return_value=proc),
-                mock.patch.object(stream_engine.time, "sleep", side_effect=stop_after_restart_sleep),
-            ):
+            with contextlib.ExitStack() as stack:
+                for method_name in (
+                    "ensure_commands",
+                    "assert_systemd_launch",
+                    "configure_target_runtime_paths",
+                    "ensure_pulse_server",
+                    "acquire_single_instance_lock",
+                    "acquire_capture_lock",
+                    "cleanup_stale_rtmp_ffmpeg",
+                    "cleanup_stale_capture_helpers",
+                    "assert_rtmp_health_gate",
+                    "ensure_x_display",
+                    "start_overlay_server",
+                    "ensure_virtual_sink",
+                    "ensure_local_audio_monitor",
+                    "start_browser",
+                    "wait_for_render_ready",
+                    "emit_startup_restart_context",
+                ):
+                    stack.enter_context(mock.patch.object(engine, method_name))
+                stack.enter_context(
+                    mock.patch.object(engine, "detect_pulse_monitor", return_value="stream_sink.monitor")
+                )
+                stack.enter_context(mock.patch.object(engine, "ensure_capture_helpers_running", return_value=[]))
+                stack.enter_context(mock.patch.object(stream_engine.subprocess, "Popen", return_value=proc))
+                stack.enter_context(
+                    mock.patch.object(stream_engine.time, "sleep", side_effect=stop_after_restart_sleep)
+                )
                 rc = engine.run()
 
             self.assertEqual(rc, 0)
