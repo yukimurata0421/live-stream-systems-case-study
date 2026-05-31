@@ -15,10 +15,13 @@ or general-purpose starter.
 ## What This Repository Demonstrates
 
 - 24/7 YouTube Live delivery operation.
+- ADS-B source-chain boundary: Airspy on HP ProDesk, `airspy_adsb`, readsb,
+  Dell-side readsb and a modified tar1090 map endpoint, then `stream_v3`
+  delivery.
 - Failure classification across rendering, audio, FFmpeg, RTMPS, API, and
   monitoring paths.
-- Delivery-plane / observability-plane separation across Dell, HP ProDesk, and
-  Raspberry Pi hardware.
+- Delivery-plane / observability-plane separation across Dell workstation and
+  HP ProDesk hardware.
 - Recovery guard design that keeps monitors from directly owning FFmpeg.
 - Shadow mode and cutover safety before destructive actions.
 - Prometheus/Loki/Grafana-style observability and SLI evidence.
@@ -27,17 +30,20 @@ or general-purpose starter.
 
 | What breaks | How stream_v3 protects it |
 | --- | --- |
-| ADS-B source or map data gets stale. | The Raspberry Pi source tier is isolated from delivery and classified as source evidence. |
-| Browser, audio, FFmpeg, RTMPS, or GPU encoding stalls. | The Dell k3s delivery tier owns local runtime recovery without giving monitors direct FFmpeg ownership. |
+| Airspy, `airspy_adsb`, ProDesk readsb, or the Dell readsb / modified tar1090 map feed gets stale. | Source freshness is treated as ADS-B evidence, separate from browser/audio/encoder failure. |
+| Browser, audio, FFmpeg, RTMPS, or GPU encoding stalls. | The Dell `stream_v3` k3s delivery tier owns local runtime recovery without giving monitors direct FFmpeg ownership. |
 | Monitoring evidence gets stale, becomes misleading, or requests the wrong action. | The HP ProDesk observability tier stages recovery through guards, shadow checks, SLI, and freshness tests. |
 
 ```mermaid
 flowchart LR
-    PI["Raspberry Pi<br/>ADS-B edge/source"] -->|readsb / tar1090 data| DELL["Dell workstation<br/>k3s delivery plane"]
-    DELL -->|browser + overlay + PulseAudio + AutoDJ + FFmpeg/NVENC| YT["YouTube Live"]
-    DELL -. runtime evidence / metrics .-> PRODESK["HP ProDesk<br/>observability plane"]
-    PRODESK -->|staged recovery request| DELL
-    PRODESK -. dashboards / SLI / alerts .-> OP["Operator"]
+    AIRSPY["Airspy USB<br/>on HP ProDesk"] --> AIRSPY_ADSB["airspy_adsb<br/>RF decode"]
+    AIRSPY_ADSB --> PRODESK_READSB["HP ProDesk readsb<br/>ADS-B source feed"]
+    PRODESK_READSB -->|readsb feed| DELL_READSB["Dell workstation readsb<br/>modified tar1090 map endpoint"]
+    DELL_READSB -->|STREAM1090_URL / BROWSER_URL| DELL_K3S["Dell workstation<br/>stream_v3 k3s delivery plane"]
+    DELL_K3S -->|browser + overlay + PulseAudio + AutoDJ + FFmpeg/NVENC| YT["YouTube Live"]
+    DELL_K3S -. runtime evidence / metrics .-> PRODESK_OBS["HP ProDesk<br/>observability plane"]
+    PRODESK_OBS -->|staged recovery request| DELL_K3S
+    PRODESK_OBS -. dashboards / SLI / alerts .-> OP["Operator"]
 ```
 
 This repository is a sanitized public snapshot of a system that evolved through
@@ -64,6 +70,14 @@ The hiring-oriented review path is in `docs/hiring-reviewer-guide.md`.
 The compact design decision table is in `docs/design-decisions-for-review.md`.
 The physical deployment topology is documented in `docs/physical-topology.md`.
 The short evolution narrative is in `docs/evolution.md`.
+
+In code, the Airspy/readsb source chain is represented by the upstream
+`STREAM1090_URL` / `BROWSER_URL` contract. The k3s runtime does not manage the
+Airspy device directly; it renders and proxies the Dell readsb / modified
+tar1090 endpoint through `src/stream_core/overlay_server.py` and validates that
+path with report-only overlay and upstream checks. `STREAM1090_URL` and
+`stream1090-report` are legacy internal identifiers in this repository, not the
+name of a separate public project.
 
 ## Reviewer Shortcuts
 

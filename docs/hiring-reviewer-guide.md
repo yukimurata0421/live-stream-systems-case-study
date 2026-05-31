@@ -15,17 +15,22 @@ plug-and-play streaming package.
 - a reliability engineering case study;
 - a 24/7 media delivery system operated under real hardware constraints;
 - an example of separating delivery ownership from monitoring ownership;
+- an example of treating the ADS-B source chain as evidence instead of hiding it
+  inside the renderer;
 - a record of safety decisions around recovery, stale evidence, and API quota.
 
 ## Key Design Decisions
 
 1. The delivery plane and observability plane are separated.
 2. Monitors do not directly own FFmpeg or the live RTMPS process.
-3. Recovery is staged through guards before destructive actions.
-4. API quota exhaustion is treated as degraded evidence, not immediate stream
+3. The production ADS-B data path is Airspy on HP ProDesk -> `airspy_adsb` ->
+   ProDesk readsb -> Dell readsb -> Dell modified tar1090 -> `stream_v3`
+   delivery.
+4. Recovery is staged through guards before destructive actions.
+5. API quota exhaustion is treated as degraded evidence, not immediate stream
    failure.
-5. Shadow mode exists before destructive cutover.
-6. Public validation excludes secrets, live YouTube mutation, and production
+6. Shadow mode exists before destructive cutover.
+7. Public validation excludes secrets, live YouTube mutation, and production
    k3s apply.
 
 ## Suggested Review Path

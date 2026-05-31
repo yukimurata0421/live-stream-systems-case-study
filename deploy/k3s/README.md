@@ -8,7 +8,7 @@ This directory is the first concrete build target for v3. It is intentionally sh
 - `v3-control` runs `python3 -m stream_v3.control_loop`, reads v2 state through a read-only mount or sync path, and writes only v3 state.
 - `v3-observer` exports v3 state for Prometheus-style scraping.
 - `v2-state-mirror` is a suspended CronJob skeleton for rsyncing the current v2 `.state` into a PVC that `v3-control` mounts read-only.
-- `v3-reports` contains suspended CronJobs for API cost and stream1090/upstream report-only jobs. Unsuspend them after URLs, secrets, and state PVC writes are validated.
+- `v3-reports` contains suspended CronJobs for API cost and map/upstream report-only jobs. Unsuspend them after URLs, secrets, and state PVC writes are validated.
 
 ## Validate manifests locally
 

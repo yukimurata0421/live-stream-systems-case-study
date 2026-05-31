@@ -1,24 +1,24 @@
 # Architecture
 
-`stream_v3` is a small production-style streaming platform built around one
-principle: keep media delivery and operational observation separate.
+`stream_v3` is the current production streaming platform. It is built around
+one principle: keep media delivery and operational observation separate, while
+also naming the ADS-B source chain as its own evidence boundary.
 
 ## System Shape
 
 ```text
-Raspberry Pi ADS-B edge/source
-  -> HP ProDesk observability / arena services
-  -> Dell workstation k3s delivery runtime
-  -> YouTube RTMPS
-
-readsb / tar1090 / map source
-  -> browser rendering
-  -> overlay
+Airspy USB on HP ProDesk
+  -> airspy_adsb
+  -> readsb on HP ProDesk
+  -> readsb on Dell workstation
+  -> Dell modified tar1090 HTTP endpoint
+  -> stream_v3 browser rendering and overlay
   -> PulseAudio + AutoDJ
-  -> FFmpeg
+  -> FFmpeg / NVIDIA NVENC
   -> YouTube RTMPS
 
 runtime evidence
+  -> HP ProDesk observability / arena services
   -> watchdogs
   -> subsystem classification
   -> SLI summaries
@@ -28,19 +28,21 @@ runtime evidence
 
 ## Physical Topology
 
-The running system is intentionally split across three physical tiers:
+The running system is intentionally split across two physical hosts with three
+logical roles:
 
-- Dell workstation: k3s delivery node running `stream-v3-runtime`, browser
-  rendering, PulseAudio, AutoDJ, FFmpeg, NVENC, and local fast recovery.
-- HP ProDesk: observability / arena node running YouTube monitoring, watchdogs,
-  SLI, Prometheus/Loki/Grafana, notifications, and staged recovery requests.
-- Raspberry Pi: ADS-B edge/source node that provides the aircraft/map data feed
-  consumed by the rendering path.
+- HP ProDesk source role: Airspy USB receiver, `airspy_adsb`, and ProDesk-side
+  readsb.
+- HP ProDesk observability role: YouTube monitoring, watchdogs, SLI,
+  Prometheus/Loki/Grafana, notifications, and staged recovery requests.
+- Dell workstation delivery role: Dell-side readsb and modified tar1090 map
+  endpoint, k3s `stream-v3-runtime`, browser rendering, PulseAudio, AutoDJ,
+  FFmpeg, NVENC, and local fast recovery.
 
-This physical split is part of the architecture, not just a deployment detail.
-It keeps the GPU/media delivery host focused on real-time output, keeps
-long-lived monitoring state away from the delivery workload, and keeps the ADS-B
-source isolated at the edge.
+This split is part of the architecture, not just a deployment detail. It keeps
+the GPU/media delivery host focused on real-time output, keeps long-lived
+monitoring state away from the delivery workload, and keeps the Airspy/readsb
+source chain distinguishable from delivery failures.
 
 ## Plane Split
 
@@ -52,13 +54,26 @@ The split prevents a monitoring failure from automatically becoming a delivery
 failure. It also prevents delivery recovery code from owning dashboard and
 long-window SLI state.
 
+## Source Boundary
+
+The Airspy/readsb source path is not managed by the k3s manifests in this public
+snapshot. The delivery runtime consumes it through `STREAM1090_URL` and
+`BROWSER_URL`, which point at the Dell readsb / modified tar1090 endpoint.
+
+`src/stream_core/overlay_server.py` proxies the upstream map and ADS-B JSON for
+the stream overlay. `src/stream_core/commands/stream1090_report.py` checks both
+the overlay path and the upstream readsb / modified tar1090 path. The
+`stream1090` spelling here is an internal legacy probe name, not the name of a
+separate public project.
+
 ## Deployment Model
 
 The k3s manifests are intentionally shadow-first:
 
 - `deploy/k3s/shadow`: validates the workload with local capture and dry-run
   recovery behavior.
-- `deploy/k3s/streaming`: enables the delivery plane for live streaming.
+- `deploy/k3s/streaming`: enables the `stream_v3` delivery plane for live
+  streaming on the Dell workstation.
 - `deploy/k3s/v3-observer`: exports v3 runtime state for scraping.
 - `deploy/k3s/v3-reports`: scheduled report jobs.
 - `deploy/k3s/v2-state-mirror`: optional read-only state mirror for migration.

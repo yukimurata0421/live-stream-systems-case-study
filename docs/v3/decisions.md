@@ -6,8 +6,12 @@ Status: accepted
 
 The Dell delivery host owns video, audio, FFmpeg, AutoDJ, k3s runtime, and local
 recovery. The HP ProDesk arena/prodesk side owns monitoring, SLI, notification,
-and staged recovery requests. The Raspberry Pi remains the ADS-B edge/source
-tier.
+and staged recovery requests.
+
+The HP ProDesk also hosts the physical ADS-B RF ingest chain: Airspy USB,
+`airspy_adsb`, and ProDesk-side readsb. The Dell workstation receives that feed
+into its own readsb and modified tar1090 map endpoint, which is what
+`stream_v3` renders and publishes.
 
 Consequence: the monitoring layer needs remote runtime evidence instead of
 directly inspecting every in-Pod socket.

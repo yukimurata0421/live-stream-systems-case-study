@@ -23,7 +23,12 @@ class PublicDocsStructureTests(unittest.TestCase):
             "What breaks",
             "How stream_v3 protects it",
             "```mermaid",
-            "Raspberry Pi",
+            "Airspy",
+            "airspy_adsb",
+            "Dell workstation readsb",
+            "modified tar1090",
+            "STREAM1090_URL",
+            "BROWSER_URL",
             "Dell workstation",
             "HP ProDesk",
             "## Why k3s",
@@ -158,7 +163,12 @@ class PublicDocsStructureTests(unittest.TestCase):
             "STREAM_K8S_DRY_RUN=1",
             "Dell workstation",
             "HP ProDesk",
-            "Raspberry Pi",
+            "Airspy USB on HP ProDesk",
+            "airspy_adsb",
+            "readsb on Dell workstation",
+            "modified tar1090",
+            "STREAM1090_URL",
+            "BROWSER_URL",
         ):
             self.assertIn(marker, runtime)
 
@@ -171,16 +181,20 @@ class PublicDocsStructureTests(unittest.TestCase):
             "Physical Topology",
             "Dell workstation",
             "HP ProDesk",
-            "Raspberry Pi",
+            "Airspy USB on HP ProDesk",
+            "Dell-side readsb",
+            "Source Boundary",
         ):
             self.assertIn(marker, architecture)
 
         for marker in (
-            "three-tier physical system",
+            "Airspy USB on HP ProDesk",
+            "airspy_adsb",
+            "readsb on HP ProDesk",
+            "readsb on Dell workstation",
             "Dell workstation",
             "HP ProDesk",
-            "Raspberry Pi",
-            "k3s is used for the delivery workload",
+            "k3s is used for the `stream_v3` delivery workload",
             "Failure-Domain Boundary",
         ):
             self.assertIn(marker, topology)
@@ -208,7 +222,10 @@ class PublicDocsStructureTests(unittest.TestCase):
             "--enable-memfd=no",
             "Dell workstation",
             "HP ProDesk",
-            "Raspberry Pi",
+            "Airspy USB",
+            "airspy_adsb",
+            "Dell readsb",
+            "modified tar1090",
         ):
             self.assertIn(marker, current)
 
@@ -246,6 +263,36 @@ class PublicDocsStructureTests(unittest.TestCase):
             text = read(path)
             with self.subTest(path=path.relative_to(ROOT)):
                 self.assertNotRegex(text, r"[ぁ-んァ-ヶ一-龠]")
+
+    def test_public_docs_do_not_claim_raspberry_pi_source_tier(self) -> None:
+        targets = [README, *sorted(DOCS.rglob("*.md"))]
+        for path in targets:
+            text = read(path)
+            with self.subTest(path=path.relative_to(ROOT)):
+                self.assertNotIn("Raspberry Pi", text)
+
+    def test_public_docs_do_not_brand_map_endpoint_as_stream1090_project(self) -> None:
+        targets = [README, *sorted(DOCS.rglob("*.md"))]
+        required_modified_tar1090_docs = {
+            README,
+            DOCS / "architecture.md",
+            DOCS / "physical-topology.md",
+            DOCS / "runtime-contract.md",
+        }
+        forbidden = (
+            "tar1090/stream1090",
+            "tar1090 / stream1090",
+            "stream1090 endpoint",
+            "stream1090 path",
+        )
+
+        for path in targets:
+            text = read(path)
+            with self.subTest(path=path.relative_to(ROOT)):
+                if path in required_modified_tar1090_docs:
+                    self.assertIn("modified tar1090", text)
+                for phrase in forbidden:
+                    self.assertNotIn(phrase, text)
 
 
 if __name__ == "__main__":

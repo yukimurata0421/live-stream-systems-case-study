@@ -18,6 +18,7 @@ The system is easier to operate when delivery and observation are split:
 delivery keeps video and audio moving; observation keeps evidence, SLI, and
 recovery decisions coherent.
 
-The public topology also names the physical split: Dell workstation for k3s
-delivery, HP ProDesk for observability, and Raspberry Pi for ADS-B edge/source
-data.
+The public topology also names the production data flow: Airspy on HP ProDesk
+feeds `airspy_adsb`, ProDesk readsb, Dell readsb, Dell modified tar1090, and
+then the `stream_v3` k3s delivery workload. The HP ProDesk is also the
+observability host.

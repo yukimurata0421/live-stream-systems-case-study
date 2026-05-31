@@ -5,8 +5,16 @@
 `stream_v3` runs the live streaming delivery path on k3s and keeps monitoring on
 the arena/prodesk side.
 
-The current physical split is Dell workstation for delivery, HP ProDesk for
-observability, and Raspberry Pi for ADS-B edge/source data.
+The current production split is:
+
+- HP ProDesk: Airspy USB, `airspy_adsb`, ProDesk-side readsb, and the
+  observability / arena services.
+- Dell workstation: Dell-side readsb, modified tar1090 map endpoint, and the
+  k3s `stream_v3` delivery workload.
+
+The ADS-B source chain is therefore Airspy on HP ProDesk -> `airspy_adsb` ->
+ProDesk readsb -> Dell readsb -> Dell modified tar1090 -> `stream_v3`
+browser rendering.
 
 ## Delivery Owner
 

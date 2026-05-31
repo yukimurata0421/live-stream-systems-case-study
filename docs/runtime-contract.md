@@ -3,9 +3,21 @@
 `stream_v3` treats streaming as a delivery-plane workload and monitoring as a
 separate observability-plane workload.
 
-The physical deployment has three tiers: a Dell workstation for k3s delivery, an
-HP ProDesk for observability / arena services, and a Raspberry Pi for ADS-B
-edge/source data.
+The physical deployment has two hosts and three logical roles: HP ProDesk owns
+the Airspy/`airspy_adsb`/readsb source role and the observability role; the Dell
+workstation owns Dell-side readsb, a modified tar1090 map endpoint, and the k3s
+delivery role.
+
+The production ADS-B data path is:
+
+```text
+Airspy USB on HP ProDesk
+  -> airspy_adsb
+  -> readsb on HP ProDesk
+  -> readsb on Dell workstation
+  -> Dell modified tar1090 HTTP endpoint
+  -> stream_v3 browser rendering and overlay
+```
 
 ## Delivery Plane
 
@@ -18,6 +30,12 @@ The delivery plane runs the live output path:
 - FFmpeg RTMPS ingest
 - NVIDIA NVENC H.264 encoding
 - local fast recovery loop
+
+The delivery runtime consumes ADS-B map/source data through the
+`STREAM1090_URL` and `BROWSER_URL` environment contract. It does not manage the
+Airspy device directly. The `STREAM1090_URL` spelling is retained as an internal
+environment variable name for compatibility; the public map component is a
+modified tar1090 endpoint.
 
 The production-oriented encoder target is:
 
