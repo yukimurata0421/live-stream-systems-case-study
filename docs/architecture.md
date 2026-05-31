@@ -26,21 +26,30 @@ runtime evidence
   -> SLI summaries
   -> ops/monitoring evidence presentation
   -> staged recovery request
+
+public status / dashboard entry
+  -> Raspberry Pi nginx status UI
+  -> /grafana/ proxy to HP ProDesk Grafana
 ```
 
 ## Physical Topology
 
-The running system is intentionally split across two physical hosts with three
+The running system is intentionally split across three physical hosts with five
 logical roles:
 
-- HP ProDesk source role: Airspy USB receiver, `airspy_adsb`, and ProDesk-side
-  readsb.
-- HP ProDesk observability role: YouTube monitoring, watchdogs, SLI,
-  notifications, Prometheus exporter, staged recovery requests, and the
-  `ops/monitoring` evidence presentation stack when deployed there.
-- Dell workstation delivery role: Dell-side readsb and modified tar1090 map
-  endpoint, k3s `stream-v3-runtime`, browser rendering, PulseAudio, AutoDJ,
-  FFmpeg, NVENC, and local fast recovery.
+- HP ProDesk `192.168.0.60` source role: Airspy USB receiver, `airspy_adsb`,
+  and ProDesk-side readsb.
+- HP ProDesk `192.168.0.60` observability role: YouTube monitoring, watchdogs,
+  SLI, notifications, Prometheus exporter, staged recovery requests, and the
+  Prometheus/Loki/Alloy/Grafana evidence stack.
+- Dell workstation `192.168.0.35` local ADS-B mirror role: Dell-side readsb and
+  modified tar1090 map endpoint.
+- Dell workstation `192.168.0.35` delivery role: k3s `stream-v3-runtime`,
+  browser rendering, PulseAudio, AutoDJ, FFmpeg, NVENC, and local fast
+  recovery.
+- Raspberry Pi `192.168.0.50` public gateway role: nginx `:8088` status UI and
+  `/grafana/` proxy to HP ProDesk Grafana. Prometheus and Loki are not migrated
+  to the Raspberry Pi in the current production shape.
 
 This split is part of the architecture, not just a deployment detail. It keeps
 the GPU/media delivery host focused on real-time output, keeps long-lived
@@ -66,13 +75,19 @@ long-window SLI state, or YouTube API decision state.
 
 `ops/monitoring/` defines Prometheus, Loki, Grafana, and Alloy as a
 host-local evidence and presentation stack. It is not a third delivery plane and
-does not own FFmpeg or k3s recovery directly.
+does not own FFmpeg or k3s recovery directly. In the current production shape,
+that monitoring backend runs on HP ProDesk; Raspberry Pi only exposes the public
+gateway and proxies Grafana.
 
 ## Source Boundary
 
 The Airspy/readsb source path is not managed by the k3s manifests in this public
 snapshot. The delivery runtime consumes it through a browser map upstream URL,
 which points at the Dell readsb / modified tar1090 endpoint.
+
+The production ADS-B handoff is ProDesk readsb Beast output to Dell
+`192.168.0.35:30104`, where Dell readsb expands it into the local map endpoint
+used by the k3s delivery runtime.
 
 `src/stream_core/overlay_server.py` proxies the upstream map and ADS-B JSON for
 the stream overlay and report-only checks validate both the overlay path and the

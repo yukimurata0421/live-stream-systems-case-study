@@ -3,10 +3,11 @@
 `stream_v3` treats streaming as a delivery-plane workload and monitoring as a
 separate observability-plane workload.
 
-The physical deployment has two hosts and three logical roles: HP ProDesk owns
-the Airspy/`airspy_adsb`/readsb source role and the observability role; the Dell
-workstation owns Dell-side readsb, a modified tar1090 map endpoint, and the k3s
-delivery role.
+The physical deployment has three hosts and five logical roles: HP ProDesk
+`192.168.0.60` owns the Airspy/`airspy_adsb`/readsb source role and the
+observability role; the Dell workstation `192.168.0.35` owns Dell-side readsb, a
+modified tar1090 map endpoint, and the k3s delivery role; Raspberry Pi
+`192.168.0.50` owns the public nginx status/dashboard gateway role.
 
 The production ADS-B data path is:
 
@@ -14,6 +15,7 @@ The production ADS-B data path is:
 Airspy USB on HP ProDesk
   -> airspy_adsb
   -> readsb on HP ProDesk
+  -> Beast feed to Dell 192.168.0.35:30104
   -> readsb on Dell workstation
   -> Dell modified tar1090 HTTP endpoint
   -> stream_v3 browser rendering and overlay
@@ -70,6 +72,13 @@ The observability plane owns health classification and recovery requests:
 
 The observability plane may request recovery, but it does not directly own the
 FFmpeg process.
+
+## Public Gateway
+
+Raspberry Pi exposes the public nginx `:8088` status UI and proxies `/grafana/`
+to HP ProDesk Grafana. Prometheus and Loki remain on HP ProDesk in the current
+production shape; the Raspberry Pi is an entrypoint, not the metrics/logs
+backend.
 
 ## Safety Gates
 

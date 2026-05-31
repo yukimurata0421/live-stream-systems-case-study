@@ -47,6 +47,10 @@ configuration used to present this evidence. It is an observability display and
 retention stack; recovery ownership still flows through the monitor guard and
 staged request path.
 
+In the current production topology this monitoring backend remains on HP
+ProDesk. Raspberry Pi exposes the public nginx status UI and `/grafana/` gateway
+to HP ProDesk Grafana, but it does not host Prometheus or Loki.
+
 ## API Cost Guard
 
 YouTube API usage is tracked separately from stream health. The watchdog can use

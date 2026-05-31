@@ -32,8 +32,12 @@ class PublicDocsStructureTests(unittest.TestCase):
             "Observability control loop",
             "Recovery guards",
             "guarded k3s recovery request",
-            "Prometheus + Loki + Grafana + Alloy",
-            "`ops/monitoring` is the",
+            "Raspberry Pi public gateway role",
+            "nginx :8088",
+            "`/grafana/` proxy",
+            "Prometheus and Loki remain on HP ProDesk",
+            "Grafana :3000",
+            "`ops/monitoring` evidence path",
             "Dell workstation",
             "HP ProDesk",
             "## Why k3s",
@@ -175,6 +179,9 @@ class PublicDocsStructureTests(unittest.TestCase):
             "browser map upstream environment contract",
             "read-only YouTube Data API, OAuth, and public watch-page probes",
             "k3s runtime, state-file, and log evidence collection",
+            "Raspberry Pi",
+            "public nginx status/dashboard gateway",
+            "Prometheus and Loki remain on HP ProDesk",
         ):
             self.assertIn(marker, runtime)
 
@@ -192,6 +199,9 @@ class PublicDocsStructureTests(unittest.TestCase):
             "Source Boundary",
             "YouTube Data API / OAuth / public watch-page probes",
             "k3s runtime, state, and log evidence",
+            "Raspberry Pi",
+            "/grafana/ proxy to HP ProDesk Grafana",
+            "Prometheus and Loki are not migrated",
         ):
             self.assertIn(marker, architecture)
 
@@ -206,6 +216,8 @@ class PublicDocsStructureTests(unittest.TestCase):
             "Visualization Boundary",
             "Prometheus, Loki, Grafana, and Alloy",
             "YouTube API/public watch evidence",
+            "Raspberry Pi",
+            "Prometheus `:9090` and Loki `:3100` are not migrated",
             "Failure-Domain Boundary",
         ):
             self.assertIn(marker, topology)
@@ -215,6 +227,8 @@ class PublicDocsStructureTests(unittest.TestCase):
             "stream_v3_network_ffmpeg_socket_lastsnd_ms",
             "stream_v3_recovery_action_executable",
             "YouTube Data API, OAuth, and public watch-page state",
+            "Raspberry Pi exposes the public nginx status UI",
+            "does not host Prometheus or Loki",
             "API Cost Guard",
         ):
             self.assertIn(marker, observability)
@@ -238,6 +252,8 @@ class PublicDocsStructureTests(unittest.TestCase):
             "airspy_adsb",
             "Dell readsb",
             "modified tar1090",
+            "Raspberry Pi",
+            "Prometheus and Loki are not hosted on the Raspberry Pi",
         ):
             self.assertIn(marker, current)
 
@@ -276,12 +292,20 @@ class PublicDocsStructureTests(unittest.TestCase):
             with self.subTest(path=path.relative_to(ROOT)):
                 self.assertNotRegex(text, r"[ぁ-んァ-ヶ一-龠]")
 
-    def test_public_docs_do_not_claim_raspberry_pi_source_tier(self) -> None:
+    def test_public_docs_do_not_claim_raspberry_pi_source_or_monitoring_backend(self) -> None:
         targets = [README, *sorted(DOCS.rglob("*.md"))]
+        forbidden = (
+            "Raspberry Pi source",
+            "Raspberry Pi ADS-B source",
+            "Raspberry Pi owns Prometheus",
+            "Raspberry Pi owns Loki",
+            "Prometheus and Loki run on Raspberry Pi",
+        )
         for path in targets:
             text = read(path)
             with self.subTest(path=path.relative_to(ROOT)):
-                self.assertNotIn("Raspberry Pi", text)
+                for phrase in forbidden:
+                    self.assertNotIn(phrase, text)
 
     def test_public_docs_do_not_use_legacy_map_project_name(self) -> None:
         targets = [README, *sorted(DOCS.rglob("*.md"))]

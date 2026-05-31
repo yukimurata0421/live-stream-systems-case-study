@@ -45,6 +45,8 @@ Observability plane:
 - SLI summaries
 - Prometheus exporter and `ops/monitoring` dashboards
 - remote recovery requests into the k3s workload
+- Raspberry Pi public status UI and `/grafana/` gateway, with Prometheus and
+  Loki still hosted on HP ProDesk
 
 The split reduces recovery blast radius: delivery can focus on producing video
 and audio, while the monitoring layer can retain state, classify faults, and

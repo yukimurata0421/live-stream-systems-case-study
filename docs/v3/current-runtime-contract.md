@@ -8,13 +8,16 @@ the arena/prodesk side.
 The current production split is:
 
 - HP ProDesk: Airspy USB, `airspy_adsb`, ProDesk-side readsb, and the
-  observability / arena services.
+  observability / arena services, including Prometheus, Loki, Alloy, and
+  Grafana.
 - Dell workstation: Dell-side readsb, modified tar1090 map endpoint, and the
   k3s `stream_v3` delivery workload.
+- Raspberry Pi: public nginx status UI and `/grafana/` proxy to HP ProDesk
+  Grafana. Prometheus and Loki are not hosted on the Raspberry Pi.
 
 The ADS-B source chain is therefore Airspy on HP ProDesk -> `airspy_adsb` ->
-ProDesk readsb -> Dell readsb -> Dell modified tar1090 -> `stream_v3`
-browser rendering.
+ProDesk readsb -> Beast feed to Dell `192.168.0.35:30104` -> Dell readsb ->
+Dell modified tar1090 -> `stream_v3` browser rendering.
 
 ## Delivery Owner
 
