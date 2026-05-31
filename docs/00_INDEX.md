@@ -20,6 +20,7 @@ incident logs.
 11. `contributing.md`
 12. `v2/README.md`
 13. `v3/README.md`
+14. `v3/encoder-fps-tuning-2026-05-31.md`
 
 ## Scope
 

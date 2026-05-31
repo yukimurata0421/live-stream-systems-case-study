@@ -61,8 +61,22 @@ than lower-bitrate VBR experiments.
 
 This decision is v3-specific. The inherited v2 production lineage was
 low-bandwidth: first 5fps/3500k/audio192k, then 4fps/3400k/audio192k. v3 keeps
-that cadence in the current env-synced runtime while changing the production
-encoder to NVENC CBR.
+the low-bandwidth NVENC CBR shape while letting fps change only through
+measurement-backed contract updates.
+
+## Encoder 5fps Current Contract
+
+Status: accepted
+
+On 2026-05-31, v3 compared 4fps, 5fps, and 10fps while holding
+`VIDEO_BITRATE=3400k`, `VIDEO_MAXRATE=3400k`, `VIDEO_BUFSIZE=6800k`, and
+`AUDIO_BITRATE=192k`. All short trials stayed below the 5.0 Mbps upload ceiling
+and YouTube remained healthy in the sampled windows.
+
+The accepted contract is 5fps/3400k/audio192k. It improves cadence over 4fps
+with a 20% lower per-frame video budget, while rejecting 10fps as the current
+contract because it leaves only 40% of the 4fps per-frame budget and 50% of the
+5fps per-frame budget.
 
 ## PulseAudio Shared Memory Policy
 

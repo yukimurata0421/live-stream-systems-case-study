@@ -23,6 +23,12 @@ Check:
 - memory guardrail
 - recovery action plan
 
+## Encoder Fps Change Check
+
+For fps changes, hold the video bitrate and maxrate constant during the trial,
+then compare fresh upload samples, YouTube health, same-URL state, and
+per-frame bit budget before changing the env-synced contract.
+
 ## k3s / Node Recovery
 
 For a single-node k3s deployment, distinguish:

@@ -163,7 +163,7 @@ def load_config() -> Config:
         test_output_file=Path(e("TEST_OUTPUT_FILE", str(base_dir / "test_capture.mkv"))),
         display_name=display_name,
         video_size=e("VIDEO_SIZE", "1920x1080"),
-        frame_rate=max(1, to_int(e("FRAME_RATE", "4"), 4)),
+        frame_rate=max(1, to_int(e("FRAME_RATE", "5"), 5)),
         output_size=e("OUTPUT_SIZE", "1920x1080"),
         draw_mouse=to_int(e("DRAW_MOUSE", "0"), 0),
         display_input=e("DISPLAY_INPUT", ""),

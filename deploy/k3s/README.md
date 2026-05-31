@@ -40,7 +40,7 @@ The root `.dockerignore` is part of the preflight contract so `.state`, local en
 
 ## GPU / NVENC prerequisites
 
-v3 runtime is not CPU-encode-first. The `stream-engine` container is configured with `VIDEO_ENCODER=h264_nvenc`, `VIDEO_NVENC_PRESET=p4`, YouTube-friendly NVENC CBR (`VIDEO_NVENC_RC=cbr`, `VIDEO_NVENC_MULTIPASS=`, `VIDEO_NVENC_RC_LOOKAHEAD=0`, `VIDEO_NVENC_SPATIAL_AQ=0`, `VIDEO_NVENC_TEMPORAL_AQ=0`, `VIDEO_NVENC_BFRAMES=0`, `FRAME_RATE=4`, `VIDEO_BITRATE=3400k`, `VIDEO_MAXRATE=3400k`), `NVIDIA_DRIVER_CAPABILITIES=video,utility`, and `nvidia.com/gpu: "1"` so the GTX 1070 NVENC block does the H.264 encode work.
+v3 runtime is not CPU-encode-first. The `stream-engine` container is configured with `VIDEO_ENCODER=h264_nvenc`, `VIDEO_NVENC_PRESET=p4`, YouTube-friendly NVENC CBR (`VIDEO_NVENC_RC=cbr`, `VIDEO_NVENC_MULTIPASS=`, `VIDEO_NVENC_RC_LOOKAHEAD=0`, `VIDEO_NVENC_SPATIAL_AQ=0`, `VIDEO_NVENC_TEMPORAL_AQ=0`, `VIDEO_NVENC_BFRAMES=0`, `FRAME_RATE=5`, `VIDEO_BITRATE=3400k`, `VIDEO_MAXRATE=3400k`), `NVIDIA_DRIVER_CAPABILITIES=video,utility`, and `nvidia.com/gpu: "1"` so the GTX 1070 NVENC block does the H.264 encode work.
 
 Before applying the runtime on the new server, prove these three points:
 

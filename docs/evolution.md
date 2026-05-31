@@ -49,9 +49,10 @@ health from long-window history, and keep shadow/read-only evidence out of
 production authority until cutover is explicit.
 
 The encoder target is a deliberate regime change, not a denial of the v2
-history: v3 uses NVIDIA NVENC CBR while keeping the env-synced 4fps/3400k
-low-bandwidth contract, then watches YouTube health and upload SLOs to decide
-whether a later tuning change is justified.
+history: v3 uses NVIDIA NVENC CBR, kept the low-fps 3400k contract from v2,
+then adopted the env-synced 5fps/3400k current contract after a 4fps, 5fps, and
+10fps tuning check showed 5fps stayed under the upload ceiling with a smaller
+per-frame quality trade-off than 10fps.
 
 Delivery plane:
 

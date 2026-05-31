@@ -295,7 +295,7 @@ def validate_configmap(resources: dict[ResourceId, dict[str, Any]]) -> list[str]
         "VIDEO_NVENC_TEMPORAL_AQ": "0",
         "VIDEO_NVENC_BFRAMES": "0",
         "VIDEO_NVENC_B_REF_MODE": "",
-        "FRAME_RATE": "4",
+        "FRAME_RATE": "5",
         "VIDEO_BITRATE": "3400k",
         "VIDEO_MAXRATE": "3400k",
         "VIDEO_BUFSIZE": "6800k",

@@ -7,6 +7,7 @@
 - `current-runtime-contract.md`
 - `runtime-state-and-evidence.md`
 - `sli-and-dashboard.md`
+- `encoder-fps-tuning-2026-05-31.md`
 - `runbooks.md`
 - `decisions.md`
 - `program-map.md`

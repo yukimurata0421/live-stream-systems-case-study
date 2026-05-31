@@ -48,7 +48,7 @@ Dell modified tar1090 -> `stream_v3` browser rendering.
 
 ```text
 h264_nvenc
-4 fps
+5 fps
 3400k CBR video
 6800k buffer
 192k audio
@@ -57,7 +57,8 @@ h264_nvenc
 
 This baseline is v3-specific in ownership and NVENC use, while preserving the
 low-bandwidth lineage: first 5fps/3500k/audio192k, then
-4fps/3400k/audio192k.
+4fps/3400k/audio192k, then the current 5fps/3400k/audio192k contract after the
+2026-05-31 fps tuning check.
 
 ## Audio Baseline
 

@@ -67,7 +67,7 @@ flowchart LR
     RS --> T1090
     T1090 -->|browser map URL| ENG
     DJ -->|stream_v3_sink| ENG
-    ENG -->|h264_nvenc 3400k / 192k| YT
+    ENG -->|h264_nvenc 5fps / 3400k / 192k| YT
 ```
 
 ### Observability & Recovery

@@ -34,7 +34,7 @@ OBJECTIVE_SLI_REGIMES: dict[str, dict[str, str]] = {
     "rtmps_low_bandwidth": {
         "regime_start_ts_utc": "2026-05-10T03:21:00Z",
         "regime_start_jst": "2026-05-10 12:21:00 JST",
-        "regime_reason": "RTMPS/443 with 5fps/3500k/audio192k contract",
+        "regime_reason": "RTMPS/443 with low-bandwidth fps/bitrate contract",
     },
 }
 MIB = 1024 * 1024

@@ -169,7 +169,7 @@ class FfmpegArgumentContractTests(unittest.TestCase):
             "video_bufsize": "6800k",
             "audio_bitrate": "192k",
             "draw_mouse": 0,
-            "frame_rate": 4,
+            "frame_rate": 5,
             "video_size": "1920x1080",
             "audio_queue_size": 8192,
             "output_size": "1920x1080",
@@ -219,8 +219,8 @@ class FfmpegArgumentContractTests(unittest.TestCase):
         self.assertIn("stream_sink.monitor", args)
         self.assertEqual(args[args.index("-c:v") + 1], "libx264")
         self.assertEqual(args[args.index("-preset") + 1], "ultrafast")
-        self.assertEqual(args[args.index("-r") + 1], "4")
-        self.assertEqual(args[args.index("-g") + 1], "8")
+        self.assertEqual(args[args.index("-r") + 1], "5")
+        self.assertEqual(args[args.index("-g") + 1], "10")
         self.assertEqual(args[args.index("-b:v") + 1], "2500k")
         self.assertEqual(args[args.index("-maxrate") + 1], "2500k")
         self.assertEqual(args[args.index("-bufsize") + 1], "5000k")

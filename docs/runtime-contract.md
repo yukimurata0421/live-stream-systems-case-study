@@ -43,7 +43,7 @@ The production-oriented encoder target is:
 VIDEO_ENCODER=h264_nvenc
 VIDEO_NVENC_RC=cbr
 VIDEO_NVENC_PRESET=p4
-FRAME_RATE=4
+FRAME_RATE=5
 VIDEO_BITRATE=3400k
 VIDEO_MAXRATE=3400k
 VIDEO_BUFSIZE=6800k
@@ -52,8 +52,9 @@ AUDIO_SAMPLE_RATE=48000
 ```
 
 This is the current v3 runtime target. It is intentionally different from the
-earlier v2 implementation, but it preserves the low-bandwidth cadence that moved
-from 5fps/3500k/audio192k to 4fps/3400k/audio192k.
+earlier v2 implementation, but it preserves the low-bandwidth lineage that moved
+from 5fps/3500k/audio192k to 4fps/3400k/audio192k, then adopted
+5fps/3400k/audio192k in v3 after a 4fps, 5fps, and 10fps upload/health trial.
 
 CPU encoding is retained only as a fallback and local debug path.
 

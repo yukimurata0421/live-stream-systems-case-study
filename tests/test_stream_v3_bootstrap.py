@@ -105,7 +105,7 @@ class StreamV3BootstrapTests(unittest.TestCase):
         self.assertIn("VIDEO_NVENC_TEMPORAL_AQ: \"0\"", configmap)
         self.assertIn("VIDEO_NVENC_BFRAMES: \"0\"", configmap)
         self.assertIn("VIDEO_NVENC_B_REF_MODE: \"\"", configmap)
-        self.assertIn("FRAME_RATE: \"4\"", configmap)
+        self.assertIn("FRAME_RATE: \"5\"", configmap)
         self.assertIn("VIDEO_BITRATE: 3400k", configmap)
         self.assertIn("VIDEO_MAXRATE: 3400k", configmap)
         self.assertIn("VIDEO_BUFSIZE: 6800k", configmap)
