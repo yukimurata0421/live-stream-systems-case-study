@@ -23,19 +23,25 @@ class PublicDocsStructureTests(unittest.TestCase):
             "What breaks",
             "How stream_v3 protects it",
             "```mermaid",
+            "### Delivery Path",
+            "### Observability & Recovery",
             "Airspy",
             "airspy_adsb",
             "Dell workstation readsb",
-            "modified tar1090",
-            "browser map endpoint",
+            "modified tar1090 map",
+            "beast feed to :30104",
+            "browser map URL",
             "Data API + OAuth + public watch",
-            "Observability control loop",
-            "Recovery guards",
-            "guarded k3s recovery request",
+            "arena-monitor",
+            "recovery-orchestrator",
+            "guarded k8s recovery",
+            "`kubectl exec`",
             "Raspberry Pi public gateway role",
             "nginx :8088",
             "`/grafana/` proxy",
             "Prometheus and Loki remain on HP ProDesk",
+            "Prometheus :9090",
+            "Loki :3100",
             "Grafana :3000",
             "`ops/monitoring` evidence path",
             "Dell workstation",
@@ -61,6 +67,7 @@ class PublicDocsStructureTests(unittest.TestCase):
         ):
             self.assertIn(marker, text)
 
+        self.assertEqual(text.count("```mermaid"), 2)
         self.assertTrue((ROOT / "docs" / "assets" / "live-stream-screenshot.png").exists())
         self.assertTrue((ROOT / "docs" / "assets" / "reddit-adsb-post-insights-2026-05.png").exists())
 

@@ -44,47 +44,72 @@ or general-purpose starter.
 | YouTube API/public evidence, k3s runtime evidence, or monitoring state gets stale or misleading. | The HP ProDesk observability tier pulls read-only YouTube and runtime evidence, applies quota/freshness guards, and only then requests staged k3s recovery. |
 | The public status or dashboard entrypoint gets confused with the monitoring backend. | Raspberry Pi serves the public nginx status/gateway layer; Prometheus, Loki, Alloy, and the v3 exporter remain on HP ProDesk. |
 
+### Delivery Path
+
 ```mermaid
 flowchart LR
-    subgraph HP["HP ProDesk 192.168.0.60"]
-        ADSB["ADS-B source<br/>Airspy USB + airspy_adsb + readsb"]
-        MON["Observability control loop<br/>resolver + watchdogs + SLI + notify"]
-        GUARD["Recovery guards<br/>orchestrator + action lock"]
-        PROM["ops/monitoring<br/>Prometheus + Loki + Alloy"]
+    subgraph PD["HP ProDesk (.60)"]
+        AIR["Airspy + airspy_adsb + readsb<br/>beast out :30005"]
+    end
+
+    subgraph DELL["Dell / k3s node (.35)"]
+        RS["readsb<br/>beast in :30104"]
+        T1090["modified tar1090 map<br/>/tar1090/"]
+        subgraph K3S["k3s ns stream-v3 / stream-v3-runtime (3/3)"]
+            ENG["stream-engine<br/>Xvfb + Chromium + overlay<br/>PulseAudio + FFmpeg / NVENC"]
+            DJ["auto-dj"]
+        end
+    end
+
+    YT["YouTube Live<br/>RTMPS :443"]
+
+    AIR -->|beast feed to :30104| RS
+    RS --> T1090
+    T1090 -->|browser map URL| ENG
+    DJ -->|stream_v3_sink| ENG
+    ENG -->|h264_nvenc 3300k / 192k| YT
+```
+
+### Observability & Recovery
+
+```mermaid
+flowchart LR
+    subgraph DELL["Dell / k3s (.35)"]
+        RUN["stream-v3-runtime Pod<br/>stream-engine + auto-dj<br/>+ fast-recovery-loop"]
+    end
+
+    subgraph PD["HP ProDesk (.60) - observability"]
+        MON["arena-monitor<br/>resolver + watchdogs<br/>SLI + notify"]
+        ORCH["recovery-orchestrator<br/>+ guard"]
+        EXP["v3 exporter :9108"]
+        PROM["Prometheus :9090"]
+        LOKI["Loki :3100<br/>(via Alloy)"]
         GRAF["Grafana :3000"]
     end
 
-    subgraph DELL["Dell workstation 192.168.0.35"]
-        MAP["readsb + modified tar1090"]
-        K3S["k3s delivery<br/>browser/overlay + audio + FFmpeg/NVENC"]
-    end
-
-    subgraph RPI["Raspberry Pi 192.168.0.50"]
+    subgraph RPI["Raspberry Pi (.50) - public gateway"]
         NGINX["nginx :8088<br/>status UI + /grafana/ proxy"]
     end
 
-    YT["YouTube Live<br/>Data API + OAuth + public watch"]
+    YT["YouTube<br/>Data API + OAuth + public watch"]
 
-    ADSB -->|Beast feed :30104| MAP
-    MAP -->|browser map endpoint| K3S
-    K3S -->|RTMPS| YT
-    K3S -. k8s/state/runtime evidence .-> MON
-    YT -. read-only API and public-page evidence .-> MON
-    MON -->|classify + summarize| GUARD
-    GUARD -->|guarded k3s recovery request| K3S
-    MON -. exporter :9108 + logs .-> PROM
-    PROM --> GRAF
-    NGINX -. /grafana/ proxy .-> GRAF
+    RUN -. runtime evidence .-> MON
+    YT -. read-only evidence .-> MON
+    MON --> ORCH
+    ORCH -->|"guarded k8s recovery"| RUN
+    MON --> EXP --> PROM --> GRAF
+    MON -. logs .-> LOKI
+    NGINX -. grafana proxy .-> GRAF
 ```
 
-The Mermaid diagram intentionally shows the ownership boundary at a readable
-level. The concrete ADS-B data path is Airspy on HP ProDesk -> `airspy_adsb` ->
-ProDesk readsb -> Dell workstation readsb -> Dell modified tar1090 ->
-`stream_v3`. The HP ProDesk observability loop also pulls YouTube Data API,
-OAuth, public watch-page, k3s, state, and log evidence before a guarded recovery
-request can touch the Dell delivery workload. Raspberry Pi is the public status
-and dashboard gateway, not the Prometheus/Loki owner; those backends remain on
-HP ProDesk.
+The diagrams intentionally separate delivery from observation. The concrete
+ADS-B data path is Airspy on HP ProDesk -> `airspy_adsb` -> ProDesk readsb ->
+Dell workstation readsb -> Dell modified tar1090 -> `stream_v3`. Evidence
+collection is dotted in the observability diagram; the only mutating path back
+to delivery is the guarded k8s recovery request. The HP ProDesk monitor
+collects runtime evidence from the Dell pod with `kubectl exec`. Raspberry Pi is
+the public status and dashboard gateway, not the Prometheus/Loki owner; those
+backends remain on HP ProDesk.
 
 This repository is a sanitized public snapshot of a system that evolved through
 three stages:
