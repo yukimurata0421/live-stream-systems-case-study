@@ -41,12 +41,13 @@ plug-and-play streaming package.
 3. `docs/v3/decisions.md`
 4. `docs/runtime-contract.md`
 5. `docs/sli-methodology.md`
-6. `docs/v3/runtime-state-and-evidence.md`
-7. `src/stream_v2/recovery_orchestrator/gate.py`
-8. `ops/scripts/v3_shadow_acceptance.py`
-9. `tests/test_v3_shadow_acceptance.py`
-10. `tests/test_youtube_video_id_resolver_cache_freshness.py`
-11. `.github/workflows/public-snapshot-check.yml`
+6. `docs/28-day-same-url-sli-case-study.md`
+7. `docs/v3/runtime-state-and-evidence.md`
+8. `src/stream_v2/recovery_orchestrator/gate.py`
+9. `ops/scripts/v3_shadow_acceptance.py`
+10. `tests/test_v3_shadow_acceptance.py`
+11. `tests/test_youtube_video_id_resolver_cache_freshness.py`
+12. `.github/workflows/public-snapshot-check.yml`
 
 ## What To Evaluate
 
@@ -55,6 +56,8 @@ plug-and-play streaming package.
   shadow mode.
 - Whether the SLI story includes measured windows, denominators, and explicit
   unknowns instead of only conceptual dashboard language.
+- Whether the 28-day same-URL case study separates URL identity, availability,
+  upload guardrails, notification quality, and known unresolved risks.
 - Whether public validation proves the snapshot boundary without requiring
   credentials or live production mutation.
 - Whether the system shows operational judgment rather than only code volume.

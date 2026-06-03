@@ -152,6 +152,7 @@ Use these entry points instead of reading the full tree:
 | Where is shadow safety asserted? | [`tests/test_v3_shadow_acceptance.py`](tests/test_v3_shadow_acceptance.py), [`deploy/k3s/README.md`](deploy/k3s/README.md) |
 | Where is the physical split documented? | [`docs/physical-topology.md`](docs/physical-topology.md), [`docs/runtime-contract.md`](docs/runtime-contract.md) |
 | Where is the measured SLI baseline? | [`docs/sli-methodology.md`](docs/sli-methodology.md), [`docs/v3/sli-and-dashboard.md`](docs/v3/sli-and-dashboard.md) |
+| Where is the 28-day same-URL reliability review? | [`docs/28-day-same-url-sli-case-study.md`](docs/28-day-same-url-sli-case-study.md) |
 | Where was the stats reuse bug fixed? | [`src/watchers/video_resolver/cache.py`](src/watchers/video_resolver/cache.py), [`src/watchers/youtube_watchdog_core/cache.py`](src/watchers/youtube_watchdog_core/cache.py), [`tests/test_youtube_video_id_resolver_cache_freshness.py`](tests/test_youtube_video_id_resolver_cache_freshness.py), [`tests/test_youtube_watchdog_cache_freshness.py`](tests/test_youtube_watchdog_cache_freshness.py) |
 
 ## External Validation
@@ -175,6 +176,8 @@ Use these entry points instead of reading the full tree:
 - `ops/prodesk-monitoring/`: sanitized legacy prodesk service checks.
 - `docs/sli-methodology.md`: measured v2 SLI baseline and the metric
   classification inherited by v3.
+- `docs/28-day-same-url-sli-case-study.md`: public translation of the 28-day
+  same-URL SLI review, including what got worse and what remained unknown.
 - `docs/v3/`: current runtime contracts, decisions, runbooks, SLI notes, and
   program map.
 - `tests/`: contract and policy tests for runtime safety and monitoring logic.

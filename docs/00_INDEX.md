@@ -14,14 +14,15 @@ incident logs.
 5. `physical-topology.md`
 6. `runtime-contract.md`
 7. `sli-methodology.md`
-8. `observability.md`
-9. `operations.md`
-10. `security-and-secrets.md`
-11. `support.md`
-12. `contributing.md`
-13. `v2/README.md`
-14. `v3/README.md`
-15. `v3/encoder-fps-tuning-2026-05-31.md`
+8. `28-day-same-url-sli-case-study.md`
+9. `observability.md`
+10. `operations.md`
+11. `security-and-secrets.md`
+12. `support.md`
+13. `contributing.md`
+14. `v2/README.md`
+15. `v3/README.md`
+16. `v3/encoder-fps-tuning-2026-05-31.md`
 
 ## Scope
 

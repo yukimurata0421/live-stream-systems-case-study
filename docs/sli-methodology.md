@@ -116,6 +116,16 @@ The important claim is therefore modest and verifiable: by May 2026 the project
 had moved from "the stream appears to work" to "the stream is measured by
 classified objectives, with denominators, windows, and explicit unknowns."
 
+## 28-Day Follow-Up
+
+The public follow-up is in
+[`28-day-same-url-sli-case-study.md`](28-day-same-url-sli-case-study.md). It
+shows how the same method was applied to a 28-day same-watch-URL review after
+the v2-to-v3 transition. The important result was not a single uptime number:
+the public URL identity survived without a selected or allowed replacement
+broadcast, while upload headroom and notification delivery remained explicit
+follow-up items.
+
 ## How v3 Uses This
 
 `stream_v3` should not copy the v2 numbers as current production status. It

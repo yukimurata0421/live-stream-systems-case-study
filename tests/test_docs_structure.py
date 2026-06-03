@@ -112,6 +112,7 @@ class PublicDocsStructureTests(unittest.TestCase):
             "physical-topology.md",
             "runtime-contract.md",
             "sli-methodology.md",
+            "28-day-same-url-sli-case-study.md",
             "observability.md",
             "operations.md",
             "security-and-secrets.md",
@@ -149,6 +150,7 @@ class PublicDocsStructureTests(unittest.TestCase):
             "physical-topology.md",
             "runtime-contract.md",
             "sli-methodology.md",
+            "28-day-same-url-sli-case-study.md",
             "observability.md",
             "operations.md",
             "security-and-secrets.md",
@@ -329,6 +331,32 @@ class PublicDocsStructureTests(unittest.TestCase):
             "Viewer-visible interruption seconds were unknown",
             "Direct ADS-B age was unknown",
             "should not copy the v2 numbers as current production status",
+            "28-Day Follow-Up",
+            "28-day-same-url-sli-case-study.md",
+        ):
+            self.assertIn(marker, text)
+
+    def test_same_url_case_study_captures_followup_and_risks(self) -> None:
+        text = read(DOCS / "28-day-same-url-sli-case-study.md")
+
+        for marker in (
+            "28-Day Same-URL SLI Case Study",
+            "What Was Ported",
+            "Did the public YouTube Live identity survive 28 days without creating a",
+            "Replacement broadcasts",
+            "observed selected replacement actions: 0",
+            "observed allowed replacement decisions: 0",
+            "observed candidate-new-URL evidence: 0",
+            "`3561 / 3563`, `99.944%`",
+            "`27486 / 27626`, `99.493%`",
+            "`6558 / 6568`, `99.848%`",
+            "What Got Worse Versus The 14-Day Baseline",
+            "Upload Headroom",
+            "Notification Delivery",
+            "What Improved Or Stayed Stable",
+            "Remaining Gaps",
+            "Viewer-visible interruption seconds were still not measured directly",
+            "The live URL identity survived the review window",
         ):
             self.assertIn(marker, text)
 
