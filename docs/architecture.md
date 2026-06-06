@@ -29,7 +29,7 @@ runtime evidence
 
 public status publication
   -> Raspberry Pi collector
-  -> operator-only /grafana/ proxy to HP ProDesk Grafana
+  -> Pi-local /grafana/ proxy to HP ProDesk Grafana
   -> outbound upload to GCS
   -> Cloudflare
   -> yukimurata0421.dev
@@ -51,8 +51,9 @@ static edge:
   browser rendering, PulseAudio, AutoDJ, FFmpeg, NVENC, and local fast
   recovery.
 - Raspberry Pi `192.168.0.50` public publisher role: nginx `:8088`
-  operator-only `/grafana/` proxy to HP ProDesk Grafana, public-safe snapshot
-  collection, static site build, and outbound GCS push.
+  `/grafana/` proxy to HP ProDesk Grafana, public-safe snapshot collection,
+  static site build, outbound GCS push, and existing `adsb-open.addevlab.com`
+  tunnel ingress.
 - GCS + Cloudflare public edge role: serve sanitized static status snapshots
   uploaded outbound from Raspberry Pi, without exposing Grafana, Prometheus,
   Loki, raw logs, credentials, or the home network.
@@ -82,10 +83,13 @@ long-window SLI state, or YouTube API decision state.
 `ops/monitoring/` defines Prometheus, Loki, Grafana, and Alloy as a
 host-local evidence and presentation stack. It is not a third delivery plane and
 does not own FFmpeg or k3s recovery directly. In the current production shape,
-that monitoring backend runs on HP ProDesk. Raspberry Pi uses an operator-only
+that monitoring backend runs on HP ProDesk. Raspberry Pi uses the Pi-local
 `/grafana/` proxy to collect allowlisted evidence from the ProDesk Grafana
 datasource proxy, then pushes a reduced static snapshot to GCS for Cloudflare to
-serve. Public readers do not reach Grafana directly.
+serve at `yukimurata0421.dev`. Existing `adsb-open.addevlab.com` dashboard
+shortcuts are separate Cloudflare Tunnel routes back to Raspberry Pi nginx and
+then HP ProDesk Grafana; Pi nginx shortcut paths such as `/stream-v3-grafana`
+redirect into that tunnel path.
 
 ## Source Boundary
 

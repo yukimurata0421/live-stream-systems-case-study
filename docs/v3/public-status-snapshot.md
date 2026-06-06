@@ -50,8 +50,8 @@ The production monitoring stack remains private. The public path is a reduced
 snapshot pipeline:
 
 1. Private Prometheus/Loki/Grafana evidence remains on HP ProDesk.
-2. Raspberry Pi queries the HP ProDesk Grafana datasource proxy through its
-   operator-only nginx `/grafana/` proxy.
+2. Raspberry Pi queries the HP ProDesk Grafana datasource proxy through the
+   Pi-local `http://127.0.0.1:8088/grafana` path.
 3. A Raspberry Pi-side collector emits allowlisted JSON fields for public
    display.
 4. Static assets and sanitized JSON are pushed outbound from Raspberry Pi to
@@ -62,6 +62,12 @@ There is no reason for public browsers to reach the home network, Grafana,
 Prometheus, Loki, or the k3s runtime directly. Generated JSON snapshots are also
 not committed to this repository; they are live artifacts with freshness
 semantics, not source files.
+
+This boundary is specifically for `yukimurata0421.dev`. Existing
+`adsb-open.addevlab.com` Grafana shortcuts are separate Cloudflare Tunnel routes
+back to Raspberry Pi nginx and then HP ProDesk Grafana. Pi nginx shortcut paths
+such as `/stream-v3-grafana` redirect into that tunnel path; they are not used
+by the static snapshot collector or the `yukimurata0421.dev` publication path.
 
 ## What To Evaluate
 

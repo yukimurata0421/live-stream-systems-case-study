@@ -11,7 +11,7 @@ GCS + Cloudflare form the public static edge.
 | --- | --- | --- |
 | HP ProDesk `192.168.0.60` | ADS-B source and observability | Airspy USB receiver, `airspy_adsb`, ProDesk-side readsb, YouTube resolver/watchdog, stream watchdog, subsystem SLI, notifications, Prometheus exporter on `:9108`, Prometheus `:9090`, Loki `:3100`, Alloy `:12345`, private Grafana `:3000`, recovery orchestration, and staged recovery requests |
 | Dell workstation `192.168.0.35` | Delivery and local ADS-B mirror | Dell-side readsb and modified tar1090 map endpoint, k3s `stream-v3-runtime`, browser rendering, PulseAudio, AutoDJ, FFmpeg, NVIDIA NVENC, and local fast recovery |
-| Raspberry Pi `192.168.0.50` | Public snapshot publisher and operator gateway | nginx `:8088` operator-only `/grafana/` proxy to HP ProDesk Grafana, public-safe snapshot collector, static site source tree, and scheduled GCS push |
+| Raspberry Pi `192.168.0.50` | Public snapshot publisher and gateway | nginx `:8088` `/grafana/` proxy to HP ProDesk Grafana, public-safe snapshot collector, static site source tree, scheduled GCS push, and existing `adsb-open.addevlab.com` tunnel ingress |
 | GCS + Cloudflare | Public static edge | Receives sanitized JSON/static assets by outbound upload and serves <https://yukimurata0421.dev/> without exposing Grafana, Prometheus, Loki, raw logs, credentials, or home-network ingress |
 
 ## ADS-B Data Flow
@@ -57,12 +57,15 @@ the HP ProDesk observability side; it is not part of the k3s delivery workload
 and does not directly own FFmpeg recovery.
 
 Grafana `:3000`, Prometheus `:9090`, Loki `:3100`, Alloy, and the exporter stay
-private on HP ProDesk. Raspberry Pi nginx exposes an operator-only `/grafana/`
-proxy to HP ProDesk Grafana; the public snapshot collector uses that proxy to
-query public-safe datasource endpoints. The public status path is then one-way:
-the Pi reduces evidence to allowlisted static assets, pushes them outbound to
-GCS, and Cloudflare serves them. Public browsers do not proxy into Grafana or
-the home network.
+private on HP ProDesk. Raspberry Pi nginx exposes `/grafana/` as a proxy to HP
+ProDesk Grafana; the public snapshot collector uses the Pi-local
+`http://127.0.0.1:8088/grafana` path to query public-safe datasource endpoints.
+The `yukimurata0421.dev` status path is then one-way: the Pi reduces evidence
+to allowlisted static assets, pushes them outbound to GCS, and Cloudflare serves
+them. Existing `adsb-open.addevlab.com` Grafana shortcut routes are a separate
+Cloudflare Tunnel path that returns to Raspberry Pi nginx and then proxies to
+HP ProDesk Grafana. Pi nginx shortcut paths such as `/stream-v3-grafana`
+redirect into that `adsb-open` path.
 
 ## k3s Boundary
 

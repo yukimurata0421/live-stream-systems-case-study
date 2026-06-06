@@ -86,13 +86,16 @@ configuration used to present this evidence. It is an observability display and
 retention stack; recovery ownership still flows through the monitor guard and
 staged request path.
 
-In the current production topology this monitoring backend remains private on
-HP ProDesk. Raspberry Pi has an operator-only nginx `/grafana/` proxy to HP
-ProDesk Grafana. The public snapshot collector runs on Raspberry Pi, queries
-allowlisted Prometheus/Loki evidence through that Grafana datasource proxy,
-pushes static JSON/assets outbound to GCS, and Cloudflare serves the public
-domain. Public readers do not reach Grafana, Prometheus, Loki, or the home
-network directly.
+In the current production topology this monitoring backend remains on HP
+ProDesk. Raspberry Pi has an nginx `/grafana/` proxy to HP ProDesk Grafana. The
+public snapshot collector runs on Raspberry Pi, queries allowlisted
+Prometheus/Loki evidence through the Pi-local
+`http://127.0.0.1:8088/grafana` datasource proxy path, pushes static
+JSON/assets outbound to GCS, and Cloudflare serves `yukimurata0421.dev`.
+Existing `adsb-open.addevlab.com` Grafana shortcuts are separate Cloudflare
+Tunnel routes back to Raspberry Pi nginx; Pi nginx shortcut paths such as
+`/stream-v3-grafana` redirect into that path. They are not the static
+`yukimurata0421.dev` status path.
 
 The public status site at <https://yukimurata0421.dev/> is a separate,
 sanitized evidence surface. It shows a static GCS + Cloudflare snapshot with

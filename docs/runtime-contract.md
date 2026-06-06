@@ -83,12 +83,16 @@ FFmpeg process.
 ## Public Status Publication
 
 Prometheus, Loki, Alloy, Grafana, and the v3 exporter remain private on HP
-ProDesk in the current production shape. Raspberry Pi runs an operator-only
-nginx `/grafana/` proxy to HP ProDesk Grafana for collector access. The Pi-side
-collector reads public-safe Prometheus/Loki evidence through that Grafana
-datasource proxy, writes static JSON/assets, pushes them outbound to GCS, and
-Cloudflare serves the public domain. Public browsers do not reach Grafana,
-Prometheus, Loki, the k3s runtime, or the home network directly.
+ProDesk in the current production shape. Raspberry Pi runs an nginx `/grafana/`
+proxy to HP ProDesk Grafana for collector access and existing operator
+shortcuts. The Pi-side collector reads public-safe Prometheus/Loki evidence via
+`http://127.0.0.1:8088/grafana`, writes static JSON/assets, pushes them
+outbound to GCS, and Cloudflare serves the `yukimurata0421.dev` public domain.
+The older `adsb-open.addevlab.com` Grafana shortcut path is a separate
+Cloudflare Tunnel route back to Raspberry Pi nginx and then to HP ProDesk
+Grafana. Pi nginx shortcut paths such as `/stream-v3-grafana` redirect into
+that `adsb-open` path; they are not the `yukimurata0421.dev` static snapshot
+path.
 
 ## Safety Gates
 

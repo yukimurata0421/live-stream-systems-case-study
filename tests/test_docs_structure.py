@@ -50,12 +50,14 @@ class PublicDocsStructureTests(unittest.TestCase):
             "guarded k8s recovery",
             "`kubectl exec`",
             "Raspberry Pi public publisher role",
-            "operator-only nginx `/grafana/` proxy",
+            "Pi-local nginx `/grafana/` proxy",
             "public snapshot collector",
             "GCS bucket",
             "outbound upload",
             "GCS + Cloudflare",
-            "Public browsers reach Cloudflare/GCS only",
+            "adsb-open.addevlab.com",
+            "/stream-v3-grafana",
+            "not the `yukimurata0421.dev` static publication path",
             "Prometheus :9090",
             "Loki :3100",
             "Grafana :3000",
@@ -345,10 +347,12 @@ class PublicDocsStructureTests(unittest.TestCase):
             "read-only YouTube Data API, OAuth, and public watch-page probes",
             "k3s runtime, state-file, and log evidence collection",
             "Raspberry Pi",
-            "operator-only",
+            "http://127.0.0.1:8088/grafana",
             "Public Status Publication",
             "pushed outbound from Raspberry Pi to GCS",
-            "Cloudflare serves the public domain",
+            "Cloudflare serves the `yukimurata0421.dev` public domain",
+            "adsb-open.addevlab.com",
+            "/stream-v3-grafana",
         ):
             self.assertIn(marker, runtime)
 
@@ -368,9 +372,11 @@ class PublicDocsStructureTests(unittest.TestCase):
             "k3s runtime, state, and log evidence",
             "public status publication",
             "Raspberry Pi collector",
-            "operator-only /grafana/ proxy",
+            "Pi-local /grafana/ proxy",
             "outbound upload to GCS",
             "Cloudflare",
+            "adsb-open.addevlab.com",
+            "/stream-v3-grafana",
         ):
             self.assertIn(marker, architecture)
 
@@ -408,9 +414,11 @@ class PublicDocsStructureTests(unittest.TestCase):
             "memory-guard-case-study.md",
             "youtube-lifecycle-safety.md",
             "Raspberry Pi",
-            "operator-only nginx `/grafana/` proxy",
+            "http://127.0.0.1:8088/grafana",
             "outbound to GCS",
             "Cloudflare serves",
+            "adsb-open.addevlab.com",
+            "/stream-v3-grafana",
             "API Cost Guard",
         ):
             self.assertIn(marker, observability)
