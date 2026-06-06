@@ -3,12 +3,13 @@
 `stream_v3` treats streaming as a delivery-plane workload and monitoring as a
 separate observability-plane workload.
 
-The active home deployment has two physical hosts and four logical roles: HP
-ProDesk `192.168.0.60` owns the Airspy/`airspy_adsb`/readsb source role and the
+The active home deployment has three hosts and five logical roles: HP ProDesk
+`192.168.0.60` owns the Airspy/`airspy_adsb`/readsb source role and the
 observability role; the Dell workstation `192.168.0.35` owns Dell-side readsb, a
-modified tar1090 map endpoint, and the k3s delivery role. Public presentation is
-not a home-network proxy. It is a reduced static snapshot pushed outbound to GCS
-and served through Cloudflare.
+modified tar1090 map endpoint, and the k3s delivery role; Raspberry Pi
+`192.168.0.50` owns the public snapshot publisher role. Public presentation is a
+reduced static snapshot pushed outbound from Raspberry Pi to GCS and served
+through Cloudflare.
 
 The production ADS-B data path is:
 
@@ -82,10 +83,12 @@ FFmpeg process.
 ## Public Status Publication
 
 Prometheus, Loki, Alloy, Grafana, and the v3 exporter remain private on HP
-ProDesk in the current production shape. A ProDesk-side publisher reduces
-operator evidence to allowlisted JSON/static assets, pushes that snapshot
-outbound to GCS, and Cloudflare serves the public domain. Public browsers do not
-reach Grafana, Prometheus, Loki, the k3s runtime, or the home network directly.
+ProDesk in the current production shape. Raspberry Pi runs an operator-only
+nginx `/grafana/` proxy to HP ProDesk Grafana for collector access. The Pi-side
+collector reads public-safe Prometheus/Loki evidence through that Grafana
+datasource proxy, writes static JSON/assets, pushes them outbound to GCS, and
+Cloudflare serves the public domain. Public browsers do not reach Grafana,
+Prometheus, Loki, the k3s runtime, or the home network directly.
 
 ## Safety Gates
 

@@ -9,9 +9,12 @@ The current production split is:
 
 - HP ProDesk: Airspy USB, `airspy_adsb`, ProDesk-side readsb, and the
   observability services, including Prometheus, Loki, Alloy, and
-  private Grafana, plus the public snapshot publisher.
+  private Grafana.
 - Dell workstation: Dell-side readsb, modified tar1090 map endpoint, and the
   k3s `stream_v3` delivery workload.
+- Raspberry Pi: operator-only nginx `/grafana/` proxy to HP ProDesk Grafana,
+  public-safe snapshot collector, static site source tree, and scheduled GCS
+  push.
 - GCS + Cloudflare: sanitized static status snapshot served at
   <https://yukimurata0421.dev/>. Public readers do not reach Grafana,
   Prometheus, Loki, raw logs, credentials, or the home network directly.

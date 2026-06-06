@@ -28,7 +28,8 @@ runtime evidence
   -> staged recovery request
 
 public status publication
-  -> HP ProDesk-side allowlist collector
+  -> Raspberry Pi collector
+  -> operator-only /grafana/ proxy to HP ProDesk Grafana
   -> outbound upload to GCS
   -> Cloudflare
   -> yukimurata0421.dev
@@ -36,7 +37,7 @@ public status publication
 
 ## Physical Topology
 
-The running system is intentionally split across two home hosts plus a public
+The running system is intentionally split across three home hosts plus a public
 static edge:
 
 - HP ProDesk `192.168.0.60` source role: Airspy USB receiver, `airspy_adsb`,
@@ -49,9 +50,12 @@ static edge:
 - Dell workstation `192.168.0.35` delivery role: k3s `stream-v3-runtime`,
   browser rendering, PulseAudio, AutoDJ, FFmpeg, NVENC, and local fast
   recovery.
+- Raspberry Pi `192.168.0.50` public publisher role: nginx `:8088`
+  operator-only `/grafana/` proxy to HP ProDesk Grafana, public-safe snapshot
+  collection, static site build, and outbound GCS push.
 - GCS + Cloudflare public edge role: serve sanitized static status snapshots
-  uploaded outbound from the operator side, without exposing Grafana,
-  Prometheus, Loki, raw logs, credentials, or the home network.
+  uploaded outbound from Raspberry Pi, without exposing Grafana, Prometheus,
+  Loki, raw logs, credentials, or the home network.
 
 This split is part of the architecture, not just a deployment detail. It keeps
 the GPU/media delivery host focused on real-time output, keeps long-lived
@@ -78,8 +82,10 @@ long-window SLI state, or YouTube API decision state.
 `ops/monitoring/` defines Prometheus, Loki, Grafana, and Alloy as a
 host-local evidence and presentation stack. It is not a third delivery plane and
 does not own FFmpeg or k3s recovery directly. In the current production shape,
-that monitoring backend runs on HP ProDesk. The public status page is a reduced
-static snapshot pushed to GCS and served by Cloudflare, not a Grafana proxy.
+that monitoring backend runs on HP ProDesk. Raspberry Pi uses an operator-only
+`/grafana/` proxy to collect allowlisted evidence from the ProDesk Grafana
+datasource proxy, then pushes a reduced static snapshot to GCS for Cloudflare to
+serve. Public readers do not reach Grafana directly.
 
 ## Source Boundary
 

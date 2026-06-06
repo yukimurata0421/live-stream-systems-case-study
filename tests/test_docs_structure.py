@@ -49,10 +49,13 @@ class PublicDocsStructureTests(unittest.TestCase):
             "recovery-orchestrator",
             "guarded k8s recovery",
             "`kubectl exec`",
-            "public snapshot publisher",
+            "Raspberry Pi public publisher role",
+            "operator-only nginx `/grafana/` proxy",
+            "public snapshot collector",
             "GCS bucket",
             "outbound upload",
             "GCS + Cloudflare",
+            "Public browsers reach Cloudflare/GCS only",
             "Prometheus :9090",
             "Loki :3100",
             "Grafana :3000",
@@ -94,7 +97,7 @@ class PublicDocsStructureTests(unittest.TestCase):
             "## Evidence Snapshot",
             "10.7 seconds from fault injection to stream_v3 observability metrics OK",
             "`bytes_sent` advanced by 37,503,068 bytes",
-            "single-operator personal 24/7 stream",
+            "three-home-host personal 24/7",
             "## What This Repository Demonstrates",
             "docs/executive-summary.md",
             "docs/operational-scorecard.md",
@@ -258,7 +261,7 @@ class PublicDocsStructureTests(unittest.TestCase):
         for marker in (
             "Operational Scorecard",
             "Scope Calibration",
-            "single-operator personal 24/7 stream",
+            "single-operator, three-home-host personal 24/7 stream",
             "Measured",
             "Tested",
             "Documented",
@@ -341,8 +344,10 @@ class PublicDocsStructureTests(unittest.TestCase):
             "browser map upstream environment contract",
             "read-only YouTube Data API, OAuth, and public watch-page probes",
             "k3s runtime, state-file, and log evidence collection",
+            "Raspberry Pi",
+            "operator-only",
             "Public Status Publication",
-            "pushed outbound to GCS",
+            "pushed outbound from Raspberry Pi to GCS",
             "Cloudflare serves the public domain",
         ):
             self.assertIn(marker, runtime)
@@ -362,6 +367,8 @@ class PublicDocsStructureTests(unittest.TestCase):
             "YouTube Data API / OAuth / public watch-page probes",
             "k3s runtime, state, and log evidence",
             "public status publication",
+            "Raspberry Pi collector",
+            "operator-only /grafana/ proxy",
             "outbound upload to GCS",
             "Cloudflare",
         ):
@@ -378,6 +385,8 @@ class PublicDocsStructureTests(unittest.TestCase):
             "Visualization Boundary",
             "Prometheus, Loki, Grafana, and Alloy",
             "YouTube API/public watch evidence",
+            "Raspberry Pi",
+            "Public snapshot publisher",
             "GCS + Cloudflare",
             "Public static edge",
             "outbound upload",
@@ -398,8 +407,10 @@ class PublicDocsStructureTests(unittest.TestCase):
             "visual-audio-health-model.md",
             "memory-guard-case-study.md",
             "youtube-lifecycle-safety.md",
-            "pushed outbound to GCS",
-            "served through Cloudflare",
+            "Raspberry Pi",
+            "operator-only nginx `/grafana/` proxy",
+            "outbound to GCS",
+            "Cloudflare serves",
             "API Cost Guard",
         ):
             self.assertIn(marker, observability)
@@ -434,6 +445,8 @@ class PublicDocsStructureTests(unittest.TestCase):
             "airspy_adsb",
             "Dell readsb",
             "modified tar1090",
+            "Raspberry Pi",
+            "scheduled GCS",
             "GCS + Cloudflare",
             "Public readers do not reach Grafana",
         ):
@@ -694,8 +707,9 @@ class PublicDocsStructureTests(unittest.TestCase):
             "Prometheus and Loki run on Raspberry Pi",
             "Raspberry Pi public gateway role",
             "Raspberry Pi exposes the public nginx status UI",
-            "/grafana/ proxy to HP ProDesk Grafana",
             "public nginx status/dashboard gateway",
+            "public browsers reach Grafana",
+            "public readers reach Grafana",
         )
         for path in targets:
             text = read(path)

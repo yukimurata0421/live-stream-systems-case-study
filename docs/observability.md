@@ -87,10 +87,12 @@ retention stack; recovery ownership still flows through the monitor guard and
 staged request path.
 
 In the current production topology this monitoring backend remains private on
-HP ProDesk. The public status page is a separate one-way publication path:
-allowlisted evidence is reduced on the operator side, pushed outbound to GCS,
-and served through Cloudflare. Public readers do not reach Grafana, Prometheus,
-Loki, or the home network directly.
+HP ProDesk. Raspberry Pi has an operator-only nginx `/grafana/` proxy to HP
+ProDesk Grafana. The public snapshot collector runs on Raspberry Pi, queries
+allowlisted Prometheus/Loki evidence through that Grafana datasource proxy,
+pushes static JSON/assets outbound to GCS, and Cloudflare serves the public
+domain. Public readers do not reach Grafana, Prometheus, Loki, or the home
+network directly.
 
 The public status site at <https://yukimurata0421.dev/> is a separate,
 sanitized evidence surface. It shows a static GCS + Cloudflare snapshot with
