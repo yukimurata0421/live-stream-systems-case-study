@@ -96,48 +96,77 @@ flowchart LR
     ENG -->|h264_nvenc 5fps / 3400k / 192k| YT
 ```
 
-### Observability & Recovery
+### Observability Path
 
 ```mermaid
 flowchart LR
     subgraph DELL["Dell / k3s (.35)"]
-        RUN["stream-v3-runtime Pod<br/>stream-engine + auto-dj<br/>+ fast-recovery-loop"]
+        RUN["stream-v3 runtime Pod"]
     end
 
-    subgraph PD["HP ProDesk (.60) - observability"]
-        MON["v3 monitor<br/>resolver + watchdogs<br/>SLI + notify"]
-        ORCH["recovery-orchestrator<br/>+ guard"]
-        EXP["v3 exporter :9108"]
+    subgraph PD["HP ProDesk (.60)"]
+        MON["v3 monitor"]
+        EXP["exporter :9108"]
         PROM["Prometheus :9090"]
-        LOKI["Loki :3100<br/>(via Alloy)"]
+        LOKI["Loki :3100"]
         GRAF["private Grafana :3000"]
     end
 
-    subgraph RPI["Raspberry Pi (.50) - public publisher"]
-        NGINX["nginx :8088<br/>local /grafana/ proxy"]
-        COLL["public snapshot collector<br/>allowlisted JSON"]
-        PUB["static site build<br/>gcloud storage rsync"]
-    end
-
-    subgraph EDGE["Public static edge"]
-        GCS["GCS bucket<br/>sanitized snapshot"]
-        CF["Cloudflare<br/>yukimurata0421.dev"]
-    end
-
-    YT["YouTube<br/>Data API + OAuth + public watch"]
+    YT["YouTube evidence<br/>API + public watch"]
 
     RUN -. runtime evidence .-> MON
     YT -. read-only evidence .-> MON
+    MON --> EXP --> PROM --> GRAF
+    MON -. logs .-> LOKI --> GRAF
+```
+
+### Recovery Path
+
+```mermaid
+flowchart LR
+    subgraph PD["HP ProDesk (.60)"]
+        MON["v3 monitor"]
+        ORCH["recovery-orchestrator"]
+        GUARD["guard"]
+    end
+
+    subgraph DELL["Dell / k3s (.35)"]
+        RUN["stream-v3 runtime Pod"]
+    end
+
     MON --> ORCH
-    ORCH -->|"guarded k8s recovery"| RUN
-    MON --> EXP --> PROM
-    MON -. logs .-> LOKI
-    PROM -->|"metrics datasource"| GRAF
-    LOKI -->|"logs datasource"| GRAF
-    COLL -->|"pull: HTTP GET<br/>127.0.0.1:8088/grafana/..."| NGINX
-    NGINX -->|"proxy_pass<br/>192.168.0.60:3000/grafana"| GRAF
-    GRAF -->|"JSON response<br/>returns through Pi nginx"| COLL
-    COLL --> PUB
+    ORCH --> GUARD
+    GUARD -->|"guarded k8s recovery"| RUN
+    RUN -. runtime evidence .-> MON
+```
+
+### Public Status Publication
+
+```mermaid
+flowchart LR
+    subgraph PD["HP ProDesk (.60)"]
+        PROM["Prometheus"]
+        LOKI["Loki"]
+        GRAF["Grafana datasource proxy"]
+    end
+
+    subgraph RPI["Raspberry Pi (.50)"]
+        NGINX["Pi nginx<br/>/grafana/"]
+        COLL["public snapshot collector"]
+        PUB["static site build"]
+    end
+
+    subgraph EDGE["Public static edge"]
+        GCS["GCS bucket"]
+        CF["Cloudflare<br/>yukimurata0421.dev"]
+    end
+
+    PROM --> GRAF
+    LOKI --> GRAF
+    COLL -->|"HTTP GET"| NGINX
+    NGINX -->|"Grafana proxy"| GRAF
+    GRAF -->|"JSON response"| COLL
+    COLL -->|"allowlist JSON"| PUB
     PUB -->|"outbound upload"| GCS --> CF
 ```
 
@@ -154,9 +183,9 @@ site outbound to GCS, and Cloudflare serves <https://yukimurata0421.dev/>. This
 keeps repeated public status reads on the static edge instead of spending home
 uplink bandwidth or proxying through the monitoring backend.
 ProDesk does not push monitoring data to Raspberry Pi. The Pi collector
-initiates HTTP GETs to `127.0.0.1:8088/grafana`; Pi nginx proxies those requests
-to HP ProDesk Grafana at `192.168.0.60:3000/grafana`, and the datasource JSON
-response returns over that same path to the Pi collector.
+initiates `pull: HTTP GET` requests to `127.0.0.1:8088/grafana/...`; Pi nginx
+uses `proxy_pass` to HP ProDesk Grafana at `192.168.0.60:3000/grafana`, and the
+datasource JSON response returns over that same path to the Pi collector.
 Non-static operational access is outside the public status endpoint and is not
 named as a public endpoint here.
 

@@ -37,16 +37,19 @@ class PublicDocsStructureTests(unittest.TestCase):
             "How stream_v3 protects it",
             "```mermaid",
             "### Delivery Path",
-            "### Observability & Recovery",
+            "### Observability Path",
+            "### Recovery Path",
+            "### Public Status Publication",
             "Airspy",
             "airspy_adsb",
             "Dell workstation readsb",
             "modified tar1090 map",
             "beast feed to :30104",
             "browser map URL",
-            "Data API + OAuth + public watch",
+            "API + public watch",
             "v3 monitor",
             "recovery-orchestrator",
+            "guard",
             "guarded k8s recovery",
             "`kubectl exec`",
             "Raspberry Pi public publisher role",
@@ -115,7 +118,7 @@ class PublicDocsStructureTests(unittest.TestCase):
         ):
             self.assertIn(marker, text)
 
-        self.assertEqual(text.count("```mermaid"), 2)
+        self.assertEqual(text.count("```mermaid"), 4)
         self.assertTrue((ROOT / "docs" / "assets" / "live-stream-screenshot.png").exists())
         self.assertTrue((ROOT / "docs" / "assets" / "reddit-adsb-post-insights-2026-05.png").exists())
 
