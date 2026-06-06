@@ -5,6 +5,16 @@ code and tests without reading the entire repository.
 
 ## High-Signal Review Paths
 
+If you only have time for a short code review, start with these files:
+
+- `src/watchers/decision/evaluator.py`
+- `src/watchers/decision/action_gate.py`
+- `src/watchers/evidence/ledger.py`
+- `src/stream_v2/recovery_orchestrator/gate.py`
+- `ops/scripts/v3_shadow_acceptance.py`
+- `tests/test_youtube_evidence_decision.py`
+- `tests/test_cli_systemctl_flow.py`
+
 | Review question | Code | Tests | Docs |
 | --- | --- | --- | --- |
 | What prevents unsafe staged recovery? | `src/stream_v2/recovery_orchestrator/gate.py`, `src/watchers/decision/*` | `tests/test_v3_shadow_acceptance.py`, `tests/test_action_plan.py`, `tests/test_youtube_evidence_decision.py` | `docs/v3/youtube-lifecycle-safety.md`, `docs/design-decisions-for-review.md` |
@@ -16,7 +26,7 @@ code and tests without reading the entire repository.
 | How are visual and audio faults kept local? | `src/watchers/stream_watchdog.py`, `src/watchers/stream_watchdog_core/*`, `src/watchers/local_health/*` | `tests/test_stream_watchdog_config.py`, `tests/test_subsystems.py`, `tests/test_runtime_bootstrap_contracts.py` | `docs/v3/visual-audio-health-model.md`, `docs/v3/failure-taxonomy.md` |
 | How is memory pressure interpreted? | `src/stream_core/stream_engine.py`, `src/stream_core/cli_support/memory_status.py`, `src/stream_core/cli_support/resource_memory.py` | `tests/test_stream_engine_wait_modes.py`, `tests/test_memory_status.py`, `tests/test_resource_memory.py` | `docs/v3/memory-guard-case-study.md` |
 | How is notification noise controlled? | `src/stream_core/notifications/*`, `src/watchers/stream_watchdog.py` | `tests/test_operational_replay_contracts.py`, `tests/test_critical_helper_contracts.py`, `tests/test_cli_ops_commands.py` | `docs/v3/notification-and-auto-recovery.md` |
-| How is public CI kept non-mutating? | `.github/workflows/public-snapshot-check.yml`, `ops/scripts/v3_shadow_acceptance.py`, `ops/scripts/validate_k3s_manifests.py` | `tests/test_v3_shadow_acceptance.py`, `tests/test_v3_k3s_preflight.py`, `tests/test_docs_structure.py` | `docs/operations.md`, `docs/public-release.md` |
+| How is public CI kept non-mutating? | `.github/workflows/public-snapshot-check.yml`, `src/stream_core/cli.py`, `ops/scripts/v3_shadow_acceptance.py`, `ops/scripts/validate_k3s_manifests.py` | `tests/test_cli_systemctl_flow.py`, `tests/test_v3_shadow_acceptance.py`, `tests/test_v3_k3s_preflight.py`, `tests/test_docs_structure.py` | `docs/operations.md`, `docs/public-release.md`, `deploy/k3s/README.md` |
 | How is single-node DR scoped honestly? | `deploy/k3s/*`, `src/stream_core/supervisor/*`, `ops/systemd/*` | `tests/test_v3_k3s_preflight.py`, `tests/test_runtime_supervisor.py`, `tests/test_env_sync.py` | `docs/v3/single-node-dr-case-study.md` |
 | How is v2 to v3 cutover authority scoped? | `deploy/k3s/*`, `ops/scripts/v3_shadow_acceptance.py`, `src/stream_v3/*` | `tests/test_v3_shadow_acceptance.py`, `tests/test_stream_v3_control_loop.py`, `tests/test_v3_k3s_preflight.py` | `docs/v3/migration-cutover-case-study.md`, `docs/test-strategy-and-safety-boundary.md` |
 | What does a 24-hour smoke test prove? | `ops/scripts/v3_shadow_acceptance.py`, `ops/scripts/stream_v3_prometheus_exporter.py`, `src/watchers/*` | `tests/test_docs_structure.py`, `tests/test_v3_shadow_acceptance.py`, cache freshness tests | `docs/operational-scorecard.md`, `docs/test-strategy-and-safety-boundary.md` |

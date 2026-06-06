@@ -114,7 +114,7 @@ Production mutation requires both of these to be true:
 - k3s manifests have been changed away from shadow mode.
 - launcher environment includes `STREAM_V3_CUTOVER_ENABLE=1`.
 
-The repo launcher blocks mutating systemd commands without that flag, even if the old v2 CLI is called through this tree.
+The repo launcher blocks mutating systemd commands without that flag, even if the old v2 CLI is called through this tree. The guard also recognizes production-shaped stream repo markers (`pyproject.toml`, `ops/systemd`, and `src/stream_core/cli.py`), so GitHub release archives keep the same default refusal behavior even when the checkout directory name changes.
 `stream_v3.control_loop --mode cutover` has the same guard. Without `STREAM_V3_CUTOVER_ENABLE=1`, it exits before starting the fast recovery / watchdog / resolver / notify task set.
 
 For this streaming host, use the streaming-only overlay:

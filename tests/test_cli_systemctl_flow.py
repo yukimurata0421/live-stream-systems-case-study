@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 import unittest
 from unittest import mock
@@ -60,6 +61,26 @@ class CliSystemctlFlowTests(unittest.TestCase):
     def test_stream_v3_refuses_mutating_systemd_commands_by_default(self) -> None:
         with mock.patch("builtins.print"):
             self.assertEqual(cli.guard_stream_v3_mutating_command("start"), 1)
+
+    def test_stream_v3_refuses_mutating_systemd_commands_in_release_archive_tree(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td) / "live-stream-systems-case-study-3.2.0"
+            (root / "ops" / "systemd").mkdir(parents=True)
+            (root / "src" / "stream_core").mkdir(parents=True)
+            (root / "src" / "stream_core" / "cli.py").write_text("", encoding="utf-8")
+            (root / "pyproject.toml").write_text('[project]\nname = "stream-v3"\n', encoding="utf-8")
+
+            with mock.patch.object(cli, "BASE_DIR", root):
+                with mock.patch("builtins.print"):
+                    self.assertEqual(cli.guard_stream_v3_mutating_command("start"), 1)
+
+    def test_stream_v3_guard_does_not_block_outside_stream_repo_tree(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td) / "scratch"
+            root.mkdir()
+
+            with mock.patch.object(cli, "BASE_DIR", root):
+                self.assertEqual(cli.guard_stream_v3_mutating_command("start"), 0)
 
     def test_stream_v3_allows_mutating_systemd_commands_with_explicit_env(self) -> None:
         with mock.patch.dict("os.environ", {"STREAM_V2_ALLOW_MUTATING_SYSTEMD": "1"}):

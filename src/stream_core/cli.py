@@ -133,6 +133,8 @@ MAINTENANCE_COMMAND_ALIASES = cli_mutation_guard.MAINTENANCE_COMMAND_ALIASES
 MAINTENANCE_STATUS_ACTIONS = cli_mutation_guard.MAINTENANCE_STATUS_ACTIONS
 MAINTENANCE_TOP_LEVEL_ACTIONS = cli_mutation_guard.MAINTENANCE_TOP_LEVEL_ACTIONS
 STREAM_V2_ALLOW_MUTATING_ENV = cli_mutation_guard.STREAM_V2_ALLOW_MUTATING_ENV
+STREAM_REPO_DIR_NAMES = {"stream_v2", "stream_v3"}
+STREAM_REPO_PROJECT_NAMES = {"stream-v2", "stream-v3"}
 
 YOUTUBE_RTMP_HOSTS = {"a.rtmp.youtube.com", "a.rtmps.youtube.com"}
 PREFERRED_YOUTUBE_RTMPS_URL = "rtmps://a.rtmps.youtube.com:443/live2"
@@ -165,8 +167,58 @@ def run_systemctl(args: list[str], check: bool = True) -> subprocess.CompletedPr
     return systemd_common.run_systemctl(args, require_privilege=True, check=check)
 
 
+def _pyproject_project_name(pyproject: Path) -> str:
+    if not pyproject.is_file():
+        return ""
+    try:
+        import tomllib
+    except ModuleNotFoundError:
+        try:
+            lines = pyproject.read_text(encoding="utf-8").splitlines()
+        except OSError:
+            return ""
+        in_project = False
+        for raw_line in lines:
+            line = raw_line.strip()
+            if line == "[project]":
+                in_project = True
+                continue
+            if line.startswith("[") and line.endswith("]"):
+                in_project = False
+                continue
+            if in_project and line.startswith("name"):
+                _, sep, raw_value = line.partition("=")
+                if sep:
+                    return raw_value.strip().strip("\"'")
+        return ""
+
+    try:
+        with pyproject.open("rb") as fp:
+            data = tomllib.load(fp)
+    except (OSError, tomllib.TOMLDecodeError):
+        return ""
+    project = data.get("project", {})
+    if not isinstance(project, dict):
+        return ""
+    name = project.get("name")
+    return name if isinstance(name, str) else ""
+
+
+def production_shaped_stream_tree(base_dir: Path | None = None) -> bool:
+    if base_dir is None:
+        base_dir = BASE_DIR
+    if base_dir.name in STREAM_REPO_DIR_NAMES:
+        return True
+    project_name = _pyproject_project_name(base_dir / "pyproject.toml")
+    return (
+        project_name in STREAM_REPO_PROJECT_NAMES
+        and (base_dir / "ops" / "systemd").is_dir()
+        and (base_dir / "src" / "stream_core" / "cli.py").is_file()
+    )
+
+
 def in_stream_v2_tree() -> bool:
-    return BASE_DIR.name in {"stream_v2", "stream_v3"}
+    return production_shaped_stream_tree(BASE_DIR)
 
 
 def mutating_systemd_allowed() -> bool:
