@@ -179,6 +179,7 @@ Use these entry points instead of reading the full tree:
 | Where is the physical split documented? | [`docs/physical-topology.md`](docs/physical-topology.md), [`docs/runtime-contract.md`](docs/runtime-contract.md) |
 | Where is the measured SLI baseline? | [`docs/sli-methodology.md`](docs/sli-methodology.md), [`docs/v3/sli-and-dashboard.md`](docs/v3/sli-and-dashboard.md) |
 | Where is the public status site boundary documented? | [`docs/v3/public-status-snapshot.md`](docs/v3/public-status-snapshot.md), <https://yukimurata0421.dev/> |
+| Where is the fast-recovery classifier replay documented? | [`docs/v3/fast-recovery-classifier-replay.md`](docs/v3/fast-recovery-classifier-replay.md), [`src/stream_v2/sli.py`](src/stream_v2/sli.py), [`tests/test_sli_pipeline_rotation.py`](tests/test_sli_pipeline_rotation.py) |
 | Where is the 28-day same-URL reliability review? | [`docs/28-day-same-url-sli-case-study.md`](docs/28-day-same-url-sli-case-study.md) |
 | Where is the short executive summary? | [`docs/executive-summary.md`](docs/executive-summary.md) |
 | Which claims are measured, tested, documented, or still unknown? | [`docs/operational-scorecard.md`](docs/operational-scorecard.md) |
@@ -240,6 +241,9 @@ Use these entry points instead of reading the full tree:
   including why a lower-upload VBR/CQ profile was rejected.
 - `docs/v3/youtube-lifecycle-safety.md`: same-URL, quota, stale-cache, and
   destructive-action safety model.
+- `docs/v3/fast-recovery-classifier-replay.md`: current classifier replay over
+  retained fast-recovery restart events without backfilling historical shadow
+  logs.
 - `docs/v3/failure-taxonomy.md`: owner/action/evidence vocabulary for runtime,
   source, YouTube, dashboard, and memory failures.
 - `tests/`: contract and policy tests for runtime safety and monitoring logic.

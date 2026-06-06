@@ -5,6 +5,7 @@ from typing import Any
 
 from ...model import EvidenceRecord, SubsystemStatus
 from ..common import BaseSubsystemEvaluator
+from . import actions
 from .policy import decide
 from .signals import collect_signals
 
@@ -20,6 +21,7 @@ class LocalDeliveryEvaluator(BaseSubsystemEvaluator):
         timeline: dict[str, Any],
         runtime: dict[str, Any],
         fast_recovery: dict[str, Any],
+        fast_recovery_restart: dict[str, Any],
         stream_engine_event: dict[str, Any],
         restart_reason: dict[str, Any],
         recovery_stage: dict[str, Any],
@@ -31,6 +33,7 @@ class LocalDeliveryEvaluator(BaseSubsystemEvaluator):
             stream_stats=stream_stats,
             runtime=runtime,
             fast_recovery=fast_recovery,
+            fast_recovery_restart=fast_recovery_restart,
             stream_engine_event=stream_engine_event,
             restart_reason=restart_reason,
             recovery_stage=recovery_stage,
@@ -40,7 +43,16 @@ class LocalDeliveryEvaluator(BaseSubsystemEvaluator):
         evidence: list[EvidenceRecord] = []
         healthy_names = signals.healthy_evidence_names()
         for name in decision.evidence:
-            source, payload, raw_file = self._evidence_source(name, ytw, stream_stats, runtime, fast_recovery, stream_engine_event, signals)
+            source, payload, raw_file = self._evidence_source(
+                name,
+                ytw,
+                stream_stats,
+                runtime,
+                fast_recovery,
+                fast_recovery_restart,
+                stream_engine_event,
+                signals,
+            )
             verdict = "healthy" if name in healthy_names else "failed"
             evidence.append(self.evidence(source=source, source_payload=payload, subsystem=self.name, name=name, verdict=verdict, target=target, now=now, ttl_sec=90, raw_file=raw_file))
         extra = {
@@ -54,6 +66,12 @@ class LocalDeliveryEvaluator(BaseSubsystemEvaluator):
             "tcp_unacked": signals.tcp_unacked,
             "tcp_lastsnd_ms": signals.tcp_lastsnd_ms,
             "tcp_conn_established": signals.tcp_conn_established,
+            "fast_recovery_kind": signals.fast_recovery_kind,
+            "fast_recovery_trigger": signals.fast_recovery_trigger,
+            "fast_recovery_age_sec": signals.fast_recovery_age_sec,
+            "fast_recovery_restart_trigger": signals.fast_recovery_restart_trigger,
+            "fast_recovery_restart_age_sec": signals.fast_recovery_restart_age_sec,
+            "fast_recovery_stream_restart_recent": signals.fast_recovery_stream_restart_recent,
             "stream_engine_recent": signals.stream_engine_recent,
             "stream_engine_event": signals.stream_engine_event,
             "reason": signals.reason,
@@ -68,11 +86,14 @@ class LocalDeliveryEvaluator(BaseSubsystemEvaluator):
         stream_stats: dict[str, Any],
         runtime: dict[str, Any],
         fast_recovery: dict[str, Any],
+        fast_recovery_restart: dict[str, Any],
         stream_engine_event: dict[str, Any],
         signals: Any,
     ) -> tuple[str, dict[str, Any], str]:
         if name == "ingest_connected":
             return "youtube_watchdog", ytw, "youtube_watchdog_stats.json"
+        if name in actions.FAST_RECOVERY_STREAM_RESTART_FAILURES and fast_recovery_restart:
+            return "fast_recovery", fast_recovery_restart, "logs/fast_recovery_events.jsonl"
         if name in {"tcp_send_healthy", "tcp_stall"} and fast_recovery:
             return "fast_recovery", fast_recovery, "logs/fast_recovery_events.jsonl"
         if name == "stream_engine_recent" and stream_engine_event:

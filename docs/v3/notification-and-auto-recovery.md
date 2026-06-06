@@ -28,6 +28,11 @@ stale report/dashboard state -> observability follow-up, not delivery restart
 Single FFmpeg child recovery without current YouTube/public/same-URL impact is
 reported as an auto-recovered event, not as a warning incident.
 
+Fast-recovery stream restarts are also replayed by the current local-delivery
+classifier. That replay is SLI evidence, not notification delivery evidence:
+it explains current classifier coverage for retained restart events without
+rewriting historical shadow logs.
+
 ## Event Classes
 
 | Event | Notification class | Evidence |
@@ -60,6 +65,8 @@ The notification layer uses:
 - `src/stream_core/notifications/outbox.py` deduplicates and bounds delivery.
 - `src/watchers/stream_watchdog.py` records k8s container restart deltas and
   syncs runtime event evidence.
+- `src/stream_v2/sli.py` exposes `current_classifier_replay` for retained
+  fast-recovery restart events.
 - `tests/test_operational_replay_contracts.py` verifies replay behavior.
 - `tests/test_critical_helper_contracts.py` covers notification outbox and
   auto-recovered state behavior.

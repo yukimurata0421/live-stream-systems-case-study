@@ -23,6 +23,9 @@ def decide(signals: LocalDeliverySignals, *, has_any_input: bool) -> LocalDelive
         confidence = "high" if signals.ingest_connected and signals.runtime_fresh else "medium"
         return LocalDeliveryDecision("healthy", confidence, signals.healthy_evidence_names(), actions.ACTION_NONE, [], [], [])
 
+    if any(name in actions.FAST_RECOVERY_STREAM_RESTART_FAILURES for name in failures):
+        return LocalDeliveryDecision("failed", "high", failures, actions.ACTION_RESTART_STREAM, [actions.BLOCK_REPLACEMENT], [], ["youtube_lifecycle"])
+
     if actions.FAILURE_TCP_STALL in failures:
         return LocalDeliveryDecision("recovering", "medium", failures, actions.ACTION_RESTART_FFMPEG, [actions.BLOCK_REPLACEMENT], [], ["youtube_lifecycle"])
 

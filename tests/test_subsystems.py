@@ -428,7 +428,7 @@ class TestSubsystemAggregation(unittest.TestCase):
         self.assertEqual(payload["music"]["recommended_action"], "defer")
         self.assertIn("audio_energy_low_transition_grace", payload["music"]["evidence"])
 
-    def test_local_delivery_tcp_stall_is_recovering_and_same_url_preserving(self) -> None:
+    def test_local_delivery_fast_recovery_tcp_restart_maps_to_stream_restart(self) -> None:
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
             healthy_source(root)
@@ -440,10 +440,103 @@ class TestSubsystemAggregation(unittest.TestCase):
                 "ffmpeg_pid": 123,
             })
             payload = self.aggregate(root)
-        self.assertEqual(payload["local_delivery"]["state"], "recovering")
-        self.assertEqual(payload["local_delivery"]["recommended_action"], "restart_ffmpeg")
+        self.assertEqual(payload["local_delivery"]["state"], "failed")
+        self.assertEqual(payload["local_delivery"]["recommended_action"], "restart_stream")
+        self.assertIn("fast_recovery_stream_restart_tcp_stall", payload["local_delivery"]["evidence"])
         self.assertIn("local_delivery_failure_never_authorizes_replacement_broadcast", payload["local_delivery"]["blocked_by"])
         self.assertEqual(payload["youtube_lifecycle"]["replacement_allowed"], False)
+
+    def test_local_delivery_tcp_stall_sample_remains_scoped_recovery(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            healthy_source(root)
+            append_jsonl(root / "logs" / "fast_recovery_events.jsonl", {
+                "ts_utc": TS,
+                "kind": "tcp_stall",
+                "trigger": "tcp_stall",
+                "message": "tcp stall: bytes_delta=0",
+                "ffmpeg_pid": 123,
+            })
+            payload = self.aggregate(root)
+        self.assertEqual(payload["local_delivery"]["state"], "recovering")
+        self.assertEqual(payload["local_delivery"]["recommended_action"], "restart_ffmpeg")
+        self.assertIn("tcp_stall", payload["local_delivery"]["evidence"])
+        self.assertIn("local_delivery_failure_never_authorizes_replacement_broadcast", payload["local_delivery"]["blocked_by"])
+        self.assertEqual(payload["youtube_lifecycle"]["replacement_allowed"], False)
+
+    def test_local_delivery_fast_recovery_restart_triggers_stream_restart(self) -> None:
+        cases = [
+            ("network_down", "fast_recovery_stream_restart_network_down"),
+            ("low_upload_pressure", "fast_recovery_stream_restart_low_upload_pressure"),
+        ]
+        for trigger, evidence in cases:
+            with self.subTest(trigger=trigger):
+                with tempfile.TemporaryDirectory() as td:
+                    root = Path(td)
+                    healthy_source(root)
+                    append_jsonl(root / "logs" / "fast_recovery_events.jsonl", {
+                        "ts_utc": TS,
+                        "kind": "restart",
+                        "trigger": trigger,
+                        "message": f"{trigger}: existing fast-recovery restarted stream",
+                        "metrics": {
+                            "send_mbps": 0.001,
+                            "bytes_sent_delta": 1338,
+                            "lastsnd_ms": 269,
+                            "notsent": 978633,
+                            "unacked": 591,
+                        },
+                    })
+                    payload = self.aggregate(root)
+                self.assertEqual(payload["local_delivery"]["state"], "failed")
+                self.assertEqual(payload["local_delivery"]["recommended_action"], "restart_stream")
+                self.assertIn(evidence, payload["local_delivery"]["evidence"])
+                self.assertTrue(payload["local_delivery"]["fast_recovery_stream_restart_recent"])
+                self.assertEqual(payload["local_delivery"]["fast_recovery_restart_trigger"], trigger)
+                self.assertEqual(payload["local_delivery"]["tcp_mbps"], 0.001)
+
+    def test_local_delivery_recent_fast_recovery_restart_survives_newer_tcp_sample(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            healthy_source(root)
+            append_jsonl(root / "logs" / "fast_recovery_events.jsonl", {
+                "ts_utc": "2026-05-06T11:59:00Z",
+                "kind": "restart",
+                "trigger": "network_down",
+                "message": "network down: fast-recovery restarted stream",
+            })
+            append_jsonl(root / "logs" / "fast_recovery_events.jsonl", {
+                "ts_utc": TS,
+                "kind": "tcp_send_sample",
+                "bytes_sent_delta": 2500000,
+                "mbps": 4.0,
+                "notsent": 0,
+                "unacked": 0,
+                "lastsnd_ms": 100,
+                "conn": "ESTAB",
+            })
+            payload = self.aggregate(root)
+        self.assertEqual(payload["local_delivery"]["state"], "failed")
+        self.assertEqual(payload["local_delivery"]["recommended_action"], "restart_stream")
+        self.assertIn("fast_recovery_stream_restart_network_down", payload["local_delivery"]["evidence"])
+        self.assertEqual(payload["local_delivery"]["fast_recovery_kind"], "tcp_send_sample")
+        self.assertEqual(payload["local_delivery"]["fast_recovery_restart_trigger"], "network_down")
+        self.assertEqual(payload["local_delivery"]["tcp_mbps"], 4.0)
+
+    def test_local_delivery_stale_fast_recovery_restart_does_not_trigger_stream_restart(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            healthy_source(root)
+            append_jsonl(root / "logs" / "fast_recovery_events.jsonl", {
+                "ts_utc": "2026-05-06T11:55:00Z",
+                "kind": "restart",
+                "trigger": "network_down",
+                "message": "old production restart",
+            })
+            payload = self.aggregate(root)
+        self.assertEqual(payload["local_delivery"]["state"], "healthy")
+        self.assertEqual(payload["local_delivery"]["recommended_action"], "none")
+        self.assertFalse(payload["local_delivery"]["fast_recovery_stream_restart_recent"])
 
     def test_local_delivery_tcp_send_sample_healthy_records_tcp_metrics(self) -> None:
         with tempfile.TemporaryDirectory() as td:

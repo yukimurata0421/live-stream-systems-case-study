@@ -53,6 +53,7 @@ Origin notes for reviewers:
 | Production authority | Transfer production authority only through explicit cutover evidence. | During migration, v2 remained production until systemd, CLI, state root, monitoring, and mutation paths were intentionally moved. | Treat a Running v3 Pod or green shadow check as ownership transfer. | Cutover takes more proof, but v2 safety gates are not bypassed by infrastructure readiness. |
 | Migration smoke test | Use a 24-hour live smoke test for v3 runtime, encoder, recovery, or cutover-authority changes. | v2 already established the stable behavior model; v3 still has to prove migrated ownership across one daily cycle. | Treat a short launch test or green Pod as enough. | A 24-hour pass is migration confidence, not a long-window SLO claim. |
 | Shadow mode | Keep shadow mode before cutover and retain it as a non-mutating validation path. | The system should prove command mapping, state writes, action plans, and guard behavior before production mutation. | Enable k3s recovery actions directly before cutover evidence exists. | More validation steps, but clearer safety evidence. |
+| Classifier replay | Keep historical shadow gaps visible and publish current classifier replay separately. | A classifier fix should prove present coverage without rewriting past orchestrator logs. | Backfill historical shadow JSONL or hide `production_without_shadow` after remediation. | Reviewers can see both the original gap and the current remediation evidence. |
 | Cutover flags | Require explicit production flags for live mutation. | `STREAM_V3_MODE`, cutover enablement, dry-run state, and test mode should make accidental mutation hard. | Infer production behavior from environment shape alone. | More configuration surface, but a safer operator contract. |
 | Maintenance mode | Treat planned work as maintenance state, not ordinary incident spam. | Some restarts, checks, and temporary warnings are operator-intended work. | Let monitors page as if every planned change is an outage. | Requires explicit maintenance state, but notifications and SLO interpretation are clearer. |
 | Same URL | Treat same-URL preservation as a first-class SLO. | Losing the public YouTube URL is more damaging than many short local faults. | Replace broadcasts aggressively whenever YouTube evidence is ambiguous. | Recovery must preserve identity unless replacement is explicitly justified. |
@@ -146,6 +147,7 @@ When reviewing the project, the highest-signal questions are:
 - `docs/v2/README.md`
 - `docs/v3/decisions.md`
 - `docs/v3/public-status-snapshot.md`
+- `docs/v3/fast-recovery-classifier-replay.md`
 - `docs/v3/migration-cutover-case-study.md`
 - `docs/v3/youtube-lifecycle-safety.md`
 - `docs/v3/encoder-upload-case-study.md`

@@ -10,6 +10,7 @@ The dashboard separates present state from historical degradation.
 | Was there monitored viewer-facing burn in that drill? | No monitored burn: YouTube ingest, public watch, same-URL, and watchdog metrics stayed OK in the sampled window. | Prometheus/YouTube sampling does not prove every frame seen by every viewer. |
 | How should error budget be read? | Same-watch-URL continuity is an invariant. A drill can burn control-plane budget without burning viewer-facing budget if the public stream remains live and the RTMPS socket continues sending. | Long-window same-URL and availability claims still require 14-day or 28-day review windows. |
 | What MTTR has been retained? | Historical `tcp_stall` clusters had 90.0s median local transport MTTR, 1190.8s p95, and 1474.0s max. | Local transport recovery is not automatically viewer MTTR. |
+| What recovery-classifier replay is retained? | On 2026-06-06, the current classifier replay covered retained fast-recovery stream restarts at 5/5 in 7d and 6/6 in 30d. | This is classifier replay over historical events. It does not backfill old shadow logs or prove executor production execution. |
 
 ## Metric Classes
 
@@ -56,3 +57,9 @@ evidence for the method, not a current v3 uptime statement.
 Long-window fields can be stale. Operators should compare dashboard signals
 against fresh runtime evidence before deciding that the stream is currently
 failing.
+
+Shadow recovery comparison uses executable recovery intent, not every selected
+report-only action. `current_classifier_replay` is shown separately from
+`production_without_shadow` so historical gaps remain visible while current
+classifier coverage can be reviewed. See
+[`fast-recovery-classifier-replay.md`](fast-recovery-classifier-replay.md).

@@ -10,6 +10,7 @@
 - Evidence and SLI:
   - `sli-and-dashboard.md`
   - `public-status-snapshot.md`
+  - `fast-recovery-classifier-replay.md`
   - `youtube-lifecycle-safety.md`
   - `encoder-upload-case-study.md`
   - `encoder-fps-tuning-2026-05-31.md`
@@ -57,3 +58,6 @@ For a focused reliability review:
   the single-node k3s DR model.
 - `public-status-snapshot.md` documents why the public site exposes a
   sanitized static operational view instead of the private monitoring backend.
+- `fast-recovery-classifier-replay.md` documents how historical
+  fast-recovery restarts are replayed by the current classifier without
+  backfilling old shadow logs.

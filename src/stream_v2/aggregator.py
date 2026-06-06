@@ -63,6 +63,7 @@ class SubsystemAggregator:
             timeline=timeline,
             runtime=runtime,
             fast_recovery=inputs.latest_fast_recovery_event,
+            fast_recovery_restart=inputs.latest_fast_recovery_restart_event,
             stream_engine_event=inputs.latest_stream_engine_event,
             restart_reason=inputs.restart_reason,
             recovery_stage=inputs.recovery_stage_state,

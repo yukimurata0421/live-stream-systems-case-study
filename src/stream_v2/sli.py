@@ -6,6 +6,7 @@ from typing import Any
 
 from .config import RuntimeConfig
 from .jsonio import iter_jsonl
+from .subsystems.local_delivery.actions import FAST_RECOVERY_STREAM_RESTART_FAILURE_BY_TRIGGER
 from .timeutil import isoformat_utc, parse_utc
 
 
@@ -18,6 +19,15 @@ SHADOW_TIMER_INTERVAL_SEC = 60
 WINDOW_COMPLETE_COVERAGE_RATIO = 0.90
 PRODUCTION_DIFF_MATCH_WINDOW_SEC = 120
 LOCAL_RESTART_ACTIONS = {"restart_ffmpeg", "restart_stream"}
+EXECUTOR_RECOVERY_ACTIONS = {
+    "reload_overlay",
+    "restart_browser",
+    "restart_dj",
+    "restart_ffmpeg",
+    "restart_stream",
+    "force_current_broadcast_live",
+    "create_replacement_broadcast",
+}
 
 
 class ObjectiveSliCalculator:
@@ -94,6 +104,7 @@ class ObjectiveSliCalculator:
 
     def _project_orchestrator_event(self, event: dict[str, Any]) -> dict[str, Any]:
         selected = event.get("selected_action") if isinstance(event.get("selected_action"), dict) else {}
+        execution_plan = event.get("execution_plan") if isinstance(event.get("execution_plan"), dict) else {}
         gates = event.get("gates") if isinstance(event.get("gates"), dict) else {}
         projected_gates: dict[str, Any] = {}
         budget = gates.get("budget") if isinstance(gates.get("budget"), dict) else {}
@@ -115,6 +126,15 @@ class ObjectiveSliCalculator:
 
         return {
             "selected_action": {"action": selected.get("action")},
+            "execution_plan": {
+                "action": execution_plan.get("action"),
+                "executable": bool(execution_plan.get("executable", False)),
+                "execute": bool(execution_plan.get("execute", False)),
+                "reason": execution_plan.get("reason"),
+                "blocked_by": [str(item) for item in execution_plan.get("blocked_by", []) if item]
+                if isinstance(execution_plan.get("blocked_by"), list)
+                else [],
+            },
             "gates": projected_gates,
             "all_candidate_gates": projected_candidate_gates,
         }
@@ -154,11 +174,14 @@ class ObjectiveSliCalculator:
             ts = parse_utc(event.get("ts_utc"))
             if ts is None or ts > now or event.get("kind") != "restart":
                 continue
+            restart_context = event.get("restart_context") if isinstance(event.get("restart_context"), dict) else {}
+            trigger = str(event.get("trigger") or restart_context.get("trigger") or event.get("message") or "restart")
             out.append({
                 "ts": ts,
                 "action": "restart_stream",
                 "source": "fast_recovery_events",
-                "reason": str(event.get("trigger") or event.get("message") or "restart"),
+                "reason": trigger,
+                "trigger": trigger,
             })
         return out
 
@@ -267,16 +290,23 @@ class ObjectiveSliCalculator:
                 "orchestrator_sample_count": len(orch_in_window),
                 "selected_action_counts": shadow_decisions["selected_action_counts"],
                 "selected_action_distribution": shadow_decisions["selected_action_distribution"],
+                "execution_plan_counts": shadow_decisions["execution_plan_counts"],
+                "executable_plan_counts": shadow_decisions["executable_plan_counts"],
+                "recovery_intent_action_counts": shadow_decisions["recovery_intent_action_counts"],
                 "production_action_counts": shadow_decisions["production_action_counts"],
                 "production_action_sample_count": shadow_decisions["production_action_sample_count"],
                 "shadow_non_none_action_count": shadow_decisions["shadow_non_none_action_count"],
+                "shadow_executable_plan_action_count": shadow_decisions["shadow_executable_plan_action_count"],
+                "shadow_recovery_intent_action_count": shadow_decisions["shadow_recovery_intent_action_count"],
                 "shadow_destructive_action_count": shadow_decisions["shadow_destructive_action_count"],
                 "shadow_vs_production_exact_agreement_count": shadow_decisions["exact_agreement_count"],
                 "shadow_vs_production_scope_compatible_agreement_count": shadow_decisions["scope_compatible_agreement_count"],
                 "shadow_vs_production_disagreement_count": shadow_decisions["disagreement_count"],
                 "shadow_vs_production_disagreement_ratio": shadow_decisions["disagreement_ratio"],
                 "shadow_vs_production_disagreement_by_reason": shadow_decisions["disagreement_by_reason"],
+                "current_classifier_replay": shadow_decisions["current_classifier_replay"],
                 "match_window_sec": PRODUCTION_DIFF_MATCH_WINDOW_SEC,
+                "diff_basis": "execution_plan.executable recovery actions only; report-only alert/probe/resync decisions excluded",
                 "interpretation": "shadow decisions are observations only; production actions remain owned by current watchdog/fast-recovery/stream-engine paths",
             },
         }
@@ -284,17 +314,33 @@ class ObjectiveSliCalculator:
     def _shadow_decision_sli(self, orchestrator_events: list[dict[str, Any]], production_events: list[dict[str, Any]]) -> dict[str, Any]:
         selected_counts = self._selected_action_counts(orchestrator_events)
         selected_distribution = self._distribution(selected_counts)
+        execution_plan_counts = self._execution_plan_counts(orchestrator_events)
+        executable_plan_counts = self._executable_plan_counts(orchestrator_events)
+        recovery_intent_events = [item for item in orchestrator_events if self._has_recovery_intent(item)]
+        recovery_intent_counts = self._execution_plan_counts(recovery_intent_events)
         production_counts = self._production_action_counts(production_events)
         non_none_shadow = [item for item in orchestrator_events if self._selected_action(item) != "none"]
+        executable_shadow = [
+            item
+            for item in orchestrator_events
+            if self._execution_plan_action(item) != "none" and self._execution_plan_executable(item)
+        ]
         destructive_count = self._count_destructive(orchestrator_events)
         diff = self._diff_shadow_vs_production(orchestrator_events, production_events)
+        current_classifier_replay = self._current_classifier_replay(production_events)
         return {
             "selected_action_counts": selected_counts,
             "selected_action_distribution": selected_distribution,
+            "execution_plan_counts": execution_plan_counts,
+            "executable_plan_counts": executable_plan_counts,
+            "recovery_intent_action_counts": recovery_intent_counts,
             "production_action_counts": production_counts,
             "production_action_sample_count": len(production_events),
             "shadow_non_none_action_count": len(non_none_shadow),
+            "shadow_executable_plan_action_count": len(executable_shadow),
+            "shadow_recovery_intent_action_count": len(recovery_intent_events),
             "shadow_destructive_action_count": destructive_count,
+            "current_classifier_replay": current_classifier_replay,
             **diff,
         }
 
@@ -305,11 +351,61 @@ class ObjectiveSliCalculator:
             counts[action] = counts.get(action, 0) + 1
         return dict(sorted(counts.items()))
 
+    def _execution_plan_counts(self, events: list[dict[str, Any]]) -> dict[str, int]:
+        counts: dict[str, int] = {}
+        for item in events:
+            action = self._execution_plan_action(item)
+            counts[action] = counts.get(action, 0) + 1
+        return dict(sorted(counts.items()))
+
+    def _executable_plan_counts(self, events: list[dict[str, Any]]) -> dict[str, int]:
+        counts: dict[str, int] = {}
+        for item in events:
+            action = self._execution_plan_action(item)
+            if action == "none" or not self._execution_plan_executable(item):
+                continue
+            counts[action] = counts.get(action, 0) + 1
+        return dict(sorted(counts.items()))
+
     def _production_action_counts(self, events: list[dict[str, Any]]) -> dict[str, int]:
         counts: dict[str, int] = {}
         for item in events:
             action = str(item.get("action") or "unknown")
             counts[action] = counts.get(action, 0) + 1
+        return dict(sorted(counts.items()))
+
+    def _current_classifier_replay(self, production_events: list[dict[str, Any]]) -> dict[str, Any]:
+        eligible = [
+            item
+            for item in production_events
+            if item.get("source") == "fast_recovery_events" and item.get("action") == "restart_stream"
+        ]
+        covered = [item for item in eligible if self._current_classifier_action_for_production(item) == item.get("action")]
+        covered_ids = {id(item) for item in covered}
+        uncovered = [item for item in eligible if id(item) not in covered_ids]
+        return {
+            "classifier": "local_delivery_fast_recovery_stream_restart_v1",
+            "target_action": "restart_stream",
+            "basis": "current classifier replay over historical fast_recovery restart events; historical orchestrator JSONL is not backfilled",
+            "eligible_count": len(eligible),
+            "covered_count": len(covered),
+            "uncovered_count": len(uncovered),
+            "coverage_ratio": None if not eligible else round(len(covered) / len(eligible), 6),
+            "covered_by_trigger": self._count_production_triggers(covered),
+            "uncovered_by_trigger": self._count_production_triggers(uncovered),
+        }
+
+    def _current_classifier_action_for_production(self, event: dict[str, Any]) -> str:
+        trigger = str(event.get("trigger") or event.get("reason") or "")
+        if trigger in FAST_RECOVERY_STREAM_RESTART_FAILURE_BY_TRIGGER:
+            return "restart_stream"
+        return "none"
+
+    def _count_production_triggers(self, events: list[dict[str, Any]]) -> dict[str, int]:
+        counts: dict[str, int] = {}
+        for item in events:
+            trigger = str(item.get("trigger") or item.get("reason") or "unknown")
+            counts[trigger] = counts.get(trigger, 0) + 1
         return dict(sorted(counts.items()))
 
     def _distribution(self, counts: dict[str, int]) -> dict[str, float]:
@@ -323,6 +419,22 @@ class ObjectiveSliCalculator:
         selected = selected if isinstance(selected, dict) else {}
         return str(selected.get("action") or "none")
 
+    def _execution_plan(self, item: dict[str, Any]) -> dict[str, Any]:
+        payload = item.get("payload") if isinstance(item.get("payload"), dict) else {}
+        plan = payload.get("execution_plan") if isinstance(payload.get("execution_plan"), dict) else {}
+        return plan
+
+    def _execution_plan_action(self, item: dict[str, Any]) -> str:
+        plan = self._execution_plan(item)
+        return str(plan.get("action") or "none")
+
+    def _execution_plan_executable(self, item: dict[str, Any]) -> bool:
+        return bool(self._execution_plan(item).get("executable", False))
+
+    def _has_recovery_intent(self, item: dict[str, Any]) -> bool:
+        action = self._execution_plan_action(item)
+        return action in EXECUTOR_RECOVERY_ACTIONS and self._execution_plan_executable(item)
+
     def _diff_shadow_vs_production(self, orchestrator_events: list[dict[str, Any]], production_events: list[dict[str, Any]]) -> dict[str, Any]:
         exact_agreement = 0
         compatible_agreement = 0
@@ -333,16 +445,17 @@ class ObjectiveSliCalculator:
             "false_positive_shadow": 0,
             "action_mismatch": 0,
         }
+        recovery_intent_events = [item for item in orchestrator_events if self._has_recovery_intent(item)]
         matched_shadow_ids: set[int] = set()
 
         for prod in production_events:
-            nearest = self._nearest_orchestrator_event(orchestrator_events, prod["ts"])
+            nearest = self._nearest_orchestrator_event(recovery_intent_events, prod["ts"])
             if nearest is None:
                 disagreements += 1
-                by_reason["timing"] += 1
+                by_reason["production_without_shadow"] += 1
                 continue
             matched_shadow_ids.add(id(nearest))
-            shadow_action = self._selected_action(nearest)
+            shadow_action = self._execution_plan_action(nearest)
             prod_action = str(prod.get("action") or "unknown")
             if shadow_action == prod_action:
                 exact_agreement += 1
@@ -359,16 +472,14 @@ class ObjectiveSliCalculator:
             else:
                 by_reason["action_mismatch"] += 1
 
-        for item in orchestrator_events:
+        for item in recovery_intent_events:
             if id(item) in matched_shadow_ids:
-                continue
-            if self._selected_action(item) == "none":
                 continue
             disagreements += 1
             by_reason["false_positive_shadow"] += 1
 
         comparable = len(production_events) + sum(
-            1 for item in orchestrator_events if id(item) not in matched_shadow_ids and self._selected_action(item) != "none"
+            1 for item in recovery_intent_events if id(item) not in matched_shadow_ids
         )
         return {
             "exact_agreement_count": exact_agreement,

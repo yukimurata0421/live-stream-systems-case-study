@@ -43,6 +43,18 @@ mutating recovery paths documented in `docs/runtime-contract.md`.
 Consequence: a green shadow action plan proves evidence classification and
 destructive-action blocking, not that production restart budgets were bypassed.
 
+## Current Classifier Replay
+
+Status: accepted
+
+Historical `production_without_shadow` counts must remain visible. When a
+classifier is improved, the remediation is shown as `current_classifier_replay`
+over retained production events, not by rewriting old orchestrator JSONL.
+
+Consequence: reviewers can distinguish historical gaps from current classifier
+coverage. A replay pass proves present classification behavior; it does not
+pretend that the executor had already produced those historical intents.
+
 ## Migration Smoke Test
 
 Status: accepted

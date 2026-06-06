@@ -26,6 +26,12 @@ class LocalDeliverySignals:
     tcp_unacked: int | None
     tcp_lastsnd_ms: int | None
     tcp_conn_established: bool
+    fast_recovery_kind: str
+    fast_recovery_trigger: str
+    fast_recovery_age_sec: float | None
+    fast_recovery_restart_trigger: str
+    fast_recovery_restart_age_sec: float | None
+    fast_recovery_stream_restart_recent: bool
     stream_engine_event: str
     observed_ts_utc: str
     reason: str
@@ -52,6 +58,10 @@ class LocalDeliverySignals:
 
     def failure_names(self) -> list[str]:
         failures: list[str] = []
+        if self.fast_recovery_stream_restart_recent:
+            failure = actions.FAST_RECOVERY_STREAM_RESTART_FAILURE_BY_TRIGGER.get(self.fast_recovery_restart_trigger)
+            if failure:
+                failures.append(failure)
         if self.ffmpeg_count > 1:
             failures.append(actions.FAILURE_STREAM_FFMPEG_DUPLICATE)
         if not self.ffmpeg_alive and self.ffmpeg_count <= 0:
@@ -71,6 +81,7 @@ def collect_signals(
     stream_stats: dict[str, Any],
     runtime: dict[str, Any],
     fast_recovery: dict[str, Any],
+    fast_recovery_restart: dict[str, Any],
     stream_engine_event: dict[str, Any],
     restart_reason: dict[str, Any],
     recovery_stage: dict[str, Any],
@@ -86,6 +97,15 @@ def collect_signals(
 
     fast_ts = parse_utc(fast_recovery.get("ts_utc"))
     fast_age = age_seconds(fast_ts, now)
+    restart_event = fast_recovery_restart or fast_recovery
+    restart_ts = parse_utc(restart_event.get("ts_utc"))
+    restart_age = age_seconds(restart_ts, now)
+    fast_context = fast_recovery.get("restart_context") if isinstance(fast_recovery.get("restart_context"), dict) else {}
+    restart_context = restart_event.get("restart_context") if isinstance(restart_event.get("restart_context"), dict) else {}
+    fast_kind = text(fast_recovery.get("kind")).lower()
+    fast_trigger = text(fast_recovery.get("trigger") or fast_context.get("trigger")).lower()
+    restart_kind = text(restart_event.get("kind")).lower()
+    restart_trigger = text(restart_event.get("trigger") or restart_context.get("trigger")).lower()
     tcp = _tcp_metrics(fast_recovery)
     tcp_stall_recent = (
         (
@@ -102,6 +122,12 @@ def collect_signals(
         and fast_age <= 180
         and (tcp["bytes_sent_delta"] or 0) > 0
         and tcp["conn_established"]
+    )
+    fast_recovery_stream_restart_recent = (
+        restart_kind == "restart"
+        and restart_trigger in actions.FAST_RECOVERY_STREAM_RESTART_FAILURE_BY_TRIGGER
+        and restart_age is not None
+        and restart_age <= 180
     )
     engine_ts = parse_utc(stream_engine_event.get("ts_utc"))
     engine_age = age_seconds(engine_ts, now) if engine_ts else None
@@ -123,6 +149,12 @@ def collect_signals(
         tcp_unacked=tcp["unacked"],
         tcp_lastsnd_ms=tcp["lastsnd_ms"],
         tcp_conn_established=tcp["conn_established"],
+        fast_recovery_kind=fast_kind,
+        fast_recovery_trigger=fast_trigger,
+        fast_recovery_age_sec=fast_age,
+        fast_recovery_restart_trigger=restart_trigger,
+        fast_recovery_restart_age_sec=restart_age,
+        fast_recovery_stream_restart_recent=fast_recovery_stream_restart_recent,
         stream_engine_event=text(stream_engine_event.get("event") or stream_engine_event.get("event_type") or stream_engine_event.get("kind")),
         observed_ts_utc=text(runtime.get("updated_at_utc") or ytw.get("ts_utc") or stream_stats.get("ts_utc") or fast_recovery.get("ts_utc") or stream_engine_event.get("ts_utc")),
         reason=" ".join(part for part in [text(stream_stats.get("reason")), text(fast_recovery.get("message")), text(restart_reason.get("reason")), text(recovery_stage.get("reason"))] if part),
@@ -144,19 +176,21 @@ def _float(value: Any, *, default: float | None = None) -> float | None:
 
 
 def _tcp_metrics(payload: dict[str, Any]) -> dict[str, Any]:
+    metrics = payload.get("metrics") if isinstance(payload.get("metrics"), dict) else {}
     conn = text(payload.get("conn") or payload.get("connection_state") or payload.get("state")).upper()
     return {
-        "bytes_sent_delta": _float(_first_present(payload, "bytes_sent_delta", "bytes_delta"), default=None),
-        "mbps": _float(payload.get("mbps"), default=None),
-        "notsent": _int(payload.get("notsent"), default=0),
-        "unacked": _int(payload.get("unacked"), default=0),
-        "lastsnd_ms": _int(payload.get("lastsnd_ms"), default=0),
+        "bytes_sent_delta": _float(_first_present(payload, metrics, "bytes_sent_delta", "bytes_delta"), default=None),
+        "mbps": _float(_first_present(payload, metrics, "mbps", "send_mbps"), default=None),
+        "notsent": _int(_first_present(payload, metrics, "notsent"), default=0),
+        "unacked": _int(_first_present(payload, metrics, "unacked"), default=0),
+        "lastsnd_ms": _int(_first_present(payload, metrics, "lastsnd_ms"), default=0),
         "conn_established": "ESTAB" in conn or "ESTABLISHED" in conn or truthy(payload.get("ingest_connected")),
     }
 
 
-def _first_present(payload: dict[str, Any], *names: str) -> Any:
-    for name in names:
-        if name in payload and payload[name] is not None:
-            return payload[name]
+def _first_present(payload: dict[str, Any], metrics: dict[str, Any], *names: str) -> Any:
+    for source in (payload, metrics):
+        for name in names:
+            if name in source and source[name] is not None:
+                return source[name]
     return None

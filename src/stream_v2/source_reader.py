@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Iterable, Optional
+from typing import Any, Callable, Iterable, Optional
 
-from .jsonio import latest_jsonl, read_json
+from .jsonio import iter_jsonl, latest_jsonl, read_json
 
 
 @dataclass(frozen=True)
@@ -21,6 +21,7 @@ class RuntimeInputs:
     latest_stream_watchdog_event: dict[str, Any]
     latest_watchdog_timeline_event: dict[str, Any]
     latest_fast_recovery_event: dict[str, Any]
+    latest_fast_recovery_restart_event: dict[str, Any]
     latest_youtube_watchdog_event: dict[str, Any]
     latest_stream1090_report: dict[str, Any]
     latest_upstream_stream1090_report: dict[str, Any]
@@ -60,6 +61,10 @@ class SourceReader:
             latest_stream_watchdog_event=latest_jsonl(logs / "stream_watchdog_events.jsonl") or {},
             latest_watchdog_timeline_event=latest_jsonl(logs / "watchdog_state_timeline.jsonl") or {},
             latest_fast_recovery_event=latest_jsonl(logs / "fast_recovery_events.jsonl") or {},
+            latest_fast_recovery_restart_event=self._latest_jsonl_where(
+                logs / "fast_recovery_events.jsonl",
+                lambda item: item.get("kind") == "restart",
+            ),
             latest_youtube_watchdog_event=latest_jsonl(logs / "youtube_watchdog.jsonl") or {},
             latest_stream1090_report=latest_jsonl(logs / "stream1090_report.jsonl") or {},
             latest_upstream_stream1090_report=latest_jsonl(logs / "upstream_stream1090_report.jsonl") or {},
@@ -124,3 +129,10 @@ class SourceReader:
             return int(raw)
         except ValueError:
             return default
+
+    def _latest_jsonl_where(self, path: Path, predicate: Callable[[dict[str, Any]], bool]) -> dict[str, Any]:
+        latest: dict[str, Any] = {}
+        for item in iter_jsonl(path):
+            if predicate(item):
+                latest = item
+        return latest

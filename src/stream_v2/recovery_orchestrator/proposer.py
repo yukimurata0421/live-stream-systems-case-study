@@ -19,12 +19,17 @@ class ActionProposer:
         elif rendering.state == "degraded":
             candidates.append(ActionCandidate("reload_overlay", "rendering", 10, "low", True, True))
 
-        if music.state in {"failed", "degraded"}:
+        local_failure_active = local.state in {"failed", "degraded"}
+        if music.state in {"failed", "degraded"} and not local_failure_active:
             candidates.append(ActionCandidate("restart_dj", "music", 20, "low", True, True))
 
         if local.state == "failed":
-            candidates.append(ActionCandidate("restart_ffmpeg", "local_delivery", 30, "medium", True, True))
-            candidates.append(ActionCandidate("restart_stream", "stream_all", 40, "high", True, True))
+            if local.recommended_action == "restart_stream":
+                candidates.append(ActionCandidate("restart_stream", "stream_all", 30, "high", True, True))
+                candidates.append(ActionCandidate("restart_ffmpeg", "local_delivery", 40, "medium", True, True))
+            else:
+                candidates.append(ActionCandidate("restart_ffmpeg", "local_delivery", 30, "medium", True, True))
+                candidates.append(ActionCandidate("restart_stream", "stream_all", 40, "high", True, True))
         elif local.state == "degraded":
             candidates.append(ActionCandidate("restart_ffmpeg", "local_delivery", 30, "medium", True, True))
 

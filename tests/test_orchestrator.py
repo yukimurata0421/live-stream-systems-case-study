@@ -16,7 +16,7 @@ from stream_v2.model import ActionCandidate
 from stream_v2.orchestrator import ActionGate, RecoveryOrchestrator
 from stream_v2.source_reader import SourceReader
 from stream_v2.timeutil import isoformat_utc
-from test_subsystems import NOW, healthy_source, write_json
+from test_subsystems import NOW, append_jsonl, healthy_source, write_json
 
 
 class TestOrchestrator(unittest.TestCase):
@@ -46,6 +46,71 @@ class TestOrchestrator(unittest.TestCase):
         actions = [item["action"] for item in decision.event["action_candidates"]]
         self.assertIn("restart_stream", actions)
         self.assertIn("create_replacement_broadcast", actions)
+
+    def test_orchestrator_does_not_restart_dj_when_local_delivery_failed(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            healthy_source(root)
+            append_jsonl(root / "logs" / "watchdog_state_timeline.jsonl", {
+                "ts_utc": "2026-05-06T11:56:30Z",
+                "event_id": "evt-stale-now-playing",
+                "stream_service_substate": "running",
+                "dj_service_substate": "running",
+                "ffmpeg_count": 1,
+                "runtime_snapshot": {
+                    "age_sec": 210,
+                    "run_id": "run-1",
+                    "status": "running",
+                    "ffmpeg_pid": "123",
+                    "updated_at_utc": "2026-05-06T11:56:30Z",
+                },
+                "now_playing_state": {
+                    "updated_at_utc": "2026-05-06T11:56:30Z",
+                    "status": "playing",
+                    "title": "NCS Track",
+                },
+            })
+            runtime = json.loads((root / "stream_runtime_state_abc.json").read_text())
+            runtime["updated_at_utc"] = "2026-05-06T11:56:30Z"
+            write_json(root / "stream_runtime_state_abc.json", runtime)
+            config = RuntimeConfig(source_state_root=root, state_root=root / "v2")
+            snap = self.snapshot(root, config)
+            decision = RecoveryOrchestrator(config).evaluate(snap, now=NOW, lock_state=LockState(False, False, "no_lock"))
+        self.assertEqual(snap.local_delivery.state, "failed")
+        self.assertEqual(snap.music.state, "degraded")
+        self.assertEqual(decision.event["selected_action"]["action"], "restart_ffmpeg")
+        actions = [item["action"] for item in decision.event["action_candidates"]]
+        self.assertNotIn("restart_dj", actions)
+
+    def test_orchestrator_selects_restart_stream_for_fast_recovery_stream_restart(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            healthy_source(root)
+            append_jsonl(root / "logs" / "fast_recovery_events.jsonl", {
+                "ts_utc": "2026-05-06T11:59:45Z",
+                "kind": "restart",
+                "trigger": "network_down",
+                "message": "network down: gw_ok=True public_ok_count=0 dns_ok=False tcp_probe_ok=False",
+                "restart_context": {
+                    "component": "stream",
+                    "target_unit": "adsb-streamnew-youtube-stream.service",
+                    "trigger": "network_down",
+                },
+            })
+            config = RuntimeConfig(source_state_root=root, state_root=root / "v2", supervisor_mode="k8s")
+            snap = self.snapshot(root, config)
+            decision = RecoveryOrchestrator(config).evaluate(snap, now=NOW, lock_state=LockState(False, False, "no_lock"))
+
+        self.assertEqual(snap.local_delivery.recommended_action, "restart_stream")
+        self.assertEqual(decision.event["selected_action"]["action"], "restart_stream")
+        self.assertEqual(decision.event["execution_plan"]["action"], "restart_stream")
+        self.assertTrue(decision.event["execution_plan"]["executable"])
+        self.assertFalse(decision.event["execution_plan"]["execute"])
+        self.assertIn("shadow_mode", decision.event["execution_plan"]["blocked_by"])
+        self.assertEqual(
+            decision.event["execution_plan"]["steps"][0]["command"],
+            ["kubectl", "-n", "stream-v3", "rollout", "restart", "deployment/stream-v3-runtime"],
+        )
 
     def test_youtube_lifecycle_expected_url_live_blocks_replacement_broadcast_in_gate(self) -> None:
         with tempfile.TemporaryDirectory() as td:

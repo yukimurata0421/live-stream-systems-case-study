@@ -75,14 +75,52 @@ class TestSliPipelineRotation(unittest.TestCase):
             append_jsonl(config.orchestrator_log_path, {
                 "ts_utc": isoformat_utc(start + timedelta(hours=1)),
                 "selected_action": {"action": "restart_ffmpeg"},
+                "execution_plan": {
+                    "action": "restart_ffmpeg",
+                    "executable": True,
+                    "execute": False,
+                    "blocked_by": ["shadow_mode"],
+                },
             })
             append_jsonl(config.orchestrator_log_path, {
                 "ts_utc": isoformat_utc(start + timedelta(hours=2)),
                 "selected_action": {"action": "restart_browser"},
+                "execution_plan": {
+                    "action": "restart_browser",
+                    "executable": False,
+                    "execute": False,
+                    "blocked_by": ["native_rendering_control_api_not_yet_available", "shadow_mode"],
+                },
             })
             append_jsonl(config.orchestrator_log_path, {
                 "ts_utc": isoformat_utc(start + timedelta(hours=3)),
                 "selected_action": {"action": "none"},
+                "execution_plan": {
+                    "action": "none",
+                    "executable": True,
+                    "execute": False,
+                    "blocked_by": ["shadow_mode"],
+                },
+            })
+            append_jsonl(config.orchestrator_log_path, {
+                "ts_utc": isoformat_utc(start + timedelta(hours=4)),
+                "selected_action": {"action": "alert"},
+                "execution_plan": {
+                    "action": "alert",
+                    "executable": True,
+                    "execute": False,
+                    "blocked_by": ["shadow_mode"],
+                },
+            })
+            append_jsonl(config.orchestrator_log_path, {
+                "ts_utc": isoformat_utc(start + timedelta(hours=5)),
+                "selected_action": {"action": "restart_dj"},
+                "execution_plan": {
+                    "action": "restart_dj",
+                    "executable": True,
+                    "execute": False,
+                    "blocked_by": ["shadow_mode"],
+                },
             })
             append_jsonl(source_root / "logs" / "fast_recovery_events.jsonl", {
                 "ts_utc": isoformat_utc(start + timedelta(hours=1, seconds=30)),
@@ -99,6 +137,11 @@ class TestSliPipelineRotation(unittest.TestCase):
         shadow = sli["windows"]["last_24h"]["subsystems_shadow"]
         self.assertEqual(shadow["selected_action_counts"]["restart_ffmpeg"], 1)
         self.assertEqual(shadow["selected_action_counts"]["restart_browser"], 1)
+        self.assertEqual(shadow["selected_action_counts"]["alert"], 1)
+        self.assertEqual(shadow["executable_plan_counts"]["alert"], 1)
+        self.assertEqual(shadow["recovery_intent_action_counts"]["restart_dj"], 1)
+        self.assertNotIn("restart_browser", shadow["recovery_intent_action_counts"])
+        self.assertNotIn("alert", shadow["recovery_intent_action_counts"])
         self.assertEqual(shadow["production_action_counts"]["restart_stream"], 1)
         self.assertEqual(shadow["production_action_counts"]["restart_ffmpeg"], 1)
         self.assertEqual(shadow["shadow_vs_production_exact_agreement_count"], 0)
@@ -106,6 +149,38 @@ class TestSliPipelineRotation(unittest.TestCase):
         self.assertEqual(shadow["shadow_vs_production_disagreement_by_reason"]["action_mismatch"], 1)
         self.assertEqual(shadow["shadow_vs_production_disagreement_by_reason"]["production_without_shadow"], 1)
         self.assertEqual(shadow["shadow_vs_production_disagreement_by_reason"]["false_positive_shadow"], 1)
+        self.assertEqual(shadow["current_classifier_replay"]["eligible_count"], 1)
+        self.assertEqual(shadow["current_classifier_replay"]["covered_count"], 1)
+        self.assertEqual(shadow["current_classifier_replay"]["uncovered_count"], 0)
+        self.assertEqual(shadow["current_classifier_replay"]["coverage_ratio"], 1.0)
+        self.assertEqual(shadow["current_classifier_replay"]["covered_by_trigger"]["tcp_stall"], 1)
+
+    def test_current_classifier_replay_counts_uncovered_fast_recovery_restart_trigger(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source_root = root / "source"
+            config = RuntimeConfig(source_state_root=source_root, state_root=root / "v2")
+            start = NOW - timedelta(hours=2)
+            append_jsonl(source_root / "logs" / "fast_recovery_events.jsonl", {
+                "ts_utc": isoformat_utc(start),
+                "kind": "restart",
+                "trigger": "network_down",
+            })
+            append_jsonl(source_root / "logs" / "fast_recovery_events.jsonl", {
+                "ts_utc": isoformat_utc(start + timedelta(minutes=10)),
+                "kind": "restart",
+                "trigger": "unmodelled_trigger",
+            })
+
+            sli = ObjectiveSliCalculator(config).calculate(now=NOW, expected_video_id="vid-current")
+
+        replay = sli["windows"]["last_24h"]["subsystems_shadow"]["current_classifier_replay"]
+        self.assertEqual(replay["eligible_count"], 2)
+        self.assertEqual(replay["covered_count"], 1)
+        self.assertEqual(replay["uncovered_count"], 1)
+        self.assertEqual(replay["coverage_ratio"], 0.5)
+        self.assertEqual(replay["covered_by_trigger"], {"network_down": 1})
+        self.assertEqual(replay["uncovered_by_trigger"], {"unmodelled_trigger": 1})
 
     def test_objective_sli_does_not_count_passed_lock_gate_as_block(self) -> None:
         with tempfile.TemporaryDirectory() as td:

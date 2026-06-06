@@ -37,7 +37,7 @@ The page front-loads the questions a reviewer should ask first:
 - Guardrails for upload p95, ADS-B source freshness, API burn, and memory.
 - 24-hour trend cards for public-safe series.
 - Evidence checks for mirror freshness, authoritative monitoring evidence,
-  priority replay, and recovery ownership.
+  priority replay, current classifier replay, and recovery ownership.
 
 This keeps the page operational instead of promotional. A green page means the
 published snapshot is fresh and the public-safe checks are currently OK; it does
@@ -66,6 +66,8 @@ semantics, not source files.
 - Public stream state, recovery state, source freshness, API usage, and memory
   guardrails are separated.
 - Shadow recovery observations are not presented as production authority.
+- Historical `production_without_shadow` gaps stay visible when
+  `current_classifier_replay` explains current classifier coverage.
 - The public surface is useful for review without becoming an operational secret
   inventory.
 - The site complements this repository instead of replacing the measured SLI and
