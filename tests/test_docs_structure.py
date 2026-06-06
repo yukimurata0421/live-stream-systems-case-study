@@ -50,7 +50,7 @@ class PublicDocsStructureTests(unittest.TestCase):
             "v3 monitor",
             "recovery-orchestrator",
             "guard",
-            "guarded k8s recovery",
+            "guarded k3s recovery",
             "`kubectl exec`",
             "Raspberry Pi public publisher role",
             "Pi-local nginx `/grafana/` proxy",
@@ -738,6 +738,8 @@ class PublicDocsStructureTests(unittest.TestCase):
             "public readers reach Grafana",
             "adsb-open.addevlab.com",
             "/stream-v3-grafana",
+            "guarded k8s recovery",
+            "k8s container restart count",
         )
         for path in targets:
             text = read(path)

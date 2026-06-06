@@ -136,7 +136,7 @@ flowchart LR
 
     MON --> ORCH
     ORCH --> GUARD
-    GUARD -->|"guarded k8s recovery"| RUN
+    GUARD -->|"guarded k3s recovery"| RUN
     RUN -. runtime evidence .-> MON
 ```
 
@@ -174,7 +174,7 @@ The diagrams intentionally separate delivery from observation. The concrete
 ADS-B data path is Airspy on HP ProDesk -> `airspy_adsb` -> ProDesk readsb ->
 Dell workstation readsb -> Dell modified tar1090 -> `stream_v3`. Evidence
 collection is dotted in the observability diagram; the only mutating path back
-to delivery is the guarded k8s recovery request. The HP ProDesk monitor
+to delivery is the guarded k3s recovery request. The HP ProDesk monitor
 collects runtime evidence from the Dell pod with `kubectl exec`. Grafana,
 Prometheus, Loki, Alloy, and the exporter remain private on HP ProDesk. The
 Raspberry Pi uses its local `/grafana/` proxy to read the ProDesk Grafana

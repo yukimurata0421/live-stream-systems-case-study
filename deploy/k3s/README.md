@@ -93,7 +93,7 @@ current runtime contract in `docs/v3/current-runtime-contract.md`, the ownership
 decisions in `docs/v3/decisions.md`, and the staged recovery notes in
 `docs/v3/runbooks.md` are satisfied.
 
-The shadow ConfigMap also keeps `STREAM_RUNTIME_SUPERVISOR=k8s` and `STREAM_K8S_DRY_RUN=1`, so recovery code can exercise k8s command mapping without deleting or restarting workloads.
+The shadow ConfigMap also keeps `STREAM_RUNTIME_SUPERVISOR=k8s` and `STREAM_K8S_DRY_RUN=1`, so recovery code can exercise the Kubernetes-compatible k3s command mapping without deleting or restarting workloads. The `k8s` value is the internal supervisor-mode enum; the deployed runtime is k3s.
 
 ## Mirror v2 state
 
@@ -134,7 +134,7 @@ The HP ProDesk observability host owns the monitoring plane. Install
 `ops/systemd/stream-v3-remote-recovery.timer` there with
 `STREAM_V3_RECOVERY_WORKLOADS=deployment/stream-v3-runtime` so the observability
 host can request runtime restarts on the Dell delivery node through the
-namespace-scoped k8s token. Manual staged requests can use:
+namespace-scoped k3s service-account token. Manual staged requests can use:
 
 ```bash
 python3 ops/scripts/stream_v3_staged_restart.py --reason "observability manual recovery"

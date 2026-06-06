@@ -9,7 +9,7 @@ Some faults recover automatically:
 
 - FFmpeg exits and the stream engine starts a new child process;
 - fast recovery restarts delivery after `tcp_stall` or `network_down`;
-- a k8s container restart count increases and then returns healthy;
+- a k3s Pod/container restart count increases and then returns healthy;
 - runtime `run_id` changes after a controlled or automatic restart.
 
 These events are worth recording, but they are not always active incidents.
@@ -40,7 +40,7 @@ rewriting historical shadow logs.
 | current delivery fail | active incident | current fail signal, YouTube/public/ingest/capture/audio context |
 | fast recovery restart | auto-recovered info when recovered | trigger, timestamp, restart result, same URL state |
 | FFmpeg child restart | auto-recovered info | scheduled restart and later `ffmpeg_started` in same run/restart count |
-| k8s container restart count change | auto-recovered info | Pod UID, container, restart count delta, last state |
+| k3s Pod/container restart count change | auto-recovered info | Pod UID, container, restart count delta, last state |
 | runtime lifecycle change | auto-recovered info after baseline | run_id change and runtime evidence |
 | report missing | observability warning/follow-up | timer/output path and stale threshold |
 
@@ -63,7 +63,7 @@ The notification layer uses:
 - `src/stream_core/notifications/incidents.py` classifies active incidents and
   recovery observations.
 - `src/stream_core/notifications/outbox.py` deduplicates and bounds delivery.
-- `src/watchers/stream_watchdog.py` records k8s container restart deltas and
+- `src/watchers/stream_watchdog.py` records k3s Pod/container restart deltas and
   syncs runtime event evidence.
 - `src/stream_v2/sli.py` exposes `current_classifier_replay` for retained
   fast-recovery restart events.
