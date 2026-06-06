@@ -14,11 +14,11 @@ The current production split is:
   k3s `stream_v3` delivery workload.
 - Raspberry Pi: nginx `/grafana/` proxy to HP ProDesk Grafana, public-safe
   snapshot collector that pulls datasource JSON via
-  `127.0.0.1:8088/grafana`, static site source tree, scheduled GCS push, and
-  existing `adsb-open.addevlab.com` tunnel ingress.
+  `127.0.0.1:8088/grafana`, static site source tree, and scheduled GCS push.
 - GCS + Cloudflare: sanitized static status snapshot served at
   <https://yukimurata0421.dev/>. Public readers do not reach Grafana,
-  Prometheus, Loki, raw logs, credentials, or the home network directly.
+  Prometheus, Loki, raw logs, credentials, the home network, or the home uplink
+  directly.
 
 The ADS-B source chain is therefore Airspy on HP ProDesk -> `airspy_adsb` ->
 ProDesk readsb -> Beast feed to Dell `192.168.0.35:30104` -> Dell readsb ->

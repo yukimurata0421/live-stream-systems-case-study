@@ -55,11 +55,11 @@ static edge:
   recovery.
 - Raspberry Pi `192.168.0.50` public publisher role: nginx `:8088`
   `/grafana/` proxy to HP ProDesk Grafana, public-safe snapshot collection,
-  static site build, outbound GCS push, and existing `adsb-open.addevlab.com`
-  tunnel ingress.
+  static site build, and outbound GCS push.
 - GCS + Cloudflare public edge role: serve sanitized static status snapshots
-  uploaded outbound from Raspberry Pi, without exposing Grafana, Prometheus,
-  Loki, raw logs, credentials, or the home network.
+  uploaded outbound from Raspberry Pi, offloading public reads away from the
+  home uplink without exposing Grafana, Prometheus, Loki, raw logs,
+  credentials, or the home network.
 
 This split is part of the architecture, not just a deployment detail. It keeps
 the GPU/media delivery host focused on real-time output, keeps long-lived
@@ -92,10 +92,10 @@ datasource proxy. The data transfer is pull-based: the Pi collector initiates
 HTTP GETs to `127.0.0.1:8088/grafana`, Pi nginx proxies those requests to
 `192.168.0.60:3000/grafana`, and the datasource JSON response returns to the Pi
 collector. The Pi then pushes a reduced static snapshot to GCS for Cloudflare to
-serve at `yukimurata0421.dev`. Existing `adsb-open.addevlab.com` dashboard
-shortcuts are separate Cloudflare Tunnel routes back to Raspberry Pi nginx and
-then HP ProDesk Grafana; Pi nginx shortcut paths such as `/stream-v3-grafana`
-redirect into that tunnel path.
+serve at `yukimurata0421.dev`. That static edge is used to avoid spending home
+uplink bandwidth on public status reads. Non-static operational access is
+outside this public static publication path and is not named as a public
+endpoint here.
 
 ## Source Boundary
 

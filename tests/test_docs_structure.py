@@ -61,9 +61,9 @@ class PublicDocsStructureTests(unittest.TestCase):
             "192.168.0.60:3000/grafana",
             "JSON response",
             "ProDesk does not push monitoring data to Raspberry Pi",
-            "adsb-open.addevlab.com",
-            "/stream-v3-grafana",
-            "not the `yukimurata0421.dev` static publication path",
+            "home uplink bandwidth",
+            "Non-static operational access",
+            "not named as a public endpoint here",
             "Prometheus :9090",
             "Loki :3100",
             "Grafana :3000",
@@ -360,8 +360,8 @@ class PublicDocsStructureTests(unittest.TestCase):
             "Public Status Publication",
             "pushed outbound from Raspberry Pi to GCS",
             "Cloudflare serves the `yukimurata0421.dev` public domain",
-            "adsb-open.addevlab.com",
-            "/stream-v3-grafana",
+            "home uplink bandwidth",
+            "Non-static operational access",
         ):
             self.assertIn(marker, runtime)
 
@@ -386,8 +386,8 @@ class PublicDocsStructureTests(unittest.TestCase):
             "datasource JSON response returns to Raspberry Pi collector",
             "outbound upload to GCS",
             "Cloudflare",
-            "adsb-open.addevlab.com",
-            "/stream-v3-grafana",
+            "offloading public reads away from the",
+            "Non-static operational access",
         ):
             self.assertIn(marker, architecture)
 
@@ -430,8 +430,8 @@ class PublicDocsStructureTests(unittest.TestCase):
             "datasource JSON",
             "outbound to GCS",
             "Cloudflare serves",
-            "adsb-open.addevlab.com",
-            "/stream-v3-grafana",
+            "keep public status reads off the home uplink",
+            "Non-static operational access",
             "API Cost Guard",
         ):
             self.assertIn(marker, observability)
@@ -470,6 +470,7 @@ class PublicDocsStructureTests(unittest.TestCase):
             "pulls datasource JSON",
             "scheduled GCS",
             "GCS + Cloudflare",
+            "home uplink",
             "Public readers do not reach Grafana",
         ):
             self.assertIn(marker, current)
@@ -732,6 +733,8 @@ class PublicDocsStructureTests(unittest.TestCase):
             "public nginx status/dashboard gateway",
             "public browsers reach Grafana",
             "public readers reach Grafana",
+            "adsb-open.addevlab.com",
+            "/stream-v3-grafana",
         )
         for path in targets:
             text = read(path)

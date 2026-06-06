@@ -53,8 +53,9 @@ enterprise traffic scale.
   Pi-local nginx `/grafana/` proxy to the HP ProDesk Grafana datasource proxy,
   build static JSON/assets, and push them outbound to GCS.
 - Public-safe status presentation: Cloudflare serves the GCS snapshot without
-  exposing Grafana, Prometheus, Loki, raw logs, credentials, or home-network
-  ingress to `yukimurata0421.dev` readers.
+  sending public reads through the home uplink or exposing Grafana, Prometheus,
+  Loki, raw logs, credentials, or home-network ingress to
+  `yukimurata0421.dev` readers.
 - Recovery guard design that keeps monitors from directly owning FFmpeg.
 - Shadow mode and cutover safety before destructive actions.
 - `ops/monitoring` evidence path with Prometheus, Loki, Grafana, and Alloy
@@ -67,7 +68,7 @@ enterprise traffic scale.
 | Airspy, `airspy_adsb`, ProDesk readsb, or the Dell readsb / modified tar1090 map feed gets stale. | Source freshness is treated as ADS-B evidence, separate from browser/audio/encoder failure. |
 | Browser, audio, FFmpeg, RTMPS, or GPU encoding stalls. | The Dell `stream_v3` k3s delivery tier owns local runtime recovery without giving monitors direct FFmpeg ownership. |
 | YouTube API/public evidence, k3s runtime evidence, or monitoring state gets stale or misleading. | The HP ProDesk observability tier pulls read-only YouTube and runtime evidence, applies quota/freshness guards, and only then requests staged k3s recovery. |
-| The public status site gets confused with the monitoring backend. | Private Prometheus, Loki, Alloy, Grafana, and the v3 exporter remain on HP ProDesk; Raspberry Pi pulls public-safe evidence through its local Grafana proxy and pushes the allowlisted static snapshot to GCS + Cloudflare. Existing `adsb-open.addevlab.com` Grafana shortcuts are a separate Cloudflare Tunnel path, not the `yukimurata0421.dev` static publication path. |
+| The public status site gets confused with the monitoring backend or starts consuming home uplink bandwidth. | Private Prometheus, Loki, Alloy, Grafana, and the v3 exporter remain on HP ProDesk; Raspberry Pi pulls public-safe evidence through its local Grafana proxy and pushes the allowlisted static snapshot to GCS + Cloudflare so public reads terminate at the static edge. Non-static operational access is outside the `yukimurata0421.dev` publication path and is not named as a public endpoint here. |
 
 ### Delivery Path
 
@@ -149,15 +150,15 @@ collects runtime evidence from the Dell pod with `kubectl exec`. Grafana,
 Prometheus, Loki, Alloy, and the exporter remain private on HP ProDesk. The
 Raspberry Pi uses its local `/grafana/` proxy to read the ProDesk Grafana
 datasource proxy, reduces that evidence to allowlisted static JSON, pushes the
-site outbound to GCS, and Cloudflare serves <https://yukimurata0421.dev/>.
+site outbound to GCS, and Cloudflare serves <https://yukimurata0421.dev/>. This
+keeps repeated public status reads on the static edge instead of spending home
+uplink bandwidth or proxying through the monitoring backend.
 ProDesk does not push monitoring data to Raspberry Pi. The Pi collector
 initiates HTTP GETs to `127.0.0.1:8088/grafana`; Pi nginx proxies those requests
 to HP ProDesk Grafana at `192.168.0.60:3000/grafana`, and the datasource JSON
 response returns over that same path to the Pi collector.
-Existing `adsb-open.addevlab.com` Grafana shortcut routes go through a separate
-Cloudflare Tunnel to the Raspberry Pi nginx gateway; Pi nginx shortcut paths
-such as `/stream-v3-grafana` redirect there. Those shortcuts are not the
-`yukimurata0421.dev` static status publication path.
+Non-static operational access is outside the public status endpoint and is not
+named as a public endpoint here.
 
 This repository is a sanitized public snapshot of a system that evolved through
 three stages:

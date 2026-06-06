@@ -9,7 +9,7 @@ observability role; the Dell workstation `192.168.0.35` owns Dell-side readsb, a
 modified tar1090 map endpoint, and the k3s delivery role; Raspberry Pi
 `192.168.0.50` owns the public snapshot publisher role. Public presentation is a
 reduced static snapshot pushed outbound from Raspberry Pi to GCS and served
-through Cloudflare.
+through Cloudflare so public reads do not consume home uplink bandwidth.
 
 The production ADS-B data path is:
 
@@ -88,14 +88,13 @@ proxy to HP ProDesk Grafana for collector access and existing operator
 shortcuts. The Pi-side collector reads public-safe Prometheus/Loki evidence via
 `http://127.0.0.1:8088/grafana`, writes static JSON/assets, pushes them
 outbound to GCS, and Cloudflare serves the `yukimurata0421.dev` public domain.
+The GCS/Cloudflare path exists to terminate public status traffic at the static
+edge and avoid turning the home network into a public read path.
 This is a Pi-initiated pull path, not a ProDesk push path: Pi nginx forwards the
 collector request to `192.168.0.60:3000/grafana`, and the datasource JSON
 response returns to the Pi collector over the same HTTP proxy path.
-The older `adsb-open.addevlab.com` Grafana shortcut path is a separate
-Cloudflare Tunnel route back to Raspberry Pi nginx and then to HP ProDesk
-Grafana. Pi nginx shortcut paths such as `/stream-v3-grafana` redirect into
-that `adsb-open` path; they are not the `yukimurata0421.dev` static snapshot
-path.
+Non-static operational access is outside the `yukimurata0421.dev` static
+snapshot path and is not named as a public endpoint here.
 
 ## Safety Gates
 

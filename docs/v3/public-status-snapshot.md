@@ -60,18 +60,18 @@ snapshot pipeline:
    display.
 6. Static assets and sanitized JSON are pushed outbound from Raspberry Pi to
    GCS.
-7. Cloudflare serves the public domain and applies short cache lifetimes.
+7. Cloudflare serves the public domain and applies short cache lifetimes, so
+   public status reads terminate at the static edge instead of consuming home
+   uplink bandwidth.
 
 There is no reason for public browsers to reach the home network, Grafana,
 Prometheus, Loki, or the k3s runtime directly. Generated JSON snapshots are also
 not committed to this repository; they are live artifacts with freshness
 semantics, not source files.
 
-This boundary is specifically for `yukimurata0421.dev`. Existing
-`adsb-open.addevlab.com` Grafana shortcuts are separate Cloudflare Tunnel routes
-back to Raspberry Pi nginx and then HP ProDesk Grafana. Pi nginx shortcut paths
-such as `/stream-v3-grafana` redirect into that tunnel path; they are not used
-by the static snapshot collector or the `yukimurata0421.dev` publication path.
+This boundary is specifically for `yukimurata0421.dev`. Non-static operational
+access is outside the static snapshot collector and the `yukimurata0421.dev`
+publication path, and it is not named as a public endpoint here.
 
 ## What To Evaluate
 

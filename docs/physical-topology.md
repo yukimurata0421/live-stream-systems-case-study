@@ -11,8 +11,8 @@ GCS + Cloudflare form the public static edge.
 | --- | --- | --- |
 | HP ProDesk `192.168.0.60` | ADS-B source and observability | Airspy USB receiver, `airspy_adsb`, ProDesk-side readsb, YouTube resolver/watchdog, stream watchdog, subsystem SLI, notifications, Prometheus exporter on `:9108`, Prometheus `:9090`, Loki `:3100`, Alloy `:12345`, private Grafana `:3000`, recovery orchestration, and staged recovery requests |
 | Dell workstation `192.168.0.35` | Delivery and local ADS-B mirror | Dell-side readsb and modified tar1090 map endpoint, k3s `stream-v3-runtime`, browser rendering, PulseAudio, AutoDJ, FFmpeg, NVIDIA NVENC, and local fast recovery |
-| Raspberry Pi `192.168.0.50` | Public snapshot publisher and gateway | nginx `:8088` `/grafana/` proxy to HP ProDesk Grafana, public-safe snapshot collector, static site source tree, scheduled GCS push, and existing `adsb-open.addevlab.com` tunnel ingress |
-| GCS + Cloudflare | Public static edge | Receives sanitized JSON/static assets by outbound upload and serves <https://yukimurata0421.dev/> without exposing Grafana, Prometheus, Loki, raw logs, credentials, or home-network ingress |
+| Raspberry Pi `192.168.0.50` | Public snapshot publisher and gateway | nginx `:8088` `/grafana/` proxy to HP ProDesk Grafana, public-safe snapshot collector, static site source tree, and scheduled GCS push |
+| GCS + Cloudflare | Public static edge | Receives sanitized JSON/static assets by outbound upload and serves <https://yukimurata0421.dev/> without spending home uplink bandwidth on public status reads or exposing Grafana, Prometheus, Loki, raw logs, credentials, or home-network ingress |
 
 ## ADS-B Data Flow
 
@@ -65,10 +65,9 @@ This is a Pi-initiated pull: Pi nginx forwards collector requests to
 to the Pi collector before the static snapshot is built.
 The `yukimurata0421.dev` status path is then one-way: the Pi reduces evidence
 to allowlisted static assets, pushes them outbound to GCS, and Cloudflare serves
-them. Existing `adsb-open.addevlab.com` Grafana shortcut routes are a separate
-Cloudflare Tunnel path that returns to Raspberry Pi nginx and then proxies to
-HP ProDesk Grafana. Pi nginx shortcut paths such as `/stream-v3-grafana`
-redirect into that `adsb-open` path.
+them. This keeps public status reads on the static edge instead of on the home
+uplink. Non-static operational access is outside the public static status path
+and is not named as a public endpoint here.
 
 ## k3s Boundary
 

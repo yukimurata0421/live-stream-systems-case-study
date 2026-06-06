@@ -8,9 +8,10 @@ case study is stronger when it says what has not been proven.
 
 This is a single-operator, three-home-host personal 24/7 stream. It has real
 live operation, real recovery decisions, retained measurements, and a public
-GCS/Cloudflare static edge, but it is not a commercial multi-tenant service and
-does not claim a contractual user SLO. The right reading is reliability
-discipline at small blast radius.
+GCS/Cloudflare static edge that offloads public status reads away from the home
+uplink, but it is not a commercial multi-tenant service and does not claim a
+contractual user SLO. The right reading is reliability discipline at small blast
+radius.
 
 ## Status Legend
 

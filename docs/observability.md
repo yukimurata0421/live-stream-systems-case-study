@@ -91,20 +91,20 @@ ProDesk. Raspberry Pi has an nginx `/grafana/` proxy to HP ProDesk Grafana. The
 public snapshot collector runs on Raspberry Pi, queries allowlisted
 Prometheus/Loki evidence through the Pi-local
 `http://127.0.0.1:8088/grafana` datasource proxy path, pushes static
-JSON/assets outbound to GCS, and Cloudflare serves `yukimurata0421.dev`.
+JSON/assets outbound to GCS, and Cloudflare serves `yukimurata0421.dev`. The
+GCS/Cloudflare edge is used to keep public status reads off the home uplink.
 ProDesk does not push this evidence to the Pi. The collector initiates HTTP
 GETs, Pi nginx proxies them to `192.168.0.60:3000/grafana`, and Grafana returns
 datasource JSON over that same proxy path.
-Existing `adsb-open.addevlab.com` Grafana shortcuts are separate Cloudflare
-Tunnel routes back to Raspberry Pi nginx; Pi nginx shortcut paths such as
-`/stream-v3-grafana` redirect into that path. They are not the static
-`yukimurata0421.dev` status path.
+Non-static operational access is outside the static `yukimurata0421.dev` status
+path and is not named as a public endpoint here.
 
 The public status site at <https://yukimurata0421.dev/> is a separate,
 sanitized evidence surface. It shows a static GCS + Cloudflare snapshot with
 freshness, decision checks, guardrails, trends, and recovery-boundary summaries;
 it does not expose Grafana, Prometheus, Loki, raw logs, credentials, or
-home-network ingress. The boundary is documented in
+home-network ingress, and public readers do not consume the home uplink. The
+boundary is documented in
 [`v3/public-status-snapshot.md`](v3/public-status-snapshot.md).
 
 ## API Cost Guard
