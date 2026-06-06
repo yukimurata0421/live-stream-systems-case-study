@@ -10,7 +10,7 @@ ExecStart=/usr/bin/python3 /home/yuki/projects/stream_v3/ops/scripts/stream_v3_p
 Restart=always
 RestartSec=10
 User=yuki
-EnvironmentFile=-/etc/default/stream-v3-observability-monitor
+EnvironmentFile=-/home/yuki/projects/stream_v2/.state/env/stream-v3-observability-monitor.env
 Environment=PYTHONPATH=/home/yuki/projects/stream_v3/src
 
 [Install]

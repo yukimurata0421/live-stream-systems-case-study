@@ -23,6 +23,8 @@ class LegacyComponent:
 
     @property
     def exists(self) -> bool:
+        if self.kind in {"runtime_asset", "local_asset"}:
+            return True
         return self.path.exists()
 
     def to_dict(self) -> dict[str, Any]:

@@ -186,6 +186,10 @@ def guard_stream_v2_mutating_command(command: str, maintenance_action: str = "")
     )
 
 
+def guard_stream_v3_mutating_command(command: str, maintenance_action: str = "") -> int:
+    return guard_stream_v2_mutating_command(command, maintenance_action)
+
+
 def unit_installed(unit: str) -> bool:
     return cli_systemd_units.unit_installed(unit, run_systemctl=lambda args, check: run_systemctl(args, check=check))
 

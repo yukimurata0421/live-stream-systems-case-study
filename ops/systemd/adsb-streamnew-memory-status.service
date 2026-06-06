@@ -8,6 +8,6 @@ Type=oneshot
 User=yuki
 Group=yuki
 WorkingDirectory=/home/yuki/projects/stream_v3
-EnvironmentFile=-/etc/default/stream-v3-observability-monitor
+EnvironmentFile=-/home/yuki/projects/stream_v2/.state/env/stream-v3-observability-monitor.env
 Environment=PYTHONPATH=/home/yuki/projects/stream_v3/src
 ExecStart=/home/yuki/projects/stream_v3/bin/stream-prod memory-status
