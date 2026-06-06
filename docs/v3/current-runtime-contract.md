@@ -13,8 +13,9 @@ The current production split is:
 - Dell workstation: Dell-side readsb, modified tar1090 map endpoint, and the
   k3s `stream_v3` delivery workload.
 - Raspberry Pi: nginx `/grafana/` proxy to HP ProDesk Grafana, public-safe
-  snapshot collector, static site source tree, scheduled GCS push, and existing
-  `adsb-open.addevlab.com` tunnel ingress.
+  snapshot collector that pulls datasource JSON via
+  `127.0.0.1:8088/grafana`, static site source tree, scheduled GCS push, and
+  existing `adsb-open.addevlab.com` tunnel ingress.
 - GCS + Cloudflare: sanitized static status snapshot served at
   <https://yukimurata0421.dev/>. Public readers do not reach Grafana,
   Prometheus, Loki, raw logs, credentials, or the home network directly.

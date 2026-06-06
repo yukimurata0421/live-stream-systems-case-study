@@ -88,6 +88,9 @@ proxy to HP ProDesk Grafana for collector access and existing operator
 shortcuts. The Pi-side collector reads public-safe Prometheus/Loki evidence via
 `http://127.0.0.1:8088/grafana`, writes static JSON/assets, pushes them
 outbound to GCS, and Cloudflare serves the `yukimurata0421.dev` public domain.
+This is a Pi-initiated pull path, not a ProDesk push path: Pi nginx forwards the
+collector request to `192.168.0.60:3000/grafana`, and the datasource JSON
+response returns to the Pi collector over the same HTTP proxy path.
 The older `adsb-open.addevlab.com` Grafana shortcut path is a separate
 Cloudflare Tunnel route back to Raspberry Pi nginx and then to HP ProDesk
 Grafana. Pi nginx shortcut paths such as `/stream-v3-grafana` redirect into

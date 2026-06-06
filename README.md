@@ -129,10 +129,13 @@ flowchart LR
     YT -. read-only evidence .-> MON
     MON --> ORCH
     ORCH -->|"guarded k8s recovery"| RUN
-    MON --> EXP --> PROM --> GRAF
+    MON --> EXP --> PROM
     MON -. logs .-> LOKI
-    COLL --> NGINX
-    NGINX -. ProDesk Grafana proxy .-> GRAF
+    PROM -->|"metrics datasource"| GRAF
+    LOKI -->|"logs datasource"| GRAF
+    COLL -->|"pull: HTTP GET<br/>127.0.0.1:8088/grafana/..."| NGINX
+    NGINX -->|"proxy_pass<br/>192.168.0.60:3000/grafana"| GRAF
+    GRAF -->|"JSON response<br/>returns through Pi nginx"| COLL
     COLL --> PUB
     PUB -->|"outbound upload"| GCS --> CF
 ```
@@ -147,6 +150,10 @@ Prometheus, Loki, Alloy, and the exporter remain private on HP ProDesk. The
 Raspberry Pi uses its local `/grafana/` proxy to read the ProDesk Grafana
 datasource proxy, reduces that evidence to allowlisted static JSON, pushes the
 site outbound to GCS, and Cloudflare serves <https://yukimurata0421.dev/>.
+ProDesk does not push monitoring data to Raspberry Pi. The Pi collector
+initiates HTTP GETs to `127.0.0.1:8088/grafana`; Pi nginx proxies those requests
+to HP ProDesk Grafana at `192.168.0.60:3000/grafana`, and the datasource JSON
+response returns over that same path to the Pi collector.
 Existing `adsb-open.addevlab.com` Grafana shortcut routes go through a separate
 Cloudflare Tunnel to the Raspberry Pi nginx gateway; Pi nginx shortcut paths
 such as `/stream-v3-grafana` redirect there. Those shortcuts are not the

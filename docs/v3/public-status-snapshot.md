@@ -50,13 +50,17 @@ The production monitoring stack remains private. The public path is a reduced
 snapshot pipeline:
 
 1. Private Prometheus/Loki/Grafana evidence remains on HP ProDesk.
-2. Raspberry Pi queries the HP ProDesk Grafana datasource proxy through the
-   Pi-local `http://127.0.0.1:8088/grafana` path.
-3. A Raspberry Pi-side collector emits allowlisted JSON fields for public
+2. The Raspberry Pi-side collector initiates HTTP GETs to the Pi-local
+   `http://127.0.0.1:8088/grafana` path.
+3. Pi nginx proxies those requests to HP ProDesk Grafana at
+   `192.168.0.60:3000/grafana`.
+4. HP ProDesk Grafana serves datasource proxy JSON from private Prometheus/Loki
+   evidence, and the JSON response returns over the same Pi nginx path.
+5. A Raspberry Pi-side collector emits allowlisted JSON fields for public
    display.
-4. Static assets and sanitized JSON are pushed outbound from Raspberry Pi to
+6. Static assets and sanitized JSON are pushed outbound from Raspberry Pi to
    GCS.
-5. Cloudflare serves the public domain and applies short cache lifetimes.
+7. Cloudflare serves the public domain and applies short cache lifetimes.
 
 There is no reason for public browsers to reach the home network, Grafana,
 Prometheus, Loki, or the k3s runtime directly. Generated JSON snapshots are also

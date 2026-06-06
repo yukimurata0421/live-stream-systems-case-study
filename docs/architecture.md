@@ -28,8 +28,11 @@ runtime evidence
   -> staged recovery request
 
 public status publication
-  -> Raspberry Pi collector
-  -> Pi-local /grafana/ proxy to HP ProDesk Grafana
+  -> Raspberry Pi collector initiates HTTP GET
+  -> Pi-local /grafana/ proxy
+  -> HP ProDesk Grafana datasource proxy
+  -> HP ProDesk Prometheus/Loki
+  -> datasource JSON response returns to Raspberry Pi collector
   -> outbound upload to GCS
   -> Cloudflare
   -> yukimurata0421.dev
@@ -85,7 +88,10 @@ host-local evidence and presentation stack. It is not a third delivery plane and
 does not own FFmpeg or k3s recovery directly. In the current production shape,
 that monitoring backend runs on HP ProDesk. Raspberry Pi uses the Pi-local
 `/grafana/` proxy to collect allowlisted evidence from the ProDesk Grafana
-datasource proxy, then pushes a reduced static snapshot to GCS for Cloudflare to
+datasource proxy. The data transfer is pull-based: the Pi collector initiates
+HTTP GETs to `127.0.0.1:8088/grafana`, Pi nginx proxies those requests to
+`192.168.0.60:3000/grafana`, and the datasource JSON response returns to the Pi
+collector. The Pi then pushes a reduced static snapshot to GCS for Cloudflare to
 serve at `yukimurata0421.dev`. Existing `adsb-open.addevlab.com` dashboard
 shortcuts are separate Cloudflare Tunnel routes back to Raspberry Pi nginx and
 then HP ProDesk Grafana; Pi nginx shortcut paths such as `/stream-v3-grafana`

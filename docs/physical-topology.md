@@ -60,6 +60,9 @@ Grafana `:3000`, Prometheus `:9090`, Loki `:3100`, Alloy, and the exporter stay
 private on HP ProDesk. Raspberry Pi nginx exposes `/grafana/` as a proxy to HP
 ProDesk Grafana; the public snapshot collector uses the Pi-local
 `http://127.0.0.1:8088/grafana` path to query public-safe datasource endpoints.
+This is a Pi-initiated pull: Pi nginx forwards collector requests to
+`192.168.0.60:3000/grafana`, and the Grafana datasource JSON response returns
+to the Pi collector before the static snapshot is built.
 The `yukimurata0421.dev` status path is then one-way: the Pi reduces evidence
 to allowlisted static assets, pushes them outbound to GCS, and Cloudflare serves
 them. Existing `adsb-open.addevlab.com` Grafana shortcut routes are a separate

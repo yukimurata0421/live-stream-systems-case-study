@@ -92,6 +92,9 @@ public snapshot collector runs on Raspberry Pi, queries allowlisted
 Prometheus/Loki evidence through the Pi-local
 `http://127.0.0.1:8088/grafana` datasource proxy path, pushes static
 JSON/assets outbound to GCS, and Cloudflare serves `yukimurata0421.dev`.
+ProDesk does not push this evidence to the Pi. The collector initiates HTTP
+GETs, Pi nginx proxies them to `192.168.0.60:3000/grafana`, and Grafana returns
+datasource JSON over that same proxy path.
 Existing `adsb-open.addevlab.com` Grafana shortcuts are separate Cloudflare
 Tunnel routes back to Raspberry Pi nginx; Pi nginx shortcut paths such as
 `/stream-v3-grafana` redirect into that path. They are not the static
