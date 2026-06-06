@@ -18,12 +18,15 @@ Key signal groups:
 - local FFmpeg process and TCP ingest state
 - k3s runtime status and in-container probes
 - upload throughput, `notsent`, `unacked`, and `lastsnd` samples
+- report-only WAN identity and TCP anchor probes for transport root-cause
+  splitting
 - YouTube Data API, OAuth, and public watch-page state
 - resolver cache freshness
 - now-playing metadata freshness
+- visual correctness checks
 - PulseAudio route and RMS checks
 - runtime heartbeat age
-- memory guardrail and OOM indicators
+- capture-helper memory guardrail and OOM indicators
 - Prometheus scrape freshness
 
 ## Metrics
@@ -56,6 +59,27 @@ Dashboard state should separate current failures from historical degradation.
 For example, a stale long-window field must not override a fresh local ingest
 sample. The monitoring layer records both so an operator can tell whether the
 fault is current, historical, or a dashboard false positive.
+
+Transport cause probes are intentionally separated from recovery authority.
+`ops/scripts/wan_address_observer.py` records route, address, public IPv4, and
+fresh TCP-anchor state. `ops/scripts/persistent_tcp_anchor_observer.py` keeps
+non-YouTube TCP/TLS anchors open and records whether reconnect succeeds after an
+existing-flow failure. The TCP stall case study in
+[`v3/tcp-stall-case-study.md`](v3/tcp-stall-case-study.md) shows how those
+signals were used to exclude YouTube-ingest and Google-only explanations before
+classifying the recurring event as a WAN/session refresh.
+
+Viewer-facing media health is tracked separately from transport state.
+[`v3/visual-audio-health-model.md`](v3/visual-audio-health-model.md) explains
+why RTMPS connected is not proof of correct video or audio.
+[`v3/memory-guard-case-study.md`](v3/memory-guard-case-study.md) explains why
+Xvfb shared-memory pressure is handled as capture-stack evidence instead of a
+generic reason to mutate YouTube lifecycle state.
+
+YouTube lifecycle state is also deliberately isolated from delivery symptoms.
+[`v3/youtube-lifecycle-safety.md`](v3/youtube-lifecycle-safety.md) documents the
+same-URL, quota, and stale-cache gates that must pass before destructive
+YouTube actions are allowed.
 
 `ops/monitoring/` contains the Prometheus, Loki, Grafana, and Alloy
 configuration used to present this evidence. It is an observability display and

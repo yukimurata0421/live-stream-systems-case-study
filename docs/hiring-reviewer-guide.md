@@ -17,7 +17,8 @@ plug-and-play streaming package.
 - an example of separating delivery ownership from monitoring ownership;
 - an example of treating the ADS-B source chain as evidence instead of hiding it
   inside the renderer;
-- a record of safety decisions around recovery, stale evidence, and API quota.
+- a record of safety decisions around recovery, stale evidence, API quota,
+  encoder/upload trade-offs, and single-node DR boundaries.
 
 ## Key Design Decisions
 
@@ -31,23 +32,43 @@ plug-and-play streaming package.
    failure.
 6. Shadow mode existed before destructive cutover and remains the safe
    validation path.
-7. Public validation excludes secrets, live YouTube mutation, and production
+7. NVENC CBR was accepted even though measured upload increased, because
+   lower-upload VBR/CQ trials damaged YouTube input health.
+8. Single-node k3s recovery is documented with measured and unmeasured RTO/RPO
+   boundaries instead of being presented as ideal HA.
+9. A 24-hour smoke test is treated as a migration confidence gate, grounded in
+   v2's stable behavior, not as a long-window SLO proof.
+10. Public validation excludes secrets, live YouTube mutation, and production
    k3s apply.
 
 ## Suggested Review Path
 
 1. `README.md`
-2. `docs/design-decisions-for-review.md`
-3. `docs/v3/decisions.md`
-4. `docs/runtime-contract.md`
-5. `docs/sli-methodology.md`
-6. `docs/28-day-same-url-sli-case-study.md`
-7. `docs/v3/runtime-state-and-evidence.md`
-8. `src/stream_v2/recovery_orchestrator/gate.py`
-9. `ops/scripts/v3_shadow_acceptance.py`
-10. `tests/test_v3_shadow_acceptance.py`
-11. `tests/test_youtube_video_id_resolver_cache_freshness.py`
-12. `.github/workflows/public-snapshot-check.yml`
+2. `docs/executive-summary.md`
+3. `docs/operational-scorecard.md`
+4. `docs/implementation-review-map.md`
+5. `docs/design-decisions-for-review.md`
+6. `docs/v3/decisions.md`
+7. `docs/runtime-contract.md`
+8. `docs/sli-methodology.md`
+9. `docs/28-day-same-url-sli-case-study.md`
+10. `docs/test-strategy-and-safety-boundary.md`
+11. `docs/v3/migration-cutover-case-study.md`
+12. `docs/v3/youtube-lifecycle-safety.md`
+13. `docs/v3/tcp-stall-case-study.md`
+14. `docs/v3/encoder-upload-case-study.md`
+15. `docs/v3/memory-guard-case-study.md`
+16. `docs/v3/single-node-dr-case-study.md`
+17. `docs/v3/failure-taxonomy.md`
+18. `docs/incident-review-template.md`
+19. `docs/v3/runtime-state-and-evidence.md`
+20. `src/stream_v2/recovery_orchestrator/gate.py`
+21. `ops/scripts/v3_shadow_acceptance.py`
+22. `ops/scripts/wan_address_observer.py`
+23. `ops/scripts/persistent_tcp_anchor_observer.py`
+24. `tests/test_v3_shadow_acceptance.py`
+25. `tests/test_youtube_video_id_resolver_cache_freshness.py`
+26. `.github/workflows/public-snapshot-check.yml`
 
 ## What To Evaluate
 
@@ -56,8 +77,21 @@ plug-and-play streaming package.
   shadow mode.
 - Whether the SLI story includes measured windows, denominators, and explicit
   unknowns instead of only conceptual dashboard language.
+- Whether recurring transport symptoms are split by falsifiable evidence:
+  delivery TCP state, WAN identity, non-YouTube anchors, YouTube lifecycle, and
+  same-URL recovery safety.
+- Whether encoder/upload tuning uses measured wire behavior and YouTube input
+  health instead of nominal bitrate alone.
 - Whether the 28-day same-URL case study separates URL identity, availability,
   upload guardrails, notification quality, and known unresolved risks.
+- Whether visual correctness, audio correctness, memory pressure, and ADS-B
+  source freshness remain separate from generic "stream is up" language.
+- Whether single-node DR claims distinguish measured control-plane recovery
+  from unmeasured node, disk, and viewer-facing RTMPS recovery.
+- Whether the 24-hour smoke-test rationale is appropriately scoped to migration
+  confidence from v2 stability instead of overstated as a reliability proof.
+- Whether incident review records decisions that were intentionally not taken,
+  especially YouTube lifecycle mutation and rollback.
 - Whether public validation proves the snapshot boundary without requiring
   credentials or live production mutation.
 - Whether the system shows operational judgment rather than only code volume.

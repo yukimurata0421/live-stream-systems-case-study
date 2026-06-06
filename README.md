@@ -130,8 +130,12 @@ The single-host versions made browser rendering, audio, FFmpeg, watchdogs, and r
 
 ## Architecture
 
+The one-page public overview is in `docs/executive-summary.md`.
 The main design decisions are summarized in `docs/v3/decisions.md`.
 The hiring-oriented review path is in `docs/hiring-reviewer-guide.md`.
+The measured/tested/documented maturity ledger is in
+`docs/operational-scorecard.md`.
+The code-to-test review map is in `docs/implementation-review-map.md`.
 The compact design decision table is in `docs/design-decisions-for-review.md`.
 The physical deployment topology is documented in `docs/physical-topology.md`.
 The short evolution narrative is in `docs/evolution.md`.
@@ -153,6 +157,17 @@ Use these entry points instead of reading the full tree:
 | Where is the physical split documented? | [`docs/physical-topology.md`](docs/physical-topology.md), [`docs/runtime-contract.md`](docs/runtime-contract.md) |
 | Where is the measured SLI baseline? | [`docs/sli-methodology.md`](docs/sli-methodology.md), [`docs/v3/sli-and-dashboard.md`](docs/v3/sli-and-dashboard.md) |
 | Where is the 28-day same-URL reliability review? | [`docs/28-day-same-url-sli-case-study.md`](docs/28-day-same-url-sli-case-study.md) |
+| Where is the short executive summary? | [`docs/executive-summary.md`](docs/executive-summary.md) |
+| Which claims are measured, tested, documented, or still unknown? | [`docs/operational-scorecard.md`](docs/operational-scorecard.md) |
+| Where can claims be mapped to code and tests? | [`docs/implementation-review-map.md`](docs/implementation-review-map.md) |
+| How are public tests kept non-mutating? | [`docs/test-strategy-and-safety-boundary.md`](docs/test-strategy-and-safety-boundary.md), [`.github/workflows/public-snapshot-check.yml`](.github/workflows/public-snapshot-check.yml) |
+| How was v2 to v3 cutover scoped? | [`docs/v3/migration-cutover-case-study.md`](docs/v3/migration-cutover-case-study.md), [`ops/scripts/v3_shadow_acceptance.py`](ops/scripts/v3_shadow_acceptance.py) |
+| Where is YouTube lifecycle mutation safety explained? | [`docs/v3/youtube-lifecycle-safety.md`](docs/v3/youtube-lifecycle-safety.md), [`src/watchers/video_resolver/cache.py`](src/watchers/video_resolver/cache.py), [`tests/test_youtube_watchdog_cache_freshness.py`](tests/test_youtube_watchdog_cache_freshness.py) |
+| Why did NVENC increase measured upload? | [`docs/v3/encoder-upload-case-study.md`](docs/v3/encoder-upload-case-study.md), [`docs/v3/encoder-fps-tuning-2026-05-31.md`](docs/v3/encoder-fps-tuning-2026-05-31.md), [`docs/runtime-contract.md`](docs/runtime-contract.md) |
+| Where is a concrete transport root-cause split? | [`docs/v3/tcp-stall-case-study.md`](docs/v3/tcp-stall-case-study.md), [`ops/scripts/wan_address_observer.py`](ops/scripts/wan_address_observer.py), [`ops/scripts/persistent_tcp_anchor_observer.py`](ops/scripts/persistent_tcp_anchor_observer.py), [`ops/systemd/stream-v3-wan-address-observer.timer`](ops/systemd/stream-v3-wan-address-observer.timer) |
+| Where are visual/audio and memory failure boundaries documented? | [`docs/v3/visual-audio-health-model.md`](docs/v3/visual-audio-health-model.md), [`docs/v3/memory-guard-case-study.md`](docs/v3/memory-guard-case-study.md), [`docs/v3/failure-taxonomy.md`](docs/v3/failure-taxonomy.md) |
+| Where is single-node DR scoped honestly? | [`docs/v3/single-node-dr-case-study.md`](docs/v3/single-node-dr-case-study.md), [`docs/v3/runbook-validation.md`](docs/v3/runbook-validation.md) |
+| What does an incident review need to record? | [`docs/incident-review-template.md`](docs/incident-review-template.md) |
 | Where was the stats reuse bug fixed? | [`src/watchers/video_resolver/cache.py`](src/watchers/video_resolver/cache.py), [`src/watchers/youtube_watchdog_core/cache.py`](src/watchers/youtube_watchdog_core/cache.py), [`tests/test_youtube_video_id_resolver_cache_freshness.py`](tests/test_youtube_video_id_resolver_cache_freshness.py), [`tests/test_youtube_watchdog_cache_freshness.py`](tests/test_youtube_watchdog_cache_freshness.py) |
 
 ## External Validation
@@ -172,14 +187,38 @@ Use these entry points instead of reading the full tree:
 - `deploy/k3s/`: k3s manifests, shadow mode, streaming overlay, observer, and
   cutover guard.
 - `ops/monitoring/`: Prometheus, Loki, Grafana, and Alloy monitoring config.
+- `ops/scripts/wan_address_observer.py` and
+  `ops/scripts/persistent_tcp_anchor_observer.py`: report-only WAN/session
+  probes used for TCP stall root-cause splitting.
+- `ops/systemd/stream-v3-wan-address-observer.*` and
+  `ops/systemd/stream-v3-persistent-anchor-observer.service`: host-side
+  scheduling examples for the TCP stall cause observers.
 - `ops/systemd/stream-v3-arena-monitor.service`: observability-plane task owner.
 - `ops/prodesk-monitoring/`: sanitized legacy prodesk service checks.
 - `docs/sli-methodology.md`: measured v2 SLI baseline and the metric
   classification inherited by v3.
 - `docs/28-day-same-url-sli-case-study.md`: public translation of the 28-day
   same-URL SLI review, including what got worse and what remained unknown.
+- `docs/executive-summary.md`: shortest narrative for reviewers who need the
+  system shape and operating invariants first.
+- `docs/operational-scorecard.md`: measured/tested/documented/unknown maturity
+  ledger, including the 24-hour smoke-test boundary.
+- `docs/implementation-review-map.md`: map from reliability claims to code,
+  tests, and public docs.
+- `docs/test-strategy-and-safety-boundary.md`: public CI, shadow validation,
+  and live smoke-test limits.
+- `docs/incident-review-template.md`: sanitized incident/postmortem structure
+  with an example based on the TCP stall diagnosis.
 - `docs/v3/`: current runtime contracts, decisions, runbooks, SLI notes, and
   program map.
+- `docs/v3/migration-cutover-case-study.md`: v2 to v3 authority transfer,
+  24-hour smoke-test rationale, and rollback boundary.
+- `docs/v3/encoder-upload-case-study.md`: NVENC CBR upload-budget decision,
+  including why a lower-upload VBR/CQ profile was rejected.
+- `docs/v3/youtube-lifecycle-safety.md`: same-URL, quota, stale-cache, and
+  destructive-action safety model.
+- `docs/v3/failure-taxonomy.md`: owner/action/evidence vocabulary for runtime,
+  source, YouTube, dashboard, and memory failures.
 - `tests/`: contract and policy tests for runtime safety and monitoring logic.
 
 ## Local Validation

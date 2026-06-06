@@ -30,6 +30,11 @@ STREAM_K8S_DRY_RUN=1
 STREAM_V3_CUTOVER_ENABLE=0
 ```
 
+The public test boundary is documented in
+`test-strategy-and-safety-boundary.md`. Public validation must remain
+non-mutating: no stream key, no live YouTube mutation, no production k3s apply,
+and no PVC deletion.
+
 ## Production-like Streaming
 
 Production-like streaming requires a host with GPU/NVENC support, PulseAudio
@@ -42,6 +47,12 @@ nvidia-smi
 ffmpeg -hide_banner -encoders | grep h264_nvenc
 kubectl describe node | grep -F nvidia.com/gpu
 ```
+
+For v3-impacting runtime, encoder, recovery, or cutover-authority changes, use
+a 24-hour smoke test before treating the change as ordinary production
+behavior. The rationale is documented in
+`v3/migration-cutover-case-study.md`: v2 supplied the stable behavior baseline,
+while v3 must still prove the migrated ownership model across one daily cycle.
 
 ## Rollback Thinking
 

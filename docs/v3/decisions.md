@@ -30,6 +30,19 @@ model that v2 established. After cutover, the same rule explains why current
 production ownership is tied to explicit runtime, state, metrics, alert, and
 recovery evidence rather than to Pod readiness alone.
 
+## Migration Smoke Test
+
+Status: accepted
+
+For v3 changes that affect runtime ownership, encoder behavior, recovery, or
+cutover authority, the live smoke-test gate is 24 hours. The basis is that v2
+already established the stable long-running behavior model, while v3 still has
+to prove that k3s ownership, NVENC, observability wiring, recovery gates, and
+same-URL preservation survive one daily cycle.
+
+Consequence: a 24-hour pass is migration confidence, not a long-window SLO
+claim. Broader reliability claims still need 14-day or 28-day SLI review.
+
 ## Metrics Namespace And Query Isolation
 
 Status: accepted
@@ -64,6 +77,19 @@ low-bandwidth: first 5fps/3500k/audio192k, then 4fps/3400k/audio192k. v3 keeps
 the low-bandwidth NVENC CBR shape while letting fps change only through
 measurement-backed contract updates.
 
+## Encoder Upload Budget
+
+Status: accepted
+
+The move from v2 `libx264` to v3 `h264_nvenc` CBR increased the measured RTMPS
+send envelope at the same nominal 3400k video bitrate. The accepted v3 contract
+stays below the 5.0 Mbps warning ceiling in measured windows, but it is closer
+to that ceiling than the older v2 CPU-encoded path.
+
+The lower-upload VBR/CQ trial was rejected because YouTube classified the input
+as low bitrate / not enough video. Upload efficiency is therefore a guardrail,
+not the top-level product outcome.
+
 ## Encoder 5fps Current Contract
 
 Status: accepted
@@ -92,9 +118,40 @@ Status: accepted
 The primary public outcome is availability and same-URL continuity. Visual
 quality and upload efficiency are tuned inside that boundary.
 
+## YouTube Lifecycle Mutation Safety
+
+Status: accepted
+
+Broadcast replacement, stream binding, and candidate video promotion require
+fresh identity, public/live, API, OAuth, quota, and action-gate evidence.
+Delivery recovery can restart local runtime components, but destructive YouTube
+lifecycle mutation is intentionally harder because it can break the public
+watch URL.
+
+## Visual / Audio / Memory Boundaries
+
+Status: accepted
+
+RTMPS connected is not enough to prove correct output. Visual capture, ADS-B
+freshness, now-playing metadata, PulseAudio route, monitor energy, Xvfb shared
+memory, and cgroup events remain separate evidence classes.
+
+Consequence: visual, audio, and memory faults can drive scoped subsystem
+recovery, but they do not authorize YouTube broadcast replacement by
+themselves.
+
 ## Host Freeze Recovery
 
 Status: accepted
 
 In-Pod recovery cannot fix a frozen host. Host watchdog configuration is part of
 the operational model for single-node deployments.
+
+## Single-Node DR Honesty
+
+Status: accepted
+
+The public DR claim separates measured k3s control-plane recovery from
+unmeasured node reboot, disk restore, spare-host rebuild, and viewer-facing
+RTMPS reconnect recovery. Single-node k3s is the current deployment shape, not
+an HA claim.

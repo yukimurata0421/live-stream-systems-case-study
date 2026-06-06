@@ -52,5 +52,6 @@ jobs:
             tests/test_v3_k3s_preflight.py \
             tests/test_stream_v3_control_loop.py \
             tests/test_v3_shadow_acceptance.py \
+            tests/test_wan_observer_scripts.py \
             tests/test_youtube_video_id_resolver_cache_freshness.py \
             tests/test_youtube_watchdog_cache_freshness.py

@@ -1,0 +1,19 @@
+[Unit]
+Description=stream_v3 persistent TCP anchor observer
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=yuki
+WorkingDirectory=/home/yuki/projects/stream_v3
+Environment=WAO_STATE_DIR=/home/yuki/projects/stream_v3/.state/wan-observer
+Environment=WAO_PERSISTENT_INTERVAL_SEC=15
+Environment=WAO_PERSISTENT_TIMEOUT_SEC=2.0
+Environment="WAO_PERSISTENT_ANCHORS=cloudflare_v4|1.1.1.1|443|cloudflare-dns.com|cloudflare-dns.com|AS13335,google_v4|8.8.8.8|443|dns.google|dns.google|AS15169,cloudflare_v6|2606:4700:4700::1111|443|cloudflare-dns.com|cloudflare-dns.com|AS13335,google_v6|2001:4860:4860::8888|443|dns.google|dns.google|AS15169"
+ExecStart=/usr/bin/python3 /home/yuki/projects/stream_v3/ops/scripts/persistent_tcp_anchor_observer.py
+Restart=always
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target

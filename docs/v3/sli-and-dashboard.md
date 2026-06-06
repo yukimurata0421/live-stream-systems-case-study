@@ -28,6 +28,15 @@ explicitly accepts that tradeoff.
 The upload ceiling is a warning boundary, not the tuning target. The current
 5fps/3400k contract was accepted because the measured windows stayed below
 5.0 Mbps while avoiding the larger per-frame quality loss of 10fps.
+`encoder-upload-case-study.md` documents the additional encoder lesson: the
+move to NVENC CBR increased measured upload versus the older v2 CPU path, and
+the lower-upload VBR/CQ profile was rejected because YouTube input health got
+worse.
+
+Visual correctness, audio correctness, ADS-B source freshness, and memory
+guardrails are also separate from transport availability. See
+`visual-audio-health-model.md`, `memory-guard-case-study.md`, and
+`failure-taxonomy.md` for the operational split.
 
 The measured v2 baseline that established this classification is summarized in
 [`../sli-methodology.md`](../sli-methodology.md). That page is historical

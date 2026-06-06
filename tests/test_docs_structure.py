@@ -65,6 +65,23 @@ class PublicDocsStructureTests(unittest.TestCase):
             "tests/test_v3_shadow_acceptance.py",
             "tests/test_youtube_video_id_resolver_cache_freshness.py",
             "tests/test_youtube_watchdog_cache_freshness.py",
+            "docs/executive-summary.md",
+            "docs/operational-scorecard.md",
+            "docs/implementation-review-map.md",
+            "docs/test-strategy-and-safety-boundary.md",
+            "docs/incident-review-template.md",
+            "docs/v3/migration-cutover-case-study.md",
+            "docs/v3/youtube-lifecycle-safety.md",
+            "docs/v3/encoder-upload-case-study.md",
+            "docs/v3/tcp-stall-case-study.md",
+            "docs/v3/visual-audio-health-model.md",
+            "docs/v3/memory-guard-case-study.md",
+            "docs/v3/failure-taxonomy.md",
+            "docs/v3/single-node-dr-case-study.md",
+            "docs/v3/runbook-validation.md",
+            "ops/scripts/wan_address_observer.py",
+            "ops/scripts/persistent_tcp_anchor_observer.py",
+            "ops/systemd/stream-v3-wan-address-observer.timer",
             "## External Validation",
             "r/ADSB",
             "Reddit Post Insights",
@@ -75,7 +92,10 @@ class PublicDocsStructureTests(unittest.TestCase):
             "open-source code published as a case study",
             "not a supported OSS product",
             "## What This Repository Demonstrates",
+            "docs/executive-summary.md",
+            "docs/operational-scorecard.md",
             "docs/hiring-reviewer-guide.md",
+            "docs/implementation-review-map.md",
             "docs/design-decisions-for-review.md",
         ):
             self.assertIn(marker, text)
@@ -105,7 +125,10 @@ class PublicDocsStructureTests(unittest.TestCase):
         required = (
             "00_INDEX.md",
             "README.md",
+            "executive-summary.md",
             "hiring-reviewer-guide.md",
+            "operational-scorecard.md",
+            "implementation-review-map.md",
             "design-decisions-for-review.md",
             "evolution.md",
             "architecture.md",
@@ -115,6 +138,8 @@ class PublicDocsStructureTests(unittest.TestCase):
             "28-day-same-url-sli-case-study.md",
             "observability.md",
             "operations.md",
+            "test-strategy-and-safety-boundary.md",
+            "incident-review-template.md",
             "security-and-secrets.md",
             "support.md",
             "contributing.md",
@@ -125,6 +150,17 @@ class PublicDocsStructureTests(unittest.TestCase):
             "v3/current-runtime-contract.md",
             "v3/runtime-state-and-evidence.md",
             "v3/sli-and-dashboard.md",
+            "v3/migration-cutover-case-study.md",
+            "v3/youtube-lifecycle-safety.md",
+            "v3/encoder-upload-case-study.md",
+            "v3/encoder-fps-tuning-2026-05-31.md",
+            "v3/tcp-stall-case-study.md",
+            "v3/visual-audio-health-model.md",
+            "v3/memory-guard-case-study.md",
+            "v3/failure-taxonomy.md",
+            "v3/notification-and-auto-recovery.md",
+            "v3/single-node-dr-case-study.md",
+            "v3/runbook-validation.md",
             "v3/runbooks.md",
             "v3/decisions.md",
             "v3/program-map.md",
@@ -143,7 +179,10 @@ class PublicDocsStructureTests(unittest.TestCase):
         for marker in (
             "Documentation Index",
             "Reading Order",
+            "executive-summary.md",
             "hiring-reviewer-guide.md",
+            "operational-scorecard.md",
+            "implementation-review-map.md",
             "design-decisions-for-review.md",
             "evolution.md",
             "architecture.md",
@@ -153,11 +192,23 @@ class PublicDocsStructureTests(unittest.TestCase):
             "28-day-same-url-sli-case-study.md",
             "observability.md",
             "operations.md",
+            "test-strategy-and-safety-boundary.md",
+            "incident-review-template.md",
             "security-and-secrets.md",
             "support.md",
             "contributing.md",
             "v2/README.md",
             "v3/README.md",
+            "v3/migration-cutover-case-study.md",
+            "v3/youtube-lifecycle-safety.md",
+            "v3/tcp-stall-case-study.md",
+            "v3/encoder-upload-case-study.md",
+            "v3/visual-audio-health-model.md",
+            "v3/memory-guard-case-study.md",
+            "v3/failure-taxonomy.md",
+            "v3/notification-and-auto-recovery.md",
+            "v3/single-node-dr-case-study.md",
+            "v3/runbook-validation.md",
         ):
             self.assertIn(marker, text)
 
@@ -179,6 +230,83 @@ class PublicDocsStructureTests(unittest.TestCase):
             "docs/v3/50_ops_logs/",
         ):
             self.assertNotIn(stale, text)
+
+    def test_public_review_docs_capture_maturity_and_safety_boundaries(self) -> None:
+        executive = read(DOCS / "executive-summary.md")
+        scorecard = read(DOCS / "operational-scorecard.md")
+        test_strategy = read(DOCS / "test-strategy-and-safety-boundary.md")
+        incident_template = read(DOCS / "incident-review-template.md")
+        migration = read(DOCS / "v3" / "migration-cutover-case-study.md")
+        operations = read(DOCS / "operations.md")
+        release = read(DOCS / "public-release.md")
+
+        for marker in (
+            "Executive Summary",
+            "same-watch-URL preservation",
+            "Highest-Signal Evidence",
+            "What This Repository Does Not Claim",
+            "docs/operational-scorecard.md",
+        ):
+            self.assertIn(marker, executive)
+
+        for marker in (
+            "Operational Scorecard",
+            "Measured",
+            "Tested",
+            "Documented",
+            "Not publicly measured",
+            "24-hour production smoke test",
+            "v2 already provided the long-running behavior baseline",
+            "migration confidence, not a replacement",
+        ):
+            self.assertIn(marker, scorecard)
+
+        for marker in (
+            "Test Strategy And Safety Boundary",
+            "Public CI must not",
+            "publish to YouTube",
+            "mutate a production k3s cluster",
+            "24-Hour Smoke Test",
+            "v2 already established the stable long-running behavior model",
+            "not a replacement for 14-day or 28-day SLI review",
+        ):
+            self.assertIn(marker, test_strategy)
+
+        for marker in (
+            "Incident Review Template",
+            "Actions explicitly not taken",
+            "Why destructive YouTube lifecycle mutation was or was not allowed",
+            "Sanitized Example",
+            "RTMPS TCP stall with WAN identity refresh signature",
+        ):
+            self.assertIn(marker, incident_template)
+
+        for marker in (
+            "Migration And Cutover Case Study",
+            "a green Pod is not production authority",
+            "Authority Transfer Model",
+            "24-Hour Smoke-Test Rationale",
+            "v2 already had stable long-running behavior",
+            "not a substitute for the 28-day same-URL review",
+            "Automatic rollback is intentionally avoided",
+        ):
+            self.assertIn(marker, migration)
+
+        for marker in (
+            "test-strategy-and-safety-boundary.md",
+            "24-hour smoke test",
+            "v3/migration-cutover-case-study.md",
+        ):
+            self.assertIn(marker, operations)
+
+        for marker in (
+            "executive summary",
+            "operational scorecard",
+            "test safety",
+            "migration cutover",
+            "public CI non-mutating",
+        ):
+            self.assertIn(marker, release)
 
     def test_runtime_docs_preserve_core_architecture_claims(self) -> None:
         runtime = read(DOCS / "runtime-contract.md")
@@ -251,6 +379,14 @@ class PublicDocsStructureTests(unittest.TestCase):
             "stream_v3_network_ffmpeg_socket_lastsnd_ms",
             "stream_v3_recovery_action_executable",
             "YouTube Data API, OAuth, and public watch-page state",
+            "visual correctness checks",
+            "capture-helper memory guardrail",
+            "ops/scripts/wan_address_observer.py",
+            "ops/scripts/persistent_tcp_anchor_observer.py",
+            "TCP stall case study",
+            "visual-audio-health-model.md",
+            "memory-guard-case-study.md",
+            "youtube-lifecycle-safety.md",
             "Raspberry Pi exposes the public nginx status UI",
             "does not host Prometheus or Loki",
             "API Cost Guard",
@@ -263,6 +399,17 @@ class PublicDocsStructureTests(unittest.TestCase):
         sli = read(DOCS / "v3" / "sli-and-dashboard.md")
         decisions = read(DOCS / "v3" / "decisions.md")
         program_map = read(DOCS / "v3" / "program-map.md")
+        tcp_stall = read(DOCS / "v3" / "tcp-stall-case-study.md")
+        review_map = read(DOCS / "implementation-review-map.md")
+        migration = read(DOCS / "v3" / "migration-cutover-case-study.md")
+        youtube_lifecycle = read(DOCS / "v3" / "youtube-lifecycle-safety.md")
+        encoder_upload = read(DOCS / "v3" / "encoder-upload-case-study.md")
+        visual_audio = read(DOCS / "v3" / "visual-audio-health-model.md")
+        memory_guard = read(DOCS / "v3" / "memory-guard-case-study.md")
+        failure_taxonomy = read(DOCS / "v3" / "failure-taxonomy.md")
+        notifications = read(DOCS / "v3" / "notification-and-auto-recovery.md")
+        single_node_dr = read(DOCS / "v3" / "single-node-dr-case-study.md")
+        runbook_validation = read(DOCS / "v3" / "runbook-validation.md")
 
         for marker in (
             "Delivery Owner",
@@ -285,6 +432,7 @@ class PublicDocsStructureTests(unittest.TestCase):
             "/state/overlay/now_playing.json",
             "Fresh local delivery evidence wins",
             "shadow_mode",
+            "tcp-stall-case-study.md",
         ):
             self.assertIn(marker, evidence)
 
@@ -292,13 +440,20 @@ class PublicDocsStructureTests(unittest.TestCase):
             "YouTube availability",
             "same URL preservation",
             "Error Budget Rule",
+            "encoder-upload-case-study.md",
+            "Visual correctness, audio correctness, ADS-B source freshness",
         ):
             self.assertIn(marker, sli)
 
         for marker in (
             "Delivery / Observability Split",
+            "Migration Smoke Test",
             "NVENC CBR Baseline",
+            "Encoder Upload Budget",
+            "YouTube Lifecycle Mutation Safety",
+            "Visual / Audio / Memory Boundaries",
             "Host Freeze Recovery",
+            "Single-Node DR Honesty",
         ):
             self.assertIn(marker, decisions)
 
@@ -308,6 +463,127 @@ class PublicDocsStructureTests(unittest.TestCase):
             "stream_v3_prometheus_exporter.py",
         ):
             self.assertIn(marker, program_map)
+
+        for marker in (
+            "TCP Stall Root-Cause Case Study",
+            "Cause Split",
+            "Cloudflare AS13335",
+            "Google AS15169",
+            "WAN or carrier session refresh",
+            "same-URL continuity",
+            "ops/scripts/wan_address_observer.py",
+            "ops/scripts/persistent_tcp_anchor_observer.py",
+            "report-only",
+            "stream-v3-wan-address-observer.timer",
+            "stream-v3-persistent-anchor-observer.service",
+        ):
+            self.assertIn(marker, tcp_stall)
+
+        for marker in (
+            "Implementation Review Map",
+            "How is upload tuning decided?",
+            "How are stale caches prevented from authorizing bad decisions?",
+            "How is v2 to v3 cutover authority scoped?",
+            "What does a 24-hour smoke test prove?",
+            "How are incidents reviewed without leaking private evidence?",
+            "What Not To Infer",
+        ):
+            self.assertIn(marker, review_map)
+
+        for marker in (
+            "Migration And Cutover Case Study",
+            "green Pod is not production authority",
+            "Authority Transfer Model",
+            "24-Hour Smoke-Test Rationale",
+            "stable long-running behavior",
+            "Rollback Rule",
+        ):
+            self.assertIn(marker, migration)
+
+        for marker in (
+            "YouTube Lifecycle Safety",
+            "preserve same watch URL when recoverable",
+            "Cache Freshness Bug",
+            "per-probe checked timestamps",
+            "quota exhaustion is treated as degraded evidence",
+            "Destructive actions require explicit permission",
+        ):
+            self.assertIn(marker, youtube_lifecycle)
+
+        for marker in (
+            "Encoder And Upload Budget Case Study",
+            "h264_nvenc",
+            "about p50 4.87 Mbps",
+            "higher measured RTMPS send envelope",
+            "VBR/CQ reduced upload",
+            "YouTube low-bitrate / not-enough-video warnings",
+            "30fps/3300k",
+        ):
+            self.assertIn(marker, encoder_upload)
+
+        for marker in (
+            "Visual And Audio Health Model",
+            "YouTube ingest being connected does not prove",
+            "Audio is validated by route and energy",
+            "RTMPS connected",
+            "ADS-B source freshness",
+        ):
+            self.assertIn(marker, visual_audio)
+
+        for marker in (
+            "Memory Guard Case Study",
+            "Xvfb shared memory",
+            "capture_helper_memory_guard_triggered",
+            "memory alone never authorizes YouTube broadcast replacement",
+            "process-level capture-helper guard",
+        ):
+            self.assertIn(marker, memory_guard)
+
+        for marker in (
+            "Failure Taxonomy",
+            "same_url_changed",
+            "memory_guard_warn",
+            "YouTube lifecycle mutation is the highest-risk class",
+            "Required Evidence",
+        ):
+            self.assertIn(marker, failure_taxonomy)
+
+        for marker in (
+            "Notification And Auto-Recovery Events",
+            "active incident notification",
+            "auto-recovered delivery event",
+            "Single FFmpeg child recovery",
+            "notification failure is not proof of stream failure",
+        ):
+            self.assertIn(marker, notifications)
+
+        for marker in (
+            "Single-Node DR Case Study",
+            "measured RTO upper bound: 10.7 seconds",
+            "not a full viewer-facing RTMPS recovery drill",
+            "Node and disk lost",
+            "same-URL safety constraints",
+        ):
+            self.assertIn(marker, single_node_dr)
+
+        for marker in (
+            "Runbook Validation",
+            "PVC deletion, URL replacement, and destructive YouTube actions",
+            "live stream keys",
+            "real production mutation",
+            "If the reviewer hesitates",
+        ):
+            self.assertIn(marker, runbook_validation)
+
+        for relative in (
+            "ops/scripts/wan_address_observer.py",
+            "ops/scripts/persistent_tcp_anchor_observer.py",
+            "ops/systemd/stream-v3-wan-address-observer.service",
+            "ops/systemd/stream-v3-wan-address-observer.timer",
+            "ops/systemd/stream-v3-persistent-anchor-observer.service",
+            "tests/test_wan_observer_scripts.py",
+        ):
+            self.assertTrue((ROOT / relative).exists(), f"missing {relative}")
 
     def test_sli_methodology_captures_measured_baseline(self) -> None:
         text = read(DOCS / "sli-methodology.md")

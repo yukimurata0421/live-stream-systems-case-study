@@ -7,22 +7,37 @@ incident logs.
 
 ## Reading Order
 
-1. `hiring-reviewer-guide.md`
-2. `design-decisions-for-review.md`
-3. `evolution.md`
-4. `architecture.md`
-5. `physical-topology.md`
-6. `runtime-contract.md`
-7. `sli-methodology.md`
-8. `28-day-same-url-sli-case-study.md`
-9. `observability.md`
-10. `operations.md`
-11. `security-and-secrets.md`
-12. `support.md`
-13. `contributing.md`
-14. `v2/README.md`
-15. `v3/README.md`
-16. `v3/encoder-fps-tuning-2026-05-31.md`
+1. `executive-summary.md`
+2. `hiring-reviewer-guide.md`
+3. `operational-scorecard.md`
+4. `implementation-review-map.md`
+5. `design-decisions-for-review.md`
+6. `evolution.md`
+7. `architecture.md`
+8. `physical-topology.md`
+9. `runtime-contract.md`
+10. `sli-methodology.md`
+11. `28-day-same-url-sli-case-study.md`
+12. `observability.md`
+13. `operations.md`
+14. `test-strategy-and-safety-boundary.md`
+15. `incident-review-template.md`
+16. `security-and-secrets.md`
+17. `support.md`
+18. `contributing.md`
+19. `v2/README.md`
+20. `v3/README.md`
+21. `v3/migration-cutover-case-study.md`
+22. `v3/youtube-lifecycle-safety.md`
+23. `v3/tcp-stall-case-study.md`
+24. `v3/encoder-upload-case-study.md`
+25. `v3/encoder-fps-tuning-2026-05-31.md`
+26. `v3/visual-audio-health-model.md`
+27. `v3/memory-guard-case-study.md`
+28. `v3/failure-taxonomy.md`
+29. `v3/notification-and-auto-recovery.md`
+30. `v3/single-node-dr-case-study.md`
+31. `v3/runbook-validation.md`
 
 ## Scope
 

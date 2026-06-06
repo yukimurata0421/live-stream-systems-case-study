@@ -30,3 +30,9 @@ For the 2026-05-31 encoder fps decision, the retained public evidence is the
 trial summary in `docs/v3/encoder-fps-tuning-2026-05-31.md`: upload average,
 p95, max, over-budget seconds, YouTube health classification, and the derived
 per-frame bit budget for 4fps, 5fps, and 10fps at 3400k video CBR.
+
+For the recurring TCP stall investigation, the retained public evidence is the
+diagnostic model in `docs/v3/tcp-stall-case-study.md` and the report-only
+observer code in `ops/scripts/wan_address_observer.py` and
+`ops/scripts/persistent_tcp_anchor_observer.py`. Raw private JSONL samples and
+exact public IP addresses are not retained in Git.

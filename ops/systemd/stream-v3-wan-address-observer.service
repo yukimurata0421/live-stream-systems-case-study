@@ -1,0 +1,14 @@
+[Unit]
+Description=stream_v3 host WAN address observer
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=yuki
+WorkingDirectory=/home/yuki/projects/stream_v3
+Environment=WAO_STATE_DIR=/home/yuki/projects/stream_v3/.state/wan-observer
+Environment="WAO_ANCHORS=cloudflare_v4=1.1.1.1:443,google_v4=8.8.8.8:443,cloudflare_v6=[2606:4700:4700::1111]:443,google_v6=[2001:4860:4860::8888]:443"
+Environment=WAO_ANCHOR_TIMEOUT_SEC=1.5
+Environment=WAO_PUBLIC_IPV4_URL=https://api.ipify.org
+ExecStart=/usr/bin/python3 /home/yuki/projects/stream_v3/ops/scripts/wan_address_observer.py

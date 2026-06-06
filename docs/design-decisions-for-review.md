@@ -10,6 +10,8 @@ The most important pattern is repeated throughout the project: delivery,
 observation, source data, recovery, and public presentation are separate
 failure domains. A dashboard warning is not automatically a delivery failure,
 and a delivery symptom is not automatically permission to mutate YouTube state.
+For reviewers who want to verify the claims against implementation and tests,
+`docs/implementation-review-map.md` is the shortest path.
 
 Origin notes for reviewers:
 
@@ -48,6 +50,7 @@ Origin notes for reviewers:
 | Recovery profiles | Apply temporary low-upload profiles only after strong transport recovery evidence. | During route or modem instability, short-lived bitrate reduction can protect live continuity. | Drive profile changes directly from raw Mbps, public-probe noise, or dashboard warnings. | Visual quality can dip briefly, but control input stays tied to a strong network-down event. |
 | Restart attribution | Record restart requests before manual rollout, staged restart, or arena-server remote recovery. | A Kubernetes `restartedAt` annotation proves that a Pod template changed, but not who requested it or why. | Reconstruct restart cause later from audit logs, ReplicaSets, and operator memory. | Adds a small wrapper/state-file requirement, but future Pod replacement can be classified as manual, automatic, or fault. |
 | Production authority | Transfer production authority only through explicit cutover evidence. | During migration, v2 remained production until systemd, CLI, state root, monitoring, and mutation paths were intentionally moved. | Treat a Running v3 Pod or green shadow check as ownership transfer. | Cutover takes more proof, but v2 safety gates are not bypassed by infrastructure readiness. |
+| Migration smoke test | Use a 24-hour live smoke test for v3 runtime, encoder, recovery, or cutover-authority changes. | v2 already established the stable behavior model; v3 still has to prove migrated ownership across one daily cycle. | Treat a short launch test or green Pod as enough. | A 24-hour pass is migration confidence, not a long-window SLO claim. |
 | Shadow mode | Keep shadow mode before cutover and retain it as a non-mutating validation path. | The system should prove command mapping, state writes, action plans, and guard behavior before production mutation. | Enable k3s recovery actions directly before cutover evidence exists. | More validation steps, but clearer safety evidence. |
 | Cutover flags | Require explicit production flags for live mutation. | `STREAM_V3_MODE`, cutover enablement, dry-run state, and test mode should make accidental mutation hard. | Infer production behavior from environment shape alone. | More configuration surface, but a safer operator contract. |
 | Maintenance mode | Treat planned work as maintenance state, not ordinary incident spam. | Some restarts, checks, and temporary warnings are operator-intended work. | Let monitors page as if every planned change is an outage. | Requires explicit maintenance state, but notifications and SLO interpretation are clearer. |
@@ -128,7 +131,12 @@ When reviewing the project, the highest-signal questions are:
 ## Related Public Docs
 
 - `docs/architecture.md`
+- `docs/executive-summary.md`
 - `docs/evolution.md`
+- `docs/operational-scorecard.md`
+- `docs/implementation-review-map.md`
+- `docs/test-strategy-and-safety-boundary.md`
+- `docs/incident-review-template.md`
 - `docs/runtime-contract.md`
 - `docs/sli-methodology.md`
 - `docs/observability.md`
@@ -136,6 +144,16 @@ When reviewing the project, the highest-signal questions are:
 - `docs/security-and-secrets.md`
 - `docs/v2/README.md`
 - `docs/v3/decisions.md`
+- `docs/v3/migration-cutover-case-study.md`
+- `docs/v3/youtube-lifecycle-safety.md`
+- `docs/v3/encoder-upload-case-study.md`
 - `docs/v3/encoder-fps-tuning-2026-05-31.md`
+- `docs/v3/tcp-stall-case-study.md`
+- `docs/v3/visual-audio-health-model.md`
+- `docs/v3/memory-guard-case-study.md`
+- `docs/v3/failure-taxonomy.md`
+- `docs/v3/notification-and-auto-recovery.md`
+- `docs/v3/single-node-dr-case-study.md`
+- `docs/v3/runbook-validation.md`
 - `docs/v3/sli-and-dashboard.md`
 - `docs/v3/runtime-state-and-evidence.md`
