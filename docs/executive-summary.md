@@ -21,6 +21,12 @@ ProDesk readsb, Dell readsb, Dell modified tar1090, and then the `stream_v3`
 delivery workload. Raspberry Pi is only the public status/dashboard gateway,
 not the monitoring backend.
 
+The current public status site, <https://yukimurata0421.dev/>, is a sanitized
+static snapshot served through GCS + Cloudflare. It is meant to expose freshness,
+decision checks, guardrails, trends, and recovery-boundary summaries without
+publishing Grafana, Prometheus, Loki, raw logs, credentials, or home-network
+ingress.
+
 ## What Makes It Operationally Interesting
 
 The hard part is not only publishing pixels to YouTube. The system has to avoid
@@ -48,6 +54,7 @@ bookmarks, embeds, and external links.
 | Same-URL continuity is a production invariant. | `docs/28-day-same-url-sli-case-study.md`, `docs/v3/youtube-lifecycle-safety.md` |
 | TCP stall diagnosis was split by evidence layer. | `docs/v3/tcp-stall-case-study.md`, `ops/scripts/wan_address_observer.py`, `ops/scripts/persistent_tcp_anchor_observer.py` |
 | Encoder/upload tuning uses measured YouTube health, not nominal bitrate alone. | `docs/v3/encoder-upload-case-study.md`, `docs/v3/encoder-fps-tuning-2026-05-31.md` |
+| Public operational evidence is reduced before publication. | `docs/v3/public-status-snapshot.md`, <https://yukimurata0421.dev/> |
 | Public validation is non-mutating. | `.github/workflows/public-snapshot-check.yml`, `docs/test-strategy-and-safety-boundary.md` |
 | Claims can be mapped to code and tests. | `docs/implementation-review-map.md` |
 
@@ -70,7 +77,8 @@ ledger for that distinction.
 4. `docs/v3/youtube-lifecycle-safety.md`
 5. `docs/v3/tcp-stall-case-study.md`
 6. `docs/v3/encoder-upload-case-study.md`
-7. `docs/test-strategy-and-safety-boundary.md`
+7. `docs/v3/public-status-snapshot.md`
+8. `docs/test-strategy-and-safety-boundary.md`
 
 The review signal is operational judgment: naming failure domains, refusing
 unsafe actions from weak evidence, and keeping public claims proportional to the

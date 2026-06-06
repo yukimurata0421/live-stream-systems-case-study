@@ -35,6 +35,7 @@ Origin notes for reviewers:
 | Delivery / observability | Split delivery and observability. | Monitoring should classify evidence and request recovery without directly owning FFmpeg. | Run delivery, monitoring, and recovery on the same host with shared process ownership. | More coordination and remote evidence plumbing, but smaller recovery blast radius. |
 | Observability host | Keep HP ProDesk as the observability owner. | Long-window SLI, dashboard state, YouTube watchdog state, notifications, and staged recovery decisions should survive delivery-host pressure. | Let the Dell delivery host own all monitoring loops. | Requires remote runtime evidence, but prevents local delivery pressure from blinding monitoring. |
 | Public gateway | Keep Raspberry Pi as a gateway, not the metrics backend. | The public status UI and `/grafana/` proxy can be exposed without moving Prometheus/Loki/Grafana state. | Move the monitoring backend to the Raspberry Pi. | Simpler public entrypoint, while evidence retention stays on the observability host. |
+| Public status snapshot | Publish only a sanitized static status view. | Outside readers need current freshness, guardrails, and recovery-boundary context without access to Grafana, Prometheus, Loki, raw logs, credentials, or home-network ingress. | Publish the site implementation and generated operational JSON directly in this repository. | Less source code is public, but the security boundary and review signal are cleaner. |
 | ADS-B source boundary | Keep the Airspy/readsb source chain distinct from `stream_v3` delivery. | Airspy on HP ProDesk, `airspy_adsb`, ProDesk readsb, Dell readsb, and the Dell modified tar1090 map endpoint can fail differently from browser rendering or RTMPS delivery. | Treat the ADS-B map endpoint as just another renderer symptom. | Source freshness checks become explicit, but public k3s manifests do not attempt to own the Airspy device. |
 | Rendering source | Render from readsb/tar1090/custom map data, not from another stream output. | The stream should produce its own video from source data rather than re-encode or depend on an existing stream. | Use another stream output as a secondary input. | More browser/rendering ownership, but clearer source-to-video evidence. |
 | Browser capture contract | Keep browser/Xvfb capture as the rendering boundary for JS-driven map output. | The modified tar1090 map is a browser-rendered product, so the stream must capture the viewer UI that actually exists. | Feed map pages directly into FFmpeg or replace the UI with a non-browser source. | Browser capture is heavier, but it preserves the real map, overlay, labels, and visual defects. |
@@ -144,6 +145,7 @@ When reviewing the project, the highest-signal questions are:
 - `docs/security-and-secrets.md`
 - `docs/v2/README.md`
 - `docs/v3/decisions.md`
+- `docs/v3/public-status-snapshot.md`
 - `docs/v3/migration-cutover-case-study.md`
 - `docs/v3/youtube-lifecycle-safety.md`
 - `docs/v3/encoder-upload-case-study.md`

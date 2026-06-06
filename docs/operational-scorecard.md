@@ -28,6 +28,7 @@ right reading is reliability discipline at small blast radius.
 | Guarded recovery | Tested | `ops/scripts/v3_shadow_acceptance.py`, `tests/test_v3_shadow_acceptance.py`, `src/stream_v2/recovery_orchestrator/gate.py` | Public tests do not perform live mutation. |
 | Public CI safety | Tested | `.github/workflows/public-snapshot-check.yml`, `docs/test-strategy-and-safety-boundary.md` | CI proves snapshot safety, not production liveness. |
 | k3s manifest and shadow behavior | Tested | `ops/scripts/validate_k3s_manifests.py`, `ops/scripts/v3_shadow_acceptance.py`, `tests/test_v3_k3s_preflight.py` | Does not prove production `kubectl apply` on the real cluster. |
+| Public status snapshot boundary | Documented | `docs/v3/public-status-snapshot.md`, <https://yukimurata0421.dev/> | The public site is a current sanitized snapshot, not a substitute for retained SLI windows or raw private observability. |
 | Encoder contract | Measured / tested | `docs/v3/encoder-upload-case-study.md`, `docs/v3/encoder-fps-tuning-2026-05-31.md`, `docs/runtime-contract.md` | Short trials do not replace long-window YouTube input monitoring. |
 | Upload budget | Measured / documented | `docs/v3/encoder-upload-case-study.md`, `docs/v3/sli-and-dashboard.md` | NVENC CBR runs closer to the 5.0 Mbps warning ceiling than the v2 CPU path. |
 | TCP stall root-cause split | Measured / documented | `docs/v3/tcp-stall-case-study.md`, observer scripts, `tests/test_wan_observer_scripts.py` | Public repo excludes raw private JSONL samples and exact public IPs. |

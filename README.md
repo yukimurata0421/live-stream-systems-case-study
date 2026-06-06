@@ -7,6 +7,8 @@
 [![Live ADS-B stream screenshot](docs/assets/live-stream-screenshot.png)](https://www.youtube.com/@yukimurata0421/live)
 
 **Live stream:** <https://www.youtube.com/@yukimurata0421/live>
+**Public status snapshot:** <https://yukimurata0421.dev/>
+([boundary note](docs/v3/public-status-snapshot.md))
 
 This repository publishes `stream_v3` as a public systems case study for a
 self-built 24/7 YouTube Live pipeline. ADS-B visualization and NCS music are the
@@ -47,6 +49,9 @@ small blast radius, not to imply enterprise traffic scale.
   subsystem SLI, notifications, Prometheus exporter, and recovery orchestrator.
 - Raspberry Pi public gateway role: nginx status UI and `/grafana/` proxy, while
   Prometheus and Loki remain on HP ProDesk.
+- Public-safe status presentation: live operational evidence is reduced to a
+  static snapshot and served through GCS + Cloudflare without exposing Grafana,
+  Prometheus, Loki, raw logs, credentials, or home-network ingress.
 - Recovery guard design that keeps monitors from directly owning FFmpeg.
 - Shadow mode and cutover safety before destructive actions.
 - `ops/monitoring` evidence path with Prometheus, Loki, Grafana, and Alloy
@@ -173,6 +178,7 @@ Use these entry points instead of reading the full tree:
 | Where is shadow safety asserted? | [`tests/test_v3_shadow_acceptance.py`](tests/test_v3_shadow_acceptance.py), [`deploy/k3s/README.md`](deploy/k3s/README.md) |
 | Where is the physical split documented? | [`docs/physical-topology.md`](docs/physical-topology.md), [`docs/runtime-contract.md`](docs/runtime-contract.md) |
 | Where is the measured SLI baseline? | [`docs/sli-methodology.md`](docs/sli-methodology.md), [`docs/v3/sli-and-dashboard.md`](docs/v3/sli-and-dashboard.md) |
+| Where is the public status site boundary documented? | [`docs/v3/public-status-snapshot.md`](docs/v3/public-status-snapshot.md), <https://yukimurata0421.dev/> |
 | Where is the 28-day same-URL reliability review? | [`docs/28-day-same-url-sli-case-study.md`](docs/28-day-same-url-sli-case-study.md) |
 | Where is the short executive summary? | [`docs/executive-summary.md`](docs/executive-summary.md) |
 | Which claims are measured, tested, documented, or still unknown? | [`docs/operational-scorecard.md`](docs/operational-scorecard.md) |

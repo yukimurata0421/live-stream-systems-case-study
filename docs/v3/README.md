@@ -9,6 +9,7 @@
   - `runtime-state-and-evidence.md`
 - Evidence and SLI:
   - `sli-and-dashboard.md`
+  - `public-status-snapshot.md`
   - `youtube-lifecycle-safety.md`
   - `encoder-upload-case-study.md`
   - `encoder-fps-tuning-2026-05-31.md`
@@ -54,3 +55,5 @@ For a focused reliability review:
   availability.
 - `single-node-dr-case-study.md` documents the measured and unmeasured parts of
   the single-node k3s DR model.
+- `public-status-snapshot.md` documents why the public site exposes a
+  sanitized static operational view instead of the private monitoring backend.
