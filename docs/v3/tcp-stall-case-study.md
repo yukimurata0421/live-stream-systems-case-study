@@ -120,8 +120,8 @@ but they do not directly authorize destructive recovery.
 
 ## Review Signal
 
-For an SRE or platform reviewer, the important part is not that the network
-failed. The important part is the control discipline:
+The important part is not that the network failed. The important part is the
+control discipline:
 
 - the system separated product impact, delivery transport, YouTube lifecycle,
   dashboard evidence, and WAN cause evidence;

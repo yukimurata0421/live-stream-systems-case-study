@@ -92,7 +92,7 @@ pressure, and the reverse can also be true.
 
 ## Review Signal
 
-For an SRE reviewer, the important part is the layered diagnosis:
+The useful operational signal is the layered diagnosis:
 
 - the system did not trust one memory number;
 - it identified the concrete process class responsible for the peak;
