@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Remote recovery loop for stream_v3 k3s workloads.
 
-This is intended to run on arena-server with a namespace-scoped kubeconfig.
+This is intended to run on the observability host with a namespace-scoped kubeconfig.
 It requests recovery of the streaming host's runtime workload; long-horizon
-stream quality decisions stay in arena monitoring tasks.
+stream quality decisions stay in observability monitoring tasks.
 """
 
 from __future__ import annotations

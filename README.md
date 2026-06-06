@@ -16,6 +16,23 @@ observability, recovery guard design, and operational decision-making.
 This is open-source code published as a case study, not a supported OSS product
 or general-purpose starter.
 
+## Evidence Snapshot
+
+The strongest measurements are intentionally front-loaded here, with their
+limits attached:
+
+| Signal | Measured result | Boundary |
+| --- | --- | --- |
+| k3s service restart drill | 10.7 seconds from fault injection to stream_v3 observability metrics OK; the same FFmpeg PID and TCP socket survived, and `bytes_sent` advanced by 37,503,068 bytes across the drill. | This proves k3s control-plane / observability recovery and RTMPS process continuity for this fault. It is not a node reboot, disk restore, RTMPS reconnect, or readsb/tar1090 source-recovery drill. |
+| Viewer-facing impact during that drill | YouTube ingest, public watch, same-URL, and watchdog metrics stayed OK in the sampled window; no monitored viewer-facing interruption was observed. | Prometheus/YouTube sampling does not prove every delivered frame. |
+| Error-budget reading | The k3s drill burned at most 10.7 seconds of control-plane availability; monitored viewer-facing burn was treated as zero because the same RTMPS socket continued sending and public signals stayed OK. | Long-window reliability claims remain in the 14-day / 28-day SLI docs. |
+| Transport MTTR baseline | Historical `tcp_stall` clusters had 90.0s median local transport MTTR, 1190.8s p95, and 1474.0s max. | Local transport MTTR is not direct viewer MTTR. |
+
+Scope calibration: this is a single-operator, three-host personal 24/7 stream
+with real production operation, but not a commercial multi-tenant service or a
+contractual user SLO. The repository is meant to show reliability discipline at
+small blast radius, not to imply enterprise traffic scale.
+
 ## What This Repository Demonstrates
 
 - 24/7 YouTube Live delivery operation.
@@ -79,7 +96,7 @@ flowchart LR
     end
 
     subgraph PD["HP ProDesk (.60) - observability"]
-        MON["arena-monitor<br/>resolver + watchdogs<br/>SLI + notify"]
+        MON["v3 monitor<br/>resolver + watchdogs<br/>SLI + notify"]
         ORCH["recovery-orchestrator<br/>+ guard"]
         EXP["v3 exporter :9108"]
         PROM["Prometheus :9090"]
@@ -132,7 +149,7 @@ The single-host versions made browser rendering, audio, FFmpeg, watchdogs, and r
 
 The one-page public overview is in `docs/executive-summary.md`.
 The main design decisions are summarized in `docs/v3/decisions.md`.
-The hiring-oriented review path is in `docs/hiring-reviewer-guide.md`.
+The guided review path is in `docs/hiring-reviewer-guide.md`.
 The measured/tested/documented maturity ledger is in
 `docs/operational-scorecard.md`.
 The code-to-test review map is in `docs/implementation-review-map.md`.
@@ -193,7 +210,7 @@ Use these entry points instead of reading the full tree:
 - `ops/systemd/stream-v3-wan-address-observer.*` and
   `ops/systemd/stream-v3-persistent-anchor-observer.service`: host-side
   scheduling examples for the TCP stall cause observers.
-- `ops/systemd/stream-v3-arena-monitor.service`: observability-plane task owner.
+- `ops/systemd/stream-v3-observability-monitor.service`: observability-plane task owner.
 - `ops/prodesk-monitoring/`: sanitized legacy prodesk service checks.
 - `docs/sli-methodology.md`: measured v2 SLI baseline and the metric
   classification inherited by v3.

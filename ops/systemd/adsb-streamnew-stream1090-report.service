@@ -8,6 +8,6 @@ Type=oneshot
 User=yuki
 Group=yuki
 EnvironmentFile=-/etc/default/adsb-streamnew
-EnvironmentFile=-/etc/default/stream-v3-arena-monitor
+EnvironmentFile=-/etc/default/stream-v3-observability-monitor
 Environment=PYTHONPATH=/home/yuki/projects/stream_v3/src
 ExecStart=/bin/bash -lc 'visual=""; if [ "$${STREAM1090_REPORT_VISUAL:-0}" = "1" ]; then visual="--visual"; fi; exec /home/yuki/projects/stream_v3/bin/stream-prod stream1090-report --base-url "$${STREAM1090_REPORT_BASE_URL:-http://stream1090.lan}" --sample-sec "$${STREAM1090_REPORT_SAMPLE_SEC:-5}" --timeout "$${STREAM1090_REPORT_TIMEOUT_SEC:-5}" $$visual'

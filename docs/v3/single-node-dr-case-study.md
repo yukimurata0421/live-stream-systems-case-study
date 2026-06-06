@@ -48,16 +48,21 @@ The measured result was:
 | node Ready | recovered inside the drill window |
 | deployment available | recovered inside the drill window |
 | Pod 3/3 | recovered inside the drill window |
-| arena metrics OK | measured RTO upper bound: 10.7 seconds from fault injection |
+| stream_v3 observability metrics OK | measured RTO upper bound: 10.7 seconds from fault injection |
+| FFmpeg RTMPS process | same PID and same TCP socket survived the drill |
+| RTMPS send progress | `bytes_sent` advanced by 37,503,068 bytes across the drill |
 | same URL | preserved |
 | YouTube ingest/public/watchdog samples | stayed OK in the measured window |
+| upload latest | stayed in the 4.689-4.817 Mbps range in the measured window |
 
-This was not a full viewer-facing RTMPS recovery drill. The stream-engine
-container and FFmpeg process survived the k3s restart window. The correct
-interpretation is:
+This was not an RTMPS reconnect drill. The stream-engine container and FFmpeg
+process survived the k3s restart window, so the useful result is a continuity
+measurement:
 
 ```text
 k3s control-plane / observability recovery was measured at 10.7s.
+The same FFmpeg PID and TCP socket continued sending bytes.
+No monitored viewer-facing interruption was observed in the sampled window.
 The drill did not prove node reboot, disk restore, spare-host rebuild, or
 FFmpeg reconnect RTO.
 ```
@@ -85,7 +90,7 @@ discipline, not a portable one-command restore.
 
 | Scenario | Current status |
 | --- | --- |
-| k3s service restart | measured: 10.7s to arena metrics OK |
+| k3s service restart | measured: 10.7s to stream_v3 observability metrics OK; same FFmpeg PID/TCP socket continued sending |
 | Pod/runtime restart | covered by runtime and fast-recovery tests; live RTO depends on trigger |
 | OS reboot | not publicly measured |
 | disk survives | procedure documented, not publicly measured |

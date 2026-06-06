@@ -128,7 +128,7 @@ kubectl kustomize --load-restrictor=LoadRestrictionsNone deploy/k3s/streaming | 
 The streaming overlay keeps this host limited to the delivery plane: `stream-v3-runtime` renders readsb/custom tar1090, plays AutoDJ, captures audio/video, sends RTMP, and runs the local fast recovery sidecar at `V3_FAST_RECOVERY_INTERVAL_SEC=10`. It switches `STREAM_V3_MODE=streaming`, `STREAM_V3_CUTOVER_ENABLE=1`, `STREAM_K8S_DRY_RUN=0`, and `TEST_MODE=0`. Create the real `stream-v3-secrets` Secret with `STREAM_KEY` before applying it; otherwise the stream engine cannot resolve a production RTMP URL.
 
 The HP ProDesk observability host owns the monitoring plane. Install
-`ops/systemd/stream-v3-arena-monitor.service` there for `youtube_video_resolver`,
+`ops/systemd/stream-v3-observability-monitor.service` there for `youtube_video_resolver`,
 `youtube_monitor`, `stream_watchdog`, `notify_status`, `subsystems_status`,
 `recovery_orchestrator`, and `shadow_sli`. Install
 `ops/systemd/stream-v3-remote-recovery.timer` there with
@@ -137,6 +137,6 @@ host can request runtime restarts on the Dell delivery node through the
 namespace-scoped k8s token. Manual staged requests can use:
 
 ```bash
-python3 ops/scripts/stream_v3_staged_restart.py --reason "arena manual recovery"
-python3 ops/scripts/stream_v3_staged_restart.py --hard --reason "arena escalated recovery"
+python3 ops/scripts/stream_v3_staged_restart.py --reason "observability manual recovery"
+python3 ops/scripts/stream_v3_staged_restart.py --hard --reason "observability escalated recovery"
 ```

@@ -45,7 +45,7 @@ class PublicDocsStructureTests(unittest.TestCase):
             "beast feed to :30104",
             "browser map URL",
             "Data API + OAuth + public watch",
-            "arena-monitor",
+            "v3 monitor",
             "recovery-orchestrator",
             "guarded k8s recovery",
             "`kubectl exec`",
@@ -91,6 +91,10 @@ class PublicDocsStructureTests(unittest.TestCase):
             "stats reuse bug",
             "open-source code published as a case study",
             "not a supported OSS product",
+            "## Evidence Snapshot",
+            "10.7 seconds from fault injection to stream_v3 observability metrics OK",
+            "`bytes_sent` advanced by 37,503,068 bytes",
+            "single-operator, three-host personal 24/7 stream",
             "## What This Repository Demonstrates",
             "docs/executive-summary.md",
             "docs/operational-scorecard.md",
@@ -251,6 +255,8 @@ class PublicDocsStructureTests(unittest.TestCase):
 
         for marker in (
             "Operational Scorecard",
+            "Scope Calibration",
+            "single-operator, three-host personal 24/7 stream",
             "Measured",
             "Tested",
             "Documented",
@@ -322,6 +328,8 @@ class PublicDocsStructureTests(unittest.TestCase):
             "VIDEO_BITRATE=3400k",
             "STREAM_V3_CUTOVER_ENABLE=1",
             "STREAM_K8S_DRY_RUN=1",
+            "shadow_budget_not_enforced",
+            "Production enforcement lives",
             "Dell workstation",
             "HP ProDesk",
             "Airspy USB on HP ProDesk",
@@ -440,6 +448,8 @@ class PublicDocsStructureTests(unittest.TestCase):
             "YouTube availability",
             "same URL preservation",
             "Error Budget Rule",
+            "Measured Results To Read First",
+            "37,503,068 bytes",
             "encoder-upload-case-study.md",
             "Visual correctness, audio correctness, ADS-B source freshness",
         ):
@@ -447,6 +457,8 @@ class PublicDocsStructureTests(unittest.TestCase):
 
         for marker in (
             "Delivery / Observability Split",
+            "Shadow Gate Semantics",
+            "not production policy",
             "Migration Smoke Test",
             "NVENC CBR Baseline",
             "Encoder Upload Budget",
@@ -560,7 +572,9 @@ class PublicDocsStructureTests(unittest.TestCase):
         for marker in (
             "Single-Node DR Case Study",
             "measured RTO upper bound: 10.7 seconds",
-            "not a full viewer-facing RTMPS recovery drill",
+            "same PID and same TCP socket survived the drill",
+            "`bytes_sent` advanced by 37,503,068 bytes",
+            "not an RTMPS reconnect drill",
             "Node and disk lost",
             "same-URL safety constraints",
         ):

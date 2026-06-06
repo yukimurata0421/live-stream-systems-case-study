@@ -3,12 +3,12 @@
 ## Purpose
 
 `stream_v3` runs the live streaming delivery path on k3s and keeps monitoring on
-the arena/prodesk side.
+the HP ProDesk observability side.
 
 The current production split is:
 
 - HP ProDesk: Airspy USB, `airspy_adsb`, ProDesk-side readsb, and the
-  observability / arena services, including Prometheus, Loki, Alloy, and
+  observability services, including Prometheus, Loki, Alloy, and
   Grafana.
 - Dell workstation: Dell-side readsb, modified tar1090 map endpoint, and the
   k3s `stream_v3` delivery workload.
@@ -32,7 +32,7 @@ Dell modified tar1090 -> `stream_v3` browser rendering.
 
 ## Monitoring Owner
 
-- arena monitor systemd unit
+- observability monitor systemd unit
 - YouTube resolver and watchdog
 - read-only YouTube Data API, OAuth, and public watch-page evidence
 - stream watchdog

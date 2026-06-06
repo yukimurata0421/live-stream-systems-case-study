@@ -72,7 +72,7 @@ def default_tasks(env: Mapping[str, str] | None = None, *, mode: str | None = No
     selected_mode = (mode or source.get("STREAM_V3_MODE", "shadow")).strip().lower() or "shadow"
     if selected_mode in {"streaming", "streaming-only", "streaming_only"}:
         return streaming_tasks(source)
-    if selected_mode in {"monitor", "arena-monitor", "arena_monitor"}:
+    if selected_mode in {"monitor", "observability-monitor", "observability_monitor"}:
         return monitor_tasks(source)
     if selected_mode in {"cutover", "production"}:
         return cutover_tasks(source)

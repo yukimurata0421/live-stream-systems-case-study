@@ -50,7 +50,7 @@ The system changed shape during this window:
 - early evidence came from the v2 single-host runtime and its archived SLI
   snapshot;
 - mid-window evidence came from v2 runtime logs and monitoring backfill;
-- later evidence came from the v3 split-plane arena monitor and Prometheus
+- later evidence came from the v3 split-plane observability monitor and Prometheus
   series.
 
 That means the case study does not claim one perfect 28-day ratio from one

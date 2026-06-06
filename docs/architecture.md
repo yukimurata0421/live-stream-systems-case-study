@@ -18,7 +18,7 @@ Airspy USB on HP ProDesk
   -> YouTube RTMPS
 
 runtime evidence
-  -> HP ProDesk observability / arena services
+  -> HP ProDesk observability services
   -> YouTube Data API / OAuth / public watch-page probes
   -> k3s runtime, state, and log evidence
   -> watchdogs

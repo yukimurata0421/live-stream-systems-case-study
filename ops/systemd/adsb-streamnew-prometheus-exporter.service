@@ -1,16 +1,16 @@
 [Unit]
-Description=ADS-B Stream v3 arena-monitor Prometheus exporter
+Description=ADS-B Stream v3 observability monitor Prometheus exporter
 After=network-online.target
 Wants=network-online.target
 
 [Service]
 Type=simple
 WorkingDirectory=/home/yuki/projects/stream_v3
-ExecStart=/usr/bin/python3 /home/yuki/projects/stream_v3/ops/scripts/stream_v3_prometheus_exporter.py --repo-root /home/yuki/projects/stream_v3 --state-root /home/yuki/projects/stream_v3/.state/arena-monitor --host 127.0.0.1 --port 9108 --cache-sec 60
+ExecStart=/usr/bin/python3 /home/yuki/projects/stream_v3/ops/scripts/stream_v3_prometheus_exporter.py --repo-root /home/yuki/projects/stream_v3 --state-root /home/yuki/projects/stream_v3/.state/observability-monitor --host 127.0.0.1 --port 9108 --cache-sec 60
 Restart=always
 RestartSec=10
 User=yuki
-EnvironmentFile=-/etc/default/stream-v3-arena-monitor
+EnvironmentFile=-/etc/default/stream-v3-observability-monitor
 Environment=PYTHONPATH=/home/yuki/projects/stream_v3/src
 
 [Install]

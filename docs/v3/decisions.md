@@ -5,8 +5,8 @@
 Status: accepted
 
 The Dell delivery host owns video, audio, FFmpeg, AutoDJ, k3s runtime, and local
-recovery. The HP ProDesk arena/prodesk side owns monitoring, SLI, notification,
-and staged recovery requests.
+recovery. The HP ProDesk observability side owns monitoring, SLI,
+notification, and staged recovery requests.
 
 The HP ProDesk also hosts the physical ADS-B RF ingest chain: Airspy USB,
 `airspy_adsb`, and ProDesk-side readsb. The Dell workstation receives that feed
@@ -30,6 +30,19 @@ model that v2 established. After cutover, the same rule explains why current
 production ownership is tied to explicit runtime, state, metrics, alert, and
 recovery evidence rather than to Pod readiness alone.
 
+## Shadow Gate Semantics
+
+Status: accepted
+
+`shadow_budget_not_enforced` and `shadow_cooldown_not_enforced` are deliberate
+shadow-plan markers, not production policy. Shadow evaluation must stay
+non-mutating: it cannot consume restart budget, write cooldown state, or perform
+live recovery. Production budget and cooldown enforcement is owned by the
+mutating recovery paths documented in `docs/runtime-contract.md`.
+
+Consequence: a green shadow action plan proves evidence classification and
+destructive-action blocking, not that production restart budgets were bypassed.
+
 ## Migration Smoke Test
 
 Status: accepted
@@ -47,7 +60,7 @@ claim. Broader reliability claims still need 14-day or 28-day SLI review.
 
 Status: accepted
 
-v3 evidence uses `stream_v3_*` metrics and the v3 arena monitor job. Dashboard
+v3 evidence uses `stream_v3_*` metrics and the v3 observability monitor job. Dashboard
 queries must not aggregate v2 production and v3 shadow-compatible series unless
 the source label is explicitly scoped.
 

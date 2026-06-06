@@ -99,6 +99,19 @@ TEST_MODE=0
 Shadow mode keeps `TEST_MODE=1`, `STREAM_K8S_DRY_RUN=1`, and
 `STREAM_V3_CUTOVER_ENABLE=0`.
 
+`src/stream_v2/recovery_orchestrator/gate.py` intentionally reports
+`shadow_budget_not_enforced` and `shadow_cooldown_not_enforced` in shadow
+plans. Shadow mode must explain what would happen without mutating restart
+history, consuming budget, or extending cooldown. Production enforcement lives
+in the mutating recovery paths:
+
+- `src/watchers/fast_recovery.py` enforces restart-induced downtime budgets,
+  block events, and sustained-emergency overrides for local delivery recovery.
+- `src/watchers/youtube_health.py` and `src/watchers/decision/action_gate.py`
+  enforce restart budgets, cooldown, budget-release reconfirmation, and
+  emergency override evidence before YouTube-oriented recovery actions.
+- Production mutation also requires the explicit mode and dry-run flags above.
+
 ## State Boundary
 
 Runtime state lives under `.state/` or `/state` in deployment contexts. It is

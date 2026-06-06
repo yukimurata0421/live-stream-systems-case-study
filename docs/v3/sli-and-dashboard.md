@@ -2,6 +2,15 @@
 
 The dashboard separates present state from historical degradation.
 
+## Measured Results To Read First
+
+| Question | Public answer | Evidence boundary |
+| --- | --- | --- |
+| What RTO has actually been drilled? | k3s service restart recovered to stream_v3 observability metrics OK in 10.7 seconds. The same FFmpeg PID and TCP socket survived the drill, and `bytes_sent` advanced by 37,503,068 bytes. | This is k3s control-plane / observability RTO plus RTMPS process-continuity evidence. It is not node reboot, disk restore, RTMPS reconnect RTO, or readsb/tar1090 source recovery. |
+| Was there monitored viewer-facing burn in that drill? | No monitored burn: YouTube ingest, public watch, same-URL, and watchdog metrics stayed OK in the sampled window. | Prometheus/YouTube sampling does not prove every frame seen by every viewer. |
+| How should error budget be read? | Same-watch-URL continuity is an invariant. A drill can burn control-plane budget without burning viewer-facing budget if the public stream remains live and the RTMPS socket continues sending. | Long-window same-URL and availability claims still require 14-day or 28-day review windows. |
+| What MTTR has been retained? | Historical `tcp_stall` clusters had 90.0s median local transport MTTR, 1190.8s p95, and 1474.0s max. | Local transport recovery is not automatically viewer MTTR. |
+
 ## Metric Classes
 
 The dashboard must keep objective classes separate:

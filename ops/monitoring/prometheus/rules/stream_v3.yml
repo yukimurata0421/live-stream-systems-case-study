@@ -1,18 +1,18 @@
 groups:
-  - name: stream_v3_arena_monitor
+  - name: stream_v3_observability_monitor
     rules:
-      - alert: StreamV3ArenaMonitorExporterDown
-        expr: up{job="stream_v3_arena_monitor"} == 0
+      - alert: StreamV3ObservabilityMonitorExporterDown
+        expr: up{job="stream_v3_observability_monitor"} == 0
         for: 2m
         labels:
           severity: warning
         annotations:
-          summary: stream_v3 arena-monitor exporter is down
+          summary: stream_v3 observability monitor exporter is down
 
-      - alert: StreamV3ArenaMonitorExporterFailing
-        expr: stream_v3_exporter_up{job="stream_v3_arena_monitor"} == 0
+      - alert: StreamV3ObservabilityMonitorExporterFailing
+        expr: stream_v3_exporter_up{job="stream_v3_observability_monitor"} == 0
         for: 2m
         labels:
           severity: warning
         annotations:
-          summary: stream_v3 arena-monitor exporter is failing
+          summary: stream_v3 observability monitor exporter is failing

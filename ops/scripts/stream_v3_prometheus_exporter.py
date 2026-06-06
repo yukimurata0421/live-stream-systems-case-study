@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Prometheus exporter for the ADS-B stream_v3 arena-monitor operation."""
+"""Prometheus exporter for the ADS-B stream_v3 observability monitor."""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ from typing import Any
 
 
 DEFAULT_REPO_ROOT = Path("/home/yuki/projects/stream_v3")
-DEFAULT_STATE_ROOT = DEFAULT_REPO_ROOT / ".state" / "arena-monitor"
+DEFAULT_STATE_ROOT = DEFAULT_REPO_ROOT / ".state" / "observability-monitor"
 
 
 def stream_cli(repo_root: Path) -> Path:

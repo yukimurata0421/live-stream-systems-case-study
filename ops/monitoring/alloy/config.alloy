@@ -31,13 +31,13 @@ loki.process "jsonl" {
 loki.source.file "stream_v3_state_jsonl" {
   targets = [
     {
-      __path__ = "/stream_v3/.state/arena-monitor/logs/*.jsonl",
+      __path__ = "/stream_v3/.state/observability-monitor/logs/*.jsonl",
       app      = "stream_v3",
-      source   = "arena_monitor_jsonl",
+      source   = "observability_monitor_jsonl",
       host     = "yuki",
     },
     {
-      __path__ = "/stream_v3/.state/arena-monitor/reports/youtube_api_cost/*.jsonl",
+      __path__ = "/stream_v3/.state/observability-monitor/reports/youtube_api_cost/*.jsonl",
       app      = "stream_v3",
       source   = "youtube_api_cost_jsonl",
       host     = "yuki",

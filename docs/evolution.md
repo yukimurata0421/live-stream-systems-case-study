@@ -40,7 +40,7 @@ still competed for the same host resources and process namespace.
 ## v3: k3s Runtime With Split Planes
 
 `stream_v3` moves the delivery plane into k3s and keeps the observability plane
-on the arena/prodesk side.
+on the HP ProDesk observability side.
 
 The v3 migration is not a rewrite that discards v2 safety. The delivery runtime
 moved, but the v2 design constraints remain: preserve the YouTube watch URL,

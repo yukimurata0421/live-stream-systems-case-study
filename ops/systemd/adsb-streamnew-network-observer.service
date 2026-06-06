@@ -8,7 +8,7 @@ Type=simple
 User=yuki
 Group=yuki
 WorkingDirectory=/home/yuki/projects/stream_v3
-EnvironmentFile=-/etc/default/stream-v3-arena-monitor
+EnvironmentFile=-/etc/default/stream-v3-observability-monitor
 Environment=PYTHONPATH=/home/yuki/projects/stream_v3/src
 ExecStart=/usr/bin/python3 /home/yuki/projects/stream_v3/src/watchers/network_observer.py --loop
 Restart=always

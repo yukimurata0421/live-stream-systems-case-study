@@ -25,6 +25,6 @@
 - `deploy/k3s/shadow`
 - `deploy/k3s/streaming`
 - `deploy/k3s/v3-observer`
-- `ops/systemd/stream-v3-arena-monitor.service`
+- `ops/systemd/stream-v3-observability-monitor.service`
 - `ops/monitoring/prometheus/prometheus.yml`
 - `ops/monitoring/prometheus/rules/stream_v3.yml`

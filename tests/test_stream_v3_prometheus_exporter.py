@@ -30,7 +30,7 @@ class StreamV3PrometheusExporterTests(unittest.TestCase):
     def test_run_json_passes_v3_state_environment_to_cli(self) -> None:
         exporter = load_exporter()
         repo_root = Path("/tmp/stream-v3")
-        state_root = Path("/tmp/stream-v3/.state/arena-monitor")
+        state_root = Path("/tmp/stream-v3/.state/observability-monitor")
 
         with mock.patch.object(exporter.subprocess, "run") as run_mock:
             run_mock.return_value = mock.Mock(returncode=0, stdout='{"ok": true}', stderr="")

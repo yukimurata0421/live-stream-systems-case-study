@@ -4,6 +4,13 @@ This scorecard separates measured behavior, tested contracts, documented
 procedures, and remaining unknowns. It is intentionally conservative: a public
 case study is stronger when it says what has not been proven.
 
+## Scope Calibration
+
+This is a single-operator, three-host personal 24/7 stream. It has real live
+operation, real recovery decisions, and retained measurements, but it is not a
+commercial multi-tenant service and does not claim a contractual user SLO. The
+right reading is reliability discipline at small blast radius.
+
 ## Status Legend
 
 | Status | Meaning |
@@ -29,7 +36,8 @@ case study is stronger when it says what has not been proven.
 | Audio correctness | Documented / tested by components | `docs/v3/visual-audio-health-model.md`, Pulse/audio tests | Track transitions can create noisy low-energy samples and require staged interpretation. |
 | Memory guard | Documented / tested by components | `docs/v3/memory-guard-case-study.md`, memory/resource tests | Short Xvfb peaks can still be hard to capture if they happen between observations. |
 | Notification quality | Documented / tested by replay contracts | `docs/v3/notification-and-auto-recovery.md`, notification tests | Notification delivery is secondary SLI, not proof of stream health. |
-| Single-node k3s service restart | Measured | `docs/v3/single-node-dr-case-study.md` | 10.7s measured to arena metrics OK is not a full viewer-facing RTMPS recovery drill. |
+| Single-node k3s service restart | Measured | `docs/v3/single-node-dr-case-study.md`, `docs/v3/sli-and-dashboard.md` | 10.7s measured to stream_v3 observability metrics OK; same FFmpeg PID/TCP socket continued sending. This is not node reboot, disk restore, RTMPS reconnect RTO, or readsb/tar1090 source recovery. |
+| Viewer-facing burn during k3s restart drill | Measured by public/ingest samples | `docs/v3/single-node-dr-case-study.md`, `docs/v3/sli-and-dashboard.md` | YouTube ingest, public watch, same-URL, and watchdog metrics stayed OK; sampling does not prove every delivered frame. |
 | OS reboot / power loss / disk loss DR | Documented / not publicly measured | `docs/v3/single-node-dr-case-study.md` | RTO/RPO depend on private state, secrets, music backup, and hardware recovery. |
 | 24-hour production smoke test | Documented gate | `docs/test-strategy-and-safety-boundary.md`, `docs/v3/migration-cutover-case-study.md` | A smoke test is migration confidence, not a replacement for 14-day or 28-day SLI review. |
 | Runbook third-party validation | Documented | `docs/v3/runbook-validation.md` | Public repo cannot validate private credentials or real production mutation. |

@@ -82,7 +82,7 @@ def scale_runtime(replicas: int, reason: str) -> StepResult:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Request a staged stream_v3 runtime restart from the monitoring host.")
-    parser.add_argument("--reason", default="manual arena restart request")
+    parser.add_argument("--reason", default="manual stream_v3 restart request")
     parser.add_argument("--timeout-sec", type=int, default=90)
     parser.add_argument("--hard", action="store_true", help="allow delete-pod and scale fallback if rollout restart is not enough")
     args = parser.parse_args()
