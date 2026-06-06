@@ -86,9 +86,11 @@ configuration used to present this evidence. It is an observability display and
 retention stack; recovery ownership still flows through the monitor guard and
 staged request path.
 
-In the current production topology this monitoring backend remains on HP
-ProDesk. Raspberry Pi exposes the public nginx status UI and `/grafana/` gateway
-to HP ProDesk Grafana, but it does not host Prometheus or Loki.
+In the current production topology this monitoring backend remains private on
+HP ProDesk. The public status page is a separate one-way publication path:
+allowlisted evidence is reduced on the operator side, pushed outbound to GCS,
+and served through Cloudflare. Public readers do not reach Grafana, Prometheus,
+Loki, or the home network directly.
 
 The public status site at <https://yukimurata0421.dev/> is a separate,
 sanitized evidence surface. It shows a static GCS + Cloudflare snapshot with

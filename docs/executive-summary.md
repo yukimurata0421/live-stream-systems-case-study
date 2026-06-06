@@ -18,14 +18,15 @@ The current public architecture separates the system into two main planes:
 
 The ADS-B source chain is also explicit: Airspy on HP ProDesk, `airspy_adsb`,
 ProDesk readsb, Dell readsb, Dell modified tar1090, and then the `stream_v3`
-delivery workload. Raspberry Pi is only the public status/dashboard gateway,
-not the monitoring backend.
+delivery workload. The public status site is not a Grafana proxy or
+home-network entrypoint; it is a reduced static snapshot published from the
+operator side.
 
 The current public status site, <https://yukimurata0421.dev/>, is a sanitized
-static snapshot served through GCS + Cloudflare. It is meant to expose freshness,
-decision checks, guardrails, trends, and recovery-boundary summaries without
-publishing Grafana, Prometheus, Loki, raw logs, credentials, or home-network
-ingress.
+static snapshot pushed outbound to GCS and served through Cloudflare. It is
+meant to expose freshness, decision checks, guardrails, trends, and
+recovery-boundary summaries without publishing Grafana, Prometheus, Loki, raw
+logs, credentials, or home-network ingress.
 
 ## What Makes It Operationally Interesting
 

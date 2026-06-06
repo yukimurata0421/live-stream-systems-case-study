@@ -27,15 +27,17 @@ runtime evidence
   -> ops/monitoring evidence presentation
   -> staged recovery request
 
-public status / dashboard entry
-  -> Raspberry Pi nginx status UI
-  -> /grafana/ proxy to HP ProDesk Grafana
+public status publication
+  -> HP ProDesk-side allowlist collector
+  -> outbound upload to GCS
+  -> Cloudflare
+  -> yukimurata0421.dev
 ```
 
 ## Physical Topology
 
-The running system is intentionally split across three physical hosts with five
-logical roles:
+The running system is intentionally split across two home hosts plus a public
+static edge:
 
 - HP ProDesk `192.168.0.60` source role: Airspy USB receiver, `airspy_adsb`,
   and ProDesk-side readsb.
@@ -47,9 +49,9 @@ logical roles:
 - Dell workstation `192.168.0.35` delivery role: k3s `stream-v3-runtime`,
   browser rendering, PulseAudio, AutoDJ, FFmpeg, NVENC, and local fast
   recovery.
-- Raspberry Pi `192.168.0.50` public gateway role: nginx `:8088` status UI and
-  `/grafana/` proxy to HP ProDesk Grafana. Prometheus and Loki are not migrated
-  to the Raspberry Pi in the current production shape.
+- GCS + Cloudflare public edge role: serve sanitized static status snapshots
+  uploaded outbound from the operator side, without exposing Grafana,
+  Prometheus, Loki, raw logs, credentials, or the home network.
 
 This split is part of the architecture, not just a deployment detail. It keeps
 the GPU/media delivery host focused on real-time output, keeps long-lived
@@ -76,8 +78,8 @@ long-window SLI state, or YouTube API decision state.
 `ops/monitoring/` defines Prometheus, Loki, Grafana, and Alloy as a
 host-local evidence and presentation stack. It is not a third delivery plane and
 does not own FFmpeg or k3s recovery directly. In the current production shape,
-that monitoring backend runs on HP ProDesk; Raspberry Pi only exposes the public
-gateway and proxies Grafana.
+that monitoring backend runs on HP ProDesk. The public status page is a reduced
+static snapshot pushed to GCS and served by Cloudflare, not a Grafana proxy.
 
 ## Source Boundary
 

@@ -3,11 +3,12 @@
 `stream_v3` treats streaming as a delivery-plane workload and monitoring as a
 separate observability-plane workload.
 
-The physical deployment has three hosts and five logical roles: HP ProDesk
-`192.168.0.60` owns the Airspy/`airspy_adsb`/readsb source role and the
+The active home deployment has two physical hosts and four logical roles: HP
+ProDesk `192.168.0.60` owns the Airspy/`airspy_adsb`/readsb source role and the
 observability role; the Dell workstation `192.168.0.35` owns Dell-side readsb, a
-modified tar1090 map endpoint, and the k3s delivery role; Raspberry Pi
-`192.168.0.50` owns the public nginx status/dashboard gateway role.
+modified tar1090 map endpoint, and the k3s delivery role. Public presentation is
+not a home-network proxy. It is a reduced static snapshot pushed outbound to GCS
+and served through Cloudflare.
 
 The production ADS-B data path is:
 
@@ -78,12 +79,13 @@ The observability plane owns health classification and recovery requests:
 The observability plane may request recovery, but it does not directly own the
 FFmpeg process.
 
-## Public Gateway
+## Public Status Publication
 
-Raspberry Pi exposes the public nginx `:8088` status UI and proxies `/grafana/`
-to HP ProDesk Grafana. Prometheus and Loki remain on HP ProDesk in the current
-production shape; the Raspberry Pi is an entrypoint, not the metrics/logs
-backend.
+Prometheus, Loki, Alloy, Grafana, and the v3 exporter remain private on HP
+ProDesk in the current production shape. A ProDesk-side publisher reduces
+operator evidence to allowlisted JSON/static assets, pushes that snapshot
+outbound to GCS, and Cloudflare serves the public domain. Public browsers do not
+reach Grafana, Prometheus, Loki, the k3s runtime, or the home network directly.
 
 ## Safety Gates
 

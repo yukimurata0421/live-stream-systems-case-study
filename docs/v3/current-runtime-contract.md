@@ -9,11 +9,12 @@ The current production split is:
 
 - HP ProDesk: Airspy USB, `airspy_adsb`, ProDesk-side readsb, and the
   observability services, including Prometheus, Loki, Alloy, and
-  Grafana.
+  private Grafana, plus the public snapshot publisher.
 - Dell workstation: Dell-side readsb, modified tar1090 map endpoint, and the
   k3s `stream_v3` delivery workload.
-- Raspberry Pi: public nginx status UI and `/grafana/` proxy to HP ProDesk
-  Grafana. Prometheus and Loki are not hosted on the Raspberry Pi.
+- GCS + Cloudflare: sanitized static status snapshot served at
+  <https://yukimurata0421.dev/>. Public readers do not reach Grafana,
+  Prometheus, Loki, raw logs, credentials, or the home network directly.
 
 The ADS-B source chain is therefore Airspy on HP ProDesk -> `airspy_adsb` ->
 ProDesk readsb -> Beast feed to Dell `192.168.0.35:30104` -> Dell readsb ->

@@ -30,8 +30,8 @@ limits attached:
 | Error-budget reading | The k3s drill burned at most 10.7 seconds of control-plane availability; monitored viewer-facing burn was treated as zero because the same RTMPS socket continued sending and public signals stayed OK. | Long-window reliability claims remain in the 14-day / 28-day SLI docs. |
 | Transport MTTR baseline | Historical `tcp_stall` clusters had 90.0s median local transport MTTR, 1190.8s p95, and 1474.0s max. | Local transport MTTR is not direct viewer MTTR. |
 
-Scope calibration: this is a single-operator, three-host personal 24/7 stream
-with real production operation, but not a commercial multi-tenant service or a
+Scope calibration: this is a single-operator personal 24/7 stream with real
+production operation, but not a commercial multi-tenant service or a
 contractual user SLO. The repository is meant to show reliability discipline at
 small blast radius, not to imply enterprise traffic scale.
 
@@ -46,12 +46,12 @@ small blast radius, not to imply enterprise traffic scale.
 - Delivery-plane / observability-plane separation across Dell workstation and
   HP ProDesk hardware.
 - HP ProDesk observability role: YouTube resolver/watchdog, stream watchdog,
-  subsystem SLI, notifications, Prometheus exporter, and recovery orchestrator.
-- Raspberry Pi public gateway role: nginx status UI and `/grafana/` proxy, while
-  Prometheus and Loki remain on HP ProDesk.
-- Public-safe status presentation: live operational evidence is reduced to a
-  static snapshot and served through GCS + Cloudflare without exposing Grafana,
-  Prometheus, Loki, raw logs, credentials, or home-network ingress.
+  subsystem SLI, notifications, Prometheus exporter, recovery orchestrator,
+  private Prometheus/Loki/Grafana, and the public snapshot publisher.
+- Public-safe status presentation: HP ProDesk-side evidence is reduced to a
+  static snapshot, pushed outbound to GCS, and served through Cloudflare without
+  exposing Grafana, Prometheus, Loki, raw logs, credentials, or home-network
+  ingress.
 - Recovery guard design that keeps monitors from directly owning FFmpeg.
 - Shadow mode and cutover safety before destructive actions.
 - `ops/monitoring` evidence path with Prometheus, Loki, Grafana, and Alloy
@@ -64,7 +64,7 @@ small blast radius, not to imply enterprise traffic scale.
 | Airspy, `airspy_adsb`, ProDesk readsb, or the Dell readsb / modified tar1090 map feed gets stale. | Source freshness is treated as ADS-B evidence, separate from browser/audio/encoder failure. |
 | Browser, audio, FFmpeg, RTMPS, or GPU encoding stalls. | The Dell `stream_v3` k3s delivery tier owns local runtime recovery without giving monitors direct FFmpeg ownership. |
 | YouTube API/public evidence, k3s runtime evidence, or monitoring state gets stale or misleading. | The HP ProDesk observability tier pulls read-only YouTube and runtime evidence, applies quota/freshness guards, and only then requests staged k3s recovery. |
-| The public status or dashboard entrypoint gets confused with the monitoring backend. | Raspberry Pi serves the public nginx status/gateway layer; Prometheus, Loki, Alloy, and the v3 exporter remain on HP ProDesk. |
+| The public status site gets confused with the monitoring backend. | Private Prometheus, Loki, Alloy, Grafana, and the v3 exporter remain on HP ProDesk; the public site is an allowlisted static snapshot served from GCS + Cloudflare. |
 
 ### Delivery Path
 
@@ -106,11 +106,13 @@ flowchart LR
         EXP["v3 exporter :9108"]
         PROM["Prometheus :9090"]
         LOKI["Loki :3100<br/>(via Alloy)"]
-        GRAF["Grafana :3000"]
+        GRAF["private Grafana :3000"]
+        PUB["public snapshot publisher<br/>allowlisted JSON + static assets"]
     end
 
-    subgraph RPI["Raspberry Pi (.50) - public gateway"]
-        NGINX["nginx :8088<br/>status UI + /grafana/ proxy"]
+    subgraph EDGE["Public static edge"]
+        GCS["GCS bucket<br/>sanitized snapshot"]
+        CF["Cloudflare<br/>yukimurata0421.dev"]
     end
 
     YT["YouTube<br/>Data API + OAuth + public watch"]
@@ -121,7 +123,9 @@ flowchart LR
     ORCH -->|"guarded k8s recovery"| RUN
     MON --> EXP --> PROM --> GRAF
     MON -. logs .-> LOKI
-    NGINX -. grafana proxy .-> GRAF
+    MON --> PUB
+    PROM -. public-safe queries .-> PUB
+    PUB -->|"outbound upload"| GCS --> CF
 ```
 
 The diagrams intentionally separate delivery from observation. The concrete
@@ -129,9 +133,11 @@ ADS-B data path is Airspy on HP ProDesk -> `airspy_adsb` -> ProDesk readsb ->
 Dell workstation readsb -> Dell modified tar1090 -> `stream_v3`. Evidence
 collection is dotted in the observability diagram; the only mutating path back
 to delivery is the guarded k8s recovery request. The HP ProDesk monitor
-collects runtime evidence from the Dell pod with `kubectl exec`. Raspberry Pi is
-the public status and dashboard gateway, not the Prometheus/Loki owner; those
-backends remain on HP ProDesk.
+collects runtime evidence from the Dell pod with `kubectl exec`. Grafana,
+Prometheus, Loki, Alloy, and the exporter remain private on HP ProDesk. The
+public status path is not a Grafana proxy: an HP ProDesk-side publisher reduces
+evidence to an allowlisted static snapshot, uploads it outbound to GCS, and
+Cloudflare serves <https://yukimurata0421.dev/>.
 
 This repository is a sanitized public snapshot of a system that evolved through
 three stages:

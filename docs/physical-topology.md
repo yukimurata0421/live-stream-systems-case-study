@@ -2,15 +2,16 @@
 
 `stream_v3` is the current production shape. The live delivery workload runs on
 the Dell workstation, the HP ProDesk is both the ADS-B RF/source host and the
-observability host, and the Raspberry Pi is the public status/dashboard gateway.
+observability host, and the public status surface is a static GCS + Cloudflare
+edge fed by an outbound publisher from the operator side.
 
 ## Physical Hosts
 
-| Host | Runtime role | Responsibility |
+| Host or edge | Runtime role | Responsibility |
 | --- | --- | --- |
-| HP ProDesk `192.168.0.60` | ADS-B source and observability | Airspy USB receiver, `airspy_adsb`, ProDesk-side readsb, YouTube resolver/watchdog, stream watchdog, subsystem SLI, notifications, Prometheus exporter on `:9108`, Prometheus `:9090`, Loki `:3100`, Alloy `:12345`, Grafana `:3000`, recovery orchestration, and staged recovery requests |
+| HP ProDesk `192.168.0.60` | ADS-B source, observability, and public snapshot publisher | Airspy USB receiver, `airspy_adsb`, ProDesk-side readsb, YouTube resolver/watchdog, stream watchdog, subsystem SLI, notifications, Prometheus exporter on `:9108`, Prometheus `:9090`, Loki `:3100`, Alloy `:12345`, private Grafana `:3000`, recovery orchestration, staged recovery requests, and allowlisted public snapshot publication |
 | Dell workstation `192.168.0.35` | Delivery and local ADS-B mirror | Dell-side readsb and modified tar1090 map endpoint, k3s `stream-v3-runtime`, browser rendering, PulseAudio, AutoDJ, FFmpeg, NVIDIA NVENC, and local fast recovery |
-| Raspberry Pi `192.168.0.50` | Public gateway | nginx `:8088` status UI and `/grafana/` proxy to HP ProDesk Grafana. Prometheus and Loki are not hosted here in the current production shape |
+| GCS + Cloudflare | Public static edge | Receives sanitized JSON/static assets by outbound upload and serves <https://yukimurata0421.dev/> without exposing Grafana, Prometheus, Loki, raw logs, credentials, or home-network ingress |
 
 ## ADS-B Data Flow
 
@@ -41,8 +42,8 @@ The physical split makes the delivery/observability split real:
 - the HP ProDesk keeps RF ingestion, YouTube API/public watch evidence,
   monitoring state, dashboards, long-window SLI, and staged recovery logic away
   from the k3s delivery workload;
-- the Raspberry Pi gives the public side a small nginx gateway and status UI
-  without becoming the Prometheus/Loki backend;
+- the public site is a reduced static snapshot, so external readers can inspect
+  freshness and guardrails without reaching the private monitoring backend;
 - ADS-B source freshness, map availability, media delivery, and recovery
   decision quality can be classified as separate failure domains.
 
@@ -53,10 +54,11 @@ with host networking and local scrape targets. That stack presents evidence from
 the HP ProDesk observability side; it is not part of the k3s delivery workload
 and does not directly own FFmpeg recovery.
 
-Raspberry Pi currently serves nginx `:8088` and proxies `/grafana/` to HP
-ProDesk Grafana. Prometheus `:9090` and Loki `:3100` are not migrated to
-Raspberry Pi; moving them would require exposing or proxying the HP ProDesk
-exporter and retargeting Alloy's Loki write path.
+Grafana `:3000`, Prometheus `:9090`, Loki `:3100`, Alloy, and the exporter stay
+private on HP ProDesk. The public status path is a one-way publication path:
+operator-side evidence is reduced to allowlisted static assets, pushed outbound
+to GCS, and served by Cloudflare. Public browsers do not proxy into Grafana or
+the home network.
 
 ## k3s Boundary
 

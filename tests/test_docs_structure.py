@@ -49,10 +49,10 @@ class PublicDocsStructureTests(unittest.TestCase):
             "recovery-orchestrator",
             "guarded k8s recovery",
             "`kubectl exec`",
-            "Raspberry Pi public gateway role",
-            "nginx :8088",
-            "`/grafana/` proxy",
-            "Prometheus and Loki remain on HP ProDesk",
+            "public snapshot publisher",
+            "GCS bucket",
+            "outbound upload",
+            "GCS + Cloudflare",
             "Prometheus :9090",
             "Loki :3100",
             "Grafana :3000",
@@ -94,7 +94,7 @@ class PublicDocsStructureTests(unittest.TestCase):
             "## Evidence Snapshot",
             "10.7 seconds from fault injection to stream_v3 observability metrics OK",
             "`bytes_sent` advanced by 37,503,068 bytes",
-            "single-operator, three-host personal 24/7 stream",
+            "single-operator personal 24/7 stream",
             "## What This Repository Demonstrates",
             "docs/executive-summary.md",
             "docs/operational-scorecard.md",
@@ -258,7 +258,7 @@ class PublicDocsStructureTests(unittest.TestCase):
         for marker in (
             "Operational Scorecard",
             "Scope Calibration",
-            "single-operator, three-host personal 24/7 stream",
+            "single-operator personal 24/7 stream",
             "Measured",
             "Tested",
             "Documented",
@@ -341,9 +341,9 @@ class PublicDocsStructureTests(unittest.TestCase):
             "browser map upstream environment contract",
             "read-only YouTube Data API, OAuth, and public watch-page probes",
             "k3s runtime, state-file, and log evidence collection",
-            "Raspberry Pi",
-            "public nginx status/dashboard gateway",
-            "Prometheus and Loki remain on HP ProDesk",
+            "Public Status Publication",
+            "pushed outbound to GCS",
+            "Cloudflare serves the public domain",
         ):
             self.assertIn(marker, runtime)
 
@@ -361,9 +361,9 @@ class PublicDocsStructureTests(unittest.TestCase):
             "Source Boundary",
             "YouTube Data API / OAuth / public watch-page probes",
             "k3s runtime, state, and log evidence",
-            "Raspberry Pi",
-            "/grafana/ proxy to HP ProDesk Grafana",
-            "Prometheus and Loki are not migrated",
+            "public status publication",
+            "outbound upload to GCS",
+            "Cloudflare",
         ):
             self.assertIn(marker, architecture)
 
@@ -378,8 +378,9 @@ class PublicDocsStructureTests(unittest.TestCase):
             "Visualization Boundary",
             "Prometheus, Loki, Grafana, and Alloy",
             "YouTube API/public watch evidence",
-            "Raspberry Pi",
-            "Prometheus `:9090` and Loki `:3100` are not migrated",
+            "GCS + Cloudflare",
+            "Public static edge",
+            "outbound upload",
             "Failure-Domain Boundary",
         ):
             self.assertIn(marker, topology)
@@ -397,8 +398,8 @@ class PublicDocsStructureTests(unittest.TestCase):
             "visual-audio-health-model.md",
             "memory-guard-case-study.md",
             "youtube-lifecycle-safety.md",
-            "Raspberry Pi exposes the public nginx status UI",
-            "does not host Prometheus or Loki",
+            "pushed outbound to GCS",
+            "served through Cloudflare",
             "API Cost Guard",
         ):
             self.assertIn(marker, observability)
@@ -433,8 +434,8 @@ class PublicDocsStructureTests(unittest.TestCase):
             "airspy_adsb",
             "Dell readsb",
             "modified tar1090",
-            "Raspberry Pi",
-            "Prometheus and Loki are not hosted on the Raspberry Pi",
+            "GCS + Cloudflare",
+            "Public readers do not reach Grafana",
         ):
             self.assertIn(marker, current)
 
@@ -691,6 +692,10 @@ class PublicDocsStructureTests(unittest.TestCase):
             "Raspberry Pi owns Prometheus",
             "Raspberry Pi owns Loki",
             "Prometheus and Loki run on Raspberry Pi",
+            "Raspberry Pi public gateway role",
+            "Raspberry Pi exposes the public nginx status UI",
+            "/grafana/ proxy to HP ProDesk Grafana",
+            "public nginx status/dashboard gateway",
         )
         for path in targets:
             text = read(path)
