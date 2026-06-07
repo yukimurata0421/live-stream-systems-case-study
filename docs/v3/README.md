@@ -28,6 +28,7 @@
   - `program-map.md`
   - `open-followups.md`
 - `../sli-methodology.md`
+- `../compliance-and-licensing-boundary.md`
 
 ## Core Claim
 
@@ -58,6 +59,9 @@ For a focused reliability review:
   the single-node k3s DR model.
 - `public-status-snapshot.md` documents why the public site exposes a
   sanitized static operational view instead of the private monitoring backend.
+- `../compliance-and-licensing-boundary.md` documents how ADS-B publication,
+  receiver privacy, and NCS attribution were treated as design constraints
+  rather than informal operator memory.
 - `fast-recovery-classifier-replay.md` documents how historical
   fast-recovery restarts are replayed by the current classifier without
   backfilling old shadow logs.

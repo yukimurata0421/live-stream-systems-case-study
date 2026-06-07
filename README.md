@@ -235,6 +235,7 @@ Use these entry points instead of reading the full tree:
 | Where is the physical split documented? | [`docs/physical-topology.md`](docs/physical-topology.md), [`docs/runtime-contract.md`](docs/runtime-contract.md) |
 | Where is the measured SLI baseline? | [`docs/sli-methodology.md`](docs/sli-methodology.md), [`docs/v3/sli-and-dashboard.md`](docs/v3/sli-and-dashboard.md) |
 | Where is the public status site boundary documented? | [`docs/v3/public-status-snapshot.md`](docs/v3/public-status-snapshot.md), <https://yukimurata0421.dev/> |
+| Where is ADS-B/NCS compliance boundary documented? | [`docs/compliance-and-licensing-boundary.md`](docs/compliance-and-licensing-boundary.md) |
 | Where is the fast-recovery classifier replay documented? | [`docs/v3/fast-recovery-classifier-replay.md`](docs/v3/fast-recovery-classifier-replay.md), [`src/stream_v2/sli.py`](src/stream_v2/sli.py), [`tests/test_sli_pipeline_rotation.py`](tests/test_sli_pipeline_rotation.py) |
 | Where is the 28-day same-URL reliability review? | [`docs/28-day-same-url-sli-case-study.md`](docs/28-day-same-url-sli-case-study.md) |
 | Where is the short executive summary? | [`docs/executive-summary.md`](docs/executive-summary.md) |
@@ -285,6 +286,8 @@ Use these entry points instead of reading the full tree:
   ledger, including the 24-hour smoke-test boundary.
 - `docs/implementation-review-map.md`: map from reliability claims to code,
   tests, and public docs.
+- `docs/compliance-and-licensing-boundary.md`: ADS-B publication,
+  receiver-privacy, and NCS-attribution boundary.
 - `docs/test-strategy-and-safety-boundary.md`: public CI, shadow validation,
   and live smoke-test limits.
 - `docs/incident-review-template.md`: sanitized incident/postmortem structure

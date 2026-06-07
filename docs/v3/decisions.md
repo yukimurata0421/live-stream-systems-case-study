@@ -55,6 +55,21 @@ Consequence: reviewers can distinguish historical gaps from current classifier
 coverage. A replay pass proves present classification behavior; it does not
 pretend that the executor had already produced those historical intents.
 
+## Compliance And Licensing Boundary
+
+Status: accepted
+
+ADS-B radio publication, receiver privacy, and NCS music attribution are treated
+as design constraints. The public record documents the operator's risk posture,
+the viewer-facing minimization choices, and the re-review triggers; it does not
+try to certify legal compliance or make the stream reusable in every
+jurisdiction.
+
+Consequence: receiver coordinates, raw operational state, music files, and
+licensing assumptions stay out of the public repository. Description-based NCS
+credit remains the canonical music-attribution path, while overlay credit is
+only supplemental viewer disclosure.
+
 ## Migration Smoke Test
 
 Status: accepted

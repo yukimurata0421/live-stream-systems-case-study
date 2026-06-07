@@ -58,6 +58,7 @@ bookmarks, embeds, and external links.
 | TCP stall diagnosis was split by evidence layer. | `docs/v3/tcp-stall-case-study.md`, `ops/scripts/wan_address_observer.py`, `ops/scripts/persistent_tcp_anchor_observer.py` |
 | Encoder/upload tuning uses measured YouTube health, not nominal bitrate alone. | `docs/v3/encoder-upload-case-study.md`, `docs/v3/encoder-fps-tuning-2026-05-31.md` |
 | Public operational evidence is reduced before publication. | `docs/v3/public-status-snapshot.md`, <https://yukimurata0421.dev/> |
+| ADS-B publication and NCS attribution are documented as constraints. | `docs/compliance-and-licensing-boundary.md` |
 | Public validation is non-mutating. | `.github/workflows/public-snapshot-check.yml`, `docs/test-strategy-and-safety-boundary.md` |
 | Claims can be mapped to code and tests. | `docs/implementation-review-map.md` |
 
