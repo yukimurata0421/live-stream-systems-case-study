@@ -11,6 +11,9 @@ If you only have time for a short code review, start with these files:
 - `src/watchers/decision/action_gate.py`
 - `src/watchers/evidence/ledger.py`
 - `src/stream_v2/recovery_orchestrator/gate.py`
+- `src/stream_v2/recovery_orchestrator/executor.py`
+- `ops/scripts/stream_v3_scoped_recovery.py`
+- `ops/scripts/stream_v3_remote_recovery.py`
 - `ops/scripts/v3_shadow_acceptance.py`
 - `tests/test_youtube_evidence_decision.py`
 - `tests/test_cli_systemctl_flow.py`
@@ -18,6 +21,7 @@ If you only have time for a short code review, start with these files:
 | Review question | Code | Tests | Docs |
 | --- | --- | --- | --- |
 | What prevents unsafe staged recovery? | `src/stream_v2/recovery_orchestrator/gate.py`, `src/watchers/decision/*` | `tests/test_v3_shadow_acceptance.py`, `tests/test_action_plan.py`, `tests/test_youtube_evidence_decision.py` | `docs/v3/youtube-lifecycle-safety.md`, `docs/design-decisions-for-review.md` |
+| How is recovery authority limited after cutover? | `src/stream_v2/recovery_orchestrator/executor.py`, `ops/scripts/stream_v3_scoped_recovery.py`, `ops/scripts/stream_v3_remote_recovery.py` | `tests/test_action_plan.py`, `tests/test_stream_v3_scoped_recovery.py`, `tests/test_stream_v3_remote_recovery.py` | `docs/v3/scoped-recovery-authority.md`, `docs/v3/migration-cutover-case-study.md` |
 | How is same-URL preservation protected? | `src/watchers/youtube_video_id_resolver.py`, `src/watchers/video_resolver/*`, `src/watchers/youtube_api.py` | `tests/test_youtube_broadcast_selection.py`, `tests/test_youtube_video_id_resolver.py`, `tests/test_youtube_monitor_e2e.py` | `docs/28-day-same-url-sli-case-study.md`, `docs/v3/youtube-lifecycle-safety.md` |
 | How are stale caches prevented from authorizing bad decisions? | `src/watchers/video_resolver/cache.py`, `src/watchers/youtube_watchdog_core/cache.py` | `tests/test_youtube_video_id_resolver_cache_freshness.py`, `tests/test_youtube_watchdog_cache_freshness.py`, `tests/test_youtube_watchdog_checked_timestamps.py` | `docs/v3/youtube-lifecycle-safety.md` |
 | How is RTMPS TCP stall diagnosed? | `src/watchers/fast_recovery_core/decision.py`, `src/watchers/fast_recovery.py`, `ops/scripts/wan_address_observer.py`, `ops/scripts/persistent_tcp_anchor_observer.py`, `ops/systemd/stream-v3-wan-address-observer.timer`, `ops/systemd/stream-v3-persistent-anchor-observer.service` | `tests/test_fast_recovery.py`, `tests/test_wan_observer_scripts.py`, `tests/test_network_observer.py` | `docs/v3/tcp-stall-case-study.md` |

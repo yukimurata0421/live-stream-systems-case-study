@@ -52,6 +52,23 @@ class TestActionPlan(unittest.TestCase):
         self.assertEqual(plan["steps"][0]["url_risk"], "none")
         self.assertEqual(plan["steps"][0]["command"], ["systemctl", "restart", DJ_SERVICE])
 
+    def test_restart_dj_plan_uses_scoped_k8s_container_restart(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            healthy_source(root)
+            plan = ActionPlanBuilder().build(
+                self.snapshot(root),
+                ActionCandidate("restart_dj", "music", 20, "low", True, True),
+                GateResult(gates={}, passed=True, blocked_by=[]),
+                mode="shadow",
+                supervisor_mode="k8s",
+            ).to_dict()
+
+        self.assertTrue(plan["executable"])
+        self.assertEqual(plan["steps"][0]["kind"], "k8s_scoped_container_restart")
+        self.assertEqual(plan["steps"][0]["command"], ["python3", "ops/scripts/stream_v3_scoped_recovery.py", "restart-dj", "--reason", "recovery_orchestrator:restart_dj"])
+        self.assertEqual(plan["steps"][0]["writes"], ["k8s:container:auto-dj"])
+
     def test_restart_stream_plan_can_render_k8s_workload_target(self) -> None:
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
@@ -85,6 +102,23 @@ class TestActionPlan(unittest.TestCase):
         self.assertEqual(plan["steps"][0]["kind"], "engine_control")
         self.assertEqual(plan["steps"][0]["command"], [])
 
+    def test_restart_ffmpeg_plan_uses_scoped_k8s_process_restart(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            healthy_source(root)
+            plan = ActionPlanBuilder().build(
+                self.snapshot(root),
+                ActionCandidate("restart_ffmpeg", "local_delivery", 30, "medium", True, True),
+                GateResult(gates={}, passed=True, blocked_by=[]),
+                mode="shadow",
+                supervisor_mode="k8s",
+            ).to_dict()
+
+        self.assertTrue(plan["executable"])
+        self.assertEqual(plan["steps"][0]["kind"], "k8s_scoped_process_restart")
+        self.assertEqual(plan["steps"][0]["command"], ["python3", "ops/scripts/stream_v3_scoped_recovery.py", "restart-ffmpeg", "--reason", "recovery_orchestrator:restart_ffmpeg"])
+        self.assertEqual(plan["steps"][0]["url_risk"], "same_url_preserving")
+
     def test_youtube_mutation_plan_is_classified_and_blocked_in_v2(self) -> None:
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
@@ -100,6 +134,22 @@ class TestActionPlan(unittest.TestCase):
         self.assertEqual(plan["steps"][0]["kind"], "youtube_api_mutation")
         self.assertEqual(plan["steps"][0]["url_risk"], "can_change_youtube_lifecycle")
         self.assertIn("youtube_mutation_not_enabled_in_stream_v2", plan["blocked_by"])
+
+    def test_replacement_broadcast_is_hard_blocked_by_same_url_contract(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            healthy_source(root)
+            plan = ActionPlanBuilder().build(
+                self.snapshot(root),
+                ActionCandidate("create_replacement_broadcast", "youtube_lifecycle", 90, "very_high", False, True),
+                GateResult(gates={}, passed=True, blocked_by=[]),
+                mode="shadow",
+            ).to_dict()
+
+        self.assertFalse(plan["executable"])
+        self.assertIn("same_url_required_absolute", plan["blocked_by"])
+        self.assertIn("replacement_broadcast_disabled", plan["blocked_by"])
+        self.assertEqual(plan["steps"][0]["url_risk"], "can_change_youtube_url")
 
 
 if __name__ == "__main__":

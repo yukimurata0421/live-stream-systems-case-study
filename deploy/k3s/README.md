@@ -134,7 +134,10 @@ The HP ProDesk observability host owns the monitoring plane. Install
 `ops/systemd/stream-v3-remote-recovery.timer` there with
 `STREAM_V3_RECOVERY_WORKLOADS=deployment/stream-v3-runtime` so the observability
 host can request runtime restarts on the Dell delivery node through the
-namespace-scoped k3s service-account token. Manual staged requests can use:
+namespace-scoped k3s service-account token. The same service can also consume a
+fresh `recovery_action_plan.json`, but only for the allowlisted scoped actions
+`restart_dj` and `restart_ffmpeg`; upload-pressure reasons and replacement
+broadcast actions remain blocked. Manual staged requests can use:
 
 ```bash
 python3 ops/scripts/stream_v3_staged_restart.py --reason "observability manual recovery"

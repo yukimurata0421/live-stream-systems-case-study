@@ -16,6 +16,7 @@
   - `encoder-fps-tuning-2026-05-31.md`
   - `tcp-stall-case-study.md`
   - `memory-guard-case-study.md`
+  - `scoped-recovery-authority.md`
 - Safety and operation:
   - `runbooks.md`
   - `runbook-validation.md`
@@ -52,6 +53,9 @@ For a focused reliability review:
   measured upload while preserving YouTube input health.
 - `migration-cutover-case-study.md` explains why a healthy Pod was not treated
   as production authority, and why the v3 smoke-test gate is 24 hours.
+- `scoped-recovery-authority.md` documents why `restart_dj` and
+  `restart_ffmpeg` are scoped to a container/process instead of becoming a
+  full runtime rollout, and why upload pressure does not authorize restart.
 - `visual-audio-health-model.md` and `memory-guard-case-study.md` keep viewer
   correctness and capture-stack memory pressure separate from generic stream
   availability.

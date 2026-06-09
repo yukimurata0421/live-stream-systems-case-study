@@ -28,6 +28,7 @@ radius.
 | --- | --- | --- | --- |
 | Same-watch-URL preservation | Measured / tested | `docs/28-day-same-url-sli-case-study.md`, `docs/v3/youtube-lifecycle-safety.md`, resolver freshness tests | Public numbers are historical windows, not a current uptime promise. |
 | Guarded recovery | Tested | `ops/scripts/v3_shadow_acceptance.py`, `tests/test_v3_shadow_acceptance.py`, `src/stream_v2/recovery_orchestrator/gate.py` | Public tests do not perform live mutation. |
+| Scoped recovery authority | Tested / documented | `docs/v3/scoped-recovery-authority.md`, `ops/scripts/stream_v3_scoped_recovery.py`, `ops/scripts/stream_v3_remote_recovery.py`, `tests/test_stream_v3_scoped_recovery.py`, `tests/test_stream_v3_remote_recovery.py` | Public tests verify policy and command rendering; they do not restart live DJ or FFmpeg processes. |
 | Public CI safety | Tested | `.github/workflows/public-snapshot-check.yml`, `docs/test-strategy-and-safety-boundary.md` | CI proves snapshot safety, not production liveness. |
 | k3s manifest and shadow behavior | Tested | `ops/scripts/validate_k3s_manifests.py`, `ops/scripts/v3_shadow_acceptance.py`, `tests/test_v3_k3s_preflight.py` | Does not prove production `kubectl apply` on the real cluster. |
 | Public status snapshot boundary | Documented | `docs/v3/public-status-snapshot.md`, <https://yukimurata0421.dev/> | The public site is a current sanitized snapshot, not a substitute for retained SLI windows or raw private observability. |

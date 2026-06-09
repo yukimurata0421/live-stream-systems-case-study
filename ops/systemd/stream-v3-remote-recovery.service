@@ -6,11 +6,14 @@ After=network-online.target
 [Service]
 Type=oneshot
 User=yuki
-WorkingDirectory=/home/yuki/projects/stream_v3
+EnvironmentFile=-/etc/default/stream-v3-remote-recovery
+Environment=STREAM_V3_REPO_DIR=/opt/stream_v3
 Environment=STREAM_K8S_NAMESPACE=stream-v3
 Environment=STREAM_V3_RECOVERY_PROMETHEUS_URL=http://127.0.0.1:9090
 Environment=STREAM_V3_RECOVERY_JOB=stream_v3_observability_monitor
 Environment=STREAM_V3_REMOTE_RECOVERY_APPLY=1
+Environment=STREAM_V3_REMOTE_RECOVERY_APPLY_ACTION_PLAN=1
 Environment=STREAM_V3_REMOTE_RECOVERY_COOLDOWN_SEC=600
+Environment=STREAM_V3_REMOTE_RECOVERY_ACTION_PLAN_MAX_AGE_SEC=180
 Environment=STREAM_V3_RECOVERY_WORKLOADS=deployment/stream-v3-runtime
-ExecStart=/usr/bin/python3 /home/yuki/projects/stream_v3/ops/scripts/stream_v3_remote_recovery.py
+ExecStart=/bin/bash -lc 'cd "$${STREAM_V3_REPO_DIR}" && exec /usr/bin/python3 "$${STREAM_V3_REPO_DIR}/ops/scripts/stream_v3_remote_recovery.py"'

@@ -77,6 +77,7 @@ class StreamV3BootstrapTests(unittest.TestCase):
             "deploy/k3s/v3-control/deployment.yaml",
             "deploy/k3s/v3-observer/deployment.yaml",
             "deploy/k3s/v3-observer/service.yaml",
+            "ops/systemd/stream-v3-remote-recovery.env.example",
         ]
         for rel in required:
             self.assertTrue((ROOT / rel).is_file(), rel)
@@ -159,6 +160,20 @@ class StreamV3BootstrapTests(unittest.TestCase):
         observer = (ROOT / "deploy/k3s/v3-observer/deployment.yaml").read_text(encoding="utf-8")
         self.assertIn("--repo-root /app", observer)
         self.assertIn("--host 0.0.0.0", observer)
+
+    def test_remote_recovery_unit_uses_repo_dir_env_override(self) -> None:
+        unit = (ROOT / "ops" / "systemd" / "stream-v3-remote-recovery.service").read_text(encoding="utf-8")
+        env_example = (ROOT / "ops" / "systemd" / "stream-v3-remote-recovery.env.example").read_text(encoding="utf-8")
+
+        self.assertIn("EnvironmentFile=-/etc/default/stream-v3-remote-recovery", unit)
+        self.assertIn("STREAM_V3_REPO_DIR", unit)
+        self.assertIn("STREAM_V3_REMOTE_RECOVERY_APPLY_ACTION_PLAN=1", unit)
+        self.assertIn("STREAM_V3_REMOTE_RECOVERY_ACTION_PLAN_MAX_AGE_SEC=180", unit)
+        self.assertIn('"$${STREAM_V3_REPO_DIR}/ops/scripts/stream_v3_remote_recovery.py"', unit)
+        legacy_repo_path = "/home/" + "yuki/projects/stream_v3"
+        self.assertNotIn(f"ExecStart=/usr/bin/python3 {legacy_repo_path}", unit)
+        self.assertNotIn(legacy_repo_path, unit)
+        self.assertIn("STREAM_V3_REMOTE_RECOVERY_ACTION_PLAN_FILE=", env_example)
 
     def test_k3s_manifest_validator_passes_shadow_overlay(self) -> None:
         completed = subprocess.run(

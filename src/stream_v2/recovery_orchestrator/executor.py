@@ -11,6 +11,7 @@ STREAM_SERVICE = "adsb-streamnew-youtube-stream.service"
 DJ_SERVICE = "adsb-streamnew-auto-dj.service"
 VIDEO_RESOLVER_SERVICE = "adsb-streamnew-youtube-video-resolver.service"
 YOUTUBE_MONITOR_SERVICE = "adsb-streamnew-youtube-monitor.service"
+SCOPED_RECOVERY_SCRIPT = "ops/scripts/stream_v3_scoped_recovery.py"
 
 
 @dataclass(frozen=True)
@@ -123,17 +124,16 @@ class ActionPlanBuilder:
             ], []
         if action == "restart_dj":
             if _is_k8s(supervisor_mode):
-                target = STREAM_V3_K8S_TARGET_MAP[DJ_SERVICE]
                 return [
                     ExecutionStep(
-                        step_id="restart_auto_dj_runtime_pod",
-                        kind="k8s_rollout_restart",
-                        description="Restart the v3 runtime workload that owns Auto DJ; container-level restart is not a separate owner in v3.",
-                        command=("kubectl", "-n", "stream-v3", "rollout", "restart", target),
+                        step_id="restart_auto_dj_container",
+                        kind="k8s_scoped_container_restart",
+                        description="Restart only the Auto DJ container; do not roll the shared v3 runtime for music-only recovery.",
+                        command=("python3", SCOPED_RECOVERY_SCRIPT, "restart-dj", "--reason", "recovery_orchestrator:restart_dj"),
                         service_unit=DJ_SERVICE,
                         require_privilege=False,
                         url_risk="none",
-                        writes=("k8s:" + target,),
+                        writes=("k8s:container:auto-dj",),
                     )
                 ], []
             return [
@@ -222,13 +222,25 @@ class ActionPlanBuilder:
                 ExecutionStep(
                     step_id="replacement_broadcast",
                     kind="youtube_api_mutation",
-                    description="Create/bind a replacement broadcast. This is intentionally not executor-owned in shadow refactor.",
+                    description="Create/bind a replacement broadcast. Blocked by the absolute same-URL contract.",
                     url_risk="can_change_youtube_url",
                     writes=("YouTube liveBroadcasts.insert", "YouTube liveStreams.bind"),
-                    blocked_by=("replacement_broadcast_not_executor_owned",),
+                    blocked_by=("same_url_required_absolute", "replacement_broadcast_disabled"),
                 )
-            ], ["replacement_broadcast_not_executor_owned"]
+            ], ["same_url_required_absolute", "replacement_broadcast_disabled"]
         if action == "restart_ffmpeg":
+            if _is_k8s(supervisor_mode):
+                return [
+                    ExecutionStep(
+                        step_id="restart_rtmps_ffmpeg_child",
+                        kind="k8s_scoped_process_restart",
+                        description="Terminate only the RTMPS FFmpeg child inside stream-engine; the engine loop restarts FFmpeg without rolling the runtime Pod.",
+                        command=("python3", SCOPED_RECOVERY_SCRIPT, "restart-ffmpeg", "--reason", "recovery_orchestrator:restart_ffmpeg"),
+                        service_unit=STREAM_SERVICE,
+                        url_risk="same_url_preserving",
+                        writes=("stream_engine rtmps ffmpeg child process",),
+                    )
+                ], []
             return [
                 ExecutionStep(
                     step_id="restart_ffmpeg_inside_engine",

@@ -231,6 +231,7 @@ Use these entry points instead of reading the full tree:
 | Review question | Direct links |
 | --- | --- |
 | What prevents unsafe staged recovery? | [`src/stream_v2/recovery_orchestrator/gate.py`](src/stream_v2/recovery_orchestrator/gate.py), [`ops/scripts/v3_shadow_acceptance.py`](ops/scripts/v3_shadow_acceptance.py) |
+| Where is post-cutover recovery authority scoped? | [`docs/v3/scoped-recovery-authority.md`](docs/v3/scoped-recovery-authority.md), [`ops/scripts/stream_v3_scoped_recovery.py`](ops/scripts/stream_v3_scoped_recovery.py), [`tests/test_stream_v3_scoped_recovery.py`](tests/test_stream_v3_scoped_recovery.py) |
 | Where is shadow safety asserted? | [`tests/test_v3_shadow_acceptance.py`](tests/test_v3_shadow_acceptance.py), [`deploy/k3s/README.md`](deploy/k3s/README.md) |
 | Where is the physical split documented? | [`docs/physical-topology.md`](docs/physical-topology.md), [`docs/runtime-contract.md`](docs/runtime-contract.md) |
 | Where is the measured SLI baseline? | [`docs/sli-methodology.md`](docs/sli-methodology.md), [`docs/v3/sli-and-dashboard.md`](docs/v3/sli-and-dashboard.md) |
@@ -271,6 +272,9 @@ Use these entry points instead of reading the full tree:
 - `ops/scripts/wan_address_observer.py` and
   `ops/scripts/persistent_tcp_anchor_observer.py`: report-only WAN/session
   probes used for TCP stall root-cause splitting.
+- `ops/scripts/stream_v3_scoped_recovery.py` and
+  `ops/scripts/stream_v3_remote_recovery.py`: limited same-URL-preserving
+  recovery authority for Auto DJ and RTMPS FFmpeg scopes.
 - `ops/systemd/stream-v3-wan-address-observer.*` and
   `ops/systemd/stream-v3-persistent-anchor-observer.service`: host-side
   scheduling examples for the TCP stall cause observers.
@@ -300,6 +304,9 @@ Use these entry points instead of reading the full tree:
   including why a lower-upload VBR/CQ profile was rejected.
 - `docs/v3/youtube-lifecycle-safety.md`: same-URL, quota, stale-cache, and
   destructive-action safety model.
+- `docs/v3/scoped-recovery-authority.md`: why post-cutover recovery can touch
+  DJ/FFmpeg scopes but cannot treat upload pressure or URL replacement as an
+  executor-owned recovery path.
 - `docs/v3/fast-recovery-classifier-replay.md`: current classifier replay over
   retained fast-recovery restart events without backfilling historical shadow
   logs.
