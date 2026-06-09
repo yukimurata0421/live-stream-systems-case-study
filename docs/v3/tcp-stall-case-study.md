@@ -75,6 +75,63 @@ The periodic RTMPS sample cadence was coarser than the fast-recovery decision
 cadence, so the public conclusion uses an upper bound: the next periodic sample
 proved recovery, while actual recovery likely happened earlier.
 
+## Later Recurrences
+
+Later events refined the classification rather than changing the core cause.
+
+On 2026-06-07, the same WAN/session-refresh signature appeared again, but the
+delivery restart path was different. Fast recovery did not record a stream
+restart. The FFmpeg PID changed because the stream-engine memory guard recycled
+FFmpeg after an Xvfb shared-memory threshold was crossed in the same window.
+That matters operationally: the incident should be classified as WAN/session
+refresh with an overlapping runtime memory guard, not as a pure memory incident
+and not as a fast-recovery restart.
+
+On 2026-06-08, persistent TCP anchors caught an all-anchor outage, but the
+60-second WAN address observer missed the shortest route or identity transition.
+The result was still H1-family evidence, but the observation gap was clear:
+the long-lived anchor cadence was good enough to prove existing-flow failure,
+while the route/address observer was too coarse to prove the short WAN state
+transition on that date.
+
+## Observer Granularity Fix
+
+The observer design was changed to remove that gap:
+
+| Observer path | Purpose |
+| --- | --- |
+| Normal WAN address observer | 60-second route, public IPv4, IPv6 prefix, and fresh TCP-anchor samples. |
+| Morning burst observer | 10-second WAN/address samples during the recurring morning validation window. |
+| Persistent anchor observer | 15-second long-lived Cloudflare/Google TCP/TLS anchors. |
+| Failure-triggered WAN snapshot | 5-second follow-up samples when all persistent anchors fail or reconnect-after-failure fails. |
+
+On 2026-06-09, the higher-cadence observers captured the short transition
+directly. The important evidence was:
+
+- persistent Cloudflare and Google anchors failed together across IPv4 and
+  IPv6;
+- immediate reconnect after persistent-flow failure failed;
+- fresh TCP anchors also failed;
+- the IPv6 default route disappeared temporarily;
+- the existing RTMPS flow reset in the same window;
+- public IPv4 and IPv6 prefix were not proven to have changed permanently in
+  that event;
+- same URL was preserved, YouTube warning count stayed zero, and upload budget
+  was not burning after recovery.
+
+The classification therefore became more precise: the later event proved a
+short WAN/session/route outage, while the remaining owner split stayed outside
+the stream system:
+
+```text
+CPE scheduled reconnect / reboot / session refresh
+carrier-side mobile session refresh / PDN reattach
+```
+
+The stream system should keep preserving the current URL and recovering the
+delivery path. The decisive next evidence for ownership is CPE settings and CPE
+logs around the recurring morning window.
+
 ## Operational Decision
 
 No YouTube broadcast replacement was justified by this evidence. The same-URL
@@ -114,6 +171,12 @@ reviewable:
 - `ops/systemd/stream-v3-wan-address-observer.timer` and
   `ops/systemd/stream-v3-persistent-anchor-observer.service` show the retained
   host-side scheduling model for those report-only observers.
+- `ops/systemd/stream-v3-wan-address-observer-burst.timer` shows the
+  high-cadence morning validation window added after the 60-second observer
+  missed a short transition.
+- The persistent anchor observer can trigger a short WAN-address snapshot after
+  all-anchor failure or failed reconnect-after-failure, keeping the extra
+  granularity event-driven rather than always-on.
 
 The observer scripts are diagnostic tools. They improve root-cause confidence,
 but they do not directly authorize destructive recovery.

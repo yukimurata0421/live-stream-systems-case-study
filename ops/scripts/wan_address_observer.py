@@ -63,7 +63,7 @@ def read_json(path: Path) -> dict[str, Any]:
 
 def write_json(path: Path, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp = path.parent / f".{path.name}.{os.getpid()}.tmp"
     tmp.write_text(json.dumps(payload, ensure_ascii=False, separators=(",", ":")) + "\n", encoding="utf-8")
     tmp.replace(path)
 
@@ -261,6 +261,7 @@ def build_payload(args: argparse.Namespace) -> dict[str, Any]:
         "schema": "stream_v3_wan_address_observer/v2",
         "ts_utc": ts_utc,
         "ts_jst": iso_jst(ts_utc),
+        "sample_reason": args.sample_reason,
         "interface": interface,
         "routes": {
             "ipv4_default": ipv4_route,
@@ -290,16 +291,49 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--public-ipv4-timeout-sec", type=float, default=float(env("WAO_PUBLIC_IPV4_TIMEOUT_SEC", "2.0") or "2.0"))
     parser.add_argument("--anchor", action="append", default=split_csv(env("WAO_ANCHORS", DEFAULT_ANCHORS)))
     parser.add_argument("--anchor-timeout-sec", type=float, default=float(env("WAO_ANCHOR_TIMEOUT_SEC", "1.5") or "1.5"))
+    parser.add_argument("--sample-reason", default=env("WAO_SAMPLE_REASON", "scheduled"))
+    parser.add_argument("--interval-sec", type=float, default=float(env("WAO_INTERVAL_SEC", "0") or "0"))
+    parser.add_argument("--duration-sec", type=float, default=float(env("WAO_DURATION_SEC", "0") or "0"))
+    parser.add_argument("--cycles", type=int, default=int(env("WAO_CYCLES", "0") or "0"))
     return parser.parse_args()
 
 
-def main() -> int:
-    args = parse_args()
+def write_sample(args: argparse.Namespace) -> dict[str, Any]:
     payload = build_payload(args)
     append_jsonl(args.output_jsonl, payload)
     write_json(args.latest_file, payload)
     write_json(args.state_file, {"schema": payload["schema"], "ts_utc": payload["ts_utc"], "signature": payload["signature"]})
     print(json.dumps(payload, ensure_ascii=False, separators=(",", ":")))
+    return payload
+
+
+def run_observer(args: argparse.Namespace) -> None:
+    interval_sec = max(0.0, float(args.interval_sec or 0.0))
+    duration_sec = max(0.0, float(args.duration_sec or 0.0))
+    cycles = max(0, int(args.cycles or 0))
+    if interval_sec <= 0.0 and duration_sec <= 0.0 and cycles <= 0:
+        write_sample(args)
+        return
+
+    completed = 0
+    started = time.monotonic()
+    while True:
+        loop_started = time.monotonic()
+        write_sample(args)
+        completed += 1
+        if cycles > 0 and completed >= cycles:
+            return
+        if duration_sec > 0.0 and time.monotonic() - started >= duration_sec:
+            return
+        if interval_sec <= 0.0:
+            return
+        sleep_sec = interval_sec - (time.monotonic() - loop_started)
+        time.sleep(max(0.0, sleep_sec))
+
+
+def main() -> int:
+    args = parse_args()
+    run_observer(args)
     return 0
 
 

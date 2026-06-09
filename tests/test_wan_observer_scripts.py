@@ -4,6 +4,7 @@ import argparse
 import sys
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -11,6 +12,13 @@ sys.path.insert(0, str(ROOT / "ops" / "scripts"))
 
 import persistent_tcp_anchor_observer  # type: ignore
 import wan_address_observer  # type: ignore
+
+
+def probe(name: str, *, ok: bool, reconnect_after_failure_ok: bool | None = None) -> dict:
+    payload = {"name": name, "ok": ok}
+    if reconnect_after_failure_ok is not None:
+        payload["reconnect_after_failure_ok"] = reconnect_after_failure_ok
+    return payload
 
 
 class WanAddressObserverTests(unittest.TestCase):
@@ -57,6 +65,14 @@ class WanAddressObserverTests(unittest.TestCase):
         self.assertIn("ipv6_networks", changes)
         self.assertIn("public_ipv4", changes)
 
+    def test_loop_mode_honors_cycles(self) -> None:
+        args = argparse.Namespace(interval_sec=0.01, duration_sec=0, cycles=3)
+
+        with patch.object(wan_address_observer, "write_sample") as write_sample, patch.object(wan_address_observer.time, "sleep"):
+            wan_address_observer.run_observer(args)
+
+        self.assertEqual(write_sample.call_count, 3)
+
 
 class PersistentTcpAnchorObserverTests(unittest.TestCase):
     def test_parse_anchor_keeps_as_and_family_metadata(self) -> None:
@@ -95,6 +111,69 @@ class PersistentTcpAnchorObserverTests(unittest.TestCase):
         self.assertEqual(payload["schema"], "stream_v3_persistent_tcp_anchor_observer/v1")
         self.assertEqual(payload["ok_count"], 1)
         self.assertEqual(payload["failed"], ["google_v4"])
+
+    def test_all_anchor_failure_triggers_wan_snapshot(self) -> None:
+        payload = {
+            "probes": [
+                probe("cloudflare_v4", ok=False, reconnect_after_failure_ok=False),
+                probe("google_v4", ok=False, reconnect_after_failure_ok=False),
+            ]
+        }
+
+        should_trigger, reason = persistent_tcp_anchor_observer.should_trigger_wan_snapshot(payload)
+
+        self.assertTrue(should_trigger)
+        self.assertEqual(reason, "all_anchors_failed")
+
+    def test_partial_reconnect_failure_triggers_wan_snapshot(self) -> None:
+        payload = {
+            "probes": [
+                probe("cloudflare_v4", ok=False, reconnect_after_failure_ok=False),
+                probe("google_v4", ok=True),
+            ]
+        }
+
+        should_trigger, reason = persistent_tcp_anchor_observer.should_trigger_wan_snapshot(payload)
+
+        self.assertTrue(should_trigger)
+        self.assertEqual(reason, "reconnect_after_failure_failed:cloudflare_v4")
+
+    def test_reconnect_success_is_baseline_noise(self) -> None:
+        payload = {
+            "probes": [
+                probe("cloudflare_v4", ok=False, reconnect_after_failure_ok=True),
+                probe("google_v4", ok=True),
+            ]
+        }
+
+        should_trigger, reason = persistent_tcp_anchor_observer.should_trigger_wan_snapshot(payload)
+
+        self.assertFalse(should_trigger)
+        self.assertEqual(reason, "baseline_or_partial_anchor_failure")
+
+    def test_wan_snapshot_command_collects_short_followup_burst(self) -> None:
+        payload = {
+            "probes": [
+                probe("cloudflare_v4", ok=False, reconnect_after_failure_ok=False),
+                probe("google_v4", ok=True),
+            ]
+        }
+        args = argparse.Namespace(
+            wan_snapshot_python="/usr/bin/python3",
+            wan_snapshot_script=Path("/repo/ops/scripts/wan_address_observer.py"),
+            wan_snapshot_interval_sec=5,
+            wan_snapshot_cycles=7,
+            wan_snapshot_reason_prefix="persistent_anchor_failure",
+        )
+
+        command = persistent_tcp_anchor_observer.build_wan_snapshot_command(payload, args)
+
+        self.assertEqual(command[:2], ["/usr/bin/python3", "/repo/ops/scripts/wan_address_observer.py"])
+        self.assertIn("--interval-sec", command)
+        self.assertIn("5", command)
+        self.assertIn("--cycles", command)
+        self.assertIn("7", command)
+        self.assertIn("persistent_anchor_failure:reconnect_after_failure_failed:cloudflare_v4:cloudflare_v4", command)
 
 
 if __name__ == "__main__":

@@ -36,3 +36,14 @@ diagnostic model in `docs/v3/tcp-stall-case-study.md` and the report-only
 observer code in `ops/scripts/wan_address_observer.py` and
 `ops/scripts/persistent_tcp_anchor_observer.py`. Raw private JSONL samples and
 exact public IP addresses are not retained in Git.
+
+The public observer contract keeps two granularities separate:
+
+- normal samples for long-window context;
+- high-cadence burst or failure-triggered samples for short WAN/session
+  transitions.
+
+`sample_reason` labels why a WAN sample exists, for example scheduled cadence,
+the recurring morning validation burst, or a persistent-anchor failure
+follow-up. This lets reviewers distinguish normal background evidence from
+incident-window attribution evidence without publishing raw private logs.

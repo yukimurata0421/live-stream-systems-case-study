@@ -96,6 +96,7 @@ class PublicDocsStructureTests(unittest.TestCase):
             "ops/scripts/wan_address_observer.py",
             "ops/scripts/persistent_tcp_anchor_observer.py",
             "ops/systemd/stream-v3-wan-address-observer.timer",
+            "ops/systemd/stream-v3-wan-address-observer-burst.timer",
             "## External Validation",
             "r/ADSB",
             "Reddit Post Insights",
@@ -526,11 +527,15 @@ class PublicDocsStructureTests(unittest.TestCase):
             "Cloudflare AS13335",
             "Google AS15169",
             "WAN or carrier session refresh",
+            "Observer Granularity Fix",
+            "Failure-triggered WAN snapshot",
+            "short WAN/session/route outage",
             "same-URL continuity",
             "ops/scripts/wan_address_observer.py",
             "ops/scripts/persistent_tcp_anchor_observer.py",
             "report-only",
             "stream-v3-wan-address-observer.timer",
+            "stream-v3-wan-address-observer-burst.timer",
             "stream-v3-persistent-anchor-observer.service",
         ):
             self.assertIn(marker, tcp_stall)
@@ -638,7 +643,10 @@ class PublicDocsStructureTests(unittest.TestCase):
             "ops/scripts/persistent_tcp_anchor_observer.py",
             "ops/systemd/stream-v3-wan-address-observer.service",
             "ops/systemd/stream-v3-wan-address-observer.timer",
+            "ops/systemd/stream-v3-wan-address-observer-burst.service",
+            "ops/systemd/stream-v3-wan-address-observer-burst.timer",
             "ops/systemd/stream-v3-persistent-anchor-observer.service",
+            "ops/systemd/stream-v3-wan-observers.env.example",
             "tests/test_wan_observer_scripts.py",
         ):
             self.assertTrue((ROOT / relative).exists(), f"missing {relative}")

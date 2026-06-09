@@ -175,6 +175,24 @@ class StreamV3BootstrapTests(unittest.TestCase):
         self.assertNotIn(legacy_repo_path, unit)
         self.assertIn("STREAM_V3_REMOTE_RECOVERY_ACTION_PLAN_FILE=", env_example)
 
+    def test_wan_observer_units_use_repo_dir_env_override(self) -> None:
+        legacy_repo_path = "/home/" + "yuki/projects/stream_v3"
+        for name in (
+            "stream-v3-wan-address-observer.service",
+            "stream-v3-wan-address-observer-burst.service",
+            "stream-v3-persistent-anchor-observer.service",
+        ):
+            unit = (ROOT / "ops" / "systemd" / name).read_text(encoding="utf-8")
+            with self.subTest(name=name):
+                self.assertIn("EnvironmentFile=-/etc/default/stream-v3-wan-observers", unit)
+                self.assertIn("STREAM_V3_REPO_DIR", unit)
+                self.assertIn('"$${STREAM_V3_REPO_DIR}', unit)
+                self.assertNotIn(legacy_repo_path, unit)
+
+        env_example = (ROOT / "ops" / "systemd" / "stream-v3-wan-observers.env.example").read_text(encoding="utf-8")
+        self.assertIn("WAO_PERSISTENT_TRIGGER_WAN_SNAPSHOT=1", env_example)
+        self.assertIn("WAO_PERSISTENT_WAN_SNAPSHOT_CYCLES=7", env_example)
+
     def test_k3s_manifest_validator_passes_shadow_overlay(self) -> None:
         completed = subprocess.run(
             ["python3", "ops/scripts/validate_k3s_manifests.py"],

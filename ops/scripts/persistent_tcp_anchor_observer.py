@@ -7,6 +7,8 @@ import json
 import os
 import socket
 import ssl
+import subprocess
+import sys
 import time
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
@@ -26,6 +28,11 @@ DEFAULT_ANCHORS = (
 
 def env(name: str, default: str = "") -> str:
     return os.environ.get(name, default).strip()
+
+
+def bool_env(name: str, default: bool = False) -> bool:
+    raw = env(name, "1" if default else "0").lower()
+    return raw in {"1", "true", "yes", "on"}
 
 
 def iso_utc_now() -> str:
@@ -50,7 +57,7 @@ def append_jsonl(path: Path, payload: dict[str, Any]) -> None:
 
 def write_json(path: Path, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp = path.parent / f".{path.name}.{os.getpid()}.tmp"
     tmp.write_text(json.dumps(payload, ensure_ascii=False, separators=(",", ":")) + "\n", encoding="utf-8")
     tmp.replace(path)
 
@@ -327,6 +334,85 @@ def build_payload(flows: list[PersistentAnchor], args: argparse.Namespace) -> di
     }
 
 
+def failed_names(payload: dict[str, Any]) -> list[str]:
+    probes = payload.get("probes", [])
+    if not isinstance(probes, list):
+        return []
+    return [str(item.get("name", "")) for item in probes if isinstance(item, dict) and not item.get("ok")]
+
+
+def should_trigger_wan_snapshot(payload: dict[str, Any]) -> tuple[bool, str]:
+    probes = payload.get("probes", [])
+    if not isinstance(probes, list) or not probes:
+        return False, "no_probes"
+    probe_dicts = [item for item in probes if isinstance(item, dict)]
+    failed = [item for item in probe_dicts if not item.get("ok")]
+    if not failed:
+        return False, "all_anchors_ok"
+    if len(failed) == len(probe_dicts):
+        return True, "all_anchors_failed"
+    reconnect_failed = [
+        str(item.get("name", ""))
+        for item in failed
+        if item.get("reconnect_after_failure_ok") is False
+    ]
+    if reconnect_failed:
+        return True, "reconnect_after_failure_failed:" + ",".join(reconnect_failed)
+    return False, "baseline_or_partial_anchor_failure"
+
+
+def build_wan_snapshot_command(payload: dict[str, Any], args: argparse.Namespace) -> list[str]:
+    reason, detail = should_trigger_wan_snapshot(payload)
+    reason_text = detail if reason else "manual"
+    names = ",".join(failed_names(payload)) or "unknown"
+    sample_reason = f"{args.wan_snapshot_reason_prefix}:{reason_text}:{names}"
+    return [
+        args.wan_snapshot_python,
+        str(args.wan_snapshot_script),
+        "--sample-reason",
+        sample_reason,
+        "--interval-sec",
+        str(args.wan_snapshot_interval_sec),
+        "--cycles",
+        str(args.wan_snapshot_cycles),
+    ]
+
+
+def maybe_trigger_wan_snapshot(
+    payload: dict[str, Any],
+    args: argparse.Namespace,
+    last_trigger_monotonic: float,
+) -> tuple[float, dict[str, Any]]:
+    should_trigger, reason = should_trigger_wan_snapshot(payload)
+    result: dict[str, Any] = {
+        "enabled": bool(args.trigger_wan_snapshot),
+        "triggered": False,
+        "reason": reason,
+    }
+    if not args.trigger_wan_snapshot or not should_trigger:
+        return last_trigger_monotonic, result
+
+    now = time.monotonic()
+    cooldown_sec = max(0.0, float(args.wan_snapshot_cooldown_sec or 0.0))
+    if last_trigger_monotonic > 0.0 and now - last_trigger_monotonic < cooldown_sec:
+        result["suppressed"] = "cooldown"
+        result["cooldown_remaining_sec"] = round(cooldown_sec - (now - last_trigger_monotonic), 1)
+        return last_trigger_monotonic, result
+
+    command = build_wan_snapshot_command(payload, args)
+    result["command"] = command
+    try:
+        subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except OSError as exc:
+        result["error"] = f"{type(exc).__name__}: {exc}"
+        return last_trigger_monotonic, result
+
+    result["triggered"] = True
+    result["snapshot_interval_sec"] = args.wan_snapshot_interval_sec
+    result["snapshot_cycles"] = args.wan_snapshot_cycles
+    return now, result
+
+
 def parse_args() -> argparse.Namespace:
     state_dir = Path(env("WAO_STATE_DIR", str(DEFAULT_STATE_DIR)))
     parser = argparse.ArgumentParser(description="Keep non-YouTube TCP/TLS anchors open and probe them for existing-flow blackholes.")
@@ -341,6 +427,18 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--cycles", type=int, default=int(env("WAO_PERSISTENT_CYCLES", "0") or "0"))
     parser.add_argument("--latest-file", type=Path, default=Path(env("WAO_PERSISTENT_LATEST_FILE", str(state_dir / "persistent_tcp_anchor_observer_latest.json"))))
     parser.add_argument("--output-jsonl", type=Path, default=Path(env("WAO_PERSISTENT_OUTPUT_JSONL", str(state_dir / "logs" / "persistent_tcp_anchor_observer.jsonl"))))
+    parser.add_argument("--trigger-wan-snapshot", action="store_true", default=bool_env("WAO_PERSISTENT_TRIGGER_WAN_SNAPSHOT", False))
+    parser.add_argument("--no-trigger-wan-snapshot", dest="trigger_wan_snapshot", action="store_false")
+    parser.add_argument("--wan-snapshot-python", default=env("WAO_PERSISTENT_WAN_SNAPSHOT_PYTHON", sys.executable or "/usr/bin/python3"))
+    parser.add_argument(
+        "--wan-snapshot-script",
+        type=Path,
+        default=Path(env("WAO_PERSISTENT_WAN_SNAPSHOT_SCRIPT", str(BASE_DIR / "ops" / "scripts" / "wan_address_observer.py"))),
+    )
+    parser.add_argument("--wan-snapshot-interval-sec", type=float, default=float(env("WAO_PERSISTENT_WAN_SNAPSHOT_INTERVAL_SEC", "5") or "5"))
+    parser.add_argument("--wan-snapshot-cycles", type=int, default=int(env("WAO_PERSISTENT_WAN_SNAPSHOT_CYCLES", "7") or "7"))
+    parser.add_argument("--wan-snapshot-cooldown-sec", type=float, default=float(env("WAO_PERSISTENT_WAN_SNAPSHOT_COOLDOWN_SEC", "120") or "120"))
+    parser.add_argument("--wan-snapshot-reason-prefix", default=env("WAO_PERSISTENT_WAN_SNAPSHOT_REASON_PREFIX", "persistent_anchor_failure"))
     return parser.parse_args()
 
 
@@ -361,10 +459,16 @@ def main() -> int:
     ]
 
     completed = 0
+    last_wan_snapshot_trigger = 0.0
     try:
         while True:
             loop_started = time.monotonic()
             payload = build_payload(flows, args)
+            last_wan_snapshot_trigger, payload["wan_snapshot_trigger"] = maybe_trigger_wan_snapshot(
+                payload,
+                args,
+                last_wan_snapshot_trigger,
+            )
             append_jsonl(args.output_jsonl, payload)
             write_json(args.latest_file, payload)
             print(json.dumps(payload, ensure_ascii=False, separators=(",", ":")), flush=True)
