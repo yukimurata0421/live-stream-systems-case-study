@@ -64,7 +64,7 @@ class CliSystemctlFlowTests(unittest.TestCase):
 
     def test_stream_v3_refuses_mutating_systemd_commands_in_release_archive_tree(self) -> None:
         with tempfile.TemporaryDirectory() as td:
-            root = Path(td) / "live-stream-systems-case-study-3.2.1"
+            root = Path(td) / "live-stream-systems-case-study-3.3.0"
             (root / "ops" / "systemd").mkdir(parents=True)
             (root / "src" / "stream_core").mkdir(parents=True)
             (root / "src" / "stream_core" / "cli.py").write_text("", encoding="utf-8")
