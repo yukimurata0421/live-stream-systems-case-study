@@ -45,8 +45,8 @@ SCOPED_RECOVERY_SCRIPT = Path(
     )
 )
 COOLDOWN_SEC = int(os.environ.get("STREAM_V3_REMOTE_RECOVERY_COOLDOWN_SEC", "600"))
-APPLY = os.environ.get("STREAM_V3_REMOTE_RECOVERY_APPLY", "1").strip().lower() in {"1", "true", "yes", "on"}
-APPLY_ACTION_PLAN = os.environ.get("STREAM_V3_REMOTE_RECOVERY_APPLY_ACTION_PLAN", "1").strip().lower() in {"1", "true", "yes", "on"}
+APPLY = os.environ.get("STREAM_V3_REMOTE_RECOVERY_APPLY", "0").strip().lower() in {"1", "true", "yes", "on"}
+APPLY_ACTION_PLAN = os.environ.get("STREAM_V3_REMOTE_RECOVERY_APPLY_ACTION_PLAN", "0").strip().lower() in {"1", "true", "yes", "on"}
 ACTION_PLAN_MAX_AGE_SEC = int(os.environ.get("STREAM_V3_REMOTE_RECOVERY_ACTION_PLAN_MAX_AGE_SEC", "180"))
 ACTION_TIMEOUT_SEC = float(os.environ.get("STREAM_V3_REMOTE_RECOVERY_ACTION_TIMEOUT_SEC", "45"))
 WORKLOADS = tuple(

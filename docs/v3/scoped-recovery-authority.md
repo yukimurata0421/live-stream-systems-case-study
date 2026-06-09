@@ -63,7 +63,10 @@ action, blockers, and step descriptions must not contain upload-pressure terms.
 
 The public systemd unit keeps the repo path and state path in
 `/etc/default/stream-v3-remote-recovery`, so deployments can point it at a
-local checkout without changing the committed unit.
+local checkout without changing the committed unit. The committed defaults are
+fail-closed: workload and action-plan mutation require explicit live-host
+opt-in through `STREAM_V3_REMOTE_RECOVERY_APPLY=1` and
+`STREAM_V3_REMOTE_RECOVERY_APPLY_ACTION_PLAN=1`.
 
 ## What This Proves
 

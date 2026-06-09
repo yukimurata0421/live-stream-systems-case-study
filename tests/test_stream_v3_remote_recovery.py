@@ -47,6 +47,12 @@ class StreamV3RemoteRecoveryTests(unittest.TestCase):
         save_state.assert_not_called()
         self.assertEqual(state, {})
 
+    def test_public_defaults_do_not_mutate(self) -> None:
+        module = load_module()
+
+        self.assertFalse(module.APPLY)
+        self.assertFalse(module.APPLY_ACTION_PLAN)
+
     def test_non_url_preserving_workload_is_blocked(self) -> None:
         module = load_module()
 
@@ -123,6 +129,7 @@ class StreamV3RemoteRecoveryTests(unittest.TestCase):
 
     def test_action_plan_blocks_unapproved_actions(self) -> None:
         module = load_module()
+        module.APPLY_ACTION_PLAN = True
         plan = {
             "ts_utc": "1970-01-01T00:16:40Z",
             "event_id": "evt-replace",

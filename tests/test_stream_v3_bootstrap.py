@@ -167,13 +167,15 @@ class StreamV3BootstrapTests(unittest.TestCase):
 
         self.assertIn("EnvironmentFile=-/etc/default/stream-v3-remote-recovery", unit)
         self.assertIn("STREAM_V3_REPO_DIR", unit)
-        self.assertIn("STREAM_V3_REMOTE_RECOVERY_APPLY_ACTION_PLAN=1", unit)
+        self.assertIn("STREAM_V3_REMOTE_RECOVERY_APPLY_ACTION_PLAN=0", unit)
         self.assertIn("STREAM_V3_REMOTE_RECOVERY_ACTION_PLAN_MAX_AGE_SEC=180", unit)
         self.assertIn('"$${STREAM_V3_REPO_DIR}/ops/scripts/stream_v3_remote_recovery.py"', unit)
         legacy_repo_path = "/home/" + "yuki/projects/stream_v3"
         self.assertNotIn(f"ExecStart=/usr/bin/python3 {legacy_repo_path}", unit)
         self.assertNotIn(legacy_repo_path, unit)
         self.assertIn("STREAM_V3_REMOTE_RECOVERY_ACTION_PLAN_FILE=", env_example)
+        self.assertIn("STREAM_V3_REMOTE_RECOVERY_APPLY=0", env_example)
+        self.assertIn("STREAM_V3_REMOTE_RECOVERY_APPLY_ACTION_PLAN=0", env_example)
 
     def test_wan_observer_units_use_repo_dir_env_override(self) -> None:
         legacy_repo_path = "/home/" + "yuki/projects/stream_v3"
