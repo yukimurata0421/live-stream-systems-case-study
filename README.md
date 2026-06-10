@@ -18,6 +18,28 @@ observability, recovery guard design, and operational decision-making.
 This is open-source code published as a case study, not a supported OSS product
 or general-purpose starter.
 
+## Reviewer Summary
+
+`stream_v3` is a public systems case study of a self-built 24/7 YouTube Live
+delivery pipeline.
+
+The main result is not simple uptime. The system has been operated through a
+monthly-window same-URL review while preserving the public YouTube Live identity
+and absorbing recoverable delivery faults through fast recovery, staged
+remediation, and SLI-based monitoring.
+
+It demonstrates:
+
+- k3s runtime operation for the delivery workload;
+- delivery-plane / observability-plane separation;
+- same-URL continuity as a production invariant;
+- public-safe status publication through GCS + Cloudflare;
+- TCP stall / WAN-session fault classification;
+- recovery guard design that avoids unsafe YouTube lifecycle mutation.
+
+This is a single-operator, three-home-host reliability case study, not a
+commercial multi-tenant service or a supported OSS starter.
+
 ## Evidence Snapshot
 
 The strongest measurements are intentionally front-loaded here, with their
@@ -29,6 +51,7 @@ limits attached:
 | Viewer-facing impact during that drill | YouTube ingest, public watch, same-URL, and watchdog metrics stayed OK in the sampled window; no monitored viewer-facing interruption was observed. | Prometheus/YouTube sampling does not prove every delivered frame. |
 | Error-budget reading | The k3s drill burned at most 10.7 seconds of control-plane availability; monitored viewer-facing burn was treated as zero because the same RTMPS socket continued sending and public signals stayed OK. | Long-window reliability claims remain in the 14-day / 28-day SLI docs. |
 | Transport MTTR baseline | Historical `tcp_stall` clusters had 90.0s median local transport MTTR, 1190.8s p95, and 1474.0s max. | Local transport MTTR is not direct viewer MTTR. |
+| Same-URL continuity review | The 28-day same-URL review recorded `pass`, selected replacement actions `0`, allowed replacement decisions `0`, and candidate-new-URL evidence `0`; the v3 strict same-URL sample window was `6558 / 6568`, `99.848%`. | This is a retained historical review window, not a current uptime promise or proof that every delivered frame was audited. |
 
 Scope calibration: this is a single-operator, three-home-host personal 24/7
 stream with real production operation and a GCS/Cloudflare static edge, but not
@@ -38,10 +61,20 @@ enterprise traffic scale.
 
 ## What This Repository Demonstrates
 
+### Production-style Operation
+
 - 24/7 YouTube Live delivery operation.
+- Same public YouTube Live URL preservation as a production invariant.
+- Daily recoverable fault absorption through fast recovery, staged remediation,
+  and explicit guardrails.
 - ADS-B source-chain boundary: Airspy on HP ProDesk, `airspy_adsb`, readsb,
   Dell-side readsb and a modified tar1090 map endpoint, then `stream_v3`
   delivery.
+
+### Runtime And Recovery Architecture
+
+- k3s runtime boundary for browser rendering, audio, AutoDJ, FFmpeg, NVENC, and
+  RTMPS delivery.
 - Failure classification across rendering, audio, FFmpeg, RTMPS, API, and
   monitoring paths.
 - Delivery-plane / observability-plane separation across Dell workstation and
@@ -49,6 +82,14 @@ enterprise traffic scale.
 - HP ProDesk observability role: YouTube resolver/watchdog, stream watchdog,
   subsystem SLI, notifications, Prometheus exporter, recovery orchestrator,
   and private Prometheus/Loki/Grafana.
+- Recovery guard design that keeps monitors from directly owning FFmpeg.
+- Scoped recovery authority for same-URL-preserving Auto DJ and RTMPS FFmpeg
+  recovery.
+- Shadow mode and cutover safety before destructive actions.
+- Contract tests for unsafe recovery prevention and stale evidence handling.
+
+### Observability And Public Evidence
+
 - Raspberry Pi public publisher role: collect public-safe evidence through the
   Pi-local nginx `/grafana/` proxy to the HP ProDesk Grafana datasource proxy,
   build static JSON/assets, and push them outbound to GCS.
@@ -56,12 +97,20 @@ enterprise traffic scale.
   sending public reads through the home uplink or exposing Grafana, Prometheus,
   Loki, raw logs, credentials, or home-network ingress to
   `yukimurata0421.dev` readers.
-- Recovery guard design that keeps monitors from directly owning FFmpeg.
-- Shadow mode and cutover safety before destructive actions.
 - `ops/monitoring` evidence path with Prometheus, Loki, Grafana, and Alloy
   configuration.
 - YouTube API quota-aware monitoring.
-- Contract tests for unsafe recovery prevention and stale evidence handling.
+
+### Reliability Evidence
+
+- SLI methodology that separates production invariants, primary SLIs,
+  guardrails, secondary SLIs, and incident metrics.
+- 28-day same-URL review with replacement-action counters kept separate from
+  availability ratios.
+- TCP stall root-cause split across delivery TCP state, WAN identity,
+  non-YouTube anchors, YouTube lifecycle evidence, and recovery policy.
+- k3s service restart drill with same FFmpeg PID/TCP socket continuity.
+- Fast-recovery classifier replay over retained events.
 
 | What breaks | How stream_v3 protects it |
 | --- | --- |
@@ -69,6 +118,14 @@ enterprise traffic scale.
 | Browser, audio, FFmpeg, RTMPS, or GPU encoding stalls. | The Dell `stream_v3` k3s delivery tier owns local runtime recovery without giving monitors direct FFmpeg ownership. |
 | YouTube API/public evidence, k3s runtime evidence, or monitoring state gets stale or misleading. | The HP ProDesk observability tier pulls read-only YouTube and runtime evidence, applies quota/freshness guards, and only then requests staged k3s recovery. |
 | The public status site gets confused with the monitoring backend or starts consuming home uplink bandwidth. | Private Prometheus, Loki, Alloy, Grafana, and the v3 exporter remain on HP ProDesk; Raspberry Pi pulls public-safe evidence through its local Grafana proxy and pushes the allowlisted static snapshot to GCS + Cloudflare so public reads terminate at the static edge. Non-static operational access is outside the `yukimurata0421.dev` publication path and is not named as a public endpoint here. |
+
+The important design point is separation of authority:
+
+- The delivery tier owns browser/audio/FFmpeg/k3s runtime behavior.
+- The observability tier reads evidence and proposes guarded recovery.
+- The public status tier publishes reduced, allowlisted snapshots only.
+- YouTube lifecycle mutation is not triggered from ambiguous transport,
+  dashboard, or upload-budget symptoms.
 
 ### Delivery Path
 
@@ -223,6 +280,23 @@ upstream contract. The k3s runtime does not manage the Airspy device directly;
 it renders and proxies the Dell readsb / modified tar1090 endpoint through
 `src/stream_core/overlay_server.py` and validates that path with report-only
 overlay and upstream checks.
+
+## Reviewer Reading Path
+
+| Reviewer | Start here | What to evaluate |
+| --- | --- | --- |
+| Non-technical interviewer | Reviewer Summary, Evidence Snapshot, [`docs/operational-scorecard.md`](docs/operational-scorecard.md) | same-URL operation, automated recovery, clear limits |
+| Backend / infrastructure reviewer | Architecture diagrams, [`docs/v3/public-status-snapshot.md`](docs/v3/public-status-snapshot.md), [`docs/implementation-review-map.md`](docs/implementation-review-map.md) | k3s runtime boundary, GCS/Cloudflare static edge, private/public boundary |
+| SRE / platform reviewer | [`docs/v3/sli-and-dashboard.md`](docs/v3/sli-and-dashboard.md), [`docs/v3/tcp-stall-case-study.md`](docs/v3/tcp-stall-case-study.md), [`docs/v3/scoped-recovery-authority.md`](docs/v3/scoped-recovery-authority.md) | production invariant, MTTR, fault-layer split, recovery authority |
+
+## What This Does Not Claim
+
+- Not a commercial multi-tenant SLO.
+- Not proof that every delivered frame was audited.
+- Not a node reboot, disk restore, RTMPS reconnect, or readsb/tar1090 source
+  recovery proof.
+- Not a generic streaming starter.
+- Not a public exposure of the private monitoring backend.
 
 ## Reviewer Shortcuts
 

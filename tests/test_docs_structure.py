@@ -106,11 +106,26 @@ class PublicDocsStructureTests(unittest.TestCase):
             "stats reuse bug",
             "open-source code published as a case study",
             "not a supported OSS product",
+            "## Reviewer Summary",
+            "monthly-window same-URL review",
             "## Evidence Snapshot",
             "10.7 seconds from fault injection to stream_v3 observability metrics OK",
             "`bytes_sent` advanced by 37,503,068 bytes",
+            "Same-URL continuity review",
+            "selected replacement actions `0`",
             "three-home-host personal 24/7",
             "## What This Repository Demonstrates",
+            "### Production-style Operation",
+            "### Runtime And Recovery Architecture",
+            "### Observability And Public Evidence",
+            "### Reliability Evidence",
+            "The important design point is separation of authority",
+            "YouTube lifecycle mutation is not triggered from ambiguous transport",
+            "## Reviewer Reading Path",
+            "Non-technical interviewer",
+            "Backend / infrastructure reviewer",
+            "SRE / platform reviewer",
+            "## What This Does Not Claim",
             "docs/executive-summary.md",
             "docs/operational-scorecard.md",
             "docs/hiring-reviewer-guide.md",
@@ -194,12 +209,20 @@ class PublicDocsStructureTests(unittest.TestCase):
                 self.assertTrue(path.exists(), f"missing {relative}")
                 self.assertGreater(len(read(path).strip()), 80)
 
-    def test_docs_index_points_to_public_reading_order(self) -> None:
+    def test_docs_index_points_to_public_catalog(self) -> None:
         text = read(DOCS / "00_INDEX.md")
 
         for marker in (
-            "Documentation Index",
-            "Reading Order",
+            "Documentation Catalog",
+            "not a required reading order",
+            "Use the rest of this page as a reference catalog",
+            "Core Entry Points",
+            "Architecture And Runtime",
+            "Reliability Evidence",
+            "Recovery And Safety",
+            "Design Review",
+            "Governance And Release Boundary",
+            "top-level `README.md`",
             "executive-summary.md",
             "hiring-reviewer-guide.md",
             "operational-scorecard.md",
@@ -232,6 +255,52 @@ class PublicDocsStructureTests(unittest.TestCase):
             "v3/notification-and-auto-recovery.md",
             "v3/single-node-dr-case-study.md",
             "v3/runbook-validation.md",
+        ):
+            self.assertIn(marker, text)
+
+    def test_docs_readme_keeps_review_paths_lightweight(self) -> None:
+        text = read(DOCS / "README.md")
+
+        for marker in (
+            "Most reviewers should then read only",
+            "hiring-reviewer-guide.md",
+            "executive-summary.md",
+            "operational-scorecard.md",
+            "Review Paths",
+            "Compact Technical Pass",
+            "Architecture Pass",
+            "Reliability / SRE Pass",
+            "Deep Design Review",
+            "Use `00_INDEX.md` as the full documentation catalog",
+        ):
+            self.assertIn(marker, text)
+
+    def test_hiring_reviewer_guide_has_reader_specific_paths(self) -> None:
+        text = read(DOCS / "hiring-reviewer-guide.md")
+
+        for marker in (
+            "Hiring Reviewer Guide",
+            "30-Second Summary",
+            "same-URL continuity",
+            "public-safe observability publication through GCS + Cloudflare",
+            "If You Are A Non-Technical Interviewer",
+            "If You Are A Backend / Infrastructure Reviewer",
+            "If You Are An SRE / Platform Reviewer",
+            "monthly-window same-URL operation evidence",
+            "k3s runtime boundary",
+            "private Prometheus/Loki/Grafana staying outside the public path",
+            "fault-layer classification",
+            "same-watch-URL continuity treated as a production invariant",
+            "This Is Not",
+            "This Is",
+            "Key Design Decisions",
+            "Suggested Review Paths",
+            "10-Minute Review",
+            "30-Minute Technical Review",
+            "Deep Review / Audit",
+            "docs/00_INDEX.md",
+            "Most hiring reviewers",
+            "What To Evaluate",
         ):
             self.assertIn(marker, text)
 

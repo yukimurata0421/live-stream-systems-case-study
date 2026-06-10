@@ -1,46 +1,81 @@
-# Documentation Index
+# Documentation Catalog
 
-This directory contains the English public documentation for `stream_v3`.
-The private operational history was intentionally reduced to a curated public
-set so readers can understand the architecture without paging through raw
-incident logs.
+This page lists the English public documentation set for `stream_v3`.
+It is not a required reading order. The private operational history was
+intentionally reduced to a curated public set so readers can understand the
+architecture without paging through raw incident logs.
 
-## Reading Order
+Most reviewers should start with:
 
-1. `executive-summary.md`
+1. top-level `README.md`
 2. `hiring-reviewer-guide.md`
-3. `operational-scorecard.md`
-4. `implementation-review-map.md`
-5. `design-decisions-for-review.md`
-6. `compliance-and-licensing-boundary.md`
-7. `evolution.md`
-8. `architecture.md`
-9. `physical-topology.md`
-10. `runtime-contract.md`
-11. `sli-methodology.md`
-12. `28-day-same-url-sli-case-study.md`
-13. `observability.md`
-14. `v3/public-status-snapshot.md`
-15. `v3/fast-recovery-classifier-replay.md`
-16. `operations.md`
-17. `test-strategy-and-safety-boundary.md`
-18. `incident-review-template.md`
-19. `security-and-secrets.md`
-20. `support.md`
-21. `contributing.md`
-22. `v2/README.md`
-23. `v3/README.md`
-24. `v3/migration-cutover-case-study.md`
-25. `v3/youtube-lifecycle-safety.md`
-26. `v3/tcp-stall-case-study.md`
-27. `v3/encoder-upload-case-study.md`
-28. `v3/encoder-fps-tuning-2026-05-31.md`
-29. `v3/visual-audio-health-model.md`
-30. `v3/memory-guard-case-study.md`
-31. `v3/failure-taxonomy.md`
-32. `v3/notification-and-auto-recovery.md`
-33. `v3/single-node-dr-case-study.md`
-34. `v3/runbook-validation.md`
+3. `executive-summary.md`
+4. `operational-scorecard.md`
+
+Use the rest of this page as a reference catalog.
+
+## Core Entry Points
+
+- `hiring-reviewer-guide.md`
+- `executive-summary.md`
+- `operational-scorecard.md`
+- `implementation-review-map.md`
+- `docs/README.md`
+- `v3/README.md`
+
+## Architecture And Runtime
+
+- `architecture.md`
+- `physical-topology.md`
+- `runtime-contract.md`
+- `observability.md`
+- `operations.md`
+- `evolution.md`
+- `v2/README.md`
+- `v3/current-runtime-contract.md`
+- `v3/runtime-state-and-evidence.md`
+- `v3/program-map.md`
+
+## Reliability Evidence
+
+- `sli-methodology.md`
+- `28-day-same-url-sli-case-study.md`
+- `v3/sli-and-dashboard.md`
+- `v3/tcp-stall-case-study.md`
+- `v3/fast-recovery-classifier-replay.md`
+- `v3/single-node-dr-case-study.md`
+- `v3/encoder-upload-case-study.md`
+- `v3/encoder-fps-tuning-2026-05-31.md`
+
+## Recovery And Safety
+
+- `v3/scoped-recovery-authority.md`
+- `v3/youtube-lifecycle-safety.md`
+- `v3/migration-cutover-case-study.md`
+- `v3/failure-taxonomy.md`
+- `v3/visual-audio-health-model.md`
+- `v3/memory-guard-case-study.md`
+- `v3/notification-and-auto-recovery.md`
+- `v3/runbook-validation.md`
+- `v3/runbooks.md`
+- `v3/open-followups.md`
+
+## Design Review
+
+- `design-decisions-for-review.md`
+- `v3/decisions.md`
+- `implementation-review-map.md`
+
+## Governance And Release Boundary
+
+- `compliance-and-licensing-boundary.md`
+- `security-and-secrets.md`
+- `public-release.md`
+- `test-strategy-and-safety-boundary.md`
+- `incident-review-template.md`
+- `support.md`
+- `contributing.md`
+- `archive-note.md`
 
 ## Scope
 

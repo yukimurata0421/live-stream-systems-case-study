@@ -3,12 +3,84 @@
 This repository is meant to be reviewed as an operational case study, not as a
 plug-and-play streaming package.
 
+## 30-Second Summary
+
+`stream_v3` is a 24/7 YouTube Live delivery system operated as a public
+reliability case study.
+
+The main achievement is not simple uptime. The system shows same-URL continuity
+and public-safe observability publication through GCS + Cloudflare, plus
+automated recovery, SLI-based monitoring, and k3s runtime operation.
+
+The strongest review signal is operational judgment: the system names failure
+domains, keeps production invariants separate from availability ratios, and
+blocks destructive actions when evidence is stale, ambiguous, or outside the
+same-URL recovery contract.
+
+## If You Are A Non-Technical Interviewer
+
+Read:
+
+1. `README.md` Reviewer Summary
+2. `README.md` Evidence Snapshot
+3. `docs/operational-scorecard.md`
+4. `docs/executive-summary.md`
+
+Look for:
+
+- monthly-window same-URL operation evidence;
+- automated recovery instead of manual babysitting;
+- a conservative scorecard that separates measured, tested, documented, and
+  not-publicly-measured claims;
+- explicit limits on scale, support, and SLO claims.
+
+## If You Are A Backend / Infrastructure Reviewer
+
+Read:
+
+1. `README.md` architecture diagrams
+2. `docs/v3/public-status-snapshot.md`
+3. `docs/implementation-review-map.md`
+4. `docs/runtime-contract.md`
+5. `docs/physical-topology.md`
+
+Look for:
+
+- k3s runtime boundary for delivery;
+- delivery-plane / observability-plane separation;
+- GCS + Cloudflare public-safe status publication;
+- private Prometheus/Loki/Grafana staying outside the public path;
+- YouTube API quota-aware monitoring and stale-evidence handling;
+- code and tests mapped to reliability claims.
+
+## If You Are An SRE / Platform Reviewer
+
+Read:
+
+1. `docs/v3/sli-and-dashboard.md`
+2. `docs/v3/tcp-stall-case-study.md`
+3. `docs/v3/scoped-recovery-authority.md`
+4. `docs/v3/fast-recovery-classifier-replay.md`
+5. `docs/v3/single-node-dr-case-study.md`
+6. `docs/28-day-same-url-sli-case-study.md`
+
+Look for:
+
+- same-watch-URL continuity treated as a production invariant;
+- fault-layer classification across RTMPS, TCP, WAN/session, YouTube lifecycle,
+  upload budget, and runtime memory signals;
+- MTTR and incident clustering kept separate from raw restart attempts;
+- report-only observers separated from mutating recovery authority;
+- recovery actions blocked by stale, ambiguous, or upload-only evidence;
+- known unknowns left visible instead of converted into broad uptime claims.
+
 ## This Is Not
 
 - a generic OSS starter;
 - a supported YouTube streaming product;
 - a commercial SaaS project;
-- an installer for another operator's environment.
+- an installer for another operator's environment;
+- proof that every delivered frame was externally audited.
 
 ## This Is
 
@@ -30,53 +102,45 @@ plug-and-play streaming package.
    ProDesk readsb -> Dell readsb -> Dell modified tar1090 -> `stream_v3`
    delivery.
 4. Recovery is staged through guards before destructive actions.
-5. API quota exhaustion is treated as degraded evidence, not immediate stream
+5. Same-watch-URL continuity is a production invariant, not an availability
+   average.
+6. API quota exhaustion is treated as degraded evidence, not immediate stream
    failure.
-6. Shadow mode existed before destructive cutover and remains the safe
+7. Shadow mode existed before destructive cutover and remains the safe
    validation path.
-7. NVENC CBR was accepted even though measured upload increased, because
+8. NVENC CBR was accepted even though measured upload increased, because
    lower-upload VBR/CQ trials damaged YouTube input health.
-8. Single-node k3s recovery is documented with measured and unmeasured RTO/RPO
+9. Single-node k3s recovery is documented with measured and unmeasured RTO/RPO
    boundaries instead of being presented as ideal HA.
-9. A 24-hour smoke test is treated as a migration confidence gate, grounded in
-   v2's stable behavior, not as a long-window SLO proof.
-10. The public status site is a reduced static snapshot, not a public Grafana or
+10. A 24-hour smoke test is treated as a migration confidence gate, grounded in
+    v2's stable behavior, not as a long-window SLO proof.
+11. The public status site is a reduced static snapshot, not a public Grafana or
     raw-log mirror.
-11. Historical shadow gaps are not rewritten; current classifier remediation is
+12. Historical shadow gaps are not rewritten; current classifier remediation is
     exposed as replay over retained production events.
-12. Public validation excludes secrets, live YouTube mutation, and production
-   k3s apply.
+13. Public validation excludes secrets, live YouTube mutation, and production
+    k3s apply.
 
-## Suggested Review Path
+## Suggested Review Paths
+
+### 10-Minute Review
 
 1. `README.md`
-2. `docs/executive-summary.md`
+2. `docs/hiring-reviewer-guide.md`
 3. `docs/operational-scorecard.md`
-4. `docs/implementation-review-map.md`
-5. `docs/design-decisions-for-review.md`
-6. `docs/v3/decisions.md`
-7. `docs/runtime-contract.md`
-8. `docs/sli-methodology.md`
-9. `docs/28-day-same-url-sli-case-study.md`
-10. `docs/test-strategy-and-safety-boundary.md`
-11. `docs/v3/public-status-snapshot.md`
-12. `docs/v3/fast-recovery-classifier-replay.md`
-13. `docs/v3/migration-cutover-case-study.md`
-14. `docs/v3/youtube-lifecycle-safety.md`
-15. `docs/v3/tcp-stall-case-study.md`
-16. `docs/v3/encoder-upload-case-study.md`
-17. `docs/v3/memory-guard-case-study.md`
-18. `docs/v3/single-node-dr-case-study.md`
-19. `docs/v3/failure-taxonomy.md`
-20. `docs/incident-review-template.md`
-21. `docs/v3/runtime-state-and-evidence.md`
-22. `src/stream_v2/recovery_orchestrator/gate.py`
-23. `ops/scripts/v3_shadow_acceptance.py`
-24. `ops/scripts/wan_address_observer.py`
-25. `ops/scripts/persistent_tcp_anchor_observer.py`
-26. `tests/test_v3_shadow_acceptance.py`
-27. `tests/test_youtube_video_id_resolver_cache_freshness.py`
-28. `.github/workflows/public-snapshot-check.yml`
+
+### 30-Minute Technical Review
+
+1. `docs/executive-summary.md`
+2. `docs/implementation-review-map.md`
+3. `docs/v3/sli-and-dashboard.md`
+4. `docs/v3/public-status-snapshot.md`
+5. `docs/v3/tcp-stall-case-study.md`
+
+### Deep Review / Audit
+
+Use `docs/00_INDEX.md` as the full documentation catalog. Most hiring reviewers
+do not need to read every file.
 
 ## What To Evaluate
 
