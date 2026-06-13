@@ -182,8 +182,10 @@ flowchart LR
 
     YT["YouTube evidence<br/>API + public watch"]
 
+    MON -. read-only request .-> YT
+    YT -. evidence response .-> MON
+    MON -. runtime read .-> RUN
     RUN -. runtime evidence .-> MON
-    YT -. read-only evidence .-> MON
     MON --> EXP --> PROM --> GRAF
     MON -. logs .-> LOKI --> GRAF
 ```
@@ -223,6 +225,7 @@ flowchart LR
         NGINX["Pi nginx<br/>/grafana/"]
         COLL["public snapshot collector"]
         PUB["static site build"]
+        PISTATE["publisher state<br/>snapshot age"]
     end
 
     subgraph EDGE["Public static edge"]
@@ -236,7 +239,10 @@ flowchart LR
     NGINX -->|"Grafana proxy"| GRAF
     GRAF -->|"JSON response"| COLL
     COLL -->|"allowlist JSON"| PUB
+    COLL -->|"publisher freshness"| PISTATE
     PUB -->|"outbound upload"| GCS --> CF
+    OBS -. freshness probe .-> PISTATE
+    PISTATE -. snapshot age .-> OBS
 ```
 
 The diagrams intentionally separate delivery from observation. The concrete
@@ -255,6 +261,10 @@ ProDesk does not push monitoring data to Raspberry Pi. The Pi collector
 initiates `pull: HTTP GET` requests to `127.0.0.1:8088/grafana/...`; Pi nginx
 uses `proxy_pass` to HP ProDesk Grafana at `192.168.0.60:3000/grafana`, and the
 datasource JSON response returns over that same path to the Pi collector.
+Separately, the HP ProDesk observability layer checks publisher freshness so a
+stale Raspberry Pi/public snapshot is visible as an observability problem; that
+freshness probe is not the publication data path and does not make the Pi a k3s
+node or monitoring backend.
 Non-static operational access is outside the public status endpoint and is not
 named as a public endpoint here.
 
