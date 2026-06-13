@@ -19,12 +19,29 @@ def int_env(name: str, default: int) -> int:
 
 SCRIPT_PATH = Path(__file__).resolve()
 BASE_DIR = SCRIPT_PATH.parents[2]
-STATE_BASE_DIR = Path(
-    env("STREAM_RUNTIME_STATE_DIR", str(BASE_DIR / ".state" / "adsb-streamnew-v2"))
-).resolve()
-LOG_BASE_DIR = Path(
-    env("STREAM_RUNTIME_LOG_DIR", str(STATE_BASE_DIR / "logs"))
-).resolve()
+_STATE_BASE_DIR_RAW = env("STREAM_RUNTIME_STATE_DIR", "")
+if _STATE_BASE_DIR_RAW:
+    STATE_BASE_DIR = Path(_STATE_BASE_DIR_RAW).expanduser()
+    STATE_BASE_DIR_TEXT = STATE_BASE_DIR.as_posix()
+else:
+    STATE_BASE_DIR = (BASE_DIR / ".state" / "adsb-streamnew-v2").resolve()
+    STATE_BASE_DIR_TEXT = str(STATE_BASE_DIR)
+
+_LOG_BASE_DIR_RAW = env("STREAM_RUNTIME_LOG_DIR", "")
+if _LOG_BASE_DIR_RAW:
+    LOG_BASE_DIR = Path(_LOG_BASE_DIR_RAW).expanduser()
+    LOG_BASE_DIR_TEXT = LOG_BASE_DIR.as_posix()
+else:
+    LOG_BASE_DIR = STATE_BASE_DIR / "logs"
+    LOG_BASE_DIR_TEXT = f"{STATE_BASE_DIR_TEXT}/logs"
+
+
+def state_path_text(*parts: str) -> str:
+    return "/".join((STATE_BASE_DIR_TEXT, *parts))
+
+
+def log_path_text(*parts: str) -> str:
+    return "/".join((LOG_BASE_DIR_TEXT, *parts))
 
 LIVE_URL = env("YTW_LIVE_URL", "")
 API_KEY = env("YTW_API_KEY", "")
@@ -35,16 +52,16 @@ STREAM_SERVICE = env("YTW_STREAM_SERVICE", "adsb-streamnew-youtube-stream.servic
 MAX_FAILS = max(1, int_env("YTW_MAX_FAILS", 3))
 TIMEOUT_SEC = max(3, int_env("YTW_TIMEOUT_SEC", 8))
 STARTUP_GRACE_SEC = max(0, int_env("YTW_STARTUP_GRACE_SEC", 30))
-STATE_FILE = env("YTW_STATE_FILE", str(STATE_BASE_DIR / "youtube_watchdog_state.json"))
-LOG_FILE = env("YTW_LOG_FILE", str(LOG_BASE_DIR / "youtube_watchdog.jsonl"))
-API_CALL_LOG_FILE = env("YTW_API_CALL_LOG_FILE", str(LOG_BASE_DIR / "youtube_api_calls.jsonl"))
+STATE_FILE = env("YTW_STATE_FILE", state_path_text("youtube_watchdog_state.json"))
+LOG_FILE = env("YTW_LOG_FILE", log_path_text("youtube_watchdog.jsonl"))
+API_CALL_LOG_FILE = env("YTW_API_CALL_LOG_FILE", log_path_text("youtube_api_calls.jsonl"))
 OK_LOG_EVERY_SEC = max(0, int_env("YTW_OK_LOG_EVERY_SEC", 300))
-STATS_FILE = env("YTW_STATS_FILE", str(STATE_BASE_DIR / "youtube_watchdog_stats.json"))
-EVIDENCE_LEDGER_FILE = env("YTW_EVIDENCE_LEDGER_FILE", str(STATE_BASE_DIR / "youtube_evidence_ledger.json"))
-OK_HEARTBEAT_FILE = env("YTW_OK_HEARTBEAT_FILE", str(STATE_BASE_DIR / "youtube_watchdog_ok_heartbeat_state.json"))
+STATS_FILE = env("YTW_STATS_FILE", state_path_text("youtube_watchdog_stats.json"))
+EVIDENCE_LEDGER_FILE = env("YTW_EVIDENCE_LEDGER_FILE", state_path_text("youtube_evidence_ledger.json"))
+OK_HEARTBEAT_FILE = env("YTW_OK_HEARTBEAT_FILE", state_path_text("youtube_watchdog_ok_heartbeat_state.json"))
 VIDEO_RESOLVER_STATE_FILE = env(
     "YTW_VIDEO_RESOLVER_STATE_FILE",
-    str(STATE_BASE_DIR / "youtube_video_id_resolver_state.json"),
+    state_path_text("youtube_video_id_resolver_state.json"),
 )
 ENFORCE_RESTART = env("YTW_ENFORCE_RESTART", "0") == "1"
 API_SEARCH_INTERVAL_SEC = max(30, int_env("YTW_API_SEARCH_INTERVAL_SEC", 300))
@@ -103,9 +120,9 @@ OAUTH_TOKEN_URL = env("YTW_OAUTH_TOKEN_URL", "https://oauth2.googleapis.com/toke
 OAUTH_TIMEOUT_SEC = max(3, int_env("YTW_OAUTH_TIMEOUT_SEC", 8))
 OAUTH_MIN_TOKEN_TTL_SEC = max(30, int_env("YTW_OAUTH_MIN_TOKEN_TTL_SEC", 90))
 OAUTH_PROBE_MIN_INTERVAL_SEC = max(0, int_env("YTW_OAUTH_PROBE_MIN_INTERVAL_SEC", 120))
-OAUTH_TOKEN_STATE_FILE = env("YTW_OAUTH_TOKEN_STATE_FILE", str(STATE_BASE_DIR / "youtube_oauth_token_state.json"))
+OAUTH_TOKEN_STATE_FILE = env("YTW_OAUTH_TOKEN_STATE_FILE", state_path_text("youtube_oauth_token_state.json"))
 OAUTH_REQUIRE_CHANNEL_MATCH = env("YTW_OAUTH_REQUIRE_CHANNEL_MATCH", "1") == "1"
-QUOTA_STATE_FILE = env("YTW_QUOTA_STATE_FILE", str(STATE_BASE_DIR / "youtube_quota_state.json"))
+QUOTA_STATE_FILE = env("YTW_QUOTA_STATE_FILE", state_path_text("youtube_quota_state.json"))
 QUOTA_EXHAUSTED_COOLDOWN_SEC = max(60, int_env("YTW_QUOTA_EXHAUSTED_COOLDOWN_SEC", 21600))
 QUOTA_RESET_MARGIN_SEC = max(0, int_env("YTW_QUOTA_RESET_MARGIN_SEC", 300))
 DATA_API_CHECK_MIN_INTERVAL_SEC = max(0, int_env("YTW_DATA_API_CHECK_MIN_INTERVAL_SEC", 120))
@@ -114,7 +131,7 @@ RESOLVER_REUSE_WATCHDOG_DATA_API_SEC = max(0, int_env("YTW_RESOLVER_REUSE_WATCHD
 API_COST_BURN_RATE_ENABLE = env("YTW_API_COST_BURN_RATE_ENABLE", "1") == "1"
 API_COST_BURN_RATE_LATEST_FILE = env(
     "YTW_API_COST_BURN_RATE_LATEST_FILE",
-    str(STATE_BASE_DIR / "reports" / "youtube_api_cost" / "open_day_latest.json"),
+    state_path_text("reports", "youtube_api_cost", "open_day_latest.json"),
 )
 API_COST_BURN_RATE_THRESHOLD_UNITS_PER_DAY = max(
     0,
@@ -142,7 +159,7 @@ API_COST_BURN_RATE_DATA_API_MIN_INTERVAL_SEC = max(
     int_env("YTW_API_COST_BURN_RATE_DATA_API_MIN_INTERVAL_SEC", 600),
 )
 OAUTH_STREAM_STATUS_REQUIRED = env("YTW_OAUTH_STREAM_STATUS_REQUIRED", "1") == "1"
-RESTART_REASON_FILE = env("RESTART_REASON_FILE", str(STATE_BASE_DIR / "restart_reason.json"))
+RESTART_REASON_FILE = env("RESTART_REASON_FILE", state_path_text("restart_reason.json"))
 RESTART_FAILURE_BACKOFF_SEC = max(0, int_env("YTW_RESTART_FAILURE_BACKOFF_SEC", 300))
 FORCE_LIVE_ON_UPCOMING_ONCE = env("YTW_FORCE_LIVE_ON_UPCOMING_ONCE", "0") == "1"
 FORCE_LIVE_AUTO_RECOVERY = env("YTW_FORCE_LIVE_AUTO_RECOVERY", "0") == "1"
@@ -151,7 +168,7 @@ FORCE_LIVE_MIN_FAILS = max(1, int_env("YTW_FORCE_LIVE_MIN_FAILS", MAX_FAILS))
 FORCE_LIVE_REQUIRE_INGEST = env("YTW_FORCE_LIVE_REQUIRE_INGEST", "1") == "1"
 FORCE_LIVE_TARGET_STATUS = env("YTW_FORCE_LIVE_TARGET_STATUS", "live").lower() or "live"
 FORCE_LIVE_BROADCAST_ID = env("YTW_FORCE_LIVE_BROADCAST_ID", "")
-FORCE_LIVE_STATE_FILE = env("YTW_FORCE_LIVE_STATE_FILE", str(STATE_BASE_DIR / "youtube_force_live_state.json"))
+FORCE_LIVE_STATE_FILE = env("YTW_FORCE_LIVE_STATE_FILE", state_path_text("youtube_force_live_state.json"))
 FORCE_LIVE_REQUIRE_OAUTH_STREAM_ACTIVE = env("YTW_FORCE_LIVE_REQUIRE_OAUTH_STREAM_ACTIVE", "1") == "1"
 FORCE_LIVE_CATEGORY_ID = env("YTW_FORCE_LIVE_CATEGORY_ID", "")
 FORCE_LIVE_REPLACEMENT_ENABLE_AUTO_STOP = env("YTW_FORCE_LIVE_REPLACEMENT_ENABLE_AUTO_STOP", "0") == "1"

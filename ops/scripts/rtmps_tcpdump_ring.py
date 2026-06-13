@@ -82,7 +82,7 @@ def build_tcpdump_command(args: argparse.Namespace, destination: Path) -> list[s
         "-W",
         "1",
         "-w",
-        str(destination),
+        destination.as_posix(),
         args.capture_filter,
         ]
     )

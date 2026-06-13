@@ -368,7 +368,7 @@ def build_wan_snapshot_command(payload: dict[str, Any], args: argparse.Namespace
     sample_reason = f"{args.wan_snapshot_reason_prefix}:{reason_text}:{names}"
     return [
         args.wan_snapshot_python,
-        str(args.wan_snapshot_script),
+        args.wan_snapshot_script.as_posix(),
         "--sample-reason",
         sample_reason,
         "--interval-sec",
@@ -385,7 +385,7 @@ def build_rtmps_burst_command(payload: dict[str, Any], args: argparse.Namespace)
     sample_reason = f"{args.rtmps_burst_reason_prefix}:{reason_text}:{names}"
     return [
         args.rtmps_burst_python,
-        str(args.rtmps_burst_script),
+        args.rtmps_burst_script.as_posix(),
         "--sample-reason",
         sample_reason,
         "--interval-sec",

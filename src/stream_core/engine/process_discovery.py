@@ -28,6 +28,14 @@ def pgrep_cmds(pattern: str, *, run_cmd: RunCommand) -> list[tuple[int, str]]:
     return parse_pgrep_output(cp.stdout or "")
 
 
+def _cmd_path_text(path: Path) -> str:
+    return path.expanduser().as_posix()
+
+
+def _normalized_cmd(text: str) -> str:
+    return text.replace("\\", "/")
+
+
 def foreign_rtmp_pids(
     *,
     rtmp_url: str,
@@ -61,9 +69,9 @@ def stale_capture_helper_pids(
     current_pid: int,
     run_cmd: RunCommand,
 ) -> dict[str, list[int]]:
-    overlay_script = str((base_dir / "src" / "stream_core" / "overlay_server.py").resolve())
-    overlay_dir_str = str(overlay_dir.resolve())
-    browser_profile = str(browser_profile_dir.resolve())
+    overlay_script = _cmd_path_text(base_dir / "src" / "stream_core" / "overlay_server.py")
+    overlay_dir_str = _cmd_path_text(overlay_dir)
+    browser_profile = _cmd_path_text(browser_profile_dir)
     overlay_index_marker = f":{overlay_port}/index.html"
 
     stale: dict[str, list[int]] = {"xvfb": [], "overlay": [], "browser": []}
@@ -77,17 +85,19 @@ def stale_capture_helper_pids(
     for pid, cmd in pgrep_cmds("overlay_server.py", run_cmd=run_cmd):
         if pid == current_pid:
             continue
-        if overlay_script in cmd and f"--port {overlay_port}" in cmd and overlay_dir_str in cmd:
+        cmd_text = _normalized_cmd(cmd)
+        if overlay_script in cmd_text and f"--port {overlay_port}" in cmd_text and overlay_dir_str in cmd_text:
             stale["overlay"].append(pid)
 
     for pid, cmd in pgrep_cmds(str(browser_profile_dir), run_cmd=run_cmd):
         if pid == current_pid:
             continue
-        if f"--user-data-dir={browser_profile}" in cmd and (
-            "chromium" in cmd
-            or "chrome" in cmd
-            or overlay_index_marker in cmd
-            or "chrome_crashpad_handler" in cmd
+        cmd_text = _normalized_cmd(cmd)
+        if f"--user-data-dir={browser_profile}" in cmd_text and (
+            "chromium" in cmd_text
+            or "chrome" in cmd_text
+            or overlay_index_marker in cmd_text
+            or "chrome_crashpad_handler" in cmd_text
         ):
             stale["browser"].append(pid)
 
@@ -122,6 +132,6 @@ def terminate_stale_pids(
         log(f"Force-killing stale {label} helper pid={pid}")
         append_event("stale_capture_helper_kill", helper=label, pid=pid, signal="KILL")
         try:
-            kill(pid, signal.SIGKILL)
+            kill(pid, getattr(signal, "SIGKILL", signal.SIGTERM))
         except OSError:
             pass

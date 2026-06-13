@@ -143,7 +143,15 @@ def write_with_backup(path: Path, content: str, dry_run: bool) -> None:
 
 
 def latest_backup(path: Path) -> Path | None:
-    candidates = sorted(path.parent.glob(f"{path.name}.bak.*"), key=lambda p: p.stat().st_mtime, reverse=True)
+    def sort_key(candidate: Path) -> tuple[str, float]:
+        suffix = candidate.name.rsplit(".bak.", 1)[-1]
+        try:
+            mtime = candidate.stat().st_mtime
+        except OSError:
+            mtime = 0.0
+        return suffix, mtime
+
+    candidates = sorted(path.parent.glob(f"{path.name}.bak.*"), key=sort_key, reverse=True)
     return candidates[0] if candidates else None
 
 

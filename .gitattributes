@@ -1,0 +1,8 @@
+.gitattributes text eol=lf
+*.sh text eol=lf
+bin/* text eol=lf
+ops/scripts/*.py text eol=lf
+ops/scripts/*.sh text eol=lf
+src/stream_core/stream.sh text eol=lf
+src/stream_v3/runtime_entrypoint.sh text eol=lf
+src/watchers/*.sh text eol=lf

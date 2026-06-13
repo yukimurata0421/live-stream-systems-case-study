@@ -25,12 +25,16 @@ def assert_systemd_launch(cfg, *, env: Mapping[str, str] | None = None) -> None:
 
 
 def pick_font_file(configured_font_file: str) -> str:
+    system_root = os.environ.get("SystemRoot", r"C:\Windows")
     candidates = [
         configured_font_file,
         "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
         "/usr/share/fonts/opentype/noto/NotoSansCJKjp-Regular.otf",
         "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
         "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+        str(Path(system_root) / "Fonts" / "meiryo.ttc"),
+        str(Path(system_root) / "Fonts" / "segoeui.ttf"),
+        str(Path(system_root) / "Fonts" / "arial.ttf"),
     ]
     for candidate in candidates:
         if candidate and Path(candidate).is_file():

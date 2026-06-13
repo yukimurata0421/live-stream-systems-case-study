@@ -209,12 +209,15 @@ def api_report_info(path: Path, *, now_ts: int, max_mtime_age_sec: int, max_effe
 def systemd_timer_status(unit: str) -> dict:
     if os.environ.get("OBSERVE_SKIP_SYSTEMD", "0").strip() == "1":
         return {"unit": unit, "active": None, "reason": "systemd check skipped"}
-    cp = subprocess.run(
-        ["systemctl", "show", unit, "--property=LoadState,ActiveState,SubState,NextElapseUSecRealtime,LastTriggerUSec"],
-        text=True,
-        capture_output=True,
-        check=False,
-    )
+    try:
+        cp = subprocess.run(
+            ["systemctl", "show", unit, "--property=LoadState,ActiveState,SubState,NextElapseUSecRealtime,LastTriggerUSec"],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+    except FileNotFoundError as exc:
+        return {"unit": unit, "active": None, "reason": f"systemd check unavailable: {exc}"}
     if cp.returncode != 0:
         return {"unit": unit, "active": False, "reason": (cp.stderr or cp.stdout or "").strip()}
     fields: dict[str, str] = {}
@@ -257,23 +260,34 @@ def journal_ssl_tls_events(*, since_ts: int, now_ts: int, cutoff_1h: int, cutoff
             "reasons": {},
             "samples": [],
         }
-    cp = subprocess.run(
-        [
-            "journalctl",
-            "-u",
-            STREAM_SERVICE,
-            "--since",
-            f"@{max(0, since_ts)}",
-            "--until",
-            f"@{max(0, now_ts)}",
-            "--no-pager",
-            "-o",
-            "json",
-        ],
-        text=True,
-        capture_output=True,
-        check=False,
-    )
+    try:
+        cp = subprocess.run(
+            [
+                "journalctl",
+                "-u",
+                STREAM_SERVICE,
+                "--since",
+                f"@{max(0, since_ts)}",
+                "--until",
+                f"@{max(0, now_ts)}",
+                "--no-pager",
+                "-o",
+                "json",
+            ],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+    except FileNotFoundError as exc:
+        return {
+            "enabled": False,
+            "reason": f"journal check unavailable: {exc}",
+            "count": 0,
+            "count_1h": 0,
+            "count_24h": 0,
+            "reasons": {},
+            "samples": [],
+        }
     if cp.returncode != 0:
         return {
             "enabled": True,

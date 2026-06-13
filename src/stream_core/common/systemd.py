@@ -4,6 +4,9 @@ import os
 import subprocess
 from typing import Sequence
 
+if not hasattr(os, "geteuid"):
+    os.geteuid = lambda: 1  # type: ignore[attr-defined]
+
 
 READ_ONLY_VERBS = {
     "cat",
@@ -49,7 +52,12 @@ def run_systemctl(
     check: bool = False,
 ) -> subprocess.CompletedProcess[str]:
     cmd = [*systemctl_prefix(require_privilege=require_privilege), *args]
-    return subprocess.run(cmd, text=True, capture_output=True, check=check)
+    try:
+        return subprocess.run(cmd, text=True, capture_output=True, check=check)
+    except FileNotFoundError as exc:
+        if check:
+            raise
+        return subprocess.CompletedProcess(cmd, 127, "", f"{type(exc).__name__}: {exc}")
 
 
 def run_systemctl_readonly(args: Sequence[str], *, check: bool = False) -> subprocess.CompletedProcess[str]:

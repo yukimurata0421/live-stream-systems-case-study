@@ -8,6 +8,7 @@ dependencies = [
   "mutagen",
   "PyYAML",
   "requests",
+  "tzdata; platform_system == 'Windows'",
 ]
 
 [project.optional-dependencies]

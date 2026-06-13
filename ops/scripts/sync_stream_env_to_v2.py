@@ -17,6 +17,15 @@ SOURCE_STATE_ROOT = Path.home() / ".local" / "state" / "adsb-streamnew"
 TARGET_STATE_NAME = "adsb-streamnew-v3" if REPO_ROOT.name == "stream_v3" else "adsb-streamnew-v2"
 TARGET_STATE_ROOT = REPO_ROOT / ".state" / TARGET_STATE_NAME
 
+
+def _repo_env_path(*parts: str) -> str:
+    return "/".join((str(TARGET_PROJECT_ROOT), *parts))
+
+
+def _state_env_path(*parts: str) -> str:
+    return _repo_env_path(".state", TARGET_STATE_NAME, *parts)
+
+
 ENV_FILES = OrderedDict(
     (
         ("adsb-streamnew", "adsb-streamnew.env"),
@@ -29,42 +38,42 @@ ENV_FILES = OrderedDict(
 MAIN_ENV_OVERRIDES = {
     "BASE_DIR": str(TARGET_PROJECT_ROOT),
     "STREAM_BASE_DIR": str(TARGET_PROJECT_ROOT),
-    "STREAM_RUNTIME_STATE_DIR": str(TARGET_STATE_ROOT),
-    "STREAM_RUNTIME_LOG_DIR": str(TARGET_STATE_ROOT / "logs"),
-    "STREAM_V2_SOURCE_STATE_ROOT": str(TARGET_STATE_ROOT),
-    "STREAM_V2_STATE_ROOT": str(TARGET_STATE_ROOT),
-    "RUNTIME_STATE_FILE": str(TARGET_STATE_ROOT / "stream_runtime_state.json"),
-    "EVENT_LOG_FILE": str(TARGET_STATE_ROOT / "logs" / "stream_engine_events.jsonl"),
-    "RESTART_REASON_FILE": str(TARGET_STATE_ROOT / "restart_reason.json"),
-    "WATCHDOG_EVENT_LOG_FILE": str(TARGET_STATE_ROOT / "logs" / "stream_watchdog_events.jsonl"),
-    "WATCHDOG_STATS_FILE": str(TARGET_STATE_ROOT / "stream_watchdog_stats.json"),
-    "PLAY_HISTORY_JSONL_FILE": str(TARGET_STATE_ROOT / "logs" / "play_history.jsonl"),
-    "RUNTIME_STATE_GLOB": str(TARGET_STATE_ROOT / "stream_runtime_state_*.json"),
-    "WATCHDOG_SNAPSHOT_TIMELINE_FILE": str(TARGET_STATE_ROOT / "logs" / "watchdog_state_timeline.jsonl"),
-    "SLO_FILE": str(TARGET_STATE_ROOT / "slo_snapshot.json"),
+    "STREAM_RUNTIME_STATE_DIR": _state_env_path(),
+    "STREAM_RUNTIME_LOG_DIR": _state_env_path("logs"),
+    "STREAM_V2_SOURCE_STATE_ROOT": _state_env_path(),
+    "STREAM_V2_STATE_ROOT": _state_env_path(),
+    "RUNTIME_STATE_FILE": _state_env_path("stream_runtime_state.json"),
+    "EVENT_LOG_FILE": _state_env_path("logs", "stream_engine_events.jsonl"),
+    "RESTART_REASON_FILE": _state_env_path("restart_reason.json"),
+    "WATCHDOG_EVENT_LOG_FILE": _state_env_path("logs", "stream_watchdog_events.jsonl"),
+    "WATCHDOG_STATS_FILE": _state_env_path("stream_watchdog_stats.json"),
+    "PLAY_HISTORY_JSONL_FILE": _state_env_path("logs", "play_history.jsonl"),
+    "RUNTIME_STATE_GLOB": _state_env_path("stream_runtime_state_*.json"),
+    "WATCHDOG_SNAPSHOT_TIMELINE_FILE": _state_env_path("logs", "watchdog_state_timeline.jsonl"),
+    "SLO_FILE": _state_env_path("slo_snapshot.json"),
 }
 
 MONITOR_ENV_OVERRIDES = {
-    "STREAM_RUNTIME_STATE_DIR": str(TARGET_STATE_ROOT),
-    "STREAM_RUNTIME_LOG_DIR": str(TARGET_STATE_ROOT / "logs"),
-    "YTW_STATE_FILE": str(TARGET_STATE_ROOT / "youtube_watchdog_state.json"),
-    "YTW_LOG_FILE": str(TARGET_STATE_ROOT / "logs" / "youtube_watchdog.jsonl"),
-    "YTW_API_CALL_LOG_FILE": str(TARGET_STATE_ROOT / "logs" / "youtube_api_calls.jsonl"),
-    "YTW_API_COST_REPORT_OUTPUT_DIR": str(TARGET_STATE_ROOT / "reports" / "youtube_api_cost"),
-    "YTW_API_COST_REPORT_LATEST_FILE": str(TARGET_STATE_ROOT / "reports" / "youtube_api_cost" / "latest.json"),
-    "YTW_API_COST_BURN_RATE_LATEST_FILE": str(TARGET_STATE_ROOT / "reports" / "youtube_api_cost" / "open_day_latest.json"),
-    "YTW_STATS_FILE": str(TARGET_STATE_ROOT / "youtube_watchdog_stats.json"),
-    "YTW_VIDEO_RESOLVER_STATE_FILE": str(TARGET_STATE_ROOT / "youtube_video_id_resolver_state.json"),
-    "YTW_OAUTH_TOKEN_STATE_FILE": str(TARGET_STATE_ROOT / "youtube_oauth_token_state.json"),
-    "YTW_FORCE_LIVE_STATE_FILE": str(TARGET_STATE_ROOT / "youtube_force_live_state.json"),
-    "RESTART_REASON_FILE": str(TARGET_STATE_ROOT / "restart_reason.json"),
+    "STREAM_RUNTIME_STATE_DIR": _state_env_path(),
+    "STREAM_RUNTIME_LOG_DIR": _state_env_path("logs"),
+    "YTW_STATE_FILE": _state_env_path("youtube_watchdog_state.json"),
+    "YTW_LOG_FILE": _state_env_path("logs", "youtube_watchdog.jsonl"),
+    "YTW_API_CALL_LOG_FILE": _state_env_path("logs", "youtube_api_calls.jsonl"),
+    "YTW_API_COST_REPORT_OUTPUT_DIR": _state_env_path("reports", "youtube_api_cost"),
+    "YTW_API_COST_REPORT_LATEST_FILE": _state_env_path("reports", "youtube_api_cost", "latest.json"),
+    "YTW_API_COST_BURN_RATE_LATEST_FILE": _state_env_path("reports", "youtube_api_cost", "open_day_latest.json"),
+    "YTW_STATS_FILE": _state_env_path("youtube_watchdog_stats.json"),
+    "YTW_VIDEO_RESOLVER_STATE_FILE": _state_env_path("youtube_video_id_resolver_state.json"),
+    "YTW_OAUTH_TOKEN_STATE_FILE": _state_env_path("youtube_oauth_token_state.json"),
+    "YTW_FORCE_LIVE_STATE_FILE": _state_env_path("youtube_force_live_state.json"),
+    "RESTART_REASON_FILE": _state_env_path("restart_reason.json"),
 }
 
 FAST_RECOVERY_ENV_OVERRIDES = {
-    "FR_EVENT_LOG_FILE": str(TARGET_STATE_ROOT / "logs" / "fast_recovery_events.jsonl"),
-    "FR_YTW_STATS_FILE": str(TARGET_STATE_ROOT / "youtube_watchdog_stats.json"),
-    "FR_QUOTA_STATE_FILE": str(TARGET_STATE_ROOT / "youtube_quota_state.json"),
-    "FR_RESTART_REASON_FILE": str(TARGET_STATE_ROOT / "restart_reason.json"),
+    "FR_EVENT_LOG_FILE": _state_env_path("logs", "fast_recovery_events.jsonl"),
+    "FR_YTW_STATS_FILE": _state_env_path("youtube_watchdog_stats.json"),
+    "FR_QUOTA_STATE_FILE": _state_env_path("youtube_quota_state.json"),
+    "FR_RESTART_REASON_FILE": _state_env_path("restart_reason.json"),
 }
 
 OVERRIDES_BY_SOURCE = {

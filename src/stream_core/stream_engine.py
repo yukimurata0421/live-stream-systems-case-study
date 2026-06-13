@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import argparse
-import fcntl
 import json
 import os
 import signal
@@ -157,7 +156,8 @@ class StreamEngine:
                 if self.stop_requested:
                     raise RuntimeError("Stop requested while waiting for takeover coordination lock")
                 try:
-                    fcntl.flock(coord_fp.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+                    if not engine_locks.try_lock_file_handle(coord_fp):
+                        raise BlockingIOError()
                     return coord_fp
                 except BlockingIOError:
                     pass

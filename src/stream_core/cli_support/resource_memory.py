@@ -392,7 +392,9 @@ def process_uptime_sec(proc_root: Path, pid_dir: Path) -> int | None:
         return None
     try:
         uptime = float((proc_root / "uptime").read_text(encoding="utf-8").split()[0])
-        hz = os.sysconf(os.sysconf_names["SC_CLK_TCK"])
+        sysconf = getattr(os, "sysconf", None)
+        sysconf_names = getattr(os, "sysconf_names", {})
+        hz = sysconf(sysconf_names["SC_CLK_TCK"]) if sysconf is not None and "SC_CLK_TCK" in sysconf_names else 100
     except (OSError, ValueError, KeyError):
         return None
     return max(0, int(uptime - (float(start_ticks) / float(hz))))

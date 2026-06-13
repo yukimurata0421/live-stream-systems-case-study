@@ -10,8 +10,12 @@ import subprocess
 import time
 import uuid
 import calendar
-import pwd
 from pathlib import Path
+
+try:
+    import pwd
+except ModuleNotFoundError:  # pragma: no cover - exercised on Windows
+    pwd = None  # type: ignore[assignment]
 
 try:
     from .systemctl_control import run_systemctl
@@ -725,10 +729,11 @@ def stream_ffmpeg_count() -> int:
 
 def as_pulse_user(cmd: list[str]) -> subprocess.CompletedProcess[str]:
     current_user = ""
-    try:
-        current_user = pwd.getpwuid(os.geteuid()).pw_name
-    except Exception:
-        current_user = ""
+    if pwd is not None:
+        try:
+            current_user = pwd.getpwuid(os.geteuid()).pw_name
+        except Exception:
+            current_user = ""
     env_cmd = [
         "env",
         "-u",

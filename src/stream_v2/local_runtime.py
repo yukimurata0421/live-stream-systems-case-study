@@ -296,7 +296,7 @@ def local_runtime_summary(config: LocalRuntimeConfig) -> dict[str, object]:
         },
         "rendering": {
             "display": config.display,
-            "overlay_dir": str(paths.overlay_dir),
+            "overlay_dir": paths.overlay_dir.as_posix(),
             "overlay_url": f"http://127.0.0.1:{config.overlay_port}/index.html",
             "stream1090_url": config.stream1090_url,
             "browser": "enabled" if config.start_browser else "disabled",

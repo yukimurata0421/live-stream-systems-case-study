@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
 
 def build_output_args(cfg: Any) -> list[str]:
     if cfg.test_mode:
         if cfg.test_output == "file":
-            return ["-f", "matroska", str(cfg.test_output_file)]
+            return ["-f", "matroska", Path(cfg.test_output_file).as_posix()]
         return ["-f", "null", "-"]
     if cfg.use_fifo_recovery:
         return [

@@ -68,7 +68,7 @@ def history(
         if paths_only:
             print(path)
             continue
-        rel = path.relative_to(base_dir)
+        rel = path.relative_to(base_dir).as_posix()
         heading = first_heading(path)
         suffix = f" - {heading}" if heading else ""
         print(f"{rel}{suffix}")

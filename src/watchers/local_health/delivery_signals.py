@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import glob
 import os
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable
@@ -12,7 +13,7 @@ NowEpoch = Callable[[], int]
 
 
 def pick_runtime_state_path(runtime_state_glob: str) -> Path | None:
-    patterns = [p.strip() for p in runtime_state_glob.split(os.pathsep) if p.strip()]
+    patterns = split_runtime_state_patterns(runtime_state_glob)
     if not patterns:
         patterns = [runtime_state_glob]
     candidates: list[str] = []
@@ -22,6 +23,16 @@ def pick_runtime_state_path(runtime_state_glob: str) -> Path | None:
     if not candidates:
         return None
     return Path(max(candidates, key=lambda p: os.path.getmtime(p)))
+
+
+def split_runtime_state_patterns(runtime_state_glob: str) -> list[str]:
+    patterns = [p.strip() for p in runtime_state_glob.split(os.pathsep) if p.strip()]
+    if len(patterns) > 1 or os.pathsep == ":":
+        return patterns
+    raw = runtime_state_glob.strip()
+    if not raw:
+        return []
+    return [p.strip() for p in re.split(r":(?=[A-Za-z]:[\\/])", raw) if p.strip()]
 
 
 def parse_utc_epoch(ts: str) -> int:

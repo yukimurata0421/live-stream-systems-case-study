@@ -49,6 +49,13 @@ def env_path(source: Mapping[str, str], name: str, default: str) -> Path:
     return Path(source.get(name, default)).expanduser()
 
 
+def env_path_arg(source: Mapping[str, str], name: str, default: str) -> str:
+    raw = source.get(name)
+    if raw is not None:
+        return Path(raw).expanduser().as_posix()
+    return str(Path(default).expanduser())
+
+
 def env_float(source: Mapping[str, str], name: str, default: float) -> float:
     try:
         return float(source.get(name, str(default)).strip())
@@ -81,8 +88,8 @@ def default_tasks(env: Mapping[str, str] | None = None, *, mode: str | None = No
 
 def shadow_tasks(source: Mapping[str, str]) -> list[ControlTask]:
     root = repo_root()
-    state_root = env_path(source, "STREAM_RUNTIME_STATE_DIR", str(root / ".state" / "adsb-streamnew-v3"))
-    source_state_root = env_path(source, "STREAM_V2_SOURCE_STATE_ROOT", str(root / ".state" / "source-v2-readonly"))
+    state_root = env_path_arg(source, "STREAM_RUNTIME_STATE_DIR", str(root / ".state" / "adsb-streamnew-v3"))
+    source_state_root = env_path_arg(source, "STREAM_V2_SOURCE_STATE_ROOT", str(root / ".state" / "source-v2-readonly"))
     python_bin = source.get("PYTHON_BIN", sys.executable)
     stream_cli = source.get("STREAM_V3_STREAM_CLI_BIN", str(root / "bin" / "stream-prod"))
     supervisor_mode = source.get("STREAM_RUNTIME_SUPERVISOR", "systemd").strip().lower() or "systemd"
@@ -106,9 +113,9 @@ def shadow_tasks(source: Mapping[str, str]) -> list[ControlTask]:
                 "stream_v2",
                 "shadow-once",
                 "--source-state-root",
-                str(source_state_root),
+                source_state_root,
                 "--state-root",
-                str(state_root),
+                state_root,
                 "--mode",
                 "shadow",
                 *supervisor_args,
@@ -142,7 +149,7 @@ def shadow_tasks(source: Mapping[str, str]) -> list[ControlTask]:
                 "stream_v2",
                 "ops-summary",
                 "--state-root",
-                str(state_root),
+                state_root,
                 "--text",
             ),
         ),
