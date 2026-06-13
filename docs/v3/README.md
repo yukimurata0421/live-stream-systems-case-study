@@ -43,7 +43,8 @@ recovery decisions coherent.
 The public topology also names the production data flow: Airspy on HP ProDesk
 feeds `airspy_adsb`, ProDesk readsb, Dell readsb, Dell modified tar1090, and
 then the `stream_v3` k3s delivery workload. The HP ProDesk is also the
-observability host.
+observability host, with `stream-v3-control` and `stream-v3-observer` running
+as the ProDesk-side k3s observability/control workloads.
 
 For a focused reliability review:
 

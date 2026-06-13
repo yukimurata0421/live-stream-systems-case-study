@@ -39,8 +39,9 @@ still competed for the same host resources and process namespace.
 
 ## v3: k3s Runtime With Split Planes
 
-`stream_v3` moves the delivery plane into k3s and keeps the observability plane
-on the HP ProDesk observability side.
+`stream_v3` moves both v3 planes into explicit k3s roles: the Dell workstation
+owns the delivery workload, and the HP ProDesk owns the observability/control
+workloads.
 
 The v3 migration is not a rewrite that discards v2 safety. The delivery runtime
 moved, but the v2 design constraints remain: preserve the YouTube watch URL,
@@ -65,6 +66,8 @@ Delivery plane:
 
 Observability plane:
 
+- ProDesk-side `stream-v3-control`
+- ProDesk-side `stream-v3-observer`
 - YouTube resolver and monitor
 - read-only YouTube Data API, OAuth, and public watch-page probes
 - stream watchdog

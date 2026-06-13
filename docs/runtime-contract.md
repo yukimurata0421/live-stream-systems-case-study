@@ -4,8 +4,8 @@
 separate observability-plane workload.
 
 The active home deployment has three hosts and five logical roles: HP ProDesk
-`192.168.0.60` owns the Airspy/`airspy_adsb`/readsb source role and the
-observability role; the Dell workstation `192.168.0.35` owns Dell-side readsb, a
+`192.168.0.60` owns the Airspy/`airspy_adsb`/readsb source role and the k3s
+observability/control role; the Dell workstation `192.168.0.35` owns Dell-side readsb, a
 modified tar1090 map endpoint, and the k3s delivery role; Raspberry Pi
 `192.168.0.50` owns the public snapshot publisher role. Public presentation is a
 reduced static snapshot pushed outbound from Raspberry Pi to GCS and served
@@ -64,6 +64,8 @@ CPU encoding is retained only as a fallback and local debug path.
 
 The observability plane owns health classification and recovery requests:
 
+- `stream-v3-control` k3s deployment for the monitor loop
+- `stream-v3-observer` k3s deployment and service for the exporter
 - YouTube video resolver
 - YouTube watchdog
 - read-only YouTube Data API, OAuth, and public watch-page probes
@@ -83,7 +85,8 @@ FFmpeg process.
 ## Public Status Publication
 
 Prometheus, Loki, Alloy, Grafana, and the v3 exporter remain private on HP
-ProDesk in the current production shape. Raspberry Pi runs an nginx `/grafana/`
+ProDesk in the current production shape. The ProDesk-side observability/control
+workloads run under k3s; Raspberry Pi runs an nginx `/grafana/`
 proxy to HP ProDesk Grafana for collector access and existing operator
 shortcuts. The Pi-side collector reads public-safe Prometheus/Loki evidence via
 `http://127.0.0.1:8088/grafana`, writes static JSON/assets, pushes them

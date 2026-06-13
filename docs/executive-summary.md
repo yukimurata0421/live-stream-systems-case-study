@@ -12,8 +12,9 @@ The current public architecture separates the system into two main planes:
 
 - Dell delivery node: browser rendering, audio, AutoDJ, FFmpeg, NVENC, RTMPS,
   fast local recovery, and k3s runtime ownership.
-- HP ProDesk observability host: YouTube resolver/watchdog, stream watchdog,
-  SLI summaries, notifications, Prometheus/Loki/Grafana, and staged recovery
+- HP ProDesk k3s observability host: `stream-v3-control`,
+  `stream-v3-observer`, YouTube resolver/watchdog, stream watchdog, SLI
+  summaries, notifications, Prometheus/Loki/Grafana, and staged recovery
   requests.
 
 The ADS-B source chain is also explicit: Airspy on HP ProDesk, `airspy_adsb`,

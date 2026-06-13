@@ -1,13 +1,24 @@
-# stream_v3 k3s deployment skeleton
+# stream_v3 k3s Deployment
 
-This directory is the first concrete build target for v3. It is intentionally shadow-first:
+This directory contains the public k3s deployment path for `stream_v3`. The
+manifests keep shadow validation, Dell live streaming, ProDesk observability,
+observer/report helpers, and cutover gates separate:
 
-- `stream_v2` remains the production owner until an explicit cutover.
-- `v3-runtime` starts with `TEST_MODE=1`; it captures locally instead of publishing to YouTube.
+- `stream_v3` is the current production delivery shape; shadow mode remains a
+  non-mutating validation path.
+- `v3-runtime` defaults to `TEST_MODE=1`; it captures locally instead of
+  publishing to YouTube until an overlay switches it.
 - `v3-runtime` starts PulseAudio inside the `stream-engine` container and exposes it to `auto-dj` through `/run/stream-pulse/native` on a shared `emptyDir`.
-- `v3-control` runs `python3 -m stream_v3.control_loop`, reads v2 state through a read-only mount or sync path, and writes only v3 state.
+- `v3-control` runs `python3 -m stream_v3.control_loop`, can read retained v2
+  state through a read-only mount or sync path for migration/replay evidence,
+  and writes only v3 state.
 - `v3-observer` exports v3 state for Prometheus-style scraping.
-- `v2-state-mirror` is a suspended CronJob skeleton for rsyncing the current v2 `.state` into a PVC that `v3-control` mounts read-only.
+- In the current production split, the Dell node applies the streaming delivery
+  overlay and the HP ProDesk applies the observability/control workloads. The
+  Raspberry Pi is not a k3s node; it only publishes the reduced public-safe
+  snapshot.
+- `v2-state-mirror` is a suspended CronJob skeleton for rsyncing retained v2
+  `.state` into a PVC that `v3-control` mounts read-only.
 - `v3-reports` contains suspended CronJobs for API cost and map/upstream report-only jobs. Unsuspend them after URLs, secrets, and state PVC writes are validated.
 
 ## Validate manifests locally
@@ -27,9 +38,11 @@ To check whether the current host can build and apply the shadow stack:
 python3 ops/scripts/v3_k3s_preflight.py
 ```
 
-On the current v2 production host this is expected to report missing cluster/build prerequisites. On the new server it should pass before running the apply command.
+On a non-k3s development host this may report missing cluster/build
+prerequisites. On the Dell delivery node and the HP ProDesk observability node
+it should pass for the overlay each host owns before running the apply command.
 
-To prove the repo-local shadow path is safe before a real cluster exists:
+To prove the repo-local shadow path is safe without touching a live cluster:
 
 ```bash
 python3 ops/scripts/v3_shadow_acceptance.py
@@ -42,7 +55,7 @@ The root `.dockerignore` is part of the preflight contract so `.state`, local en
 
 v3 runtime is not CPU-encode-first. The `stream-engine` container is configured with `VIDEO_ENCODER=h264_nvenc`, `VIDEO_NVENC_PRESET=p4`, YouTube-friendly NVENC CBR (`VIDEO_NVENC_RC=cbr`, `VIDEO_NVENC_MULTIPASS=`, `VIDEO_NVENC_RC_LOOKAHEAD=0`, `VIDEO_NVENC_SPATIAL_AQ=0`, `VIDEO_NVENC_TEMPORAL_AQ=0`, `VIDEO_NVENC_BFRAMES=0`, `FRAME_RATE=5`, `VIDEO_BITRATE=3400k`, `VIDEO_MAXRATE=3400k`), `NVIDIA_DRIVER_CAPABILITIES=video,utility`, and `nvidia.com/gpu: "1"` so the GTX 1070 NVENC block does the H.264 encode work.
 
-Before applying the runtime on the new server, prove these three points:
+Before applying the runtime on the delivery host, prove these three points:
 
 ```bash
 nvidia-smi
@@ -59,7 +72,8 @@ cd /home/yuki/projects/stream_v3
 sudo nerdctl -n k8s.io build -f deploy/k3s/Containerfile -t stream-v3:local .
 ```
 
-Use `docker build` or `podman build` if the new server is not using containerd directly.
+Use `docker build` or `podman build` if the host is not using containerd
+directly.
 
 ## Prepare music
 
@@ -95,13 +109,15 @@ decisions in `docs/v3/decisions.md`, and the staged recovery notes in
 
 The shadow ConfigMap also keeps `STREAM_RUNTIME_SUPERVISOR=k8s` and `STREAM_K8S_DRY_RUN=1`, so recovery code can exercise the Kubernetes-compatible k3s command mapping without deleting or restarting workloads. The `k8s` value is the internal supervisor-mode enum; the deployed runtime is k3s.
 
-## Mirror v2 state
+## Mirror Retained v2 State
 
 `deploy/k3s/v2-state-mirror/cronjob.yaml` is committed with `suspend: true`.
+It is a migration/replay helper, not the current production owner.
 
 Before enabling it:
 
-1. Set `STREAM_V2_MIRROR_SOURCE` in `base/configmap-shadow.yaml` to the current v2 host and `.state/adsb-streamnew-v2/` path.
+1. Set `STREAM_V2_MIRROR_SOURCE` in `base/configmap-shadow.yaml` to the host
+   and path that hold the retained v2 `.state/adsb-streamnew-v2/` evidence.
 2. Create a local secret from `deploy/k3s/v2-state-mirror/secret.example.yaml` with a read-only SSH key and known_hosts entry.
 3. Unsuspend the CronJob only after the first manual rsync succeeds.
 
@@ -114,7 +130,11 @@ Production mutation requires both of these to be true:
 - k3s manifests have been changed away from shadow mode.
 - launcher environment includes `STREAM_V3_CUTOVER_ENABLE=1`.
 
-The repo launcher blocks mutating systemd commands without that flag, even if the old v2 CLI is called through this tree. The guard also recognizes production-shaped stream repo markers (`pyproject.toml`, `ops/systemd`, and `src/stream_core/cli.py`), so GitHub release archives keep the same default refusal behavior even when the checkout directory name changes.
+The repo launcher blocks mutating systemd commands without that flag, even if a
+legacy v2 CLI entrypoint is called through this tree. The guard also recognizes
+production-shaped stream repo markers (`pyproject.toml`, `ops/systemd`, and
+`src/stream_core/cli.py`), so GitHub release archives keep the same default
+refusal behavior even when the checkout directory name changes.
 `stream_v3.control_loop --mode cutover` has the same guard. Without `STREAM_V3_CUTOVER_ENABLE=1`, it exits before starting the fast recovery / watchdog / resolver / notify task set.
 
 For this streaming host, use the streaming-only overlay:
@@ -125,19 +145,29 @@ python3 ops/scripts/v3_k3s_preflight.py --overlay streaming
 kubectl kustomize --load-restrictor=LoadRestrictionsNone deploy/k3s/streaming | kubectl apply -f -
 ```
 
-The streaming overlay keeps this host limited to the delivery plane: `stream-v3-runtime` renders readsb/custom tar1090, plays AutoDJ, captures audio/video, sends RTMP, and runs the local fast recovery sidecar at `V3_FAST_RECOVERY_INTERVAL_SEC=10`. It switches `STREAM_V3_MODE=streaming`, `STREAM_V3_CUTOVER_ENABLE=1`, `STREAM_K8S_DRY_RUN=0`, and `TEST_MODE=0`. Create the real `stream-v3-secrets` Secret with `STREAM_KEY` before applying it; otherwise the stream engine cannot resolve a production RTMP URL.
+The streaming overlay keeps this host limited to the delivery plane:
+`stream-v3-runtime` renders the Dell-side modified tar1090 endpoint, plays
+AutoDJ, captures audio/video, sends RTMPS ingest, and runs the local fast
+recovery sidecar at `V3_FAST_RECOVERY_INTERVAL_SEC=10`. It switches
+`STREAM_V3_MODE=streaming`, `STREAM_V3_CUTOVER_ENABLE=1`,
+`STREAM_K8S_DRY_RUN=0`, and `TEST_MODE=0`. Create the real
+`stream-v3-secrets` Secret with `STREAM_KEY` before applying it; otherwise the
+stream engine cannot resolve a production RTMPS URL.
 
-The HP ProDesk observability host owns the monitoring plane. Install
-`ops/systemd/stream-v3-observability-monitor.service` there for `youtube_video_resolver`,
-`youtube_monitor`, `stream_watchdog`, `notify_status`, `subsystems_status`,
-`recovery_orchestrator`, and `shadow_sli`. Install
-`ops/systemd/stream-v3-remote-recovery.timer` there with
-`STREAM_V3_RECOVERY_WORKLOADS=deployment/stream-v3-runtime` so the observability
-host can request runtime restarts on the Dell delivery node through the
-namespace-scoped k3s service-account token. The same service can also consume a
-fresh `recovery_action_plan.json`, but only for the allowlisted scoped actions
-`restart_dj` and `restart_ffmpeg`; upload-pressure reasons and replacement
-broadcast actions remain blocked. Manual staged requests can use:
+The HP ProDesk observability host owns the monitoring plane through k3s
+`stream-v3-control` and `stream-v3-observer`. Those workloads cover
+`youtube_video_resolver`, `youtube_monitor`, `stream_watchdog`, `notify_status`,
+`subsystems_status`, `recovery_orchestrator`, `shadow_sli`, and the exporter.
+The `ops/systemd/stream-v3-observability-monitor.service` unit remains as a
+legacy/reference host-side entrypoint for the same monitor mode, not the primary
+current ownership description. Install `ops/systemd/stream-v3-remote-recovery.timer`
+there only if host-side remote recovery checks are still part of the local
+operation, with `STREAM_V3_RECOVERY_WORKLOADS=deployment/stream-v3-runtime` so
+the observability host can request runtime restarts on the Dell delivery node
+through the namespace-scoped k3s service-account token. The same service can
+also consume a fresh `recovery_action_plan.json`, but only for the allowlisted
+scoped actions `restart_dj` and `restart_ffmpeg`; upload-pressure reasons and
+replacement broadcast actions remain blocked. Manual staged requests can use:
 
 ```bash
 python3 ops/scripts/stream_v3_staged_restart.py --reason "observability manual recovery"

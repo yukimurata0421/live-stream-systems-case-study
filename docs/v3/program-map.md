@@ -16,8 +16,9 @@
 | `watchers.youtube_video_id_resolver` | observability plane | resolve current live video identity |
 | `watchers.youtube_watchdog` | observability plane | YouTube health and lifecycle evidence |
 | `watchers.stream_watchdog` | observability plane | local delivery and stream evidence |
+| `stream_v3.control_loop --mode monitor` | ProDesk k3s `stream-v3-control` | observability task runner |
 | `stream_v2 recovery_orchestrator` | observability plane | action planning and guard checks |
-| `stream_v3_prometheus_exporter.py` | observability plane | Prometheus metrics |
+| `stream_v3_prometheus_exporter.py` | ProDesk k3s `stream-v3-observer` | Prometheus metrics |
 | `stream_v3_health_snapshot.py` | observability plane | last-known-good health and objective SLI snapshots |
 | `stream_v3_monitoring_watchdog.py` | observability plane | exporter, metric-contract, and snapshot freshness self-check |
 
@@ -45,6 +46,7 @@ are not retained in Git. `tcp-stall-resolution-depth.md` explains that boundary.
 - `deploy/k3s/Containerfile`
 - `deploy/k3s/shadow`
 - `deploy/k3s/streaming`
+- `deploy/k3s/v3-control`
 - `deploy/k3s/v3-observer`
 - `ops/systemd/stream-v3-observability-monitor.service`
 - `ops/systemd/stream-v3-health-snapshot.timer`

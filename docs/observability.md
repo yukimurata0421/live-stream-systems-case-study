@@ -83,13 +83,14 @@ YouTube actions are allowed.
 
 `ops/monitoring/` contains the Prometheus, Loki, Grafana, and Alloy
 configuration used to present this evidence. It is an observability display and
-retention stack; recovery ownership still flows through the monitor guard and
-staged request path.
+retention stack; recovery ownership still flows through the ProDesk-side k3s
+monitor guard and staged request path.
 
 In the current production topology this monitoring backend remains on HP
-ProDesk. Raspberry Pi has an nginx `/grafana/` proxy to HP ProDesk Grafana. The
-public snapshot collector runs on Raspberry Pi, queries allowlisted
-Prometheus/Loki evidence through the Pi-local
+ProDesk, alongside the k3s `stream-v3-control` and `stream-v3-observer`
+observability workloads. Raspberry Pi has an nginx `/grafana/` proxy to HP
+ProDesk Grafana. The public snapshot collector runs on Raspberry Pi, queries
+allowlisted Prometheus/Loki evidence through the Pi-local
 `http://127.0.0.1:8088/grafana` datasource proxy path, pushes static
 JSON/assets outbound to GCS, and Cloudflare serves `yukimurata0421.dev`. The
 GCS/Cloudflare edge is used to keep public status reads off the home uplink.

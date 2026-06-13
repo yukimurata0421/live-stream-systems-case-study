@@ -5,7 +5,8 @@
 Status: accepted
 
 The Dell delivery host owns video, audio, FFmpeg, AutoDJ, k3s runtime, and local
-recovery. The HP ProDesk observability side owns monitoring, SLI,
+recovery. The HP ProDesk observability side also runs k3s for
+`stream-v3-control` and `stream-v3-observer`, and owns monitoring, SLI,
 notification, and staged recovery requests.
 
 The HP ProDesk also hosts the physical ADS-B RF ingest chain: Airspy USB,

@@ -46,6 +46,10 @@ class PublicDocsStructureTests(unittest.TestCase):
             "modified tar1090 map",
             "beast feed to :30104",
             "browser map URL",
+            "fast-recovery-loop",
+            "scoped local FFmpeg recovery",
+            "deploy/k3s/streaming",
+            "stream_v3.control_loop --mode streaming",
             "API + public watch",
             "v3 monitor",
             "recovery-orchestrator",
@@ -183,6 +187,7 @@ class PublicDocsStructureTests(unittest.TestCase):
             "v2/README.md",
             "v3/README.md",
             "v3/current-runtime-contract.md",
+            "v3/public-status-snapshot.md",
             "v3/runtime-state-and-evidence.md",
             "v3/sli-and-dashboard.md",
             "v3/rolling-sli-error-budget-feedback.md",
@@ -248,6 +253,7 @@ class PublicDocsStructureTests(unittest.TestCase):
             "v2/README.md",
             "v3/README.md",
             "v3/observability-plane-self-check.md",
+            "v3/public-status-snapshot.md",
             "v3/rolling-sli-error-budget-feedback.md",
             "v3/fast-recovery-classifier-replay.md",
             "v3/migration-cutover-case-study.md",
@@ -263,6 +269,14 @@ class PublicDocsStructureTests(unittest.TestCase):
             "v3/runbook-validation.md",
         ):
             self.assertIn(marker, text)
+
+        indexed = set(re.findall(r"`([^`]+\.md)`", text))
+        expected = {
+            str(path.relative_to(DOCS)).replace("\\", "/")
+            for path in DOCS.rglob("*.md")
+            if path.name != "00_INDEX.md"
+        }
+        self.assertFalse(expected - indexed)
 
     def test_docs_readme_keeps_review_paths_lightweight(self) -> None:
         text = read(DOCS / "README.md")
@@ -326,6 +340,12 @@ class PublicDocsStructureTests(unittest.TestCase):
             "docs/v3/10_current/",
             "docs/v3/25_decisions/",
             "docs/v3/50_ops_logs/",
+            "stream_v2` remains the production owner",
+            "current v2 production host",
+            "new server",
+            "first concrete build target for v3",
+            "sends RTMP,",
+            "production RTMP URL",
         ):
             self.assertNotIn(stale, text)
 

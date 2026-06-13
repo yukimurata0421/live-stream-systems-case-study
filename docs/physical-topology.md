@@ -1,15 +1,15 @@
 # Physical Topology
 
 `stream_v3` is the current production shape. The live delivery workload runs on
-the Dell workstation, the HP ProDesk is both the ADS-B RF/source host and the
-observability host, Raspberry Pi publishes the public-safe status snapshot, and
-GCS + Cloudflare form the public static edge.
+the Dell workstation k3s node, the HP ProDesk is both the ADS-B RF/source host
+and the k3s observability/control host, Raspberry Pi publishes the public-safe
+status snapshot, and GCS + Cloudflare form the public static edge.
 
 ## Physical Hosts
 
 | Host or edge | Runtime role | Responsibility |
 | --- | --- | --- |
-| HP ProDesk `192.168.0.60` | ADS-B source and observability | Airspy USB receiver, `airspy_adsb`, ProDesk-side readsb, YouTube resolver/watchdog, stream watchdog, subsystem SLI, notifications, Prometheus exporter on `:9108`, Prometheus `:9090`, Loki `:3100`, Alloy `:12345`, private Grafana `:3000`, recovery orchestration, and staged recovery requests |
+| HP ProDesk `192.168.0.60` | ADS-B source and k3s observability | Airspy USB receiver, `airspy_adsb`, ProDesk-side readsb, k3s `stream-v3-control`, k3s `stream-v3-observer`, YouTube resolver/watchdog, stream watchdog, subsystem SLI, notifications, Prometheus exporter on `:9108`, Prometheus `:9090`, Loki `:3100`, Alloy `:12345`, private Grafana `:3000`, recovery orchestration, and staged recovery requests |
 | Dell workstation `192.168.0.35` | Delivery and local ADS-B mirror | Dell-side readsb and modified tar1090 map endpoint, k3s `stream-v3-runtime`, browser rendering, PulseAudio, AutoDJ, FFmpeg, NVIDIA NVENC, and local fast recovery |
 | Raspberry Pi `192.168.0.50` | Public snapshot publisher and gateway | nginx `:8088` `/grafana/` proxy to HP ProDesk Grafana, public-safe snapshot collector, static site source tree, and scheduled GCS push |
 | GCS + Cloudflare | Public static edge | Receives sanitized JSON/static assets by outbound upload and serves <https://yukimurata0421.dev/> without spending home uplink bandwidth on public status reads or exposing Grafana, Prometheus, Loki, raw logs, credentials, or home-network ingress |
@@ -40,9 +40,10 @@ The physical split makes the delivery/observability split real:
 
 - the Dell workstation spends its resources on local readsb/tar1090 serving,
   browser rendering, audio, GPU encoding, and YouTube ingest;
-- the HP ProDesk keeps RF ingestion, YouTube API/public watch evidence,
-  monitoring state, dashboards, long-window SLI, and staged recovery logic away
-  from the k3s delivery workload;
+- the HP ProDesk keeps RF ingestion plus k3s-owned observability/control
+  workloads for YouTube API/public watch evidence, monitoring state,
+  dashboards, long-window SLI, and staged recovery logic away from the Dell
+  k3s delivery workload;
 - the Raspberry Pi publishes a reduced static snapshot, so external readers can
   inspect freshness and guardrails without reaching the private monitoring
   backend;
@@ -53,8 +54,8 @@ The physical split makes the delivery/observability split real:
 
 `ops/monitoring/docker-compose.yml` defines Prometheus, Loki, Grafana, and Alloy
 with host networking and local scrape targets. That stack presents evidence from
-the HP ProDesk observability side; it is not part of the k3s delivery workload
-and does not directly own FFmpeg recovery.
+the HP ProDesk k3s observability side; it is not part of the Dell k3s delivery
+workload and does not directly own FFmpeg recovery.
 
 Grafana `:3000`, Prometheus `:9090`, Loki `:3100`, Alloy, and the exporter stay
 private on HP ProDesk. Raspberry Pi nginx exposes `/grafana/` as a proxy to HP
@@ -71,9 +72,10 @@ and is not named as a public endpoint here.
 
 ## k3s Boundary
 
-k3s is used for the `stream_v3` delivery workload on the Dell workstation. The
-observability plane may request staged recovery, but it does not directly own
-the FFmpeg process.
+k3s is used for the `stream_v3` delivery workload on the Dell workstation and
+for the observability/control workloads on HP ProDesk.
+The observability plane may request staged recovery, but it does not directly
+own the FFmpeg process.
 
 ## Code Boundary
 

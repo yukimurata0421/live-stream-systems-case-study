@@ -30,7 +30,8 @@ remediation, and SLI-based monitoring.
 
 It demonstrates:
 
-- k3s runtime operation for the delivery workload;
+- k3s runtime operation for both the delivery workload and the ProDesk-side
+  observability/control workloads;
 - delivery-plane / observability-plane separation;
 - same-URL continuity as a production invariant;
 - public-safe status publication through GCS + Cloudflare;
@@ -73,15 +74,21 @@ enterprise traffic scale.
 
 ### Runtime And Recovery Architecture
 
-- k3s runtime boundary for browser rendering, audio, AutoDJ, FFmpeg, NVENC, and
-  RTMPS delivery.
+- k3s runtime boundary for browser rendering, audio, AutoDJ, FFmpeg, NVENC,
+  local fast recovery, and RTMPS delivery.
+- Streaming overlay contract: the live `stream-v3-runtime` Pod runs
+  `stream-engine`, `auto-dj`, and `fast-recovery-loop`. The base/shadow runtime
+  manifest includes a report-only `network-observer` sidecar, and
+  `deploy/k3s/streaming` swaps it out for the local fast recovery loop before
+  live operation.
 - Failure classification across rendering, audio, FFmpeg, RTMPS, API, and
   monitoring paths.
 - Delivery-plane / observability-plane separation across Dell workstation and
-  HP ProDesk hardware.
-- HP ProDesk observability role: YouTube resolver/watchdog, stream watchdog,
-  subsystem SLI, notifications, Prometheus exporter, recovery orchestrator,
-  and private Prometheus/Loki/Grafana.
+  HP ProDesk hardware, with both sides represented as k3s-owned v3 workloads.
+- HP ProDesk k3s observability role: `stream-v3-control` for the monitor loop,
+  `stream-v3-observer` for the Prometheus exporter, YouTube resolver/watchdog,
+  stream watchdog, subsystem SLI, notifications, recovery orchestration, and
+  private Prometheus/Loki/Grafana evidence presentation.
 - Recovery guard design that keeps monitors from directly owning FFmpeg.
 - Scoped recovery authority for same-URL-preserving Auto DJ and RTMPS FFmpeg
   recovery.
@@ -93,6 +100,8 @@ enterprise traffic scale.
 - Raspberry Pi public publisher role: collect public-safe evidence through the
   Pi-local nginx `/grafana/` proxy to the HP ProDesk Grafana datasource proxy,
   build static JSON/assets, and push them outbound to GCS.
+- The Raspberry Pi is not the k3s node and does not own the private monitoring
+  backend; it only publishes the reduced public-safe snapshot.
 - Public-safe status presentation: Cloudflare serves the GCS snapshot without
   sending public reads through the home uplink or exposing Grafana, Prometheus,
   Loki, raw logs, credentials, or home-network ingress to
@@ -141,6 +150,7 @@ flowchart LR
         subgraph K3S["k3s ns stream-v3 / stream-v3-runtime (3/3)"]
             ENG["stream-engine<br/>Xvfb + Chromium + overlay<br/>PulseAudio + FFmpeg / NVENC"]
             DJ["auto-dj"]
+            FR["fast-recovery-loop<br/>fast_recovery.py"]
         end
     end
 
@@ -150,6 +160,7 @@ flowchart LR
     RS --> T1090
     T1090 -->|browser map URL| ENG
     DJ -->|stream_v3_sink| ENG
+    FR -. scoped local FFmpeg recovery .-> ENG
     ENG -->|h264_nvenc 5fps / 3400k / 192k| YT
 ```
 
@@ -161,9 +172,9 @@ flowchart LR
         RUN["stream-v3 runtime Pod"]
     end
 
-    subgraph PD["HP ProDesk (.60)"]
-        MON["v3 monitor"]
-        EXP["exporter :9108"]
+    subgraph PD["HP ProDesk / k3s observability (.60)"]
+        MON["v3 monitor<br/>stream-v3-control"]
+        EXP["stream-v3-observer<br/>exporter :9108"]
         PROM["Prometheus :9090"]
         LOKI["Loki :3100"]
         GRAF["private Grafana :3000"]
@@ -181,8 +192,8 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-    subgraph PD["HP ProDesk (.60)"]
-        MON["v3 monitor"]
+    subgraph PD["HP ProDesk / k3s observability (.60)"]
+        MON["v3 monitor<br/>stream-v3-control"]
         ORCH["recovery-orchestrator"]
         GUARD["guard"]
     end
@@ -201,7 +212,8 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-    subgraph PD["HP ProDesk (.60)"]
+    subgraph PD["HP ProDesk / k3s observability (.60)"]
+        OBS["stream-v3-observer<br/>exporter :9108"]
         PROM["Prometheus"]
         LOKI["Loki"]
         GRAF["Grafana datasource proxy"]
@@ -218,7 +230,7 @@ flowchart LR
         CF["Cloudflare<br/>yukimurata0421.dev"]
     end
 
-    PROM --> GRAF
+    OBS --> PROM --> GRAF
     LOKI --> GRAF
     COLL -->|"HTTP GET"| NGINX
     NGINX -->|"Grafana proxy"| GRAF
@@ -231,10 +243,10 @@ The diagrams intentionally separate delivery from observation. The concrete
 ADS-B data path is Airspy on HP ProDesk -> `airspy_adsb` -> ProDesk readsb ->
 Dell workstation readsb -> Dell modified tar1090 -> `stream_v3`. Evidence
 collection is dotted in the observability diagram; the only mutating path back
-to delivery is the guarded k3s recovery request. The HP ProDesk monitor
-collects runtime evidence from the Dell pod with `kubectl exec`. Grafana,
-Prometheus, Loki, Alloy, and the exporter remain private on HP ProDesk. The
-Raspberry Pi uses its local `/grafana/` proxy to read the ProDesk Grafana
+to delivery is the guarded k3s recovery request. The HP ProDesk k3s
+observability workloads collect runtime evidence from the Dell pod with
+`kubectl exec`. Grafana, Prometheus, Loki, Alloy, and the exporter remain
+private on HP ProDesk. The Raspberry Pi uses its local `/grafana/` proxy to read the ProDesk Grafana
 datasource proxy, reduces that evidence to allowlisted static JSON, pushes the
 site outbound to GCS, and Cloudflare serves <https://yukimurata0421.dev/>. This
 keeps repeated public status reads on the static edge instead of spending home
@@ -245,6 +257,13 @@ uses `proxy_pass` to HP ProDesk Grafana at `192.168.0.60:3000/grafana`, and the
 datasource JSON response returns over that same path to the Pi collector.
 Non-static operational access is outside the public status endpoint and is not
 named as a public endpoint here.
+
+For the Dell delivery node, the streaming overlay is the production-shaped
+manifest. It removes the base/shadow `network-observer` sidecar and adds
+`fast-recovery-loop`, which runs `stream_v3.control_loop --mode streaming`.
+That loop schedules only `fast_recovery.py`; YouTube resolver/watchdog,
+notification, subsystem SLI, and recovery orchestration run on the HP ProDesk
+k3s observability side.
 
 This repository is a sanitized public snapshot of a system that evolved through
 three stages:
@@ -261,7 +280,7 @@ Prometheus metrics, runbooks, and rollback-aware deployment.
 
 ## Why k3s
 
-The single-host versions made browser rendering, audio, FFmpeg, watchdogs, and recovery compete for the same resources and process ownership. k3s gives the delivery workload a hard runtime boundary while the HP ProDesk observability plane keeps long-window evidence and recovery decisions outside the FFmpeg owner.
+The single-host versions made browser rendering, audio, FFmpeg, watchdogs, and recovery compete for the same resources and process ownership. k3s now gives the Dell delivery workload and the HP ProDesk observability/control workloads explicit runtime boundaries, while the plane split still keeps long-window evidence and recovery decisions outside the FFmpeg owner.
 
 ## Architecture
 
@@ -341,7 +360,8 @@ Use these entry points instead of reading the full tree:
 - `src/stream_core/`: delivery runtime, FFmpeg lifecycle, CLI, diagnostics,
   notifications, and supervisor abstractions.
 - `src/watchers/`: YouTube, stream, network, evidence, and recovery monitors.
-- `deploy/k3s/`: k3s manifests, shadow mode, streaming overlay, observer, and
+- `deploy/k3s/`: k3s manifests, shadow mode, streaming overlay that swaps the
+  base `network-observer` sidecar for `fast-recovery-loop`, observer, and
   cutover guard.
 - `ops/monitoring/`: Prometheus, Loki, Grafana, and Alloy monitoring config.
 - `ops/scripts/wan_address_observer.py` and
@@ -359,7 +379,9 @@ Use these entry points instead of reading the full tree:
 - `ops/systemd/stream-v3-wan-address-observer.*` and
   `ops/systemd/stream-v3-persistent-anchor-observer.service`: host-side
   scheduling examples for the TCP stall cause observers.
-- `ops/systemd/stream-v3-observability-monitor.service`: observability-plane task owner.
+- `ops/systemd/stream-v3-observability-monitor.service`: legacy/reference
+  host-side observability task owner; the current ProDesk observability role is
+  represented in k3s by `stream-v3-control` and `stream-v3-observer`.
 - `ops/prodesk-monitoring/`: sanitized legacy prodesk service checks.
 - `docs/sli-methodology.md`: measured v2 SLI baseline and the metric
   classification inherited by v3.

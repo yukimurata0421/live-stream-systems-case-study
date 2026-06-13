@@ -45,8 +45,9 @@ static edge:
 
 - HP ProDesk `192.168.0.60` source role: Airspy USB receiver, `airspy_adsb`,
   and ProDesk-side readsb.
-- HP ProDesk `192.168.0.60` observability role: YouTube monitoring, watchdogs,
-  SLI, notifications, Prometheus exporter, staged recovery requests, and the
+- HP ProDesk `192.168.0.60` k3s observability role: `stream-v3-control`,
+  `stream-v3-observer`, YouTube monitoring, watchdogs, SLI, notifications,
+  Prometheus exporter, staged recovery requests, and the
   Prometheus/Loki/Alloy/Grafana evidence stack.
 - Dell workstation `192.168.0.35` local ADS-B mirror role: Dell-side readsb and
   modified tar1090 map endpoint.
@@ -72,12 +73,12 @@ Delivery-plane components are optimized for keeping video and audio alive.
 Observability-plane components are optimized for retaining evidence, explaining
 faults, and deciding whether a recovery action is safe.
 
-The HP ProDesk observability plane runs `stream_v3.control_loop --mode monitor`.
-That monitor mode runs the YouTube video resolver, YouTube watchdog, stream
-watchdog, notification status loop, subsystem status summary, recovery
-orchestrator, and shadow SLI tasks. It pulls read-only YouTube Data API, OAuth,
-public watch-page, k3s runtime, state-file, and log evidence before recovery is
-planned.
+The HP ProDesk observability plane runs `stream_v3.control_loop --mode monitor`
+as the k3s `stream-v3-control` workload. That monitor mode runs the YouTube
+video resolver, YouTube watchdog, stream watchdog, notification status loop,
+subsystem status summary, recovery orchestrator, and shadow SLI tasks. It pulls
+read-only YouTube Data API, OAuth, public watch-page, k3s runtime, state-file,
+and log evidence before recovery is planned.
 
 The split prevents a monitoring failure from automatically becoming a delivery
 failure. It also prevents delivery recovery code from owning dashboard,
@@ -86,7 +87,8 @@ long-window SLI state, or YouTube API decision state.
 `ops/monitoring/` defines Prometheus, Loki, Grafana, and Alloy as a
 host-local evidence and presentation stack. It is not a third delivery plane and
 does not own FFmpeg or k3s recovery directly. In the current production shape,
-that monitoring backend runs on HP ProDesk. Raspberry Pi uses the Pi-local
+that monitoring backend runs on HP ProDesk alongside the ProDesk k3s
+observability workloads. Raspberry Pi uses the Pi-local
 `/grafana/` proxy to collect allowlisted evidence from the ProDesk Grafana
 datasource proxy. The data transfer is pull-based: the Pi collector initiates
 HTTP GETs to `127.0.0.1:8088/grafana`, Pi nginx proxies those requests to
@@ -119,7 +121,9 @@ The k3s manifests are intentionally shadow-first:
   recovery behavior.
 - `deploy/k3s/streaming`: enables the `stream_v3` delivery plane for live
   streaming on the Dell workstation.
-- `deploy/k3s/v3-observer`: exports v3 runtime state for scraping.
+- `deploy/k3s/v3-control`: runs the ProDesk-side observability monitor loop.
+- `deploy/k3s/v3-observer`: exports v3 runtime state for scraping from the
+  ProDesk-side observability k3s role.
 - `deploy/k3s/v3-reports`: scheduled report jobs.
 - `deploy/k3s/v2-state-mirror`: optional read-only state mirror for migration.
 

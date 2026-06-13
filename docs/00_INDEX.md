@@ -33,6 +33,7 @@ Use the rest of this page as a reference catalog.
 - `evolution.md`
 - `v2/README.md`
 - `v3/current-runtime-contract.md`
+- `v3/public-status-snapshot.md`
 - `v3/runtime-state-and-evidence.md`
 - `v3/program-map.md`
 
