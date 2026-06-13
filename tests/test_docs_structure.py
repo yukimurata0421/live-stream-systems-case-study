@@ -50,6 +50,12 @@ class PublicDocsStructureTests(unittest.TestCase):
             "scoped local FFmpeg recovery",
             "deploy/k3s/streaming",
             "stream_v3.control_loop --mode streaming",
+            "HP ProDesk k3s observability role",
+            "`stream-v3-control` for the monitor loop",
+            "`stream-v3-observer` for the Prometheus exporter",
+            "The Raspberry Pi is not the k3s node",
+            "HP ProDesk / k3s observability",
+            "stream-v3-observer<br/>exporter :9108",
             "API + public watch",
             "v3 monitor",
             "recovery-orchestrator",
@@ -158,6 +164,54 @@ class PublicDocsStructureTests(unittest.TestCase):
             "delivery-plane / observability-plane",
         ):
             self.assertIn(marker, text)
+
+    def test_readme_mermaid_topology_matches_current_host_split(self) -> None:
+        text = read(README)
+        blocks = re.findall(r"```mermaid\n(.*?)\n```", text, flags=re.S)
+
+        self.assertEqual(len(blocks), 4)
+        delivery, observability, recovery, public_status = blocks
+
+        for marker in (
+            'subgraph PD["HP ProDesk (.60)"]',
+            'subgraph DELL["Dell / k3s node (.35)"]',
+            'subgraph K3S["k3s ns stream-v3 / stream-v3-runtime (3/3)"]',
+            'FR["fast-recovery-loop<br/>fast_recovery.py"]',
+            "FR -. scoped local FFmpeg recovery .-> ENG",
+        ):
+            self.assertIn(marker, delivery)
+
+        for marker in (
+            'subgraph PD["HP ProDesk / k3s observability (.60)"]',
+            'MON["v3 monitor<br/>stream-v3-control"]',
+            'EXP["stream-v3-observer<br/>exporter :9108"]',
+            "RUN -. runtime evidence .-> MON",
+            "MON --> EXP --> PROM --> GRAF",
+        ):
+            self.assertIn(marker, observability)
+
+        for marker in (
+            'subgraph PD["HP ProDesk / k3s observability (.60)"]',
+            'MON["v3 monitor<br/>stream-v3-control"]',
+            'subgraph DELL["Dell / k3s (.35)"]',
+            'GUARD -->|"guarded k3s recovery"| RUN',
+            "RUN -. runtime evidence .-> MON",
+        ):
+            self.assertIn(marker, recovery)
+
+        for marker in (
+            'subgraph PD["HP ProDesk / k3s observability (.60)"]',
+            'OBS["stream-v3-observer<br/>exporter :9108"]',
+            'subgraph RPI["Raspberry Pi (.50)"]',
+            'subgraph EDGE["Public static edge"]',
+            "OBS --> PROM --> GRAF",
+            'PUB -->|"outbound upload"| GCS --> CF',
+        ):
+            self.assertIn(marker, public_status)
+
+        for block in blocks:
+            self.assertNotIn("Raspberry Pi / k3s", block)
+            self.assertNotIn("Raspberry Pi k3s", block)
 
     def test_public_docs_are_english_entrypoints(self) -> None:
         required = (
@@ -333,6 +387,10 @@ class PublicDocsStructureTests(unittest.TestCase):
             "docs/v3/runbooks.md",
             "HP ProDesk observability host",
             "Dell delivery node",
+            "HP ProDesk applies the observability/control workloads",
+            "Raspberry Pi is not a k3s node",
+            "`stream-v3-control` and `stream-v3-observer`",
+            "legacy/reference host-side entrypoint",
         ):
             self.assertIn(marker, text)
 
@@ -346,6 +404,7 @@ class PublicDocsStructureTests(unittest.TestCase):
             "first concrete build target for v3",
             "sends RTMP,",
             "production RTMP URL",
+            "Install\n`ops/systemd/stream-v3-observability-monitor.service` there for",
         ):
             self.assertNotIn(stale, text)
 
@@ -438,6 +497,9 @@ class PublicDocsStructureTests(unittest.TestCase):
             "delivery-plane",
             "observability-plane",
             "stream-v3-runtime",
+            "`stream-v3-control` k3s deployment for the monitor loop",
+            "`stream-v3-observer` k3s deployment and service for the exporter",
+            "ProDesk-side observability/control",
             "h264_nvenc",
             "VIDEO_BITRATE=3400k",
             "STREAM_V3_CUTOVER_ENABLE=1",
@@ -471,6 +533,9 @@ class PublicDocsStructureTests(unittest.TestCase):
             "shadow",
             "streaming",
             "v3-observer",
+            "`deploy/k3s/v3-control`",
+            "HP ProDesk `192.168.0.60` k3s observability role",
+            "as the k3s `stream-v3-control` workload",
             "Recovery is staged",
             "Physical Topology",
             "Dell workstation",
@@ -500,6 +565,9 @@ class PublicDocsStructureTests(unittest.TestCase):
             "Dell workstation",
             "HP ProDesk",
             "k3s is used for the `stream_v3` delivery workload",
+            "k3s observability/control host",
+            "k3s `stream-v3-control`",
+            "k3s `stream-v3-observer`",
             "Visualization Boundary",
             "Prometheus, Loki, Grafana, and Alloy",
             "YouTube API/public watch evidence",
@@ -534,6 +602,8 @@ class PublicDocsStructureTests(unittest.TestCase):
             "keep public status reads off the home uplink",
             "Non-static operational access",
             "API Cost Guard",
+            "ProDesk-side k3s\nmonitor guard",
+            "k3s `stream-v3-control` and `stream-v3-observer`",
         ):
             self.assertIn(marker, observability)
 
@@ -561,6 +631,9 @@ class PublicDocsStructureTests(unittest.TestCase):
         for marker in (
             "Delivery Owner",
             "Monitoring Owner",
+            "observability/control path on HP ProDesk k3s",
+            "`stream-v3-control` deployment",
+            "`stream-v3-observer` deployment and service",
             "h264_nvenc",
             "--disable-shm=yes",
             "--enable-memfd=no",
@@ -629,6 +702,8 @@ class PublicDocsStructureTests(unittest.TestCase):
 
         for marker in (
             "Delivery / Observability Split",
+            "HP ProDesk observability side also runs k3s",
+            "`stream-v3-control` and `stream-v3-observer`",
             "Shadow Gate Semantics",
             "not production policy",
             "Migration Smoke Test",
@@ -644,6 +719,8 @@ class PublicDocsStructureTests(unittest.TestCase):
         for marker in (
             "Delivery Plane",
             "Observability Plane",
+            "ProDesk k3s `stream-v3-control`",
+            "ProDesk k3s `stream-v3-observer`",
             "stream_v3_prometheus_exporter.py",
             "stream_v3_health_snapshot.py",
             "stream_v3_monitoring_watchdog.py",
