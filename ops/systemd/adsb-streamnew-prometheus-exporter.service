@@ -5,13 +5,16 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-WorkingDirectory=/home/yuki/projects/stream_v3
-ExecStart=/usr/bin/python3 /home/yuki/projects/stream_v3/ops/scripts/stream_v3_prometheus_exporter.py --repo-root /home/yuki/projects/stream_v3 --state-root /home/yuki/projects/stream_v3/.state/observability-monitor --host 127.0.0.1 --port 9108 --cache-sec 60
+User=stream-v3
+EnvironmentFile=-/etc/default/stream-v3-observability-monitor
+Environment=STREAM_V3_REPO_DIR=/opt/stream_v3
+Environment=STREAM_RUNTIME_STATE_DIR=/var/lib/stream-v3/observability-monitor
+Environment=STREAM_V3_EXPORTER_HOST=127.0.0.1
+Environment=STREAM_V3_EXPORTER_PORT=9108
+Environment=STREAM_V3_EXPORTER_CACHE_SEC=60
+ExecStart=/bin/bash -lc 'cd "$${STREAM_V3_REPO_DIR}" && export PYTHONPATH="$${STREAM_V3_REPO_DIR}/src$${PYTHONPATH:+:$${PYTHONPATH}}" && exec /usr/bin/python3 "$${STREAM_V3_REPO_DIR}/ops/scripts/stream_v3_prometheus_exporter.py" --repo-root "$${STREAM_V3_REPO_DIR}" --state-root "$${STREAM_RUNTIME_STATE_DIR}" --host "$${STREAM_V3_EXPORTER_HOST}" --port "$${STREAM_V3_EXPORTER_PORT}" --cache-sec "$${STREAM_V3_EXPORTER_CACHE_SEC}"'
 Restart=always
 RestartSec=10
-User=yuki
-EnvironmentFile=-/home/yuki/projects/stream_v2/.state/env/stream-v3-observability-monitor.env
-Environment=PYTHONPATH=/home/yuki/projects/stream_v3/src
 
 [Install]
 WantedBy=multi-user.target

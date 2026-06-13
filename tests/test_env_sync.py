@@ -60,6 +60,10 @@ class EnvSyncTests(unittest.TestCase):
             with self.subTest(path=path.name):
                 self.assertNotIn("EnvironmentFile=/etc/default/adsb-streamnew", text)
                 self.assertNotIn("EnvironmentFile=-/etc/default/adsb-streamnew", text)
+                if path.name == "adsb-streamnew-prometheus-exporter.service":
+                    self.assertIn("EnvironmentFile=-/etc/default/stream-v3-observability-monitor", text)
+                    self.assertNotIn("/home/yuki/projects/stream_v2/.state/env/", text)
+                    continue
                 if "EnvironmentFile=" in text:
                     self.assertIn("/home/yuki/projects/stream_v2/.state/env/", text)
 

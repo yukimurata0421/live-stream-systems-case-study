@@ -1,0 +1,14 @@
+[Unit]
+Description=stream_v3 monitoring-plane self-check
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=stream-v3
+EnvironmentFile=-/etc/default/stream-v3-observability-monitor
+Environment=STREAM_V3_REPO_DIR=/opt/stream_v3
+Environment=STREAM_RUNTIME_STATE_DIR=/var/lib/stream-v3/observability-monitor
+Environment=STREAM_V3_MONITORING_EXPORTER_URL=http://127.0.0.1:9108/metrics
+Environment=STREAM_V3_MONITORING_REPAIR=0
+ExecStart=/bin/bash -lc 'cd "$${STREAM_V3_REPO_DIR}" && export PYTHONPATH="$${STREAM_V3_REPO_DIR}/src$${PYTHONPATH:+:$${PYTHONPATH}}" && exec /usr/bin/python3 "$${STREAM_V3_REPO_DIR}/ops/scripts/stream_v3_monitoring_watchdog.py" --state-root "$${STREAM_RUNTIME_STATE_DIR}"'

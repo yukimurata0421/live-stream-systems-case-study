@@ -27,6 +27,13 @@ def metric_value(payload: str, name: str, label_text: str = "") -> float:
 
 
 class StreamV3PrometheusExporterTests(unittest.TestCase):
+    def test_default_repo_root_is_derived_from_public_checkout(self) -> None:
+        exporter = load_exporter()
+
+        self.assertTrue(str(exporter.DEFAULT_REPO_ROOT).endswith("stream_v3"))
+        self.assertNotIn("/home/yuki/projects/stream_v3", str(exporter.DEFAULT_REPO_ROOT))
+        self.assertEqual(exporter.DEFAULT_STATE_ROOT, exporter.DEFAULT_REPO_ROOT / ".state" / "observability-monitor")
+
     def test_run_json_passes_v3_state_environment_to_cli(self) -> None:
         exporter = load_exporter()
         repo_root = Path("/tmp/stream-v3")
@@ -326,6 +333,95 @@ class StreamV3PrometheusExporterTests(unittest.TestCase):
         self.assertEqual(metric_value(payload, "stream_v3_runtime_memory_sample_available"), 1.0)
         self.assertEqual(metric_value(payload, "stream_v3_runtime_memory_current_mib", '{container="stream-engine",namespace="stream-v3",pod="stream-v3-runtime-abc123"}'), 3072.0)
         self.assertEqual(metric_value(payload, "stream_v3_runtime_memory_usage_ratio", '{container="stream-engine",namespace="stream-v3",pod="stream-v3-runtime-abc123"}'), 0.5)
+
+    def test_build_metrics_uses_snapshots_when_live_cli_collection_fails(self) -> None:
+        exporter = load_exporter()
+        with tempfile.TemporaryDirectory() as td:
+            state_root = Path(td)
+            (state_root / "health_summary_snapshot.json").write_text(
+                json.dumps(
+                    {
+                        "windows": [
+                            {
+                                "hours": 1,
+                                "observe": {"pass": True, "checks": {"current_fail": False}},
+                            }
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (state_root / "objective_sli_snapshot.json").write_text(json.dumps({"metrics": {}}), encoding="utf-8")
+
+            with (
+                mock.patch.object(exporter, "run_json", side_effect=RuntimeError("timeout")),
+                mock.patch.object(exporter, "host_memory_snapshot", return_value={}),
+                mock.patch.object(exporter, "runtime_memory_snapshot", return_value={"containers": []}),
+            ):
+                payload = exporter.build_metrics(repo_root=Path(td), state_root=state_root, timeout_sec=1)
+
+        self.assertEqual(metric_value(payload, "stream_v3_exporter_up"), 1.0)
+        self.assertEqual(metric_value(payload, "stream_v3_exporter_snapshot_fallback"), 1.0)
+        self.assertEqual(metric_value(payload, "stream_v3_exporter_health_summary_snapshot_used"), 1.0)
+        self.assertEqual(metric_value(payload, "stream_v3_health_pass", '{window_hours="1"}'), 1.0)
+
+    def test_cache_serves_last_good_payload_when_refresh_fails(self) -> None:
+        exporter = load_exporter()
+        cache = exporter.MetricsCache(repo_root=Path("/tmp/repo"), state_root=Path("/tmp/state"), ttl_sec=0, timeout_sec=1)
+        first_payload = "\n".join(
+            [
+                "# HELP stream_v3_exporter_up Exporter scrape success.",
+                "# TYPE stream_v3_exporter_up gauge",
+                "stream_v3_exporter_up 1.0",
+                "# HELP stream_v3_health_pass Health summary pass by window.",
+                "# TYPE stream_v3_health_pass gauge",
+                'stream_v3_health_pass{window_hours="1"} 1.0',
+            ]
+        ) + "\n"
+
+        with mock.patch.object(exporter, "build_metrics", side_effect=[first_payload, RuntimeError("refresh failed")]):
+            payload1, error1 = cache.get()
+            payload2, error2 = cache.get()
+
+        self.assertEqual(error1, "")
+        self.assertIn('stream_v3_health_pass{window_hours="1"} 1.0', payload1)
+        self.assertIn('stream_v3_health_pass{window_hours="1"} 1.0', payload2)
+        self.assertEqual(metric_value(payload2, "stream_v3_exporter_up"), 0.0)
+        self.assertEqual(metric_value(payload2, "stream_v3_exporter_last_good_payload"), 1.0)
+        self.assertIn("refresh failed", error2)
+
+    def test_build_metrics_exports_monitoring_watchdog_state(self) -> None:
+        exporter = load_exporter()
+        with tempfile.TemporaryDirectory() as td:
+            state_root = Path(td)
+            (state_root / "monitoring_watchdog_state.json").write_text(
+                json.dumps(
+                    {
+                        "ts_utc": "2099-01-01T00:00:00Z",
+                        "ok": True,
+                        "repair_enabled": False,
+                        "repair_attempted": False,
+                        "repair_count": 0,
+                        "checks": {
+                            "exporter_http": {"ok": True},
+                            "metrics_contract": {"ok": True},
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+            with (
+                mock.patch.object(exporter, "run_json", side_effect=[{"windows": []}, {"metrics": {}}]),
+                mock.patch.object(exporter, "time") as time_mock,
+                mock.patch.object(exporter, "host_memory_snapshot", return_value={}),
+                mock.patch.object(exporter, "runtime_memory_snapshot", return_value={"containers": []}),
+            ):
+                time_mock.time.return_value = 4070908860.0
+                payload = exporter.build_metrics(repo_root=Path(td), state_root=state_root, timeout_sec=1)
+
+        self.assertEqual(metric_value(payload, "stream_v3_monitoring_watchdog_ok"), 1.0)
+        self.assertEqual(metric_value(payload, "stream_v3_monitoring_watchdog_repair_enabled"), 0.0)
+        self.assertEqual(metric_value(payload, "stream_v3_monitoring_watchdog_check_ok", '{check="exporter_http"}'), 1.0)
 
 
 if __name__ == "__main__":

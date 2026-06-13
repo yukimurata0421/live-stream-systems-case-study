@@ -16,3 +16,19 @@ groups:
           severity: warning
         annotations:
           summary: stream_v3 observability monitor exporter is failing
+
+      - alert: StreamV3MonitoringWatchdogFailing
+        expr: stream_v3_monitoring_watchdog_ok{job="stream_v3_observability_monitor"} == 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: stream_v3 monitoring-plane self-check is failing
+
+      - alert: StreamV3ExporterSnapshotFallbackActive
+        expr: stream_v3_exporter_snapshot_fallback{job="stream_v3_observability_monitor"} == 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: stream_v3 exporter is serving snapshot fallback data

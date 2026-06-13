@@ -1,0 +1,11 @@
+[Unit]
+Description=stream_v3 observability health snapshot timer
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=1min
+AccuracySec=10s
+Unit=stream-v3-health-snapshot.service
+
+[Install]
+WantedBy=timers.target

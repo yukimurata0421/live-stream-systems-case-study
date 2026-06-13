@@ -15,8 +15,19 @@ from pathlib import Path
 from typing import Any
 
 
-DEFAULT_REPO_ROOT = Path("/home/yuki/projects/stream_v3")
-DEFAULT_STATE_ROOT = DEFAULT_REPO_ROOT / ".state" / "observability-monitor"
+def default_repo_root() -> Path:
+    return Path(os.environ.get("STREAM_V3_REPO_DIR", Path(__file__).resolve().parents[2])).expanduser()
+
+
+def default_state_root(repo_root: Path) -> Path:
+    configured = os.environ.get("STREAM_V3_OBSERVABILITY_STATE_ROOT") or os.environ.get("STREAM_RUNTIME_STATE_DIR")
+    return Path(configured).expanduser() if configured else repo_root / ".state" / "observability-monitor"
+
+
+DEFAULT_REPO_ROOT = default_repo_root()
+DEFAULT_STATE_ROOT = default_state_root(DEFAULT_REPO_ROOT)
+HEALTH_SUMMARY_SNAPSHOT = "health_summary_snapshot.json"
+OBJECTIVE_SLI_SNAPSHOT = "objective_sli_snapshot.json"
 
 
 def stream_cli(repo_root: Path) -> Path:
@@ -66,7 +77,7 @@ class MetricsCache:
             self._error = ""
         except Exception as exc:  # pragma: no cover - defensive service boundary
             self._error = f"{type(exc).__name__}: {exc}"
-            self._payload = build_error_metrics(self._error)
+            self._payload = mark_cached_payload_stale(self._payload, self._error) if self._payload else build_error_metrics(self._error)
         self._updated = now
         return self._payload, self._error
 
@@ -100,6 +111,35 @@ def read_json(path: Path) -> dict[str, Any]:
     except FileNotFoundError:
         return {}
     return value if isinstance(value, dict) else {}
+
+
+def snapshot_candidates(state_root: Path, name: str) -> list[Path]:
+    return [state_root / name, state_root / "snapshots" / name]
+
+
+def read_snapshot(state_root: Path, name: str) -> tuple[dict[str, Any], Path | None]:
+    for candidate in snapshot_candidates(state_root, name):
+        payload = read_json(candidate)
+        if payload:
+            return payload, candidate
+    return {}, None
+
+
+def run_json_with_snapshot(
+    repo_root: Path,
+    state_root: Path,
+    args: list[str],
+    *,
+    timeout_sec: float,
+    snapshot_name: str,
+) -> tuple[dict[str, Any], str, str]:
+    try:
+        return run_json(repo_root, state_root, args, timeout_sec=timeout_sec), "live", ""
+    except Exception as exc:
+        snapshot, path = read_snapshot(state_root, snapshot_name)
+        if snapshot:
+            return snapshot, f"snapshot:{path.name if path else snapshot_name}", f"{type(exc).__name__}: {exc}"
+        raise
 
 
 def count_pending_outbox(path: Path) -> int:
@@ -423,19 +463,46 @@ class MetricWriter:
         return "\n".join(self.lines) + "\n"
 
 
+def mark_cached_payload_stale(payload: str, error: str) -> str:
+    filtered: list[str] = []
+    stale_prefixes = (
+        "# HELP stream_v3_exporter_up ",
+        "# TYPE stream_v3_exporter_up ",
+        "stream_v3_exporter_up",
+        "# HELP stream_v3_exporter_error ",
+        "# TYPE stream_v3_exporter_error ",
+        "stream_v3_exporter_error",
+        "# HELP stream_v3_exporter_last_good_payload ",
+        "# TYPE stream_v3_exporter_last_good_payload ",
+        "stream_v3_exporter_last_good_payload",
+    )
+    for line in payload.splitlines():
+        if line.startswith(stale_prefixes):
+            continue
+        filtered.append(line)
+    writer = MetricWriter()
+    writer.metric("stream_v3_exporter_up", 0, help_text="Exporter scrape success.")
+    writer.metric("stream_v3_exporter_error", 1, labels={"error": error[:120]}, help_text="Exporter error flag.")
+    writer.metric("stream_v3_exporter_last_good_payload", 1, help_text="Exporter is serving a cached last-good payload.")
+    body = writer.lines + filtered
+    return "\n".join(body).rstrip() + "\n"
+
+
 def build_metrics(*, repo_root: Path, state_root: Path, timeout_sec: float) -> str:
     cli = stream_cli(repo_root)
-    health = run_json(
+    health, health_source, health_fallback_error = run_json_with_snapshot(
         repo_root,
         state_root,
         [str(cli), "health-summary", "--windows", "1,8,24", "--json"],
         timeout_sec=timeout_sec,
+        snapshot_name=HEALTH_SUMMARY_SNAPSHOT,
     )
-    objective = run_json(
+    objective, objective_source, objective_fallback_error = run_json_with_snapshot(
         repo_root,
         state_root,
         [str(cli), "objective-sli", "--json", "--no-record"],
         timeout_sec=timeout_sec,
+        snapshot_name=OBJECTIVE_SLI_SNAPSHOT,
     )
     subsystems = read_json(state_root / "subsystems_status.json")
     memory = read_json(state_root / "memory_status.json")
@@ -448,6 +515,7 @@ def build_metrics(*, repo_root: Path, state_root: Path, timeout_sec: float) -> s
     adsb_freshness = read_json(state_root / "watchdog" / "adsb_freshness_state.json")
     pulse_health = read_json(state_root / "watchdog" / "pulse_health_state.json")
     recovery_stage = read_json(state_root / "watchdog" / "recovery_stage_state.json")
+    monitoring_watchdog = read_json(state_root / "monitoring_watchdog_state.json")
     slo_snapshot = read_json(state_root / "slo_snapshot.json")
     now = time.time()
     host_memory = host_memory_snapshot()
@@ -457,6 +525,31 @@ def build_metrics(*, repo_root: Path, state_root: Path, timeout_sec: float) -> s
 
     writer = MetricWriter()
     writer.metric("stream_v3_exporter_up", 1, help_text="Exporter scrape success.")
+    writer.metric(
+        "stream_v3_exporter_health_summary_snapshot_used",
+        1 if health_source != "live" else 0,
+        help_text="Health summary was served from a stored snapshot.",
+    )
+    writer.metric(
+        "stream_v3_exporter_objective_sli_snapshot_used",
+        1 if objective_source != "live" else 0,
+        help_text="Objective SLI was served from a stored snapshot.",
+    )
+    writer.metric(
+        "stream_v3_exporter_snapshot_fallback",
+        1 if health_source != "live" or objective_source != "live" else 0,
+        help_text="At least one exporter input used a snapshot fallback.",
+    )
+    writer.metric(
+        "stream_v3_exporter_health_summary_fallback_error",
+        1 if health_fallback_error else 0,
+        help_text="Health summary live collection failed before snapshot fallback.",
+    )
+    writer.metric(
+        "stream_v3_exporter_objective_sli_fallback_error",
+        1 if objective_fallback_error else 0,
+        help_text="Objective SLI live collection failed before snapshot fallback.",
+    )
 
     for window in health.get("windows", []):
         if not isinstance(window, dict):
@@ -628,6 +721,18 @@ def build_metrics(*, repo_root: Path, state_root: Path, timeout_sec: float) -> s
     writer.metric("stream_v3_recovery_action_executable", recovery_plan.get("executable"), help_text="Recovery action executable flag.")
     writer.metric("stream_v3_recovery_action_blocked_count", len(recovery_plan.get("blocked_by") or []), help_text="Recovery action blocked-by count.")
     writer.metric("stream_v3_recovery_plan_age_seconds", age_seconds(recovery_plan.get("ts_utc"), now=now), help_text="Age of recovery action plan.")
+
+    monitoring_checks = monitoring_watchdog.get("checks") if isinstance(monitoring_watchdog.get("checks"), dict) else {}
+    writer.metric("stream_v3_monitoring_watchdog_ok", monitoring_watchdog.get("ok"), help_text="Monitoring-plane self-check ok flag.")
+    writer.metric("stream_v3_monitoring_watchdog_state_age_seconds", age_seconds(monitoring_watchdog.get("ts_utc"), now=now), help_text="Age of monitoring-plane self-check state.")
+    writer.metric("stream_v3_monitoring_watchdog_repair_enabled", monitoring_watchdog.get("repair_enabled"), help_text="Monitoring-plane self-repair enabled flag.")
+    writer.metric("stream_v3_monitoring_watchdog_repair_attempted", monitoring_watchdog.get("repair_attempted"), help_text="Monitoring-plane self-repair attempted flag.")
+    writer.metric("stream_v3_monitoring_watchdog_repair_count", monitoring_watchdog.get("repair_count"), help_text="Monitoring-plane self-repair attempt count.")
+    for check_name, check_payload in monitoring_checks.items():
+        if not isinstance(check_payload, dict):
+            continue
+        labels = {"check": check_name}
+        writer.metric("stream_v3_monitoring_watchdog_check_ok", check_payload.get("ok"), labels=labels, help_text="Monitoring-plane self-check result.")
     return writer.render()
 
 
@@ -671,8 +776,8 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=9108)
-    parser.add_argument("--repo-root", type=Path, default=DEFAULT_REPO_ROOT)
-    parser.add_argument("--state-root", type=Path, default=DEFAULT_STATE_ROOT)
+    parser.add_argument("--repo-root", type=Path, default=None)
+    parser.add_argument("--state-root", type=Path, default=None)
     parser.add_argument("--cache-sec", type=float, default=240.0)
     parser.add_argument("--timeout-sec", type=float, default=45.0)
     return parser.parse_args()
@@ -680,9 +785,11 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
+    repo_root = args.repo_root or DEFAULT_REPO_ROOT
+    state_root = args.state_root or default_state_root(repo_root)
     cache = MetricsCache(
-        repo_root=args.repo_root,
-        state_root=args.state_root,
+        repo_root=repo_root,
+        state_root=state_root,
         ttl_sec=args.cache_sec,
         timeout_sec=args.timeout_sec,
     )

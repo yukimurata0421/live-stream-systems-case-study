@@ -77,6 +77,13 @@ class StreamV3BootstrapTests(unittest.TestCase):
             "deploy/k3s/v3-control/deployment.yaml",
             "deploy/k3s/v3-observer/deployment.yaml",
             "deploy/k3s/v3-observer/service.yaml",
+            "ops/systemd/adsb-streamnew-prometheus-exporter.service",
+            "ops/systemd/stream-v3-health-snapshot.service",
+            "ops/systemd/stream-v3-health-snapshot.timer",
+            "ops/systemd/stream-v3-monitoring-watchdog.service",
+            "ops/systemd/stream-v3-monitoring-watchdog.timer",
+            "ops/systemd/stream-v3-observability-monitor.service",
+            "ops/systemd/stream-v3-observability-monitor.env.example",
             "ops/systemd/stream-v3-remote-recovery.env.example",
         ]
         for rel in required:
@@ -176,6 +183,29 @@ class StreamV3BootstrapTests(unittest.TestCase):
         self.assertIn("STREAM_V3_REMOTE_RECOVERY_ACTION_PLAN_FILE=", env_example)
         self.assertIn("STREAM_V3_REMOTE_RECOVERY_APPLY=0", env_example)
         self.assertIn("STREAM_V3_REMOTE_RECOVERY_APPLY_ACTION_PLAN=0", env_example)
+
+    def test_observability_units_use_generic_repo_dir_env_override(self) -> None:
+        legacy_repo_path = "/home/" + "yuki/projects/stream_v3"
+        for name in (
+            "adsb-streamnew-prometheus-exporter.service",
+            "stream-v3-observability-monitor.service",
+            "stream-v3-health-snapshot.service",
+            "stream-v3-monitoring-watchdog.service",
+        ):
+            unit = (ROOT / "ops" / "systemd" / name).read_text(encoding="utf-8")
+            with self.subTest(name=name):
+                self.assertIn("EnvironmentFile=-/etc/default/stream-v3-observability-monitor", unit)
+                self.assertIn("STREAM_V3_REPO_DIR=/opt/stream_v3", unit)
+                self.assertIn('"$${STREAM_V3_REPO_DIR}', unit)
+                self.assertNotIn(legacy_repo_path, unit)
+
+        env_example = (ROOT / "ops" / "systemd" / "stream-v3-observability-monitor.env.example").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("STREAM_V3_REPO_DIR=/opt/stream_v3", env_example)
+        self.assertIn("STREAM_RUNTIME_STATE_DIR=/var/lib/stream-v3/observability-monitor", env_example)
+        self.assertIn("STREAM_V3_MONITORING_REPAIR=0", env_example)
+        self.assertNotIn(legacy_repo_path, env_example)
 
     def test_wan_observer_units_use_repo_dir_env_override(self) -> None:
         legacy_repo_path = "/home/" + "yuki/projects/stream_v3"

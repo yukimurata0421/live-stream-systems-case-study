@@ -1,0 +1,11 @@
+[Unit]
+Description=stream_v3 monitoring-plane self-check timer
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=1min
+AccuracySec=10s
+Unit=stream-v3-monitoring-watchdog.service
+
+[Install]
+WantedBy=timers.target
