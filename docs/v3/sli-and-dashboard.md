@@ -75,3 +75,30 @@ report-only action. `current_classifier_replay` is shown separately from
 `production_without_shadow` so historical gaps remain visible while current
 classifier coverage can be reviewed. See
 [`fast-recovery-classifier-replay.md`](fast-recovery-classifier-replay.md).
+
+## Metric Contract Hygiene
+
+The exporter should not turn missing evidence into `0` or OK. ADS-B and audio
+dashboard panels read the subsystem snapshot first:
+
+```text
+stream_v3_adsb_evidence_age_seconds
+stream_v3_adsb_rendering_ok
+stream_v3_adsb_messages_moving
+stream_v3_audio_ok
+stream_v3_audio_fault_count
+```
+
+Legacy pulse, SLO, cgroup, and stream-watchdog detail files are emitted only
+when the underlying state field exists. A missing file means "not observed,"
+not "healthy."
+
+Window labels must describe the actual aggregation window. A 24-hour restart or
+TLS count must not be copied into `window_hours="1"` or `window_hours="8"`.
+Open-day YouTube API cost is a single PT-day gauge
+`stream_v3_youtube_api_open_day_units`; historical closed days remain labelled
+by `pt_day`.
+
+Runtime memory uses `stream_v3_runtime_memory_*` for delivery Pod alerting.
+Monitoring-host memory is exported with `stream_v3_monitor_host_*` names as
+diagnostic capacity evidence, not as the primary v3 runtime memory guard.

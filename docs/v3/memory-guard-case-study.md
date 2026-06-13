@@ -69,11 +69,14 @@ process breakdown, swap, PSI, and current delivery health.
 | Cgroup | `memory.current`, `memory.peak`, `memory.events` | prove current usage, peaks, and OOM events |
 | Host | MemAvailable, swap, PSI | distinguish host pressure from delivery Pod pressure |
 | Runtime | FFmpeg alive, RTMPS connected, capture/audio freshness | decide whether memory is correlated with product impact |
-| Prometheus | `stream_v3_runtime_memory_*`, `stream_v3_cgroup_*` | dashboard and alert evidence |
+| Prometheus | `stream_v3_runtime_memory_*`, `stream_v3_monitor_host_*`, optional `stream_v3_cgroup_*` | runtime alert evidence plus host/cgroup diagnostics |
 
 The observability model separates host memory from delivery Pod memory. The HP
 ProDesk observability host can be healthy while the Dell delivery Pod is under
 pressure, and the reverse can also be true.
+Host memory is not the primary v3 runtime alert. The exporter names host
+capacity as `stream_v3_monitor_host_*`, while `stream_v3_runtime_memory_*`
+tracks the delivery Pod.
 
 ## Public Implementation Hooks
 

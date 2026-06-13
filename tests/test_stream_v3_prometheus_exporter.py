@@ -26,6 +26,11 @@ def metric_value(payload: str, name: str, label_text: str = "") -> float:
     raise AssertionError(f"metric not found: {prefix}")
 
 
+def metric_present(payload: str, name: str, label_text: str = "") -> bool:
+    prefix = f"{name}{label_text} "
+    return any(line.startswith(prefix) for line in payload.splitlines())
+
+
 class StreamV3PrometheusExporterTests(unittest.TestCase):
     def test_default_repo_root_is_derived_from_public_checkout(self) -> None:
         exporter = load_exporter()
@@ -130,7 +135,8 @@ class StreamV3PrometheusExporterTests(unittest.TestCase):
         self.assertEqual(metric_value(payload, "stream_v3_health_pass", '{window_hours="1"}'), 1.0)
         self.assertEqual(metric_value(payload, "stream_v3_current_fail", '{window_hours="1"}'), 0.0)
         self.assertEqual(metric_value(payload, "stream_v3_network_ok"), 1.0)
-        self.assertEqual(metric_value(payload, "stream_v3_memory_current_ok"), 1.0)
+        self.assertEqual(metric_value(payload, "stream_v3_monitor_host_mem_available_mib"), 4096.0)
+        self.assertNotIn("stream_v3_memory_current_ok", payload)
         self.assertEqual(metric_value(payload, "stream_v3_upload_p95_mbps", '{window_hours="1"}'), 5.2)
         self.assertNotIn("stream_v2_health_pass", payload)
 
@@ -245,6 +251,54 @@ class StreamV3PrometheusExporterTests(unittest.TestCase):
         self.assertEqual(metric_value(payload, "stream_v3_upload_max_mbps", '{window_hours="1"}'), 3.2)
         self.assertEqual(metric_value(payload, "stream_v3_upload_over_budget_seconds", '{window_hours="1"}'), 0.0)
 
+    def test_windowed_event_metrics_do_not_relabel_24h_values_as_other_windows(self) -> None:
+        exporter = load_exporter()
+        health = {
+            "windows": [
+                {
+                    "hours": 1,
+                    "observe": {
+                        "ffmpeg_restart_incident_clusters_1h": 1,
+                        "rtmps_ssl_tls_count_1h": 2,
+                        "api_cost_reports": {"open_day_latest": {"units": 155}},
+                    },
+                },
+                {
+                    "hours": 8,
+                    "observe": {
+                        "ffmpeg_restart_incident_clusters_24h": 9,
+                        "rtmps_ssl_tls_count_24h": 10,
+                        "api_cost_reports": {"open_day_latest": {"units": 155}},
+                    },
+                },
+                {
+                    "hours": 24,
+                    "observe": {
+                        "ffmpeg_restart_incident_clusters_24h": 9,
+                        "rtmps_ssl_tls_count_24h": 10,
+                        "api_cost_reports": {"open_day_latest": {"units": 155}},
+                    },
+                },
+            ]
+        }
+        with tempfile.TemporaryDirectory() as td:
+            state_root = Path(td)
+            with (
+                mock.patch.object(exporter, "run_json", side_effect=[health, {"metrics": {}}]),
+                mock.patch.object(exporter, "host_memory_snapshot", return_value={}),
+                mock.patch.object(exporter, "runtime_memory_snapshot", return_value={"containers": []}),
+            ):
+                payload = exporter.build_metrics(repo_root=Path(td), state_root=state_root, timeout_sec=1)
+
+        self.assertEqual(metric_value(payload, "stream_v3_ffmpeg_restart_incident_clusters", '{window_hours="1"}'), 1.0)
+        self.assertEqual(metric_value(payload, "stream_v3_rtmps_ssl_tls_count", '{window_hours="1"}'), 2.0)
+        self.assertFalse(metric_present(payload, "stream_v3_ffmpeg_restart_incident_clusters", '{window_hours="8"}'))
+        self.assertFalse(metric_present(payload, "stream_v3_rtmps_ssl_tls_count", '{window_hours="8"}'))
+        self.assertEqual(metric_value(payload, "stream_v3_ffmpeg_restart_incident_clusters", '{window_hours="24"}'), 9.0)
+        self.assertEqual(metric_value(payload, "stream_v3_rtmps_ssl_tls_count", '{window_hours="24"}'), 10.0)
+        self.assertEqual(metric_value(payload, "stream_v3_youtube_api_open_day_units"), 155.0)
+        self.assertNotIn("stream_v3_api_open_day_units", payload)
+
     def test_runtime_memory_metrics_target_stream_v3_runtime_pod(self) -> None:
         exporter = load_exporter()
         deployment_json = {
@@ -333,6 +387,67 @@ class StreamV3PrometheusExporterTests(unittest.TestCase):
         self.assertEqual(metric_value(payload, "stream_v3_runtime_memory_sample_available"), 1.0)
         self.assertEqual(metric_value(payload, "stream_v3_runtime_memory_current_mib", '{container="stream-engine",namespace="stream-v3",pod="stream-v3-runtime-abc123"}'), 3072.0)
         self.assertEqual(metric_value(payload, "stream_v3_runtime_memory_usage_ratio", '{container="stream-engine",namespace="stream-v3",pod="stream-v3-runtime-abc123"}'), 0.5)
+        self.assertNotIn("stream_v3_memory_current_ok", payload)
+
+    def test_missing_optional_state_files_do_not_emit_false_ok_metrics(self) -> None:
+        exporter = load_exporter()
+        with tempfile.TemporaryDirectory() as td:
+            state_root = Path(td)
+            with (
+                mock.patch.object(exporter, "run_json", side_effect=[{"windows": []}, {"metrics": {}}]),
+                mock.patch.object(exporter, "host_memory_snapshot", return_value={}),
+                mock.patch.object(exporter, "runtime_memory_snapshot", return_value={"containers": []}),
+            ):
+                payload = exporter.build_metrics(repo_root=Path(td), state_root=state_root, timeout_sec=1)
+
+        self.assertNotIn("stream_v3_adsb_messages_last_change_age_seconds", payload)
+        self.assertNotIn("stream_v3_adsb_evidence_age_seconds", payload)
+        self.assertNotIn("stream_v3_audio_dj_missing_count", payload)
+        self.assertNotIn("stream_v3_audio_fault_count", payload)
+        self.assertNotIn("stream_v3_slo_pulse_unavailable_count", payload)
+        self.assertNotIn("stream_v3_stream_watchdog_ffmpeg_count", payload)
+        self.assertNotIn("stream_v3_stream_watchdog_runtime_snapshot_age_seconds", payload)
+        self.assertNotIn("stream_v3_resource_memory_age_seconds", payload)
+        self.assertNotIn("stream_v3_recovery_action_blocked_count", payload)
+
+    def test_adsb_and_audio_metrics_come_from_subsystems_status(self) -> None:
+        exporter = load_exporter()
+        with tempfile.TemporaryDirectory() as td:
+            state_root = Path(td)
+            (state_root / "subsystems_status.json").write_text(
+                json.dumps(
+                    {
+                        "overall": {"state": "healthy", "stream_public_state": "same_url_live"},
+                        "rendering": {
+                            "state": "healthy",
+                            "evidence_age_sec": 85.0,
+                            "aircraft_messages_moving": True,
+                            "aircraft_positions_moving": False,
+                        },
+                        "music": {
+                            "state": "healthy",
+                            "evidence_age_sec": 12.5,
+                            "audio_fail_count": 0,
+                            "pulse_source_missing_count": 0,
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+            with (
+                mock.patch.object(exporter, "run_json", side_effect=[{"windows": []}, {"metrics": {}}]),
+                mock.patch.object(exporter, "host_memory_snapshot", return_value={}),
+                mock.patch.object(exporter, "runtime_memory_snapshot", return_value={"containers": []}),
+            ):
+                payload = exporter.build_metrics(repo_root=Path(td), state_root=state_root, timeout_sec=1)
+
+        self.assertEqual(metric_value(payload, "stream_v3_adsb_evidence_age_seconds"), 85.0)
+        self.assertEqual(metric_value(payload, "stream_v3_adsb_rendering_ok"), 1.0)
+        self.assertEqual(metric_value(payload, "stream_v3_adsb_messages_moving"), 1.0)
+        self.assertEqual(metric_value(payload, "stream_v3_adsb_positions_moving"), 0.0)
+        self.assertEqual(metric_value(payload, "stream_v3_audio_evidence_age_seconds"), 12.5)
+        self.assertEqual(metric_value(payload, "stream_v3_audio_ok"), 1.0)
+        self.assertEqual(metric_value(payload, "stream_v3_audio_fault_count"), 0.0)
 
     def test_build_metrics_uses_snapshots_when_live_cli_collection_fails(self) -> None:
         exporter = load_exporter()

@@ -80,6 +80,11 @@ quota-exceeded events
 ```
 
 This prevents an operator from mistaking projection for actual PT-day usage.
+At the start of a new PT quota day, the open-day report may be in warmup because
+there is not yet a stable cost window or first telemetry sample. That state can
+gate expensive YouTube operations, but it is not the same as quota exhaustion
+and should not be treated as delivery degradation while public/live evidence is
+healthy.
 
 ## Mutation Gate
 

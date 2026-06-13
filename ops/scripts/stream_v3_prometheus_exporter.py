@@ -195,6 +195,10 @@ def bool_metric(value: Any) -> float:
     return 1.0 if bool(value) else 0.0
 
 
+def dict_value(payload: dict[str, Any], key: str) -> Any:
+    return payload.get(key) if key in payload else None
+
+
 def parse_ts(value: Any) -> float | None:
     if value in (None, ""):
         return None
@@ -431,6 +435,48 @@ def age_seconds(value: Any, *, now: float) -> float:
     return max(0.0, now - ts)
 
 
+def windowed_observe_value(observe: dict[str, Any], base_name: str, hours: Any) -> Any:
+    key = f"{base_name}_{hours}h"
+    return observe.get(key) if key in observe else None
+
+
+def open_day_latest_units(health: dict[str, Any]) -> Any:
+    for window in health.get("windows", []):
+        if not isinstance(window, dict):
+            continue
+        observe = window.get("observe") if isinstance(window.get("observe"), dict) else {}
+        reports = observe.get("api_cost_reports") if isinstance(observe.get("api_cost_reports"), dict) else {}
+        latest = reports.get("open_day_latest") if isinstance(reports.get("open_day_latest"), dict) else {}
+        if "units" in latest:
+            return latest.get("units")
+    return None
+
+
+def audio_fault_count(music: dict[str, Any]) -> Any:
+    if not music:
+        return None
+    count = 0
+    observed = False
+    for key in ("audio_fail_count", "pulse_source_missing_count"):
+        if key in music:
+            count += int(as_float(music.get(key)))
+            observed = True
+    evidence = music.get("evidence") if isinstance(music.get("evidence"), list) else []
+    uncounted_faults = {
+        "audio_energy_low",
+        "audio_energy_low_transition_grace",
+        "pulse_source_missing",
+        "pulse_route_anomaly",
+    }
+    if not observed and any(str(item) in uncounted_faults for item in evidence):
+        count = 1
+        observed = True
+    if not observed and str(music.get("state", "")).lower() in {"failed", "degraded", "recovering"}:
+        count = 1
+        observed = True
+    return count if observed or str(music.get("state", "")).lower() == "healthy" else None
+
+
 def label_value(value: Any) -> str:
     return str(value).replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n")
 
@@ -448,7 +494,10 @@ class MetricWriter:
         labels: dict[str, Any] | None = None,
         help_text: str = "",
         metric_type: str = "gauge",
+        skip_none: bool = False,
     ) -> None:
+        if skip_none and value is None:
+            return
         label_text = ""
         if labels:
             pairs = [f'{key}="{label_value(val)}"' for key, val in sorted(labels.items())]
@@ -505,15 +554,12 @@ def build_metrics(*, repo_root: Path, state_root: Path, timeout_sec: float) -> s
         snapshot_name=OBJECTIVE_SLI_SNAPSHOT,
     )
     subsystems = read_json(state_root / "subsystems_status.json")
-    memory = read_json(state_root / "memory_status.json")
     youtube_watchdog = read_json(state_root / "youtube_watchdog_stats.json")
     stream_watchdog = read_json(state_root / "stream_watchdog_stats.json")
     network = read_json(state_root / "network_observer_latest.json")
     resource_memory = read_json(state_root / "resource_memory.json")
     recovery_plan = read_json(state_root / "recovery_action_plan.json")
     notify_state = read_json(state_root / "stream_notify_state.json")
-    adsb_freshness = read_json(state_root / "watchdog" / "adsb_freshness_state.json")
-    pulse_health = read_json(state_root / "watchdog" / "pulse_health_state.json")
     recovery_stage = read_json(state_root / "watchdog" / "recovery_stage_state.json")
     monitoring_watchdog = read_json(state_root / "monitoring_watchdog_state.json")
     slo_snapshot = read_json(state_root / "slo_snapshot.json")
@@ -562,8 +608,20 @@ def build_metrics(*, repo_root: Path, state_root: Path, timeout_sec: float) -> s
         writer.metric("stream_v3_historical_degraded", checks.get("historical_degraded"), labels=labels, help_text="Historical degraded flag by window.")
         writer.metric("stream_v3_youtube_warn_count", checks.get("youtube_warn_count"), labels=labels, help_text="YouTube warning count by window.")
         writer.metric("stream_v3_fast_recovery_restart_count", observe.get("fast_recovery_restart_count"), labels=labels, help_text="Fast recovery restart count by window.")
-        writer.metric("stream_v3_ffmpeg_restart_incident_clusters", observe.get("ffmpeg_restart_incident_clusters_24h"), labels=labels, help_text="FFmpeg restart incident cluster count.")
-        writer.metric("stream_v3_rtmps_ssl_tls_count", observe.get("rtmps_ssl_tls_count_24h"), labels=labels, help_text="RTMPS SSL/TLS event count.")
+        writer.metric(
+            "stream_v3_ffmpeg_restart_incident_clusters",
+            windowed_observe_value(observe, "ffmpeg_restart_incident_clusters", window.get("hours")),
+            labels=labels,
+            help_text="FFmpeg restart incident cluster count for the labelled window.",
+            skip_none=True,
+        )
+        writer.metric(
+            "stream_v3_rtmps_ssl_tls_count",
+            windowed_observe_value(observe, "rtmps_ssl_tls_count", window.get("hours")),
+            labels=labels,
+            help_text="RTMPS SSL/TLS event count for the labelled window.",
+            skip_none=True,
+        )
         fallback = upload_fallback.get(str(window.get("hours", "")), {})
         p95 = observe.get("ffmpeg_tcp_send_mbps_24h_p95")
         max_mbps = observe.get("ffmpeg_tcp_send_mbps_24h_max")
@@ -573,7 +631,13 @@ def build_metrics(*, repo_root: Path, state_root: Path, timeout_sec: float) -> s
         writer.metric("stream_v3_upload_max_mbps", fallback.get("max") if fallback_has_samples else max_mbps, labels=labels, help_text="FFmpeg TCP send max Mbps.")
         writer.metric("stream_v3_upload_over_budget_seconds", fallback.get("over_budget_sec") if fallback_has_samples else over_budget, labels=labels, help_text="Seconds above upload budget.")
         writer.metric("stream_v3_fast_mode_active", observe.get("fast_mode_current_active"), labels=labels, help_text="Fast mode active flag.")
-        writer.metric("stream_v3_api_open_day_units", (((observe.get("api_cost_reports") or {}).get("open_day_latest") or {}).get("units")), labels=labels, help_text="YouTube API units for current PT day.")
+
+    writer.metric(
+        "stream_v3_youtube_api_open_day_units",
+        open_day_latest_units(health),
+        help_text="YouTube API units for the current open PT day.",
+        skip_none=True,
+    )
 
     metrics = objective.get("metrics") if isinstance(objective.get("metrics"), dict) else {}
     upload = metrics.get("upload_budget") if isinstance(metrics.get("upload_budget"), dict) else {}
@@ -592,22 +656,17 @@ def build_metrics(*, repo_root: Path, state_root: Path, timeout_sec: float) -> s
     for window_name in ("rolling_1h", "rolling_8h", "rolling_24h"):
         payload = memory_pressure.get(window_name) if isinstance(memory_pressure.get(window_name), dict) else {}
         labels = {"window": window_name}
-        writer.metric("stream_v3_memory_warn_count", payload.get("warn_count"), labels=labels, help_text="Memory guardrail warn count.")
-        writer.metric("stream_v3_memory_critical_count", payload.get("critical_count"), labels=labels, help_text="Memory guardrail critical count.")
-        writer.metric("stream_v3_memory_non_reclaimable_p95_mib", payload.get("host_non_reclaimable_estimate_mib_p95"), labels=labels, help_text="Host non-reclaimable memory p95 MiB.")
-        writer.metric("stream_v3_memory_available_min_mib", payload.get("host_mem_available_mib_min"), labels=labels, help_text="Host MemAvailable minimum MiB.")
+        writer.metric("stream_v3_monitor_host_memory_warn_count", payload.get("warn_count"), labels=labels, help_text="Monitoring host memory guardrail warn count.", skip_none=True)
+        writer.metric("stream_v3_monitor_host_memory_critical_count", payload.get("critical_count"), labels=labels, help_text="Monitoring host memory guardrail critical count.", skip_none=True)
+        writer.metric("stream_v3_monitor_host_memory_non_reclaimable_p95_mib", payload.get("host_non_reclaimable_estimate_mib_p95"), labels=labels, help_text="Monitoring host non-reclaimable memory p95 MiB.", skip_none=True)
+        writer.metric("stream_v3_monitor_host_memory_available_min_mib", payload.get("host_mem_available_mib_min"), labels=labels, help_text="Monitoring host MemAvailable minimum MiB.", skip_none=True)
 
     overall = subsystems.get("overall") if isinstance(subsystems.get("overall"), dict) else {}
     writer.metric("stream_v3_subsystems_healthy", 1 if overall.get("state") == "healthy" else 0, help_text="Subsystem overall healthy flag.")
     writer.metric("stream_v3_same_url_live", 1 if overall.get("stream_public_state") == "same_url_live" else 0, help_text="Same URL live flag.")
     writer.metric("stream_v3_subsystems_degraded_count", len(overall.get("degraded_subsystems") or []), help_text="Degraded subsystem count.")
 
-    latest_memory_overall = memory.get("overall") if isinstance(memory.get("overall"), dict) else {}
-    memory_current_ok = latest_memory_overall.get("severity") == "ok"
-    if not latest_memory_overall and host_memory:
-        memory_current_ok = as_float(host_memory.get("mem_available_ratio")) >= 0.10
     writer.metric("stream_v3_notify_pending", count_pending_outbox(state_root / "stream_notify_outbox.jsonl"), help_text="Pending notification messages.")
-    writer.metric("stream_v3_memory_current_ok", 1 if memory_current_ok else 0, help_text="Latest memory severity ok flag.")
     writer.metric("stream_v3_maintenance_active", notify_state.get("maintenance_active"), help_text="Maintenance mode active flag.")
     writer.metric("stream_v3_notify_active_incidents", len(notify_state.get("active") or {}), help_text="Active notification incidents.")
     writer.metric("stream_v3_runtime_memory_current_ok", 1 if runtime_memory.get("current_ok") else 0, help_text="stream-v3-runtime Pod memory guardrail ok flag.")
@@ -647,8 +706,8 @@ def build_metrics(*, repo_root: Path, state_root: Path, timeout_sec: float) -> s
     writer.metric("stream_v3_youtube_stats_age_seconds", age_seconds(youtube_watchdog.get("stats_file_updated_at_utc") or youtube_watchdog.get("ts_utc"), now=now), help_text="Age of YouTube watchdog stats.")
 
     writer.metric("stream_v3_stream_watchdog_ok", 1 if stream_watchdog.get("status") == "ok" else 0, help_text="Local stream watchdog ok flag.")
-    writer.metric("stream_v3_stream_watchdog_ffmpeg_count", stream_watchdog.get("ffmpeg_count"), help_text="Local stream watchdog ffmpeg process count.")
-    writer.metric("stream_v3_stream_watchdog_runtime_snapshot_age_seconds", stream_watchdog.get("runtime_snapshot_age_sec"), help_text="Runtime snapshot age seconds.")
+    writer.metric("stream_v3_stream_watchdog_ffmpeg_count", dict_value(stream_watchdog, "ffmpeg_count"), help_text="Local stream watchdog ffmpeg process count.", skip_none=True)
+    writer.metric("stream_v3_stream_watchdog_runtime_snapshot_age_seconds", dict_value(stream_watchdog, "runtime_snapshot_age_sec"), help_text="Runtime snapshot age seconds.", skip_none=True)
     writer.metric("stream_v3_stream_watchdog_stats_age_seconds", age_seconds(stream_watchdog.get("ts_utc"), now=now), help_text="Age of local stream watchdog stats.")
 
     route = network.get("route") if isinstance(network.get("route"), dict) else {}
@@ -690,36 +749,44 @@ def build_metrics(*, repo_root: Path, state_root: Path, timeout_sec: float) -> s
     mem_pressure = resource_memory.get("memory_pressure") if isinstance(resource_memory.get("memory_pressure"), dict) else {}
     vm_activity = resource_memory.get("vm_activity") if isinstance(resource_memory.get("vm_activity"), dict) else {}
     cgroups = resource_memory.get("cgroups") if isinstance(resource_memory.get("cgroups"), dict) else {}
-    writer.metric("stream_v3_host_mem_available_mib", host_mem.get("mem_available_mb"), help_text="Host MemAvailable MiB.")
-    writer.metric("stream_v3_host_mem_available_ratio", host_mem.get("mem_available_ratio"), help_text="Host MemAvailable ratio.")
-    writer.metric("stream_v3_host_swap_used_mib", host_mem.get("swap_used_mb"), help_text="Host swap used MiB.")
-    writer.metric("stream_v3_host_swap_used_ratio", host_mem.get("swap_used_ratio"), help_text="Host swap used ratio.")
-    writer.metric("stream_v3_host_memory_pressure_some_avg10", mem_pressure.get("some_avg10"), help_text="Host memory PSI some avg10.")
-    writer.metric("stream_v3_host_memory_pressure_full_avg10", mem_pressure.get("full_avg10"), help_text="Host memory PSI full avg10.")
-    writer.metric("stream_v3_host_pgmajfault_delta_per_min", vm_activity.get("pgmajfault_delta_per_min"), help_text="Major page faults per minute.")
-    writer.metric("stream_v3_host_pswpin_delta_per_min", vm_activity.get("pswpin_delta_per_min"), help_text="Swap-in pages per minute.")
-    writer.metric("stream_v3_resource_memory_age_seconds", age_seconds(resource_memory.get("ts_utc"), now=now), help_text="Age of resource memory sample.")
+    writer.metric("stream_v3_monitor_host_mem_available_mib", host_mem.get("mem_available_mb"), help_text="Monitoring host MemAvailable MiB.", skip_none=True)
+    writer.metric("stream_v3_monitor_host_mem_available_ratio", host_mem.get("mem_available_ratio"), help_text="Monitoring host MemAvailable ratio.", skip_none=True)
+    writer.metric("stream_v3_monitor_host_swap_used_mib", host_mem.get("swap_used_mb"), help_text="Monitoring host swap used MiB.", skip_none=True)
+    writer.metric("stream_v3_monitor_host_swap_used_ratio", host_mem.get("swap_used_ratio"), help_text="Monitoring host swap used ratio.", skip_none=True)
+    writer.metric("stream_v3_monitor_host_memory_pressure_some_avg10", mem_pressure.get("some_avg10"), help_text="Monitoring host memory PSI some avg10.", skip_none=True)
+    writer.metric("stream_v3_monitor_host_memory_pressure_full_avg10", mem_pressure.get("full_avg10"), help_text="Monitoring host memory PSI full avg10.", skip_none=True)
+    writer.metric("stream_v3_monitor_host_pgmajfault_delta_per_min", vm_activity.get("pgmajfault_delta_per_min"), help_text="Monitoring host major page faults per minute.", skip_none=True)
+    writer.metric("stream_v3_monitor_host_pswpin_delta_per_min", vm_activity.get("pswpin_delta_per_min"), help_text="Monitoring host swap-in pages per minute.", skip_none=True)
+    resource_memory_age = age_seconds(resource_memory.get("ts_utc"), now=now) if resource_memory.get("ts_utc") else None
+    writer.metric("stream_v3_resource_memory_age_seconds", resource_memory_age, help_text="Age of resource memory sample.", skip_none=True)
     for unit, payload in cgroups.items():
         if not isinstance(payload, dict):
             continue
         labels = {"unit": unit}
-        writer.metric("stream_v3_cgroup_memory_current_mib", payload.get("memory_current_mb"), labels=labels, help_text="Cgroup current memory MiB.")
-        writer.metric("stream_v3_cgroup_memory_peak_mib", payload.get("memory_peak_mb"), labels=labels, help_text="Cgroup peak memory MiB.")
-        writer.metric("stream_v3_cgroup_swap_current_mib", payload.get("memory_swap_current_mb"), labels=labels, help_text="Cgroup current swap MiB.")
+        writer.metric("stream_v3_cgroup_memory_current_mib", dict_value(payload, "memory_current_mb"), labels=labels, help_text="Cgroup current memory MiB.", skip_none=True)
+        writer.metric("stream_v3_cgroup_memory_peak_mib", dict_value(payload, "memory_peak_mb"), labels=labels, help_text="Cgroup peak memory MiB.", skip_none=True)
+        writer.metric("stream_v3_cgroup_swap_current_mib", dict_value(payload, "memory_swap_current_mb"), labels=labels, help_text="Cgroup current swap MiB.", skip_none=True)
 
-    writer.metric("stream_v3_adsb_messages_last_change_age_seconds", age_seconds(adsb_freshness.get("last_change_ts"), now=now), help_text="Age since ADS-B message count last changed.")
-    writer.metric("stream_v3_audio_dj_missing_count", pulse_health.get("dj_missing_count"), help_text="Auto DJ pulse missing count.")
-    writer.metric("stream_v3_audio_capture_missing_count", pulse_health.get("capture_missing_count"), help_text="Capture pulse missing count.")
-    writer.metric("stream_v3_audio_dj_latency_high_count", pulse_health.get("dj_latency_high_count"), help_text="Auto DJ pulse high-latency count.")
-    writer.metric("stream_v3_audio_capture_latency_high_count", pulse_health.get("capture_latency_high_count"), help_text="Capture pulse high-latency count.")
-    writer.metric("stream_v3_audio_stage", recovery_stage.get("audio_stage"), help_text="Audio recovery stage.")
-    writer.metric("stream_v3_pulse_stage", recovery_stage.get("pulse_stage"), help_text="Pulse recovery stage.")
-    writer.metric("stream_v3_slo_pulse_unavailable_count", slo_snapshot.get("pulse_unavailable_count"), help_text="Pulse unavailable count in SLO window.")
-    writer.metric("stream_v3_slo_restart_trigger_count", slo_snapshot.get("restart_trigger_count"), help_text="Restart trigger count in SLO window.")
+    rendering = subsystems.get("rendering") if isinstance(subsystems.get("rendering"), dict) else {}
+    writer.metric("stream_v3_adsb_evidence_age_seconds", dict_value(rendering, "evidence_age_sec"), help_text="Age of ADS-B/rendering subsystem evidence.", skip_none=True)
+    writer.metric("stream_v3_adsb_rendering_ok", 1 if rendering.get("state") == "healthy" else 0, help_text="Rendering subsystem reports ADS-B source and visual evidence healthy.", skip_none=not bool(rendering))
+    writer.metric("stream_v3_adsb_messages_moving", dict_value(rendering, "aircraft_messages_moving"), help_text="ADS-B aircraft message count is moving.", skip_none=True)
+    writer.metric("stream_v3_adsb_positions_moving", dict_value(rendering, "aircraft_positions_moving"), help_text="ADS-B aircraft positions are moving.", skip_none=True)
 
-    writer.metric("stream_v3_recovery_action_pending", 1 if recovery_plan.get("action") not in ("", "none", None) else 0, help_text="Recovery orchestrator has a non-noop action.")
-    writer.metric("stream_v3_recovery_action_executable", recovery_plan.get("executable"), help_text="Recovery action executable flag.")
-    writer.metric("stream_v3_recovery_action_blocked_count", len(recovery_plan.get("blocked_by") or []), help_text="Recovery action blocked-by count.")
+    music = subsystems.get("music") if isinstance(subsystems.get("music"), dict) else {}
+    writer.metric("stream_v3_audio_evidence_age_seconds", dict_value(music, "evidence_age_sec"), help_text="Age of music/audio subsystem evidence.", skip_none=True)
+    writer.metric("stream_v3_audio_ok", 1 if music.get("state") == "healthy" else 0, help_text="Music/audio subsystem healthy flag.", skip_none=not bool(music))
+    writer.metric("stream_v3_audio_fault_count", audio_fault_count(music), help_text="Audio fault count derived from subsystem evidence.", skip_none=True)
+    writer.metric("stream_v3_audio_stage", dict_value(recovery_stage, "audio_stage"), help_text="Audio recovery stage.", skip_none=True)
+    writer.metric("stream_v3_pulse_stage", dict_value(recovery_stage, "pulse_stage"), help_text="Pulse recovery stage.", skip_none=True)
+    writer.metric("stream_v3_slo_pulse_unavailable_count", dict_value(slo_snapshot, "pulse_unavailable_count"), help_text="Pulse unavailable count in SLO window.", skip_none=True)
+    writer.metric("stream_v3_slo_restart_trigger_count", dict_value(slo_snapshot, "restart_trigger_count"), help_text="Restart trigger count in SLO window.", skip_none=True)
+
+    recovery_pending = recovery_plan.get("action") not in ("", "none", None)
+    writer.metric("stream_v3_recovery_action_pending", 1 if recovery_pending else 0, help_text="Recovery orchestrator has a non-noop action.")
+    if recovery_pending:
+        writer.metric("stream_v3_recovery_action_executable", recovery_plan.get("executable"), help_text="Recovery action executable flag.")
+        writer.metric("stream_v3_recovery_action_blocked_count", len(recovery_plan.get("blocked_by") or []), help_text="Recovery action blocked-by count.")
     writer.metric("stream_v3_recovery_plan_age_seconds", age_seconds(recovery_plan.get("ts_utc"), now=now), help_text="Age of recovery action plan.")
 
     monitoring_checks = monitoring_watchdog.get("checks") if isinstance(monitoring_watchdog.get("checks"), dict) else {}

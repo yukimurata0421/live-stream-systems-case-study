@@ -95,6 +95,59 @@ If `stream_v3_exporter_snapshot_fallback == 1`, dashboard data may still be
 useful, but it is no longer a fresh live computation. Snapshot age must be read
 before using the value for incident judgment.
 
+## Quota-Day Boundary Warmup
+
+YouTube API quota accounting resets on Pacific Time, while the operator may be
+reading the dashboard from a different local timezone. Immediately after the
+quota-day boundary, an open-day cost report can have too little elapsed time to
+form a stable burn-rate window, or it may still be waiting for the first
+in-window telemetry record.
+
+That condition is observability warmup, not quota exhaustion and not delivery
+failure. The expected classification is:
+
+```text
+open-day cost report has no stable window
+delivery runtime and public/live evidence remain healthy
+expensive or destructive YouTube API operations stay gated
+public subsystem health does not burn delivery error budget
+```
+
+The important split is between "API evidence is not yet usable for cost
+projection" and "the stream is unhealthy." A fail-closed quota guard can still
+be useful for blocking risky YouTube mutations, but it should not by itself
+promote the monitoring subsystem into a public degraded count when raw delivery
+evidence is fresh and healthy.
+
+For public reporting, this case should be summarized as a guardrail warmup or
+monitoring-plane correction. Avoid publishing raw notification timelines,
+machine-local paths, hostnames, or private runbook commands. The useful review
+signal is the boundary: telemetry freshness can restrict control-plane actions
+without claiming viewer-facing impact.
+
+## Metric Inventory Cleanup
+
+Dashboard cleanup follows the same rule: a missing state file is not a healthy
+sample. The exporter should avoid `missing => 0` for optional ADS-B freshness,
+audio route, SLO, cgroup, or stream-watchdog detail files. It either emits a
+metric from fresher subsystem evidence or omits the series until evidence
+exists.
+
+The public-safe contract is:
+
+```text
+ADS-B source health comes from rendering subsystem evidence
+audio health comes from music subsystem evidence
+runtime memory comes from stream-v3-runtime Pod metrics
+monitoring-host memory is diagnostic capacity evidence
+open-day API usage is a single PT-day gauge
+window labels reflect real aggregation windows only
+recovery blocked/executable counts matter only when an action is pending
+```
+
+This keeps panels from showing false OK states such as "ADS-B age is zero" or
+"audio faults are zero" when the actual issue is absent telemetry.
+
 ## Runbook
 
 When public or private dashboards show missing data:

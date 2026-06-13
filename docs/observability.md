@@ -37,9 +37,12 @@ The v3 exporter focuses on runtime and decision evidence:
 - `stream_v3_upload_p95_mbps`
 - `stream_v3_network_ffmpeg_socket_lastsnd_ms`
 - `stream_v3_network_ffmpeg_socket_notsent_bytes`
-- `stream_v3_audio_dj_missing_count`
+- `stream_v3_adsb_evidence_age_seconds`
+- `stream_v3_audio_ok`
+- `stream_v3_audio_fault_count`
 - `stream_v3_runtime_memory_current_mib`
 - `stream_v3_runtime_memory_usage_ratio`
+- `stream_v3_monitor_host_mem_available_ratio`
 - `stream_v3_recovery_action_pending`
 - `stream_v3_recovery_action_executable`
 
@@ -52,6 +55,9 @@ the raw series and source labels, not proof that the delivery plane is down.
 Exporter mappings are treated as contracts. If a health summary JSON shape
 changes, the exporter and dashboard tests must verify the exact path being read;
 otherwise a panel can show a convincing but false `PASS` or `FAIL`.
+Missing optional state is not exported as `0`. For example, absent ADS-B,
+audio, SLO, cgroup, or stream-watchdog detail files should remove the metric
+series or fall back to subsystem evidence; they must not create a false OK.
 
 ## Dashboards
 
