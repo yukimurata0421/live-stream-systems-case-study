@@ -58,11 +58,13 @@ Look for:
 Read:
 
 1. `docs/v3/sli-and-dashboard.md`
-2. `docs/v3/tcp-stall-case-study.md`
-3. `docs/v3/scoped-recovery-authority.md`
-4. `docs/v3/fast-recovery-classifier-replay.md`
-5. `docs/v3/single-node-dr-case-study.md`
-6. `docs/28-day-same-url-sli-case-study.md`
+2. `docs/v3/rolling-sli-error-budget-feedback.md`
+3. `docs/v3/tcp-stall-case-study.md`
+4. `docs/v3/tcp-stall-resolution-depth.md`
+5. `docs/v3/scoped-recovery-authority.md`
+6. `docs/v3/fast-recovery-classifier-replay.md`
+7. `docs/v3/single-node-dr-case-study.md`
+8. `docs/28-day-same-url-sli-case-study.md`
 
 Look for:
 
@@ -70,6 +72,9 @@ Look for:
 - fault-layer classification across RTMPS, TCP, WAN/session, YouTube lifecycle,
   upload budget, and runtime memory signals;
 - MTTR and incident clustering kept separate from raw restart attempts;
+- rolling SLI feedback separated from 14-day and 28-day reliability claims;
+- same-URL metric-zero samples challenged against raw identity and replacement
+  evidence before budget burn is claimed;
 - report-only observers separated from mutating recovery authority;
 - recovery actions blocked by stale, ambiguous, or upload-only evidence;
 - known unknowns left visible instead of converted into broad uptime claims.
@@ -149,9 +154,14 @@ do not need to read every file.
   shadow mode.
 - Whether the SLI story includes measured windows, denominators, and explicit
   unknowns instead of only conceptual dashboard language.
+- Whether rolling dashboard feedback, long-window SLI claims, and production
+  invariants stay separate.
 - Whether recurring transport symptoms are split by falsifiable evidence:
   delivery TCP state, WAN identity, non-YouTube anchors, YouTube lifecycle, and
   same-URL recovery safety.
+- Whether the TCP stall analysis keeps observer code public while excluding raw
+  runtime evidence such as exact IP values, CPE logs, packet metadata, and
+  packet captures.
 - Whether encoder/upload tuning uses measured wire behavior and YouTube input
   health instead of nominal bitrate alone.
 - Whether the 28-day same-URL case study separates URL identity, availability,

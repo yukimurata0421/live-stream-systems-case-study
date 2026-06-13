@@ -1,0 +1,15 @@
+[Unit]
+Description=stream_v3 RTMPS TCP socket burst observer for recurring TCP stall attribution
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=yuki
+EnvironmentFile=-/etc/default/stream-v3-wan-observers
+Environment=STREAM_V3_REPO_DIR=/opt/stream_v3
+Environment=RTMPS_OBSERVER_STATE_DIR=/opt/stream_v3/.state/rtmps-observer
+Environment=RTMPS_OBSERVER_NAMESPACE=stream-v3
+Environment=RTMPS_OBSERVER_POD_PREFIX=stream-v3-runtime-
+Environment=RTMPS_OBSERVER_CONTAINER=stream-engine
+ExecStart=/bin/bash -lc 'cd "$${STREAM_V3_REPO_DIR}" && exec /usr/bin/python3 "$${STREAM_V3_REPO_DIR}/ops/scripts/rtmps_tcp_burst_observer.py" --sample-reason jst_0800_0820_burst --interval-sec 5 --duration-sec 1200'

@@ -213,6 +213,10 @@ class StreamV3BootstrapTests(unittest.TestCase):
             "stream-v3-wan-address-observer.service",
             "stream-v3-wan-address-observer-burst.service",
             "stream-v3-persistent-anchor-observer.service",
+            "stream-v3-rtmps-tcp-burst.service",
+            "stream-v3-netlink-wan-event-observer.service",
+            "stream-v3-cpe-event-ingest.service",
+            "stream-v3-tcpdump-ring.service",
         ):
             unit = (ROOT / "ops" / "systemd" / name).read_text(encoding="utf-8")
             with self.subTest(name=name):
@@ -223,7 +227,10 @@ class StreamV3BootstrapTests(unittest.TestCase):
 
         env_example = (ROOT / "ops" / "systemd" / "stream-v3-wan-observers.env.example").read_text(encoding="utf-8")
         self.assertIn("WAO_PERSISTENT_TRIGGER_WAN_SNAPSHOT=1", env_example)
+        self.assertIn("WAO_PERSISTENT_TRIGGER_RTMPS_BURST=1", env_example)
         self.assertIn("WAO_PERSISTENT_WAN_SNAPSHOT_CYCLES=7", env_example)
+        self.assertIn("CPE_OBSERVER_LISTEN_HOST=127.0.0.1", env_example)
+        self.assertIn("TCPDUMP_RING_DRY_RUN=1", env_example)
 
     def test_k3s_manifest_validator_passes_shadow_overlay(self) -> None:
         completed = subprocess.run(

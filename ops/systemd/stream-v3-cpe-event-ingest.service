@@ -1,0 +1,19 @@
+[Unit]
+Description=stream_v3 CPE syslog/API event ingest for WAN attribution
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=yuki
+EnvironmentFile=-/etc/default/stream-v3-wan-observers
+Environment=STREAM_V3_REPO_DIR=/opt/stream_v3
+Environment=CPE_OBSERVER_STATE_DIR=/opt/stream_v3/.state/cpe-observer
+Environment=CPE_OBSERVER_LISTEN_HOST=127.0.0.1
+Environment=CPE_OBSERVER_LISTEN_PORT=5514
+ExecStart=/bin/bash -lc 'cd "$${STREAM_V3_REPO_DIR}" && exec /usr/bin/python3 "$${STREAM_V3_REPO_DIR}/ops/scripts/cpe_event_ingest.py"'
+Restart=always
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target

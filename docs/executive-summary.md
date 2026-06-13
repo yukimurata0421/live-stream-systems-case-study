@@ -55,7 +55,8 @@ bookmarks, embeds, and external links.
 | --- | --- |
 | Recovery is guarded before destructive action. | `src/stream_v2/recovery_orchestrator/gate.py`, `ops/scripts/v3_shadow_acceptance.py`, `tests/test_v3_shadow_acceptance.py` |
 | Same-URL continuity is a production invariant. | `docs/28-day-same-url-sli-case-study.md`, `docs/v3/youtube-lifecycle-safety.md` |
-| TCP stall diagnosis was split by evidence layer. | `docs/v3/tcp-stall-case-study.md`, `ops/scripts/wan_address_observer.py`, `ops/scripts/persistent_tcp_anchor_observer.py` |
+| Rolling SLI feedback is read without overclaiming. | `docs/v3/rolling-sli-error-budget-feedback.md`, `docs/v3/sli-and-dashboard.md` |
+| TCP stall diagnosis was split by evidence layer. | `docs/v3/tcp-stall-case-study.md`, `docs/v3/tcp-stall-resolution-depth.md`, `ops/scripts/wan_address_observer.py`, `ops/scripts/persistent_tcp_anchor_observer.py` |
 | Encoder/upload tuning uses measured YouTube health, not nominal bitrate alone. | `docs/v3/encoder-upload-case-study.md`, `docs/v3/encoder-fps-tuning-2026-05-31.md` |
 | Public operational evidence is reduced before publication. | `docs/v3/public-status-snapshot.md`, <https://yukimurata0421.dev/> |
 | ADS-B publication and NCS attribution are documented as constraints. | `docs/compliance-and-licensing-boundary.md` |

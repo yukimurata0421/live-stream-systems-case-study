@@ -14,9 +14,13 @@ If you only have time for a short code review, start with these files:
 - `src/stream_v2/recovery_orchestrator/executor.py`
 - `ops/scripts/stream_v3_scoped_recovery.py`
 - `ops/scripts/stream_v3_remote_recovery.py`
+- `ops/scripts/stream_v3_health_snapshot.py`
+- `ops/scripts/stream_v3_monitoring_watchdog.py`
 - `ops/scripts/v3_shadow_acceptance.py`
 - `tests/test_youtube_evidence_decision.py`
 - `tests/test_cli_systemctl_flow.py`
+- `tests/test_stream_v3_health_snapshot.py`
+- `tests/test_stream_v3_monitoring_watchdog.py`
 
 | Review question | Code | Tests | Docs |
 | --- | --- | --- | --- |
@@ -25,6 +29,9 @@ If you only have time for a short code review, start with these files:
 | How is same-URL preservation protected? | `src/watchers/youtube_video_id_resolver.py`, `src/watchers/video_resolver/*`, `src/watchers/youtube_api.py` | `tests/test_youtube_broadcast_selection.py`, `tests/test_youtube_video_id_resolver.py`, `tests/test_youtube_monitor_e2e.py` | `docs/28-day-same-url-sli-case-study.md`, `docs/v3/youtube-lifecycle-safety.md` |
 | How are stale caches prevented from authorizing bad decisions? | `src/watchers/video_resolver/cache.py`, `src/watchers/youtube_watchdog_core/cache.py` | `tests/test_youtube_video_id_resolver_cache_freshness.py`, `tests/test_youtube_watchdog_cache_freshness.py`, `tests/test_youtube_watchdog_checked_timestamps.py` | `docs/v3/youtube-lifecycle-safety.md` |
 | How is RTMPS TCP stall diagnosed? | `src/watchers/fast_recovery_core/decision.py`, `src/watchers/fast_recovery.py`, `ops/scripts/wan_address_observer.py`, `ops/scripts/persistent_tcp_anchor_observer.py`, `ops/systemd/stream-v3-wan-address-observer.timer`, `ops/systemd/stream-v3-persistent-anchor-observer.service` | `tests/test_fast_recovery.py`, `tests/test_wan_observer_scripts.py`, `tests/test_network_observer.py` | `docs/v3/tcp-stall-case-study.md` |
+| How is the higher-resolution TCP stall evidence ladder implemented? | `ops/scripts/rtmps_tcp_burst_observer.py`, `ops/scripts/netlink_wan_event_observer.py`, `ops/scripts/cpe_event_ingest.py`, `ops/scripts/rtmps_tcpdump_ring.py`, `ops/systemd/stream-v3-rtmps-tcp-burst.timer`, `ops/systemd/stream-v3-netlink-wan-event-observer.service`, `ops/systemd/stream-v3-cpe-event-ingest.service`, `ops/systemd/stream-v3-tcpdump-ring.timer` | `tests/test_wan_observer_scripts.py`, `tests/test_network_observer.py` | `docs/v3/tcp-stall-resolution-depth.md` |
+| How are rolling SLI windows read without overclaiming? | `ops/scripts/stream_v3_prometheus_exporter.py`, `ops/scripts/stream_v3_health_snapshot.py`, `src/stream_v2/sli.py` | `tests/test_stream_v3_prometheus_exporter.py`, `tests/test_stream_v3_health_snapshot.py`, `tests/test_sli_pipeline_rotation.py`, `tests/test_docs_structure.py` | `docs/v3/rolling-sli-error-budget-feedback.md`, `docs/v3/sli-and-dashboard.md`, `docs/sli-methodology.md` |
+| How does the system keep dashboard `No data` out of delivery recovery? | `ops/scripts/stream_v3_health_snapshot.py`, `ops/scripts/stream_v3_monitoring_watchdog.py`, `ops/scripts/stream_v3_prometheus_exporter.py` | `tests/test_stream_v3_health_snapshot.py`, `tests/test_stream_v3_monitoring_watchdog.py`, `tests/test_stream_v3_prometheus_exporter.py` | `docs/v3/observability-plane-self-check.md`, `docs/v3/failure-taxonomy.md` |
 | How are historical fast-recovery stream restarts replayed? | `src/stream_v2/source_reader.py`, `src/stream_v2/subsystems/local_delivery/*`, `src/stream_v2/recovery_orchestrator/proposer.py`, `src/stream_v2/sli.py` | `tests/test_subsystems.py`, `tests/test_orchestrator.py`, `tests/test_sli_pipeline_rotation.py` | `docs/v3/fast-recovery-classifier-replay.md` |
 | How is upload tuning decided? | `src/stream_core/engine/ffmpeg_args.py`, `src/stream_core/recovery_profile.py`, `ops/scripts/stream_v3_prometheus_exporter.py` | `tests/test_runtime_contract.py`, `tests/test_stream_v3_prometheus_exporter.py`, `tests/test_docs_structure.py` | `docs/v3/encoder-upload-case-study.md`, `docs/v3/encoder-fps-tuning-2026-05-31.md` |
 | How are visual and audio faults kept local? | `src/watchers/stream_watchdog.py`, `src/watchers/stream_watchdog_core/*`, `src/watchers/local_health/*` | `tests/test_stream_watchdog_config.py`, `tests/test_subsystems.py`, `tests/test_runtime_bootstrap_contracts.py` | `docs/v3/visual-audio-health-model.md`, `docs/v3/failure-taxonomy.md` |

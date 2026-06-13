@@ -9,6 +9,7 @@
   - `runtime-state-and-evidence.md`
 - Evidence and SLI:
   - `sli-and-dashboard.md`
+  - `rolling-sli-error-budget-feedback.md`
   - `public-status-snapshot.md`
   - `observability-plane-self-check.md`
   - `fast-recovery-classifier-replay.md`
@@ -16,6 +17,7 @@
   - `encoder-upload-case-study.md`
   - `encoder-fps-tuning-2026-05-31.md`
   - `tcp-stall-case-study.md`
+  - `tcp-stall-resolution-depth.md`
   - `memory-guard-case-study.md`
   - `scoped-recovery-authority.md`
 - Safety and operation:
@@ -50,6 +52,12 @@ For a focused reliability review:
 - `tcp-stall-case-study.md` shows how recurring RTMPS transport stalls were
   split across delivery TCP state, WAN identity, non-YouTube TCP anchors,
   YouTube lifecycle evidence, and same-URL recovery policy.
+- `tcp-stall-resolution-depth.md` records the later evidence ladder for RTMPS
+  socket bursts, netlink route events, CPE evidence, and bounded packet
+  metadata. The observer code is public; generated evidence artifacts are not.
+- `rolling-sli-error-budget-feedback.md` shows how the current dashboard
+  feedback windows are read without replacing the historical 14-day and 28-day
+  SLI reviews.
 - `encoder-upload-case-study.md` explains why the move to NVENC CBR increased
   measured upload while preserving YouTube input health.
 - `migration-cutover-case-study.md` explains why a healthy Pod was not treated

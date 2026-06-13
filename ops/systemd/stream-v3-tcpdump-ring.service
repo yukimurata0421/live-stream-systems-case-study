@@ -1,0 +1,16 @@
+[Unit]
+Description=stream_v3 bounded packet-metadata capture for recurring TCP stall attribution
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+EnvironmentFile=-/etc/default/stream-v3-wan-observers
+Environment=STREAM_V3_REPO_DIR=/opt/stream_v3
+Environment=TCPDUMP_RING_STATE_DIR=/opt/stream_v3/.state/packet-captures
+Environment=TCPDUMP_RING_INTERFACE=any
+Environment=TCPDUMP_RING_TCPDUMP_USER=root
+Environment=TCPDUMP_RING_DURATION_SEC=1200
+Environment=TCPDUMP_RING_SNAPLEN=128
+Environment=TCPDUMP_RING_DRY_RUN=1
+ExecStart=/bin/bash -lc 'cd "$${STREAM_V3_REPO_DIR}" && exec /usr/bin/python3 "$${STREAM_V3_REPO_DIR}/ops/scripts/rtmps_tcpdump_ring.py" --sample-reason jst_0800_0820_packet_metadata'

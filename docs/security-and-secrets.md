@@ -13,6 +13,7 @@ state.
 - SSH private keys
 - real Kubernetes Secrets
 - `.state/` runtime evidence
+- packet captures and packet metadata outputs
 - local media files
 - production logs and screenshots
 

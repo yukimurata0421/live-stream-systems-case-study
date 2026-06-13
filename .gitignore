@@ -33,6 +33,8 @@ ui/overlay/preview*.png
 *.mkv
 *.mp4
 *.webm
+*.pcap
+*.pcapng
 legacy/stream/venv
 legacy/stream/logs/
 legacy/stream/runtime/

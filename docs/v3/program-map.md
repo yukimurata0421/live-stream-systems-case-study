@@ -32,6 +32,13 @@ faults. They do not restart the stream or mutate YouTube state.
 | `persistent_tcp_anchor_observer.py` | delivery host | long-lived Cloudflare/Google TCP/TLS anchors and reconnect-after-failure evidence |
 | `stream-v3-wan-address-observer-burst.timer` | delivery host | 10-second samples during the recurring morning validation window |
 | failure-triggered WAN snapshot | delivery host | 5-second follow-up samples after all-anchor failure or failed reconnect-after-failure |
+| `rtmps_tcp_burst_observer.py` | delivery host / k3s runtime | high-cadence `ss -tinp` RTMPS socket state and TCP counters |
+| `netlink_wan_event_observer.py` | delivery host | route/address/link events from `ip monitor` |
+| `cpe_event_ingest.py` | delivery host / private CPE boundary | classify CPE syslog/API text for WAN ownership evidence |
+| `rtmps_tcpdump_ring.py` | delivery host | bounded packet-metadata capture command builder; dry-run by default in public examples |
+
+Raw observer outputs, CPE logs, and packet captures are runtime artifacts and
+are not retained in Git. `tcp-stall-resolution-depth.md` explains that boundary.
 
 ## Deployment Assets
 
@@ -45,5 +52,9 @@ faults. They do not restart the stream or mutate YouTube state.
 - `ops/systemd/stream-v3-wan-address-observer.timer`
 - `ops/systemd/stream-v3-wan-address-observer-burst.timer`
 - `ops/systemd/stream-v3-persistent-anchor-observer.service`
+- `ops/systemd/stream-v3-rtmps-tcp-burst.timer`
+- `ops/systemd/stream-v3-netlink-wan-event-observer.service`
+- `ops/systemd/stream-v3-cpe-event-ingest.service`
+- `ops/systemd/stream-v3-tcpdump-ring.timer`
 - `ops/monitoring/prometheus/prometheus.yml`
 - `ops/monitoring/prometheus/rules/stream_v3.yml`

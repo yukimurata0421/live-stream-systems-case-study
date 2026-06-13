@@ -287,7 +287,7 @@ overlay and upstream checks.
 | --- | --- | --- |
 | Non-technical interviewer | Reviewer Summary, Evidence Snapshot, [`docs/operational-scorecard.md`](docs/operational-scorecard.md) | same-URL operation, automated recovery, clear limits |
 | Backend / infrastructure reviewer | Architecture diagrams, [`docs/v3/public-status-snapshot.md`](docs/v3/public-status-snapshot.md), [`docs/implementation-review-map.md`](docs/implementation-review-map.md) | k3s runtime boundary, GCS/Cloudflare static edge, private/public boundary |
-| SRE / platform reviewer | [`docs/v3/sli-and-dashboard.md`](docs/v3/sli-and-dashboard.md), [`docs/v3/tcp-stall-case-study.md`](docs/v3/tcp-stall-case-study.md), [`docs/v3/scoped-recovery-authority.md`](docs/v3/scoped-recovery-authority.md) | production invariant, MTTR, fault-layer split, recovery authority |
+| SRE / platform reviewer | [`docs/v3/sli-and-dashboard.md`](docs/v3/sli-and-dashboard.md), [`docs/v3/rolling-sli-error-budget-feedback.md`](docs/v3/rolling-sli-error-budget-feedback.md), [`docs/v3/tcp-stall-case-study.md`](docs/v3/tcp-stall-case-study.md), [`docs/v3/tcp-stall-resolution-depth.md`](docs/v3/tcp-stall-resolution-depth.md), [`docs/v3/scoped-recovery-authority.md`](docs/v3/scoped-recovery-authority.md) | production invariant, MTTR, rolling feedback, fault-layer split, recovery authority |
 
 ## What This Does Not Claim
 
@@ -309,6 +309,7 @@ Use these entry points instead of reading the full tree:
 | Where is shadow safety asserted? | [`tests/test_v3_shadow_acceptance.py`](tests/test_v3_shadow_acceptance.py), [`deploy/k3s/README.md`](deploy/k3s/README.md) |
 | Where is the physical split documented? | [`docs/physical-topology.md`](docs/physical-topology.md), [`docs/runtime-contract.md`](docs/runtime-contract.md) |
 | Where is the measured SLI baseline? | [`docs/sli-methodology.md`](docs/sli-methodology.md), [`docs/v3/sli-and-dashboard.md`](docs/v3/sli-and-dashboard.md) |
+| Where is rolling SLI/error-budget feedback interpreted? | [`docs/v3/rolling-sli-error-budget-feedback.md`](docs/v3/rolling-sli-error-budget-feedback.md), [`docs/v3/sli-and-dashboard.md`](docs/v3/sli-and-dashboard.md) |
 | Where is the public status site boundary documented? | [`docs/v3/public-status-snapshot.md`](docs/v3/public-status-snapshot.md), <https://yukimurata0421.dev/> |
 | Where is ADS-B/NCS compliance boundary documented? | [`docs/compliance-and-licensing-boundary.md`](docs/compliance-and-licensing-boundary.md) |
 | Where is the fast-recovery classifier replay documented? | [`docs/v3/fast-recovery-classifier-replay.md`](docs/v3/fast-recovery-classifier-replay.md), [`src/stream_v2/sli.py`](src/stream_v2/sli.py), [`tests/test_sli_pipeline_rotation.py`](tests/test_sli_pipeline_rotation.py) |
@@ -320,7 +321,7 @@ Use these entry points instead of reading the full tree:
 | How was v2 to v3 cutover scoped? | [`docs/v3/migration-cutover-case-study.md`](docs/v3/migration-cutover-case-study.md), [`ops/scripts/v3_shadow_acceptance.py`](ops/scripts/v3_shadow_acceptance.py) |
 | Where is YouTube lifecycle mutation safety explained? | [`docs/v3/youtube-lifecycle-safety.md`](docs/v3/youtube-lifecycle-safety.md), [`src/watchers/video_resolver/cache.py`](src/watchers/video_resolver/cache.py), [`tests/test_youtube_watchdog_cache_freshness.py`](tests/test_youtube_watchdog_cache_freshness.py) |
 | Why did NVENC increase measured upload? | [`docs/v3/encoder-upload-case-study.md`](docs/v3/encoder-upload-case-study.md), [`docs/v3/encoder-fps-tuning-2026-05-31.md`](docs/v3/encoder-fps-tuning-2026-05-31.md), [`docs/runtime-contract.md`](docs/runtime-contract.md) |
-| Where is a concrete transport root-cause split? | [`docs/v3/tcp-stall-case-study.md`](docs/v3/tcp-stall-case-study.md), [`ops/scripts/wan_address_observer.py`](ops/scripts/wan_address_observer.py), [`ops/scripts/persistent_tcp_anchor_observer.py`](ops/scripts/persistent_tcp_anchor_observer.py), [`ops/systemd/stream-v3-wan-address-observer.timer`](ops/systemd/stream-v3-wan-address-observer.timer), [`ops/systemd/stream-v3-wan-address-observer-burst.timer`](ops/systemd/stream-v3-wan-address-observer-burst.timer) |
+| Where is a concrete transport root-cause split? | [`docs/v3/tcp-stall-case-study.md`](docs/v3/tcp-stall-case-study.md), [`docs/v3/tcp-stall-resolution-depth.md`](docs/v3/tcp-stall-resolution-depth.md), [`ops/scripts/wan_address_observer.py`](ops/scripts/wan_address_observer.py), [`ops/scripts/persistent_tcp_anchor_observer.py`](ops/scripts/persistent_tcp_anchor_observer.py), [`ops/systemd/stream-v3-wan-address-observer.timer`](ops/systemd/stream-v3-wan-address-observer.timer), [`ops/systemd/stream-v3-wan-address-observer-burst.timer`](ops/systemd/stream-v3-wan-address-observer-burst.timer) |
 | Where are visual/audio and memory failure boundaries documented? | [`docs/v3/visual-audio-health-model.md`](docs/v3/visual-audio-health-model.md), [`docs/v3/memory-guard-case-study.md`](docs/v3/memory-guard-case-study.md), [`docs/v3/failure-taxonomy.md`](docs/v3/failure-taxonomy.md) |
 | Where is single-node DR scoped honestly? | [`docs/v3/single-node-dr-case-study.md`](docs/v3/single-node-dr-case-study.md), [`docs/v3/runbook-validation.md`](docs/v3/runbook-validation.md) |
 | What does an incident review need to record? | [`docs/incident-review-template.md`](docs/incident-review-template.md) |
@@ -346,6 +347,12 @@ Use these entry points instead of reading the full tree:
 - `ops/scripts/wan_address_observer.py` and
   `ops/scripts/persistent_tcp_anchor_observer.py`: report-only WAN/session
   probes used for TCP stall root-cause splitting.
+- `ops/scripts/rtmps_tcp_burst_observer.py`,
+  `ops/scripts/netlink_wan_event_observer.py`,
+  `ops/scripts/cpe_event_ingest.py`, and
+  `ops/scripts/rtmps_tcpdump_ring.py`: higher-resolution TCP stall attribution
+  helpers. Generated JSONL, CPE logs, packet metadata, and captures remain
+  untracked runtime artifacts.
 - `ops/scripts/stream_v3_scoped_recovery.py` and
   `ops/scripts/stream_v3_remote_recovery.py`: limited same-URL-preserving
   recovery authority for Auto DJ and RTMPS FFmpeg scopes.
@@ -358,6 +365,8 @@ Use these entry points instead of reading the full tree:
   classification inherited by v3.
 - `docs/28-day-same-url-sli-case-study.md`: public translation of the 28-day
   same-URL SLI review, including what got worse and what remained unknown.
+- `docs/v3/rolling-sli-error-budget-feedback.md`: rolling 24h/7d/available-30d
+  feedback rules that keep dashboard burn separate from long-window SLI claims.
 - `docs/executive-summary.md`: shortest narrative for reviewers who need the
   system shape and operating invariants first.
 - `docs/operational-scorecard.md`: measured/tested/documented/unknown maturity
@@ -386,6 +395,8 @@ Use these entry points instead of reading the full tree:
   logs.
 - `docs/v3/failure-taxonomy.md`: owner/action/evidence vocabulary for runtime,
   source, YouTube, dashboard, and memory failures.
+- `docs/v3/tcp-stall-resolution-depth.md`: higher-resolution TCP stall evidence
+  ladder and the public/raw-artifact boundary.
 - `tests/`: contract and policy tests for runtime safety and monitoring logic.
 
 ## Local Validation

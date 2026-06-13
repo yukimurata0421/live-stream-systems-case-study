@@ -185,6 +185,7 @@ class PublicDocsStructureTests(unittest.TestCase):
             "v3/current-runtime-contract.md",
             "v3/runtime-state-and-evidence.md",
             "v3/sli-and-dashboard.md",
+            "v3/rolling-sli-error-budget-feedback.md",
             "v3/observability-plane-self-check.md",
             "v3/fast-recovery-classifier-replay.md",
             "v3/migration-cutover-case-study.md",
@@ -192,6 +193,7 @@ class PublicDocsStructureTests(unittest.TestCase):
             "v3/encoder-upload-case-study.md",
             "v3/encoder-fps-tuning-2026-05-31.md",
             "v3/tcp-stall-case-study.md",
+            "v3/tcp-stall-resolution-depth.md",
             "v3/visual-audio-health-model.md",
             "v3/memory-guard-case-study.md",
             "v3/failure-taxonomy.md",
@@ -246,10 +248,12 @@ class PublicDocsStructureTests(unittest.TestCase):
             "v2/README.md",
             "v3/README.md",
             "v3/observability-plane-self-check.md",
+            "v3/rolling-sli-error-budget-feedback.md",
             "v3/fast-recovery-classifier-replay.md",
             "v3/migration-cutover-case-study.md",
             "v3/youtube-lifecycle-safety.md",
             "v3/tcp-stall-case-study.md",
+            "v3/tcp-stall-resolution-depth.md",
             "v3/encoder-upload-case-study.md",
             "v3/visual-audio-health-model.md",
             "v3/memory-guard-case-study.md",
@@ -518,9 +522,11 @@ class PublicDocsStructureTests(unittest.TestCase):
         evidence = read(DOCS / "v3" / "runtime-state-and-evidence.md")
         sli = read(DOCS / "v3" / "sli-and-dashboard.md")
         observability_self_check = read(DOCS / "v3" / "observability-plane-self-check.md")
+        rolling_sli = read(DOCS / "v3" / "rolling-sli-error-budget-feedback.md")
         decisions = read(DOCS / "v3" / "decisions.md")
         program_map = read(DOCS / "v3" / "program-map.md")
         tcp_stall = read(DOCS / "v3" / "tcp-stall-case-study.md")
+        tcp_depth = read(DOCS / "v3" / "tcp-stall-resolution-depth.md")
         review_map = read(DOCS / "implementation-review-map.md")
         migration = read(DOCS / "v3" / "migration-cutover-case-study.md")
         youtube_lifecycle = read(DOCS / "v3" / "youtube-lifecycle-safety.md")
@@ -570,8 +576,21 @@ class PublicDocsStructureTests(unittest.TestCase):
             "encoder-upload-case-study.md",
             "Visual correctness, audio correctness, ADS-B source freshness",
             "observability-plane-self-check.md",
+            "rolling-sli-error-budget-feedback.md",
         ):
             self.assertIn(marker, sli)
+
+        for marker in (
+            "Rolling SLI And Error-Budget Feedback",
+            "rolling 24h, 7d, and available 30d windows",
+            "`7.0 / 100.8 min` burned",
+            "metric-zero `19.0 min`; actual URL burn `0`; replacement count `0`",
+            "raw over-budget `195 sec`",
+            "same-URL metric-zero samples",
+            "not by creating a replacement broadcast",
+            "Rolling feedback is labeled separately from long-window public SLI claims",
+        ):
+            self.assertIn(marker, rolling_sli)
 
         for marker in (
             "Observability Plane Self-Check",
@@ -608,6 +627,7 @@ class PublicDocsStructureTests(unittest.TestCase):
             "stream_v3_prometheus_exporter.py",
             "stream_v3_health_snapshot.py",
             "stream_v3_monitoring_watchdog.py",
+            "tcp-stall-resolution-depth.md",
         ):
             self.assertIn(marker, program_map)
 
@@ -627,12 +647,31 @@ class PublicDocsStructureTests(unittest.TestCase):
             "stream-v3-wan-address-observer.timer",
             "stream-v3-wan-address-observer-burst.timer",
             "stream-v3-persistent-anchor-observer.service",
+            "tcp-stall-resolution-depth.md",
         ):
             self.assertIn(marker, tcp_stall)
 
         for marker in (
+            "TCP Stall Resolution Depth",
+            "Resolution Ladder",
+            "Public-retained state",
+            "Retained through `ops/scripts/rtmps_tcp_burst_observer.py`",
+            "Retained through `ops/scripts/netlink_wan_event_observer.py`",
+            "Retained through `ops/scripts/cpe_event_ingest.py`",
+            "Retained through `ops/scripts/rtmps_tcpdump_ring.py`",
+            "DNS success is supporting evidence",
+            "Cloudflare AS13335 and Google AS15169",
+            "bounded packet metadata",
+            "CPE scheduled reconnect",
+            "carrier-side mobile session refresh",
+        ):
+            self.assertIn(marker, tcp_depth)
+
+        for marker in (
             "Implementation Review Map",
             "How is upload tuning decided?",
+            "How are rolling SLI windows read without overclaiming?",
+            "How does the system keep dashboard `No data` out of delivery recovery?",
             "How are stale caches prevented from authorizing bad decisions?",
             "How is v2 to v3 cutover authority scoped?",
             "What does a 24-hour smoke test prove?",
@@ -736,6 +775,16 @@ class PublicDocsStructureTests(unittest.TestCase):
             "ops/systemd/stream-v3-wan-address-observer-burst.service",
             "ops/systemd/stream-v3-wan-address-observer-burst.timer",
             "ops/systemd/stream-v3-persistent-anchor-observer.service",
+            "ops/scripts/rtmps_tcp_burst_observer.py",
+            "ops/scripts/netlink_wan_event_observer.py",
+            "ops/scripts/cpe_event_ingest.py",
+            "ops/scripts/rtmps_tcpdump_ring.py",
+            "ops/systemd/stream-v3-rtmps-tcp-burst.service",
+            "ops/systemd/stream-v3-rtmps-tcp-burst.timer",
+            "ops/systemd/stream-v3-netlink-wan-event-observer.service",
+            "ops/systemd/stream-v3-cpe-event-ingest.service",
+            "ops/systemd/stream-v3-tcpdump-ring.service",
+            "ops/systemd/stream-v3-tcpdump-ring.timer",
             "ops/systemd/stream-v3-wan-observers.env.example",
             "tests/test_wan_observer_scripts.py",
         ):

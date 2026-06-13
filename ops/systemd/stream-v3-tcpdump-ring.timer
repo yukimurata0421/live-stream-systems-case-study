@@ -1,0 +1,10 @@
+[Unit]
+Description=Run stream_v3 bounded packet-metadata capture during the recurring morning TCP stall window
+
+[Timer]
+OnCalendar=*-*-* 23:00:00 UTC
+AccuracySec=1s
+Unit=stream-v3-tcpdump-ring.service
+
+[Install]
+WantedBy=timers.target

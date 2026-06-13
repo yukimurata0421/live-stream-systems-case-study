@@ -23,6 +23,7 @@ contracts, and operational decisions without publishing runtime data or secrets.
 
 - `.state/` runtime state, incident snapshots, local logs, screenshots, and
   capture outputs.
+- Packet captures and generated packet-metadata artifacts.
 - `ncs_music/` and other local media payloads.
 - Virtual environments, Python caches, and generated runtime directories.
 - Real YouTube stream keys, OAuth tokens, Discord webhooks, SSH keys, and

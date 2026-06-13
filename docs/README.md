@@ -27,9 +27,11 @@ Start with the top-level `README.md`. Most reviewers should then read only:
 ### Reliability / SRE Pass
 
 - `v3/sli-and-dashboard.md`
+- `v3/rolling-sli-error-budget-feedback.md`
 - `sli-methodology.md`
 - `28-day-same-url-sli-case-study.md`
 - `v3/tcp-stall-case-study.md`
+- `v3/tcp-stall-resolution-depth.md`
 - `v3/scoped-recovery-authority.md`
 - `v3/single-node-dr-case-study.md`
 

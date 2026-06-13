@@ -1,0 +1,10 @@
+[Unit]
+Description=Run stream_v3 RTMPS TCP socket burst observer during the recurring morning TCP stall window
+
+[Timer]
+OnCalendar=*-*-* 23:00:00 UTC
+AccuracySec=1s
+Unit=stream-v3-rtmps-tcp-burst.service
+
+[Install]
+WantedBy=timers.target

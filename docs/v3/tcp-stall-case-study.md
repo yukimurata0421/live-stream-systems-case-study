@@ -181,6 +181,12 @@ reviewable:
 The observer scripts are diagnostic tools. They improve root-cause confidence,
 but they do not directly authorize destructive recovery.
 
+The later resolution model is documented in
+[`tcp-stall-resolution-depth.md`](tcp-stall-resolution-depth.md). It explains
+how RTMPS socket burst samples, netlink route events, CPE evidence, and bounded
+packet metadata fit into the evidence ladder. The observer code is public, while
+raw JSONL, CPE logs, exact public IPs, and packet captures remain outside Git.
+
 ## Review Signal
 
 The important part is not that the network failed. The important part is the

@@ -378,6 +378,23 @@ def build_wan_snapshot_command(payload: dict[str, Any], args: argparse.Namespace
     ]
 
 
+def build_rtmps_burst_command(payload: dict[str, Any], args: argparse.Namespace) -> list[str]:
+    reason, detail = should_trigger_wan_snapshot(payload)
+    reason_text = detail if reason else "manual"
+    names = ",".join(failed_names(payload)) or "unknown"
+    sample_reason = f"{args.rtmps_burst_reason_prefix}:{reason_text}:{names}"
+    return [
+        args.rtmps_burst_python,
+        str(args.rtmps_burst_script),
+        "--sample-reason",
+        sample_reason,
+        "--interval-sec",
+        str(args.rtmps_burst_interval_sec),
+        "--duration-sec",
+        str(args.rtmps_burst_duration_sec),
+    ]
+
+
 def maybe_trigger_wan_snapshot(
     payload: dict[str, Any],
     args: argparse.Namespace,
@@ -413,6 +430,41 @@ def maybe_trigger_wan_snapshot(
     return now, result
 
 
+def maybe_trigger_rtmps_burst(
+    payload: dict[str, Any],
+    args: argparse.Namespace,
+    last_trigger_monotonic: float,
+) -> tuple[float, dict[str, Any]]:
+    should_trigger, reason = should_trigger_wan_snapshot(payload)
+    result: dict[str, Any] = {
+        "enabled": bool(args.trigger_rtmps_burst),
+        "triggered": False,
+        "reason": reason,
+    }
+    if not args.trigger_rtmps_burst or not should_trigger:
+        return last_trigger_monotonic, result
+
+    now = time.monotonic()
+    cooldown_sec = max(0.0, float(args.rtmps_burst_cooldown_sec or 0.0))
+    if last_trigger_monotonic > 0.0 and now - last_trigger_monotonic < cooldown_sec:
+        result["suppressed"] = "cooldown"
+        result["cooldown_remaining_sec"] = round(cooldown_sec - (now - last_trigger_monotonic), 1)
+        return last_trigger_monotonic, result
+
+    command = build_rtmps_burst_command(payload, args)
+    result["command"] = command
+    try:
+        subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except OSError as exc:
+        result["error"] = f"{type(exc).__name__}: {exc}"
+        return last_trigger_monotonic, result
+
+    result["triggered"] = True
+    result["burst_interval_sec"] = args.rtmps_burst_interval_sec
+    result["burst_duration_sec"] = args.rtmps_burst_duration_sec
+    return now, result
+
+
 def parse_args() -> argparse.Namespace:
     state_dir = Path(env("WAO_STATE_DIR", str(DEFAULT_STATE_DIR)))
     parser = argparse.ArgumentParser(description="Keep non-YouTube TCP/TLS anchors open and probe them for existing-flow blackholes.")
@@ -439,6 +491,18 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--wan-snapshot-cycles", type=int, default=int(env("WAO_PERSISTENT_WAN_SNAPSHOT_CYCLES", "7") or "7"))
     parser.add_argument("--wan-snapshot-cooldown-sec", type=float, default=float(env("WAO_PERSISTENT_WAN_SNAPSHOT_COOLDOWN_SEC", "120") or "120"))
     parser.add_argument("--wan-snapshot-reason-prefix", default=env("WAO_PERSISTENT_WAN_SNAPSHOT_REASON_PREFIX", "persistent_anchor_failure"))
+    parser.add_argument("--trigger-rtmps-burst", action="store_true", default=bool_env("WAO_PERSISTENT_TRIGGER_RTMPS_BURST", False))
+    parser.add_argument("--no-trigger-rtmps-burst", dest="trigger_rtmps_burst", action="store_false")
+    parser.add_argument("--rtmps-burst-python", default=env("WAO_PERSISTENT_RTMPS_BURST_PYTHON", sys.executable or "/usr/bin/python3"))
+    parser.add_argument(
+        "--rtmps-burst-script",
+        type=Path,
+        default=Path(env("WAO_PERSISTENT_RTMPS_BURST_SCRIPT", str(BASE_DIR / "ops" / "scripts" / "rtmps_tcp_burst_observer.py"))),
+    )
+    parser.add_argument("--rtmps-burst-interval-sec", type=float, default=float(env("WAO_PERSISTENT_RTMPS_BURST_INTERVAL_SEC", "5") or "5"))
+    parser.add_argument("--rtmps-burst-duration-sec", type=float, default=float(env("WAO_PERSISTENT_RTMPS_BURST_DURATION_SEC", "300") or "300"))
+    parser.add_argument("--rtmps-burst-cooldown-sec", type=float, default=float(env("WAO_PERSISTENT_RTMPS_BURST_COOLDOWN_SEC", "120") or "120"))
+    parser.add_argument("--rtmps-burst-reason-prefix", default=env("WAO_PERSISTENT_RTMPS_BURST_REASON_PREFIX", "persistent_anchor_failure"))
     return parser.parse_args()
 
 
@@ -460,6 +524,7 @@ def main() -> int:
 
     completed = 0
     last_wan_snapshot_trigger = 0.0
+    last_rtmps_burst_trigger = 0.0
     try:
         while True:
             loop_started = time.monotonic()
@@ -468,6 +533,11 @@ def main() -> int:
                 payload,
                 args,
                 last_wan_snapshot_trigger,
+            )
+            last_rtmps_burst_trigger, payload["rtmps_burst_trigger"] = maybe_trigger_rtmps_burst(
+                payload,
+                args,
+                last_rtmps_burst_trigger,
             )
             append_jsonl(args.output_jsonl, payload)
             write_json(args.latest_file, payload)

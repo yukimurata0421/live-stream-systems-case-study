@@ -32,10 +32,14 @@ p95, max, over-budget seconds, YouTube health classification, and the derived
 per-frame bit budget for 4fps, 5fps, and 10fps at 3400k video CBR.
 
 For the recurring TCP stall investigation, the retained public evidence is the
-diagnostic model in `docs/v3/tcp-stall-case-study.md` and the report-only
+diagnostic model in `docs/v3/tcp-stall-case-study.md`, the higher-resolution
+reading model in `docs/v3/tcp-stall-resolution-depth.md`, and the report-only
 observer code in `ops/scripts/wan_address_observer.py` and
-`ops/scripts/persistent_tcp_anchor_observer.py`. Raw private JSONL samples and
-exact public IP addresses are not retained in Git.
+`ops/scripts/persistent_tcp_anchor_observer.py`, plus high-resolution helpers
+for RTMPS socket bursts, netlink route/address events, CPE text classification,
+and bounded packet metadata. Raw private JSONL samples, exact public IP
+addresses, CPE logs, generated packet metadata, and packet captures are not
+retained in Git.
 
 The public observer contract keeps two granularities separate:
 

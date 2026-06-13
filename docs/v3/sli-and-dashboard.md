@@ -52,6 +52,13 @@ The measured v2 baseline that established this classification is summarized in
 [`../sli-methodology.md`](../sli-methodology.md). That page is historical
 evidence for the method, not a current v3 uptime statement.
 
+`rolling-sli-error-budget-feedback.md` documents the current feedback reading
+rule: rolling 24h, 7d, and available 30d windows are used for operator
+feedback, while the public reliability claims remain tied to explicitly
+documented 14-day and 28-day review windows. It also records why same-URL
+metric-zero samples are not budget burn unless URL identity evidence or
+replacement evidence also fails.
+
 ## Dashboard Caution
 
 Long-window fields can be stale. Operators should compare dashboard signals
