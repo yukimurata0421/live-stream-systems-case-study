@@ -58,6 +58,11 @@ Long-window fields can be stale. Operators should compare dashboard signals
 against fresh runtime evidence before deciding that the stream is currently
 failing.
 
+Exporter timeout and `No data` dashboard states are observability-plane
+incidents until raw delivery evidence also fails. `observability-plane-self-check.md`
+documents the snapshot fallback, last-good exporter payload, and monitoring
+watchdog contract used to keep that distinction visible.
+
 Shadow recovery comparison uses executable recovery intent, not every selected
 report-only action. `current_classifier_replay` is shown separately from
 `production_without_shadow` so historical gaps remain visible while current

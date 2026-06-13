@@ -41,6 +41,7 @@ Use the rest of this page as a reference catalog.
 - `sli-methodology.md`
 - `28-day-same-url-sli-case-study.md`
 - `v3/sli-and-dashboard.md`
+- `v3/observability-plane-self-check.md`
 - `v3/tcp-stall-case-study.md`
 - `v3/fast-recovery-classifier-replay.md`
 - `v3/single-node-dr-case-study.md`

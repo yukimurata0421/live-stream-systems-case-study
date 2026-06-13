@@ -185,6 +185,7 @@ class PublicDocsStructureTests(unittest.TestCase):
             "v3/current-runtime-contract.md",
             "v3/runtime-state-and-evidence.md",
             "v3/sli-and-dashboard.md",
+            "v3/observability-plane-self-check.md",
             "v3/fast-recovery-classifier-replay.md",
             "v3/migration-cutover-case-study.md",
             "v3/youtube-lifecycle-safety.md",
@@ -244,6 +245,7 @@ class PublicDocsStructureTests(unittest.TestCase):
             "contributing.md",
             "v2/README.md",
             "v3/README.md",
+            "v3/observability-plane-self-check.md",
             "v3/fast-recovery-classifier-replay.md",
             "v3/migration-cutover-case-study.md",
             "v3/youtube-lifecycle-safety.md",
@@ -515,6 +517,7 @@ class PublicDocsStructureTests(unittest.TestCase):
         current = read(DOCS / "v3" / "current-runtime-contract.md")
         evidence = read(DOCS / "v3" / "runtime-state-and-evidence.md")
         sli = read(DOCS / "v3" / "sli-and-dashboard.md")
+        observability_self_check = read(DOCS / "v3" / "observability-plane-self-check.md")
         decisions = read(DOCS / "v3" / "decisions.md")
         program_map = read(DOCS / "v3" / "program-map.md")
         tcp_stall = read(DOCS / "v3" / "tcp-stall-case-study.md")
@@ -566,8 +569,24 @@ class PublicDocsStructureTests(unittest.TestCase):
             "37,503,068 bytes",
             "encoder-upload-case-study.md",
             "Visual correctness, audio correctness, ADS-B source freshness",
+            "observability-plane-self-check.md",
         ):
             self.assertIn(marker, sli)
+
+        for marker in (
+            "Observability Plane Self-Check",
+            "Prometheus target reachable",
+            "exporter /metrics or /healthz slow or unavailable",
+            "dashboard panels missing stream_v3_* series",
+            "raw delivery evidence still healthy",
+            "observability-plane incident, not a delivery-plane incident",
+            "stream_v3_health_snapshot.py",
+            "stream_v3_monitoring_watchdog.py",
+            "stream_v3_exporter_snapshot_fallback",
+            "stream_v3_monitoring_watchdog_ok",
+            "Snapshot fallback is not a new uptime claim",
+        ):
+            self.assertIn(marker, observability_self_check)
 
         for marker in (
             "Delivery / Observability Split",
@@ -587,6 +606,8 @@ class PublicDocsStructureTests(unittest.TestCase):
             "Delivery Plane",
             "Observability Plane",
             "stream_v3_prometheus_exporter.py",
+            "stream_v3_health_snapshot.py",
+            "stream_v3_monitoring_watchdog.py",
         ):
             self.assertIn(marker, program_map)
 

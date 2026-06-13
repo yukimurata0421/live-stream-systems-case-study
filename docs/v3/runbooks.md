@@ -86,6 +86,24 @@ Check:
   `stream-v3-persistent-anchor-observer.service` are installed if the host is
   expected to retain cause-layer evidence
 
+## Observability Plane Self-Check
+
+When a dashboard shows `No data`, missing `stream_v3_*` series, or exporter
+errors, classify the monitoring plane before touching delivery.
+
+Check:
+
+- exporter `/healthz` and `/metrics`
+- `stream_v3_exporter_up`
+- `stream_v3_exporter_snapshot_fallback`
+- `stream_v3_monitoring_watchdog_ok`
+- required metric presence from `stream_v3_monitoring_watchdog_check_ok`
+- snapshot age for health summary and objective SLI
+- raw delivery evidence: Pod ready, FFmpeg RTMPS connected, same URL, YouTube
+  public/live/ingest, capture, and audio
+
+The retained public model is in `observability-plane-self-check.md`.
+
 ## Visual / Audio / Memory Check
 
 Treat RTMPS connected, YouTube public live, visual correctness, audio

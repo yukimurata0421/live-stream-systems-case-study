@@ -32,6 +32,7 @@ before recovery.
 | `upstream_adsb_stale` | ADS-B JSON or aircraft movement stale | observability/source boundary | classify source freshness; avoid FFmpeg restart unless delivery also fails | overlay/upstream reports |
 | `report_missing` | report-only artifact stale or absent | observability plane | fix timer/output path/stale threshold | report JSONL, systemd timer logs |
 | `prometheus_stale_metric` | metric timestamp or source label stale | observability plane | fix exporter/query/source labels | raw metrics, scrape timestamp |
+| `exporter_timeout_no_data` | exporter health fails or required `stream_v3_*` series missing while raw delivery evidence is healthy | observability plane | refresh snapshot, inspect exporter/watchdog, fix metric contract | exporter `/metrics`, snapshot age, monitoring watchdog state |
 | `memory_guard_warn` | memory warning without current runtime impact | delivery + observability | observe and correlate; no destructive action by memory alone | cgroup/process/PSI/runtime evidence |
 | `secrets_missing` | redacted env or Kubernetes Secret missing | delivery/control plane | restore secret from local private source; do not log value | redacted env checks |
 | `gpu_nvenc_unavailable` | FFmpeg cannot open NVENC | delivery plane | fix GPU runtime/driver/device plugin | FFmpeg log, `nvidia-smi`, resource request |

@@ -10,6 +10,7 @@
 - Evidence and SLI:
   - `sli-and-dashboard.md`
   - `public-status-snapshot.md`
+  - `observability-plane-self-check.md`
   - `fast-recovery-classifier-replay.md`
   - `youtube-lifecycle-safety.md`
   - `encoder-upload-case-study.md`
@@ -63,6 +64,9 @@ For a focused reliability review:
   the single-node k3s DR model.
 - `public-status-snapshot.md` documents why the public site exposes a
   sanitized static operational view instead of the private monitoring backend.
+- `observability-plane-self-check.md` documents why exporter timeouts,
+  snapshot fallback, and `No data` dashboards are observability-plane incidents
+  unless fresh delivery evidence also fails.
 - `../compliance-and-licensing-boundary.md` documents how ADS-B publication,
   receiver privacy, and NCS attribution were treated as design constraints
   rather than informal operator memory.
