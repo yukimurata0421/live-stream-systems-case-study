@@ -34,8 +34,10 @@ def metric_present(payload: str, name: str, label_text: str = "") -> bool:
 class StreamV3PrometheusExporterTests(unittest.TestCase):
     def test_default_repo_root_is_derived_from_public_checkout(self) -> None:
         exporter = load_exporter()
+        expected_repo_root = Path(__file__).resolve().parents[1]
 
-        self.assertTrue(str(exporter.DEFAULT_REPO_ROOT).endswith("stream_v3"))
+        self.assertEqual(exporter.DEFAULT_REPO_ROOT, expected_repo_root)
+        self.assertTrue((exporter.DEFAULT_REPO_ROOT / "pyproject.toml").exists())
         self.assertNotIn("/home/yuki/projects/stream_v3", str(exporter.DEFAULT_REPO_ROOT))
         self.assertEqual(exporter.DEFAULT_STATE_ROOT, exporter.DEFAULT_REPO_ROOT / ".state" / "observability-monitor")
 
