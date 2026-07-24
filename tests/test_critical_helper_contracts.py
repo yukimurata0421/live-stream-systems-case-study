@@ -487,6 +487,38 @@ class NotificationAutoRecoveredContractTests(unittest.TestCase):
         self.assertEqual(events[0]["evidence"], "network recovered")
         self.assertEqual(events[0]["recovery_type"], "fast_recovery_restart:network_down")
 
+    def test_auto_recovered_event_waits_for_recovery_sample_when_recent(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            events_file = Path(td) / "fast_recovery_events.jsonl"
+            rows = [
+                {
+                    "ts_utc": self._utc(1950),
+                    "kind": "restart",
+                    "trigger": "network_down",
+                    "message": "network recovered",
+                }
+            ]
+            events_file.write_text("\n".join(json.dumps(row) for row in rows) + "\n", encoding="utf-8")
+
+            recent = status_loop.fast_recovery_auto_recovered_events(
+                state={},
+                now_ts=2000,
+                recent_sec=600,
+                triggers=["network_down"],
+                events_file=events_file,
+            )
+            aged = status_loop.fast_recovery_auto_recovered_events(
+                state={},
+                now_ts=2140,
+                recent_sec=600,
+                triggers=["network_down"],
+                events_file=events_file,
+            )
+
+        self.assertEqual(recent, [])
+        self.assertEqual(len(aged), 1)
+        self.assertEqual(aged[0]["diagnostic_context"], "tcp_sample_context=missing")
+
     def test_mark_auto_recovered_notifications_compacts_old_acknowledgements(self) -> None:
         state = {
             "fast_recovery_auto_recovered_notified": {

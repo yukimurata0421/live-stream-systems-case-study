@@ -97,6 +97,57 @@ def compact_report_evidence(item: dict, age_sec: int | None) -> str:
     return " ".join(parts)
 
 
+def _compact_counts(value: object, *, limit: int = 3) -> str:
+    if not isinstance(value, dict) or not value:
+        return "{}"
+    parts: list[str] = []
+    for key, count in sorted(value.items(), key=lambda item: str(item[0]))[: max(1, limit)]:
+        parts.append(f"{key}:{count}")
+    suffix = "" if len(value) <= limit else f",+{len(value) - limit}"
+    return "{" + ",".join(parts) + suffix + "}"
+
+
+def compact_observe_context(payload: dict, checks: dict | None = None) -> str:
+    checks = checks if isinstance(checks, dict) else {}
+    parts = [
+        f"pass={payload.get('pass', '')}",
+        f"current_fail={checks.get('current_fail', '')}",
+        f"historical_degraded={checks.get('historical_degraded', '')}",
+        f"fast_recovery_1h={payload.get('fast_recovery_restart_count_1h', '')}",
+        f"fast_recovery_24h={payload.get('fast_recovery_restart_count_24h', '')}",
+        f"fr_triggers={_compact_counts(payload.get('fast_recovery_restart_triggers'))}",
+        f"upload_p95={payload.get('ffmpeg_tcp_send_mbps_24h_p95', '')}",
+        f"upload_max={payload.get('ffmpeg_tcp_send_mbps_24h_max', '')}",
+        f"public_probe={payload.get('public_probe_judgment', '')}",
+        f"api_report={payload.get('api_report_judgment', '')}",
+    ]
+    return " ".join(parts)[:320]
+
+
+def compact_api_report_context(payload: dict) -> str:
+    reports = payload.get("api_cost_reports") if isinstance(payload.get("api_cost_reports"), dict) else {}
+    open_day = reports.get("open_day_latest") if isinstance(reports.get("open_day_latest"), dict) else {}
+    closed_day = reports.get("closed_day_latest") if isinstance(reports.get("closed_day_latest"), dict) else {}
+    timers = reports.get("timers") if isinstance(reports.get("timers"), dict) else {}
+    timer_parts: list[str] = []
+    for name, timer in sorted(timers.items(), key=lambda item: str(item[0]))[:3]:
+        timer_parts.append(f"{name}:active={bool(isinstance(timer, dict) and timer.get('active') is True)}")
+    return (
+        f"open_day_fresh={payload.get('api_report_open_day_fresh', open_day.get('fresh', ''))} "
+        f"closed_day_fresh={payload.get('api_report_closed_day_fresh', closed_day.get('fresh', ''))} "
+        f"timers_active={payload.get('api_report_timers_active', '')} "
+        f"timers={{{','.join(timer_parts)}}}"
+    )[:320]
+
+
+def compact_report_context(*, item: dict, age_sec: int | None, max_age_sec: int, path: Path) -> str:
+    state = "missing" if not item else ("stale" if age_sec is None or age_sec > max_age_sec else "fresh")
+    return (
+        f"report_state={state} source={path.name} age={seconds_to_human(age_sec)} "
+        f"max_age={seconds_to_human(max_age_sec)} target={item.get('target', '') if item else ''}"
+    )[:320]
+
+
 def recovery_type_from_observe(payload: dict) -> str:
     if payload.get("watchdog_restart_reasons"):
         return "stream_watchdog_restart"
@@ -188,6 +239,7 @@ def incident(
     recovery_type: str,
     follow_up: str,
     observed_ts: int | None = None,
+    diagnostic_context: str = "",
 ) -> dict:
     payload = {
         "id": ident,
@@ -198,6 +250,8 @@ def incident(
         "recovery_type": recovery_type,
         "follow_up": follow_up,
     }
+    if diagnostic_context:
+        payload["diagnostic_context"] = str(diagnostic_context)[:320]
     try:
         value = int(observed_ts or 0)
     except Exception:
@@ -222,6 +276,7 @@ def collect_notification_incidents(
     _rc, payload, error = observe_payload(24)
     checks = payload.get("checks") if isinstance(payload.get("checks"), dict) else {}
     recovery_type = recovery_type_from_observe(payload)
+    observe_context = compact_observe_context(payload, checks)
 
     if error and not payload:
         incidents.append(
@@ -250,6 +305,7 @@ def collect_notification_incidents(
                 ),
                 recovery_type=recovery_type,
                 follow_up="recovery event後に health-summary と stream_engine_events.jsonl を突き合わせる",
+                diagnostic_context=observe_context,
             )
         )
     elif checks.get("youtube_current_degraded") is True:
@@ -265,6 +321,7 @@ def collect_notification_incidents(
                 ),
                 recovery_type=recovery_type,
                 follow_up="OAuth/Data API/local ingest のどれが degraded を支えているか確認する",
+                diagnostic_context=observe_context,
             )
         )
 
@@ -278,6 +335,7 @@ def collect_notification_incidents(
                 evidence=str(payload.get("api_report_judgment_reason", "")),
                 recovery_type="api_cost_report_timer_recovery",
                 follow_up="latest.json/open_day_latest.json と api cost report timer の更新時刻を確認する",
+                diagnostic_context=compact_api_report_context(payload),
             )
         )
 
@@ -296,6 +354,7 @@ def collect_notification_incidents(
                 ),
                 recovery_type="resolver_hysteresis_exit_or_api_guard",
                 follow_up="fast mode exit 条件と PT API usage の増分を確認する",
+                diagnostic_context=observe_context,
             )
         )
 
@@ -318,6 +377,7 @@ def collect_notification_incidents(
                 ),
                 recovery_type="encoder_or_stream_restart_if_current_fail",
                 follow_up="YouTube public state と local encoder state の gap が回復したか確認する",
+                diagnostic_context=observe_context,
             )
         )
 
@@ -334,6 +394,7 @@ def collect_notification_incidents(
                 ),
                 recovery_type="fast_recovery_restart:remote_warning",
                 follow_up="remote-warning-compare で local TCP と YouTube remote warning を再分離する",
+                diagnostic_context=observe_context,
             )
         )
 
@@ -350,6 +411,7 @@ def collect_notification_incidents(
                 ),
                 recovery_type="ffmpeg_child_self_recovery:exit_224_broken_pipe",
                 follow_up="Broken pipe が複数回なら ISP/RTMP ingest/上流ネットワークの切り分けに昇格する",
+                diagnostic_context=observe_context,
             )
         )
 
@@ -375,6 +437,7 @@ def collect_notification_incidents(
                 ),
                 recovery_type="observe_rtmps_ssl_tls_before_transport_reclassification",
                 follow_up="journal / stream_engine_events / fast_recovery_events の SSL/TLS reason を見て RTMPS 固有か通常 transport か切り分ける",
+                diagnostic_context=observe_context,
             )
         )
 
@@ -395,6 +458,7 @@ def collect_notification_incidents(
                 ),
                 recovery_type="observe_only_no_restart_when_oauth_data_api_local_ok",
                 follow_up="OAuth/Data API/local ingest が正常なら outage ではなく観測ノイズとして扱う",
+                diagnostic_context=observe_context,
             )
         )
 
@@ -430,6 +494,12 @@ def collect_notification_incidents(
                     recovery_type="report_only_observation_no_stream_restart",
                     follow_up="次の report-only sample で report_only_ok に戻るか確認する。連続するなら upstream/overlay を個別復旧する",
                     observed_ts=observed_ts,
+                    diagnostic_context=compact_report_context(
+                        item=item,
+                        age_sec=age,
+                        max_age_sec=report_stale_sec,
+                        path=path,
+                    ),
                 )
             )
 
@@ -442,6 +512,7 @@ def recovery_observation_for_incident(
     *,
     stream1090_report_events_file: Path,
     upstream_report_events_file: Path,
+    observe_payload: ObservePayload | None = None,
 ) -> tuple[int, str]:
     spec = report_incident_spec(
         ident,
@@ -449,7 +520,27 @@ def recovery_observation_for_incident(
         upstream_report_events_file=upstream_report_events_file,
     )
     if spec is None:
-        return now_ts, ""
+        if observe_payload is None:
+            return now_ts, "current incident absent; no component-specific recovery probe configured"
+        _rc, payload, error = observe_payload(24)
+        if error and not payload:
+            return now_ts, f"current incident absent; observe_probe_error={error[:160]}"
+        checks = payload.get("checks") if isinstance(payload.get("checks"), dict) else {}
+        if ident == "stream:current_fail":
+            return (
+                now_ts,
+                (
+                    f"current_fail={checks.get('current_fail')} "
+                    f"youtube_status={checks.get('youtube_current_status')} "
+                    f"youtube_judgment={checks.get('youtube_current_judgment')} "
+                    f"youtube_stats_stale={checks.get('youtube_stats_stale')} "
+                    f"pulse_pass={checks.get('pulse_pass')} "
+                    f"pass={payload.get('pass')}"
+                )[:320],
+            )
+        if ident == "api_report:freshness_or_timer":
+            return now_ts, compact_api_report_context(payload)
+        return now_ts, f"current incident absent; {compact_observe_context(payload, checks)}"
     path, target = spec
     item, age = latest_jsonl_item(path, target=target, now_ts=now_ts)
     observed_ts = parse_utc_ts(str(item.get("ts_utc", ""))) if item else 0

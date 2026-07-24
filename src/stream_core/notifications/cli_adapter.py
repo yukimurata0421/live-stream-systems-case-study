@@ -147,6 +147,7 @@ def recovery_observation_for_incident(ctx: NotifyCliContext, ident: str, now_ts:
         now_ts,
         stream1090_report_events_file=ctx.stream1090_report_events_file,
         upstream_report_events_file=ctx.upstream_report_events_file,
+        observe_payload=ctx.observe_payload,
     )
 
 

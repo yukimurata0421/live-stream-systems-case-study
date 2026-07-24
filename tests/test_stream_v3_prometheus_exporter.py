@@ -39,6 +39,14 @@ class StreamV3PrometheusExporterTests(unittest.TestCase):
         self.assertNotIn("/home/yuki/projects/stream_v3", str(exporter.DEFAULT_REPO_ROOT))
         self.assertEqual(exporter.DEFAULT_STATE_ROOT, exporter.DEFAULT_REPO_ROOT / ".state" / "observability-monitor")
 
+    def test_exporter_cache_default_matches_public_monitoring_unit(self) -> None:
+        exporter = load_exporter()
+
+        with mock.patch("sys.argv", ["stream_v3_prometheus_exporter.py"]):
+            args = exporter.parse_args()
+
+        self.assertEqual(args.cache_sec, 60.0)
+
     def test_run_json_passes_v3_state_environment_to_cli(self) -> None:
         exporter = load_exporter()
         repo_root = Path("/tmp/stream-v3")

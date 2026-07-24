@@ -74,6 +74,10 @@ For recurring RTMPS transport stalls, compare delivery TCP state with
 non-YouTube WAN evidence before changing YouTube lifecycle or encoder policy.
 The retained public model is in `tcp-stall-case-study.md`.
 
+As of the 2026-07 public-safe review, the current primary recurrence window is
+`10:55-11:15 JST`. The earlier `08:00-08:20 JST` window is retained for
+historical comparison.
+
 Check:
 
 - FFmpeg TCP `lastsnd_ms`, `notsent`, `unacked`, and send throughput

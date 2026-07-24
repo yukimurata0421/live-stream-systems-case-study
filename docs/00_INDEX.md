@@ -44,6 +44,7 @@ Use the rest of this page as a reference catalog.
 - `v3/sli-and-dashboard.md`
 - `v3/rolling-sli-error-budget-feedback.md`
 - `v3/observability-plane-self-check.md`
+- `v3/notification-diagnostic-boundary.md`
 - `v3/tcp-stall-case-study.md`
 - `v3/tcp-stall-resolution-depth.md`
 - `v3/fast-recovery-classifier-replay.md`
@@ -60,6 +61,7 @@ Use the rest of this page as a reference catalog.
 - `v3/visual-audio-health-model.md`
 - `v3/memory-guard-case-study.md`
 - `v3/notification-and-auto-recovery.md`
+- `v3/notification-diagnostic-boundary.md`
 - `v3/runbook-validation.md`
 - `v3/runbooks.md`
 - `v3/open-followups.md`

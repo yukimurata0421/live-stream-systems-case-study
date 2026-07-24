@@ -132,6 +132,26 @@ The stream system should keep preserving the current URL and recovering the
 delivery path. The decisive next evidence for ownership is CPE settings and CPE
 logs around the recurring morning window.
 
+## Timing Update
+
+The original validation work focused on an 08 JST morning recurrence. A later
+public-safe review in 2026-07 found that the same TCP-stall / WAN-session
+family had shifted after 2026-06-29 toward an 11 JST recurrence window.
+
+The direct `tcp_stall` trigger was observed around 11:03 JST, and later events
+in the same family were often classified as `network_down` or low-upload
+pressure. The operational reading is therefore intentionally broad: track the
+current recurrence as a transport/WAN-session family, not only as rows whose
+trigger label is exactly `tcp_stall`.
+
+Current validation guidance:
+
+- use `10:55-11:15 JST` as the primary recurrence window;
+- keep `08:00-08:20 JST` as a historical comparison window;
+- keep same-URL and YouTube lifecycle evidence separate from transport
+  recovery evidence;
+- do not use the timing shift alone to change encoder or broadcast policy.
+
 ## Operational Decision
 
 No YouTube broadcast replacement was justified by this evidence. The same-URL

@@ -845,7 +845,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--port", type=int, default=9108)
     parser.add_argument("--repo-root", type=Path, default=None)
     parser.add_argument("--state-root", type=Path, default=None)
-    parser.add_argument("--cache-sec", type=float, default=240.0)
+    parser.add_argument("--cache-sec", type=float, default=60.0)
     parser.add_argument("--timeout-sec", type=float, default=45.0)
     return parser.parse_args()
 

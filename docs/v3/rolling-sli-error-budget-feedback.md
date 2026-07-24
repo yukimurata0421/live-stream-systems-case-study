@@ -1,9 +1,10 @@
 # Rolling SLI And Error-Budget Feedback
 
-This page is a public-safe summary of a point-in-time rolling SLI review from
-2026-06-13 JST. It is included because it shows how `stream_v3` reads current
-dashboard windows without confusing them with the historical 14-day and 28-day
-case-study claims.
+This page is a public-safe summary of point-in-time rolling SLI reviews. The
+first retained snapshot was 2026-06-13 JST, and the latest public-safe refresh
+in this file is 2026-07-24 JST. It is included because it shows how
+`stream_v3` reads current dashboard windows without confusing them with the
+historical 14-day and 28-day case-study claims.
 
 The source review used private Prometheus/report evidence. This public version
 keeps the window sizes, denominators, burn numbers, and decisions, but excludes
@@ -44,6 +45,30 @@ Point-in-time review: `2026-06-13 JST`.
 The 24-hour view was read as fast feedback, not as a long-window reliability
 claim. The available 30-day trend was also treated as trend-only when the
 retention coverage did not span a complete 30 days.
+
+## Latest Public-Safe Refresh
+
+Point-in-time review: `2026-07-24 JST`.
+
+| Signal | Feedback window | Result | Reading |
+| --- | --- | ---: | --- |
+| Same URL preservation | rolling 24h / 7d / 30d feedback | `100.0000%` / `99.8016%` / `99.6898%` | No current same-URL burn. Short historical gaps remain feedback evidence, not broadcast-replacement authority. |
+| YouTube watchdog health | rolling 24h / 7d / 30d feedback | `100.0000%` / `99.8611%` / `99.9676%` | Current watchdog state was healthy; public probe noise was cross-checked against authoritative live evidence before classification. |
+| Visual correctness | rolling 24h / 7d / 30d feedback | `100.0000%` / `99.8413%` / `99.4676%` | ADS-B rendering remained healthy in the current window; freshness is read from successful evidence, not only from raw source-change age. |
+| Audio correctness | rolling 24h / 7d / 30d feedback | `100.0000%` / `99.9206%` / `99.9167%` | Audio stayed inside the feedback budget. |
+| Upload ceiling | rolling 24h feedback | p95 `4.85 Mbps`, max `4.87 Mbps`, over-budget `0 sec` | Upload stayed below the 5.0 Mbps guardrail; no encoder-quality reduction was justified. |
+| Recovery budget | rolling 24h feedback | restart count `0` | No current fast-recovery burn. |
+
+The current host memory guard carried a watch-level swap warning, but not a
+current stream incident. The public decision remains unchanged: memory guard
+warnings should be separated from user-facing delivery faults unless current
+runtime evidence shows impact.
+
+The same review also found that the recurring TCP stall / WAN-session evidence
+had moved from the earlier 08 JST morning family to an 11 JST family after
+2026-06-29. The latest runbook guidance therefore treats `10:55-11:15 JST` as
+the current primary validation window, while retaining `08:00-08:20 JST` for
+historical comparison.
 
 ## Decision Rules
 

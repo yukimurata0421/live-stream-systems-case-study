@@ -12,6 +12,7 @@
   - `rolling-sli-error-budget-feedback.md`
   - `public-status-snapshot.md`
   - `observability-plane-self-check.md`
+  - `notification-diagnostic-boundary.md`
   - `fast-recovery-classifier-replay.md`
   - `youtube-lifecycle-safety.md`
   - `encoder-upload-case-study.md`
@@ -76,6 +77,9 @@ For a focused reliability review:
 - `observability-plane-self-check.md` documents why exporter timeouts,
   snapshot fallback, and `No data` dashboards are observability-plane incidents
   unless fresh delivery evidence also fails.
+- `notification-diagnostic-boundary.md` documents what notification messages
+  can diagnose directly, what evidence they add for fast recovery and report
+  incidents, and where raw logs remain necessary for ownership.
 - `../compliance-and-licensing-boundary.md` documents how ADS-B publication,
   receiver privacy, and NCS attribution were treated as design constraints
   rather than informal operator memory.

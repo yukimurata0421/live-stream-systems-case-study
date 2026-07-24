@@ -76,3 +76,8 @@ The notification layer uses:
 The system treats notification delivery as a secondary SLI. It matters for
 operations, but notification failure is not proof of stream failure, and
 auto-recovery information is not automatically an active outage.
+
+The diagnostic boundary for those messages is documented in
+[`notification-diagnostic-boundary.md`](notification-diagnostic-boundary.md).
+That article explains which fault layers the notification can separate directly
+and which root-cause claims still require raw evidence.

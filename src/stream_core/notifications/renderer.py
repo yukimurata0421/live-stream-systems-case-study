@@ -38,9 +38,11 @@ def format_discord_message(*, phase: str, incidents: list[dict], state: dict, no
                     f"  action={item.get('summary')}",
                     f"  recovery_type={item.get('recovery_type')}",
                     f"  evidence={item.get('evidence')}",
-                    f"  follow_up={item.get('follow_up')}",
                 ]
             )
+            if item.get("diagnostic_context"):
+                lines.append(f"  context={item.get('diagnostic_context')}")
+            lines.append(f"  follow_up={item.get('follow_up')}")
         if len(incidents) > 8:
             lines.append(f"... {len(incidents) - 8} more events omitted")
         content = "\n".join(lines)
@@ -100,6 +102,8 @@ def format_discord_message(*, phase: str, incidents: list[dict], state: dict, no
                 f"  {evidence_label}={item.get('evidence')}",
             ]
         )
+        if item.get("diagnostic_context"):
+            lines.append(f"  context={item.get('diagnostic_context')}")
         if phase == "recovered":
             lines.append(f"  recovery_evidence={item.get('_recovery_evidence', '')}")
         lines.append(f"  follow_up={item.get('follow_up')}")

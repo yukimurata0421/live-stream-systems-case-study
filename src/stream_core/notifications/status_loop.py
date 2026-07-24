@@ -48,20 +48,32 @@ def fast_recovery_auto_recovered_events(
         acknowledged = {}
 
     cutoff = int(now_ts) - max(60, int(recent_sec or 0))
-    events: list[dict] = []
+    context_cutoff = cutoff - 300
+    context_end = int(now_ts) + 60
+    tcp_samples: list[tuple[int, dict]] = []
+    restart_candidates: list[tuple[int, str, str, dict]] = []
     for item in iter_jsonl(events_file):
+        event_ts = parse_utc_ts(str(item.get("ts_utc", "")))
+        if event_ts > 0 and context_cutoff <= event_ts <= context_end and str(item.get("kind", "")) == "tcp_send_sample":
+            tcp_samples.append((event_ts, item))
         if str(item.get("kind", "")) != "restart":
             continue
         trigger = str(item.get("trigger", "")).strip()
         if trigger not in trigger_set:
             continue
-        event_ts = parse_utc_ts(str(item.get("ts_utc", "")))
         if event_ts <= 0 or event_ts < cutoff or event_ts > int(now_ts) + 60:
             continue
         key = f"{item.get('ts_utc')}|{trigger}"
         if acknowledged.get(key):
             continue
+        restart_candidates.append((event_ts, trigger, key, item))
+
+    events: list[dict] = []
+    for event_ts, trigger, key, item in restart_candidates:
         evidence = str(item.get("message", "") or item.get("reason", "") or f"trigger={trigger}")
+        diagnostic_context = fast_recovery_restart_diagnostic_context(event_ts, tcp_samples)
+        if "recovery_lag_sec=" not in diagnostic_context and (int(now_ts) - event_ts) < 180:
+            continue
         events.append(
             {
                 "id": f"fast_recovery:auto_recovered:{trigger}:{int(event_ts)}",
@@ -74,11 +86,79 @@ def fast_recovery_auto_recovered_events(
                 "observed_ts": int(event_ts),
                 "trigger": trigger,
                 "_event_key": key,
+                "diagnostic_context": diagnostic_context,
             }
         )
 
     events.sort(key=lambda event: int(event.get("observed_ts", 0) or 0))
     return events[-max(1, int(max_events)) :]
+
+
+def _tcp_sample_number(item: dict, key: str) -> str:
+    value = item.get(key, "")
+    if value is None:
+        return ""
+    if isinstance(value, float):
+        return f"{value:.3f}".rstrip("0").rstrip(".")
+    return str(value)
+
+
+def compact_tcp_send_sample(label: str, event_ts: int, sample_ts: int, item: dict) -> str:
+    offset = sample_ts - event_ts
+    sign = "+" if offset >= 0 else ""
+    return (
+        f"{label}={sign}{offset}s "
+        f"mbps={_tcp_sample_number(item, 'mbps')} "
+        f"delta={_tcp_sample_number(item, 'bytes_sent_delta')} "
+        f"lastsnd={_tcp_sample_number(item, 'lastsnd_ms')} "
+        f"notsent={_tcp_sample_number(item, 'notsent')} "
+        f"unacked={_tcp_sample_number(item, 'unacked')} "
+        f"pid={_tcp_sample_number(item, 'ffmpeg_pid')}"
+    )
+
+
+def fast_recovery_restart_diagnostic_context(
+    event_ts: int,
+    tcp_samples: list[tuple[int, dict]],
+    *,
+    before_sec: int = 180,
+    after_sec: int = 300,
+    recovered_mbps: float = 4.5,
+) -> str:
+    before = [
+        (ts, item)
+        for ts, item in tcp_samples
+        if event_ts - max(1, before_sec) <= ts <= event_ts and str(item.get("kind", "")) == "tcp_send_sample"
+    ]
+    after = [
+        (ts, item)
+        for ts, item in tcp_samples
+        if event_ts < ts <= event_ts + max(1, after_sec) and str(item.get("kind", "")) == "tcp_send_sample"
+    ]
+    parts: list[str] = []
+    if before:
+        ts, item = before[-1]
+        parts.append(compact_tcp_send_sample("pre", event_ts, ts, item))
+    recovered = []
+    for ts, item in after:
+        try:
+            mbps = float(item.get("mbps", 0) or 0)
+        except Exception:
+            mbps = 0.0
+        if mbps >= recovered_mbps:
+            recovered.append((ts, item))
+            break
+    if recovered:
+        ts, item = recovered[0]
+        parts.append(compact_tcp_send_sample("post", event_ts, ts, item))
+        parts.append(f"recovery_lag_sec={ts - event_ts}")
+    elif after:
+        ts, item = after[0]
+        parts.append(compact_tcp_send_sample("post_first", event_ts, ts, item))
+        parts.append("recovery_lag_sec=unknown")
+    if not parts:
+        return "tcp_sample_context=missing"
+    return "; ".join(parts)[:320]
 
 
 def mark_fast_recovery_auto_recovered_events_notified(state: dict, events: list[dict], *, now_ts: int) -> None:

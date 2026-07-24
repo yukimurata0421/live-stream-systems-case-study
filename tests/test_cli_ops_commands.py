@@ -1165,13 +1165,41 @@ class CliOpsCommandsTests(unittest.TestCase):
             outbox_file = root / "notify_outbox.jsonl"
             fast_events_file = root / "fast_recovery_events.jsonl"
             fast_events_file.write_text(
-                json.dumps(
-                    {
-                        "ts_utc": "1970-01-01T00:20:00Z",
-                        "kind": "restart",
-                        "trigger": "tcp_stall",
-                        "message": "tcp stall: bytes_delta=0 lastsnd_ms=12332 notsent=1649460 unacked=390",
-                    }
+                "\n".join(
+                    [
+                        json.dumps(
+                            {
+                                "ts_utc": "1970-01-01T00:19:00Z",
+                                "kind": "tcp_send_sample",
+                                "mbps": 4.8,
+                                "bytes_sent_delta": 36_000_000,
+                                "lastsnd_ms": 10,
+                                "notsent": 0,
+                                "unacked": 8,
+                                "ffmpeg_pid": 111,
+                            }
+                        ),
+                        json.dumps(
+                            {
+                                "ts_utc": "1970-01-01T00:20:00Z",
+                                "kind": "restart",
+                                "trigger": "tcp_stall",
+                                "message": "tcp stall: bytes_delta=0 lastsnd_ms=12332 notsent=1649460 unacked=390",
+                            }
+                        ),
+                        json.dumps(
+                            {
+                                "ts_utc": "1970-01-01T00:21:00Z",
+                                "kind": "tcp_send_sample",
+                                "mbps": 4.7,
+                                "bytes_sent_delta": 35_000_000,
+                                "lastsnd_ms": 20,
+                                "notsent": 0,
+                                "unacked": 5,
+                                "ffmpeg_pid": 222,
+                            }
+                        ),
+                    ]
                 )
                 + "\n",
                 encoding="utf-8",
@@ -1199,7 +1227,71 @@ class CliOpsCommandsTests(unittest.TestCase):
         self.assertIn("active_incidents=0", sent[0])
         self.assertIn("trigger=tcp_stall", sent[0])
         self.assertIn("stream service restart completed", sent[0])
+        self.assertIn("context=pre=-60s mbps=4.8", sent[0])
+        self.assertIn("post=+60s mbps=4.7", sent[0])
+        self.assertIn("recovery_lag_sec=60", sent[0])
         self.assertIn("1970-01-01T00:20:00Z|tcp_stall", state["fast_recovery_auto_recovered_notified"])
+
+    def test_notify_status_recovery_followup_uses_observe_payload_for_stream_health(self) -> None:
+        config = {
+            "enabled": True,
+            "webhook_url": "https://discord.example/webhook",
+            "repeat_sec": 60,
+            "maintenance_repeat_sec": 600,
+            "report_stale_sec": 1800,
+            "username": "test",
+            "outbox_ttl_sec": 86400,
+            "outbox_max_pending": 50,
+            "outbox_flush_limit": 10,
+        }
+        incident_payload = [
+            {
+                "id": "stream:current_fail",
+                "severity": "critical",
+                "component": "stream_health",
+                "summary": "current_fail=true",
+                "evidence": "youtube_status=warn youtube_judgment=ng youtube_stats_stale=False pulse_pass=True",
+                "recovery_type": "fast_recovery_restart:network_down",
+                "follow_up": "check recovery",
+                "observed_ts": 1000,
+            }
+        ]
+        recovered_observe_payload = {
+            "pass": True,
+            "checks": {
+                "current_fail": False,
+                "youtube_current_status": "ok",
+                "youtube_current_judgment": "ok",
+                "youtube_stats_stale": False,
+                "pulse_pass": True,
+            },
+        }
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            state_file = root / "notify_state.json"
+            events_file = root / "notify_events.jsonl"
+            outbox_file = root / "notify_outbox.jsonl"
+            sent: list[str] = []
+
+            def fake_send(_url: str, content: str, **_kwargs) -> tuple[bool, str]:
+                sent.append(content)
+                return True, "ok"
+
+            with mock.patch.object(cli, "NOTIFY_STATE_FILE", state_file):
+                with mock.patch.object(cli, "NOTIFY_EVENTS_FILE", events_file):
+                    with mock.patch.object(cli, "NOTIFY_OUTBOX_FILE", outbox_file):
+                        with mock.patch("cli.load_stream_notify_config", return_value=config):
+                            with mock.patch("cli._observe_payload", return_value=(0, recovered_observe_payload, "")):
+                                with mock.patch("cli.send_discord_webhook", side_effect=fake_send):
+                                    with mock.patch("cli.collect_notification_incidents", return_value=incident_payload):
+                                        self.assertEqual(cli.notify_status(now_ts=1000), 0)
+                                    with mock.patch("cli.collect_notification_incidents", return_value=[]):
+                                        self.assertEqual(cli.notify_status(now_ts=1061), 0)
+
+        self.assertEqual(len(sent), 2)
+        self.assertIn("復旧フォローアップ", sent[1])
+        self.assertIn("recovery_evidence=current_fail=False", sent[1])
+        self.assertIn("youtube_status=ok", sent[1])
 
     def test_notify_status_dry_run_does_not_mutate_state_or_events(self) -> None:
         config = {
