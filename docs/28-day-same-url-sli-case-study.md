@@ -6,6 +6,31 @@ objective, measure the denominator, separate invariants from availability, and
 publish the unresolved risks instead of hiding them behind a single uptime
 number.
 
+## Approximately 80-Day Continuity Checkpoint
+
+Retained evidence from `2026-05-06 10:36:17 JST` through
+`2026-07-25 08:22:08 JST` covers `79 days, 21 hours, 45 minutes`. It preserves
+the same public YouTube Live identity across the production cutover from the v2
+single-host runtime to the v3 k3s split-plane architecture.
+
+| Evidence item | Observed value | Interpretation boundary |
+| --- | --- | --- |
+| Measurement start | `2026-05-06 10:36:17 JST` | Start of the retained 14-day same-URL observation. |
+| Measurement endpoint | `2026-07-25 08:22:08 JST` | Fresh resolver state at this checkpoint, not a continuously sampled 80-day denominator. |
+| Expected video ID | `OpMzOBFwM7M` | The configured identity contract. |
+| Current selected video ID | `OpMzOBFwM7M` | The fresh resolver selection at the endpoint. |
+| Selected replacement actions | `0` observed across retained review windows | This is not a full YouTube broadcast inventory audit. |
+| Candidate-new-URL samples | `2` transient samples in the initial 14-day window | Both samples came from one short resolver mismatch interval and recovered without selection. |
+| V2 stopped | `2026-05-28 22:29:43 JST` | Final V2 runtime state was `stopped`; its resolver selected `OpMzOBFwM7M`. |
+| First retained V3 production-send evidence | `2026-05-28 22:41:31 JST` | A TCP send sample measured `4.900 Mbps`; the exact authority handoff was not separately logged. |
+| First V3 public identity evidence | `2026-05-28 22:57:22 JST` | Expected and selected IDs were both `OpMzOBFwM7M`; public-watch evidence was live. |
+| First fully healthy V3 identity sample | `2026-05-28 22:59:53 JST` | Local ingest, public evidence, and the same video ID were all healthy. |
+
+The defensible claim is URL identity preservation without a selected replacement
+broadcast. It is not a zero-downtime or frame-continuity claim. The retained
+V2-stop to first V3-send evidence gap is `11 minutes, 48 seconds`, so exact
+viewer-visible interruption during the handoff remains unknown.
+
 ## What Was Ported
 
 The public version intentionally selects only the material that helps a technical
@@ -66,7 +91,8 @@ Same-URL decision:
 Replacement broadcasts:
   observed selected replacement actions: 0
   observed allowed replacement decisions: 0
-  observed candidate-new-URL evidence: 0
+  initial 14-day candidate-new-URL samples: 2 transient samples, not selected
+  later v2/v3 raw extraction: 0 candidate-new-URL samples
 
 Current state at the review time:
   expected video id matched the resolver-selected video id
@@ -117,7 +143,8 @@ This is a real degradation in sample cleanliness, but it is not evidence of an
 actual URL change. The deciding evidence remained:
 
 ```text
-candidate-new-URL evidence: 0
+initial 14-day candidate-new-URL samples: 2 transient samples, not selected
+later v2/v3 raw extraction: 0 candidate-new-URL samples
 replacement allowed decisions: 0
 selected replacement actions: 0
 ```

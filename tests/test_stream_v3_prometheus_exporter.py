@@ -420,7 +420,7 @@ class StreamV3PrometheusExporterTests(unittest.TestCase):
         self.assertNotIn("stream_v3_resource_memory_age_seconds", payload)
         self.assertNotIn("stream_v3_recovery_action_blocked_count", payload)
 
-    def test_adsb_and_audio_metrics_come_from_subsystems_status(self) -> None:
+    def test_adsb_source_age_is_separate_from_rendering_evidence_age(self) -> None:
         exporter = load_exporter()
         with tempfile.TemporaryDirectory() as td:
             state_root = Path(td)
@@ -444,14 +444,31 @@ class StreamV3PrometheusExporterTests(unittest.TestCase):
                 ),
                 encoding="utf-8",
             )
+            (state_root / "watchdog").mkdir()
+            (state_root / "watchdog" / "adsb_freshness_state.json").write_text(
+                json.dumps(
+                    {
+                        "last_messages": 1234,
+                        "last_change_ts": 1990,
+                        "sample_ts": 1995,
+                        "status": "ok",
+                    }
+                ),
+                encoding="utf-8",
+            )
             with (
                 mock.patch.object(exporter, "run_json", side_effect=[{"windows": []}, {"metrics": {}}]),
                 mock.patch.object(exporter, "host_memory_snapshot", return_value={}),
                 mock.patch.object(exporter, "runtime_memory_snapshot", return_value={"containers": []}),
+                mock.patch.object(exporter.time, "time", return_value=2000),
             ):
                 payload = exporter.build_metrics(repo_root=Path(td), state_root=state_root, timeout_sec=1)
 
-        self.assertEqual(metric_value(payload, "stream_v3_adsb_evidence_age_seconds"), 85.0)
+        self.assertEqual(metric_value(payload, "stream_v3_adsb_evidence_available"), 1.0)
+        self.assertEqual(metric_value(payload, "stream_v3_adsb_evidence_age_seconds"), 10.0)
+        self.assertEqual(metric_value(payload, "stream_v3_adsb_source_age_seconds"), 10.0)
+        self.assertEqual(metric_value(payload, "stream_v3_adsb_source_sample_age_seconds"), 5.0)
+        self.assertEqual(metric_value(payload, "stream_v3_adsb_rendering_evidence_age_seconds"), 85.0)
         self.assertEqual(metric_value(payload, "stream_v3_adsb_rendering_ok"), 1.0)
         self.assertEqual(metric_value(payload, "stream_v3_adsb_messages_moving"), 1.0)
         self.assertEqual(metric_value(payload, "stream_v3_adsb_positions_moving"), 0.0)

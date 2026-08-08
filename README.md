@@ -7,486 +7,161 @@
 [![Live ADS-B stream screenshot](docs/assets/live-stream-screenshot.png)](https://www.youtube.com/@yukimurata0421/live)
 
 **Live stream:** <https://www.youtube.com/@yukimurata0421/live>
+
 **Public status snapshot:** <https://yukimurata0421.dev/>
-([boundary note](docs/v3/public-status-snapshot.md))
 
-This repository publishes `stream_v3` as a public systems case study for a
-self-built 24/7 YouTube Live pipeline. ADS-B visualization and NCS music are the
-workload; the primary focus is pipeline development, SLI-based monitoring,
-observability, recovery guard design, and operational decision-making.
+This is open-source code published as a reliability engineering case study, not
+a supported streaming product or general-purpose starter.
 
-This is open-source code published as a case study, not a supported OSS product
-or general-purpose starter.
+## 30-Second Summary
 
-## Reviewer Summary
+`stream_v3` is a self-built 24/7 YouTube Live pipeline for ADS-B visualization
+and NCS music. The engineering focus is same-watch-URL continuity, SLI-based
+monitoring, fault classification, bounded recovery authority, and public-safe
+status publication.
 
-`stream_v3` is a public systems case study of a self-built 24/7 YouTube Live
-delivery pipeline.
+The system runs across three home hosts:
 
-The main result is not simple uptime. The system has been operated through a
-monthly-window same-URL review while preserving the public YouTube Live identity
-and absorbing recoverable delivery faults through fast recovery, staged
-remediation, and SLI-based monitoring.
+- an HP ProDesk owns the Airspy/readsb source and private k3s observability
+  workloads;
+- a Dell workstation owns the k3s delivery runtime, browser/audio/FFmpeg, and
+  local fast recovery;
+- a Raspberry Pi pulls allowlisted evidence through its local Grafana proxy and
+  publishes a static snapshot to GCS, which Cloudflare serves publicly.
 
-It demonstrates:
-
-- k3s runtime operation for both the delivery workload and the ProDesk-side
-  observability/control workloads;
-- delivery-plane / observability-plane separation;
-- same-URL continuity as a production invariant;
-- public-safe status publication through GCS + Cloudflare;
-- TCP stall / WAN-session fault classification;
-- recovery guard design that avoids unsafe YouTube lifecycle mutation.
-
-This is a single-operator, three-home-host reliability case study, not a
-commercial multi-tenant service or a supported OSS starter.
+This is a single-operator system with a small blast radius. Its value is the
+explicit evidence and safety boundaries, not enterprise scale.
 
 ## Evidence Snapshot
 
-The strongest measurements are intentionally front-loaded here, with their
-limits attached:
+**Approximately 80 days on one public YouTube Live URL.** The same public Live
+identity was preserved from the initial measurement checkpoint through the
+production cutover from the v2 single-host runtime to the v3 k3s split-plane
+architecture, with no selected replacement action observed.
+
+| Continuity evidence | Measured value |
+| --- | --- |
+| Measurement start | `2026-05-06 10:36:17 JST` |
+| Measurement endpoint | `2026-07-25 08:22:08 JST` (`79 days, 21 hours, 45 minutes`) |
+| Expected video ID | `OpMzOBFwM7M` |
+| Current selected video ID | `OpMzOBFwM7M` |
+| Observed replacement actions | `0` across the retained review windows |
+| Candidate-new-URL samples | `2` transient samples in the initial 14-day window; neither was selected |
+| V2 stopped | `2026-05-28 22:29:43 JST` |
+| First retained V3 production-send evidence | `2026-05-28 22:41:31 JST` |
+| Cutover video ID check | V2 final resolver and V3 first public identity evidence both selected `OpMzOBFwM7M` |
+
+This establishes URL identity preservation, not uninterrupted frame delivery.
+The exact production-authority handoff was not logged as a standalone event,
+and the retained V2-stop to V3-send evidence gap is `11 minutes, 48 seconds`.
+The detailed evidence and counting boundaries are in the
+[same-URL SLI case study](docs/28-day-same-url-sli-case-study.md).
 
 | Signal | Measured result | Boundary |
 | --- | --- | --- |
-| k3s service restart drill | 10.7 seconds from fault injection to stream_v3 observability metrics OK; the same FFmpeg PID and TCP socket survived, and `bytes_sent` advanced by 37,503,068 bytes across the drill. | This proves k3s control-plane / observability recovery and RTMPS process continuity for this fault. It is not a node reboot, disk restore, RTMPS reconnect, or readsb/tar1090 source-recovery drill. |
-| Viewer-facing impact during that drill | YouTube ingest, public watch, same-URL, and watchdog metrics stayed OK in the sampled window; no monitored viewer-facing interruption was observed. | Prometheus/YouTube sampling does not prove every delivered frame. |
-| Error-budget reading | The k3s drill burned at most 10.7 seconds of control-plane availability; monitored viewer-facing burn was treated as zero because the same RTMPS socket continued sending and public signals stayed OK. | Long-window reliability claims remain in the 14-day / 28-day SLI docs. |
-| Transport MTTR baseline | Historical `tcp_stall` clusters had 90.0s median local transport MTTR, 1190.8s p95, and 1474.0s max. | Local transport MTTR is not direct viewer MTTR. |
-| Same-URL continuity review | The 28-day same-URL review recorded `pass`, selected replacement actions `0`, allowed replacement decisions `0`, and candidate-new-URL evidence `0`; the v3 strict same-URL sample window was `6558 / 6568`, `99.848%`. | This is a retained historical review window, not a current uptime promise or proof that every delivered frame was audited. |
+| k3s service restart drill | 10.7 seconds to observability metrics OK; the FFmpeg PID and TCP socket survived, and `bytes_sent` advanced by 37,503,068 bytes. | This was not a node reboot, disk restore, or RTMPS reconnect drill. |
+| Viewer-facing drill signals | YouTube ingest, public watch, same URL, and watchdog metrics stayed OK in the sampled window. | Sampling does not prove every delivered frame. |
+| Transport MTTR baseline | Historical `tcp_stall` clusters: 90.0s median, 1190.8s p95, 1474.0s max local transport MTTR. | Local transport MTTR is not direct viewer MTTR. |
+| 28-day same-URL review | Replacement actions `0`; strict v3 same-URL samples `6558 / 6568`, `99.848%`. | This is a retained historical window, not a current uptime promise. |
 
-Scope calibration: this is a single-operator, three-home-host personal 24/7
-stream with real production operation and a GCS/Cloudflare static edge, but not
-a commercial multi-tenant service or a contractual user SLO. The repository is
-meant to show reliability discipline at small blast radius, not to imply
-enterprise traffic scale.
+The measured, tested, documented, and unknown status of each claim is kept in
+the [operational scorecard](docs/operational-scorecard.md).
 
-## What This Repository Demonstrates
-
-### Production-style Operation
-
-- 24/7 YouTube Live delivery operation.
-- Same public YouTube Live URL preservation as a production invariant.
-- Daily recoverable fault absorption through fast recovery, staged remediation,
-  and explicit guardrails.
-- ADS-B source-chain boundary: Airspy on HP ProDesk, `airspy_adsb`, readsb,
-  Dell-side readsb and a modified tar1090 map endpoint, then `stream_v3`
-  delivery.
-
-### Runtime And Recovery Architecture
-
-- k3s runtime boundary for browser rendering, audio, AutoDJ, FFmpeg, NVENC,
-  local fast recovery, and RTMPS delivery.
-- Streaming overlay contract: the live `stream-v3-runtime` Pod runs
-  `stream-engine`, `auto-dj`, and `fast-recovery-loop`. The base/shadow runtime
-  manifest includes a report-only `network-observer` sidecar, and
-  `deploy/k3s/streaming` swaps it out for the local fast recovery loop before
-  live operation.
-- Failure classification across rendering, audio, FFmpeg, RTMPS, API, and
-  monitoring paths.
-- Delivery-plane / observability-plane separation across Dell workstation and
-  HP ProDesk hardware, with both sides represented as k3s-owned v3 workloads.
-- HP ProDesk k3s observability role: `stream-v3-control` for the monitor loop,
-  `stream-v3-observer` for the Prometheus exporter, YouTube resolver/watchdog,
-  stream watchdog, subsystem SLI, notifications, recovery orchestration, and
-  private Prometheus/Loki/Grafana evidence presentation.
-- Recovery guard design that keeps monitors from directly owning FFmpeg.
-- Scoped recovery authority for same-URL-preserving Auto DJ and RTMPS FFmpeg
-  recovery.
-- Shadow mode and cutover safety before destructive actions.
-- Contract tests for unsafe recovery prevention and stale evidence handling.
-
-### Observability And Public Evidence
-
-- Raspberry Pi public publisher role: collect public-safe evidence through the
-  Pi-local nginx `/grafana/` proxy to the HP ProDesk Grafana datasource proxy,
-  build static JSON/assets, and push them outbound to GCS.
-- The Raspberry Pi is not the k3s node and does not own the private monitoring
-  backend; it only publishes the reduced public-safe snapshot.
-- Public-safe status presentation: Cloudflare serves the GCS snapshot without
-  sending public reads through the home uplink or exposing Grafana, Prometheus,
-  Loki, raw logs, credentials, or home-network ingress to
-  `yukimurata0421.dev` readers.
-- `ops/monitoring` evidence path with Prometheus, Loki, Grafana, and Alloy
-  configuration.
-- YouTube API quota-aware monitoring.
-
-### Reliability Evidence
-
-- SLI methodology that separates production invariants, primary SLIs,
-  guardrails, secondary SLIs, and incident metrics.
-- 28-day same-URL review with replacement-action counters kept separate from
-  availability ratios.
-- TCP stall root-cause split across delivery TCP state, WAN identity,
-  non-YouTube anchors, YouTube lifecycle evidence, and recovery policy.
-- k3s service restart drill with same FFmpeg PID/TCP socket continuity.
-- Fast-recovery classifier replay over retained events.
-
-| What breaks | How stream_v3 protects it |
-| --- | --- |
-| Airspy, `airspy_adsb`, ProDesk readsb, or the Dell readsb / modified tar1090 map feed gets stale. | Source freshness is treated as ADS-B evidence, separate from browser/audio/encoder failure. |
-| Browser, audio, FFmpeg, RTMPS, or GPU encoding stalls. | The Dell `stream_v3` k3s delivery tier owns local runtime recovery without giving monitors direct FFmpeg ownership. |
-| YouTube API/public evidence, k3s runtime evidence, or monitoring state gets stale or misleading. | The HP ProDesk observability tier pulls read-only YouTube and runtime evidence, applies quota/freshness guards, and only then requests staged k3s recovery. |
-| The public status site gets confused with the monitoring backend or starts consuming home uplink bandwidth. | Private Prometheus, Loki, Alloy, Grafana, and the v3 exporter remain on HP ProDesk; Raspberry Pi pulls public-safe evidence through its local Grafana proxy and pushes the allowlisted static snapshot to GCS + Cloudflare so public reads terminate at the static edge. Non-static operational access is outside the `yukimurata0421.dev` publication path and is not named as a public endpoint here. |
-
-The important design point is separation of authority:
-
-- The delivery tier owns browser/audio/FFmpeg/k3s runtime behavior.
-- The observability tier reads evidence and proposes guarded recovery.
-- The public status tier publishes reduced, allowlisted snapshots only.
-- YouTube lifecycle mutation is not triggered from ambiguous transport,
-  dashboard, or upload-budget symptoms.
-
-### Delivery Path
+## System Architecture
 
 ```mermaid
 flowchart LR
-    subgraph PD["HP ProDesk (.60)"]
-        AIR["Airspy + airspy_adsb + readsb<br/>beast out :30005"]
+    subgraph PD["HP ProDesk / source + private observability"]
+        AIR["Airspy + airspy_adsb + readsb"]
+        MON["stream-v3-control"]
+        EXP["stream-v3-observer"]
+        GRAF["Prometheus + Loki + Grafana"]
+        GUARD["recovery orchestrator + guard"]
+        MON --> EXP --> GRAF
+        MON --> GUARD
     end
 
-    subgraph DELL["Dell / k3s node (.35)"]
-        RS["readsb<br/>beast in :30104"]
-        T1090["modified tar1090 map<br/>/tar1090/"]
-        subgraph K3S["k3s ns stream-v3 / stream-v3-runtime (3/3)"]
-            ENG["stream-engine<br/>Xvfb + Chromium + overlay<br/>PulseAudio + FFmpeg / NVENC"]
-            DJ["auto-dj"]
-            FR["fast-recovery-loop<br/>fast_recovery.py"]
-        end
+    subgraph DELL["Dell / k3s delivery"]
+        RS["readsb + modified tar1090"]
+        RUN["stream-v3-runtime<br/>browser + audio + FFmpeg + fast recovery"]
+        RS --> RUN
     end
 
-    YT["YouTube Live<br/>RTMPS :443"]
-
-    AIR -->|beast feed to :30104| RS
-    RS --> T1090
-    T1090 -->|browser map URL| ENG
-    DJ -->|stream_v3_sink| ENG
-    FR -. scoped local FFmpeg recovery .-> ENG
-    ENG -->|h264_nvenc 5fps / 3400k / 192k| YT
-```
-
-### Observability Path
-
-```mermaid
-flowchart LR
-    subgraph DELL["Dell / k3s (.35)"]
-        RUN["stream-v3 runtime Pod"]
-    end
-
-    subgraph PD["HP ProDesk / k3s observability (.60)"]
-        MON["v3 monitor<br/>stream-v3-control"]
-        EXP["stream-v3-observer<br/>exporter :9108"]
-        PROM["Prometheus :9090"]
-        LOKI["Loki :3100"]
-        GRAF["private Grafana :3000"]
-    end
-
-    YT["YouTube evidence<br/>API + public watch"]
-
-    MON -. read-only request .-> YT
-    YT -. evidence response .-> MON
-    MON -. runtime read .-> RUN
-    RUN -. runtime evidence .-> MON
-    MON --> EXP --> PROM --> GRAF
-    MON -. logs .-> LOKI --> GRAF
-```
-
-### Recovery Path
-
-```mermaid
-flowchart LR
-    subgraph PD["HP ProDesk / k3s observability (.60)"]
-        MON["v3 monitor<br/>stream-v3-control"]
-        ORCH["recovery-orchestrator"]
-        GUARD["guard"]
-    end
-
-    subgraph DELL["Dell / k3s (.35)"]
-        RUN["stream-v3 runtime Pod"]
-    end
-
-    MON --> ORCH
-    ORCH --> GUARD
-    GUARD -->|"guarded k3s recovery"| RUN
-    RUN -. runtime evidence .-> MON
-```
-
-### Public Status Publication
-
-```mermaid
-flowchart LR
-    subgraph PD["HP ProDesk / k3s observability (.60)"]
-        OBS["stream-v3-observer<br/>exporter :9108"]
-        PROM["Prometheus"]
-        LOKI["Loki"]
-        GRAF["Grafana datasource proxy"]
-    end
-
-    subgraph RPI["Raspberry Pi (.50)"]
-        NGINX["Pi nginx<br/>/grafana/"]
-        COLL["public snapshot collector"]
-        PUB["static site build"]
-        PISTATE["publisher state<br/>snapshot age"]
+    subgraph PI["Raspberry Pi / public snapshot publisher"]
+        PROXY["Pi-local /grafana/ proxy"]
+        BUILD["allowlisted static snapshot"]
+        PROXY --> BUILD
     end
 
     subgraph EDGE["Public static edge"]
-        GCS["GCS bucket"]
+        GCS["GCS"]
         CF["Cloudflare<br/>yukimurata0421.dev"]
+        GCS --> CF
     end
 
-    OBS --> PROM --> GRAF
-    LOKI --> GRAF
-    COLL -->|"HTTP GET"| NGINX
-    NGINX -->|"Grafana proxy"| GRAF
-    GRAF -->|"JSON response"| COLL
-    COLL -->|"allowlist JSON"| PUB
-    COLL -->|"publisher freshness"| PISTATE
-    PUB -->|"outbound upload"| GCS --> CF
-    OBS -. freshness probe .-> PISTATE
-    PISTATE -. snapshot age .-> OBS
+    YT["YouTube Live"]
+
+    AIR -->|"beast feed"| RS
+    RUN -->|"RTMPS"| YT
+    MON -. "read-only runtime + YouTube evidence" .-> RUN
+    GUARD -. "scoped k3s recovery" .-> RUN
+    GRAF -->|"datasource JSON"| PROXY
+    BUILD -->|"outbound upload"| GCS
 ```
 
-The diagrams intentionally separate delivery from observation. The concrete
-ADS-B data path is Airspy on HP ProDesk -> `airspy_adsb` -> ProDesk readsb ->
-Dell workstation readsb -> Dell modified tar1090 -> `stream_v3`. Evidence
-collection is dotted in the observability diagram; the only mutating path back
-to delivery is the guarded k3s recovery request. The HP ProDesk k3s
-observability workloads collect runtime evidence from the Dell pod with
-`kubectl exec`. Grafana, Prometheus, Loki, Alloy, and the exporter remain
-private on HP ProDesk. The Raspberry Pi uses its local `/grafana/` proxy to read the ProDesk Grafana
-datasource proxy, reduces that evidence to allowlisted static JSON, pushes the
-site outbound to GCS, and Cloudflare serves <https://yukimurata0421.dev/>. This
-keeps repeated public status reads on the static edge instead of spending home
-uplink bandwidth or proxying through the monitoring backend.
-ProDesk does not push monitoring data to Raspberry Pi. The Pi collector
-initiates `pull: HTTP GET` requests to `127.0.0.1:8088/grafana/...`; Pi nginx
-uses `proxy_pass` to HP ProDesk Grafana at `192.168.0.60:3000/grafana`, and the
-datasource JSON response returns over that same path to the Pi collector.
-Separately, the HP ProDesk observability layer checks publisher freshness so a
-stale Raspberry Pi/public snapshot is visible as an observability problem; that
-freshness probe is not the publication data path and does not make the Pi a k3s
-node or monitoring backend.
-Non-static operational access is outside the public status endpoint and is not
-named as a public endpoint here.
+The public status path is static. Public readers do not reach the private
+Grafana, Prometheus, Loki, home network, or delivery runtime. The Raspberry Pi
+is a publisher, not a k3s node or monitoring backend. Detailed host and runtime
+contracts are in [physical topology](docs/physical-topology.md) and
+[runtime contract](docs/runtime-contract.md).
 
-For the Dell delivery node, the streaming overlay is the production-shaped
-manifest. It removes the base/shadow `network-observer` sidecar and adds
-`fast-recovery-loop`, which runs `stream_v3.control_loop --mode streaming`.
-That loop schedules only `fast_recovery.py`; YouTube resolver/watchdog,
-notification, subsystem SLI, and recovery orchestration run on the HP ProDesk
-k3s observability side.
+## Key Design Decisions
 
-This repository is a sanitized public snapshot of a system that evolved through
-three stages:
+- `SV3-SAME-URL`: preserve the current YouTube watch URL when a fault is
+  recoverable; replacement is never inferred from transport noise alone.
+- `SV3-RECOVERY-GUARD`: monitors collect evidence and request staged recovery,
+  while the delivery tier retains FFmpeg ownership.
+- `SV3-PUBLIC-BOUNDARY`: publish only an allowlisted static snapshot through
+  GCS and Cloudflare.
+- `SV3-EVIDENCE-STRENGTH`: keep restart observation separate from confirmed TCP
+  send recovery; stale, missing, or ambiguous evidence cannot claim recovery.
+- Treat API quota exhaustion and public-probe failures as degraded evidence,
+  not immediate proof of stream failure.
+- Keep ADS-B source freshness, visual correctness, audio correctness, upload
+  pressure, and YouTube lifecycle state as separate fault domains.
 
-- `stream`: first single-machine streaming prototype.
-- `stream_v2`: refactored single-host runtime with watchdogs, SLI, recovery
-  policy, and runbooks.
-- `stream_v3`: current k3s runtime that splits delivery from observation.
+## Claims And Limits
 
-The project is not a generic starter template. It is a case study in operating a
-small but real 24/7 streaming system: browser rendering, PulseAudio, AutoDJ,
-FFmpeg, NVIDIA NVENC, YouTube health checks, restart budgets, API quota guards,
-Prometheus metrics, runbooks, and rollback-aware deployment.
-
-## Why k3s
-
-The single-host versions made browser rendering, audio, FFmpeg, watchdogs, and recovery compete for the same resources and process ownership. k3s now gives the Dell delivery workload and the HP ProDesk observability/control workloads explicit runtime boundaries, while the plane split still keeps long-window evidence and recovery decisions outside the FFmpeg owner.
-
-## Architecture
-
-The one-page public overview is in `docs/executive-summary.md`.
-The main design decisions are summarized in `docs/v3/decisions.md`.
-The guided review path is in `docs/hiring-reviewer-guide.md`.
-The measured/tested/documented maturity ledger is in
-`docs/operational-scorecard.md`.
-The code-to-test review map is in `docs/implementation-review-map.md`.
-The compact design decision table is in `docs/design-decisions-for-review.md`.
-The physical deployment topology is documented in `docs/physical-topology.md`.
-The short evolution narrative is in `docs/evolution.md`.
-
-In code, the Airspy/readsb source chain is represented by the browser map
-upstream contract. The k3s runtime does not manage the Airspy device directly;
-it renders and proxies the Dell readsb / modified tar1090 endpoint through
-`src/stream_core/overlay_server.py` and validates that path with report-only
-overlay and upstream checks.
-
-## Reviewer Reading Path
-
-| Reviewer | Start here | What to evaluate |
+| Claim ID | What the repository supports | What it does not claim |
 | --- | --- | --- |
-| Non-technical interviewer | Reviewer Summary, Evidence Snapshot, [`docs/operational-scorecard.md`](docs/operational-scorecard.md) | same-URL operation, automated recovery, clear limits |
-| Backend / infrastructure reviewer | Architecture diagrams, [`docs/v3/public-status-snapshot.md`](docs/v3/public-status-snapshot.md), [`docs/implementation-review-map.md`](docs/implementation-review-map.md) | k3s runtime boundary, GCS/Cloudflare static edge, private/public boundary |
-| SRE / platform reviewer | [`docs/v3/sli-and-dashboard.md`](docs/v3/sli-and-dashboard.md), [`docs/v3/rolling-sli-error-budget-feedback.md`](docs/v3/rolling-sli-error-budget-feedback.md), [`docs/v3/tcp-stall-case-study.md`](docs/v3/tcp-stall-case-study.md), [`docs/v3/tcp-stall-resolution-depth.md`](docs/v3/tcp-stall-resolution-depth.md), [`docs/v3/scoped-recovery-authority.md`](docs/v3/scoped-recovery-authority.md) | production invariant, MTTR, rolling feedback, fault-layer split, recovery authority |
+| `SV3-SAME-URL` | Historical same-URL windows and zero selected replacement actions. | Contractual availability or continuous frame-by-frame auditing. |
+| `SV3-RECOVERY-GUARD` | Public policy tests, shadow acceptance, and scoped recovery command rendering. | Live production mutation from public CI or ideal multi-node HA. |
+| `SV3-PUBLIC-BOUNDARY` | Static GCS/Cloudflare publication with private monitoring kept off the public path. | Public Grafana, raw logs, credentials, or home-network ingress. |
+| `SV3-EVIDENCE-STRENGTH` | Notifications distinguish restart observed, recovery unconfirmed, and TCP send recovery confirmed. | CPE-versus-carrier ownership or exact viewer impact from a notification alone. |
 
-## What This Does Not Claim
+Production state, logs, media, packet captures, credentials, and host-specific
+configuration are intentionally excluded. The full publication boundary is
+documented in [public release notes](docs/public-release.md).
 
-- Not a commercial multi-tenant SLO.
-- Not proof that every delivered frame was audited.
-- Not a node reboot, disk restore, RTMPS reconnect, or readsb/tar1090 source
-  recovery proof.
-- Not a generic streaming starter.
-- Not a public exposure of the private monitoring backend.
+## Review Paths
 
-## Reviewer Shortcuts
+Use one of these three entry points:
 
-Use these entry points instead of reading the full tree:
+1. [Hiring reviewer guide](docs/hiring-reviewer-guide.md) for a role-specific
+   reading path.
+2. [Operational scorecard](docs/operational-scorecard.md) for measured, tested,
+   documented, and unknown claims.
+3. [Implementation review map](docs/implementation-review-map.md) to connect
+   reliability claims to code and tests.
 
-| Review question | Direct links |
-| --- | --- |
-| What prevents unsafe staged recovery? | [`src/stream_v2/recovery_orchestrator/gate.py`](src/stream_v2/recovery_orchestrator/gate.py), [`ops/scripts/v3_shadow_acceptance.py`](ops/scripts/v3_shadow_acceptance.py) |
-| Where is post-cutover recovery authority scoped? | [`docs/v3/scoped-recovery-authority.md`](docs/v3/scoped-recovery-authority.md), [`ops/scripts/stream_v3_scoped_recovery.py`](ops/scripts/stream_v3_scoped_recovery.py), [`tests/test_stream_v3_scoped_recovery.py`](tests/test_stream_v3_scoped_recovery.py) |
-| Where is shadow safety asserted? | [`tests/test_v3_shadow_acceptance.py`](tests/test_v3_shadow_acceptance.py), [`deploy/k3s/README.md`](deploy/k3s/README.md) |
-| Where is the physical split documented? | [`docs/physical-topology.md`](docs/physical-topology.md), [`docs/runtime-contract.md`](docs/runtime-contract.md) |
-| Where is the measured SLI baseline? | [`docs/sli-methodology.md`](docs/sli-methodology.md), [`docs/v3/sli-and-dashboard.md`](docs/v3/sli-and-dashboard.md) |
-| Where is rolling SLI/error-budget feedback interpreted? | [`docs/v3/rolling-sli-error-budget-feedback.md`](docs/v3/rolling-sli-error-budget-feedback.md), [`docs/v3/sli-and-dashboard.md`](docs/v3/sli-and-dashboard.md) |
-| Where is the public status site boundary documented? | [`docs/v3/public-status-snapshot.md`](docs/v3/public-status-snapshot.md), <https://yukimurata0421.dev/> |
-| Where is ADS-B/NCS compliance boundary documented? | [`docs/compliance-and-licensing-boundary.md`](docs/compliance-and-licensing-boundary.md) |
-| Where is the fast-recovery classifier replay documented? | [`docs/v3/fast-recovery-classifier-replay.md`](docs/v3/fast-recovery-classifier-replay.md), [`src/stream_v2/sli.py`](src/stream_v2/sli.py), [`tests/test_sli_pipeline_rotation.py`](tests/test_sli_pipeline_rotation.py) |
-| Where is the 28-day same-URL reliability review? | [`docs/28-day-same-url-sli-case-study.md`](docs/28-day-same-url-sli-case-study.md) |
-| Where is the short executive summary? | [`docs/executive-summary.md`](docs/executive-summary.md) |
-| Which claims are measured, tested, documented, or still unknown? | [`docs/operational-scorecard.md`](docs/operational-scorecard.md) |
-| Where can claims be mapped to code and tests? | [`docs/implementation-review-map.md`](docs/implementation-review-map.md) |
-| How are public tests kept non-mutating? | [`docs/test-strategy-and-safety-boundary.md`](docs/test-strategy-and-safety-boundary.md), [`.github/workflows/public-snapshot-check.yml`](.github/workflows/public-snapshot-check.yml) |
-| How was v2 to v3 cutover scoped? | [`docs/v3/migration-cutover-case-study.md`](docs/v3/migration-cutover-case-study.md), [`ops/scripts/v3_shadow_acceptance.py`](ops/scripts/v3_shadow_acceptance.py) |
-| Where is YouTube lifecycle mutation safety explained? | [`docs/v3/youtube-lifecycle-safety.md`](docs/v3/youtube-lifecycle-safety.md), [`src/watchers/video_resolver/cache.py`](src/watchers/video_resolver/cache.py), [`tests/test_youtube_watchdog_cache_freshness.py`](tests/test_youtube_watchdog_cache_freshness.py) |
-| Why did NVENC increase measured upload? | [`docs/v3/encoder-upload-case-study.md`](docs/v3/encoder-upload-case-study.md), [`docs/v3/encoder-fps-tuning-2026-05-31.md`](docs/v3/encoder-fps-tuning-2026-05-31.md), [`docs/runtime-contract.md`](docs/runtime-contract.md) |
-| Where is a concrete transport root-cause split? | [`docs/v3/tcp-stall-case-study.md`](docs/v3/tcp-stall-case-study.md), [`docs/v3/tcp-stall-resolution-depth.md`](docs/v3/tcp-stall-resolution-depth.md), [`ops/scripts/wan_address_observer.py`](ops/scripts/wan_address_observer.py), [`ops/scripts/persistent_tcp_anchor_observer.py`](ops/scripts/persistent_tcp_anchor_observer.py), [`ops/systemd/stream-v3-wan-address-observer.timer`](ops/systemd/stream-v3-wan-address-observer.timer), [`ops/systemd/stream-v3-wan-address-observer-burst.timer`](ops/systemd/stream-v3-wan-address-observer-burst.timer) |
-| Where are visual/audio and memory failure boundaries documented? | [`docs/v3/visual-audio-health-model.md`](docs/v3/visual-audio-health-model.md), [`docs/v3/memory-guard-case-study.md`](docs/v3/memory-guard-case-study.md), [`docs/v3/failure-taxonomy.md`](docs/v3/failure-taxonomy.md) |
-| Where is single-node DR scoped honestly? | [`docs/v3/single-node-dr-case-study.md`](docs/v3/single-node-dr-case-study.md), [`docs/v3/runbook-validation.md`](docs/v3/runbook-validation.md) |
-| What does an incident review need to record? | [`docs/incident-review-template.md`](docs/incident-review-template.md) |
-| Where was the stats reuse bug fixed? | [`src/watchers/video_resolver/cache.py`](src/watchers/video_resolver/cache.py), [`src/watchers/youtube_watchdog_core/cache.py`](src/watchers/youtube_watchdog_core/cache.py), [`tests/test_youtube_video_id_resolver_cache_freshness.py`](tests/test_youtube_video_id_resolver_cache_freshness.py), [`tests/test_youtube_watchdog_cache_freshness.py`](tests/test_youtube_watchdog_cache_freshness.py) |
-
-## External Validation
-
-- A Reddit post introducing the livestream reached the #1 post position on
-  r/ADSB for the day, according to Reddit Post Insights. The insight screen
-  showed the post title "24/7 ADS-B livestream from Japan with custom evaluation pipeline (ARENA)" and about 1.2K views.
-  Evidence: [`docs/assets/reddit-adsb-post-insights-2026-05.png`](docs/assets/reddit-adsb-post-insights-2026-05.png).
-- An external reviewer found a stats reuse bug in the YouTube resolver/watchdog path; the fix now prefers per-probe checked timestamps over the top-level stats timestamp and is covered by cache freshness tests.
-
-## What To Look At
-
-- `src/stream_v3/`: v3 control loop and runtime entrypoint.
-- `src/stream_core/`: delivery runtime, FFmpeg lifecycle, CLI, diagnostics,
-  notifications, and supervisor abstractions.
-- `src/watchers/`: YouTube, stream, network, evidence, and recovery monitors.
-- `deploy/k3s/`: k3s manifests, shadow mode, streaming overlay that swaps the
-  base `network-observer` sidecar for `fast-recovery-loop`, observer, and
-  cutover guard.
-- `ops/monitoring/`: Prometheus, Loki, Grafana, and Alloy monitoring config.
-- `ops/scripts/wan_address_observer.py` and
-  `ops/scripts/persistent_tcp_anchor_observer.py`: report-only WAN/session
-  probes used for TCP stall root-cause splitting.
-- `ops/scripts/rtmps_tcp_burst_observer.py`,
-  `ops/scripts/netlink_wan_event_observer.py`,
-  `ops/scripts/cpe_event_ingest.py`, and
-  `ops/scripts/rtmps_tcpdump_ring.py`: higher-resolution TCP stall attribution
-  helpers. Generated JSONL, CPE logs, packet metadata, and captures remain
-  untracked runtime artifacts.
-- `ops/scripts/stream_v3_scoped_recovery.py` and
-  `ops/scripts/stream_v3_remote_recovery.py`: limited same-URL-preserving
-  recovery authority for Auto DJ and RTMPS FFmpeg scopes.
-- `ops/systemd/stream-v3-wan-address-observer.*` and
-  `ops/systemd/stream-v3-persistent-anchor-observer.service`: host-side
-  scheduling examples for the TCP stall cause observers.
-- `ops/systemd/stream-v3-observability-monitor.service`: legacy/reference
-  host-side observability task owner; the current ProDesk observability role is
-  represented in k3s by `stream-v3-control` and `stream-v3-observer`.
-- `ops/prodesk-monitoring/`: sanitized legacy prodesk service checks.
-- `docs/sli-methodology.md`: measured v2 SLI baseline and the metric
-  classification inherited by v3.
-- `docs/28-day-same-url-sli-case-study.md`: public translation of the 28-day
-  same-URL SLI review, including what got worse and what remained unknown.
-- `docs/v3/rolling-sli-error-budget-feedback.md`: rolling 24h/7d/available-30d
-  feedback rules that keep dashboard burn separate from long-window SLI claims.
-- `docs/executive-summary.md`: shortest narrative for reviewers who need the
-  system shape and operating invariants first.
-- `docs/operational-scorecard.md`: measured/tested/documented/unknown maturity
-  ledger, including the 24-hour smoke-test boundary.
-- `docs/implementation-review-map.md`: map from reliability claims to code,
-  tests, and public docs.
-- `docs/compliance-and-licensing-boundary.md`: ADS-B publication,
-  receiver-privacy, and NCS-attribution boundary.
-- `docs/test-strategy-and-safety-boundary.md`: public CI, shadow validation,
-  and live smoke-test limits.
-- `docs/incident-review-template.md`: sanitized incident/postmortem structure
-  with an example based on the TCP stall diagnosis.
-- `docs/v3/`: current runtime contracts, decisions, runbooks, SLI notes, and
-  program map.
-- `docs/v3/migration-cutover-case-study.md`: v2 to v3 authority transfer,
-  24-hour smoke-test rationale, and rollback boundary.
-- `docs/v3/encoder-upload-case-study.md`: NVENC CBR upload-budget decision,
-  including why a lower-upload VBR/CQ profile was rejected.
-- `docs/v3/youtube-lifecycle-safety.md`: same-URL, quota, stale-cache, and
-  destructive-action safety model.
-- `docs/v3/scoped-recovery-authority.md`: why post-cutover recovery can touch
-  DJ/FFmpeg scopes but cannot treat upload pressure or URL replacement as an
-  executor-owned recovery path.
-- `docs/v3/fast-recovery-classifier-replay.md`: current classifier replay over
-  retained fast-recovery restart events without backfilling historical shadow
-  logs.
-- `docs/v3/failure-taxonomy.md`: owner/action/evidence vocabulary for runtime,
-  source, YouTube, dashboard, and memory failures.
-- `docs/v3/tcp-stall-resolution-depth.md`: higher-resolution TCP stall evidence
-  ladder and the public/raw-artifact boundary.
-- `tests/`: contract and policy tests for runtime safety and monitoring logic.
-
-## Local Validation
-
-These checks do not require publishing to YouTube:
+Local non-mutating validation:
 
 ```bash
 python3 ops/scripts/validate_k3s_manifests.py
 python3 ops/scripts/v3_shadow_acceptance.py
-pytest tests/test_v3_k3s_preflight.py tests/test_stream_v3_control_loop.py
+python3 -m pytest -q
 ```
 
-Production-like use requires local secrets and host-specific devices, so the
-public repository intentionally defaults to examples and shadow/test paths.
-
-The GitHub Actions workflow
-`.github/workflows/public-snapshot-check.yml` is a public evidence check, not a
-production deployment pipeline. It runs compile checks, k3s manifest validation,
-shadow acceptance, and focused safety/freshness tests without secrets or live
-YouTube mutation.
-
-## Public Snapshot Notes
-
-This tree excludes runtime state, logs, media files, local capture artifacts,
-virtual environments, and real credentials. See `docs/public-release.md` for the
-public-release boundary.
-
-The public runtime contract is documented in `docs/runtime-contract.md`.
-
-## Support
-
-This is a public case-study repository, not a supported package, service, or
-starter template. Issues, if enabled after publication, are limited to public
-documentation defects, reproducible validation failures, and sanitized
-portability notes.
-
-There is no uptime promise, incident response promise, installation support, or
-guarantee that this system fits another production environment. Do not post
-stream keys, OAuth tokens, Discord webhooks, SSH keys, private hostnames, or
-runtime state copied from `.state/`.
-
-## Contributions
-
-This repository is not trying to become a general-purpose OSS project. Small
-pull requests may be considered when they improve the public case study without
-changing its operational boundary: documentation clarity, safer examples,
-manifest validation, focused tests, and sanitized portability notes.
-
-Before opening a pull request:
-
-- keep changes small and explain the operational reason;
-- run `python3 ops/scripts/validate_k3s_manifests.py`;
-- run `python3 ops/scripts/v3_shadow_acceptance.py` when touching runtime or
-  monitoring behavior;
-- keep secrets and real operational data out of commits;
-- preserve the delivery-plane / observability-plane ownership split unless the
-  PR explicitly argues for a documented design change.
-
-## License
-
-MIT License. See `LICENSE`.
+The public workflow compiles the code, validates manifests and shadow behavior,
+and runs focused safety, freshness, notification, and documentation contracts.
+It does not publish to YouTube or mutate a production cluster.

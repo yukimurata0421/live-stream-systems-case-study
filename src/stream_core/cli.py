@@ -647,7 +647,29 @@ def fast_recovery_auto_recovered_events(
     )
 
 
+def fast_recovery_recovery_events(
+    *,
+    state: dict,
+    now_ts: int,
+    recent_sec: int,
+    triggers: list[str],
+    events_file: Path | None = None,
+    max_events: int = 8,
+) -> list[dict]:
+    if events_file is None:
+        events_file = FAST_RECOVERY_EVENTS_FILE
+    return notify_status_loop.fast_recovery_recovery_events(
+        state=state,
+        now_ts=now_ts,
+        recent_sec=recent_sec,
+        triggers=triggers,
+        events_file=events_file,
+        max_events=max_events,
+    )
+
+
 mark_fast_recovery_auto_recovered_events_notified = notify_status_loop.mark_fast_recovery_auto_recovered_events_notified
+mark_fast_recovery_recovery_events_notified = notify_status_loop.mark_fast_recovery_recovery_events_notified
 
 
 def enqueue_notify_messages(

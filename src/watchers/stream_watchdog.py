@@ -65,6 +65,7 @@ STATE_ROOT = Path(
 STREAM_SERVICE = env("STREAM_SERVICE", "adsb-streamnew-youtube-stream.service")
 DJ_SERVICE = env("DJ_SERVICE", "adsb-streamnew-auto-dj.service")
 STREAM_WATCHDOG_REMOTE_ONLY = env("STREAM_WATCHDOG_REMOTE_ONLY", "0") == "1"
+STREAM_WATCHDOG_ADSB_PROBE_ONLY = env("STREAM_WATCHDOG_ADSB_PROBE_ONLY", "0") == "1"
 STREAM_K8S_NAMESPACE = env("STREAM_K8S_NAMESPACE", "stream-v3")
 STREAM_KUBECTL_BIN = env("STREAM_KUBECTL_BIN", "kubectl")
 STREAM_V3_RUNTIME_WORKLOAD = env("STREAM_V3_RUNTIME_WORKLOAD", "deployment/stream-v3-runtime")
@@ -473,6 +474,36 @@ def remote_cat_latest_runtime_state() -> subprocess.CompletedProcess[str]:
     )
 
 
+def remote_adsb_payload() -> dict:
+    return decode_json_stdout(
+        kubectl_exec_stream_engine(
+            r'''
+            set -eu
+            curl -fsS -m 4 http://127.0.0.1:18080/adsb/aircraft.json
+            '''
+        )
+    )
+
+
+def adsb_source_probe_only() -> int:
+    payload = remote_adsb_payload()
+    if not payload:
+        append_event("remote_adsb_source_unavailable", workload=STREAM_V3_RUNTIME_WORKLOAD)
+        log("ERROR displayed ADS-B source sample unavailable")
+        return 1
+    ok, reason = check_adsb_freshness(payload)
+    if not ok:
+        append_event(
+            "remote_adsb_source_unhealthy",
+            workload=STREAM_V3_RUNTIME_WORKLOAD,
+            adsb_reason=reason,
+        )
+        log(f"ERROR displayed ADS-B source unhealthy: {reason}")
+        return 1
+    log(f"Displayed ADS-B source ok: {reason}")
+    return 0
+
+
 def remote_tail_jsonl(path: str) -> subprocess.CompletedProcess[str]:
     return kubectl_exec_stream_engine(
         f'''
@@ -596,8 +627,35 @@ def remote_only_watchdog() -> int:
         record_watchdog_stats("anomaly", reason=reason, stream_status=stream_status.detail, dj_status=dj_status.detail)
         return 0
 
+    adsb_payload = remote_adsb_payload()
+    if not adsb_payload:
+        reason = "k8s runtime ADS-B source sample unavailable"
+        append_event("remote_adsb_source_unavailable", workload=STREAM_V3_RUNTIME_WORKLOAD)
+        record_watchdog_stats("anomaly", reason=reason, stream_status=stream_status.detail, dj_status=dj_status.detail)
+        return 0
+    adsb_ok, adsb_reason = check_adsb_freshness(adsb_payload)
+    if not adsb_ok:
+        append_event(
+            "remote_adsb_source_unhealthy",
+            workload=STREAM_V3_RUNTIME_WORKLOAD,
+            adsb_reason=adsb_reason,
+        )
+        record_watchdog_stats(
+            "anomaly",
+            reason=adsb_reason,
+            stream_status=stream_status.detail,
+            dj_status=dj_status.detail,
+        )
+        return 0
+
     synced = sync_remote_runtime_evidence()
-    record_watchdog_stats("ok", reason="remote k8s runtime ok", detail=detail, stream_status=stream_status.detail)
+    record_watchdog_stats(
+        "ok",
+        reason="remote k8s runtime ok",
+        detail=detail,
+        adsb_reason=adsb_reason,
+        stream_status=stream_status.detail,
+    )
     if should_emit_watchdog_ok():
         append_event("watchdog_ok", **collect_diagnostic_snapshot(), remote_probe=detail)
     append_remote_snapshot_timeline(detail, synced)
@@ -953,8 +1011,21 @@ def check_adsb_freshness(payload: dict, current_ts: int | None = None) -> tuple[
         max_age_sec=ADSB_JSON_MAX_AGE_SEC,
         message_stall_sec=ADSB_MESSAGE_STALL_SEC,
     )
+    observed_state = dict(state)
     if next_state is not None:
-        write_json_file(ADSB_FRESHNESS_STATE_FILE, next_state)
+        observed_state.update(next_state)
+    observed_state.update(
+        {
+            "ts_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(now_ts)),
+            "sample_ts": now_ts,
+            "source_now": payload.get("now"),
+            "source_messages": payload.get("messages"),
+            "aircraft_count": len(payload.get("aircraft", [])) if isinstance(payload.get("aircraft"), list) else None,
+            "status": "ok" if ok else "unhealthy",
+            "reason": reason,
+        }
+    )
+    write_json_file(ADSB_FRESHNESS_STATE_FILE, observed_state)
     if event is not None:
         append_event("adsb_messages_counter_reset", **event)
     return ok, reason
@@ -1159,6 +1230,8 @@ def recover_pulse_then_restart(stage: int) -> None:
 
 def main() -> int:
     WORK_DIR.mkdir(parents=True, exist_ok=True)
+    if STREAM_WATCHDOG_ADSB_PROBE_ONLY:
+        return adsb_source_probe_only()
     if STREAM_WATCHDOG_REMOTE_ONLY:
         return remote_only_watchdog()
     try:

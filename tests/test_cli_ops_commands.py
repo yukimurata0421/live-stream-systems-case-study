@@ -1223,14 +1223,19 @@ class CliOpsCommandsTests(unittest.TestCase):
             state = json.loads(state_file.read_text(encoding="utf-8"))
 
         self.assertEqual(len(sent), 1)
-        self.assertIn("自動復旧イベント", sent[0])
+        self.assertIn("自動復旧確認", sent[0])
         self.assertIn("active_incidents=0", sent[0])
         self.assertIn("trigger=tcp_stall", sent[0])
-        self.assertIn("stream service restart completed", sent[0])
+        self.assertIn("stream service restart and TCP send recovery confirmed", sent[0])
+        self.assertIn("restart_observed=true", sent[0])
+        self.assertIn("recovery_confirmed=true", sent[0])
         self.assertIn("context=pre=-60s mbps=4.8", sent[0])
         self.assertIn("post=+60s mbps=4.7", sent[0])
         self.assertIn("recovery_lag_sec=60", sent[0])
-        self.assertIn("1970-01-01T00:20:00Z|tcp_stall", state["fast_recovery_auto_recovered_notified"])
+        self.assertIn(
+            "1970-01-01T00:20:00Z|tcp_stall|auto_recovered",
+            state["fast_recovery_recovery_evidence_notified"],
+        )
 
     def test_notify_status_recovery_followup_uses_observe_payload_for_stream_health(self) -> None:
         config = {

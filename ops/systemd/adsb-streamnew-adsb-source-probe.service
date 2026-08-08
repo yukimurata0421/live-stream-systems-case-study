@@ -1,0 +1,19 @@
+[Unit]
+Description=stream_v3 displayed ADS-B source freshness probe
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=yuki
+WorkingDirectory=/home/yuki/projects/stream_v3
+EnvironmentFile=-/home/yuki/projects/stream_v2/.state/env/adsb-streamnew.env
+EnvironmentFile=-/home/yuki/projects/stream_v2/.state/env/stream-v3-observability-monitor.env
+Environment=PYTHONPATH=/home/yuki/projects/stream_v3/src
+Environment=STREAM_RUNTIME_STATE_DIR=/home/yuki/projects/stream_v3/.state/arena-monitor
+Environment=STREAM_RUNTIME_LOG_DIR=/home/yuki/projects/stream_v3/.state/arena-monitor/logs
+Environment=STREAM_RUNTIME_SUPERVISOR=k8s
+Environment=STREAM_K8S_NAMESPACE=stream-v3
+Environment=STREAM_WATCHDOG_ADSB_PROBE_ONLY=1
+ExecStart=/usr/bin/python3 /home/yuki/projects/stream_v3/src/watchers/stream_watchdog.py
+TimeoutStartSec=20

@@ -435,6 +435,13 @@ def age_seconds(value: Any, *, now: float) -> float:
     return max(0.0, now - ts)
 
 
+def optional_age_seconds(value: Any, *, now: float) -> float | None:
+    ts = parse_ts(value)
+    if ts is None:
+        return None
+    return max(0.0, now - ts)
+
+
 def windowed_observe_value(observe: dict[str, Any], base_name: str, hours: Any) -> Any:
     key = f"{base_name}_{hours}h"
     return observe.get(key) if key in observe else None
@@ -560,6 +567,7 @@ def build_metrics(*, repo_root: Path, state_root: Path, timeout_sec: float) -> s
     resource_memory = read_json(state_root / "resource_memory.json")
     recovery_plan = read_json(state_root / "recovery_action_plan.json")
     notify_state = read_json(state_root / "stream_notify_state.json")
+    adsb_freshness = read_json(state_root / "watchdog" / "adsb_freshness_state.json")
     recovery_stage = read_json(state_root / "watchdog" / "recovery_stage_state.json")
     monitoring_watchdog = read_json(state_root / "monitoring_watchdog_state.json")
     slo_snapshot = read_json(state_root / "slo_snapshot.json")
@@ -768,8 +776,47 @@ def build_metrics(*, repo_root: Path, state_root: Path, timeout_sec: float) -> s
         writer.metric("stream_v3_cgroup_swap_current_mib", dict_value(payload, "memory_swap_current_mb"), labels=labels, help_text="Cgroup current swap MiB.", skip_none=True)
 
     rendering = subsystems.get("rendering") if isinstance(subsystems.get("rendering"), dict) else {}
-    writer.metric("stream_v3_adsb_evidence_age_seconds", dict_value(rendering, "evidence_age_sec"), help_text="Age of ADS-B/rendering subsystem evidence.", skip_none=True)
-    writer.metric("stream_v3_adsb_rendering_ok", 1 if rendering.get("state") == "healthy" else 0, help_text="Rendering subsystem reports ADS-B source and visual evidence healthy.", skip_none=not bool(rendering))
+    adsb_source_age = optional_age_seconds(adsb_freshness.get("last_change_ts"), now=now)
+    adsb_sample_age = optional_age_seconds(
+        adsb_freshness.get("sample_ts") or adsb_freshness.get("ts_utc"),
+        now=now,
+    )
+    adsb_source_status = str(adsb_freshness.get("status") or "").strip().lower()
+    adsb_source_ok = adsb_source_age is not None and adsb_source_status in {"", "ok", "healthy"}
+    writer.metric(
+        "stream_v3_adsb_evidence_available",
+        1 if adsb_source_age is not None else 0,
+        help_text="Displayed ADS-B source evidence availability flag.",
+    )
+    writer.metric(
+        "stream_v3_adsb_rendering_ok",
+        1 if adsb_source_ok and rendering.get("state") == "healthy" else 0,
+        help_text="Rendering subsystem and displayed ADS-B source are healthy.",
+    )
+    writer.metric(
+        "stream_v3_adsb_evidence_age_seconds",
+        adsb_source_age,
+        help_text="Age since the displayed ADS-B source message counter last changed.",
+        skip_none=True,
+    )
+    writer.metric(
+        "stream_v3_adsb_source_age_seconds",
+        adsb_source_age,
+        help_text="Age since the displayed ADS-B source message counter last changed.",
+        skip_none=True,
+    )
+    writer.metric(
+        "stream_v3_adsb_source_sample_age_seconds",
+        adsb_sample_age,
+        help_text="Age of the latest displayed ADS-B source probe.",
+        skip_none=True,
+    )
+    writer.metric(
+        "stream_v3_adsb_rendering_evidence_age_seconds",
+        dict_value(rendering, "evidence_age_sec"),
+        help_text="Age of the latest rendering subsystem evidence.",
+        skip_none=True,
+    )
     writer.metric("stream_v3_adsb_messages_moving", dict_value(rendering, "aircraft_messages_moving"), help_text="ADS-B aircraft message count is moving.", skip_none=True)
     writer.metric("stream_v3_adsb_positions_moving", dict_value(rendering, "aircraft_positions_moving"), help_text="ADS-B aircraft positions are moving.", skip_none=True)
 

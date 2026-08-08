@@ -62,9 +62,9 @@ def notify_message_id(*, phase: str, incidents: list[dict], now_ts: int) -> str:
     if phase == "recovered":
         recovered_ts = max((int(item.get("_recovered_ts", now_ts) or now_ts) for item in incidents), default=now_ts)
         return f"recovered|{ids}|{recovered_ts}"
-    if phase == "auto_recovered":
+    if phase in {"restart_observed", "recovery_unconfirmed", "auto_recovered"}:
         event_ts = max((int(item.get("observed_ts", now_ts) or now_ts) for item in incidents), default=now_ts)
-        return f"auto_recovered|{ids}|{event_ts}"
+        return f"{phase}|{ids}|{event_ts}"
     return f"{phase}|{ids}|{now_ts}"
 
 

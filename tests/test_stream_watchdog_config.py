@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import importlib
+import json
 import os
+import subprocess
 import sys
 import tempfile
 from contextlib import ExitStack
@@ -310,8 +312,13 @@ class StreamWatchdogConfigTests(unittest.TestCase):
                     {"now": 1130, "messages": 10, "aircraft": []},
                     current_ts=1130,
                 )
+            state = json.loads(state_file.read_text(encoding="utf-8"))
         self.assertFalse(ok)
         self.assertIn("messages stalled", reason)
+        self.assertEqual(state["sample_ts"], 1130)
+        self.assertEqual(state["source_messages"], 10)
+        self.assertEqual(state["status"], "unhealthy")
+        self.assertEqual(state["last_change_ts"], 1000)
 
     def test_adsb_freshness_accepts_messages_counter_reset(self) -> None:
         with tempfile.TemporaryDirectory() as td:
@@ -330,6 +337,60 @@ class StreamWatchdogConfigTests(unittest.TestCase):
         self.assertTrue(ok)
         self.assertIn("counter reset", reason)
         append_event.assert_called_once()
+
+    def test_remote_only_watchdog_records_displayed_adsb_source_freshness(self) -> None:
+        status = mock.Mock(active=True, detail="running")
+        supervisor = mock.Mock()
+        supervisor.status.return_value = status
+        probe = subprocess.CompletedProcess(
+            args=[],
+            returncode=0,
+            stdout="rtmp_count=1 dj_count=1 overlay=ok aircraft=ok\n",
+            stderr="",
+        )
+        adsb_payload = {"now": 1130, "messages": 1234, "aircraft": [{}, {}]}
+
+        with (
+            mock.patch.object(stream_watchdog, "runtime_supervisor_or_none", return_value=supervisor),
+            mock.patch.object(stream_watchdog, "kubectl_exec_stream_engine", return_value=probe),
+            mock.patch.object(stream_watchdog, "remote_adsb_payload", return_value=adsb_payload),
+            mock.patch.object(
+                stream_watchdog,
+                "check_adsb_freshness",
+                return_value=(True, "overlay adsb aircraft json fresh"),
+            ) as check_adsb,
+            mock.patch.object(stream_watchdog, "sync_remote_runtime_evidence", return_value={}),
+            mock.patch.object(stream_watchdog, "should_emit_watchdog_ok", return_value=False),
+            mock.patch.object(stream_watchdog, "append_remote_snapshot_timeline"),
+            mock.patch.object(stream_watchdog, "record_watchdog_stats") as record_stats,
+            mock.patch.object(stream_watchdog, "log"),
+        ):
+            rc = stream_watchdog.remote_only_watchdog()
+
+        self.assertEqual(rc, 0)
+        check_adsb.assert_called_once_with(adsb_payload)
+        self.assertEqual(record_stats.call_args.args[0], "ok")
+        self.assertEqual(record_stats.call_args.kwargs["adsb_reason"], "overlay adsb aircraft json fresh")
+
+    def test_adsb_source_probe_only_has_no_recovery_authority(self) -> None:
+        adsb_payload = {"now": 1130, "messages": 1234, "aircraft": [{}, {}]}
+        with (
+            mock.patch.object(stream_watchdog, "remote_adsb_payload", return_value=adsb_payload),
+            mock.patch.object(
+                stream_watchdog,
+                "check_adsb_freshness",
+                return_value=(True, "overlay adsb aircraft json fresh"),
+            ) as check_adsb,
+            mock.patch.object(stream_watchdog, "append_event") as append_event,
+            mock.patch.object(stream_watchdog, "restart_service") as restart_service,
+            mock.patch.object(stream_watchdog, "log"),
+        ):
+            rc = stream_watchdog.adsb_source_probe_only()
+
+        self.assertEqual(rc, 0)
+        check_adsb.assert_called_once_with(adsb_payload)
+        append_event.assert_not_called()
+        restart_service.assert_not_called()
 
     def test_now_playing_transition_age_ignores_heartbeat_updates(self) -> None:
         with tempfile.TemporaryDirectory() as td:

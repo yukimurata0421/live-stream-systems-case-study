@@ -455,12 +455,12 @@ class YoutubeDataApiAndPublicProbeContractTests(unittest.TestCase):
         self.assertIn("not_live", result.reason)
 
 
-class NotificationAutoRecoveredContractTests(unittest.TestCase):
+class NotificationRecoveryEvidenceContractTests(unittest.TestCase):
     @staticmethod
     def _utc(ts: int) -> str:
         return datetime.fromtimestamp(ts, tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
-    def test_auto_recovered_event_filtering_uses_trigger_ack_cutoff_and_future_guard(self) -> None:
+    def test_recovery_event_filtering_uses_trigger_ack_cutoff_and_future_guard(self) -> None:
         with tempfile.TemporaryDirectory() as td:
             events_file = Path(td) / "fast_recovery_events.jsonl"
             rows = [
@@ -474,7 +474,7 @@ class NotificationAutoRecoveredContractTests(unittest.TestCase):
             events_file.write_text("\n".join(json.dumps(row) for row in rows) + "\n", encoding="utf-8")
             state = {"fast_recovery_auto_recovered_notified": {f"{self._utc(1600)}|tcp_stall": 1601}}
 
-            events = status_loop.fast_recovery_auto_recovered_events(
+            events = status_loop.fast_recovery_recovery_events(
                 state=state,
                 now_ts=2000,
                 recent_sec=600,
@@ -486,8 +486,12 @@ class NotificationAutoRecoveredContractTests(unittest.TestCase):
         self.assertEqual(events[0]["trigger"], "network_down")
         self.assertEqual(events[0]["evidence"], "network recovered")
         self.assertEqual(events[0]["recovery_type"], "fast_recovery_restart:network_down")
+        self.assertEqual(events[0]["_notification_phase"], "recovery_unconfirmed")
+        self.assertTrue(events[0]["restart_observed"])
+        self.assertFalse(events[0]["recovery_confirmed"])
+        self.assertIsNone(events[0]["recovery_lag_sec"])
 
-    def test_auto_recovered_event_waits_for_recovery_sample_when_recent(self) -> None:
+    def test_restart_without_tcp_sample_progresses_from_observed_to_unconfirmed(self) -> None:
         with tempfile.TemporaryDirectory() as td:
             events_file = Path(td) / "fast_recovery_events.jsonl"
             rows = [
@@ -500,14 +504,14 @@ class NotificationAutoRecoveredContractTests(unittest.TestCase):
             ]
             events_file.write_text("\n".join(json.dumps(row) for row in rows) + "\n", encoding="utf-8")
 
-            recent = status_loop.fast_recovery_auto_recovered_events(
+            recent = status_loop.fast_recovery_recovery_events(
                 state={},
                 now_ts=2000,
                 recent_sec=600,
                 triggers=["network_down"],
                 events_file=events_file,
             )
-            aged = status_loop.fast_recovery_auto_recovered_events(
+            aged = status_loop.fast_recovery_recovery_events(
                 state={},
                 now_ts=2140,
                 recent_sec=600,
@@ -515,26 +519,126 @@ class NotificationAutoRecoveredContractTests(unittest.TestCase):
                 events_file=events_file,
             )
 
-        self.assertEqual(recent, [])
+        self.assertEqual(len(recent), 1)
+        self.assertEqual(recent[0]["_notification_phase"], "restart_observed")
+        self.assertFalse(recent[0]["recovery_confirmed"])
         self.assertEqual(len(aged), 1)
+        self.assertEqual(aged[0]["_notification_phase"], "recovery_unconfirmed")
         self.assertEqual(aged[0]["diagnostic_context"], "tcp_sample_context=missing")
 
-    def test_mark_auto_recovered_notifications_compacts_old_acknowledgements(self) -> None:
+    def test_low_speed_post_sample_never_confirms_recovery(self) -> None:
+        event_ts = 2000
+        tcp_samples = [
+            (
+                2060,
+                {
+                    "kind": "tcp_send_sample",
+                    "mbps": 1.2,
+                    "bytes_sent_delta": 9_000_000,
+                    "lastsnd_ms": 40,
+                    "notsent": 0,
+                    "unacked": 4,
+                    "ffmpeg_pid": 222,
+                },
+            )
+        ]
+
+        evidence = status_loop.fast_recovery_restart_evidence(event_ts, tcp_samples)
+
+        self.assertTrue(evidence.restart_observed)
+        self.assertFalse(evidence.recovery_confirmed)
+        self.assertIsNone(evidence.recovery_lag_sec)
+        self.assertIn("post_first=+60s mbps=1.2", evidence.diagnostic_context)
+        self.assertIn("recovery_lag_sec=unknown", evidence.diagnostic_context)
+
+        with tempfile.TemporaryDirectory() as td:
+            events_file = Path(td) / "fast_recovery_events.jsonl"
+            rows = [
+                {"ts_utc": self._utc(event_ts), "kind": "restart", "trigger": "tcp_stall"},
+                {"ts_utc": self._utc(2060), **tcp_samples[0][1]},
+            ]
+            events_file.write_text("\n".join(json.dumps(row) for row in rows) + "\n", encoding="utf-8")
+
+            recent = status_loop.fast_recovery_recovery_events(
+                state={},
+                now_ts=2070,
+                recent_sec=600,
+                triggers=["tcp_stall"],
+                events_file=events_file,
+            )
+            aged = status_loop.fast_recovery_recovery_events(
+                state={},
+                now_ts=2200,
+                recent_sec=600,
+                triggers=["tcp_stall"],
+                events_file=events_file,
+            )
+
+        self.assertEqual(recent[0]["_notification_phase"], "restart_observed")
+        self.assertEqual(aged[0]["_notification_phase"], "recovery_unconfirmed")
+
+    def test_confirmed_tcp_sample_records_recovery_lag(self) -> None:
+        evidence = status_loop.fast_recovery_restart_evidence(
+            2000,
+            [
+                (
+                    2060,
+                    {
+                        "kind": "tcp_send_sample",
+                        "mbps": 4.7,
+                        "bytes_sent_delta": 35_000_000,
+                    },
+                )
+            ],
+        )
+
+        self.assertTrue(evidence.restart_observed)
+        self.assertTrue(evidence.recovery_confirmed)
+        self.assertEqual(evidence.recovery_lag_sec, 60)
+
+    def test_mark_recovery_notifications_compacts_old_phase_acknowledgements(self) -> None:
         state = {
-            "fast_recovery_auto_recovered_notified": {
-                "old|tcp_stall": 100,
-                "recent|tcp_stall": 90_000,
+            "fast_recovery_recovery_evidence_notified": {
+                "old|tcp_stall|restart_observed": 100,
+                "recent|tcp_stall|restart_observed": 90_000,
             }
         }
-        status_loop.mark_fast_recovery_auto_recovered_events_notified(
+        status_loop.mark_fast_recovery_recovery_events_notified(
             state,
-            [{"_event_key": "new|network_down"}],
+            [{"_event_key": "new|network_down", "_notification_phase": "recovery_unconfirmed"}],
             now_ts=100_000,
         )
 
-        self.assertNotIn("old|tcp_stall", state["fast_recovery_auto_recovered_notified"])
-        self.assertEqual(state["fast_recovery_auto_recovered_notified"]["recent|tcp_stall"], 90_000)
-        self.assertEqual(state["fast_recovery_auto_recovered_notified"]["new|network_down"], 100_000)
+        acknowledged = state["fast_recovery_recovery_evidence_notified"]
+        self.assertNotIn("old|tcp_stall|restart_observed", acknowledged)
+        self.assertEqual(acknowledged["recent|tcp_stall|restart_observed"], 90_000)
+        self.assertEqual(acknowledged["new|network_down|recovery_unconfirmed"], 100_000)
+
+    def test_phase_acknowledgement_allows_later_recovery_confirmation(self) -> None:
+        event_key = f"{self._utc(2000)}|tcp_stall"
+        state = {
+            "fast_recovery_recovery_evidence_notified": {
+                f"{event_key}|restart_observed": 2050,
+            }
+        }
+        with tempfile.TemporaryDirectory() as td:
+            events_file = Path(td) / "fast_recovery_events.jsonl"
+            rows = [
+                {"ts_utc": self._utc(2000), "kind": "restart", "trigger": "tcp_stall"},
+                {"ts_utc": self._utc(2060), "kind": "tcp_send_sample", "mbps": 4.7},
+            ]
+            events_file.write_text("\n".join(json.dumps(row) for row in rows) + "\n", encoding="utf-8")
+
+            events = status_loop.fast_recovery_recovery_events(
+                state=state,
+                now_ts=2070,
+                recent_sec=600,
+                triggers=["tcp_stall"],
+                events_file=events_file,
+            )
+
+        self.assertEqual(len(events), 1)
+        self.assertEqual(events[0]["_notification_phase"], "auto_recovered")
 
 
 class OpsHealthJudgmentContractTests(unittest.TestCase):

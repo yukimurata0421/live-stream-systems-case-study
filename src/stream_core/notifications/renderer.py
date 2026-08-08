@@ -21,9 +21,14 @@ def seconds_to_human(seconds: int | float | None) -> str:
 
 
 def format_discord_message(*, phase: str, incidents: list[dict], state: dict, now_ts: int) -> str:
-    if phase == "auto_recovered":
+    recovery_titles = {
+        "restart_observed": "再起動観測・送信回復確認待ち",
+        "recovery_unconfirmed": "再起動後の送信回復未確認",
+        "auto_recovered": "自動復旧確認",
+    }
+    if phase in recovery_titles:
         lines = [
-            "[ADS-B Stream] 自動復旧イベント",
+            f"[ADS-B Stream] {recovery_titles[phase]}",
             f"time={jst_text(now_ts)}",
             "active_incidents=0",
             f"events={len(incidents)}",
@@ -38,6 +43,9 @@ def format_discord_message(*, phase: str, incidents: list[dict], state: dict, no
                     f"  action={item.get('summary')}",
                     f"  recovery_type={item.get('recovery_type')}",
                     f"  evidence={item.get('evidence')}",
+                    f"  restart_observed={str(bool(item.get('restart_observed'))).lower()}",
+                    f"  recovery_confirmed={str(bool(item.get('recovery_confirmed'))).lower()}",
+                    f"  recovery_lag_sec={item.get('recovery_lag_sec') if item.get('recovery_lag_sec') is not None else 'unknown'}",
                 ]
             )
             if item.get("diagnostic_context"):
