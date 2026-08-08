@@ -1,0 +1,19 @@
+[Unit]
+Description=Check NVIDIA and NVENC package updates without applying them
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=stream-v3
+Group=stream-v3
+EnvironmentFile=-/etc/default/adsb-streamnew-notify
+EnvironmentFile=-/etc/default/stream-v3-nvidia-driver-check
+ExecStart=/usr/local/libexec/stream-v3-nvidia-driver-check
+StateDirectory=stream-v3-nvidia-driver-check
+StateDirectoryMode=0700
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+TimeoutStartSec=60

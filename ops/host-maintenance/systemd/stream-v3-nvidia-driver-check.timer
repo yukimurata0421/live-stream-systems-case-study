@@ -1,0 +1,11 @@
+[Unit]
+Description=Check NVIDIA and NVENC updates daily at 18:00 JST
+
+[Timer]
+OnCalendar=*-*-* 18:00:00 Asia/Tokyo
+AccuracySec=1min
+Persistent=true
+Unit=stream-v3-nvidia-driver-check.service
+
+[Install]
+WantedBy=timers.target

@@ -45,6 +45,9 @@ def load_stream_notify_config(ctx: NotifyCliContext) -> dict:
     for env_file in env_files:
         cfg.update(ctx.read_env_file(env_file))
     cfg.update({key: value for key, value in os.environ.items() if key.startswith("STREAM_NOTIFY_")})
+    slack_webhook_url = cfg.get("STREAM_NOTIFY_SLACK_WEBHOOK_URL", "").strip()
+    slack_enabled_raw = ctx.parse_bool(cfg.get("STREAM_NOTIFY_SLACK_ENABLED", ""))
+    slack_enabled = bool(slack_webhook_url) if slack_enabled_raw is None else slack_enabled_raw
     fast_recovery_event_triggers = [
         part.strip()
         for part in str(
@@ -64,12 +67,29 @@ def load_stream_notify_config(ctx: NotifyCliContext) -> dict:
         "report_stale_sec": max(60, int(cfg.get("STREAM_NOTIFY_REPORT_STALE_SEC", "1800") or "1800")),
         "startup_grace_sec": max(0, int(cfg.get("STREAM_NOTIFY_STARTUP_GRACE_SEC", "300") or "300")),
         "username": cfg.get("STREAM_NOTIFY_USERNAME", "ADS-B Stream Watchdog").strip() or "ADS-B Stream Watchdog",
+        "slack_enabled": slack_enabled,
+        "slack_webhook_url": slack_webhook_url,
+        "slack_username": cfg.get("STREAM_NOTIFY_SLACK_USERNAME", cfg.get("STREAM_NOTIFY_USERNAME", "ADS-B Stream Watchdog")).strip()
+        or "ADS-B Stream Watchdog",
+        "slack_min_active_sec": max(60, int(cfg.get("STREAM_NOTIFY_SLACK_MIN_ACTIVE_SEC", "1800") or "1800")),
         "outbox_ttl_sec": max(3600, int(cfg.get("STREAM_NOTIFY_OUTBOX_TTL_SEC", "86400") or "86400")),
         "outbox_max_pending": max(1, int(cfg.get("STREAM_NOTIFY_OUTBOX_MAX_PENDING", "50") or "50")),
         "outbox_flush_limit": max(1, int(cfg.get("STREAM_NOTIFY_OUTBOX_FLUSH_LIMIT", "10") or "10")),
         "fast_recovery_event_recent_sec": max(
             60,
             int(cfg.get("STREAM_NOTIFY_FAST_RECOVERY_EVENT_RECENT_SEC", "1800") or "1800"),
+        ),
+        "stream_engine_event_recent_sec": max(
+            60,
+            int(cfg.get("STREAM_NOTIFY_STREAM_ENGINE_EVENT_RECENT_SEC", "1800") or "1800"),
+        ),
+        "stream_watchdog_event_recent_sec": max(
+            60,
+            int(cfg.get("STREAM_NOTIFY_STREAM_WATCHDOG_EVENT_RECENT_SEC", "1800") or "1800"),
+        ),
+        "runtime_lifecycle_event_recent_sec": max(
+            60,
+            int(cfg.get("STREAM_NOTIFY_RUNTIME_LIFECYCLE_EVENT_RECENT_SEC", "86400") or "86400"),
         ),
         "fast_recovery_event_triggers": fast_recovery_event_triggers,
     }
@@ -135,6 +155,9 @@ def collect_notification_incidents(
         stream1090_report_events_file=ctx.stream1090_report_events_file,
         upstream_report_events_file=ctx.upstream_report_events_file,
         youtube_watchdog_stats_file=ctx.youtube_watchdog_stats_file,
+        map_runtime_status_file=ctx.state_base_dir / "map_runtime_status.json",
+        map_runtime_history_file=ctx.state_base_dir / "logs" / "map_runtime_status.jsonl",
+        viewer_synthetic_status_file=ctx.state_base_dir / "viewer_synthetic_status.json",
         now_ts=now,
         report_stale_sec=report_stale_sec,
         bootstrap_grace_active=notify_bootstrap_grace_active(ctx, now, startup_grace_sec),
@@ -142,6 +165,21 @@ def collect_notification_incidents(
 
 
 def recovery_observation_for_incident(ctx: NotifyCliContext, ident: str, now_ts: int) -> tuple[int, str]:
+    if ident.startswith("map:"):
+        payload = ctx.read_json_file(ctx.state_base_dir / "map_runtime_status.json")
+        observed_ts = ctx.parse_utc_ts(str(payload.get("checked_at_utc", ""))) or now_ts
+        return observed_ts, (
+            f"status={payload.get('status', '')} delivery_critical_ok={payload.get('delivery_critical_ok', '')} "
+            f"weather_ok={payload.get('weather_ok', '')} critical_reasons={payload.get('critical_reasons', [])}"
+        )[:320]
+    if ident.startswith("viewer:"):
+        payload = ctx.read_json_file(ctx.state_base_dir / "viewer_synthetic_status.json")
+        observed_ts = ctx.parse_utc_ts(str(payload.get("checked_at_utc", ""))) or now_ts
+        return observed_ts, (
+            f"status={payload.get('status', '')} frame_ok={payload.get('frame_ok', '')} "
+            f"black={payload.get('black_detected', '')} freeze={payload.get('freeze_detected', '')} "
+            f"probe_failures={payload.get('consecutive_probe_failures', '')}"
+        )[:320]
     return notify_incidents.recovery_observation_for_incident(
         ident,
         now_ts,

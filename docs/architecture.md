@@ -12,7 +12,8 @@ Airspy USB on HP ProDesk
   -> readsb on HP ProDesk
   -> readsb on Dell workstation
   -> Dell modified tar1090 HTTP endpoint
-  -> stream_v3 browser rendering and overlay
+  -> sanitized ADS-B JSON proxy
+  -> stream_v3 MapLibre rendering and overlay
   -> PulseAudio + AutoDJ
   -> FFmpeg / NVIDIA NVENC
   -> YouTube RTMPS
@@ -50,10 +51,10 @@ static edge:
   Prometheus exporter, staged recovery requests, and the
   Prometheus/Loki/Alloy/Grafana evidence stack.
 - Dell workstation `192.168.0.35` local ADS-B mirror role: Dell-side readsb and
-  modified tar1090 map endpoint.
+  modified tar1090 ADS-B HTTP endpoint.
 - Dell workstation `192.168.0.35` delivery role: k3s `stream-v3-runtime`,
-  browser rendering, PulseAudio, AutoDJ, FFmpeg, NVENC, and local fast
-  recovery.
+  custom MapLibre rendering, analysis-only precipitation, PulseAudio, AutoDJ,
+  FFmpeg, NVENC, and local fast recovery.
 - Raspberry Pi `192.168.0.50` public publisher role: nginx `:8088`
   `/grafana/` proxy to HP ProDesk Grafana, public-safe snapshot collection,
   static site build, and outbound GCS push.
@@ -102,16 +103,19 @@ endpoint here.
 ## Source Boundary
 
 The Airspy/readsb source path is not managed by the k3s manifests in this public
-snapshot. The delivery runtime consumes it through a browser map upstream URL,
-which points at the Dell readsb / modified tar1090 endpoint.
+snapshot. The delivery runtime consumes `aircraft.json`, receiver metadata,
+and range evidence from the Dell readsb / modified tar1090 endpoint through a
+sanitizing local proxy. The viewer-facing page is the repository-owned
+MapLibre renderer, not the upstream tar1090 page.
 
 The production ADS-B handoff is ProDesk readsb Beast output to Dell
 `192.168.0.35:30104`, where Dell readsb expands it into the local map endpoint
 used by the k3s delivery runtime.
 
-`src/stream_core/overlay_server.py` proxies the upstream map and ADS-B JSON for
-the stream overlay and report-only checks validate both the overlay path and the
-upstream readsb / modified tar1090 path.
+`src/stream_core/overlay_server.py` proxies ADS-B JSON, map/terrain tiles,
+processed precipitation assets, and render-readiness state. Report-only checks
+validate both the rendered overlay and the upstream readsb / modified tar1090
+path without giving either probe direct recovery authority.
 
 ## Deployment Model
 

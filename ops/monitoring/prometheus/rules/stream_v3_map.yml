@@ -1,0 +1,78 @@
+groups:
+  - name: stream_v3_production_map_runtime
+    rules:
+      - alert: StreamV3MapMonitorSampleMissingOrStale
+        expr: |
+          stream_v3_map_monitor_sample_available{job="stream_v3_observability_monitor"} == 0
+          or stream_v3_map_monitor_sample_age_seconds{job="stream_v3_observability_monitor"} > 180
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: production map runtime probe is missing or stale
+
+      - alert: StreamV3MapDeliveryCriticalUnhealthy
+        expr: |
+          stream_v3_map_monitor_sample_available{job="stream_v3_observability_monitor"} == 1
+          and stream_v3_map_monitor_delivery_critical_ok{job="stream_v3_observability_monitor"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: production map delivery contract is unhealthy
+          description: Check the runtime Pod topology, NVENC/RTMP readiness, render heartbeat, and Chromium contract before recovery.
+
+      - alert: StreamV3MapBrowserWebGLFailure
+        expr: |
+          stream_v3_map_webgl2_blocklisted{job="stream_v3_observability_monitor"} > 0
+          or stream_v3_map_webgl_context_fatal{job="stream_v3_observability_monitor"} > 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: production Chromium reported a WebGL failure
+
+      - alert: StreamV3MapPrecipitationUnavailable
+        expr: |
+          stream_v3_map_monitor_sample_available{job="stream_v3_observability_monitor"} == 1
+          and stream_v3_map_monitor_weather_ok{job="stream_v3_observability_monitor"} == 0
+        for: 20m
+        labels:
+          severity: warning
+        annotations:
+          summary: JMA precipitation layer or fetcher is unhealthy
+          description: This alert is observational and does not request a stream runtime restart.
+
+      - alert: StreamV3MapRuntimeContainerRestarted
+        expr: stream_v3_map_container_restart_count{job="stream_v3_observability_monitor"} > 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: a production map runtime container has restarted
+          description: Inspect the container and Pod history; the probe itself does not restart the workload.
+
+      - alert: StreamV3ViewerSyntheticSampleMissingOrStale
+        expr: |
+          stream_v3_viewer_synthetic_sample_available{job="stream_v3_observability_monitor"} == 0
+          or stream_v3_viewer_synthetic_sample_age_seconds{job="stream_v3_observability_monitor"} > 900
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: public viewer synthetic sample is missing or stale
+
+      - alert: StreamV3ViewerSyntheticProbeFailed
+        expr: stream_v3_viewer_synthetic_consecutive_probe_failures{job="stream_v3_observability_monitor"} >= 2
+        labels:
+          severity: warning
+        annotations:
+          summary: public viewer frame capture repeatedly failed
+
+      - alert: StreamV3ViewerSyntheticVisualFailure
+        expr: stream_v3_viewer_synthetic_consecutive_visual_failures{job="stream_v3_observability_monitor"} >= 2
+        labels:
+          severity: critical
+        annotations:
+          summary: public viewer frames are repeatedly black or frozen
+          description: Correlate the viewer capture with YouTube health, local NVENC/RTMP, and the map render heartbeat.

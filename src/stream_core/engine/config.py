@@ -55,6 +55,7 @@ class Config:
     overlay_port: int
     overlay_server_log_file: Path
     stream1090_url: str
+    overlay_map_path: str
     map_lat: str
     map_lon: str
     map_zoom: str
@@ -93,6 +94,7 @@ class Config:
     takeover_enabled: bool
     takeover_grace_sec: int
     takeover_force_kill: bool
+    video_queue_size: int
     video_encoder: str
     video_preset: str
     video_nvenc_preset: str
@@ -148,6 +150,7 @@ def load_config() -> Config:
     script_dir = Path(__file__).resolve().parents[1]
     base_default = script_dir.parent.parent
     base_dir = Path(os.environ.get("BASE_DIR", str(base_default))).resolve()
+    runtime_log_dir = Path(os.environ.get("STREAM_RUNTIME_LOG_DIR", str(base_dir / "logs")))
 
     def e(name: str, default: str) -> str:
         return os.environ.get(name, default)
@@ -177,8 +180,9 @@ def load_config() -> Config:
         overlay_bind_host=e("OVERLAY_BIND_HOST", "0.0.0.0"),
         overlay_view_host=e("OVERLAY_VIEW_HOST", "127.0.0.1"),
         overlay_port=max(1, to_int(e("OVERLAY_PORT", "18080"), 18080)),
-        overlay_server_log_file=Path(e("OVERLAY_SERVER_LOG_FILE", str(base_dir / "logs" / "overlay_server.log"))),
+        overlay_server_log_file=Path(e("OVERLAY_SERVER_LOG_FILE", str(runtime_log_dir / "overlay_server.log"))),
         stream1090_url=e("STREAM1090_URL", "http://stream1090.lan/stream1090/"),
+        overlay_map_path=e("OVERLAY_MAP_PATH", "adsb-map/"),
         map_lat=e("MAP_LAT", "36.35"),
         map_lon=e("MAP_LON", "140.75"),
         map_zoom=e("MAP_ZOOM", "7.6"),
@@ -194,8 +198,8 @@ def load_config() -> Config:
         browser_start_settle_sec_restart=max(0.0, to_float(e("BROWSER_START_SETTLE_SEC_RESTART", "0.5"), 0.5)),
         browser_start_settle_sec_test=max(0.0, to_float(e("BROWSER_START_SETTLE_SEC_TEST", "0"), 0.0)),
         xvfb_depth=max(16, to_int(e("XVFB_DEPTH", "24"), 24)),
-        xvfb_log_file=Path(e("XVFB_LOG_FILE", str(base_dir / "logs" / "xvfb.log"))),
-        browser_log_file=Path(e("BROWSER_LOG_FILE", str(base_dir / "logs" / "browser.log"))),
+        xvfb_log_file=Path(e("XVFB_LOG_FILE", str(runtime_log_dir / "xvfb.log"))),
+        browser_log_file=Path(e("BROWSER_LOG_FILE", str(runtime_log_dir / "browser.log"))),
         pulse_sink=e("PULSE_SINK", "stream_sink"),
         pulse_source=e("PULSE_SOURCE", ""),
         pulse_shm=e("PULSE_SHM", "0"),
@@ -217,6 +221,7 @@ def load_config() -> Config:
         takeover_enabled=to_bool(e("TAKEOVER_ENABLED", "1"), True),
         takeover_grace_sec=max(1, to_int(e("TAKEOVER_GRACE_SEC", "5"), 5)),
         takeover_force_kill=to_bool(e("TAKEOVER_FORCE_KILL", "1"), True),
+        video_queue_size=max(1, to_int(e("VIDEO_QUEUE_SIZE", "32"), 32)),
         video_encoder=normalize_video_encoder(e("VIDEO_ENCODER", "libx264")),
         video_preset=e("VIDEO_PRESET", "ultrafast"),
         video_nvenc_preset=e("VIDEO_NVENC_PRESET", "p4"),
@@ -252,7 +257,7 @@ def load_config() -> Config:
         fifo_max_recovery_attempts=max(0, to_int(e("RTMP_FIFO_MAX_RECOVERY_ATTEMPTS", "0"), 0)),
         fifo_drop_pkts_on_overflow=to_bool(e("RTMP_FIFO_DROP_PKTS_ON_OVERFLOW", "0")),
         fifo_restart_with_keyframe=to_bool(e("RTMP_FIFO_RESTART_WITH_KEYFRAME", "1"), True),
-        event_log_file=Path(e("EVENT_LOG_FILE", str(base_dir / "logs" / "stream_engine_events.jsonl"))),
+        event_log_file=Path(e("EVENT_LOG_FILE", str(runtime_log_dir / "stream_engine_events.jsonl"))),
         restart_reason_file=Path(e("RESTART_REASON_FILE", str(base_dir / "state" / "runtime" / "restart_reason.json"))),
         pre_ffmpeg_min_wait_sec=max(0.0, to_float(e("PRE_FFMPEG_MIN_WAIT_SEC", "0"), 0.0)),
         pre_ffmpeg_min_wait_sec_restart=max(0.0, to_float(e("PRE_FFMPEG_MIN_WAIT_SEC_RESTART", "0"), 0.0)),

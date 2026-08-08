@@ -140,6 +140,10 @@ def notify_status_context(ns):
         send_webhook=ns.send_discord_webhook,
         maintenance_notification_incident=ns.maintenance_notification_incident,
         fast_recovery_events_file=ns.FAST_RECOVERY_EVENTS_FILE,
+        stream_engine_events_file=ns.STREAM_ENGINE_EVENTS_FILE,
+        stream_watchdog_events_file=ns.LOG_BASE_DIR / "stream_watchdog_events.jsonl",
+        runtime_state_base_dir=ns.STATE_BASE_DIR,
+        send_slack_webhook=ns.send_slack_webhook,
     )
 
 

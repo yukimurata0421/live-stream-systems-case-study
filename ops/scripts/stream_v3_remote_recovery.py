@@ -19,6 +19,16 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+SRC_DIR = Path(__file__).resolve().parents[2] / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
+
+from stream_core.k8s_gpu_guard import (
+    runtime_node_name,
+    summarize_runtime_gpu,
+    summarize_runtime_startup,
+)
+
 
 DEFAULT_REPO_ROOT = Path(os.environ.get("STREAM_V3_REPO_DIR", Path(__file__).resolve().parents[2])).expanduser()
 DEFAULT_OBSERVABILITY_STATE_ROOT = DEFAULT_REPO_ROOT / ".state" / "observability-monitor"
@@ -26,6 +36,12 @@ PROMETHEUS_URL = os.environ.get("STREAM_V3_RECOVERY_PROMETHEUS_URL", "http://127
 JOB = os.environ.get("STREAM_V3_RECOVERY_JOB", "stream_v3_observability_monitor")
 NAMESPACE = os.environ.get("STREAM_K8S_NAMESPACE", "stream-v3")
 KUBECTL = os.environ.get("STREAM_KUBECTL_BIN", "kubectl")
+RUNTIME_DEPLOYMENT = os.environ.get("STREAM_V3_RUNTIME_DEPLOYMENT", "stream-v3-runtime")
+RUNTIME_SELECTOR = os.environ.get(
+    "STREAM_V3_RUNTIME_SELECTOR",
+    "app.kubernetes.io/name=stream-v3,app.kubernetes.io/component=runtime",
+)
+RUNTIME_GPU_CONTAINER = os.environ.get("STREAM_V3_RUNTIME_GPU_CONTAINER", "stream-engine")
 STATE_FILE = Path(
     os.environ.get(
         "STREAM_V3_REMOTE_RECOVERY_STATE_FILE",
@@ -113,6 +129,14 @@ def run(command: list[str]) -> subprocess.CompletedProcess[str]:
     return subprocess.run(command, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
 
 
+def kubectl_json(args: list[str]) -> dict[str, Any]:
+    cp = run([KUBECTL, *args])
+    if cp.returncode != 0:
+        raise RuntimeError((cp.stderr or cp.stdout or f"kubectl exited {cp.returncode}").strip())
+    payload = json.loads(cp.stdout)
+    return payload if isinstance(payload, dict) else {}
+
+
 def prometheus_value(query: str) -> float | None:
     url = f"{PROMETHEUS_URL}/api/v1/query?{urllib.parse.urlencode({'query': query})}"
     try:
@@ -144,6 +168,69 @@ def workload_active(workload: str) -> tuple[bool, str]:
     ready = int(status.get("readyReplicas", 0) or 0)
     available = int(status.get("availableReplicas", 0) or 0)
     return desired > 0 and ready >= desired and available >= desired, f"desired={desired} ready={ready} available={available}"
+
+
+def runtime_gpu_restart_blocked(workload: str) -> tuple[bool, str]:
+    if workload not in {f"deployment/{RUNTIME_DEPLOYMENT}", RUNTIME_DEPLOYMENT}:
+        return False, ""
+    try:
+        deployment_json = kubectl_json(["-n", NAMESPACE, "get", "deployment", RUNTIME_DEPLOYMENT, "-o", "json"])
+        pods_json = kubectl_json(["-n", NAMESPACE, "get", "pods", "-l", RUNTIME_SELECTOR, "-o", "json"])
+    except Exception as exc:
+        log(f"gpu preflight unavailable for {workload}: {type(exc).__name__}: {exc}")
+        return False, ""
+    gpu_status = summarize_runtime_gpu(
+        deployment_json,
+        pods_json,
+        deployment=RUNTIME_DEPLOYMENT,
+        container_name=RUNTIME_GPU_CONTAINER,
+    )
+    if not gpu_status.get("restart_blocked"):
+        return False, ""
+    return True, str(gpu_status.get("restart_block_reason") or gpu_status.get("status") or "gpu preflight")
+
+
+def runtime_startup_restart_blocked(workload: str) -> tuple[bool, str]:
+    if workload not in {f"deployment/{RUNTIME_DEPLOYMENT}", RUNTIME_DEPLOYMENT}:
+        return False, ""
+    try:
+        pods_json = kubectl_json(["-n", NAMESPACE, "get", "pods", "-l", RUNTIME_SELECTOR, "-o", "json"])
+    except Exception as exc:
+        detail = f"startup state unavailable: {type(exc).__name__}: {exc}"
+        log(f"startup preflight unavailable for {workload}: {type(exc).__name__}: {exc}")
+        return True, detail
+    node_name = runtime_node_name(pods_json, deployment=RUNTIME_DEPLOYMENT)
+    if not node_name:
+        startup_status = summarize_runtime_startup(pods_json, deployment=RUNTIME_DEPLOYMENT)
+        if startup_status.get("restart_blocked"):
+            return True, str(
+                startup_status.get("restart_block_reason")
+                or "runtime Pod is not assigned to a node"
+            )
+        return True, "runtime startup state unavailable: runtime node name is missing"
+    try:
+        node_json = kubectl_json(["get", "node", node_name, "-o", "json"])
+    except Exception as exc:
+        detail = f"startup node boot state unavailable: {type(exc).__name__}: {exc}"
+        log(f"startup node preflight unavailable for {workload}: {type(exc).__name__}: {exc}")
+        return True, detail
+    node_status = node_json.get("status") if isinstance(node_json.get("status"), dict) else {}
+    node_info = node_status.get("nodeInfo") if isinstance(node_status.get("nodeInfo"), dict) else {}
+    node_boot_id = str(node_info.get("bootID") or "")
+    if not node_boot_id:
+        return True, "runtime startup state unavailable: node boot ID is missing"
+    startup_status = summarize_runtime_startup(
+        pods_json,
+        deployment=RUNTIME_DEPLOYMENT,
+        expected_boot_id=node_boot_id,
+    )
+    if not startup_status.get("restart_blocked"):
+        return False, ""
+    return True, str(
+        startup_status.get("restart_block_reason")
+        or startup_status.get("status")
+        or "runtime startup"
+    )
 
 
 def restart_workload(workload: str, reason: str) -> bool:
@@ -190,10 +277,24 @@ def maybe_restart(workload: str, reason: str, state: dict[str, Any], now: int) -
     if blocker:
         log(f"block restart {workload}: {blocker}: {reason}")
         return False
+    startup_blocked, startup_detail = runtime_startup_restart_blocked(workload)
+    if startup_blocked:
+        log(f"block restart {workload}: startup preflight: {startup_detail}")
+        state[f"last_startup_restart_block_ts:{workload}"] = now
+        state[f"last_startup_restart_block_reason:{workload}"] = startup_detail
+        save_state(state)
+        return True
     key = f"last_restart_ts:{workload}"
     last = int(state.get(key, 0) or 0)
     if now - last < COOLDOWN_SEC:
         log(f"skip restart {workload}: cooldown active age={now - last}s reason={reason}")
+        return True
+    gpu_blocked, gpu_detail = runtime_gpu_restart_blocked(workload)
+    if gpu_blocked:
+        log(f"block restart {workload}: gpu preflight: {gpu_detail}")
+        state[f"last_gpu_restart_block_ts:{workload}"] = now
+        state[f"last_gpu_restart_block_reason:{workload}"] = gpu_detail
+        save_state(state)
         return True
     ok = restart_workload(workload, reason)
     if ok and APPLY:

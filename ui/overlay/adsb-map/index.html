@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en" class="notranslate" translate="no">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="google" content="notranslate">
+  <title>ADS-B Terrain Map</title>
+  <link rel="stylesheet" href="./vendor/maplibre-gl.css">
+  <link rel="stylesheet" href="./map.css">
+</head>
+<body>
+  <main id="map" aria-label="Live ADS-B aircraft map"></main>
+  <div id="mapLegends" role="group" aria-label="Map legends">
+    <aside id="altitudeLegend" aria-label="Altitude and range legend">
+      <div class="legend-heading">
+        <span class="legend-title">AIRCRAFT ALTITUDE</span>
+        <span class="legend-unit">FEET</span>
+      </div>
+      <div class="altitude-scale" role="list" aria-label="Aircraft altitude color bands">
+        <div class="altitude-scale-row">
+          <span class="legend-item" role="listitem"><i class="dot ground"></i>GND</span>
+          <span class="legend-item" role="listitem"><i class="dot low"></i>BELOW 10K</span>
+          <span class="legend-item" role="listitem"><i class="dot mid"></i>10–25K</span>
+        </div>
+        <div class="altitude-scale-row">
+          <span class="legend-item" role="listitem"><i class="dot high"></i>25–35K</span>
+          <span class="legend-item" role="listitem"><i class="dot very-high"></i>35K+</span>
+          <span class="legend-item" role="listitem"><i class="dot unknown"></i>N/A</span>
+        </div>
+      </div>
+      <div class="legend-row guide-scale">
+        <span class="legend-item" title="24-hour ADS-B reception envelope with LOS plausibility guard"><i class="line coverage"></i>24H LOS-AWARE COVERAGE</span>
+        <span class="separator" aria-hidden="true"></span>
+        <span class="legend-item"><i class="line ring"></i>RANGE · 50 / 100 / 150 NM</span>
+      </div>
+    </aside>
+    <aside id="precipitationStatus" aria-live="polite" aria-label="JMA precipitation status">
+      <div class="legend-heading">
+        <span class="precipitation-title">PRECIPITATION <span class="legend-unit">mm/h</span></span>
+        <span class="precipitation-source">JMA · <time id="precipitationTime">--:-- JST</time></span>
+      </div>
+      <div class="legend-row precipitation-scale">
+        <span class="legend-item"><i class="rain weak"></i>1–5</span>
+        <span class="legend-item"><i class="rain moderate"></i>5–20</span>
+        <span class="legend-item"><i class="rain heavy"></i>20–50</span>
+        <span class="legend-item"><i class="rain intense"></i>50+</span>
+      </div>
+    </aside>
+  </div>
+  <aside id="mapStatus" role="status" aria-live="polite"></aside>
+  <footer id="mapAttribution" aria-label="Map data attribution and navigation notice">
+    <span>ADS-B: Local receiver · Evaluated with ARENA · Not for navigation</span>
+    <span>Map: OpenFreeMap © OpenMapTiles · Data © OpenStreetMap contributors (ODbL)</span>
+    <span>Terrain: Mapterhorn / GSI Japan (Approval R 7JHs 542) · Precipitation: JMA, processed (PDL1.0)</span>
+  </footer>
+  <script type="module" src="./map.js"></script>
+</body>
+</html>

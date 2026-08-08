@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Serve the stream overlay and same-origin proxy ADS-B JSON."""
+"""Serve the stream overlay, ADS-B data, map tiles, and processed weather."""
 
 from __future__ import annotations
 
@@ -8,11 +8,14 @@ import http.server
 import json
 import math
 import os
+import re
 import socketserver
+import threading
 import time
 import urllib.error
 import urllib.parse
 import urllib.request
+from collections import OrderedDict
 from functools import partial
 from pathlib import Path
 
@@ -36,6 +39,19 @@ class OverlayHandler(http.server.SimpleHTTPRequestHandler):
     actual_range_neighbor_support_degrees = 2
     actual_range_neighbor_support_margin_nmi = 20.0
     actual_range_aircraft_max_seen_pos_sec = 120.0
+    openfreemap_tilejson_url = "https://tiles.openfreemap.org/planet"
+    mapterhorn_tile_template = "https://tiles.mapterhorn.com/{z}/{x}/{y}.webp"
+    map_tile_cache_max_entries = 256
+    map_tile_cache: OrderedDict[str, tuple[bytes, str]] = OrderedDict()
+    map_tile_cache_lock = threading.RLock()
+    openfreemap_tile_template = ""
+    openfreemap_tile_template_expires_at = 0.0
+    precipitation_root = Path("/state/overlay/precipitation")
+    render_status_lock = threading.RLock()
+    render_ready_payload: dict[str, object] = {}
+    render_ready_received_at = 0.0
+    render_ready_max_age_sec = 30.0
+    render_server_started_at = time.time()
 
     def do_GET(self) -> None:
         if self.handle_overlay_request(send_body=True):
@@ -47,6 +63,13 @@ class OverlayHandler(http.server.SimpleHTTPRequestHandler):
             return
         super().do_HEAD()
 
+    def do_POST(self) -> None:
+        parsed = urllib.parse.urlparse(self.path)
+        if parsed.path == "/render/ready":
+            self.accept_render_ready()
+            return
+        self.send_error(405, "method not allowed")
+
     def handle_overlay_request(self, *, send_body: bool) -> bool:
         parsed = urllib.parse.urlparse(self.path)
         if parsed.path == "/now_playing.txt":
@@ -55,6 +78,15 @@ class OverlayHandler(http.server.SimpleHTTPRequestHandler):
         if parsed.path == "/now_playing.json":
             self.serve_now_playing_json(send_body=send_body)
             return True
+        if parsed.path.startswith("/map-tiles/"):
+            self.proxy_map_tile(parsed, send_body=send_body)
+            return True
+        if parsed.path.startswith("/weather/"):
+            self.serve_precipitation_asset(parsed, send_body=send_body)
+            return True
+        if parsed.path == "/render/status.json":
+            self.serve_render_status(send_body=send_body)
+            return True
         if parsed.path == "/stream1090" or parsed.path.startswith("/stream1090/"):
             self.proxy_stream1090(parsed, send_body=send_body)
             return True
@@ -62,6 +94,219 @@ class OverlayHandler(http.server.SimpleHTTPRequestHandler):
             self.proxy_adsb_json(parsed.path.rsplit("/", 1)[-1], send_body=send_body)
             return True
         return False
+
+    def send_json_payload(self, payload: dict[str, object], *, send_body: bool = True) -> None:
+        body = (json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n").encode(
+            "utf-8"
+        )
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Cache-Control", "no-store")
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.end_headers()
+        if send_body:
+            self.wfile.write(body)
+
+    def accept_render_ready(self) -> None:
+        try:
+            length = int(self.headers.get("Content-Length", "0"))
+        except ValueError:
+            length = 0
+        if length <= 0 or length > 16_384:
+            self.send_error(400, "invalid render-ready payload")
+            return
+        try:
+            payload = json.loads(self.rfile.read(length).decode("utf-8"))
+        except (UnicodeDecodeError, json.JSONDecodeError):
+            self.send_error(400, "invalid render-ready payload")
+            return
+        required = (
+            isinstance(payload, dict)
+            and payload.get("ready") is True
+            and payload.get("map_tiles_ready") is True
+            and payload.get("aircraft_sample_ready") is True
+        )
+        if not required:
+            self.send_error(400, "render is not ready")
+            return
+        accepted = {
+            "ready": True,
+            "map_tiles_ready": True,
+            "aircraft_sample_ready": True,
+            "reported_at_ms": payload.get("reported_at_ms"),
+        }
+        with self.render_status_lock:
+            type(self).render_ready_payload = accepted
+            type(self).render_ready_received_at = time.time()
+        self.send_json_payload({"accepted": True})
+
+    def serve_render_status(self, *, send_body: bool = True) -> None:
+        now = time.time()
+        with self.render_status_lock:
+            report = dict(type(self).render_ready_payload)
+            received_at = type(self).render_ready_received_at
+            started_at = type(self).render_server_started_at
+        age_sec = now - received_at if received_at > 0 else None
+        ready = bool(report.get("ready")) and age_sec is not None and age_sec <= self.render_ready_max_age_sec
+        self.send_json_payload(
+            {
+                "schema": "stream_v3.render_ready.v1",
+                "ready": ready,
+                "state": "ready" if ready else "warming_up",
+                "age_sec": round(age_sec, 3) if age_sec is not None else None,
+                "server_uptime_sec": round(max(0.0, now - started_at), 3),
+                "map_tiles_ready": report.get("map_tiles_ready") is True,
+                "aircraft_sample_ready": report.get("aircraft_sample_ready") is True,
+                "reported_at_ms": report.get("reported_at_ms"),
+            },
+            send_body=send_body,
+        )
+
+    def serve_precipitation_asset(
+        self,
+        parsed: urllib.parse.ParseResult,
+        *,
+        send_body: bool = True,
+    ) -> None:
+        if parsed.path in {"/weather/status.json", "/weather/health.json"}:
+            path = self.precipitation_root / parsed.path.rsplit("/", 1)[-1]
+            content_type = "application/json"
+        else:
+            match = re.fullmatch(
+                r"/weather/tiles/(\d{14})/(\d{1,2})/(\d+)/(\d+)\.png",
+                parsed.path,
+            )
+            if not match:
+                self.send_error(404, "unknown precipitation asset")
+                return
+            validtime, zoom_text, x_text, y_text = match.groups()
+            zoom = int(zoom_text)
+            x = int(x_text)
+            y = int(y_text)
+            if zoom > 10 or x >= 1 << zoom or y >= 1 << zoom:
+                self.send_error(404, "invalid precipitation tile")
+                return
+            path = self.precipitation_root / "generations" / validtime / zoom_text / x_text / f"{y_text}.png"
+            content_type = "image/png"
+
+        try:
+            body = path.read_bytes()
+        except FileNotFoundError:
+            self.send_error(404, "precipitation asset unavailable")
+            return
+        except OSError:
+            self.send_error(503, "precipitation asset unavailable")
+            return
+
+        self.send_response(200)
+        self.send_header("Content-Type", content_type)
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.end_headers()
+        if send_body:
+            self.wfile.write(body)
+
+    def proxy_map_tile(self, parsed: urllib.parse.ParseResult, *, send_body: bool = True) -> None:
+        vector_match = re.fullmatch(r"/map-tiles/openfreemap/(\d+)/(\d+)/(\d+)\.pbf", parsed.path)
+        terrain_match = re.fullmatch(r"/map-tiles/terrain/(\d+)/(\d+)/(\d+)\.webp", parsed.path)
+        if not vector_match and not terrain_match:
+            self.send_error(404, "unknown map tile")
+            return
+
+        try:
+            if vector_match:
+                z, x, y = vector_match.groups()
+                template = self.resolve_openfreemap_tile_template()
+                upstream_url = template.replace("{z}", z).replace("{x}", x).replace("{y}", y)
+                body, content_type = self.fetch_cached_map_asset(
+                    upstream_url,
+                    fallback_content_type="application/vnd.mapbox-vector-tile",
+                )
+            else:
+                z, x, y = terrain_match.groups()
+                upstream_url = self.mapterhorn_tile_template.format(z=z, x=x, y=y)
+                try:
+                    body, content_type = self.fetch_cached_map_asset(
+                        upstream_url,
+                        fallback_content_type="image/webp",
+                    )
+                except urllib.error.HTTPError as exc:
+                    if exc.code != 404:
+                        raise
+                    neutral_path = Path(self.directory) / "adsb-map" / "neutral-terrain.webp"
+                    body = neutral_path.read_bytes()
+                    content_type = "image/webp"
+                    self.store_cached_map_asset(upstream_url, body, content_type)
+        except (urllib.error.URLError, TimeoutError, OSError, ValueError, json.JSONDecodeError) as exc:
+            body = (json.dumps({"error": type(exc).__name__}, separators=(",", ":")) + "\n").encode("utf-8")
+            self.send_response(502)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            if send_body:
+                self.wfile.write(body)
+            return
+
+        self.send_response(200)
+        self.send_header("Content-Type", content_type)
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.end_headers()
+        if send_body:
+            self.wfile.write(body)
+
+    @classmethod
+    def resolve_openfreemap_tile_template(cls) -> str:
+        now = time.monotonic()
+        with cls.map_tile_cache_lock:
+            if cls.openfreemap_tile_template and now < cls.openfreemap_tile_template_expires_at:
+                return cls.openfreemap_tile_template
+
+        req = urllib.request.Request(
+            cls.openfreemap_tilejson_url,
+            headers={"User-Agent": "stream-overlay-map/1.0", "Accept": "application/json"},
+        )
+        with urllib.request.urlopen(req, timeout=10) as res:
+            tilejson = json.loads(res.read().decode("utf-8"))
+        tiles = tilejson.get("tiles") if isinstance(tilejson, dict) else None
+        if not isinstance(tiles, list) or not tiles or not isinstance(tiles[0], str):
+            raise ValueError("OpenFreeMap TileJSON has no tile template")
+        template = tiles[0]
+        parsed = urllib.parse.urlparse(template)
+        if parsed.scheme != "https" or parsed.hostname != "tiles.openfreemap.org":
+            raise ValueError("unexpected OpenFreeMap tile host")
+        if not all(token in template for token in ("{z}", "{x}", "{y}")):
+            raise ValueError("OpenFreeMap tile template is incomplete")
+        with cls.map_tile_cache_lock:
+            cls.openfreemap_tile_template = template
+            cls.openfreemap_tile_template_expires_at = now + 900.0
+        return template
+
+    @classmethod
+    def fetch_cached_map_asset(cls, url: str, *, fallback_content_type: str) -> tuple[bytes, str]:
+        with cls.map_tile_cache_lock:
+            cached = cls.map_tile_cache.get(url)
+            if cached is not None:
+                cls.map_tile_cache.move_to_end(url)
+                return cached
+        req = urllib.request.Request(
+            url,
+            headers={"User-Agent": "stream-overlay-map/1.0", "Accept-Encoding": "identity"},
+        )
+        with urllib.request.urlopen(req, timeout=20) as res:
+            body = res.read()
+            content_type = res.headers.get("Content-Type", fallback_content_type).split(";", 1)[0]
+        cls.store_cached_map_asset(url, body, content_type)
+        return body, content_type
+
+    @classmethod
+    def store_cached_map_asset(cls, url: str, body: bytes, content_type: str) -> None:
+        with cls.map_tile_cache_lock:
+            cls.map_tile_cache[url] = (body, content_type)
+            cls.map_tile_cache.move_to_end(url)
+            while len(cls.map_tile_cache) > cls.map_tile_cache_max_entries:
+                cls.map_tile_cache.popitem(last=False)
 
     def end_headers(self) -> None:
         self.send_header("Cache-Control", "no-store")
@@ -213,9 +458,9 @@ html,body,#map_container,#map_canvas,.ol-viewport{cursor:none !important;}
         text = body.decode("utf-8", errors="replace")
         injected = """
 
-// stream-overlay privacy: hide the receiver position marker while preserving dashed coverage/range guides.
+// stream-overlay privacy: hide the receiver position marker while preserving solid range guides.
 SiteShow = false;
-SiteCirclesLineDash = [8, 4];
+SiteCirclesLineDash = [];
 """
         if "stream-overlay privacy" in text:
             return text.encode("utf-8")
@@ -604,6 +849,10 @@ def main() -> int:
         type=float,
         default=float(os.environ.get("OVERLAY_ACTUAL_RANGE_RECEIVER_HEIGHT_FT", "0")),
     )
+    parser.add_argument(
+        "--precipitation-root",
+        default=os.environ.get("PRECIPITATION_ROOT", "/state/overlay/precipitation"),
+    )
     args = parser.parse_args()
 
     OverlayHandler.stream1090_url = args.stream1090_url
@@ -617,6 +866,10 @@ def main() -> int:
     OverlayHandler.actual_range_supplement_file = Path(args.actual_range_supplement_file).resolve()
     OverlayHandler.actual_range_supplement_hours = args.actual_range_supplement_hours
     OverlayHandler.actual_range_receiver_height_ft = args.actual_range_receiver_height_ft
+    OverlayHandler.precipitation_root = Path(args.precipitation_root).resolve()
+    OverlayHandler.render_ready_payload = {}
+    OverlayHandler.render_ready_received_at = 0.0
+    OverlayHandler.render_server_started_at = time.time()
     handler = partial(OverlayHandler, directory=str(overlay_dir))
     socketserver.ThreadingTCPServer.allow_reuse_address = True
     with socketserver.ThreadingTCPServer((args.host, args.port), handler) as httpd:

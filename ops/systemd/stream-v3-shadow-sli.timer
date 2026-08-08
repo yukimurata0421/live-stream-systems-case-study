@@ -1,0 +1,11 @@
+[Unit]
+Description=Run stream_v3 historical shadow SLI rollup hourly
+
+[Timer]
+OnBootSec=10min
+OnUnitInactiveSec=1h
+AccuracySec=1min
+Unit=stream-v3-shadow-sli.service
+
+[Install]
+WantedBy=timers.target

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -48,6 +49,19 @@ class StreamV3PrometheusExporterTests(unittest.TestCase):
             args = exporter.parse_args()
 
         self.assertEqual(args.cache_sec, 60.0)
+
+    def test_map_alert_rules_use_public_observability_job(self) -> None:
+        rules = (
+            Path(__file__).resolve().parents[1]
+            / "ops"
+            / "monitoring"
+            / "prometheus"
+            / "rules"
+            / "stream_v3_map.yml"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn('job="stream_v3_observability_monitor"', rules)
+        self.assertNotIn('job="stream_v3_arena_monitor"', rules)
 
     def test_run_json_passes_v3_state_environment_to_cli(self) -> None:
         exporter = load_exporter()
@@ -138,6 +152,7 @@ class StreamV3PrometheusExporterTests(unittest.TestCase):
                     "host_memory_snapshot",
                     return_value={"mem_available_mb": 4096.0, "mem_available_ratio": 0.50},
                 ),
+                mock.patch.object(exporter, "runtime_gpu_snapshot", return_value={}),
             ):
                 time_mock.time.return_value = 4070908860.0
                 payload = exporter.build_metrics(repo_root=Path(td), state_root=state_root, timeout_sec=1)
@@ -194,6 +209,7 @@ class StreamV3PrometheusExporterTests(unittest.TestCase):
                 mock.patch.object(exporter, "run_json", side_effect=[{"windows": []}, {"metrics": {}}]),
                 mock.patch.object(exporter, "time") as time_mock,
                 mock.patch.object(exporter, "host_memory_snapshot", return_value={}),
+                mock.patch.object(exporter, "runtime_gpu_snapshot", return_value={}),
             ):
                 time_mock.time.return_value = 4070908860.0
                 payload = exporter.build_metrics(repo_root=Path(td), state_root=state_root, timeout_sec=1)
@@ -253,6 +269,7 @@ class StreamV3PrometheusExporterTests(unittest.TestCase):
                 mock.patch.object(exporter, "run_json", side_effect=[health, {"metrics": {}}]),
                 mock.patch.object(exporter, "time") as time_mock,
                 mock.patch.object(exporter, "host_memory_snapshot", return_value={}),
+                mock.patch.object(exporter, "runtime_gpu_snapshot", return_value={}),
             ):
                 time_mock.time.return_value = 4070908920.0
                 payload = exporter.build_metrics(repo_root=Path(td), state_root=state_root, timeout_sec=1)
@@ -390,6 +407,7 @@ class StreamV3PrometheusExporterTests(unittest.TestCase):
                 mock.patch.object(exporter, "run_json", side_effect=[{"windows": []}, {"metrics": {}}]),
                 mock.patch.object(exporter, "host_memory_snapshot", return_value={}),
                 mock.patch.object(exporter, "runtime_memory_snapshot", return_value=runtime_memory),
+                mock.patch.object(exporter, "runtime_gpu_snapshot", return_value={}),
             ):
                 payload = exporter.build_metrics(repo_root=Path(td), state_root=state_root, timeout_sec=1)
 
@@ -564,6 +582,170 @@ class StreamV3PrometheusExporterTests(unittest.TestCase):
         self.assertEqual(metric_value(payload, "stream_v3_monitoring_watchdog_ok"), 1.0)
         self.assertEqual(metric_value(payload, "stream_v3_monitoring_watchdog_repair_enabled"), 0.0)
         self.assertEqual(metric_value(payload, "stream_v3_monitoring_watchdog_check_ok", '{check="exporter_http"}'), 1.0)
+
+    def test_runtime_gpu_snapshot_detects_nvml_driver_library_mismatch_from_pod_status(self) -> None:
+        exporter = load_exporter()
+        deployment_json = {
+            "spec": {
+                "template": {
+                    "spec": {
+                        "containers": [
+                            {
+                                "name": "stream-engine",
+                                "resources": {"limits": {"nvidia.com/gpu": "1"}},
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+        pods_json = {
+            "items": [
+                {
+                    "metadata": {"name": "stream-v3-runtime-abc123"},
+                    "status": {
+                        "phase": "Running",
+                        "containerStatuses": [
+                            {
+                                "name": "stream-engine",
+                                "ready": False,
+                                "state": {
+                                    "waiting": {
+                                        "reason": "RunContainerError",
+                                        "message": "Failed to initialize NVML: Driver/library version mismatch",
+                                    }
+                                },
+                            }
+                        ],
+                    },
+                }
+            ]
+        }
+
+        with mock.patch.object(exporter, "kubectl_json", side_effect=[deployment_json, pods_json]):
+            snapshot = exporter.runtime_gpu_snapshot(timeout_sec=1, now=4070908860.0)
+
+        self.assertEqual(snapshot["status"], "driver_mismatch")
+        self.assertTrue(snapshot["restart_blocked"])
+        self.assertTrue(snapshot["driver_mismatch"])
+
+    def test_build_metrics_exports_runtime_gpu_guardrail(self) -> None:
+        exporter = load_exporter()
+        runtime_gpu = {
+            "available": True,
+            "status": "driver_mismatch",
+            "status_ok": False,
+            "restart_blocked": True,
+            "driver_mismatch": True,
+            "gpu_runtime_error": True,
+            "gpu_requested": True,
+            "stream_engine_ready": False,
+            "stream_engine_running": False,
+            "container_waiting": True,
+            "pod_count": 1,
+            "pods": [
+                {
+                    "pod": "stream-v3-runtime-abc123",
+                    "container": "stream-engine",
+                    "state": "waiting",
+                    "reason": "RunContainerError",
+                }
+            ],
+        }
+        with tempfile.TemporaryDirectory() as td:
+            state_root = Path(td)
+            with (
+                mock.patch.object(exporter, "run_json", side_effect=[{"windows": []}, {"metrics": {}}]),
+                mock.patch.object(exporter, "host_memory_snapshot", return_value={}),
+                mock.patch.object(exporter, "runtime_memory_snapshot", return_value={}),
+                mock.patch.object(exporter, "runtime_gpu_snapshot", return_value=runtime_gpu),
+            ):
+                payload = exporter.build_metrics(repo_root=Path(td), state_root=state_root, timeout_sec=1)
+
+        self.assertEqual(metric_value(payload, "stream_v3_runtime_gpu_status_ok"), 0.0)
+        self.assertEqual(metric_value(payload, "stream_v3_runtime_gpu_restart_blocked"), 1.0)
+        self.assertEqual(metric_value(payload, "stream_v3_runtime_gpu_driver_mismatch"), 1.0)
+        self.assertEqual(
+            metric_value(
+                payload,
+                "stream_v3_runtime_gpu_pod_state",
+                '{container="stream-engine",pod="stream-v3-runtime-abc123",reason="RunContainerError",state="waiting"}',
+            ),
+            1.0,
+        )
+
+    def test_map_runtime_metrics_export_delivery_weather_and_container_contracts(self) -> None:
+        exporter = load_exporter()
+        writer = exporter.MetricWriter()
+        exporter.write_map_runtime_metrics(
+            writer,
+            {
+                "schema": "stream_v3.map_runtime_monitor.v1",
+                "checked_at_utc": "2099-01-01T00:00:00Z",
+                "status": "ok",
+                "delivery_critical_ok": True,
+                "weather_ok": True,
+                "readiness": {
+                    "ready": True,
+                    "nvenc_active": True,
+                    "rtmp_socket_established": True,
+                },
+                "conditions": {"render_heartbeat": True},
+                "render": {
+                    "age_sec": 5,
+                    "map_tiles_ready": True,
+                    "aircraft_sample_ready": True,
+                },
+                "browser": {"contract_ok": True},
+                "precipitation": {
+                    "observed_age_sec": 120,
+                    "status": {"available": True},
+                    "health": {"state": "current", "consecutive_failures": 0},
+                },
+                "expected_containers": ["stream-engine"],
+                "pod": {
+                    "containers": {
+                        "stream-engine": {"ready": True, "restart_count": 2}
+                    }
+                },
+            },
+            now=4070908860.0,
+        )
+        payload = writer.render()
+
+        self.assertEqual(metric_value(payload, "stream_v3_map_monitor_sample_available"), 1.0)
+        self.assertEqual(metric_value(payload, "stream_v3_map_monitor_delivery_critical_ok"), 1.0)
+        self.assertEqual(metric_value(payload, "stream_v3_map_monitor_weather_ok"), 1.0)
+        self.assertEqual(metric_value(payload, "stream_v3_map_nvenc_active"), 1.0)
+        self.assertEqual(
+            metric_value(payload, "stream_v3_map_container_restart_count", '{container="stream-engine"}'),
+            2.0,
+        )
+
+    def test_viewer_synthetic_metrics_export_failure_counters(self) -> None:
+        exporter = load_exporter()
+        writer = exporter.MetricWriter()
+        exporter.write_viewer_synthetic_metrics(
+            writer,
+            {
+                "schema": "stream_v3.viewer_synthetic.v1",
+                "checked_at_utc": "2099-01-01T00:00:00Z",
+                "status": "degraded",
+                "frame_ok": True,
+                "black_detected": False,
+                "freeze_detected": True,
+                "consecutive_probe_failures": 2,
+                "consecutive_visual_failures": 3,
+            },
+            now=4070908860.0,
+        )
+        payload = writer.render()
+
+        self.assertEqual(metric_value(payload, "stream_v3_viewer_synthetic_sample_available"), 1.0)
+        self.assertEqual(metric_value(payload, "stream_v3_viewer_synthetic_frame_ok"), 1.0)
+        self.assertEqual(metric_value(payload, "stream_v3_viewer_synthetic_freeze_detected"), 1.0)
+        self.assertEqual(metric_value(payload, "stream_v3_viewer_synthetic_consecutive_probe_failures"), 2.0)
+        self.assertEqual(metric_value(payload, "stream_v3_viewer_synthetic_consecutive_visual_failures"), 3.0)
 
 
 if __name__ == "__main__":

@@ -559,7 +559,7 @@ class CliOpsCommandsTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             env = Path(td) / "adsb-streamnew"
             env.write_text(
-                "STREAM_KEY=REPLACE_WITH_TEST_STREAM_KEY\n"
+                "STREAM_KEY=KEY123\n"
                 "RTMP_URL=rtmps://a.rtmps.youtube.com:443/live2\n",
                 encoding="utf-8",
             )
@@ -576,7 +576,7 @@ class CliOpsCommandsTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             env = Path(td) / "adsb-streamnew"
             env.write_text(
-                "STREAM_KEY=REPLACE_WITH_TEST_STREAM_KEY\n"
+                "STREAM_KEY=KEY123\n"
                 "RTMP_URL=rtmp://a.rtmp.youtube.com/live2\n",
                 encoding="utf-8",
             )
@@ -590,7 +590,7 @@ class CliOpsCommandsTests(unittest.TestCase):
     def test_guard_start_safety_blocks_invalid_ingest_endpoint(self) -> None:
         def fake_read_env_file(_path: Path) -> dict[str, str]:
             return {
-                "STREAM_KEY": "REPLACE_WITH_TEST_STREAM_KEY",
+                "STREAM_KEY": "KEY123",
                 "RTMP_URL": "rtmps://example.invalid/live2",
                 "TEST_MODE": "0",
                 "DISPLAY_NAME": ":101",
@@ -838,6 +838,90 @@ class CliOpsCommandsTests(unittest.TestCase):
         self.assertNotIn("rtmps:ssl_tls_specific_event", incident_ids)
         self.assertNotIn("public_probe:429_or_bot_confirmation_repeated", incident_ids)
 
+    def test_collect_notification_incidents_skips_recovered_fast_mode_runaway_history(self) -> None:
+        now_ts = cli.parse_utc_ts("2026-07-25T10:52:29Z")
+        observe_payload = {
+            "pass": True,
+            "checks": {
+                "current_fail": False,
+                "youtube_current_degraded": False,
+                "youtube_observability_current_fail": False,
+                "historical_degraded": True,
+                "fast_mode_current_active": False,
+            },
+            "api_report_judgment": "ok",
+            "fast_mode_current_active": False,
+            "fast_mode_judgment": "investigate_fast_mode_runaway",
+            "fast_mode_episode_count_24h": 2,
+            "fast_mode_active_duration_sec_24h": 11540,
+            "fast_mode_api_units_estimated_24h": 6924,
+            "encoder_gap_enable_auto_stop_false_judgment": "ok_none",
+            "remote_warning_restart_judgment": "ok_single_or_none",
+            "stream_engine_ffmpeg_exit_224_judgment": "ok_single_or_none",
+            "public_probe_judgment": "ok_none",
+            "watchdog_restart_reasons": {},
+            "fast_recovery_restart_triggers": {},
+            "stream_engine_ffmpeg_exit_224_count_1h": 0,
+        }
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            stream_log = root / "stream1090_report.jsonl"
+            upstream_log = root / "upstream_stream1090_report.jsonl"
+            stream_log.write_text("", encoding="utf-8")
+            upstream_log.write_text("", encoding="utf-8")
+            with mock.patch("cli._observe_payload", return_value=(0, observe_payload, "")):
+                with mock.patch.object(cli, "STREAM1090_REPORT_EVENTS_FILE", stream_log):
+                    with mock.patch.object(cli, "UPSTREAM_REPORT_EVENTS_FILE", upstream_log):
+                        incidents = cli.collect_notification_incidents(now_ts=now_ts, report_stale_sec=1800)
+
+        incident_ids = {item["id"] for item in incidents}
+        self.assertNotIn("resolver:fast_mode_active_or_runaway", incident_ids)
+
+    def test_collect_notification_incidents_keeps_current_fast_mode_active(self) -> None:
+        now_ts = cli.parse_utc_ts("2026-07-25T10:52:29Z")
+        base_payload = {
+            "pass": False,
+            "checks": {
+                "current_fail": False,
+                "youtube_current_degraded": False,
+                "youtube_observability_current_fail": False,
+                "fast_mode_current_active": False,
+            },
+            "api_report_judgment": "ok",
+            "fast_mode_current_active": False,
+            "fast_mode_judgment": "investigate_fast_mode_runaway",
+            "fast_mode_episode_count_24h": 2,
+            "fast_mode_active_duration_sec_24h": 11540,
+            "fast_mode_api_units_estimated_24h": 6924,
+            "encoder_gap_enable_auto_stop_false_judgment": "ok_none",
+            "remote_warning_restart_judgment": "ok_single_or_none",
+            "stream_engine_ffmpeg_exit_224_judgment": "ok_single_or_none",
+            "public_probe_judgment": "ok_none",
+            "watchdog_restart_reasons": {},
+            "fast_recovery_restart_triggers": {},
+            "stream_engine_ffmpeg_exit_224_count_1h": 0,
+        }
+        cases = [
+            ("checks", {"checks": {**base_payload["checks"], "fast_mode_current_active": True}}),
+            ("payload", {"fast_mode_current_active": True}),
+        ]
+
+        for _label, override in cases:
+            observe_payload = {**base_payload, **override}
+            with tempfile.TemporaryDirectory() as td:
+                root = Path(td)
+                stream_log = root / "stream1090_report.jsonl"
+                upstream_log = root / "upstream_stream1090_report.jsonl"
+                stream_log.write_text("", encoding="utf-8")
+                upstream_log.write_text("", encoding="utf-8")
+                with mock.patch("cli._observe_payload", return_value=(0, observe_payload, "")):
+                    with mock.patch.object(cli, "STREAM1090_REPORT_EVENTS_FILE", stream_log):
+                        with mock.patch.object(cli, "UPSTREAM_REPORT_EVENTS_FILE", upstream_log):
+                            incidents = cli.collect_notification_incidents(now_ts=now_ts, report_stale_sec=1800)
+
+            incident_ids = {item["id"] for item in incidents}
+            self.assertIn("resolver:fast_mode_active_or_runaway", incident_ids)
+
     def test_collect_notification_incidents_skips_recovered_encoder_gap_history(self) -> None:
         now_ts = cli.parse_utc_ts("2026-05-18T09:54:00Z")
         observe_payload = {
@@ -1068,6 +1152,153 @@ class CliOpsCommandsTests(unittest.TestCase):
         self.assertIn("resolved_incidents=1", sent[2])
         self.assertIn("window=1970-01-01 09:15:40 JST -> 1970-01-01 09:18:40 JST", sent[2])
 
+    def test_notify_status_routes_critical_incident_to_slack_immediately_with_recovery(self) -> None:
+        config = {
+            "enabled": True,
+            "webhook_url": "https://discord.example/webhook",
+            "repeat_sec": 60,
+            "report_stale_sec": 1800,
+            "username": "discord-bot",
+            "slack_enabled": True,
+            "slack_webhook_url": "https://slack.example/webhook",
+            "slack_username": "slack-bot",
+            "slack_min_active_sec": 1800,
+            "outbox_ttl_sec": 86400,
+            "outbox_max_pending": 50,
+            "outbox_flush_limit": 10,
+        }
+        incident_payload = [
+            {
+                "id": "stream:current_fail",
+                "severity": "critical",
+                "component": "stream_health",
+                "summary": "current_fail=true",
+                "evidence": "youtube_status=fail",
+                "recovery_type": "fast_recovery_restart:network_down",
+                "follow_up": "check stream",
+                "observed_ts": 1000,
+            }
+        ]
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            state_file = root / "notify_state.json"
+            events_file = root / "notify_events.jsonl"
+            outbox_file = root / "notify_outbox.jsonl"
+            discord_sent: list[str] = []
+            slack_sent: list[str] = []
+
+            with mock.patch.object(cli, "NOTIFY_STATE_FILE", state_file):
+                with mock.patch.object(cli, "NOTIFY_EVENTS_FILE", events_file):
+                    with mock.patch.object(cli, "NOTIFY_OUTBOX_FILE", outbox_file):
+                        with mock.patch("cli.load_stream_notify_config", return_value=config):
+                            with mock.patch("cli.send_discord_webhook", side_effect=lambda _url, content, **_kwargs: (discord_sent.append(content) is None, "ok")):
+                                with mock.patch("cli.send_slack_webhook", side_effect=lambda _url, content, **_kwargs: (slack_sent.append(content) is None, "ok")):
+                                    with mock.patch("cli.collect_notification_incidents", return_value=incident_payload):
+                                        self.assertEqual(cli.notify_status(now_ts=1000), 0)
+                                    with mock.patch("cli.collect_notification_incidents", return_value=[]):
+                                        self.assertEqual(cli.notify_status(now_ts=1061), 0)
+
+            state = json.loads(state_file.read_text(encoding="utf-8"))
+            events = [json.loads(line) for line in events_file.read_text(encoding="utf-8").splitlines()]
+
+        self.assertEqual(len(discord_sent), 2)
+        self.assertEqual(len(slack_sent), 2)
+        self.assertIn("障害検知", slack_sent[0])
+        self.assertIn("復旧フォローアップ", slack_sent[1])
+        self.assertEqual(state["active"], {})
+        self.assertIn("slack", {item["route"] for item in events})
+        self.assertIn("discord", {item["route"] for item in events})
+
+    def test_notify_status_routes_warning_to_slack_after_sustained_window_once(self) -> None:
+        config = {
+            "enabled": True,
+            "webhook_url": "https://discord.example/webhook",
+            "repeat_sec": 60,
+            "report_stale_sec": 1800,
+            "username": "discord-bot",
+            "slack_enabled": True,
+            "slack_webhook_url": "https://slack.example/webhook",
+            "slack_username": "slack-bot",
+            "slack_min_active_sec": 1800,
+            "outbox_ttl_sec": 86400,
+            "outbox_max_pending": 50,
+            "outbox_flush_limit": 10,
+        }
+        incident_payload = [
+            {
+                "id": "stream1090:overlay_report",
+                "severity": "warning",
+                "component": "overlay_stream1090",
+                "summary": "overlay report is warn",
+                "evidence": "judgment=report_only_warn",
+                "recovery_type": "report_only_observation_no_stream_restart",
+                "follow_up": "next sample",
+                "observed_ts": 1000,
+            }
+        ]
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            state_file = root / "notify_state.json"
+            events_file = root / "notify_events.jsonl"
+            outbox_file = root / "notify_outbox.jsonl"
+            discord_sent: list[str] = []
+            slack_sent: list[str] = []
+
+            with mock.patch.object(cli, "NOTIFY_STATE_FILE", state_file):
+                with mock.patch.object(cli, "NOTIFY_EVENTS_FILE", events_file):
+                    with mock.patch.object(cli, "NOTIFY_OUTBOX_FILE", outbox_file):
+                        with mock.patch("cli.load_stream_notify_config", return_value=config):
+                            with mock.patch("cli.send_discord_webhook", side_effect=lambda _url, content, **_kwargs: (discord_sent.append(content) is None, "ok")):
+                                with mock.patch("cli.send_slack_webhook", side_effect=lambda _url, content, **_kwargs: (slack_sent.append(content) is None, "ok")):
+                                    with mock.patch("cli.collect_notification_incidents", return_value=incident_payload):
+                                        self.assertEqual(cli.notify_status(now_ts=1000), 0)
+                                        self.assertEqual(cli.notify_status(now_ts=1061), 0)
+                                        self.assertEqual(cli.notify_status(now_ts=2800), 0)
+                                        self.assertEqual(cli.notify_status(now_ts=2861), 0)
+
+            state = json.loads(state_file.read_text(encoding="utf-8"))
+
+        self.assertEqual(len(discord_sent), 4)
+        self.assertEqual(len(slack_sent), 1)
+        self.assertIn("障害継続ステータス", slack_sent[0])
+        self.assertEqual(state["active"]["stream1090:overlay_report"]["slack_first_notified_ts"], 2800)
+
+    def test_notify_status_force_test_routes_to_slack_even_without_incidents(self) -> None:
+        config = {
+            "enabled": True,
+            "webhook_url": "https://discord.example/webhook",
+            "repeat_sec": 60,
+            "report_stale_sec": 1800,
+            "username": "discord-bot",
+            "slack_enabled": True,
+            "slack_webhook_url": "https://slack.example/webhook",
+            "slack_username": "slack-bot",
+            "slack_min_active_sec": 1800,
+            "outbox_ttl_sec": 86400,
+            "outbox_max_pending": 50,
+            "outbox_flush_limit": 10,
+        }
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            state_file = root / "notify_state.json"
+            events_file = root / "notify_events.jsonl"
+            outbox_file = root / "notify_outbox.jsonl"
+            discord_sent: list[str] = []
+            slack_sent: list[str] = []
+
+            with mock.patch.object(cli, "NOTIFY_STATE_FILE", state_file):
+                with mock.patch.object(cli, "NOTIFY_EVENTS_FILE", events_file):
+                    with mock.patch.object(cli, "NOTIFY_OUTBOX_FILE", outbox_file):
+                        with mock.patch("cli.load_stream_notify_config", return_value=config):
+                            with mock.patch("cli.send_discord_webhook", side_effect=lambda _url, content, **_kwargs: (discord_sent.append(content) is None, "ok")):
+                                with mock.patch("cli.send_slack_webhook", side_effect=lambda _url, content, **_kwargs: (slack_sent.append(content) is None, "ok")):
+                                    with mock.patch("cli.collect_notification_incidents", return_value=[]):
+                                        self.assertEqual(cli.notify_status(force_test=True, now_ts=1000), 0)
+
+        self.assertEqual(len(discord_sent), 1)
+        self.assertEqual(len(slack_sent), 1)
+        self.assertIn("通知テスト", slack_sent[0])
+
     def test_notify_status_sends_maintenance_reminder_without_collecting_incidents(self) -> None:
         config = {
             "enabled": True,
@@ -1297,6 +1528,85 @@ class CliOpsCommandsTests(unittest.TestCase):
         self.assertIn("復旧フォローアップ", sent[1])
         self.assertIn("recovery_evidence=current_fail=False", sent[1])
         self.assertIn("youtube_status=ok", sent[1])
+
+    def test_notify_status_sends_stream_engine_ffmpeg_auto_recovered_event_once(self) -> None:
+        config = {
+            "enabled": True,
+            "webhook_url": "https://discord.example/webhook",
+            "repeat_sec": 60,
+            "maintenance_repeat_sec": 600,
+            "report_stale_sec": 1800,
+            "username": "test",
+            "outbox_ttl_sec": 86400,
+            "outbox_max_pending": 50,
+            "outbox_flush_limit": 10,
+            "fast_recovery_event_recent_sec": 1800,
+            "fast_recovery_event_triggers": ["tcp_stall"],
+            "stream_engine_event_recent_sec": 1800,
+        }
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            state_file = root / "notify_state.json"
+            events_file = root / "notify_events.jsonl"
+            outbox_file = root / "notify_outbox.jsonl"
+            fast_events_file = root / "fast_recovery_events.jsonl"
+            stream_engine_events_file = root / "stream_engine_events.jsonl"
+            log_dir = root / "logs"
+            log_dir.mkdir()
+            stream_engine_events_file.write_text(
+                "\n".join(
+                    [
+                        json.dumps(
+                            {
+                                "ts_utc": "1970-01-01T00:20:00Z",
+                                "event_id": "evt-ffmpeg-1",
+                                "event_type": "ffmpeg_restart_scheduled",
+                                "run_id": "19700101T001000Z-111",
+                                "restart_count": 1,
+                                "exit_code": 1,
+                                "delay_sec": 5,
+                            }
+                        ),
+                        json.dumps(
+                            {
+                                "ts_utc": "1970-01-01T00:20:06Z",
+                                "event_type": "ffmpeg_started",
+                                "run_id": "19700101T001000Z-111",
+                                "restart_count": 1,
+                                "ffmpeg_pid": 1234,
+                            }
+                        ),
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            sent: list[str] = []
+
+            def fake_send(_url: str, content: str, **_kwargs) -> tuple[bool, str]:
+                sent.append(content)
+                return True, "ok"
+
+            with mock.patch.object(cli, "NOTIFY_STATE_FILE", state_file):
+                with mock.patch.object(cli, "NOTIFY_EVENTS_FILE", events_file):
+                    with mock.patch.object(cli, "NOTIFY_OUTBOX_FILE", outbox_file):
+                        with mock.patch.object(cli, "FAST_RECOVERY_EVENTS_FILE", fast_events_file):
+                            with mock.patch.object(cli, "STREAM_ENGINE_EVENTS_FILE", stream_engine_events_file):
+                                with mock.patch.object(cli, "LOG_BASE_DIR", log_dir):
+                                    with mock.patch.object(cli, "STATE_BASE_DIR", root):
+                                        with mock.patch("cli.load_stream_notify_config", return_value=config):
+                                            with mock.patch("cli.collect_notification_incidents", return_value=[]):
+                                                with mock.patch("cli.send_discord_webhook", side_effect=fake_send):
+                                                    self.assertEqual(cli.notify_status(now_ts=1230), 0)
+                                                    self.assertEqual(cli.notify_status(now_ts=1290), 0)
+
+            state = json.loads(state_file.read_text(encoding="utf-8"))
+
+        self.assertEqual(len(sent), 1)
+        self.assertIn("自動復旧確認", sent[0])
+        self.assertIn("trigger=ffmpeg_exit_code_1", sent[0])
+        self.assertIn("ffmpeg child restart completed", sent[0])
+        self.assertIn("evt-ffmpeg-1", state["stream_engine_ffmpeg_auto_recovered_notified"])
 
     def test_notify_status_dry_run_does_not_mutate_state_or_events(self) -> None:
         config = {

@@ -511,6 +511,106 @@ class ObserveStreamHealthTests(unittest.TestCase):
             self.assertEqual(payload.get("stream_engine_ffmpeg_exit_224_count"), 1)
             self.assertGreaterEqual(payload.get("log_files_read", {}).get("stream_engine_events", 0), 1)
 
+    def test_tcp_stall_rollout_and_exit_255_child_recovery_remain_separate(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            state_dir = Path(td) / "state"
+            log_dir = Path(td) / "logs"
+            state_dir.mkdir(parents=True, exist_ok=True)
+            log_dir.mkdir(parents=True, exist_ok=True)
+
+            now = datetime.now(timezone.utc)
+            rollout = now - timedelta(minutes=10)
+            child_exit = rollout + timedelta(minutes=3)
+            ts_now = now.strftime("%Y-%m-%dT%H:%M:%SZ")
+            ts_rollout = rollout.strftime("%Y-%m-%dT%H:%M:%SZ")
+            ts_first_start = (rollout + timedelta(seconds=29)).strftime("%Y-%m-%dT%H:%M:%SZ")
+            ts_child_exit = child_exit.strftime("%Y-%m-%dT%H:%M:%SZ")
+            ts_child_restart = (child_exit + timedelta(seconds=6)).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+            (log_dir / "youtube_watchdog.jsonl").write_text(
+                json.dumps({"ts_utc": ts_now, "status": "ok"}) + "\n",
+                encoding="utf-8",
+            )
+            (log_dir / "fast_recovery_events.jsonl").write_text(
+                json.dumps(
+                    {
+                        "ts_utc": ts_rollout,
+                        "kind": "restart",
+                        "trigger": "tcp_stall",
+                        "message": "tcp stall: bytes not increasing with queued data",
+                    }
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            (log_dir / "stream_engine_events.jsonl").write_text(
+                "\n".join(
+                    [
+                        json.dumps({"ts_utc": ts_rollout, "event_type": "ffmpeg_exited", "exit_code": -9}),
+                        json.dumps(
+                            {"ts_utc": ts_first_start, "event_type": "ffmpeg_started", "ffmpeg_pid": 668}
+                        ),
+                        json.dumps(
+                            {"ts_utc": ts_child_exit, "event_type": "ffmpeg_exited", "exit_code": 255}
+                        ),
+                        json.dumps(
+                            {
+                                "ts_utc": ts_child_exit,
+                                "event_type": "ffmpeg_restart_scheduled",
+                                "exit_code": 255,
+                                "delay_sec": 5,
+                            }
+                        ),
+                        json.dumps(
+                            {"ts_utc": ts_child_restart, "event_type": "ffmpeg_started", "ffmpeg_pid": 3683}
+                        ),
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            (state_dir / "youtube_watchdog_stats.json").write_text(
+                json.dumps(
+                    {
+                        "ts_utc": ts_now,
+                        "status": "ok",
+                        "judgment": "ok",
+                        "stream_active": True,
+                        "ingest_connected": True,
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (state_dir / "slo_snapshot.json").write_text(
+                json.dumps({"pulse_unavailable_count": 0, "slo_pulse_unavailable_24h_max": 1, "ts_utc": ts_now}),
+                encoding="utf-8",
+            )
+
+            with mock.patch.dict(
+                os.environ,
+                {
+                    "STREAM_RUNTIME_STATE_DIR": str(state_dir),
+                    "STREAM_RUNTIME_LOG_DIR": str(log_dir),
+                },
+                clear=False,
+            ):
+                mod = _load_module()
+                buf = io.StringIO()
+                argv = ["observe_stream_health.py", "--hours", "1"]
+                with mock.patch("sys.argv", argv):
+                    with redirect_stdout(buf):
+                        rc = mod.main()
+
+            payload = json.loads(buf.getvalue())
+            self.assertEqual(rc, 0)
+            self.assertTrue(bool(payload.get("pass", False)))
+            self.assertFalse(bool(payload.get("checks", {}).get("current_fail", True)))
+            self.assertEqual(payload.get("fast_recovery_restart_count"), 1)
+            self.assertEqual(payload.get("fast_recovery_restart_triggers", {}).get("tcp_stall"), 1)
+            self.assertEqual(payload.get("stream_engine_ffmpeg_restart_count"), 1)
+            self.assertEqual(payload.get("stream_engine_ffmpeg_exit_codes", {}).get("255"), 1)
+            self.assertEqual(payload.get("stream_engine_ffmpeg_exit_codes", {}).get("-9"), 1)
+
     def test_ffmpeg_exit_224_sli_uses_1h_and_24h_windows_without_failing_health(self) -> None:
         with tempfile.TemporaryDirectory() as td:
             state_dir = Path(td) / "state"

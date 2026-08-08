@@ -16,9 +16,10 @@ a supported streaming product or general-purpose starter.
 ## 30-Second Summary
 
 `stream_v3` is a self-built 24/7 YouTube Live pipeline for ADS-B visualization
-and NCS music. The engineering focus is same-watch-URL continuity, SLI-based
-monitoring, fault classification, bounded recovery authority, and public-safe
-status publication.
+and NCS music. Its current renderer combines a custom MapLibre aircraft map,
+analysis-only JMA precipitation, and explicit render readiness. The engineering
+focus is same-watch-URL continuity, SLI-based monitoring, fault classification,
+bounded recovery authority, and public-safe status publication.
 
 The system runs across three home hosts:
 
@@ -82,8 +83,8 @@ flowchart LR
     end
 
     subgraph DELL["Dell / k3s delivery"]
-        RS["readsb + modified tar1090"]
-        RUN["stream-v3-runtime<br/>browser + audio + FFmpeg + fast recovery"]
+        RS["readsb + modified tar1090 ADS-B source"]
+        RUN["stream-v3-runtime<br/>MapLibre + weather + audio + NVENC + recovery"]
         RS --> RUN
     end
 
@@ -129,6 +130,8 @@ contracts are in [physical topology](docs/physical-topology.md) and
   not immediate proof of stream failure.
 - Keep ADS-B source freshness, visual correctness, audio correctness, upload
   pressure, and YouTube lifecycle state as separate fault domains.
+- Keep the map runtime probe, public-viewer frame probe, and precipitation
+  health read-only; repeated visual evidence must be correlated before recovery.
 
 ## Claims And Limits
 
@@ -163,5 +166,5 @@ python3 -m pytest -q
 ```
 
 The public workflow compiles the code, validates manifests and shadow behavior,
-and runs focused safety, freshness, notification, and documentation contracts.
-It does not publish to YouTube or mutate a production cluster.
+and runs the full deterministic test suite. It does not publish to YouTube,
+install host units, or mutate a production cluster.

@@ -14,6 +14,13 @@
       --accent: #6de3ff;
       --ok: #66e08a;
       --warn: #ffb15c;
+      --coverage: #A29BBA;
+      --ground: #f3f4f6;
+      --low: #ffd166;
+      --mid: #39e6c3;
+      --high: #67a7ff;
+      --very-high: #f278ff;
+      --unknown: #9aa6ae;
     }
     * { box-sizing: border-box; }
     html, body {
@@ -56,18 +63,46 @@
     #adsb {
       top: 12px;
       left: 12px;
-      width: min(360px, calc(100vw - 24px));
+      width: min(420px, calc(100vw - 24px));
+      padding: 0;
+      overflow: hidden;
+    }
+    #adsb .kicker {
+      letter-spacing: 0.08em;
+      text-align: center;
+    }
+    .instrument-section {
+      padding: 9px 14px;
+    }
+    .instrument-section + .instrument-section {
+      border-top: 1px solid rgba(255, 255, 255, 0.11);
+    }
+    .instrument-heading {
+      display: flex;
+      min-height: 16px;
+      align-items: center;
+      justify-content: space-between;
+      color: #d3e1e4;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+    }
+    .instrument-unit {
+      color: rgba(190, 207, 207, 0.82);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.05em;
     }
     .metric-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 8px 12px;
-      margin-top: 8px;
+      gap: 6px 12px;
+      margin-top: 6px;
     }
     .metric {
       min-width: 0;
       border-top: 1px solid rgba(255, 255, 255, 0.15);
-      padding-top: 8px;
+      padding-top: 5px;
     }
     .metric span {
       display: block;
@@ -80,8 +115,136 @@
       font-size: 20px;
       line-height: 1.1;
     }
+    .receiver-status-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 8px;
+      padding-top: 7px;
+      border-top: 1px solid rgba(255, 255, 255, 0.12);
+      color: var(--panel-sub);
+      font-size: 12px;
+    }
+    .status-badge {
+      display: inline-flex;
+      min-width: 74px;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 3px 9px;
+      border: 1px solid currentColor;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+    }
+    .status-badge::before {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: currentColor;
+      content: "";
+    }
     .status-ok { color: var(--ok); }
     .status-warn { color: var(--warn); }
+    .altitude-scale {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      margin-top: 7px;
+    }
+    .altitude-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      column-gap: 14px;
+    }
+    .legend-item {
+      display: inline-flex;
+      min-width: 0;
+      align-items: center;
+      color: rgba(226, 237, 236, 0.96);
+      font-size: 12px;
+      line-height: 1.15;
+      white-space: nowrap;
+    }
+    .dot {
+      width: 11px;
+      height: 11px;
+      flex: 0 0 auto;
+      margin-right: 7px;
+      border-radius: 50%;
+      box-shadow: 0 0 0 2px rgba(4, 12, 15, 0.90);
+    }
+    .dot.ground { background: var(--ground); }
+    .dot.low { background: var(--low); }
+    .dot.mid { background: var(--mid); }
+    .dot.high { background: var(--high); }
+    .dot.very-high { background: var(--very-high); }
+    .dot.unknown { background: var(--unknown); }
+    .guide-scale {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      margin-top: 7px;
+      padding-top: 7px;
+      border-top: 1px solid rgba(255, 255, 255, 0.10);
+    }
+    .guide-line {
+      display: inline-block;
+      width: 30px;
+      flex: 0 0 auto;
+      margin-right: 8px;
+    }
+    .guide-line.coverage { border-top: 2px solid var(--coverage); opacity: 0.62; }
+    .guide-line.ring { border-top: 1px solid rgba(176, 207, 212, 0.55); }
+    .precipitation-meta {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-top: 4px;
+      color: rgba(207, 222, 221, 0.84);
+      font-size: 11px;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.04em;
+    }
+    .weather-state {
+      font-weight: 700;
+      letter-spacing: 0.08em;
+    }
+    .weather-current { color: var(--ok); }
+    .weather-no-rain { color: #8fc7d0; }
+    .weather-warming-up { color: #d5e0df; }
+    .weather-last-data,
+    .weather-stale,
+    .weather-data-unavailable { color: var(--warn); }
+    .precipitation-notice {
+      margin-left: auto;
+      color: rgba(235, 190, 118, 0.95);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      white-space: nowrap;
+    }
+    .rain-scale {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 7px 18px;
+      margin-top: 7px;
+      padding-top: 7px;
+      border-top: 1px solid rgba(255, 255, 255, 0.10);
+    }
+    .rain {
+      width: 30px;
+      height: 11px;
+      flex: 0 0 auto;
+      margin-right: 8px;
+      border: 1px solid rgba(4, 12, 15, 0.72);
+      border-radius: 2px;
+    }
+    .rain.weak { background: rgba(116, 145, 158, 0.38); }
+    .rain.moderate { background: rgba(59, 126, 132, 0.62); }
+    .rain.heavy { background: rgba(192, 106, 63, 0.70); }
+    .rain.intense { background: rgba(157, 54, 55, 0.78); }
     #np {
       top: 18px;
       right: 18px;
@@ -120,22 +283,6 @@
       width: auto;
       max-width: calc(100vw - 16px);
       padding-bottom: 10px;
-    }
-    #arenaFooter {
-      position: fixed;
-      right: 14px;
-      bottom: 14px;
-      z-index: 10000;
-      background: rgba(0, 0, 0, 0.42);
-      color: #f0f6ff;
-      border: 1px solid rgba(255, 255, 255, 0.18);
-      border-radius: 8px;
-      padding: 5px 9px;
-      font: 500 12px "Trebuchet MS", "Noto Sans", sans-serif;
-      letter-spacing: 0.01em;
-      text-align: right;
-      pointer-events: none;
-      white-space: nowrap;
     }
     .map-mask {
       position: fixed;
@@ -182,15 +329,60 @@
 </head>
 <body class="notranslate" translate="no">
   <iframe id="map" title="tar1090-stream"></iframe>
-  <aside id="adsb" class="panel" aria-live="polite">
-    <div class="kicker">Local ADS-B Receiver</div>
-    <div class="metric-grid">
-      <div class="metric"><span>Targets</span><strong id="aircraftCount">--</strong></div>
-      <div class="metric"><span>Positions</span><strong id="positionCount">--</strong></div>
-      <div class="metric"><span>Msg/sec</span><strong id="messageRate">--</strong></div>
-      <div class="metric"><span>Coverage</span><strong id="coverageRadius">--</strong></div>
-      <div class="metric"><span>Receiver</span><strong id="receiverStatus" class="status-warn">WAIT</strong></div>
-    </div>
+  <aside id="adsb" class="panel" aria-live="polite" aria-label="ADS-B receiver and map legend">
+    <section class="instrument-section receiver-section">
+      <div class="kicker">Local ADS-B Receiver</div>
+      <div class="metric-grid">
+        <div class="metric"><span>Targets</span><strong id="aircraftCount">--</strong></div>
+        <div class="metric"><span>Positions</span><strong id="positionCount">--</strong></div>
+        <div class="metric"><span>Msg/sec</span><strong id="messageRate">--</strong></div>
+        <div class="metric"><span>Farthest now</span><strong id="coverageRadius">--</strong></div>
+      </div>
+      <div class="receiver-status-row">
+        <span>Receiver</span>
+        <strong id="receiverStatus" class="status-badge status-warn">WAIT</strong>
+      </div>
+    </section>
+    <section class="instrument-section altitude-section" aria-label="Altitude and reception range legend">
+      <div class="instrument-heading">
+        <span>ALTITUDE</span>
+        <span class="instrument-unit">ft</span>
+      </div>
+      <div class="altitude-scale" role="list" aria-label="Aircraft altitude color bands">
+        <div class="altitude-row">
+          <span class="legend-item" role="listitem"><i class="dot ground"></i>GND</span>
+          <span class="legend-item" role="listitem"><i class="dot low"></i>&lt;10K</span>
+          <span class="legend-item" role="listitem"><i class="dot mid"></i>10–25K</span>
+        </div>
+        <div class="altitude-row">
+          <span class="legend-item" role="listitem"><i class="dot high"></i>25–35K</span>
+          <span class="legend-item" role="listitem"><i class="dot very-high"></i>35K+</span>
+          <span class="legend-item" role="listitem"><i class="dot unknown"></i>N/A</span>
+        </div>
+      </div>
+      <div class="guide-scale">
+        <span class="legend-item" title="24-hour ADS-B reception envelope with LOS plausibility guard"><i class="guide-line coverage"></i>24H LOS-AWARE COVERAGE</span>
+        <span class="legend-item"><i class="guide-line ring"></i>RANGE · 50 / 100 / 150 NM</span>
+      </div>
+    </section>
+    <section class="instrument-section precipitation-section" aria-label="JMA precipitation legend">
+      <div class="instrument-heading">
+        <span>PRECIPITATION</span>
+        <span class="instrument-unit">mm/h</span>
+      </div>
+      <div class="precipitation-meta">
+        <span>JMA</span><span aria-hidden="true">·</span>
+        <time id="precipitationTime">--:-- JST</time><span aria-hidden="true">·</span>
+        <span id="precipitationState" class="weather-state weather-warming-up">WARMING UP</span>
+        <span id="precipitationNotice" class="precipitation-notice">INITIAL REQUEST</span>
+      </div>
+      <div class="rain-scale">
+        <span class="legend-item"><i class="rain weak"></i>1–5</span>
+        <span class="legend-item"><i class="rain moderate"></i>5–20</span>
+        <span class="legend-item"><i class="rain heavy"></i>20–50</span>
+        <span class="legend-item"><i class="rain intense"></i>50+</span>
+      </div>
+    </section>
   </aside>
   <aside id="np" class="panel" aria-live="polite">
     <div class="kicker">Background Music</div>
@@ -204,15 +396,12 @@
       <span>Last update <strong id="lastUpdate">--</strong></span>
     </div>
   </aside>
-  <aside id="arenaFooter" aria-hidden="true">
-    Evaluated with ARENA | Data: Local ADS-B | Map: Natural Earth | Not for navigation
-  </aside>
   <div id="scaleMask" class="map-mask" aria-hidden="true"></div>
   <script>
     (() => {
       const params = new URLSearchParams(window.location.search);
       const legacyMapUrl = params.get("map_url");
-      const mapBase = params.get("map_base") || "./stream1090/";
+      const mapBase = params.get("map_base") || "./adsb-map/";
       const mapLat = params.get("lat") || "36.35";
       const mapLon = params.get("lon") || "140.75";
       const mapZoom = params.get("zoom") || "7.6";
@@ -221,6 +410,7 @@
       const mapLabelScale = params.get("labelScale") || "0.82";
       const mapLargeMode = params.get("largeMode") || "1";
       const mapBaseMap = params.get("baseMap") || "natural_earth";
+      const mapSolarTime = params.get("solarTime");
       const frame = document.getElementById("map");
       const mapUrl = buildMapUrl();
       const panel = document.getElementById("np");
@@ -231,9 +421,32 @@
       let lastAdsbOkMs = 0;
       let lastMapReloadMs = Date.now();
       let lastMapLoadMs = 0;
-      const STALE_MS = 30_000;
-      const MAP_RELOAD_MIN_MS = 30_000;
-      const MAP_STUCK_MS = 60_000;
+      let currentNowPlayingTitle = "";
+      let currentNowPlayingStale = null;
+      let lastGoodPrecipitationStatus = null;
+      let lastGoodPrecipitationHealth = null;
+      let overlayResponseValidationFailures = 0;
+
+      function intervalParam(name, fallbackMs, minMs) {
+        const value = Number(params.get(name));
+        if (Number.isFinite(value) && value >= minMs) return value;
+        return fallbackMs;
+      }
+
+      const CLOCK_REFRESH_MS = 1_000;
+      const RECEIVER_REFRESH_MS = intervalParam("receiverRefreshMs", 60_000, 10_000);
+      const ADSB_REFRESH_MS = intervalParam("adsbRefreshMs", 5_000, 1_000);
+      const NOW_PLAYING_REFRESH_MS = intervalParam("nowPlayingRefreshMs", 10_000, 2_000);
+      const PRECIPITATION_REFRESH_MS = intervalParam("precipitationRefreshMs", 60_000, 10_000);
+      const PRECIPITATION_WARMUP_MS = intervalParam("precipitationWarmupMs", 20_000, 5_000);
+      const PRECIPITATION_UNAVAILABLE_MS = intervalParam("precipitationUnavailableMs", 30 * 60_000, 15 * 60_000);
+      const MAP_ERROR_MUTE_MS = intervalParam("mapErrorMuteMs", 5_000, 1_000);
+      const MAP_HEALTH_CHECK_MS = intervalParam("mapHealthCheckMs", 30_000, 10_000);
+      const STALE_MS = intervalParam("nowPlayingStaleMs", 60_000, 30_000);
+      const ADSB_STALE_MS = intervalParam("adsbStaleMs", 20_000, 10_000);
+      const MAP_RELOAD_MIN_MS = intervalParam("mapReloadMinMs", 120_000, 30_000);
+      const MAP_STUCK_MS = intervalParam("mapStuckMs", 120_000, 30_000);
+      const overlayStartedMs = Date.now();
 
       function buildMapUrl() {
         if (legacyMapUrl) return legacyMapUrl;
@@ -248,11 +461,13 @@
         u.searchParams.set("iconScale", mapIconScale);
         u.searchParams.set("labelScale", mapLabelScale);
         u.searchParams.set("baseMap", mapBaseMap);
+        if (mapSolarTime) u.searchParams.set("solarTime", mapSolarTime);
         u.searchParams.set("altitudeChart", "0");
         u.searchParams.set("hideStreamCounter", "1");
         u.searchParams.set("hideScaleLine", "1");
         u.searchParams.set("hideCursor", "1");
         u.searchParams.set("hideAttribution", "1");
+        u.searchParams.set("embedded", "1");
         return u.toString();
       }
 
@@ -316,7 +531,7 @@
 
       function setText(id, value) {
         const el = document.getElementById(id);
-        if (el) el.textContent = value;
+        if (el && el.textContent !== value) el.textContent = value;
       }
 
       function pad2(value) {
@@ -361,16 +576,39 @@
           .trim();
       }
 
+      function responseContentTypeIncludes(response, expected) {
+        return String(response.headers.get("content-type") || "").toLowerCase().includes(expected);
+      }
+
+      function validNowPlayingSnapshot(value) {
+        return Boolean(value
+          && typeof value === "object"
+          && value.now_playing
+          && typeof value.now_playing === "object"
+          && (typeof value.now_playing.title === "string" || typeof value.now_playing.title_line === "string"));
+      }
+
+      function validNowPlayingText(value) {
+        const text = String(value || "").trim();
+        return text.length > 0 && text.length <= 512 && !/^\{\s*"/u.test(text);
+      }
+
       async function fetchNowPlayingJson() {
         const res = await fetch(`./now_playing.json?ts=${Date.now()}`, { cache: "no-store" });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
+        if (!responseContentTypeIncludes(res, "application/json")) throw new Error("invalid now-playing content type");
+        const payload = await res.json();
+        if (!validNowPlayingSnapshot(payload)) throw new Error("invalid now-playing payload");
+        return payload;
       }
 
       async function fetchNowPlayingText() {
         const res = await fetch(`./now_playing.txt?ts=${Date.now()}`, { cache: "no-store" });
         if (!res.ok) return "";
-        return res.text();
+        if (!responseContentTypeIncludes(res, "text/plain")) throw new Error("invalid now-playing text content type");
+        const text = await res.text();
+        if (!validNowPlayingText(text)) throw new Error("invalid now-playing text payload");
+        return text;
       }
 
       function messageRate(data) {
@@ -452,6 +690,116 @@
         }
       }
 
+      function validPrecipitationStatus(value) {
+        return value
+          && typeof value === "object"
+          && value.schema === "stream_v3.precipitation.v1"
+          && value.available === true
+          && value.analysis_only === true
+          && value.forecast_minutes === 0
+          && typeof value.observed_at_utc === "string";
+      }
+
+      function validPrecipitationHealth(value) {
+        return value
+          && typeof value === "object"
+          && value.schema === "stream_v3.precipitation_fetcher_health.v1"
+          && typeof value.state === "string";
+      }
+
+      function validatedPrecipitationPayloads(statusCandidate, healthCandidate) {
+        const statusValid = validPrecipitationStatus(statusCandidate);
+        const healthValid = validPrecipitationHealth(healthCandidate);
+        if (statusValid) lastGoodPrecipitationStatus = statusCandidate;
+        if (healthValid) lastGoodPrecipitationHealth = healthCandidate;
+        if (!statusValid || !healthValid) overlayResponseValidationFailures += 1;
+        const status = statusValid ? statusCandidate : lastGoodPrecipitationStatus;
+        let health = healthValid ? healthCandidate : lastGoodPrecipitationHealth;
+        if ((!statusValid || !healthValid) && status) {
+          health = {...(health || {}), state: "retrying", success: false};
+        }
+        return {status, health, usedFallback: !statusValid || !healthValid};
+      }
+
+      function precipitationRetryNotice(health, nowMs) {
+        if (!health || (health.state !== "retrying" && health.success !== false)) return "";
+        const nextRetryMs = toEpochMs(health.next_retry_at_utc);
+        if (!nextRetryMs || nextRetryMs <= nowMs) return "RETRYING";
+        return `RETRY ${clock(new Date(nextRetryMs + 9 * 60 * 60 * 1000), true).slice(0, 5)}`;
+      }
+
+      function precipitationPresentation(status, health, nowMs = Date.now()) {
+        const retryNotice = precipitationRetryNotice(health, nowMs);
+        const warming = nowMs - overlayStartedMs <= PRECIPITATION_WARMUP_MS;
+        const healthCheckedMs = toEpochMs(health?.checked_at_utc);
+        const fetcherWarming = health?.state === "warming_up"
+          && healthCheckedMs > 0
+          && nowMs - healthCheckedMs <= PRECIPITATION_WARMUP_MS;
+        const statusValid = status
+          && status.available === true
+          && status.analysis_only === true
+          && status.forecast_minutes === 0;
+        if (!statusValid) {
+          if (warming || fetcherWarming) {
+            return {state: "WARMING UP", observedMs: 0, notice: retryNotice || "INITIAL REQUEST"};
+          }
+          return {state: "DATA UNAVAILABLE", observedMs: 0, notice: retryNotice};
+        }
+        const observedMs = toEpochMs(status.observed_at_utc);
+        const staleAfterMs = Number.isFinite(status.stale_after_sec)
+          ? status.stale_after_sec * 1000
+          : 15 * 60 * 1000;
+        if (!observedMs) return {state: "DATA UNAVAILABLE", observedMs: 0, notice: retryNotice};
+        const ageMs = Math.max(0, nowMs - observedMs);
+        const retrying = health?.state === "retrying" || health?.success === false;
+        if (ageMs <= staleAfterMs) {
+          if (retrying) return {state: "LAST DATA", observedMs, notice: retryNotice || "RETRYING"};
+          if (status.has_precipitation !== true) return {state: "NO RAIN", observedMs, notice: ""};
+          return {state: "CURRENT", observedMs, notice: ""};
+        }
+        if (ageMs <= PRECIPITATION_UNAVAILABLE_MS) {
+          return {state: "STALE", observedMs, notice: retryNotice || "RETRYING"};
+        }
+        return {state: "DATA UNAVAILABLE", observedMs, notice: retryNotice};
+      }
+
+      function setPrecipitationState(state, notice = "") {
+        const stateEl = document.getElementById("precipitationState");
+        const noticeEl = document.getElementById("precipitationNotice");
+        setText("precipitationState", state);
+        setText("precipitationNotice", notice);
+        stateEl.className = `weather-state weather-${state.toLowerCase().replaceAll(" ", "-")}`;
+        noticeEl.hidden = !notice;
+        publishOverlayDiagnostics();
+      }
+
+      async function refreshPrecipitation() {
+        const cacheBust = `ts=${Date.now()}`;
+        const [statusResult, healthResult] = await Promise.allSettled([
+          fetch(`./weather/status.json?${cacheBust}`, {cache: "no-store"}).then((res) => {
+            if (!res.ok) throw new Error(`status HTTP ${res.status}`);
+            if (!responseContentTypeIncludes(res, "application/json")) throw new Error("invalid status content type");
+            return res.json();
+          }),
+          fetch(`./weather/health.json?${cacheBust}`, {cache: "no-store"}).then((res) => {
+            if (!res.ok) throw new Error(`health HTTP ${res.status}`);
+            if (!responseContentTypeIncludes(res, "application/json")) throw new Error("invalid health content type");
+            return res.json();
+          }),
+        ]);
+        const statusCandidate = statusResult.status === "fulfilled" ? statusResult.value : null;
+        const healthCandidate = healthResult.status === "fulfilled" ? healthResult.value : null;
+        const {status, health} = validatedPrecipitationPayloads(statusCandidate, healthCandidate);
+        const presentation = precipitationPresentation(status, health);
+        setText(
+          "precipitationTime",
+          presentation.observedMs
+            ? `${clock(new Date(presentation.observedMs + 9 * 60 * 60 * 1000), true).slice(0, 5)} JST`
+            : "--:-- JST",
+        );
+        setPrecipitationState(presentation.state, presentation.notice);
+      }
+
       async function refresh() {
         const [jsonResult, textResult] = await Promise.allSettled([
           fetchNowPlayingJson(),
@@ -463,32 +811,70 @@
           ? cleanNowPlayingTitle(textResult.value)
           : "";
         const jsonTitle = cleanNowPlayingTitle(np.title || np.title_line);
-        const title = mockTitle || textTitle || jsonTitle || "Unknown title";
+        if (jsonResult.status !== "fulfilled" || textResult.status !== "fulfilled") {
+          overlayResponseValidationFailures += 1;
+        }
+        const title = mockTitle || textTitle || jsonTitle || currentNowPlayingTitle || "Unknown title";
         const updatedAt = data && data.updated_at_utc ? data.updated_at_utc : "";
         const stale = !textTitle && (!updatedAt || Date.now() - toEpochMs(updatedAt) > STALE_MS);
 
-        titleEl.textContent = title;
-        titleEl.title = title;
-        fitNowPlayingTitle();
-        panel.classList.toggle("stale", stale);
+        if (title !== currentNowPlayingTitle) {
+          titleEl.textContent = title;
+          titleEl.title = title;
+          fitNowPlayingTitle();
+          currentNowPlayingTitle = title;
+        }
+        if (stale !== currentNowPlayingStale) {
+          panel.classList.toggle("stale", stale);
+          currentNowPlayingStale = stale;
+        }
+      }
+
+      function publishOverlayDiagnostics() {
+        const card = document.getElementById("adsb").getBoundingClientRect();
+        const receiverTitle = document.querySelector("#adsb .kicker");
+        const report = {
+          viewport: [window.innerWidth, window.innerHeight],
+          integratedInstrumentCard: true,
+          instrumentCardBounds: [card.left, card.top, card.right, card.bottom],
+          instrumentCardHeight: card.height,
+          instrumentCardWithinTarget: card.height >= 370 && card.height <= 400,
+          altitudeRows: document.querySelectorAll("#adsb .altitude-row").length,
+          receiverTitleAlignment: getComputedStyle(receiverTitle).textAlign,
+          precipitationState: document.getElementById("precipitationState").textContent,
+          precipitationNotice: document.getElementById("precipitationNotice").textContent,
+          responseValidationFailures: overlayResponseValidationFailures,
+          mapEmbedded: new URL(frame.src).searchParams.get("embedded") === "1",
+        };
+        window.streamOverlayRenderReport = report;
+        if (params.get("diag") === "1") {
+          document.documentElement.dataset.overlayReport = JSON.stringify(report);
+        }
       }
 
       updateClocks();
       refreshReceiver();
       refreshAdsb();
+      refreshPrecipitation();
+      setTimeout(refreshPrecipitation, PRECIPITATION_WARMUP_MS + 250);
       refresh();
-      window.addEventListener("resize", fitNowPlayingTitle);
-      setInterval(updateClocks, 1000);
-      setInterval(refreshReceiver, 30_000);
-      setInterval(refreshAdsb, 1000);
-      setInterval(refresh, 1000);
-      setInterval(muteMapErrorBoxes, 1000);
+      requestAnimationFrame(publishOverlayDiagnostics);
+      window.addEventListener("resize", () => {
+        fitNowPlayingTitle();
+        publishOverlayDiagnostics();
+      });
+      setInterval(updateClocks, CLOCK_REFRESH_MS);
+      setInterval(refreshReceiver, RECEIVER_REFRESH_MS);
+      setInterval(refreshAdsb, ADSB_REFRESH_MS);
+      setInterval(refreshPrecipitation, PRECIPITATION_REFRESH_MS);
+      setInterval(refresh, NOW_PLAYING_REFRESH_MS);
+      setInterval(muteMapErrorBoxes, MAP_ERROR_MUTE_MS);
       setInterval(() => {
-        if (Date.now() - lastAdsbOkMs > 15_000) return;
+        if (Date.now() - lastAdsbOkMs > ADSB_STALE_MS) return;
         if (!lastMapLoadMs || mapFrameLooksRecoverable()) {
           reloadMapFrame("adsb data is fresh but map iframe is not rendered");
         }
-      }, 10_000);
+      }, MAP_HEALTH_CHECK_MS);
     })();
   </script>
 </body>

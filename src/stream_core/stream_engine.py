@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Optional
 
 try:
-    from stream_core.engine import audio_boot, ffmpeg_lifecycle, ingest, locks as engine_locks, preflight, process_discovery, rendering_boot, restart_context, runtime_state, target_runtime
+    from stream_core.engine import audio_boot, browser_diagnostics, ffmpeg_lifecycle, ingest, locks as engine_locks, preflight, process_discovery, rendering_boot, restart_context, runtime_state, target_runtime
     from stream_core.engine.config import Config, load_config, to_bool, to_float, to_int
     from stream_core.engine.encoder_profile import (
         effective_encoder_profile as choose_effective_encoder_profile,
@@ -22,7 +22,7 @@ try:
     from stream_core.engine.events import StreamEventWriter
     from stream_core.engine.ffmpeg_args import build_ffmpeg_args, build_filter as build_video_filter, build_output_args as build_ffmpeg_output_args
 except ModuleNotFoundError:
-    from engine import audio_boot, ffmpeg_lifecycle, ingest, locks as engine_locks, preflight, process_discovery, rendering_boot, restart_context, runtime_state, target_runtime
+    from engine import audio_boot, browser_diagnostics, ffmpeg_lifecycle, ingest, locks as engine_locks, preflight, process_discovery, rendering_boot, restart_context, runtime_state, target_runtime
     from engine.config import Config, load_config, to_bool, to_float, to_int
     from engine.encoder_profile import (
         effective_encoder_profile as choose_effective_encoder_profile,
@@ -60,6 +60,8 @@ class StreamEngine:
         self.event_writer = StreamEventWriter(event_log_file=self.cfg.event_log_file, run_id=self.run_id)
         self.active_encoder_profile: dict[str, object] = {}
         self.capture_helpers_force_restart_reason = ""
+        self.render_ready_not_before_ms = 0
+        self.browser_log_offset = 0
 
     def log(self, msg: str) -> None:
         print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] {msg}", flush=True)
@@ -327,7 +329,10 @@ class StreamEngine:
         return rendering_boot.http_get_text(url, timeout_sec=timeout_sec)
 
     def overlay_http_ready_probe(self) -> tuple[bool, str]:
-        return rendering_boot.overlay_http_ready_probe(self.cfg)
+        return rendering_boot.overlay_http_ready_probe(
+            self.cfg,
+            min_reported_at_ms=self.render_ready_not_before_ms,
+        )
 
     def start_overlay_server(self) -> None:
         if not self.cfg.use_overlay_wrapper:
@@ -521,12 +526,22 @@ class StreamEngine:
         if not self.cfg.auto_start_browser:
             return
         settle_sec, settle_mode = self.effective_browser_settle_sec()
+        self.render_ready_not_before_ms = int(time.time() * 1000)
+        try:
+            self.browser_log_offset = self.cfg.browser_log_file.stat().st_size
+        except OSError:
+            self.browser_log_offset = 0
         self.browser_proc = rendering_boot.start_browser(
             self.cfg,
             settle_sec=0,
             url=self.build_browser_url(),
         )
-        self.append_event("browser_started", settle_sec=settle_sec, settle_mode=settle_mode)
+        self.append_event(
+            "browser_started",
+            browser_pid=self.browser_proc.pid if self.browser_proc else 0,
+            settle_sec=settle_sec,
+            settle_mode=settle_mode,
+        )
         if settle_sec > 0:
             time.sleep(settle_sec)
 
@@ -594,7 +609,7 @@ class StreamEngine:
                 if overlay_ready:
                     self.log(f"Overlay ready probe passed: {last_probe_reason}")
 
-            if now >= min_wait_deadline:
+            if now >= min_wait_deadline and (overlay_ready or now >= overlay_deadline):
                 break
             time.sleep(self.cfg.pre_ffmpeg_overlay_ready_poll_sec)
 
@@ -641,6 +656,12 @@ class StreamEngine:
         ffmpeg_pid = str(self.ffmpeg_proc.pid) if self.ffmpeg_proc else ""
         self.last_health_ok = True
         self.write_runtime_snapshot("running", ffmpeg_pid, "ffmpeg heartbeat")
+        self.browser_log_offset, diagnostics = browser_diagnostics.read_new_diagnostics(
+            self.cfg.browser_log_file,
+            self.browser_log_offset,
+        )
+        for diagnostic in diagnostics:
+            self.append_event("browser_diagnostic", **diagnostic)
         memory_action = self.helper_memory_guard_action()
         if memory_action.should_stop:
             return memory_action
@@ -735,7 +756,9 @@ class StreamEngine:
 
         while not self.stop_requested:
             self.assert_rtmp_health_gate()
-            self.ensure_capture_helpers_running()
+            restarted_helpers = self.ensure_capture_helpers_running()
+            if restarted_helpers:
+                self.wait_for_render_ready()
             self.write_runtime_snapshot("running", "", "starting ffmpeg process")
             encoder_profile = self.effective_encoder_profile()
             self.active_encoder_profile = encoder_profile

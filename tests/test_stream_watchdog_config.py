@@ -180,6 +180,117 @@ class StreamWatchdogConfigTests(unittest.TestCase):
                 picked = mod.pick_runtime_state_path()
                 self.assertEqual(picked, f2)
 
+    def test_k8s_container_restart_count_observer_emits_delta_after_baseline(self) -> None:
+        def pod_payload(stream_restart_count: int, auto_dj_restart_count: int) -> dict:
+            return {
+                "items": [
+                    {
+                        "metadata": {"name": "stream-v3-runtime-abc", "uid": "pod-uid-1"},
+                        "status": {
+                            "phase": "Running",
+                            "containerStatuses": [
+                                {
+                                    "name": "stream-engine",
+                                    "restartCount": stream_restart_count,
+                                    "ready": True,
+                                    "state": {"running": {"startedAt": "1970-01-01T00:00:00Z"}},
+                                    "lastState": {},
+                                },
+                                {
+                                    "name": "auto-dj",
+                                    "restartCount": auto_dj_restart_count,
+                                    "ready": True,
+                                    "state": {"running": {"startedAt": "1970-01-01T00:00:00Z"}},
+                                    "lastState": {
+                                        "terminated": {
+                                            "reason": "Error",
+                                            "exitCode": 1,
+                                        }
+                                    },
+                                },
+                            ],
+                        },
+                    }
+                ]
+            }
+
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            payloads = [pod_payload(0, 0), pod_payload(0, 1)]
+            emitted: list[tuple[str, dict]] = []
+
+            def fake_run(cmd, check=False):
+                payload = payloads.pop(0)
+                return subprocess.CompletedProcess(args=cmd, returncode=0, stdout=json.dumps(payload), stderr="")
+
+            def fake_append(event_type: str, **fields: object) -> str:
+                emitted.append((event_type, fields))
+                return "evt-test"
+
+            with mock.patch.object(stream_watchdog, "K8S_RESTART_COUNTS_FILE", root / "counts.json"):
+                with mock.patch.object(stream_watchdog, "run", side_effect=fake_run):
+                    with mock.patch.object(stream_watchdog, "append_event", side_effect=fake_append):
+                        first = stream_watchdog.observe_k8s_container_restart_counts()
+                        second = stream_watchdog.observe_k8s_container_restart_counts()
+
+        self.assertEqual(first["containers"]["pod-uid-1/auto-dj"]["restart_count"], 0)
+        self.assertEqual(second["containers"]["pod-uid-1/auto-dj"]["restart_count"], 1)
+        self.assertEqual(len(emitted), 1)
+        self.assertEqual(emitted[0][0], "k8s_container_restart_count_changed")
+        self.assertEqual(emitted[0][1]["container"], "auto-dj")
+        self.assertEqual(emitted[0][1]["previous_restart_count"], 0)
+        self.assertEqual(emitted[0][1]["restart_count"], 1)
+
+    def test_remote_runtime_evidence_sync_keeps_recent_stream_engine_event_burst(self) -> None:
+        runtime = {"run_id": "19700101T000000Z-1", "status": "running"}
+        now_playing = {"status": "ok"}
+        fast_recovery = {"status": "ok"}
+        stream_engine_lines = "\n".join(
+            [
+                json.dumps({"ts_utc": "1970-01-01T00:20:00Z", "event_type": "ffmpeg_restart_scheduled"}),
+                json.dumps({"ts_utc": "1970-01-01T00:20:06Z", "event_type": "ffmpeg_started"}),
+            ]
+        )
+
+        def completed(stdout: str, returncode: int = 0) -> subprocess.CompletedProcess[str]:
+            return subprocess.CompletedProcess(args=["kubectl"], returncode=returncode, stdout=stdout, stderr="")
+
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            tail_payloads = {
+                "/state/logs/play_history.jsonl": completed("", returncode=3),
+                "/state/logs/stream_engine_events.jsonl": completed(stream_engine_lines),
+                "/state/logs/fast_recovery_events.jsonl": completed("", returncode=3),
+            }
+
+            with mock.patch.object(stream_watchdog, "STATE_ROOT", root):
+                with mock.patch.object(stream_watchdog, "remote_cat_latest_runtime_state", return_value=completed(json.dumps(runtime))):
+                    with mock.patch.object(stream_watchdog, "remote_cat_first", side_effect=[completed(json.dumps(now_playing)), completed(json.dumps(fast_recovery))]):
+                        with mock.patch.object(stream_watchdog, "remote_tail_jsonl", side_effect=lambda path: tail_payloads[path]):
+                            synced = stream_watchdog.sync_remote_runtime_evidence()
+
+            lines = (root / "logs" / "stream_engine_events.jsonl").read_text(encoding="utf-8").splitlines()
+
+        self.assertEqual(synced["stream_engine"]["event_type"], "ffmpeg_started")
+        self.assertEqual(len(lines), 2)
+        self.assertIn("ffmpeg_restart_scheduled", lines[0])
+        self.assertIn("ffmpeg_started", lines[1])
+
+    def test_append_jsonl_if_changed_skips_duplicate_from_recent_tail_window(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "events.jsonl"
+            first = {"ts_utc": "1970-01-01T00:20:00Z", "event_type": "ffmpeg_restart_scheduled"}
+            second = {"ts_utc": "1970-01-01T00:20:06Z", "event_type": "ffmpeg_started"}
+            stream_watchdog.append_jsonl_if_changed(path, first)
+            stream_watchdog.append_jsonl_if_changed(path, second)
+            stream_watchdog.append_jsonl_if_changed(path, first)
+
+            lines = path.read_text(encoding="utf-8").splitlines()
+
+        self.assertEqual(len(lines), 2)
+        self.assertIn("ffmpeg_restart_scheduled", lines[0])
+        self.assertIn("ffmpeg_started", lines[1])
+
     def test_watchdog_ok_logging_is_throttled(self) -> None:
         with tempfile.TemporaryDirectory() as td:
             with mock.patch.dict(
@@ -360,6 +471,7 @@ class StreamWatchdogConfigTests(unittest.TestCase):
                 return_value=(True, "overlay adsb aircraft json fresh"),
             ) as check_adsb,
             mock.patch.object(stream_watchdog, "sync_remote_runtime_evidence", return_value={}),
+            mock.patch.object(stream_watchdog, "observe_k8s_container_restart_counts", return_value={}),
             mock.patch.object(stream_watchdog, "should_emit_watchdog_ok", return_value=False),
             mock.patch.object(stream_watchdog, "append_remote_snapshot_timeline"),
             mock.patch.object(stream_watchdog, "record_watchdog_stats") as record_stats,
@@ -369,8 +481,82 @@ class StreamWatchdogConfigTests(unittest.TestCase):
 
         self.assertEqual(rc, 0)
         check_adsb.assert_called_once_with(adsb_payload)
-        self.assertEqual(record_stats.call_args.args[0], "ok")
+        self.assertEqual(record_stats.call_args.args[:2], ("ok",))
         self.assertEqual(record_stats.call_args.kwargs["adsb_reason"], "overlay adsb aircraft json fresh")
+
+    def test_remote_only_watchdog_does_not_restart_during_runtime_startup(self) -> None:
+        stream_status = mock.Mock(active=False, detail="desired=1 ready=0 available=0")
+        dj_status = mock.Mock(active=False, detail="desired=1 ready=0 available=0")
+        supervisor = mock.Mock()
+        supervisor.status.side_effect = [stream_status, dj_status]
+
+        with (
+            mock.patch.object(stream_watchdog, "runtime_supervisor_or_none", return_value=supervisor),
+            mock.patch.object(
+                stream_watchdog,
+                "runtime_startup_restart_blocked",
+                return_value=(True, "current Pod has not established NVENC RTMPS delivery"),
+            ),
+            mock.patch.object(stream_watchdog, "append_event") as append_event,
+            mock.patch.object(stream_watchdog, "record_watchdog_stats") as record_stats,
+            mock.patch.object(stream_watchdog, "restart_service") as restart_service,
+            mock.patch.object(stream_watchdog, "log"),
+        ):
+            rc = stream_watchdog.remote_only_watchdog()
+
+        self.assertEqual(rc, 0)
+        restart_service.assert_not_called()
+        self.assertEqual(append_event.call_args.args[0], "restart_blocked_startup")
+        self.assertEqual(record_stats.call_args.args[0], "warmup_grace")
+
+    def test_runtime_startup_preflight_fails_closed_when_api_is_unavailable(self) -> None:
+        cp = subprocess.CompletedProcess(
+            args=[],
+            returncode=1,
+            stdout="",
+            stderr="Error from server (ServiceUnavailable)",
+        )
+        with mock.patch.object(stream_watchdog, "kubectl_get_runtime_pods_json", return_value=cp):
+            blocked, detail = stream_watchdog.runtime_startup_restart_blocked()
+
+        self.assertTrue(blocked)
+        self.assertIn("ServiceUnavailable", detail)
+
+    def test_runtime_startup_preflight_blocks_previous_node_boot(self) -> None:
+        pods = {
+            "items": [
+                {
+                    "metadata": {
+                        "name": "stream-v3-runtime-abc",
+                        "annotations": {
+                            "stream-v3.io/gpu-gate-boot-id": "boot-1",
+                            "stream-v3.io/stream-established-boot-id": "boot-1",
+                        },
+                    },
+                    "spec": {"nodeName": "yuki"},
+                }
+            ]
+        }
+        pod_cp = subprocess.CompletedProcess(
+            args=[],
+            returncode=0,
+            stdout=json.dumps(pods),
+            stderr="",
+        )
+        node_cp = subprocess.CompletedProcess(
+            args=[],
+            returncode=0,
+            stdout='{"status":{"nodeInfo":{"bootID":"boot-2"}}}',
+            stderr="",
+        )
+        with (
+            mock.patch.object(stream_watchdog, "kubectl_get_runtime_pods_json", return_value=pod_cp),
+            mock.patch.object(stream_watchdog, "kubectl_get_node_json", return_value=node_cp),
+        ):
+            blocked, detail = stream_watchdog.runtime_startup_restart_blocked()
+
+        self.assertTrue(blocked)
+        self.assertIn("previous host boot", detail)
 
     def test_adsb_source_probe_only_has_no_recovery_authority(self) -> None:
         adsb_payload = {"now": 1130, "messages": 1234, "aircraft": [{}, {}]}

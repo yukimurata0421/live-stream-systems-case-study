@@ -5,8 +5,8 @@ separate observability-plane workload.
 
 The active home deployment has three hosts and five logical roles: HP ProDesk
 `192.168.0.60` owns the Airspy/`airspy_adsb`/readsb source role and the k3s
-observability/control role; the Dell workstation `192.168.0.35` owns Dell-side readsb, a
-modified tar1090 map endpoint, and the k3s delivery role; Raspberry Pi
+observability/control role; the Dell workstation `192.168.0.35` owns Dell-side
+readsb, a modified tar1090 ADS-B endpoint, and the k3s delivery role; Raspberry Pi
 `192.168.0.50` owns the public snapshot publisher role. Public presentation is a
 reduced static snapshot pushed outbound from Raspberry Pi to GCS and served
 through Cloudflare so public reads do not consume home uplink bandwidth.
@@ -20,7 +20,8 @@ Airspy USB on HP ProDesk
   -> Beast feed to Dell 192.168.0.35:30104
   -> readsb on Dell workstation
   -> Dell modified tar1090 HTTP endpoint
-  -> stream_v3 browser rendering and overlay
+  -> sanitized ADS-B JSON proxy
+  -> stream_v3 MapLibre rendering and overlay
 ```
 
 ## Delivery Plane
@@ -28,16 +29,20 @@ Airspy USB on HP ProDesk
 The delivery plane runs the live output path:
 
 - `stream-v3-runtime` k3s deployment
-- browser rendering and overlay capture
+- `stream-engine`, `precipitation-fetcher`, `auto-dj`, and
+  `fast-recovery-loop` containers
+- custom MapLibre rendering and overlay capture
+- JMA analysis-only precipitation with bounded last-known-good state
 - PulseAudio sink and monitor source
 - AutoDJ playback and now-playing metadata
 - FFmpeg RTMPS ingest
 - NVIDIA NVENC H.264 encoding
 - local fast recovery loop
 
-The delivery runtime consumes ADS-B map/source data through the
-browser map upstream environment contract. It does not manage the Airspy device
-directly. The public map component is a modified tar1090 endpoint.
+The delivery runtime consumes ADS-B aircraft/source data through the modified
+tar1090 upstream contract. It does not manage the Airspy device directly. The
+viewer-facing map is the repository-owned MapLibre renderer; the modified
+tar1090 endpoint remains the local source and fallback/probe boundary.
 
 The production-oriented encoder target is:
 
@@ -75,12 +80,25 @@ The observability plane owns health classification and recovery requests:
 - recovery orchestrator
 - notification status loop
 - Prometheus exporter
+- read-only 60-second map runtime probe
+- read-only 300-second public viewer frame probe
 - `ops/monitoring` Prometheus, Loki, Grafana, and Alloy configuration for
   evidence presentation
 - staged remote recovery request tooling
 
 The observability plane may request recovery, but it does not directly own the
 FFmpeg process.
+
+The map probe correlates Pod/container state, render heartbeat, browser/WebGL,
+weather, GPU, NVENC, and RTMP evidence. The viewer probe independently captures
+a small frame from the selected public YouTube video and tracks black/freeze
+and consecutive failure evidence. Internal Prometheus metrics are authoritative;
+the reduced public dashboard is presentation, not a recovery input.
+
+Discord receives the broad operational incident stream. Slack receives
+critical and delivery/GPU/RTMPS incident families immediately, and other
+sustained incidents after the configured minimum active period. Probe failures
+alone do not mutate the runtime.
 
 ## Public Status Publication
 
@@ -125,6 +143,8 @@ in the mutating recovery paths:
   enforce restart budgets, cooldown, budget-release reconfirmation, and
   emergency override evidence before YouTube-oriented recovery actions.
 - Production mutation also requires the explicit mode and dry-run flags above.
+- GPU preflight, the host boot ID, Pod UID, and current-boot establishment
+  marker must agree before rollout-style recovery is allowed.
 
 ## State Boundary
 

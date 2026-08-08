@@ -1,0 +1,14 @@
+[Unit]
+Description=Stream v3 GPU startup scheduling gate
+Wants=network-online.target k3s.service nvidia-persistenced.service
+After=network-online.target nvidia-persistenced.service
+
+[Service]
+Type=simple
+ExecStart=/usr/local/libexec/stream-v3-gpu-startup-gate
+Restart=always
+RestartSec=2
+TimeoutStopSec=5
+
+[Install]
+WantedBy=multi-user.target

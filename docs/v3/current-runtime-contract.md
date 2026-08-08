@@ -10,8 +10,8 @@ The current production split is:
 - HP ProDesk: Airspy USB, `airspy_adsb`, ProDesk-side readsb, k3s
   `stream-v3-control` / `stream-v3-observer`, and the private observability
   services, including Prometheus, Loki, Alloy, and private Grafana.
-- Dell workstation: Dell-side readsb, modified tar1090 map endpoint, and the
-  k3s `stream_v3` delivery workload.
+- Dell workstation: Dell-side readsb, modified tar1090 ADS-B endpoint, and the
+  k3s `stream_v3` custom-map delivery workload.
 - Raspberry Pi: nginx `/grafana/` proxy to HP ProDesk Grafana, public-safe
   snapshot collector that pulls datasource JSON via
   `127.0.0.1:8088/grafana`, static site source tree, and scheduled GCS push.
@@ -22,15 +22,17 @@ The current production split is:
 
 The ADS-B source chain is therefore Airspy on HP ProDesk -> `airspy_adsb` ->
 ProDesk readsb -> Beast feed to Dell `192.168.0.35:30104` -> Dell readsb ->
-Dell modified tar1090 -> `stream_v3` browser rendering.
+Dell modified tar1090 ADS-B JSON -> sanitized proxy -> `stream_v3` MapLibre
+browser rendering.
 
 ## Delivery Owner
 
 - `stream-v3-runtime` deployment
 - `stream-engine` container
+- `precipitation-fetcher` container
 - `auto-dj` container
 - `fast-recovery-loop` container
-- browser rendering and overlay
+- custom MapLibre rendering, precipitation, and overlay
 - PulseAudio
 - FFmpeg RTMPS ingest
 - NVIDIA NVENC
@@ -49,6 +51,8 @@ Dell modified tar1090 -> `stream_v3` browser rendering.
 - recovery orchestrator
 - shadow SLI
 - Prometheus exporter
+- 60-second map runtime probe
+- 300-second public viewer synthetic probe
 - `ops/monitoring` Prometheus, Loki, Grafana, and Alloy evidence presentation
 
 ## Encoder Baseline

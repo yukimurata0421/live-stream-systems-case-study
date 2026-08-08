@@ -93,6 +93,7 @@ Required before production-like tests:
 - `YTW_OAUTH_CLIENT_SECRET`
 - `YTW_OAUTH_REFRESH_TOKEN`
 - `STREAM_NOTIFY_DISCORD_WEBHOOK_URL` if notification dry-runs should reach Discord
+- `STREAM_NOTIFY_SLACK_WEBHOOK_URL` and `STREAM_NOTIFY_SLACK_ENABLED=1` if critical incidents and sustained warnings should escalate to Slack
 
 The committed manifests reference `stream-v3-secrets` as an optional Secret so shadow TEST_MODE can run before real keys are provisioned. Create the real Secret on the cluster before production-like lifecycle or notification tests.
 
@@ -156,8 +157,16 @@ stream engine cannot resolve a production RTMPS URL.
 
 The HP ProDesk observability host owns the monitoring plane through k3s
 `stream-v3-control` and `stream-v3-observer`. Those workloads cover
-`youtube_video_resolver`, `youtube_monitor`, `stream_watchdog`, `notify_status`,
-`subsystems_status`, `recovery_orchestrator`, `shadow_sli`, and the exporter.
+`youtube_video_resolver`, `youtube_monitor`, `map_runtime_probe`,
+`viewer_synthetic_probe`, `stream_watchdog`, `notify_status`,
+`subsystems_status`, `recovery_orchestrator`, and the exporter.
+`map_runtime_probe` runs every 60 seconds and `viewer_synthetic_probe` every
+300 seconds by default; both are read-only and do not restart the runtime.
+The latency-sensitive monitor loop excludes `shadow_sli` unless
+`V3_ENABLE_INLINE_SHADOW_SLI=1` is explicitly set. For a host-side historical
+rollup, install `ops/systemd/stream-v3-shadow-sli.service` and
+`ops/systemd/stream-v3-shadow-sli.timer` instead so the hourly scan cannot
+block current-state monitoring.
 The `ops/systemd/stream-v3-observability-monitor.service` unit remains as a
 legacy/reference host-side entrypoint for the same monitor mode, not the primary
 current ownership description. Install `ops/systemd/stream-v3-remote-recovery.timer`

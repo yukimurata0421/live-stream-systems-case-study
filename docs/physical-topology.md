@@ -10,7 +10,7 @@ status snapshot, and GCS + Cloudflare form the public static edge.
 | Host or edge | Runtime role | Responsibility |
 | --- | --- | --- |
 | HP ProDesk `192.168.0.60` | ADS-B source and k3s observability | Airspy USB receiver, `airspy_adsb`, ProDesk-side readsb, k3s `stream-v3-control`, k3s `stream-v3-observer`, YouTube resolver/watchdog, stream watchdog, subsystem SLI, notifications, Prometheus exporter on `:9108`, Prometheus `:9090`, Loki `:3100`, Alloy `:12345`, private Grafana `:3000`, recovery orchestration, and staged recovery requests |
-| Dell workstation `192.168.0.35` | Delivery and local ADS-B mirror | Dell-side readsb and modified tar1090 map endpoint, k3s `stream-v3-runtime`, browser rendering, PulseAudio, AutoDJ, FFmpeg, NVIDIA NVENC, and local fast recovery |
+| Dell workstation `192.168.0.35` | Delivery and local ADS-B mirror | Dell-side readsb and modified tar1090 ADS-B endpoint, k3s `stream-v3-runtime`, custom MapLibre rendering, precipitation fetcher, PulseAudio, AutoDJ, FFmpeg, NVIDIA NVENC, and local fast recovery |
 | Raspberry Pi `192.168.0.50` | Public snapshot publisher and gateway | nginx `:8088` `/grafana/` proxy to HP ProDesk Grafana, public-safe snapshot collector, static site source tree, and scheduled GCS push |
 | GCS + Cloudflare | Public static edge | Receives sanitized JSON/static assets by outbound upload and serves <https://yukimurata0421.dev/> without spending home uplink bandwidth on public status reads or exposing Grafana, Prometheus, Loki, raw logs, credentials, or home-network ingress |
 
@@ -25,14 +25,15 @@ Airspy USB on HP ProDesk
   -> Beast feed to Dell 192.168.0.35:30104
   -> readsb on Dell workstation
   -> Dell modified tar1090 HTTP endpoint
-  -> stream_v3 browser rendering and overlay
+  -> sanitized ADS-B JSON proxy
+  -> stream_v3 MapLibre rendering and overlay
   -> FFmpeg/NVENC
   -> YouTube Live
 ```
 
 This repository does not manage the Airspy device or the ProDesk readsb process
-directly. In the public code, that source chain appears as the
-browser map upstream contract used by the delivery runtime.
+directly. In the public code, that source chain appears as the ADS-B JSON and
+range-evidence upstream contract used by the delivery runtime.
 
 ## Why It Matters
 
@@ -79,12 +80,13 @@ own the FFmpeg process.
 
 ## Code Boundary
 
-- `deploy/k3s/base/configmap-shadow.yaml` contains the browser map upstream
-  URL defaults consumed by the delivery runtime.
+- `deploy/k3s/base/configmap-shadow.yaml` contains the ADS-B upstream, custom
+  map path, precipitation, and render-warmup defaults consumed by the runtime.
 - `deploy/k3s/streaming/patch-configmap-streaming.yaml` points the live
   delivery path at the Dell-side modified tar1090 endpoint.
-- `src/stream_core/overlay_server.py` proxies the browser map and ADS-B JSON
-  from that upstream endpoint and sanitizes receiver location fields.
+- `src/stream_core/overlay_server.py` proxies ADS-B JSON from that upstream,
+  sanitizes receiver location fields, bounds map/terrain access, serves local
+  precipitation generations, and records render readiness.
 - report-only delivery checks validate overlay and upstream readsb / modified
   tar1090 availability.
 
@@ -94,7 +96,8 @@ The topology separates these failure domains:
 
 - RF/source chain failure: Airspy, `airspy_adsb`, ProDesk readsb, or Dell readsb
   feed freshness;
-- map/HTTP source failure: Dell modified tar1090 availability;
+- map/source failure: Dell modified tar1090 ADS-B availability, map/terrain
+  delivery, precipitation freshness, or browser render heartbeat;
 - delivery/media runtime failure: browser, overlay, PulseAudio, AutoDJ, FFmpeg,
   NVENC, RTMPS, or upload path;
 - observability/classification failure: stale evidence, unsafe action plans, or

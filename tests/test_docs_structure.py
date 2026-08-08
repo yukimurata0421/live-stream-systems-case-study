@@ -76,6 +76,7 @@ class PublicDocsStructureTests(unittest.TestCase):
             DOCS / "v3" / "tcp-stall-resolution-depth.md",
             DOCS / "v3" / "notification-and-auto-recovery.md",
             DOCS / "v3" / "notification-diagnostic-boundary.md",
+            DOCS / "v3" / "map-rendering-and-monitoring.md",
             DOCS / "v3" / "scoped-recovery-authority.md",
         )
 

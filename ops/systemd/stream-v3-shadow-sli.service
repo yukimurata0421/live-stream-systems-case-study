@@ -1,0 +1,15 @@
+[Unit]
+Description=stream_v3 historical shadow SLI rollup
+Wants=network-online.target
+After=network-online.target stream-v3-observability-monitor.service
+
+[Service]
+Type=oneshot
+User=stream-v3
+EnvironmentFile=-/etc/default/stream-v3-observability-monitor
+Environment=STREAM_V3_REPO_DIR=/opt/stream_v3
+Environment=STREAM_RUNTIME_STATE_DIR=/var/lib/stream-v3/observability-monitor
+ExecStart=/bin/bash -lc 'cd "$${STREAM_V3_REPO_DIR}" && export PYTHONPATH="$${STREAM_V3_REPO_DIR}/src$${PYTHONPATH:+:$${PYTHONPATH}}" && exec "$${STREAM_V3_REPO_DIR}/bin/stream-prod" shadow-sli --json'
+TimeoutStartSec=180
+Nice=10
+IOSchedulingClass=idle

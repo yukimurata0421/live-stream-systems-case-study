@@ -43,11 +43,16 @@ def format_discord_message(*, phase: str, incidents: list[dict], state: dict, no
                     f"  action={item.get('summary')}",
                     f"  recovery_type={item.get('recovery_type')}",
                     f"  evidence={item.get('evidence')}",
-                    f"  restart_observed={str(bool(item.get('restart_observed'))).lower()}",
-                    f"  recovery_confirmed={str(bool(item.get('recovery_confirmed'))).lower()}",
-                    f"  recovery_lag_sec={item.get('recovery_lag_sec') if item.get('recovery_lag_sec') is not None else 'unknown'}",
                 ]
             )
+            if "restart_observed" in item:
+                lines.extend(
+                    [
+                        f"  restart_observed={str(bool(item.get('restart_observed'))).lower()}",
+                        f"  recovery_confirmed={str(bool(item.get('recovery_confirmed'))).lower()}",
+                        f"  recovery_lag_sec={item.get('recovery_lag_sec') if item.get('recovery_lag_sec') is not None else 'unknown'}",
+                    ]
+                )
             if item.get("diagnostic_context"):
                 lines.append(f"  context={item.get('diagnostic_context')}")
             lines.append(f"  follow_up={item.get('follow_up')}")

@@ -1,0 +1,236 @@
+:root {
+  --coverage: #A29BBA;
+  --ground: #f3f4f6;
+  --low: #ffd166;
+  --mid: #39e6c3;
+  --high: #67a7ff;
+  --very-high: #f278ff;
+  --unknown: #9aa6ae;
+}
+
+* { box-sizing: border-box; }
+
+html,
+body,
+#map {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: #101e29;
+}
+
+body {
+  color: #d8e2e1;
+  cursor: none;
+  font-family: "Segoe UI", "Noto Sans", "DejaVu Sans", sans-serif;
+}
+
+#map {
+  position: absolute;
+  inset: 0;
+}
+
+#mapLegends {
+  position: absolute;
+  z-index: 20;
+  top: 230px;
+  left: 12px;
+  display: flex;
+  max-width: calc(100vw - 24px);
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.embedded #mapLegends { display: none; }
+
+#altitudeLegend,
+#precipitationStatus {
+  width: min(440px, calc(100vw - 24px));
+  min-height: 38px;
+  padding: 12px 14px;
+  border: 1px solid rgba(154, 187, 184, 0.30);
+  border-radius: 6px;
+  background: rgba(5, 14, 18, 0.90);
+  box-shadow: 0 2px 12px rgba(2, 8, 11, 0.30);
+  color: rgba(226, 237, 236, 0.96);
+  font-size: 13px;
+  line-height: 1.15;
+  letter-spacing: 0.035em;
+  white-space: nowrap;
+}
+
+#altitudeLegend {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 9px;
+}
+
+.legend-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 16px;
+}
+
+.legend-row {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+
+.altitude-scale {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(178, 198, 198, 0.26);
+}
+
+.altitude-scale-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  column-gap: 16px;
+}
+
+.altitude-scale-row .legend-item { min-width: 0; }
+.guide-scale,
+.precipitation-scale {
+  padding-top: 9px;
+  border-top: 1px solid rgba(178, 198, 198, 0.26);
+}
+.guide-scale { gap: 14px; }
+.precipitation-scale { justify-content: space-between; }
+
+.legend-title {
+  color: #c5d4d3;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+
+.legend-unit {
+  color: rgba(190, 207, 207, 0.82);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: none;
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+}
+
+.dot {
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  margin-right: 7px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px rgba(4, 12, 15, 0.90);
+  vertical-align: -1px;
+}
+
+.dot.ground { background: var(--ground); }
+.dot.low { background: var(--low); }
+.dot.mid { background: var(--mid); }
+.dot.high { background: var(--high); }
+.dot.very-high { background: var(--very-high); }
+.dot.unknown { background: var(--unknown); }
+
+.line {
+  display: inline-block;
+  width: 28px;
+  margin-right: 6px;
+}
+
+.line.coverage { border-top: 2px solid var(--coverage); opacity: 0.62; }
+.line.ring { border-top: 1px solid rgba(176, 207, 212, 0.55); }
+.separator { width: 1px; height: 18px; background: rgba(178, 198, 198, 0.30); }
+
+#precipitationStatus {
+  display: none;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+}
+
+#precipitationStatus.visible { display: flex; }
+#precipitationStatus.stale { color: #d6a46f; }
+#precipitationStatus.stale .precipitation-scale { display: none; }
+.precipitation-title { color: #c5d4d3; font-weight: 700; letter-spacing: 0.12em; }
+.precipitation-source {
+  color: rgba(207, 222, 221, 0.84);
+  font-variant-numeric: tabular-nums;
+}
+
+.rain {
+  display: inline-block;
+  width: 22px;
+  height: 10px;
+  margin-right: 7px;
+  border: 1px solid rgba(4, 12, 15, 0.72);
+  border-radius: 2px;
+  vertical-align: -1px;
+}
+
+.rain.weak { background: rgba(116, 145, 158, 0.38); }
+.rain.moderate { background: rgba(59, 126, 132, 0.62); }
+.rain.heavy { background: rgba(192, 106, 63, 0.70); }
+.rain.intense { background: rgba(157, 54, 55, 0.78); }
+
+@media (max-width: 700px) {
+  #mapLegends { right: 12px; }
+  .altitude-scale-row,
+  .guide-scale,
+  .precipitation-scale {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    flex-wrap: wrap;
+    row-gap: 8px;
+    white-space: normal;
+  }
+}
+
+#mapAttribution {
+  position: absolute;
+  z-index: 20;
+  right: 12px;
+  bottom: 10px;
+  width: max-content;
+  max-width: calc(100vw - 24px);
+  padding: 8px 10px;
+  border: 1px solid rgba(154, 187, 184, 0.26);
+  border-radius: 6px;
+  background: rgba(5, 14, 18, 0.88);
+  box-shadow: 0 2px 12px rgba(2, 8, 11, 0.28);
+  color: rgba(214, 226, 225, 0.82);
+  font-size: 11px;
+  line-height: 1.35;
+  letter-spacing: 0.01em;
+  text-align: left;
+}
+
+#mapAttribution span { white-space: nowrap; }
+#mapAttribution span + span { margin-top: 2px; }
+#mapAttribution span { display: block; }
+
+#mapStatus {
+  position: absolute;
+  z-index: 30;
+  left: 50%;
+  top: 14px;
+  display: none;
+  transform: translateX(-50%);
+  padding: 6px 10px;
+  border: 1px solid rgba(255, 177, 92, 0.45);
+  border-radius: 4px;
+  background: rgba(20, 13, 8, 0.88);
+  color: #ffbf78;
+  font-size: 11px;
+}
+
+#mapStatus.visible { display: block; }
+.maplibregl-control-container { display: none; }

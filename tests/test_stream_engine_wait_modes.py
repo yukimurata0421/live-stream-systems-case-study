@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-import contextlib
 import os
 import json
 import sys
 import subprocess
 import tempfile
 import time
+from contextlib import ExitStack
 from pathlib import Path
 import unittest
 from unittest import mock
@@ -18,6 +18,130 @@ import stream_engine  # type: ignore
 
 
 class StreamEngineWaitModeTests(unittest.TestCase):
+    def test_zero_minimum_wait_still_waits_for_real_render_ready(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            env = {
+                "BASE_DIR": td,
+                "TEST_MODE": "1",
+                "PRE_FFMPEG_MIN_WAIT_SEC_TEST": "0",
+                "PRE_FFMPEG_OVERLAY_READY_TIMEOUT_SEC": "10",
+                "PRE_FFMPEG_OVERLAY_READY_POLL_SEC": "0.5",
+                "PRE_FFMPEG_REQUIRE_OVERLAY_READY": "0",
+            }
+            with mock.patch.dict(os.environ, env, clear=False):
+                cfg = stream_engine.load_config()
+                engine = stream_engine.StreamEngine(cfg)
+
+            with (
+                mock.patch.object(
+                    engine,
+                    "overlay_http_ready_probe",
+                    side_effect=[(False, "warming up"), (True, "rendered frame ready")],
+                ) as ready_probe,
+                mock.patch.object(engine, "append_event"),
+                mock.patch.object(engine, "log"),
+                mock.patch.object(stream_engine.time, "monotonic", side_effect=[0.0, 0.0, 0.0, 1.0]),
+                mock.patch.object(stream_engine.time, "sleep") as sleep,
+            ):
+                engine.wait_for_render_ready()
+
+            self.assertEqual(ready_probe.call_count, 2)
+            sleep.assert_called_once_with(0.5)
+
+    def test_render_warmup_is_bounded_and_fail_open_when_weather_independent_map_is_slow(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            env = {
+                "BASE_DIR": td,
+                "TEST_MODE": "1",
+                "PRE_FFMPEG_MIN_WAIT_SEC_TEST": "0",
+                "PRE_FFMPEG_OVERLAY_READY_TIMEOUT_SEC": "10",
+                "PRE_FFMPEG_OVERLAY_READY_POLL_SEC": "0.5",
+                "PRE_FFMPEG_REQUIRE_OVERLAY_READY": "0",
+            }
+            with mock.patch.dict(os.environ, env, clear=False):
+                cfg = stream_engine.load_config()
+                engine = stream_engine.StreamEngine(cfg)
+
+            with (
+                mock.patch.object(
+                    engine,
+                    "overlay_http_ready_probe",
+                    return_value=(False, "browser map and ADS-B sample still warming up"),
+                ) as ready_probe,
+                mock.patch.object(engine, "append_event"),
+                mock.patch.object(engine, "log") as log,
+                mock.patch.object(stream_engine.time, "monotonic", side_effect=[0.0, 0.0, 0.0, 10.5]),
+                mock.patch.object(stream_engine.time, "sleep") as sleep,
+            ):
+                engine.wait_for_render_ready()
+
+            ready_probe.assert_called_once_with()
+            sleep.assert_called_once_with(0.5)
+            log.assert_called_once_with(
+                "Overlay ready probe did not pass before ffmpeg start (fail-open): "
+                "browser map and ADS-B sample still warming up"
+            )
+
+    def test_render_warmup_strict_mode_aborts_when_ready_never_arrives(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            env = {
+                "BASE_DIR": td,
+                "TEST_MODE": "1",
+                "PRE_FFMPEG_MIN_WAIT_SEC_TEST": "0",
+                "PRE_FFMPEG_OVERLAY_READY_TIMEOUT_SEC": "10",
+                "PRE_FFMPEG_OVERLAY_READY_POLL_SEC": "0.5",
+                "PRE_FFMPEG_REQUIRE_OVERLAY_READY": "1",
+            }
+            with mock.patch.dict(os.environ, env, clear=False):
+                cfg = stream_engine.load_config()
+                engine = stream_engine.StreamEngine(cfg)
+
+            with (
+                mock.patch.object(
+                    engine,
+                    "overlay_http_ready_probe",
+                    return_value=(False, "browser map and ADS-B sample still warming up"),
+                ),
+                mock.patch.object(engine, "append_event"),
+                mock.patch.object(stream_engine.time, "monotonic", side_effect=[0.0, 0.0, 0.0, 10.5]),
+                mock.patch.object(stream_engine.time, "sleep"),
+            ):
+                with self.assertRaisesRegex(
+                    RuntimeError,
+                    "Overlay did not become ready before ffmpeg start: browser map and ADS-B sample still warming up",
+                ):
+                    engine.wait_for_render_ready()
+
+    def test_render_ready_does_not_bypass_configured_minimum_wait(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            env = {
+                "BASE_DIR": td,
+                "TEST_MODE": "1",
+                "PRE_FFMPEG_MIN_WAIT_SEC_TEST": "2",
+                "PRE_FFMPEG_OVERLAY_READY_TIMEOUT_SEC": "10",
+                "PRE_FFMPEG_OVERLAY_READY_POLL_SEC": "0.5",
+                "PRE_FFMPEG_REQUIRE_OVERLAY_READY": "0",
+            }
+            with mock.patch.dict(os.environ, env, clear=False):
+                cfg = stream_engine.load_config()
+                engine = stream_engine.StreamEngine(cfg)
+
+            with (
+                mock.patch.object(
+                    engine,
+                    "overlay_http_ready_probe",
+                    return_value=(True, "rendered frame ready"),
+                ) as ready_probe,
+                mock.patch.object(engine, "append_event"),
+                mock.patch.object(engine, "log"),
+                mock.patch.object(stream_engine.time, "monotonic", side_effect=[0.0, 0.0, 0.0, 2.0]),
+                mock.patch.object(stream_engine.time, "sleep") as sleep,
+            ):
+                engine.wait_for_render_ready()
+
+            ready_probe.assert_called_once_with()
+            sleep.assert_called_once_with(0.5)
+
     def test_test_mode_uses_test_wait_value(self) -> None:
         with tempfile.TemporaryDirectory() as td:
             env = {
@@ -33,6 +157,34 @@ class StreamEngineWaitModeTests(unittest.TestCase):
                 wait_sec, mode = engine.effective_pre_ffmpeg_min_wait_sec()
                 self.assertEqual(wait_sec, 0.0)
                 self.assertEqual(mode, "test")
+
+    def test_start_browser_sets_new_render_generation_before_launch(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            env = {
+                "BASE_DIR": td,
+                "TEST_MODE": "1",
+                "AUTO_START_BROWSER": "1",
+                "BROWSER_START_SETTLE_SEC_TEST": "0",
+            }
+            with mock.patch.dict(os.environ, env, clear=False):
+                cfg = stream_engine.load_config()
+                engine = stream_engine.StreamEngine(cfg)
+
+            browser = mock.Mock()
+            with (
+                mock.patch.object(stream_engine.time, "time", return_value=1234.567),
+                mock.patch.object(
+                    stream_engine.rendering_boot,
+                    "start_browser",
+                    return_value=browser,
+                ) as start_browser,
+                mock.patch.object(engine, "append_event"),
+            ):
+                engine.start_browser()
+
+            self.assertEqual(engine.render_ready_not_before_ms, 1234567)
+            self.assertIs(engine.browser_proc, browser)
+            start_browser.assert_called_once()
 
     def test_recent_runtime_snapshot_switches_to_restart_wait(self) -> None:
         with tempfile.TemporaryDirectory() as td:
@@ -410,8 +562,75 @@ class StreamEngineWaitModeTests(unittest.TestCase):
             def stop_after_restart_sleep(_seconds: float) -> None:
                 engine.stop_requested = True
 
-            with contextlib.ExitStack() as stack:
-                for method_name in (
+            with (
+                mock.patch.object(engine, "ensure_commands"),
+                mock.patch.object(engine, "assert_systemd_launch"),
+                mock.patch.object(engine, "configure_target_runtime_paths"),
+                mock.patch.object(engine, "ensure_pulse_server"),
+                mock.patch.object(engine, "acquire_single_instance_lock"),
+                mock.patch.object(engine, "acquire_capture_lock"),
+                mock.patch.object(engine, "cleanup_stale_rtmp_ffmpeg"),
+                mock.patch.object(engine, "cleanup_stale_capture_helpers"),
+                mock.patch.object(engine, "assert_rtmp_health_gate"),
+                mock.patch.object(engine, "ensure_x_display"),
+                mock.patch.object(engine, "start_overlay_server"),
+                mock.patch.object(engine, "ensure_virtual_sink"),
+                mock.patch.object(engine, "detect_pulse_monitor", return_value="stream_sink.monitor"),
+                mock.patch.object(engine, "ensure_local_audio_monitor"),
+                mock.patch.object(engine, "start_browser"),
+                mock.patch.object(engine, "wait_for_render_ready") as wait_for_render_ready,
+                mock.patch.object(engine, "emit_startup_restart_context"),
+                mock.patch.object(engine, "ensure_capture_helpers_running", return_value=["browser"]),
+                mock.patch.object(stream_engine.subprocess, "Popen", return_value=proc),
+                mock.patch.object(stream_engine.time, "sleep", side_effect=stop_after_restart_sleep),
+            ):
+                rc = engine.run()
+
+            self.assertEqual(rc, 0)
+            self.assertEqual(engine.restart_count, 1)
+            self.assertEqual(wait_for_render_ready.call_count, 2)
+            events = [json.loads(line) for line in event_log.read_text(encoding="utf-8").splitlines()]
+            event_types = [event["event_type"] for event in events]
+            self.assertIn("ffmpeg_exited", event_types)
+            self.assertIn("ffmpeg_restart_scheduled", event_types)
+            exited = next(event for event in events if event["event_type"] == "ffmpeg_exited")
+            scheduled = next(event for event in events if event["event_type"] == "ffmpeg_restart_scheduled")
+            self.assertEqual(exited["exit_code"], 224)
+            self.assertEqual(scheduled["exit_code"], 224)
+            self.assertEqual(scheduled["delay_sec"], 5)
+
+    def test_repeated_ffmpeg_exit_255_records_each_child_recovery_attempt(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            event_log = Path(td) / "logs" / "stream_engine_events.jsonl"
+            env = {
+                "BASE_DIR": td,
+                "TEST_MODE": "1",
+                "TEST_OUTPUT": "null",
+                "TEST_OUTPUT_FILE": str(Path(td) / "capture.mkv"),
+                "EVENT_LOG_FILE": str(event_log),
+                "RESTART_DELAY_SEC": "5",
+                "RUNTIME_HEARTBEAT_SEC": "5",
+            }
+            with mock.patch.dict(os.environ, env, clear=False):
+                cfg = stream_engine.load_config()
+                engine = stream_engine.StreamEngine(cfg)
+
+            processes = []
+            for pid in (12001, 12002):
+                proc = mock.Mock()
+                proc.pid = pid
+                proc.wait.return_value = 255
+                processes.append(proc)
+
+            restart_delays: list[float] = []
+
+            def stop_after_second_restart_sleep(seconds: float) -> None:
+                restart_delays.append(seconds)
+                if len(restart_delays) == 2:
+                    engine.stop_requested = True
+
+            with ExitStack() as stack:
+                for method in (
                     "ensure_commands",
                     "assert_systemd_launch",
                     "configure_target_runtime_paths",
@@ -429,28 +648,34 @@ class StreamEngineWaitModeTests(unittest.TestCase):
                     "wait_for_render_ready",
                     "emit_startup_restart_context",
                 ):
-                    stack.enter_context(mock.patch.object(engine, method_name))
+                    stack.enter_context(mock.patch.object(engine, method))
                 stack.enter_context(
                     mock.patch.object(engine, "detect_pulse_monitor", return_value="stream_sink.monitor")
                 )
-                stack.enter_context(mock.patch.object(engine, "ensure_capture_helpers_running", return_value=[]))
-                stack.enter_context(mock.patch.object(stream_engine.subprocess, "Popen", return_value=proc))
                 stack.enter_context(
-                    mock.patch.object(stream_engine.time, "sleep", side_effect=stop_after_restart_sleep)
+                    mock.patch.object(engine, "ensure_capture_helpers_running", return_value=["browser"])
+                )
+                popen = stack.enter_context(
+                    mock.patch.object(stream_engine.subprocess, "Popen", side_effect=processes)
+                )
+                stack.enter_context(
+                    mock.patch.object(stream_engine.time, "sleep", side_effect=stop_after_second_restart_sleep)
                 )
                 rc = engine.run()
 
             self.assertEqual(rc, 0)
-            self.assertEqual(engine.restart_count, 1)
+            self.assertEqual(engine.restart_count, 2)
+            self.assertEqual(popen.call_count, 2)
+            self.assertEqual(restart_delays, [5, 5])
+
             events = [json.loads(line) for line in event_log.read_text(encoding="utf-8").splitlines()]
-            event_types = [event["event_type"] for event in events]
-            self.assertIn("ffmpeg_exited", event_types)
-            self.assertIn("ffmpeg_restart_scheduled", event_types)
-            exited = next(event for event in events if event["event_type"] == "ffmpeg_exited")
-            scheduled = next(event for event in events if event["event_type"] == "ffmpeg_restart_scheduled")
-            self.assertEqual(exited["exit_code"], 224)
-            self.assertEqual(scheduled["exit_code"], 224)
-            self.assertEqual(scheduled["delay_sec"], 5)
+            started = [event for event in events if event["event_type"] == "ffmpeg_started"]
+            exited = [event for event in events if event["event_type"] == "ffmpeg_exited"]
+            scheduled = [event for event in events if event["event_type"] == "ffmpeg_restart_scheduled"]
+            self.assertEqual([event["ffmpeg_pid"] for event in started], [12001, 12002])
+            self.assertEqual([event["exit_code"] for event in exited], [255, 255])
+            self.assertEqual([event["exit_code"] for event in scheduled], [255, 255])
+            self.assertEqual([event["delay_sec"] for event in scheduled], [5, 5])
 
     def test_stale_capture_cleanup_skips_when_foreign_rtmp_is_alive(self) -> None:
         with tempfile.TemporaryDirectory() as td:
