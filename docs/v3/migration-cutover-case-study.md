@@ -65,6 +65,12 @@ The smoke test is therefore a confidence gate before broader reliance on v3. It
 is not a substitute for the 28-day same-URL review style used elsewhere in the
 public docs.
 
+The later map-renderer rollout is a concrete example of resetting failed
+confidence windows and using a prepared rollback. Its measured 24-hour window
+was isolated renderer evidence, followed by a one-hour production observation;
+it must not be relabeled as a full 24-hour live-production smoke test. See
+[`map-production-cutover-case-study.md`](map-production-cutover-case-study.md).
+
 ## Rollback Rule
 
 Rollback is allowed only when the operator records:

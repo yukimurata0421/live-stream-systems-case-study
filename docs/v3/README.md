@@ -14,6 +14,7 @@
   - `observability-plane-self-check.md`
   - `notification-diagnostic-boundary.md`
   - `map-rendering-and-monitoring.md`
+  - `map-production-cutover-case-study.md`
   - `fast-recovery-classifier-replay.md`
   - `youtube-lifecycle-safety.md`
   - `encoder-upload-case-study.md`
@@ -84,6 +85,9 @@ For a focused reliability review:
 - `map-rendering-and-monitoring.md` documents the custom aircraft map,
   analysis-only precipitation, render warmup, GPU readiness, read-only map and
   viewer probes, Prometheus alerts, and Discord/Slack routing boundary.
+- `map-production-cutover-case-study.md` records the failed renderer and
+  production windows, rollback thresholds, root repairs, isolated 24-hour and
+  NVENC soaks, and the accepted one-hour production cutover.
 - `../compliance-and-licensing-boundary.md` documents how ADS-B publication,
   receiver privacy, and NCS attribution were treated as design constraints
   rather than informal operator memory.

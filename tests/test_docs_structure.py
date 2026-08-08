@@ -77,6 +77,7 @@ class PublicDocsStructureTests(unittest.TestCase):
             DOCS / "v3" / "notification-and-auto-recovery.md",
             DOCS / "v3" / "notification-diagnostic-boundary.md",
             DOCS / "v3" / "map-rendering-and-monitoring.md",
+            DOCS / "v3" / "map-production-cutover-case-study.md",
             DOCS / "v3" / "scoped-recovery-authority.md",
         )
 
@@ -176,6 +177,35 @@ class PublicDocsStructureTests(unittest.TestCase):
             with self.subTest(claim_id=claim_id):
                 self.assertIn(f"`{claim_id}`", readme)
                 self.assertIn(f"`{claim_id}`", scorecard)
+
+    def test_map_cutover_case_study_preserves_measured_boundaries(self) -> None:
+        text = read(DOCS / "v3" / "map-production-cutover-case-study.md")
+        scorecard = read(DOCS / "operational-scorecard.md")
+
+        for evidence in (
+            "17,280 / 17,280",
+            "289 / 289",
+            "18,000 / 18,000",
+            "13 / 13",
+            "h264_nvenc",
+            "Remote Recovery Collision",
+            "WebGL2 Blocklist",
+            "Render-Ready Idle Starvation",
+            "two consecutive failed checks",
+            "local null muxer",
+            "not a current health report",
+        ):
+            with self.subTest(evidence=evidence):
+                self.assertIn(evidence, text)
+
+        for private_artifact in ("/home/", ".state/", "Pod UID", "rollback image SHA"):
+            with self.subTest(private_artifact=private_artifact):
+                self.assertNotIn(private_artifact, text)
+
+        self.assertIn("Track-free renderer isolated soak | Measured", scorecard)
+        self.assertIn("Renderer NVENC soak | Measured", scorecard)
+        self.assertIn("Renderer production cutover | Measured", scorecard)
+        self.assertIn("24-hour full production smoke test | Documented gate", scorecard)
 
     def test_hiring_guide_owns_role_specific_routes(self) -> None:
         text = read(DOCS / "hiring-reviewer-guide.md")
