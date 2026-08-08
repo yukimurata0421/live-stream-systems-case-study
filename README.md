@@ -6,6 +6,9 @@
 
 [![Live ADS-B stream screenshot](docs/assets/live-stream-screenshot.png)](https://www.youtube.com/@yukimurata0421/live)
 
+*Current runtime frame: aircraft icons have no retained tracks or labels; the
+violet outline is 24-hour LOS-aware reception coverage.*
+
 **Live stream:** <https://www.youtube.com/@yukimurata0421/live>
 
 **Public status snapshot:** <https://yukimurata0421.dev/>
@@ -16,10 +19,14 @@ a supported streaming product or general-purpose starter.
 ## 30-Second Summary
 
 `stream_v3` is a self-built 24/7 YouTube Live pipeline for ADS-B visualization
-and NCS music. Its current renderer combines a custom MapLibre aircraft map,
-analysis-only JMA precipitation, and explicit render readiness. The engineering
-focus is same-watch-URL continuity, SLI-based monitoring, fault classification,
-bounded recovery authority, and public-safe status publication.
+and NCS music. Its current renderer combines a track-free custom MapLibre map,
+analysis-only JMA precipitation with bounded last-known-good handling, locally
+calculated time-of-day base-map transitions, and explicit render readiness. The
+engineering focus is same-watch-URL continuity, SLI-based monitoring, fault
+classification, bounded recovery authority, and public-safe status publication.
+
+The detailed renderer, weather, GPU-readiness, and read-only probe boundaries
+are in the [map rendering and monitoring contract](docs/v3/map-rendering-and-monitoring.md).
 
 The system runs across three home hosts:
 
@@ -132,6 +139,8 @@ contracts are in [physical topology](docs/physical-topology.md) and
   pressure, and YouTube lifecycle state as separate fault domains.
 - Keep the map runtime probe, public-viewer frame probe, and precipitation
   health read-only; repeated visual evidence must be correlated before recovery.
+- Route broad operational warnings to Discord, while delivery, GPU, and RTMPS
+  critical incidents escalate to Slack with bounded outbox retry.
 
 ## Claims And Limits
 
