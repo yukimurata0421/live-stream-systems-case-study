@@ -153,6 +153,7 @@ When reviewing the project, the highest-signal questions are:
 - `docs/v3/public-status-snapshot.md`
 - `docs/v3/fast-recovery-classifier-replay.md`
 - `docs/v3/migration-cutover-case-study.md`
+- `docs/v3/map-production-cutover-case-study.md`
 - `docs/v3/youtube-lifecycle-safety.md`
 - `docs/v3/encoder-upload-case-study.md`
 - `docs/v3/encoder-fps-tuning-2026-05-31.md`

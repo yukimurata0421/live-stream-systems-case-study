@@ -52,6 +52,7 @@ Use the rest of this page as a reference catalog.
 - `v3/single-node-dr-case-study.md`
 - `v3/encoder-upload-case-study.md`
 - `v3/encoder-fps-tuning-2026-05-31.md`
+- `v3/map-production-cutover-case-study.md`
 
 ## Recovery And Safety
 

@@ -4,6 +4,10 @@ This document connects the viewer-facing ADS-B map to its delivery, weather,
 monitoring, and recovery boundaries. It describes code and configuration
 contracts in this public snapshot; it is not a current-production health report.
 
+The dated failure, rollback, repair, soak, and live-cutover evidence for this
+renderer is retained separately in
+[`map-production-cutover-case-study.md`](map-production-cutover-case-study.md).
+
 ## Rendering Path
 
 The Dell-side modified tar1090 endpoint remains the local ADS-B HTTP source.

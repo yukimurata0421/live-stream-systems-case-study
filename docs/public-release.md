@@ -22,6 +22,8 @@ contracts, and operational decisions without publishing runtime data or secrets.
   postboot readiness, and read-only NVIDIA package observation.
 - Public review docs for executive summary, operational scorecard, test safety
   boundary, incident review, and migration cutover reasoning.
+- A sanitized renderer-cutover case study with failure, rollback, repair, and
+  accepted-window aggregates while raw operational artifacts remain excluded.
 - Sanitized prodesk monitoring extracts in `ops/prodesk-monitoring/`.
 
 ## What Was Excluded
