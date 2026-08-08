@@ -120,22 +120,38 @@ document.getElementById("result").textContent = JSON.stringify(samples);
             thread.start()
             host, port = server.server_address
             try:
-                completed = subprocess.run(
-                    [
-                        chromium,
-                        "--headless",
-                        "--no-sandbox",
-                        "--disable-gpu",
-                        "--disable-dev-shm-usage",
-                        "--virtual-time-budget=1000",
-                        "--dump-dom",
-                        f"http://{host}:{port}/",
-                    ],
-                    text=True,
-                    capture_output=True,
-                    timeout=20,
-                    check=False,
-                )
+                command = [
+                    chromium,
+                    "--headless",
+                    "--no-sandbox",
+                    "--disable-gpu",
+                    "--disable-dev-shm-usage",
+                    "--virtual-time-budget=1000",
+                    "--dump-dom",
+                    f"http://{host}:{port}/",
+                ]
+                try:
+                    completed = subprocess.run(
+                        command,
+                        text=True,
+                        capture_output=True,
+                        timeout=20,
+                        check=False,
+                    )
+                except subprocess.TimeoutExpired as exc:
+                    stdout = (
+                        exc.stdout.decode("utf-8", "replace")
+                        if isinstance(exc.stdout, bytes)
+                        else (exc.stdout or "")
+                    )
+                    stderr = (
+                        exc.stderr.decode("utf-8", "replace")
+                        if isinstance(exc.stderr, bytes)
+                        else (exc.stderr or "")
+                    )
+                    if '<pre id="result">' not in stdout or "pending</pre>" in stdout:
+                        raise
+                    completed = subprocess.CompletedProcess(command, 0, stdout, stderr)
             finally:
                 server.shutdown()
                 server.server_close()
