@@ -1,183 +1,73 @@
 # Hiring Reviewer Guide
 
-This repository is meant to be reviewed as an operational case study, not as a
-plug-and-play streaming package.
+Use this page only to choose a review path. The top-level
+[`README.md`](../README.md) already contains the short summary, evidence
+snapshot, architecture, decisions, and claim limits.
 
-## 30-Second Summary
+## Choose One Path
 
-`stream_v3` is a 24/7 YouTube Live delivery system operated as a public
-reliability case study.
-
-The main achievement is not simple uptime. The system shows same-URL continuity
-and public-safe observability publication through GCS + Cloudflare, plus
-automated recovery, SLI-based monitoring, and k3s runtime operation.
-
-The strongest review signal is operational judgment: the system names failure
-domains, keeps production invariants separate from availability ratios, and
-blocks destructive actions when evidence is stale, ambiguous, or outside the
-same-URL recovery contract.
-
-## If You Are A Non-Technical Interviewer
+### Non-Technical Interviewer
 
 Read:
 
-1. `README.md` Reviewer Summary
-2. `README.md` Evidence Snapshot
-3. `docs/operational-scorecard.md`
-4. `docs/executive-summary.md`
+1. the top-level [`README.md`](../README.md);
+2. the [`operational scorecard`](operational-scorecard.md);
+3. the [`executive summary`](executive-summary.md).
 
-Look for:
+Evaluate whether the case study:
 
-- monthly-window same-URL operation evidence;
-- automated recovery instead of manual babysitting;
-- a conservative scorecard that separates measured, tested, documented, and
-  not-publicly-measured claims;
-- explicit limits on scale, support, and SLO claims.
+- attaches limits to its measured results;
+- separates a real production invariant from a broad uptime claim;
+- shows automated recovery without hiding operator responsibility;
+- calibrates its single-operator, three-home-host scale honestly.
 
-## If You Are A Backend / Infrastructure Reviewer
+### Backend Or Infrastructure Reviewer
 
 Read:
 
-1. `README.md` architecture diagrams
-2. `docs/v3/public-status-snapshot.md`
-3. `docs/implementation-review-map.md`
-4. `docs/runtime-contract.md`
-5. `docs/physical-topology.md`
+1. the [`implementation review map`](implementation-review-map.md);
+2. the [`runtime contract`](runtime-contract.md);
+3. the [`physical topology`](physical-topology.md);
+4. the [`public status boundary`](v3/public-status-snapshot.md).
 
-Look for:
+Evaluate whether:
 
-- k3s runtime boundary for delivery;
-- delivery-plane / observability-plane separation;
-- GCS + Cloudflare public-safe status publication;
-- private Prometheus/Loki/Grafana staying outside the public path;
-- YouTube API quota-aware monitoring and stale-evidence handling;
-- code and tests mapped to reliability claims.
+- k3s ownership is explicit for delivery and observability workloads;
+- the Airspy/readsb/modified-tar1090 source chain is separated from rendering;
+- private Prometheus, Loki, and Grafana stay outside the public path;
+- monitoring cannot directly take ownership of FFmpeg;
+- public tests map to the claimed safety contracts.
 
-## If You Are An SRE / Platform Reviewer
+### SRE Or Platform Reviewer
 
 Read:
 
-1. `docs/v3/sli-and-dashboard.md`
-2. `docs/v3/rolling-sli-error-budget-feedback.md`
-3. `docs/v3/tcp-stall-case-study.md`
-4. `docs/v3/tcp-stall-resolution-depth.md`
-5. `docs/v3/scoped-recovery-authority.md`
-6. `docs/v3/fast-recovery-classifier-replay.md`
-7. `docs/v3/single-node-dr-case-study.md`
-8. `docs/28-day-same-url-sli-case-study.md`
+1. the [`SLI and dashboard model`](v3/sli-and-dashboard.md);
+2. the [`rolling SLI feedback rules`](v3/rolling-sli-error-budget-feedback.md);
+3. the [`TCP stall case study`](v3/tcp-stall-case-study.md);
+4. the [`diagnostic resolution boundary`](v3/tcp-stall-resolution-depth.md);
+5. the [`scoped recovery authority`](v3/scoped-recovery-authority.md);
+6. the [`notification evidence model`](v3/notification-and-auto-recovery.md).
 
-Look for:
+Evaluate whether:
 
-- same-watch-URL continuity treated as a production invariant;
-- fault-layer classification across RTMPS, TCP, WAN/session, YouTube lifecycle,
-  upload budget, and runtime memory signals;
-- MTTR and incident clustering kept separate from raw restart attempts;
-- rolling SLI feedback separated from 14-day and 28-day reliability claims;
-- same-URL metric-zero samples challenged against raw identity and replacement
-  evidence before budget burn is claimed;
-- report-only observers separated from mutating recovery authority;
-- recovery actions blocked by stale, ambiguous, or upload-only evidence;
-- known unknowns left visible instead of converted into broad uptime claims.
+- same-watch-URL continuity remains distinct from availability ratios;
+- transport, WAN/session, YouTube, upload, source, visual, and audio evidence
+  remain separate;
+- recovery authority is blocked by stale or ambiguous evidence;
+- restart observation is not mislabeled as confirmed send recovery;
+- MTTR, dashboard sampling, and viewer-visible impact are not conflated;
+- unresolved ownership remains explicit when public evidence is insufficient.
 
-## This Is Not
+## Evaluation Rubric
 
-- a generic OSS starter;
-- a supported YouTube streaming product;
-- a commercial SaaS project;
-- an installer for another operator's environment;
-- proof that every delivered frame was externally audited.
+| Area | Strong signal | Warning sign |
+| --- | --- | --- |
+| Evidence | Measurement window, denominator, freshness, and limitation are stated. | A dashboard label is treated as root cause. |
+| Recovery | Authority, guard, and non-actions are explicit. | A monitor can mutate YouTube lifecycle or FFmpeg from one weak signal. |
+| Architecture | Delivery, observation, source, and public publication have named owners. | Public status reads traverse private monitoring or home ingress. |
+| Reliability | Historical SLI, rolling feedback, and current incident state stay separate. | A short drill is generalized into a broad uptime promise. |
+| Operations | Known unknowns and required deeper evidence are recorded. | Missing evidence is silently converted into success. |
 
-## This Is
-
-- a reliability engineering case study;
-- a 24/7 media delivery system operated under real hardware constraints;
-- an example of separating delivery ownership from monitoring ownership;
-- an example of publishing a public-safe status snapshot without exposing the
-  private monitoring backend;
-- an example of treating the ADS-B source chain as evidence instead of hiding it
-  inside the renderer;
-- a record of safety decisions around recovery, stale evidence, API quota,
-  encoder/upload trade-offs, and single-node DR boundaries.
-
-## Key Design Decisions
-
-1. The delivery plane and observability plane are separated.
-2. Monitors do not directly own FFmpeg or the live RTMPS process.
-3. The production ADS-B data path is Airspy on HP ProDesk -> `airspy_adsb` ->
-   ProDesk readsb -> Dell readsb -> Dell modified tar1090 -> `stream_v3`
-   delivery.
-4. Recovery is staged through guards before destructive actions.
-5. Same-watch-URL continuity is a production invariant, not an availability
-   average.
-6. API quota exhaustion is treated as degraded evidence, not immediate stream
-   failure.
-7. Shadow mode existed before destructive cutover and remains the safe
-   validation path.
-8. NVENC CBR was accepted even though measured upload increased, because
-   lower-upload VBR/CQ trials damaged YouTube input health.
-9. Single-node k3s recovery is documented with measured and unmeasured RTO/RPO
-   boundaries instead of being presented as ideal HA.
-10. A 24-hour smoke test is treated as a migration confidence gate, grounded in
-    v2's stable behavior, not as a long-window SLO proof.
-11. The public status site is a reduced static snapshot, not a public Grafana or
-    raw-log mirror.
-12. Historical shadow gaps are not rewritten; current classifier remediation is
-    exposed as replay over retained production events.
-13. Public validation excludes secrets, live YouTube mutation, and production
-    k3s apply.
-
-## Suggested Review Paths
-
-### 10-Minute Review
-
-1. `README.md`
-2. `docs/hiring-reviewer-guide.md`
-3. `docs/operational-scorecard.md`
-
-### 30-Minute Technical Review
-
-1. `docs/executive-summary.md`
-2. `docs/implementation-review-map.md`
-3. `docs/v3/sli-and-dashboard.md`
-4. `docs/v3/public-status-snapshot.md`
-5. `docs/v3/tcp-stall-case-study.md`
-
-### Deep Review / Audit
-
-Use `docs/00_INDEX.md` as the full documentation catalog. Most hiring reviewers
-do not need to read every file.
-
-## What To Evaluate
-
-- Whether the failure domains are named clearly.
-- Whether recovery actions are blocked when evidence is stale, ambiguous, or in
-  shadow mode.
-- Whether the SLI story includes measured windows, denominators, and explicit
-  unknowns instead of only conceptual dashboard language.
-- Whether rolling dashboard feedback, long-window SLI claims, and production
-  invariants stay separate.
-- Whether recurring transport symptoms are split by falsifiable evidence:
-  delivery TCP state, WAN identity, non-YouTube anchors, YouTube lifecycle, and
-  same-URL recovery safety.
-- Whether the TCP stall analysis keeps observer code public while excluding raw
-  runtime evidence such as exact IP values, CPE logs, packet metadata, and
-  packet captures.
-- Whether encoder/upload tuning uses measured wire behavior and YouTube input
-  health instead of nominal bitrate alone.
-- Whether the 28-day same-URL case study separates URL identity, availability,
-  upload guardrails, notification quality, and known unresolved risks.
-- Whether visual correctness, audio correctness, memory pressure, and ADS-B
-  source freshness remain separate from generic "stream is up" language.
-- Whether single-node DR claims distinguish measured control-plane recovery
-  from unmeasured node, disk, and viewer-facing RTMPS recovery.
-- Whether the 24-hour smoke-test rationale is appropriately scoped to migration
-  confidence from v2 stability instead of overstated as a reliability proof.
-- Whether the public status page communicates freshness, guardrails, and
-  recovery ownership without exposing the private monitoring stack.
-- Whether historical shadow gaps remain visible while current classifier replay
-  shows what is now covered.
-- Whether incident review records decisions that were intentionally not taken,
-  especially YouTube lifecycle mutation and rollback.
-- Whether public validation proves the snapshot boundary without requiring
-  credentials or live production mutation.
-- Whether the system shows operational judgment rather than only code volume.
+The complete reference catalog is in [`docs/00_INDEX.md`](00_INDEX.md). Most
+reviewers should not need to read every document.

@@ -123,6 +123,41 @@ class NotificationReplayContractTests(unittest.TestCase):
         self.assertIn("rtmps:ssl_tls_specific_event", ids)
         self.assertIn("public_probe:429_or_bot_confirmation_repeated", ids)
 
+    def test_monitoring_only_missing_state_gap_does_not_page_as_stream_incident(self) -> None:
+        payload = {
+            **base_observe_payload(),
+            "api_report_judgment": "api_report_timer_attention",
+            "api_report_judgment_reason": "one or more API cost report timers are inactive or unknown",
+            "api_report_timers_active": False,
+            "api_cost_reports": {
+                "timers": {
+                    "open.timer": {"active": False},
+                    "closed.timer": {"active": False},
+                }
+            },
+            "checks": {
+                **base_observe_payload()["checks"],
+                "current_fail": True,
+                "youtube_current_degraded": True,
+                "youtube_current_status": "",
+                "youtube_current_judgment": "",
+                "youtube_stats_stale": True,
+                "pulse_pass": True,
+            },
+        }
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            incidents = notify_incidents.collect_notification_incidents(
+                observe_payload=lambda _hours: (0, payload, ""),
+                stream1090_report_events_file=root / "missing_stream1090_report.jsonl",
+                upstream_report_events_file=root / "missing_upstream_stream1090_report.jsonl",
+                youtube_watchdog_stats_file=None,
+                now_ts=1000,
+                report_stale_sec=1800,
+            )
+
+        self.assertEqual(incidents, [])
+
     def test_encoder_gap_replay_requires_fresh_current_stats(self) -> None:
         payload = {
             **base_observe_payload(),

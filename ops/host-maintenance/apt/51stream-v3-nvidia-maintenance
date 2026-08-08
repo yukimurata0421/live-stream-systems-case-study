@@ -1,0 +1,7 @@
+Unattended-Upgrade::Package-Blacklist {
+    "^nvidia-.*";
+    "^libnvidia-.*";
+    "^xserver-xorg-video-nvidia-.*";
+};
+
+Unattended-Upgrade::Remove-Unused-Dependencies "false";

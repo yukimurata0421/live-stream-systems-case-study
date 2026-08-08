@@ -96,7 +96,7 @@ def build_ffmpeg_args(
         "-fflags",
         "+genpts",
         "-thread_queue_size",
-        "2048",
+        str(getattr(cfg, "video_queue_size", 32)),
         "-f",
         "x11grab",
         "-draw_mouse",

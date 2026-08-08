@@ -1,10 +1,11 @@
 # Executive Summary
 
 `stream_v3` is a public reliability engineering case study for a self-built
-24/7 YouTube Live pipeline. The workload is ADS-B visualization with NCS music,
-but the engineering focus is the delivery system around it: browser rendering,
-PulseAudio, AutoDJ, FFmpeg/NVENC, YouTube evidence, API quota, observability,
-guarded recovery, k3s runtime boundaries, and public-release safety.
+24/7 YouTube Live pipeline. The workload is custom MapLibre ADS-B visualization,
+analysis-only precipitation, and NCS music, but the engineering focus is the
+delivery system around it: browser rendering, PulseAudio, AutoDJ, FFmpeg/NVENC,
+YouTube evidence, API quota, observability, guarded recovery, k3s runtime
+boundaries, and public-release safety.
 
 ## What Was Built
 
@@ -18,8 +19,9 @@ The current public architecture separates the system into two main planes:
   requests.
 
 The ADS-B source chain is also explicit: Airspy on HP ProDesk, `airspy_adsb`,
-ProDesk readsb, Dell readsb, Dell modified tar1090, and then the `stream_v3`
-delivery workload. The public status site is not public Grafana access or a
+ProDesk readsb, Dell readsb, Dell modified tar1090 ADS-B JSON, a sanitizing
+proxy, and then the `stream_v3` custom renderer. The public status site is not
+public Grafana access or a
 home-network entrypoint; Raspberry Pi publishes a reduced static snapshot to
 GCS, and Cloudflare serves the public domain so repeated public reads do not
 consume home uplink bandwidth.

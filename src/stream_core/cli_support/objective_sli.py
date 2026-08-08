@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -73,14 +74,121 @@ def percentile(values: list[float], percentile_value: float) -> float | None:
     return round(ordered[lower] * (1 - weight) + ordered[upper] * weight, 3)
 
 
-def timestamped_jsonl_items(path: Path) -> list[tuple[int, dict]]:
+def timestamped_jsonl_items(
+    path: Path,
+    *,
+    payload_projector: Callable[[dict], dict] | None = None,
+) -> list[tuple[int, dict]]:
     items: list[tuple[int, dict]] = []
     for payload in iter_jsonl(path):
         ts = parse_utc_ts(str(payload.get("ts_utc", "")))
         if ts <= 0:
             continue
+        if payload_projector is not None:
+            payload = payload_projector(payload)
         items.append((ts, payload))
     return sorted(items, key=lambda item: item[0])
+
+
+def stream_watchdog_sli_payload(payload: dict) -> dict:
+    """Keep only fields consumed by stream_watchdog_sli."""
+
+    return {
+        key: payload[key]
+        for key in ("kind", "status", "trigger", "restart_reason")
+        if key in payload
+    }
+
+
+def youtube_sli_payload(payload: dict) -> dict:
+    return {key: payload[key] for key in ("status",) if key in payload}
+
+
+def fast_recovery_sli_payload(payload: dict) -> dict:
+    return {
+        key: payload[key]
+        for key in (
+            "kind",
+            "trigger",
+            "send_mbps",
+            "mbps",
+            "sample_interval_sec",
+        )
+        if key in payload
+    }
+
+
+def report_only_sli_payload(payload: dict) -> dict:
+    return {
+        key: payload[key]
+        for key in ("target", "judgment")
+        if key in payload
+    }
+
+
+def notify_sli_payload(payload: dict) -> dict:
+    return {
+        key: payload[key]
+        for key in ("kind", "phase", "send_ok", "route")
+        if key in payload
+    }
+
+
+def api_usage_sli_payload(payload: dict) -> dict:
+    return {
+        key: payload[key]
+        for key in ("cost_units", "units", "quota_exceeded", "error_reason")
+        if key in payload
+    }
+
+
+def memory_guardrail_sli_payload(payload: dict) -> dict:
+    """Project a memory-status row onto fields consumed by the SLI."""
+
+    overall = payload.get("overall") or {}
+    host = payload.get("host") or {}
+    operational_adequacy = payload.get("operational_adequacy") or {}
+    top_non_reclaimable = payload.get("top_non_reclaimable_consumers") or []
+
+    projected: dict = {
+        "classification_policy_version": payload.get("classification_policy_version"),
+        "overall": {
+            key: overall[key]
+            for key in (
+                "severity",
+                "operational_adequacy_severity",
+                "active_oneshot_peak_severity",
+                "systemd_peak_history_severity",
+            )
+            if key in overall
+        },
+        "host": {
+            key: host[key]
+            for key in (
+                "non_reclaimable_estimate_bytes",
+                "mem_available_bytes",
+                "swap_used_bytes",
+            )
+            if key in host
+        },
+        "operational_adequacy": (
+            {"severity": operational_adequacy["severity"]}
+            if "severity" in operational_adequacy
+            else {}
+        ),
+        "top_non_reclaimable_consumers": [],
+    }
+    if top_non_reclaimable and isinstance(top_non_reclaimable[0], dict):
+        first = top_non_reclaimable[0]
+        if "non_reclaimable_estimate_bytes" in first:
+            projected["top_non_reclaimable_consumers"] = [
+                {
+                    "non_reclaimable_estimate_bytes": first[
+                        "non_reclaimable_estimate_bytes"
+                    ]
+                }
+            ]
+    return projected
 
 
 def time_bounds(items: list[tuple[int, dict]]) -> dict:
@@ -264,9 +372,12 @@ def discord_notify_sli(items: list[tuple[int, dict]]) -> dict:
     ok_count = 0
     fail_count = 0
     by_kind: dict[str, int] = {}
+    by_route: dict[str, int] = {}
     for _ts, payload in delivery:
         kind = str(payload.get("kind") or payload.get("phase") or "unknown")
         by_kind[kind] = by_kind.get(kind, 0) + 1
+        route = str(payload.get("route") or "discord")
+        by_route[route] = by_route.get(route, 0) + 1
         if payload.get("kind") == "send_ok" or payload.get("send_ok") is True:
             ok_count += 1
         elif payload.get("kind") == "send_failed" or payload.get("send_ok") is False:
@@ -277,6 +388,7 @@ def discord_notify_sli(items: list[tuple[int, dict]]) -> dict:
         "send_failed_count": fail_count,
         "delivery_ratio_pct": ratio_percent(ok_count, ok_count + fail_count),
         "by_kind": by_kind,
+        "by_route": by_route,
         "denominator": "stream_notify_events.jsonl delivery events",
     }
 
@@ -486,15 +598,39 @@ def daily_objective_sli(youtube_items: list[tuple[int, dict]]) -> list[dict]:
 
 def objective_sli_payload(ctx: ObjectiveSliContext, *, now_ts: int | None = None) -> dict:
     now_ts = int(time.time() if now_ts is None else now_ts)
-    youtube_items = timestamped_jsonl_items(ctx.youtube_watchdog_events_file)
-    fast_recovery_items = timestamped_jsonl_items(ctx.fast_recovery_events_file)
+    youtube_items = timestamped_jsonl_items(
+        ctx.youtube_watchdog_events_file,
+        payload_projector=youtube_sli_payload,
+    )
+    fast_recovery_items = timestamped_jsonl_items(
+        ctx.fast_recovery_events_file,
+        payload_projector=fast_recovery_sli_payload,
+    )
     stream_engine_items = timestamped_jsonl_items(ctx.stream_engine_events_file)
-    stream_watchdog_items = timestamped_jsonl_items(ctx.log_base_dir / "stream_watchdog_events.jsonl")
-    overlay_items = timestamped_jsonl_items(ctx.stream1090_report_events_file)
-    upstream_items = timestamped_jsonl_items(ctx.upstream_report_events_file)
-    notify_items = timestamped_jsonl_items(ctx.notify_events_file)
-    api_items = timestamped_jsonl_items(ctx.log_base_dir / "youtube_api_calls.jsonl")
-    memory_items = timestamped_jsonl_items(ctx.memory_status_events_file)
+    stream_watchdog_items = timestamped_jsonl_items(
+        ctx.log_base_dir / "stream_watchdog_events.jsonl",
+        payload_projector=stream_watchdog_sli_payload,
+    )
+    overlay_items = timestamped_jsonl_items(
+        ctx.stream1090_report_events_file,
+        payload_projector=report_only_sli_payload,
+    )
+    upstream_items = timestamped_jsonl_items(
+        ctx.upstream_report_events_file,
+        payload_projector=report_only_sli_payload,
+    )
+    notify_items = timestamped_jsonl_items(
+        ctx.notify_events_file,
+        payload_projector=notify_sli_payload,
+    )
+    api_items = timestamped_jsonl_items(
+        ctx.log_base_dir / "youtube_api_calls.jsonl",
+        payload_projector=api_usage_sli_payload,
+    )
+    memory_items = timestamped_jsonl_items(
+        ctx.memory_status_events_file,
+        payload_projector=memory_guardrail_sli_payload,
+    )
 
     regime_starts = {
         name: parse_utc_ts(meta["regime_start_ts_utc"])

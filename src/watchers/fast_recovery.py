@@ -19,6 +19,8 @@ try:
     from .fast_recovery_core import remote_warning as remote_warning_core
     from .fast_recovery_core import restart_context as restart_context_writer
     from .fast_recovery_core import tcp_metrics
+    from stream_core.k8s_gpu_guard import summarize_runtime_gpu
+    from stream_core.runtime_readiness import current_pod_establishment
     from stream_core.supervisor.factory import build_runtime_supervisor
 except ImportError:
     from systemctl_control import run_systemctl
@@ -29,6 +31,8 @@ except ImportError:
     from fast_recovery_core import remote_warning as remote_warning_core
     from fast_recovery_core import restart_context as restart_context_writer
     from fast_recovery_core import tcp_metrics
+    from stream_core.k8s_gpu_guard import summarize_runtime_gpu
+    from stream_core.runtime_readiness import current_pod_establishment
     from stream_core.supervisor.factory import build_runtime_supervisor
 
 LIVE_LIKE_LIFECYCLE = {"live", "liveStarting", "testing", "testStarting"}
@@ -122,6 +126,21 @@ QUOTA_STATE_FILE = Path(
 )
 RESTART_REASON_FILE = Path(
     env("FR_RESTART_REASON_FILE", str(STATE_ROOT / "restart_reason.json"))
+)
+GPU_PREFLIGHT_ENABLED = bool_env("FR_GPU_PREFLIGHT_ENABLED", True)
+GPU_PREFLIGHT_TIMEOUT_SEC = max(1.0, float_env("FR_GPU_PREFLIGHT_TIMEOUT_SEC", 3.0))
+GPU_PREFLIGHT_DEPLOYMENT = env("FR_GPU_PREFLIGHT_DEPLOYMENT", "stream-v3-runtime")
+GPU_PREFLIGHT_SELECTOR = env(
+    "FR_GPU_PREFLIGHT_SELECTOR",
+    "app.kubernetes.io/name=stream-v3,app.kubernetes.io/component=runtime",
+)
+GPU_PREFLIGHT_CONTAINER = env("FR_GPU_PREFLIGHT_CONTAINER", "stream-engine")
+FFMPEG_MISSING_REQUIRE_CURRENT_POD_ESTABLISHED = bool_env(
+    "FR_FFMPEG_MISSING_REQUIRE_CURRENT_POD_ESTABLISHED",
+    True,
+)
+BOOT_ESTABLISHED_FILE = Path(
+    env("STREAM_BOOT_ESTABLISHED_FILE", str(STATE_ROOT / "runtime" / "stream_boot_established.json"))
 )
 
 RTMP_PORTS = [int(p.strip()) for p in env("FR_RTMP_PORTS", "1935,443").split(",") if p.strip().isdigit()]
@@ -265,6 +284,10 @@ def load_state(now_ts: int) -> dict[str, Any]:
         "last_reason": "",
         "last_budget_block_key": "",
         "last_budget_block_ts": 0,
+        "last_gpu_restart_block_key": "",
+        "last_gpu_restart_block_ts": 0,
+        "last_startup_restart_block_key": "",
+        "last_startup_restart_block_ts": 0,
         "last_tcp_send_sample_ts": 0,
         "last_tcp_send_sample_pid": 0,
         "last_tcp_send_sample_bytes_sent": 0,
@@ -417,6 +440,124 @@ def restart_stream(reason: str) -> tuple[bool, str]:
             run_systemctl=lambda args, check: run_systemctl(args, require_privilege=True, check=check),
         ),
     )
+
+
+def k8s_supervisor_active() -> bool:
+    return env("STREAM_RUNTIME_SUPERVISOR", "systemd").strip().lower() in {"k8s", "k3s", "kubernetes"}
+
+
+def kubectl_json(args: list[str], *, timeout_sec: float) -> dict[str, Any]:
+    kubectl = env("STREAM_KUBECTL_BIN", "kubectl")
+    cp = subprocess.run(
+        [kubectl, *args],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        timeout=timeout_sec,
+        check=False,
+    )
+    if cp.returncode != 0:
+        raise RuntimeError((cp.stderr or cp.stdout or f"kubectl exited {cp.returncode}").strip())
+    payload = json.loads(cp.stdout)
+    return payload if isinstance(payload, dict) else {}
+
+
+def runtime_gpu_restart_block() -> dict[str, Any]:
+    if not GPU_PREFLIGHT_ENABLED or not k8s_supervisor_active():
+        return {}
+    namespace = env("STREAM_K8S_NAMESPACE", "stream-v3")
+    try:
+        deployment_json = kubectl_json(
+            ["-n", namespace, "get", "deployment", GPU_PREFLIGHT_DEPLOYMENT, "-o", "json"],
+            timeout_sec=GPU_PREFLIGHT_TIMEOUT_SEC,
+        )
+        pods_json = kubectl_json(
+            ["-n", namespace, "get", "pods", "-l", GPU_PREFLIGHT_SELECTOR, "-o", "json"],
+            timeout_sec=GPU_PREFLIGHT_TIMEOUT_SEC,
+        )
+    except Exception as exc:
+        return {"status": "unavailable", "restart_blocked": False, "error": f"{type(exc).__name__}: {exc}"}
+    return summarize_runtime_gpu(
+        deployment_json,
+        pods_json,
+        deployment=GPU_PREFLIGHT_DEPLOYMENT,
+        container_name=GPU_PREFLIGHT_CONTAINER,
+    )
+
+
+def maybe_record_gpu_restart_block(
+    state: dict[str, Any],
+    *,
+    trigger: str,
+    reason: str,
+    gpu_status: dict[str, Any],
+) -> None:
+    now_ts = int(time.time())
+    block_key = f"{trigger}:{gpu_status.get('status')}:{gpu_status.get('restart_block_reason')}"
+    last_key = str(state.get("last_gpu_restart_block_key", ""))
+    last_ts = int(state.get("last_gpu_restart_block_ts", 0) or 0)
+    if block_key != last_key or now_ts - last_ts >= 60:
+        append_event(
+            "restart_blocked_gpu",
+            str(gpu_status.get("restart_block_reason") or gpu_status.get("status") or "gpu preflight blocked restart"),
+            {
+                "trigger": trigger,
+                "reason": reason,
+                "gpu_status": gpu_status,
+            },
+        )
+        state["last_gpu_restart_block_key"] = block_key
+        state["last_gpu_restart_block_ts"] = now_ts
+
+
+def block_restart_if_gpu_preflight_fails(
+    state: dict[str, Any],
+    *,
+    trigger: str,
+    reason: str,
+) -> bool:
+    gpu_status = runtime_gpu_restart_block()
+    if not gpu_status.get("restart_blocked"):
+        return False
+    maybe_record_gpu_restart_block(state, trigger=trigger, reason=reason, gpu_status=gpu_status)
+    detail = str(gpu_status.get("restart_block_reason") or gpu_status.get("status") or "gpu preflight")
+    state["last_reason"] = f"restart blocked by GPU preflight: {detail}"
+    return True
+
+
+def current_stream_establishment() -> dict[str, Any]:
+    if not FFMPEG_MISSING_REQUIRE_CURRENT_POD_ESTABLISHED or not k8s_supervisor_active():
+        return {"established": True, "reason": "current Pod establishment gate disabled"}
+    return current_pod_establishment(
+        BOOT_ESTABLISHED_FILE,
+        pod_uid=env("STREAM_V3_POD_UID"),
+        pod_name=env("STREAM_V3_POD_NAME"),
+    )
+
+
+def block_ffmpeg_missing_restart_before_established(state: dict[str, Any], *, reason: str) -> bool:
+    establishment = current_stream_establishment()
+    if establishment.get("established"):
+        return False
+    now_ts = int(time.time())
+    detail = str(establishment.get("reason") or "current Pod has not established streaming")
+    block_key = f"ffmpeg_missing:{detail}"
+    last_key = str(state.get("last_startup_restart_block_key", ""))
+    last_ts = int(state.get("last_startup_restart_block_ts", 0) or 0)
+    if block_key != last_key or now_ts - last_ts >= 60:
+        append_event(
+            "restart_blocked_startup",
+            detail,
+            {
+                "trigger": "ffmpeg_missing",
+                "reason": reason,
+                "establishment": establishment,
+            },
+        )
+        state["last_startup_restart_block_key"] = block_key
+        state["last_startup_restart_block_ts"] = now_ts
+    state["last_reason"] = f"restart blocked before current Pod established streaming: {detail}"
+    return True
 
 
 def used_downtime_budget_sec(events: list[dict[str, int | str]], now_ts: int, window_sec: int) -> int:
@@ -578,6 +719,12 @@ def main() -> int:
                     state["last_tcp_send_sample_bytes_sent"] = 0
                     save_state(state)
                     return 0
+            if block_ffmpeg_missing_restart_before_established(state, reason=reason):
+                save_state(state)
+                return 0
+            if block_restart_if_gpu_preflight_fails(state, trigger="ffmpeg_missing", reason=reason):
+                save_state(state)
+                return 0
             restart_context = write_restart_reason(
                 reason_kind="ffmpeg_missing",
                 reason=reason,
@@ -878,6 +1025,15 @@ def main() -> int:
             network_down=network.network_down,
             remote_warning=remote_warning,
         )
+        if block_restart_if_gpu_preflight_fails(state, trigger=reason_kind or "unknown", reason=reason):
+            recovery_decision.mark_latest_transport_sample(
+                state,
+                ffmpeg_pid=ffmpeg_pid,
+                bytes_sent=tcp.bytes_sent,
+                now_ts=now_ts,
+            )
+            save_state(state)
+            return 0
         restart_context = write_restart_reason(
             reason_kind=reason_kind,
             reason=reason,

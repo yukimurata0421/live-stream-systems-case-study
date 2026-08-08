@@ -1,0 +1,230 @@
+{
+  "version": 8,
+  "name": "Stream v3 ADS-B terrain",
+  "glyphs": "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf",
+  "sources": {
+    "openmaptiles": {
+      "type": "vector",
+      "tiles": ["/map-tiles/openfreemap/{z}/{x}/{y}.pbf"],
+      "minzoom": 0,
+      "maxzoom": 14,
+      "attribution": "OpenFreeMap © OpenMapTiles · Data © OpenStreetMap contributors"
+    },
+    "terrain-dem": {
+      "type": "raster-dem",
+      "tiles": ["/map-tiles/terrain/{z}/{x}/{y}.webp"],
+      "encoding": "terrarium",
+      "tileSize": 512,
+      "minzoom": 0,
+      "maxzoom": 17,
+      "attribution": "Terrain © Mapterhorn / GSI Japan"
+    },
+    "airports": {
+      "type": "geojson",
+      "data": "/adsb-map/airports.geojson"
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {"background-color": "#1b2729"}
+    },
+    {
+      "id": "terrain-relief",
+      "type": "color-relief",
+      "source": "terrain-dem",
+      "paint": {
+        "color-relief-color": [
+          "interpolate", ["linear"], ["elevation"],
+          -20, "#1c2929",
+          20, "#20302c",
+          100, "#26352e",
+          300, "#303b31",
+          600, "#3a4134",
+          1000, "#47463a",
+          1500, "#554b3f",
+          2200, "#645345",
+          3200, "#735f4e",
+          4500, "#806b59"
+        ],
+        "color-relief-opacity": 0.42
+      }
+    },
+    {
+      "id": "terrain-hillshade",
+      "type": "hillshade",
+      "source": "terrain-dem",
+      "paint": {
+        "hillshade-illumination-direction": 315,
+        "hillshade-illumination-altitude": 42,
+        "hillshade-illumination-anchor": "map",
+        "hillshade-exaggeration": 0.27,
+        "hillshade-shadow-color": "rgba(3,10,13,0.78)",
+        "hillshade-highlight-color": "rgba(102,119,106,0.48)",
+        "hillshade-accent-color": "rgba(15,26,26,0.55)"
+      }
+    },
+    {
+      "id": "wood-muted",
+      "type": "fill",
+      "source": "openmaptiles",
+      "source-layer": "landcover",
+      "filter": ["==", ["get", "class"], "wood"],
+      "paint": {"fill-color": "#395046", "fill-opacity": 0.10}
+    },
+    {
+      "id": "park-muted",
+      "type": "fill",
+      "source": "openmaptiles",
+      "source-layer": "landuse",
+      "filter": ["==", ["get", "class"], "park"],
+      "paint": {"fill-color": "#425446", "fill-opacity": 0.07}
+    },
+    {
+      "id": "water",
+      "type": "fill",
+      "source": "openmaptiles",
+      "source-layer": "water",
+      "filter": ["match", ["geometry-type"], ["MultiPolygon", "Polygon"], true, false],
+      "paint": {"fill-color": "#101e29", "fill-opacity": 1, "fill-antialias": true}
+    },
+    {
+      "id": "weather-sea-veil",
+      "type": "fill",
+      "source": "openmaptiles",
+      "source-layer": "water",
+      "filter": ["match", ["geometry-type"], ["MultiPolygon", "Polygon"], true, false],
+      "paint": {
+        "fill-color": "#071923",
+        "fill-opacity": 0.24,
+        "fill-antialias": true
+      }
+    },
+    {
+      "id": "coastline-glow",
+      "type": "line",
+      "source": "openmaptiles",
+      "source-layer": "water",
+      "filter": ["match", ["geometry-type"], ["MultiPolygon", "Polygon"], true, false],
+      "paint": {"line-color": "rgba(3,9,13,0.90)", "line-width": 3.6, "line-blur": 1.0}
+    },
+    {
+      "id": "coastline",
+      "type": "line",
+      "source": "openmaptiles",
+      "source-layer": "water",
+      "filter": ["match", ["geometry-type"], ["MultiPolygon", "Polygon"], true, false],
+      "paint": {"line-color": "rgba(128,159,155,0.76)", "line-width": 1.0}
+    },
+    {
+      "id": "country-border-shadow",
+      "type": "line",
+      "source": "openmaptiles",
+      "source-layer": "boundary",
+      "filter": ["all", ["==", ["get", "admin_level"], 2], ["!=", ["get", "maritime"], 1]],
+      "layout": {"line-cap": "round", "line-join": "round"},
+      "paint": {"line-color": "rgba(3,10,13,0.90)", "line-width": 4.2, "line-blur": 0.8}
+    },
+    {
+      "id": "country-border",
+      "type": "line",
+      "source": "openmaptiles",
+      "source-layer": "boundary",
+      "filter": ["all", ["==", ["get", "admin_level"], 2], ["!=", ["get", "maritime"], 1]],
+      "layout": {"line-cap": "round", "line-join": "round"},
+      "paint": {"line-color": "rgba(118,147,141,0.82)", "line-width": 1.45}
+    },
+    {
+      "id": "prefecture-border-shadow",
+      "type": "line",
+      "source": "openmaptiles",
+      "source-layer": "boundary",
+      "filter": ["all", ["==", ["get", "admin_level"], 4], ["!=", ["get", "maritime"], 1]],
+      "layout": {"line-cap": "round", "line-join": "round"},
+      "paint": {"line-color": "rgba(4,11,14,0.88)", "line-width": 3.8, "line-blur": 0.75}
+    },
+    {
+      "id": "prefecture-border",
+      "type": "line",
+      "source": "openmaptiles",
+      "source-layer": "boundary",
+      "filter": ["all", ["==", ["get", "admin_level"], 4], ["!=", ["get", "maritime"], 1]],
+      "layout": {"line-cap": "round", "line-join": "round"},
+      "paint": {"line-color": "rgba(109,145,137,0.84)", "line-width": 1.4, "line-dasharray": [2, 1.6]}
+    },
+    {
+      "id": "major-city",
+      "type": "symbol",
+      "source": "openmaptiles",
+      "source-layer": "place",
+      "maxzoom": 14,
+      "filter": ["all", ["==", ["get", "class"], "city"], [">", ["get", "rank"], 3]],
+      "layout": {
+        "text-field": ["coalesce", ["get", "name:latin"], ["get", "name_en"]],
+        "text-font": ["Noto Sans Regular"],
+        "text-size": ["interpolate", ["linear"], ["zoom"], 5, 9, 8, 12],
+        "text-transform": "none",
+        "text-letter-spacing": 0.02
+      },
+      "paint": {
+        "text-color": "rgba(174,190,193,0.74)",
+        "text-halo-color": "rgba(8,17,20,0.90)",
+        "text-halo-width": 1.2,
+        "text-halo-blur": 0.7
+      }
+    },
+    {
+      "id": "major-city-large",
+      "type": "symbol",
+      "source": "openmaptiles",
+      "source-layer": "place",
+      "maxzoom": 12,
+      "filter": ["all", ["==", ["get", "class"], "city"], ["<=", ["get", "rank"], 3]],
+      "layout": {
+        "text-field": ["coalesce", ["get", "name:latin"], ["get", "name_en"]],
+        "text-font": ["Noto Sans Regular"],
+        "text-size": ["interpolate", ["linear"], ["zoom"], 5, 12, 8, 17],
+        "text-transform": "none",
+        "text-letter-spacing": 0.02
+      },
+      "paint": {
+        "text-color": "rgba(190,205,207,0.86)",
+        "text-halo-color": "rgba(8,17,20,0.92)",
+        "text-halo-width": 1.4,
+        "text-halo-blur": 0.7
+      }
+    },
+    {
+      "id": "airport-dot",
+      "type": "circle",
+      "source": "airports",
+      "paint": {
+        "circle-radius": 3.7,
+        "circle-color": "#c5d4d5",
+        "circle-opacity": 0.88,
+        "circle-stroke-color": "#0a1519",
+        "circle-stroke-width": 1.6
+      }
+    },
+    {
+      "id": "airport-label",
+      "type": "symbol",
+      "source": "airports",
+      "layout": {
+        "text-field": ["get", "code"],
+        "text-font": ["Noto Sans Regular"],
+        "text-size": 10,
+        "text-offset": [0, 1.15],
+        "text-anchor": "top",
+        "text-letter-spacing": 0.08
+      },
+      "paint": {
+        "text-color": "rgba(205,220,221,0.90)",
+        "text-halo-color": "rgba(5,13,16,0.94)",
+        "text-halo-width": 1.2,
+        "text-halo-blur": 0.6
+      }
+    }
+  ]
+}

@@ -8,11 +8,18 @@ import json
 import math
 import os
 import subprocess
+import sys
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from datetime import datetime
 from pathlib import Path
 from typing import Any
+
+SRC_DIR = Path(__file__).resolve().parents[2] / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
+
+from stream_core.k8s_gpu_guard import summarize_runtime_gpu
 
 
 def default_repo_root() -> Path:
@@ -28,6 +35,12 @@ DEFAULT_REPO_ROOT = default_repo_root()
 DEFAULT_STATE_ROOT = default_state_root(DEFAULT_REPO_ROOT)
 HEALTH_SUMMARY_SNAPSHOT = "health_summary_snapshot.json"
 OBJECTIVE_SLI_SNAPSHOT = "objective_sli_snapshot.json"
+MAP_EXPECTED_CONTAINERS = (
+    "stream-engine",
+    "precipitation-fetcher",
+    "auto-dj",
+    "fast-recovery-loop",
+)
 
 
 def stream_cli(repo_root: Path) -> Path:
@@ -378,6 +391,47 @@ def runtime_memory_snapshot(*, timeout_sec: float, now: float) -> dict[str, Any]
     }
 
 
+def runtime_gpu_snapshot(*, timeout_sec: float, now: float) -> dict[str, Any]:
+    namespace = os.environ.get("STREAM_V3_RUNTIME_NAMESPACE", "stream-v3")
+    deployment = os.environ.get("STREAM_V3_RUNTIME_DEPLOYMENT", "stream-v3-runtime")
+    selector = os.environ.get(
+        "STREAM_V3_RUNTIME_SELECTOR",
+        "app.kubernetes.io/name=stream-v3,app.kubernetes.io/component=runtime",
+    )
+    container_name = os.environ.get("STREAM_V3_RUNTIME_GPU_CONTAINER", "stream-engine")
+    try:
+        deployment_json = kubectl_json(
+            ["-n", namespace, "get", "deployment", deployment, "-o", "json"],
+            timeout_sec=timeout_sec,
+        )
+        pods_json = kubectl_json(
+            ["-n", namespace, "get", "pods", "-l", selector, "-o", "json"],
+            timeout_sec=timeout_sec,
+        )
+    except Exception as exc:
+        return {
+            "available": False,
+            "status": "unavailable",
+            "status_ok": False,
+            "restart_blocked": False,
+            "driver_mismatch": False,
+            "gpu_runtime_error": False,
+            "gpu_requested": False,
+            "stream_engine_ready": False,
+            "stream_engine_running": False,
+            "container_waiting": False,
+            "pod_count": 0,
+            "pods": [],
+            "error": f"{type(exc).__name__}: {exc}",
+        }
+    return summarize_runtime_gpu(
+        deployment_json,
+        pods_json,
+        deployment=deployment,
+        container_name=container_name,
+    )
+
+
 def tcp_send_rows(state_root: Path, *, now: float) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     for item in iter_jsonl(state_root / "logs" / "fast_recovery_events.jsonl"):
@@ -433,6 +487,24 @@ def age_seconds(value: Any, *, now: float) -> float:
     if ts is None:
         return 0.0
     return max(0.0, now - ts)
+
+
+def optional_age_seconds(value: Any, *, now: float) -> float | None:
+    ts = parse_ts(value)
+    if ts is None:
+        return None
+    return max(0.0, now - ts)
+
+
+def child_dict(parent: dict[str, Any], key: str) -> dict[str, Any]:
+    value = parent.get(key)
+    return value if isinstance(value, dict) else {}
+
+
+def boolish(value: Any) -> bool:
+    if isinstance(value, str):
+        return value.strip().lower() in {"1", "true", "yes", "ok", "healthy", "running"}
+    return bool(value)
 
 
 def windowed_observe_value(observe: dict[str, Any], base_name: str, hours: Any) -> Any:
@@ -512,6 +584,191 @@ class MetricWriter:
         return "\n".join(self.lines) + "\n"
 
 
+def write_map_runtime_metrics(writer: MetricWriter, status: dict[str, Any], *, now: float) -> None:
+    checked_at = status.get("checked_at_utc")
+    sample_age = optional_age_seconds(checked_at, now=now)
+    sample_available = bool(
+        status.get("schema") == "stream_v3.map_runtime_monitor.v1" and sample_age is not None
+    )
+    current_status = str(status.get("status") or "unknown")
+    writer.metric(
+        "stream_v3_map_monitor_sample_available",
+        1 if sample_available else 0,
+        help_text="Production map runtime monitor sample availability flag.",
+    )
+    writer.metric(
+        "stream_v3_map_monitor_sample_age_seconds",
+        sample_age if sample_age is not None else 0,
+        help_text="Age of the production map runtime monitor sample.",
+    )
+    writer.metric(
+        "stream_v3_map_monitor_status",
+        1,
+        labels={"status": current_status},
+        help_text="Production map runtime monitor status label.",
+    )
+    writer.metric(
+        "stream_v3_map_monitor_delivery_critical_ok",
+        1 if boolish(status.get("delivery_critical_ok")) else 0,
+        help_text="Map delivery critical contract aggregate flag.",
+    )
+    writer.metric(
+        "stream_v3_map_monitor_weather_ok",
+        1 if boolish(status.get("weather_ok")) else 0,
+        help_text="JMA precipitation status and fetcher health aggregate flag.",
+    )
+
+    readiness = child_dict(status, "readiness")
+    conditions = child_dict(status, "conditions")
+    render = child_dict(status, "render")
+    browser = child_dict(status, "browser")
+    precipitation = child_dict(status, "precipitation")
+    weather_status = child_dict(precipitation, "status")
+    weather_health = child_dict(precipitation, "health")
+    writer.metric(
+        "stream_v3_map_runtime_ready",
+        1 if boolish(readiness.get("ready")) else 0,
+        help_text="Runtime readiness result observed by the map monitor.",
+    )
+    writer.metric(
+        "stream_v3_map_nvenc_active",
+        1 if boolish(readiness.get("nvenc_active")) else 0,
+        help_text="NVENC active flag observed by runtime readiness.",
+    )
+    writer.metric(
+        "stream_v3_map_rtmp_socket_established",
+        1 if boolish(readiness.get("rtmp_socket_established")) else 0,
+        help_text="RTMP socket established flag observed by runtime readiness.",
+    )
+    writer.metric(
+        "stream_v3_map_render_ready",
+        1 if boolish(conditions.get("render_heartbeat")) else 0,
+        help_text="Map render heartbeat contract flag including freshness.",
+    )
+    writer.metric(
+        "stream_v3_map_render_age_seconds",
+        render.get("age_sec"),
+        help_text="Age of the latest browser render-ready heartbeat.",
+    )
+    writer.metric(
+        "stream_v3_map_tiles_ready",
+        1 if boolish(render.get("map_tiles_ready")) else 0,
+        help_text="MapLibre tile readiness flag.",
+    )
+    writer.metric(
+        "stream_v3_map_aircraft_sample_ready",
+        1 if boolish(render.get("aircraft_sample_ready")) else 0,
+        help_text="Recent ADS-B aircraft sample readiness flag.",
+    )
+    writer.metric(
+        "stream_v3_map_browser_contract_ok",
+        1 if boolish(browser.get("contract_ok")) else 0,
+        help_text="Chromium ADS-B map and SwiftShader launch contract flag.",
+    )
+    writer.metric(
+        "stream_v3_map_webgl2_blocklisted",
+        1 if boolish(browser.get("webgl2_blocklisted")) else 0,
+        help_text="Chromium browser log contains a WebGL2 blocklist failure.",
+    )
+    writer.metric(
+        "stream_v3_map_webgl_context_fatal",
+        1 if boolish(browser.get("context_fatal_failure")) else 0,
+        help_text="Chromium browser log contains a fatal WebGL context failure.",
+    )
+    writer.metric(
+        "stream_v3_map_precipitation_available",
+        1 if boolish(weather_status.get("available")) else 0,
+        help_text="Processed JMA precipitation layer availability flag.",
+    )
+    writer.metric(
+        "stream_v3_map_precipitation_current",
+        1 if weather_health.get("state") == "current" else 0,
+        help_text="JMA precipitation fetcher current-state flag.",
+    )
+    writer.metric(
+        "stream_v3_map_precipitation_observed_age_seconds",
+        precipitation.get("observed_age_sec"),
+        help_text="Age of the JMA precipitation analysis observation.",
+    )
+    writer.metric(
+        "stream_v3_map_precipitation_consecutive_failures",
+        weather_health.get("consecutive_failures"),
+        help_text="Consecutive JMA precipitation fetch failures.",
+    )
+
+    pod = child_dict(status, "pod")
+    containers = child_dict(pod, "containers")
+    expected = status.get("expected_containers")
+    expected_names = expected if isinstance(expected, list) and expected else list(MAP_EXPECTED_CONTAINERS)
+    for name in expected_names:
+        container = containers.get(name) if isinstance(containers.get(name), dict) else {}
+        labels = {"container": name}
+        writer.metric(
+            "stream_v3_map_expected_container_present",
+            1 if name in containers else 0,
+            labels=labels,
+            help_text="Expected production map runtime container presence flag.",
+        )
+        writer.metric(
+            "stream_v3_map_container_ready",
+            1 if boolish(container.get("ready")) else 0,
+            labels=labels,
+            help_text="Production map runtime container readiness flag.",
+        )
+        writer.metric(
+            "stream_v3_map_container_restart_count",
+            container.get("restart_count"),
+            labels=labels,
+            help_text="Production map runtime container restart count.",
+        )
+
+
+def write_viewer_synthetic_metrics(writer: MetricWriter, status: dict[str, Any], *, now: float) -> None:
+    sample_age = optional_age_seconds(status.get("checked_at_utc"), now=now)
+    sample_available = status.get("schema") == "stream_v3.viewer_synthetic.v1" and sample_age is not None
+    writer.metric(
+        "stream_v3_viewer_synthetic_sample_available",
+        1 if sample_available else 0,
+        help_text="Public viewer synthetic sample availability flag.",
+    )
+    writer.metric(
+        "stream_v3_viewer_synthetic_sample_age_seconds",
+        sample_age if sample_age is not None else 0,
+        help_text="Age of the public viewer synthetic sample.",
+    )
+    writer.metric(
+        "stream_v3_viewer_synthetic_status",
+        1,
+        labels={"status": str(status.get("status") or "unknown")},
+        help_text="Public viewer synthetic status label.",
+    )
+    writer.metric(
+        "stream_v3_viewer_synthetic_frame_ok",
+        1 if status.get("frame_ok") is True else 0,
+        help_text="Public viewer frame capture success flag.",
+    )
+    writer.metric(
+        "stream_v3_viewer_synthetic_black_detected",
+        1 if status.get("black_detected") is True else 0,
+        help_text="Black video interval detected in the public viewer sample.",
+    )
+    writer.metric(
+        "stream_v3_viewer_synthetic_freeze_detected",
+        1 if status.get("freeze_detected") is True else 0,
+        help_text="Frozen video interval detected in the public viewer sample.",
+    )
+    writer.metric(
+        "stream_v3_viewer_synthetic_consecutive_probe_failures",
+        status.get("consecutive_probe_failures"),
+        help_text="Consecutive public viewer capture failures.",
+    )
+    writer.metric(
+        "stream_v3_viewer_synthetic_consecutive_visual_failures",
+        status.get("consecutive_visual_failures"),
+        help_text="Consecutive public viewer black or frozen frame detections.",
+    )
+
+
 def mark_cached_payload_stale(payload: str, error: str) -> str:
     filtered: list[str] = []
     stale_prefixes = (
@@ -560,17 +817,23 @@ def build_metrics(*, repo_root: Path, state_root: Path, timeout_sec: float) -> s
     resource_memory = read_json(state_root / "resource_memory.json")
     recovery_plan = read_json(state_root / "recovery_action_plan.json")
     notify_state = read_json(state_root / "stream_notify_state.json")
+    adsb_freshness = read_json(state_root / "watchdog" / "adsb_freshness_state.json")
     recovery_stage = read_json(state_root / "watchdog" / "recovery_stage_state.json")
     monitoring_watchdog = read_json(state_root / "monitoring_watchdog_state.json")
     slo_snapshot = read_json(state_root / "slo_snapshot.json")
+    map_runtime = read_json(state_root / "map_runtime_status.json")
+    viewer_synthetic = read_json(state_root / "viewer_synthetic_status.json")
     now = time.time()
     host_memory = host_memory_snapshot()
     runtime_memory = runtime_memory_snapshot(timeout_sec=timeout_sec, now=now)
+    runtime_gpu = runtime_gpu_snapshot(timeout_sec=timeout_sec, now=now)
     upload_fallback = upload_fallback_by_window(state_root, now=now)
     latest_tcp_sample = latest_tcp_send_sample(state_root, now=now)
 
     writer = MetricWriter()
     writer.metric("stream_v3_exporter_up", 1, help_text="Exporter scrape success.")
+    write_map_runtime_metrics(writer, map_runtime, now=now)
+    write_viewer_synthetic_metrics(writer, viewer_synthetic, now=now)
     writer.metric(
         "stream_v3_exporter_health_summary_snapshot_used",
         1 if health_source != "live" else 0,
@@ -674,6 +937,17 @@ def build_metrics(*, repo_root: Path, state_root: Path, timeout_sec: float) -> s
     writer.metric("stream_v3_runtime_memory_sample_age_seconds", runtime_memory.get("sample_age_seconds"), help_text="Age of stream-v3-runtime Pod memory sample.")
     writer.metric("stream_v3_runtime_memory_warning_ratio", runtime_memory.get("warning_ratio"), help_text="stream-v3-runtime container memory warning ratio.")
     writer.metric("stream_v3_runtime_memory_container_count", len(runtime_memory.get("containers") or []), help_text="stream-v3-runtime memory container sample count.")
+    writer.metric("stream_v3_runtime_gpu_status_ok", 1 if runtime_gpu.get("status_ok") else 0, help_text="stream-v3-runtime stream-engine GPU status ok flag.")
+    writer.metric("stream_v3_runtime_gpu_sample_available", 1 if runtime_gpu.get("available") else 0, help_text="stream-v3-runtime GPU pod-status sample availability.")
+    writer.metric("stream_v3_runtime_gpu_restart_blocked", 1 if runtime_gpu.get("restart_blocked") else 0, help_text="Runtime restart blocked because stream-engine is waiting on GPU runtime failure.")
+    writer.metric("stream_v3_runtime_gpu_driver_mismatch", 1 if runtime_gpu.get("driver_mismatch") else 0, help_text="stream-engine current pod state reports NVIDIA driver/library mismatch.")
+    writer.metric("stream_v3_runtime_gpu_runtime_error", 1 if runtime_gpu.get("gpu_runtime_error") else 0, help_text="stream-engine current pod state reports a GPU runtime error.")
+    writer.metric("stream_v3_runtime_gpu_requested", 1 if runtime_gpu.get("gpu_requested") else 0, help_text="stream-engine requests an NVIDIA GPU.")
+    writer.metric("stream_v3_runtime_gpu_stream_engine_ready", 1 if runtime_gpu.get("stream_engine_ready") else 0, help_text="stream-engine container ready flag from pod status.")
+    writer.metric("stream_v3_runtime_gpu_stream_engine_running", 1 if runtime_gpu.get("stream_engine_running") else 0, help_text="stream-engine container running flag from pod status.")
+    writer.metric("stream_v3_runtime_gpu_container_waiting", 1 if runtime_gpu.get("container_waiting") else 0, help_text="stream-engine container waiting flag from pod status.")
+    writer.metric("stream_v3_runtime_gpu_pod_count", runtime_gpu.get("pod_count"), help_text="stream-v3-runtime pod count included in GPU status.")
+    writer.metric("stream_v3_runtime_gpu_status", 1, labels={"status": runtime_gpu.get("status", "unknown")}, help_text="stream-v3-runtime GPU status label.")
     for item in runtime_memory.get("containers") or []:
         if not isinstance(item, dict):
             continue
@@ -687,6 +961,16 @@ def build_metrics(*, repo_root: Path, state_root: Path, timeout_sec: float) -> s
         writer.metric("stream_v3_runtime_memory_request_mib", item.get("request_mib"), labels=labels, help_text="stream-v3-runtime container memory request MiB.")
         writer.metric("stream_v3_runtime_memory_usage_ratio", item.get("usage_ratio"), labels=labels, help_text="stream-v3-runtime container memory usage divided by limit.")
         writer.metric("stream_v3_runtime_memory_over_warning", 1 if item.get("over_warning") else 0, labels=labels, help_text="stream-v3-runtime container memory over warning ratio.")
+    for item in runtime_gpu.get("pods") or []:
+        if not isinstance(item, dict):
+            continue
+        labels = {
+            "pod": item.get("pod", ""),
+            "container": item.get("container", ""),
+            "state": item.get("state", "unknown"),
+            "reason": item.get("reason", ""),
+        }
+        writer.metric("stream_v3_runtime_gpu_pod_state", 1, labels=labels, help_text="stream-engine GPU-relevant current pod state.")
 
     writer.metric("stream_v3_youtube_watchdog_healthy", youtube_watchdog.get("healthy"), help_text="YouTube watchdog healthy flag.")
     writer.metric("stream_v3_youtube_public_ok", youtube_watchdog.get("public_ok"), help_text="YouTube public probe ok flag.")
@@ -768,8 +1052,47 @@ def build_metrics(*, repo_root: Path, state_root: Path, timeout_sec: float) -> s
         writer.metric("stream_v3_cgroup_swap_current_mib", dict_value(payload, "memory_swap_current_mb"), labels=labels, help_text="Cgroup current swap MiB.", skip_none=True)
 
     rendering = subsystems.get("rendering") if isinstance(subsystems.get("rendering"), dict) else {}
-    writer.metric("stream_v3_adsb_evidence_age_seconds", dict_value(rendering, "evidence_age_sec"), help_text="Age of ADS-B/rendering subsystem evidence.", skip_none=True)
-    writer.metric("stream_v3_adsb_rendering_ok", 1 if rendering.get("state") == "healthy" else 0, help_text="Rendering subsystem reports ADS-B source and visual evidence healthy.", skip_none=not bool(rendering))
+    adsb_source_age = optional_age_seconds(adsb_freshness.get("last_change_ts"), now=now)
+    adsb_sample_age = optional_age_seconds(
+        adsb_freshness.get("sample_ts") or adsb_freshness.get("ts_utc"),
+        now=now,
+    )
+    adsb_source_status = str(adsb_freshness.get("status") or "").strip().lower()
+    adsb_source_ok = adsb_source_age is not None and adsb_source_status in {"", "ok", "healthy"}
+    writer.metric(
+        "stream_v3_adsb_evidence_available",
+        1 if adsb_source_age is not None else 0,
+        help_text="Displayed ADS-B source evidence availability flag.",
+    )
+    writer.metric(
+        "stream_v3_adsb_rendering_ok",
+        1 if adsb_source_ok and rendering.get("state") == "healthy" else 0,
+        help_text="Rendering subsystem and displayed ADS-B source are healthy.",
+    )
+    writer.metric(
+        "stream_v3_adsb_evidence_age_seconds",
+        adsb_source_age,
+        help_text="Age since the displayed ADS-B source message counter last changed.",
+        skip_none=True,
+    )
+    writer.metric(
+        "stream_v3_adsb_source_age_seconds",
+        adsb_source_age,
+        help_text="Age since the displayed ADS-B source message counter last changed.",
+        skip_none=True,
+    )
+    writer.metric(
+        "stream_v3_adsb_source_sample_age_seconds",
+        adsb_sample_age,
+        help_text="Age of the latest displayed ADS-B source probe.",
+        skip_none=True,
+    )
+    writer.metric(
+        "stream_v3_adsb_rendering_evidence_age_seconds",
+        dict_value(rendering, "evidence_age_sec"),
+        help_text="Age of the latest rendering subsystem evidence.",
+        skip_none=True,
+    )
     writer.metric("stream_v3_adsb_messages_moving", dict_value(rendering, "aircraft_messages_moving"), help_text="ADS-B aircraft message count is moving.", skip_none=True)
     writer.metric("stream_v3_adsb_positions_moving", dict_value(rendering, "aircraft_positions_moving"), help_text="ADS-B aircraft positions are moving.", skip_none=True)
 
@@ -806,7 +1129,6 @@ def build_metrics(*, repo_root: Path, state_root: Path, timeout_sec: float) -> s
 def build_error_metrics(error: str) -> str:
     writer = MetricWriter()
     writer.metric("stream_v3_exporter_up", 0, help_text="Exporter scrape success.")
-    writer.metric("stream_v3_exporter_error", 1, labels={"error": error[:120]}, help_text="Exporter error flag.")
     return writer.render()
 
 

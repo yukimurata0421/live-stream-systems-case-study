@@ -1,0 +1,12 @@
+[Unit]
+Description=Verify stream v3 runtime after host boot
+Wants=k3s.service stream-v3-gpu-startup-gate.service
+After=k3s.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/libexec/stream-v3-postboot-verify --timeout-sec 300 --poll-sec 10
+TimeoutStartSec=330
+
+[Install]
+WantedBy=multi-user.target

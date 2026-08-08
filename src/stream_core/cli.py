@@ -83,6 +83,7 @@ from stream_core.notifications import discord as notify_discord
 from stream_core.notifications import incidents as notify_incidents
 from stream_core.notifications import outbox as notify_outbox
 from stream_core.notifications import renderer as notify_renderer
+from stream_core.notifications import slack as notify_slack
 from stream_core.notifications import state as notify_state
 from stream_core.notifications import status_loop as notify_status_loop
 
@@ -580,6 +581,9 @@ def collect_notification_incidents(
         stream1090_report_events_file=STREAM1090_REPORT_EVENTS_FILE,
         upstream_report_events_file=UPSTREAM_REPORT_EVENTS_FILE,
         youtube_watchdog_stats_file=YOUTUBE_WATCHDOG_STATS_FILE,
+        map_runtime_status_file=STATE_BASE_DIR / "map_runtime_status.json",
+        map_runtime_history_file=LOG_BASE_DIR / "map_runtime_status.jsonl",
+        viewer_synthetic_status_file=STATE_BASE_DIR / "viewer_synthetic_status.json",
         now_ts=now,
         report_stale_sec=report_stale_sec,
         bootstrap_grace_active=notify_bootstrap_grace_active(now, startup_grace_sec),
@@ -610,6 +614,10 @@ def send_discord_webhook(webhook_url: str, content: str, *, username: str = "ADS
     return notify_discord.send_discord_webhook(webhook_url, content, username=username, timeout=timeout)
 
 
+def send_slack_webhook(webhook_url: str, content: str, *, username: str = "ADS-B Stream Watchdog", timeout: float = 10.0) -> tuple[bool, str]:
+    return notify_slack.send_slack_webhook(webhook_url, content, username=username, timeout=timeout)
+
+
 def load_notify_outbox(path: Path | None = None, *, now_ts: int | None = None, ttl_sec: int | None = None) -> list[dict]:
     if path is None:
         path = NOTIFY_OUTBOX_FILE
@@ -622,8 +630,8 @@ def save_notify_outbox(rows: list[dict], path: Path | None = None) -> None:
     notify_outbox.save_notify_outbox(path, rows)
 
 
-def notify_message_id(*, phase: str, incidents: list[dict], now_ts: int) -> str:
-    return notify_outbox.notify_message_id(phase=phase, incidents=incidents, now_ts=now_ts)
+def notify_message_id(*, phase: str, incidents: list[dict], now_ts: int, route: str = notify_outbox.DEFAULT_ROUTE) -> str:
+    return notify_outbox.notify_message_id(phase=phase, incidents=incidents, now_ts=now_ts, route=route)
 
 
 def fast_recovery_auto_recovered_events(
@@ -647,7 +655,29 @@ def fast_recovery_auto_recovered_events(
     )
 
 
+def fast_recovery_recovery_events(
+    *,
+    state: dict,
+    now_ts: int,
+    recent_sec: int,
+    triggers: list[str],
+    events_file: Path | None = None,
+    max_events: int = 8,
+) -> list[dict]:
+    if events_file is None:
+        events_file = FAST_RECOVERY_EVENTS_FILE
+    return notify_status_loop.fast_recovery_recovery_events(
+        state=state,
+        now_ts=now_ts,
+        recent_sec=recent_sec,
+        triggers=triggers,
+        events_file=events_file,
+        max_events=max_events,
+    )
+
+
 mark_fast_recovery_auto_recovered_events_notified = notify_status_loop.mark_fast_recovery_auto_recovered_events_notified
+mark_fast_recovery_recovery_events_notified = notify_status_loop.mark_fast_recovery_recovery_events_notified
 
 
 def enqueue_notify_messages(
@@ -657,6 +687,7 @@ def enqueue_notify_messages(
     username: str,
     now_ts: int,
     max_pending: int,
+    route: str = notify_outbox.DEFAULT_ROUTE,
 ) -> list[dict]:
     return notify_outbox.enqueue_notify_messages(
         outbox,
@@ -664,10 +695,11 @@ def enqueue_notify_messages(
         username=username,
         now_ts=now_ts,
         max_pending=max_pending,
+        route=route,
     )
 
 
-def flush_notify_outbox(*, cfg: dict, now_ts: int, dry_run: bool = False) -> tuple[int, int, int]:
+def flush_notify_outbox(*, cfg: dict, now_ts: int, dry_run: bool = False, route: str = notify_outbox.DEFAULT_ROUTE) -> tuple[int, int, int]:
     return notify_outbox.flush_notify_outbox(
         outbox_path=NOTIFY_OUTBOX_FILE,
         events_path=NOTIFY_EVENTS_FILE,
@@ -675,6 +707,7 @@ def flush_notify_outbox(*, cfg: dict, now_ts: int, dry_run: bool = False) -> tup
         now_ts=now_ts,
         send_webhook=send_discord_webhook,
         dry_run=dry_run,
+        route=route,
     )
 
 

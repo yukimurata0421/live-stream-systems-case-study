@@ -35,6 +35,7 @@ Use the rest of this page as a reference catalog.
 - `v3/current-runtime-contract.md`
 - `v3/public-status-snapshot.md`
 - `v3/runtime-state-and-evidence.md`
+- `v3/map-rendering-and-monitoring.md`
 - `v3/program-map.md`
 
 ## Reliability Evidence

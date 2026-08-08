@@ -10,7 +10,8 @@ and operational design choices. Last reviewed: 2026-06-07.
 This document covers the public stream and the public repository snapshot:
 
 - receive-only ADS-B ingest through Airspy, `airspy_adsb`, readsb, modified
-  tar1090, and the `stream_v3` browser/FFmpeg delivery path;
+  tar1090, a custom MapLibre renderer, processed JMA precipitation, and the
+  `stream_v3` browser/FFmpeg delivery path;
 - viewer-facing YouTube video, overlay panels, public-safe status snapshots,
   and public documentation;
 - NCS music attribution for a YouTube livestream.
@@ -57,8 +58,12 @@ rendering path:
 
 - `src/stream_core/overlay_server.py` removes receiver latitude and longitude
   from proxied `receiver.json`.
-- The same proxy injects tar1090 configuration that hides the receiver site
-  marker while preserving coverage/range guides.
+- The same proxy keeps the modified tar1090 source available for bounded
+  fallback/probe use while the viewer-facing custom map hides the receiver
+  marker and preserves coverage/range guides.
+- `ui/overlay/adsb-map/ATTRIBUTION.md` records MapLibre, OpenFreeMap/
+  OpenMapTiles/OpenStreetMap, Mapterhorn/GSI, OurAirports, and processed JMA
+  precipitation attribution. The on-screen footer remains visible.
 - `ui/overlay/index.html` presents aggregate stream metrics such as target
   count, position count, message rate, coverage, receiver freshness, clocks, and
   now-playing state.
@@ -104,6 +109,8 @@ Re-review this boundary before any of the following changes:
 
 - exposing the ADS-B JSON feed, readsb/tar1090 endpoint, receiver position, or
   raw aircraft logs as a public HTTP service;
+- changing map/terrain/weather providers, removing visible attribution, or
+  displaying forecast precipitation instead of analysis-only data;
 - adding aircraft registration, owner lookup, persistent ICAO lists, or
   searchable aircraft history to the public presentation;
 - changing from receive-only equipment to any transmitter or active RF

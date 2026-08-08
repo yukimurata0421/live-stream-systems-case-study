@@ -1,0 +1,12 @@
+[Unit]
+Description=Probe stream_v3 displayed ADS-B source every 60 seconds
+
+[Timer]
+OnBootSec=30s
+OnUnitActiveSec=60s
+AccuracySec=5s
+Persistent=true
+Unit=adsb-streamnew-adsb-source-probe.service
+
+[Install]
+WantedBy=timers.target

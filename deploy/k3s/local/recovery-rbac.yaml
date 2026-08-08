@@ -45,3 +45,26 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
   name: stream-v3-recovery
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: stream-v3-recovery-node-boot-reader
+rules:
+  - apiGroups: [""]
+    resources: ["nodes"]
+    resourceNames: ["yuki"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: stream-v3-recovery-node-boot-reader
+subjects:
+  - kind: ServiceAccount
+    name: stream-v3-recovery
+    namespace: stream-v3
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: stream-v3-recovery-node-boot-reader

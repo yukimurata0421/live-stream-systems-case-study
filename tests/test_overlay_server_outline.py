@@ -6,6 +6,8 @@ import socketserver
 import sys
 import tempfile
 import threading
+import time
+import urllib.error
 import urllib.request
 from functools import partial
 from pathlib import Path
@@ -44,6 +46,220 @@ class _Stream1090FixtureHandler(http.server.BaseHTTPRequestHandler):
 
 
 class OverlayActualRangeOutlineTests(unittest.TestCase):
+    def test_render_ready_rejects_partial_report_and_expires_old_report(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            previous_payload = overlay_server.OverlayHandler.render_ready_payload
+            previous_received_at = overlay_server.OverlayHandler.render_ready_received_at
+            previous_started_at = overlay_server.OverlayHandler.render_server_started_at
+            try:
+                overlay_server.OverlayHandler.render_ready_payload = {}
+                overlay_server.OverlayHandler.render_ready_received_at = 0.0
+                overlay_server.OverlayHandler.render_server_started_at = time.time()
+                handler = partial(overlay_server.OverlayHandler, directory=td)
+                overlay, overlay_url = _serve(handler)
+                try:
+                    partial_body = json.dumps(
+                        {
+                            "ready": True,
+                            "map_tiles_ready": True,
+                            "aircraft_sample_ready": False,
+                            "reported_at_ms": 123456,
+                        }
+                    ).encode("utf-8")
+                    request = urllib.request.Request(
+                        overlay_url + "render/ready",
+                        data=partial_body,
+                        headers={"Content-Type": "application/json"},
+                        method="POST",
+                    )
+                    with self.assertRaises(urllib.error.HTTPError) as rejected:
+                        urllib.request.urlopen(request, timeout=3)
+                    self.assertEqual(rejected.exception.code, 400)
+                    rejected.exception.close()
+
+                    with urllib.request.urlopen(overlay_url + "render/status.json", timeout=3) as res:
+                        after_rejection = json.loads(res.read().decode("utf-8"))
+                    self.assertFalse(after_rejection["ready"])
+                    self.assertEqual(after_rejection["state"], "warming_up")
+
+                    overlay_server.OverlayHandler.render_ready_payload = {
+                        "ready": True,
+                        "map_tiles_ready": True,
+                        "aircraft_sample_ready": True,
+                        "reported_at_ms": 654321,
+                    }
+                    overlay_server.OverlayHandler.render_ready_received_at = time.time() - 31.0
+                    with urllib.request.urlopen(overlay_url + "render/status.json", timeout=3) as res:
+                        expired = json.loads(res.read().decode("utf-8"))
+                    self.assertFalse(expired["ready"])
+                    self.assertEqual(expired["state"], "warming_up")
+                    self.assertGreaterEqual(expired["age_sec"], 30.9)
+                    self.assertEqual(expired["reported_at_ms"], 654321)
+                finally:
+                    overlay.shutdown()
+                    overlay.server_close()
+            finally:
+                overlay_server.OverlayHandler.render_ready_payload = previous_payload
+                overlay_server.OverlayHandler.render_ready_received_at = previous_received_at
+                overlay_server.OverlayHandler.render_server_started_at = previous_started_at
+
+    def test_render_ready_endpoint_requires_real_map_and_adsb_report(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            previous_payload = overlay_server.OverlayHandler.render_ready_payload
+            previous_received_at = overlay_server.OverlayHandler.render_ready_received_at
+            previous_started_at = overlay_server.OverlayHandler.render_server_started_at
+            try:
+                overlay_server.OverlayHandler.render_ready_payload = {}
+                overlay_server.OverlayHandler.render_ready_received_at = 0.0
+                overlay_server.OverlayHandler.render_server_started_at = 1.0
+                handler = partial(overlay_server.OverlayHandler, directory=td)
+                overlay, overlay_url = _serve(handler)
+                try:
+                    with urllib.request.urlopen(overlay_url + "render/status.json", timeout=3) as res:
+                        before = json.loads(res.read().decode("utf-8"))
+                    self.assertFalse(before["ready"])
+                    self.assertEqual(before["state"], "warming_up")
+                    self.assertFalse(before["map_tiles_ready"])
+                    self.assertFalse(before["aircraft_sample_ready"])
+
+                    body = json.dumps(
+                        {
+                            "ready": True,
+                            "map_tiles_ready": True,
+                            "aircraft_sample_ready": True,
+                            "reported_at_ms": 123456,
+                        }
+                    ).encode("utf-8")
+                    request = urllib.request.Request(
+                        overlay_url + "render/ready",
+                        data=body,
+                        headers={"Content-Type": "application/json"},
+                        method="POST",
+                    )
+                    with urllib.request.urlopen(request, timeout=3) as res:
+                        accepted = json.loads(res.read().decode("utf-8"))
+                    self.assertTrue(accepted["accepted"])
+
+                    with urllib.request.urlopen(overlay_url + "render/status.json", timeout=3) as res:
+                        after = json.loads(res.read().decode("utf-8"))
+                    self.assertTrue(after["ready"])
+                    self.assertEqual(after["state"], "ready")
+                    self.assertTrue(after["map_tiles_ready"])
+                    self.assertTrue(after["aircraft_sample_ready"])
+                    self.assertEqual(after["reported_at_ms"], 123456)
+                    self.assertLessEqual(after["age_sec"], 1.0)
+                finally:
+                    overlay.shutdown()
+                    overlay.server_close()
+            finally:
+                overlay_server.OverlayHandler.render_ready_payload = previous_payload
+                overlay_server.OverlayHandler.render_ready_received_at = previous_received_at
+                overlay_server.OverlayHandler.render_server_started_at = previous_started_at
+
+    def test_processed_precipitation_assets_are_served_from_local_root(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            weather = root / "weather"
+            tile = weather / "generations" / "20260802080000" / "7" / "114" / "50.png"
+            tile.parent.mkdir(parents=True)
+            tile.write_bytes(b"processed-precipitation")
+            (weather / "status.json").write_text(
+                json.dumps({"analysis_only": True, "validtime": "20260802080000"}),
+                encoding="utf-8",
+            )
+            previous_root = overlay_server.OverlayHandler.precipitation_root
+            overlay_server.OverlayHandler.precipitation_root = weather
+            handler = partial(overlay_server.OverlayHandler, directory=td)
+            overlay, overlay_url = _serve(handler)
+            try:
+                with urllib.request.urlopen(overlay_url + "weather/status.json", timeout=3) as res:
+                    self.assertTrue(json.loads(res.read())["analysis_only"])
+                    self.assertEqual(res.headers.get_content_type(), "application/json")
+                with urllib.request.urlopen(
+                    overlay_url + "weather/tiles/20260802080000/7/114/50.png",
+                    timeout=3,
+                ) as res:
+                    self.assertEqual(res.read(), b"processed-precipitation")
+                    self.assertEqual(res.headers.get_content_type(), "image/png")
+                with self.assertRaises(urllib.error.HTTPError) as invalid:
+                    urllib.request.urlopen(
+                        overlay_url + "weather/tiles/20260802080000/7/999/50.png",
+                        timeout=3,
+                    )
+                self.assertEqual(invalid.exception.code, 404)
+                invalid.exception.close()
+            finally:
+                overlay.shutdown()
+                overlay.server_close()
+                overlay_server.OverlayHandler.precipitation_root = previous_root
+
+    def test_openfreemap_tilejson_template_is_validated_and_cached(self) -> None:
+        response = mock.MagicMock()
+        response.__enter__.return_value.read.return_value = json.dumps(
+            {"tiles": ["https://tiles.openfreemap.org/planet/version/{z}/{x}/{y}.pbf"]}
+        ).encode("utf-8")
+        previous_template = overlay_server.OverlayHandler.openfreemap_tile_template
+        previous_expiry = overlay_server.OverlayHandler.openfreemap_tile_template_expires_at
+        try:
+            overlay_server.OverlayHandler.openfreemap_tile_template = ""
+            overlay_server.OverlayHandler.openfreemap_tile_template_expires_at = 0.0
+            with mock.patch.object(urllib.request, "urlopen", return_value=response) as urlopen:
+                first = overlay_server.OverlayHandler.resolve_openfreemap_tile_template()
+                second = overlay_server.OverlayHandler.resolve_openfreemap_tile_template()
+
+            self.assertEqual(first, "https://tiles.openfreemap.org/planet/version/{z}/{x}/{y}.pbf")
+            self.assertEqual(second, first)
+            self.assertEqual(urlopen.call_count, 1)
+        finally:
+            overlay_server.OverlayHandler.openfreemap_tile_template = previous_template
+            overlay_server.OverlayHandler.openfreemap_tile_template_expires_at = previous_expiry
+
+    def test_map_vector_tile_route_proxies_same_origin_content(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            handler = partial(overlay_server.OverlayHandler, directory=td)
+            with (
+                mock.patch.object(
+                    overlay_server.OverlayHandler,
+                    "resolve_openfreemap_tile_template",
+                    return_value="https://tiles.openfreemap.org/planet/version/{z}/{x}/{y}.pbf",
+                ),
+                mock.patch.object(
+                    overlay_server.OverlayHandler,
+                    "fetch_cached_map_asset",
+                    return_value=(b"vector-tile", "application/vnd.mapbox-vector-tile"),
+                ),
+            ):
+                overlay, overlay_url = _serve(handler)
+                try:
+                    with urllib.request.urlopen(overlay_url + "map-tiles/openfreemap/6/57/25.pbf", timeout=3) as res:
+                        self.assertEqual(res.read(), b"vector-tile")
+                        self.assertEqual(res.headers.get_content_type(), "application/vnd.mapbox-vector-tile")
+                finally:
+                    overlay.shutdown()
+                    overlay.server_close()
+
+    def test_missing_terrain_tile_uses_neutral_terrarium_asset(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            neutral = root / "adsb-map" / "neutral-terrain.webp"
+            neutral.parent.mkdir(parents=True)
+            neutral.write_bytes(b"neutral-terrain")
+            error = urllib.error.HTTPError("https://tiles.mapterhorn.com/6/57/25.webp", 404, "missing", {}, None)
+            handler = partial(overlay_server.OverlayHandler, directory=td)
+            with mock.patch.object(
+                overlay_server.OverlayHandler,
+                "fetch_cached_map_asset",
+                side_effect=error,
+            ), mock.patch.object(overlay_server.OverlayHandler, "store_cached_map_asset"):
+                overlay, overlay_url = _serve(handler)
+                try:
+                    with urllib.request.urlopen(overlay_url + "map-tiles/terrain/6/57/25.webp", timeout=3) as res:
+                        self.assertEqual(res.read(), b"neutral-terrain")
+                        self.assertEqual(res.headers.get_content_type(), "image/webp")
+                finally:
+                    overlay.shutdown()
+                    overlay.server_close()
+
     def test_receiver_json_sanitizer_removes_site_coordinates(self) -> None:
         body = b'{"lat":35.0,"lon":139.0,"readsb":true}\n'
 
@@ -60,7 +276,7 @@ class OverlayActualRangeOutlineTests(unittest.TestCase):
         injected = overlay_server.OverlayHandler.inject_stream1090_privacy_config(body).decode("utf-8")
 
         self.assertIn("SiteShow = false;", injected)
-        self.assertIn("SiteCirclesLineDash = [8, 4];", injected)
+        self.assertIn("SiteCirclesLineDash = [];", injected)
         self.assertNotIn("SiteCircles = false;", injected)
         self.assertNotIn("actual_range_show = false;", injected)
 

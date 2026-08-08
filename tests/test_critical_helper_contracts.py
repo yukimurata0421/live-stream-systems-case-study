@@ -91,7 +91,7 @@ class FastRecoveryDecisionContractTests(unittest.TestCase):
     def test_select_restart_reason_prefers_remote_warning_in_url_preservation_mode(self) -> None:
         state = {"net_fail_streak": 3, "stall_streak": 3, "low_upload_pressure_streak": 3}
         network = recovery_decision.NetworkObservation(
-            gateway="192.0.2.1",
+            gateway="192.168.0.1",
             gateway_ok=False,
             public_ok_count=0,
             dns_ok=False,
@@ -118,7 +118,7 @@ class FastRecoveryDecisionContractTests(unittest.TestCase):
 
     def test_select_restart_reason_prefers_network_then_tcp_before_low_upload(self) -> None:
         network = recovery_decision.NetworkObservation(
-            gateway="192.0.2.1",
+            gateway="192.168.0.1",
             gateway_ok=False,
             public_ok_count=0,
             dns_ok=False,
@@ -455,12 +455,12 @@ class YoutubeDataApiAndPublicProbeContractTests(unittest.TestCase):
         self.assertIn("not_live", result.reason)
 
 
-class NotificationAutoRecoveredContractTests(unittest.TestCase):
+class NotificationRecoveryEvidenceContractTests(unittest.TestCase):
     @staticmethod
     def _utc(ts: int) -> str:
         return datetime.fromtimestamp(ts, tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
-    def test_auto_recovered_event_filtering_uses_trigger_ack_cutoff_and_future_guard(self) -> None:
+    def test_recovery_event_filtering_uses_trigger_ack_cutoff_and_future_guard(self) -> None:
         with tempfile.TemporaryDirectory() as td:
             events_file = Path(td) / "fast_recovery_events.jsonl"
             rows = [
@@ -474,7 +474,7 @@ class NotificationAutoRecoveredContractTests(unittest.TestCase):
             events_file.write_text("\n".join(json.dumps(row) for row in rows) + "\n", encoding="utf-8")
             state = {"fast_recovery_auto_recovered_notified": {f"{self._utc(1600)}|tcp_stall": 1601}}
 
-            events = status_loop.fast_recovery_auto_recovered_events(
+            events = status_loop.fast_recovery_recovery_events(
                 state=state,
                 now_ts=2000,
                 recent_sec=600,
@@ -486,8 +486,12 @@ class NotificationAutoRecoveredContractTests(unittest.TestCase):
         self.assertEqual(events[0]["trigger"], "network_down")
         self.assertEqual(events[0]["evidence"], "network recovered")
         self.assertEqual(events[0]["recovery_type"], "fast_recovery_restart:network_down")
+        self.assertEqual(events[0]["_notification_phase"], "recovery_unconfirmed")
+        self.assertTrue(events[0]["restart_observed"])
+        self.assertFalse(events[0]["recovery_confirmed"])
+        self.assertIsNone(events[0]["recovery_lag_sec"])
 
-    def test_auto_recovered_event_waits_for_recovery_sample_when_recent(self) -> None:
+    def test_restart_without_tcp_sample_progresses_from_observed_to_unconfirmed(self) -> None:
         with tempfile.TemporaryDirectory() as td:
             events_file = Path(td) / "fast_recovery_events.jsonl"
             rows = [
@@ -500,14 +504,14 @@ class NotificationAutoRecoveredContractTests(unittest.TestCase):
             ]
             events_file.write_text("\n".join(json.dumps(row) for row in rows) + "\n", encoding="utf-8")
 
-            recent = status_loop.fast_recovery_auto_recovered_events(
+            recent = status_loop.fast_recovery_recovery_events(
                 state={},
                 now_ts=2000,
                 recent_sec=600,
                 triggers=["network_down"],
                 events_file=events_file,
             )
-            aged = status_loop.fast_recovery_auto_recovered_events(
+            aged = status_loop.fast_recovery_recovery_events(
                 state={},
                 now_ts=2140,
                 recent_sec=600,
@@ -515,26 +519,273 @@ class NotificationAutoRecoveredContractTests(unittest.TestCase):
                 events_file=events_file,
             )
 
-        self.assertEqual(recent, [])
+        self.assertEqual(len(recent), 1)
+        self.assertEqual(recent[0]["_notification_phase"], "restart_observed")
+        self.assertFalse(recent[0]["recovery_confirmed"])
         self.assertEqual(len(aged), 1)
+        self.assertEqual(aged[0]["_notification_phase"], "recovery_unconfirmed")
         self.assertEqual(aged[0]["diagnostic_context"], "tcp_sample_context=missing")
 
-    def test_mark_auto_recovered_notifications_compacts_old_acknowledgements(self) -> None:
+    def test_low_speed_post_sample_never_confirms_recovery(self) -> None:
+        event_ts = 2000
+        tcp_samples = [
+            (
+                2060,
+                {
+                    "kind": "tcp_send_sample",
+                    "mbps": 1.2,
+                    "bytes_sent_delta": 9_000_000,
+                    "lastsnd_ms": 40,
+                    "notsent": 0,
+                    "unacked": 4,
+                    "ffmpeg_pid": 222,
+                },
+            )
+        ]
+
+        evidence = status_loop.fast_recovery_restart_evidence(event_ts, tcp_samples)
+
+        self.assertTrue(evidence.restart_observed)
+        self.assertFalse(evidence.recovery_confirmed)
+        self.assertIsNone(evidence.recovery_lag_sec)
+        self.assertIn("post_first=+60s mbps=1.2", evidence.diagnostic_context)
+        self.assertIn("recovery_lag_sec=unknown", evidence.diagnostic_context)
+
+        with tempfile.TemporaryDirectory() as td:
+            events_file = Path(td) / "fast_recovery_events.jsonl"
+            rows = [
+                {"ts_utc": self._utc(event_ts), "kind": "restart", "trigger": "tcp_stall"},
+                {"ts_utc": self._utc(2060), **tcp_samples[0][1]},
+            ]
+            events_file.write_text("\n".join(json.dumps(row) for row in rows) + "\n", encoding="utf-8")
+
+            recent = status_loop.fast_recovery_recovery_events(
+                state={},
+                now_ts=2070,
+                recent_sec=600,
+                triggers=["tcp_stall"],
+                events_file=events_file,
+            )
+            aged = status_loop.fast_recovery_recovery_events(
+                state={},
+                now_ts=2200,
+                recent_sec=600,
+                triggers=["tcp_stall"],
+                events_file=events_file,
+            )
+
+        self.assertEqual(recent[0]["_notification_phase"], "restart_observed")
+        self.assertEqual(aged[0]["_notification_phase"], "recovery_unconfirmed")
+
+    def test_confirmed_tcp_sample_records_recovery_lag(self) -> None:
+        evidence = status_loop.fast_recovery_restart_evidence(
+            2000,
+            [
+                (
+                    2060,
+                    {
+                        "kind": "tcp_send_sample",
+                        "mbps": 4.7,
+                        "bytes_sent_delta": 35_000_000,
+                    },
+                )
+            ],
+        )
+
+        self.assertTrue(evidence.restart_observed)
+        self.assertTrue(evidence.recovery_confirmed)
+        self.assertEqual(evidence.recovery_lag_sec, 60)
+
+    def test_mark_recovery_notifications_compacts_old_phase_acknowledgements(self) -> None:
         state = {
-            "fast_recovery_auto_recovered_notified": {
-                "old|tcp_stall": 100,
-                "recent|tcp_stall": 90_000,
+            "fast_recovery_recovery_evidence_notified": {
+                "old|tcp_stall|restart_observed": 100,
+                "recent|tcp_stall|restart_observed": 90_000,
             }
         }
-        status_loop.mark_fast_recovery_auto_recovered_events_notified(
+        status_loop.mark_fast_recovery_recovery_events_notified(
             state,
-            [{"_event_key": "new|network_down"}],
+            [{"_event_key": "new|network_down", "_notification_phase": "recovery_unconfirmed"}],
             now_ts=100_000,
         )
 
-        self.assertNotIn("old|tcp_stall", state["fast_recovery_auto_recovered_notified"])
-        self.assertEqual(state["fast_recovery_auto_recovered_notified"]["recent|tcp_stall"], 90_000)
-        self.assertEqual(state["fast_recovery_auto_recovered_notified"]["new|network_down"], 100_000)
+        acknowledged = state["fast_recovery_recovery_evidence_notified"]
+        self.assertNotIn("old|tcp_stall|restart_observed", acknowledged)
+        self.assertEqual(acknowledged["recent|tcp_stall|restart_observed"], 90_000)
+        self.assertEqual(acknowledged["new|network_down|recovery_unconfirmed"], 100_000)
+
+    def test_phase_acknowledgement_allows_later_recovery_confirmation(self) -> None:
+        event_key = f"{self._utc(2000)}|tcp_stall"
+        state = {
+            "fast_recovery_recovery_evidence_notified": {
+                f"{event_key}|restart_observed": 2050,
+            }
+        }
+        with tempfile.TemporaryDirectory() as td:
+            events_file = Path(td) / "fast_recovery_events.jsonl"
+            rows = [
+                {"ts_utc": self._utc(2000), "kind": "restart", "trigger": "tcp_stall"},
+                {"ts_utc": self._utc(2060), "kind": "tcp_send_sample", "mbps": 4.7},
+            ]
+            events_file.write_text("\n".join(json.dumps(row) for row in rows) + "\n", encoding="utf-8")
+
+            events = status_loop.fast_recovery_recovery_events(
+                state=state,
+                now_ts=2070,
+                recent_sec=600,
+                triggers=["tcp_stall"],
+                events_file=events_file,
+            )
+
+        self.assertEqual(len(events), 1)
+        self.assertEqual(events[0]["_notification_phase"], "auto_recovered")
+
+    def test_stream_engine_ffmpeg_auto_recovered_requires_matching_started_event(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            events_file = Path(td) / "stream_engine_events.jsonl"
+            rows = [
+                {
+                    "ts_utc": self._utc(1800),
+                    "event_id": "evt-scheduled-1",
+                    "event_type": "ffmpeg_restart_scheduled",
+                    "run_id": "19700101T001000Z-111",
+                    "restart_count": 1,
+                    "exit_code": 1,
+                    "delay_sec": 5,
+                },
+                {
+                    "ts_utc": self._utc(1806),
+                    "event_type": "ffmpeg_started",
+                    "run_id": "19700101T001000Z-111",
+                    "restart_count": 1,
+                    "ffmpeg_pid": 1234,
+                },
+                {
+                    "ts_utc": self._utc(1810),
+                    "event_id": "evt-scheduled-2",
+                    "event_type": "ffmpeg_restart_scheduled",
+                    "run_id": "19700101T001000Z-111",
+                    "restart_count": 2,
+                    "exit_code": 224,
+                },
+            ]
+            events_file.write_text("\n".join(json.dumps(row) for row in rows) + "\n", encoding="utf-8")
+            state = {"stream_engine_ffmpeg_auto_recovered_notified": {"evt-scheduled-1": 1900}}
+
+            events = status_loop.stream_engine_ffmpeg_auto_recovered_events(
+                state=state,
+                now_ts=2000,
+                recent_sec=600,
+                events_file=events_file,
+            )
+
+        self.assertEqual(events, [])
+
+    def test_mark_stream_engine_auto_recovered_notifications_compacts_acknowledgements(self) -> None:
+        state = {
+            "stream_engine_ffmpeg_auto_recovered_notified": {
+                "old": 100,
+                "recent": 90_000,
+            }
+        }
+        status_loop.mark_stream_engine_ffmpeg_auto_recovered_events_notified(
+            state,
+            [{"_event_key": "evt-new"}],
+            now_ts=100_000,
+        )
+
+        self.assertNotIn("old", state["stream_engine_ffmpeg_auto_recovered_notified"])
+        self.assertEqual(state["stream_engine_ffmpeg_auto_recovered_notified"]["recent"], 90_000)
+        self.assertEqual(state["stream_engine_ffmpeg_auto_recovered_notified"]["evt-new"], 100_000)
+
+    def test_k8s_container_restart_auto_recovered_event_filters_acknowledgements(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            events_file = Path(td) / "stream_watchdog_events.jsonl"
+            rows = [
+                {
+                    "ts_utc": self._utc(1800),
+                    "event_id": "evt-k8s-1",
+                    "event_type": "k8s_container_restart_count_changed",
+                    "workload": "deployment/stream-v3-runtime",
+                    "pod": "stream-v3-runtime-abc",
+                    "container": "auto-dj",
+                    "previous_restart_count": 0,
+                    "restart_count": 1,
+                    "delta": 1,
+                    "last_state": "terminated:Error:exit_code=1",
+                },
+                {
+                    "ts_utc": self._utc(1810),
+                    "event_id": "evt-k8s-2",
+                    "event_type": "watchdog_ok",
+                },
+            ]
+            events_file.write_text("\n".join(json.dumps(row) for row in rows) + "\n", encoding="utf-8")
+            state = {"k8s_container_restart_auto_recovered_notified": {}}
+
+            events = status_loop.k8s_container_restart_auto_recovered_events(
+                state=state,
+                now_ts=2000,
+                recent_sec=600,
+                events_file=events_file,
+            )
+
+        self.assertEqual(len(events), 1)
+        self.assertEqual(events[0]["component"], "k8s_runtime_container")
+        self.assertEqual(events[0]["trigger"], "k8s_container_restart_count")
+        self.assertIn("container=auto-dj", events[0]["evidence"])
+
+    def test_runtime_lifecycle_events_baseline_then_report_run_id_change(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            runtime_file = root / "stream_runtime_state_remote.json"
+            runtime_file.write_text(
+                json.dumps(
+                    {
+                        "run_id": "19700101T002000Z-111",
+                        "status": "running",
+                        "ffmpeg_pid": "1234",
+                        "restart_count": 0,
+                        "updated_at_utc": self._utc(1201),
+                    }
+                ),
+                encoding="utf-8",
+            )
+            state: dict = {}
+
+            events, marker = status_loop.runtime_lifecycle_events(
+                state=state,
+                now_ts=1300,
+                recent_sec=3600,
+                runtime_state_base_dir=root,
+            )
+            self.assertEqual(events, [])
+            self.assertIsNotNone(marker)
+            status_loop.mark_runtime_lifecycle_seen(state, marker or {}, now_ts=1300)
+
+            runtime_file.write_text(
+                json.dumps(
+                    {
+                        "run_id": "19700101T003000Z-222",
+                        "status": "running",
+                        "ffmpeg_pid": "5678",
+                        "restart_count": 0,
+                        "updated_at_utc": self._utc(1801),
+                    }
+                ),
+                encoding="utf-8",
+            )
+            events, marker = status_loop.runtime_lifecycle_events(
+                state=state,
+                now_ts=1900,
+                recent_sec=3600,
+                runtime_state_base_dir=root,
+            )
+
+        self.assertEqual(len(events), 1)
+        self.assertEqual(events[0]["trigger"], "runtime_run_id_changed")
+        self.assertIn("previous_run_id=19700101T002000Z-111", events[0]["evidence"])
+        self.assertEqual(marker["run_id"], "19700101T003000Z-222")
 
 
 class OpsHealthJudgmentContractTests(unittest.TestCase):
@@ -667,6 +918,96 @@ class ObjectiveSliContractTests(unittest.TestCase):
     def _ts(year: int, month: int, day: int, hour: int, minute: int = 0) -> int:
         return int(datetime(year, month, day, hour, minute, tzinfo=timezone.utc).timestamp())
 
+    def test_large_rows_are_projected_without_changing_objective_metrics(self) -> None:
+        stream_watchdog_payload = {
+            "kind": "restart",
+            "trigger": "tcp_stall",
+            "runtime_snapshot": {"unused": "x" * 100_000},
+        }
+        projected_watchdog = objective_sli_cli.stream_watchdog_sli_payload(
+            stream_watchdog_payload
+        )
+        self.assertEqual(
+            objective_sli_cli.stream_watchdog_sli([(100, stream_watchdog_payload)]),
+            objective_sli_cli.stream_watchdog_sli([(100, projected_watchdog)]),
+        )
+        self.assertNotIn("runtime_snapshot", projected_watchdog)
+
+        memory_payload = {
+            "classification_policy_version": "v2",
+            "overall": {
+                "severity": "warn",
+                "operational_adequacy_severity": "ok",
+                "active_oneshot_peak_severity": "warn",
+                "systemd_peak_history_severity": "critical",
+                "unused": "x" * 100_000,
+            },
+            "host": {
+                "non_reclaimable_estimate_bytes": 10 * objective_sli_cli.MIB,
+                "mem_available_bytes": 20 * objective_sli_cli.MIB,
+                "swap_used_bytes": 2 * objective_sli_cli.MIB,
+                "unused": "x" * 100_000,
+            },
+            "operational_adequacy": {
+                "severity": "ok",
+                "unused": "x" * 100_000,
+            },
+            "top_non_reclaimable_consumers": [
+                {
+                    "non_reclaimable_estimate_bytes": 3 * objective_sli_cli.MIB,
+                    "unused": "x" * 100_000,
+                }
+            ],
+            "services": [{"unused": "x" * 100_000}],
+        }
+        projected_memory = objective_sli_cli.memory_guardrail_sli_payload(
+            memory_payload
+        )
+        self.assertEqual(
+            objective_sli_cli.memory_guardrail_sli([(100, memory_payload)]),
+            objective_sli_cli.memory_guardrail_sli([(100, projected_memory)]),
+        )
+        self.assertNotIn("services", projected_memory)
+
+        projection_cases = [
+            (
+                objective_sli_cli.youtube_sli_payload,
+                objective_sli_cli.youtube_sli_for_items,
+                {"status": "ok", "unused": {"x": "y"}},
+            ),
+            (
+                objective_sli_cli.fast_recovery_sli_payload,
+                objective_sli_cli.fast_recovery_sli,
+                {"kind": "restart", "trigger": "tcp_stall", "unused": {"x": "y"}},
+            ),
+            (
+                objective_sli_cli.report_only_sli_payload,
+                lambda items: objective_sli_cli.report_only_sli(
+                    items,
+                    expected_target="overlay_stream1090",
+                ),
+                {
+                    "target": "overlay_stream1090",
+                    "judgment": "report_only_ok",
+                    "unused": {"x": "y"},
+                },
+            ),
+            (
+                objective_sli_cli.notify_sli_payload,
+                objective_sli_cli.discord_notify_sli,
+                {"kind": "send_ok", "route": "slack", "unused": {"x": "y"}},
+            ),
+            (
+                objective_sli_cli.api_usage_sli_payload,
+                objective_sli_cli.api_usage_sli,
+                {"cost_units": 10, "quota_exceeded": False, "unused": {"x": "y"}},
+            ),
+        ]
+        for projector, metric, source in projection_cases:
+            projected = projector(source)
+            self.assertEqual(metric([(100, source)]), metric([(100, projected)]))
+            self.assertNotIn("unused", projected)
+
     def test_upload_budget_sli_accepts_send_mbps_and_mbps_aliases(self) -> None:
         result = objective_sli_cli.upload_budget_sli(
             [
@@ -717,7 +1058,7 @@ class ObjectiveSliContractTests(unittest.TestCase):
         result = objective_sli_cli.discord_notify_sli(
             [
                 (100, {"phase": "detected", "send_ok": True}),
-                (200, {"kind": "send_failed", "send_ok": False}),
+                (200, {"kind": "send_failed", "send_ok": False, "route": "slack"}),
                 (300, {"kind": "ignored_without_delivery"}),
             ]
         )
@@ -728,6 +1069,7 @@ class ObjectiveSliContractTests(unittest.TestCase):
         self.assertEqual(result["delivery_ratio_pct"], 50.0)
         self.assertEqual(result["by_kind"]["detected"], 1)
         self.assertEqual(result["by_kind"]["send_failed"], 1)
+        self.assertEqual(result["by_route"], {"discord": 1, "slack": 1})
 
     def test_api_usage_sli_groups_by_pacific_day_not_utc_day(self) -> None:
         result = objective_sli_cli.api_usage_sli(
@@ -833,6 +1175,28 @@ class NotificationOutboxContractTests(unittest.TestCase):
         self.assertEqual(rows[0]["username"], "bot")
         self.assertTrue(rows[1]["message_id"].startswith("detected|incident-b|500"))
 
+    def test_enqueue_notify_messages_keeps_routes_separate(self) -> None:
+        rows = notify_outbox.enqueue_notify_messages(
+            [],
+            [("status", [{"id": "incident-a"}], "discord")],
+            username="bot",
+            now_ts=1000,
+            max_pending=10,
+        )
+
+        rows = notify_outbox.enqueue_notify_messages(
+            rows,
+            [("status", [{"id": "incident-a"}], "slack")],
+            username="bot",
+            now_ts=1001,
+            max_pending=10,
+            route="slack",
+        )
+
+        self.assertEqual([item["message_id"] for item in rows], ["status|incident-a", "slack|status|incident-a"])
+        self.assertEqual([item["route"] for item in rows], ["discord", "slack"])
+        self.assertEqual([item["content"] for item in rows], ["discord", "slack"])
+
     def test_flush_notify_outbox_respects_flush_limit_and_leaves_unattempted(self) -> None:
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
@@ -861,6 +1225,38 @@ class NotificationOutboxContractTests(unittest.TestCase):
         self.assertEqual([item["message_id"] for item in remaining], ["m2"])
         self.assertEqual(event["message_id"], "m1")
         self.assertTrue(event["send_ok"])
+
+    def test_flush_notify_outbox_only_flushes_requested_route(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            outbox_file = root / "outbox.jsonl"
+            events_file = root / "events.jsonl"
+            notify_outbox.save_notify_outbox(
+                outbox_file,
+                [
+                    {"message_id": "status|incident-a", "route": "discord", "phase": "status", "content": "discord", "username": "bot", "status": "pending", "attempts": 0, "created_ts": 900},
+                    {"message_id": "slack|status|incident-a", "route": "slack", "phase": "status", "content": "slack", "username": "bot", "status": "pending", "attempts": 0, "created_ts": 900},
+                ],
+            )
+            cfg = {"enabled": True, "webhook_url": "https://slack.example", "username": "bot", "outbox_ttl_sec": 86400, "outbox_flush_limit": 10}
+            sent_payloads: list[str] = []
+
+            sent, failures, pending = notify_outbox.flush_notify_outbox(
+                outbox_path=outbox_file,
+                events_path=events_file,
+                cfg=cfg,
+                now_ts=1000,
+                send_webhook=lambda _url, content, **_kwargs: (sent_payloads.append(content) is None, "ok"),
+                route="slack",
+            )
+            remaining = notify_outbox.load_notify_outbox(outbox_file, now_ts=1000, ttl_sec=86400)
+            event = json.loads(events_file.read_text(encoding="utf-8").strip())
+
+        self.assertEqual((sent, failures, pending), (1, 0, 0))
+        self.assertEqual(sent_payloads, ["slack"])
+        self.assertEqual([item["message_id"] for item in remaining], ["status|incident-a"])
+        self.assertEqual(event["route"], "slack")
+        self.assertEqual(event["message_id"], "slack|status|incident-a")
 
     def test_flush_notify_outbox_records_failure_attempt_and_last_error(self) -> None:
         with tempfile.TemporaryDirectory() as td:

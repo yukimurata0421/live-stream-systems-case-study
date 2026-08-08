@@ -17,6 +17,8 @@ try:
 except ModuleNotFoundError:  # pragma: no cover - exercised on Windows
     pwd = None  # type: ignore[assignment]
 
+from stream_core.k8s_gpu_guard import runtime_node_name, summarize_runtime_startup
+
 try:
     from .systemctl_control import run_systemctl
     from .local_health import actions as local_actions
@@ -65,10 +67,15 @@ STATE_ROOT = Path(
 STREAM_SERVICE = env("STREAM_SERVICE", "adsb-streamnew-youtube-stream.service")
 DJ_SERVICE = env("DJ_SERVICE", "adsb-streamnew-auto-dj.service")
 STREAM_WATCHDOG_REMOTE_ONLY = env("STREAM_WATCHDOG_REMOTE_ONLY", "0") == "1"
+STREAM_WATCHDOG_ADSB_PROBE_ONLY = env("STREAM_WATCHDOG_ADSB_PROBE_ONLY", "0") == "1"
 STREAM_K8S_NAMESPACE = env("STREAM_K8S_NAMESPACE", "stream-v3")
 STREAM_KUBECTL_BIN = env("STREAM_KUBECTL_BIN", "kubectl")
 STREAM_V3_RUNTIME_WORKLOAD = env("STREAM_V3_RUNTIME_WORKLOAD", "deployment/stream-v3-runtime")
 STREAM_V3_RUNTIME_CONTAINER = env("STREAM_V3_RUNTIME_CONTAINER", "stream-engine")
+STREAM_V3_RUNTIME_POD_SELECTOR = env(
+    "STREAM_V3_RUNTIME_POD_SELECTOR",
+    "app.kubernetes.io/name=stream-v3,app.kubernetes.io/component=runtime",
+)
 OVERLAY_URL = env("OVERLAY_URL", "http://127.0.0.1:18080")
 OVERLAY_REQUIRE_MAP_PROXY = env("OVERLAY_REQUIRE_MAP_PROXY", "1") == "1"
 OVERLAY_REQUIRE_ADSB_JSON = env("OVERLAY_REQUIRE_ADSB_JSON", "1") == "1"
@@ -164,6 +171,9 @@ RESTART_STATE_FILE = WORK_DIR / "restart_events.log"
 RESTART_COOLDOWN_FILE = WORK_DIR / "restart_cooldown_until"
 RECOVERY_STAGE_FILE = WORK_DIR / "recovery_stage_state.json"
 PULSE_HEALTH_STATE_FILE = WORK_DIR / "pulse_health_state.json"
+K8S_RESTART_COUNTS_FILE = Path(
+    env("WATCHDOG_K8S_RESTART_COUNTS_FILE", str(WORK_DIR / "k8s_container_restart_counts.json"))
+).expanduser()
 
 
 def next_event_id() -> str:
@@ -285,15 +295,17 @@ def write_json_file(path: Path, payload: dict) -> None:
 
 def append_jsonl_if_changed(path: Path, payload: dict) -> None:
     line = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
-    last = ""
+    recent: list[str] = []
     try:
         with path.open("r", encoding="utf-8") as fh:
             for raw in fh:
                 if raw.strip():
-                    last = raw.strip()
+                    recent.append(raw.strip())
+                    if len(recent) > 200:
+                        recent.pop(0)
     except FileNotFoundError:
         pass
-    if last == line:
+    if line in recent:
         return
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("a", encoding="utf-8") as fh:
@@ -444,6 +456,191 @@ def kubectl_exec_stream_engine(script: str) -> subprocess.CompletedProcess[str]:
     )
 
 
+def kubectl_get_runtime_pods_json() -> subprocess.CompletedProcess[str]:
+    return run(
+        [
+            STREAM_KUBECTL_BIN,
+            "-n",
+            STREAM_K8S_NAMESPACE,
+            "get",
+            "pods",
+            "-l",
+            STREAM_V3_RUNTIME_POD_SELECTOR,
+            "-o",
+            "json",
+        ],
+        check=False,
+    )
+
+
+def kubectl_get_node_json(node_name: str) -> subprocess.CompletedProcess[str]:
+    return run(
+        [
+            STREAM_KUBECTL_BIN,
+            "get",
+            "node",
+            node_name,
+            "-o",
+            "json",
+        ],
+        check=False,
+    )
+
+
+def runtime_startup_restart_blocked() -> tuple[bool, str]:
+    cp = kubectl_get_runtime_pods_json()
+    if cp.returncode != 0:
+        detail = (cp.stderr or cp.stdout or f"kubectl exited {cp.returncode}").strip()
+        return True, f"runtime startup state unavailable: {detail}"
+    try:
+        payload = json.loads(cp.stdout)
+    except json.JSONDecodeError:
+        return True, "runtime startup state unavailable: invalid Pod JSON"
+    if not isinstance(payload, dict):
+        return True, "runtime startup state unavailable: Pod payload is not an object"
+    deployment = STREAM_V3_RUNTIME_WORKLOAD.rsplit("/", 1)[-1]
+    node_name = runtime_node_name(payload, deployment=deployment)
+    if not node_name:
+        startup_status = summarize_runtime_startup(payload, deployment=deployment)
+        if startup_status.get("restart_blocked"):
+            return True, str(
+                startup_status.get("restart_block_reason")
+                or "runtime Pod is not assigned to a node"
+            )
+        return True, "runtime startup state unavailable: runtime node name is missing"
+    node_cp = kubectl_get_node_json(node_name)
+    if node_cp.returncode != 0:
+        detail = (node_cp.stderr or node_cp.stdout or f"kubectl exited {node_cp.returncode}").strip()
+        return True, f"runtime node boot state unavailable: {detail}"
+    try:
+        node_payload = json.loads(node_cp.stdout)
+    except json.JSONDecodeError:
+        return True, "runtime node boot state unavailable: invalid Node JSON"
+    node_status = node_payload.get("status") if isinstance(node_payload.get("status"), dict) else {}
+    node_info = node_status.get("nodeInfo") if isinstance(node_status.get("nodeInfo"), dict) else {}
+    node_boot_id = str(node_info.get("bootID") or "")
+    if not node_boot_id:
+        return True, "runtime node boot state unavailable: node boot ID is missing"
+    startup_status = summarize_runtime_startup(
+        payload,
+        deployment=deployment,
+        expected_boot_id=node_boot_id,
+    )
+    if not startup_status.get("restart_blocked"):
+        return False, ""
+    return True, str(
+        startup_status.get("restart_block_reason")
+        or startup_status.get("status")
+        or "runtime startup"
+    )
+
+
+def _container_state_summary(status: dict, field: str) -> str:
+    source = status.get(field) if isinstance(status.get(field), dict) else {}
+    for state_name in ("waiting", "terminated", "running"):
+        item = source.get(state_name) if isinstance(source.get(state_name), dict) else {}
+        if not item:
+            continue
+        reason = str(item.get("reason") or "")
+        if state_name == "terminated":
+            exit_code = item.get("exitCode", "")
+            return f"terminated:{reason or 'unknown'}:exit_code={exit_code}"
+        if state_name == "waiting":
+            return f"waiting:{reason or 'unknown'}"
+        return "running"
+    return ""
+
+
+def runtime_pod_restart_snapshot(payload: dict) -> dict:
+    items = payload.get("items") if isinstance(payload.get("items"), list) else []
+    pods: list[dict] = []
+    containers: dict[str, dict] = {}
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        metadata = item.get("metadata") if isinstance(item.get("metadata"), dict) else {}
+        status = item.get("status") if isinstance(item.get("status"), dict) else {}
+        pod_name = str(metadata.get("name") or "")
+        pod_uid = str(metadata.get("uid") or pod_name)
+        pod_phase = str(status.get("phase") or "")
+        pod_info = {"name": pod_name, "uid": pod_uid, "phase": pod_phase}
+        pods.append(pod_info)
+        statuses = status.get("containerStatuses") if isinstance(status.get("containerStatuses"), list) else []
+        for container_status in statuses:
+            if not isinstance(container_status, dict):
+                continue
+            name = str(container_status.get("name") or "")
+            if not name:
+                continue
+            try:
+                restart_count = int(container_status.get("restartCount", 0) or 0)
+            except Exception:
+                restart_count = 0
+            key = f"{pod_uid}/{name}"
+            containers[key] = {
+                "pod": pod_name,
+                "pod_uid": pod_uid,
+                "pod_phase": pod_phase,
+                "container": name,
+                "restart_count": restart_count,
+                "ready": bool(container_status.get("ready", False)),
+                "state": _container_state_summary(container_status, "state"),
+                "last_state": _container_state_summary(container_status, "lastState"),
+            }
+    return {
+        "workload": STREAM_V3_RUNTIME_WORKLOAD,
+        "namespace": STREAM_K8S_NAMESPACE,
+        "selector": STREAM_V3_RUNTIME_POD_SELECTOR,
+        "pods": pods,
+        "containers": containers,
+        "updated_at_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+    }
+
+
+def observe_k8s_container_restart_counts() -> dict:
+    cp = kubectl_get_runtime_pods_json()
+    if cp.returncode != 0:
+        return {}
+    try:
+        payload = json.loads(cp.stdout or "{}")
+    except json.JSONDecodeError:
+        return {}
+    if not isinstance(payload, dict):
+        return {}
+    snapshot = runtime_pod_restart_snapshot(payload)
+    previous = maybe_read_json(K8S_RESTART_COUNTS_FILE)
+    previous_containers = previous.get("containers") if isinstance(previous.get("containers"), dict) else {}
+    for key, current in snapshot.get("containers", {}).items():
+        if not isinstance(current, dict):
+            continue
+        previous_item = previous_containers.get(key) if isinstance(previous_containers.get(key), dict) else None
+        if previous_item is None:
+            continue
+        try:
+            current_count = int(current.get("restart_count", 0) or 0)
+            previous_count = int(previous_item.get("restart_count", 0) or 0)
+        except Exception:
+            continue
+        if current_count <= previous_count:
+            continue
+        append_event(
+            "k8s_container_restart_count_changed",
+            workload=STREAM_V3_RUNTIME_WORKLOAD,
+            namespace=STREAM_K8S_NAMESPACE,
+            pod=current.get("pod", ""),
+            pod_uid=current.get("pod_uid", ""),
+            container=current.get("container", ""),
+            previous_restart_count=previous_count,
+            restart_count=current_count,
+            delta=current_count - previous_count,
+            state=current.get("state", ""),
+            last_state=current.get("last_state", ""),
+            ready=current.get("ready", False),
+        )
+    write_json_file(K8S_RESTART_COUNTS_FILE, snapshot)
+    return snapshot
+
+
 def remote_cat_first(paths: list[str]) -> subprocess.CompletedProcess[str]:
     quoted = " ".join(shlex.quote(path) for path in paths)
     return kubectl_exec_stream_engine(
@@ -473,12 +670,43 @@ def remote_cat_latest_runtime_state() -> subprocess.CompletedProcess[str]:
     )
 
 
-def remote_tail_jsonl(path: str) -> subprocess.CompletedProcess[str]:
+def remote_adsb_payload() -> dict:
+    return decode_json_stdout(
+        kubectl_exec_stream_engine(
+            r'''
+            set -eu
+            curl -fsS -m 4 http://127.0.0.1:18080/adsb/aircraft.json
+            '''
+        )
+    )
+
+
+def adsb_source_probe_only() -> int:
+    payload = remote_adsb_payload()
+    if not payload:
+        append_event("remote_adsb_source_unavailable", workload=STREAM_V3_RUNTIME_WORKLOAD)
+        log("ERROR displayed ADS-B source sample unavailable")
+        return 1
+    ok, reason = check_adsb_freshness(payload)
+    if not ok:
+        append_event(
+            "remote_adsb_source_unhealthy",
+            workload=STREAM_V3_RUNTIME_WORKLOAD,
+            adsb_reason=reason,
+        )
+        log(f"ERROR displayed ADS-B source unhealthy: {reason}")
+        return 1
+    log(f"Displayed ADS-B source ok: {reason}")
+    return 0
+
+
+def remote_tail_jsonl(path: str, lines: int = 20) -> subprocess.CompletedProcess[str]:
+    tail_lines = max(1, int(lines))
     return kubectl_exec_stream_engine(
         f'''
         set -eu
         if [ -s {shlex.quote(path)} ]; then
-            tail -n 1 {shlex.quote(path)}
+            tail -n {tail_lines} {shlex.quote(path)}
             exit 0
         fi
         exit 3
@@ -494,6 +722,23 @@ def decode_json_stdout(cp: subprocess.CompletedProcess[str]) -> dict:
     except json.JSONDecodeError:
         return {}
     return payload if isinstance(payload, dict) else {}
+
+
+def decode_jsonl_stdout(cp: subprocess.CompletedProcess[str]) -> list[dict]:
+    if cp.returncode != 0:
+        return []
+    rows: list[dict] = []
+    for line in (cp.stdout or "").splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            payload = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(payload, dict):
+            rows.append(payload)
+    return rows
 
 
 def sync_remote_runtime_evidence() -> dict[str, dict]:
@@ -520,8 +765,7 @@ def sync_remote_runtime_evidence() -> dict[str, dict]:
         ("/state/logs/stream_engine_events.jsonl", STATE_ROOT / "logs" / "stream_engine_events.jsonl", "stream_engine"),
         ("/state/logs/fast_recovery_events.jsonl", STATE_ROOT / "logs" / "fast_recovery_events.jsonl", "fast_recovery_event"),
     ]:
-        payload = decode_json_stdout(remote_tail_jsonl(remote_path))
-        if payload:
+        for payload in decode_jsonl_stdout(remote_tail_jsonl(remote_path)):
             append_jsonl_if_changed(local_path, payload)
             synced[key] = payload
 
@@ -572,6 +816,22 @@ def remote_only_watchdog() -> int:
     dj_status = supervisor.status(DJ_SERVICE)
     if not stream_status.active or not dj_status.active:
         reason = f"k8s runtime inactive stream={stream_status.detail} dj={dj_status.detail}"
+        startup_blocked, startup_detail = runtime_startup_restart_blocked()
+        if startup_blocked:
+            append_event(
+                "restart_blocked_startup",
+                service=STREAM_V3_RUNTIME_WORKLOAD,
+                substate=reason,
+                startup_detail=startup_detail,
+            )
+            record_watchdog_stats(
+                "warmup_grace",
+                reason=startup_detail,
+                stream_status=stream_status.detail,
+                dj_status=dj_status.detail,
+            )
+            log(f"Startup restart blocked: {startup_detail}")
+            return 0
         append_event("service_unstable", service=STREAM_V3_RUNTIME_WORKLOAD, substate=reason)
         record_watchdog_stats("anomaly", reason=reason, stream_status=stream_status.detail, dj_status=dj_status.detail)
         restart_service(STREAM_SERVICE, "stream", reason)
@@ -596,8 +856,38 @@ def remote_only_watchdog() -> int:
         record_watchdog_stats("anomaly", reason=reason, stream_status=stream_status.detail, dj_status=dj_status.detail)
         return 0
 
+    adsb_payload = remote_adsb_payload()
+    if not adsb_payload:
+        reason = "k8s runtime ADS-B source sample unavailable"
+        append_event("remote_adsb_source_unavailable", workload=STREAM_V3_RUNTIME_WORKLOAD)
+        record_watchdog_stats("anomaly", reason=reason, stream_status=stream_status.detail, dj_status=dj_status.detail)
+        return 0
+    adsb_ok, adsb_reason = check_adsb_freshness(adsb_payload)
+    if not adsb_ok:
+        append_event(
+            "remote_adsb_source_unhealthy",
+            workload=STREAM_V3_RUNTIME_WORKLOAD,
+            adsb_reason=adsb_reason,
+        )
+        record_watchdog_stats(
+            "anomaly",
+            reason=adsb_reason,
+            stream_status=stream_status.detail,
+            dj_status=dj_status.detail,
+        )
+        return 0
+
     synced = sync_remote_runtime_evidence()
-    record_watchdog_stats("ok", reason="remote k8s runtime ok", detail=detail, stream_status=stream_status.detail)
+    k8s_restart_snapshot = observe_k8s_container_restart_counts()
+    if k8s_restart_snapshot:
+        synced["k8s_restart_counts"] = k8s_restart_snapshot
+    record_watchdog_stats(
+        "ok",
+        reason="remote k8s runtime ok",
+        detail=detail,
+        adsb_reason=adsb_reason,
+        stream_status=stream_status.detail,
+    )
     if should_emit_watchdog_ok():
         append_event("watchdog_ok", **collect_diagnostic_snapshot(), remote_probe=detail)
     append_remote_snapshot_timeline(detail, synced)
@@ -729,11 +1019,10 @@ def stream_ffmpeg_count() -> int:
 
 def as_pulse_user(cmd: list[str]) -> subprocess.CompletedProcess[str]:
     current_user = ""
-    if pwd is not None:
-        try:
-            current_user = pwd.getpwuid(os.geteuid()).pw_name
-        except Exception:
-            current_user = ""
+    try:
+        current_user = pwd.getpwuid(os.geteuid()).pw_name
+    except Exception:
+        current_user = ""
     env_cmd = [
         "env",
         "-u",
@@ -953,8 +1242,21 @@ def check_adsb_freshness(payload: dict, current_ts: int | None = None) -> tuple[
         max_age_sec=ADSB_JSON_MAX_AGE_SEC,
         message_stall_sec=ADSB_MESSAGE_STALL_SEC,
     )
+    observed_state = dict(state)
     if next_state is not None:
-        write_json_file(ADSB_FRESHNESS_STATE_FILE, next_state)
+        observed_state.update(next_state)
+    observed_state.update(
+        {
+            "ts_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(now_ts)),
+            "sample_ts": now_ts,
+            "source_now": payload.get("now"),
+            "source_messages": payload.get("messages"),
+            "aircraft_count": len(payload.get("aircraft", [])) if isinstance(payload.get("aircraft"), list) else None,
+            "status": "ok" if ok else "unhealthy",
+            "reason": reason,
+        }
+    )
+    write_json_file(ADSB_FRESHNESS_STATE_FILE, observed_state)
     if event is not None:
         append_event("adsb_messages_counter_reset", **event)
     return ok, reason
@@ -1159,6 +1461,8 @@ def recover_pulse_then_restart(stage: int) -> None:
 
 def main() -> int:
     WORK_DIR.mkdir(parents=True, exist_ok=True)
+    if STREAM_WATCHDOG_ADSB_PROBE_ONLY:
+        return adsb_source_probe_only()
     if STREAM_WATCHDOG_REMOTE_ONLY:
         return remote_only_watchdog()
     try:

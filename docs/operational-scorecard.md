@@ -22,11 +22,23 @@ radius.
 | Documented | Procedure or boundary exists, but public evidence is not a measured drill. |
 | Not publicly measured | Known gap or private-only evidence not included in the public snapshot. |
 
+## Core Claim IDs
+
+These stable identifiers let documentation tests protect the public claims
+without freezing their prose or section layout.
+
+| Claim ID | Contract |
+| --- | --- |
+| `SV3-SAME-URL` | Recoverable faults preserve the current YouTube watch URL. |
+| `SV3-RECOVERY-GUARD` | Monitoring evidence cannot bypass scoped recovery authority. |
+| `SV3-PUBLIC-BOUNDARY` | Public status is an allowlisted static snapshot, not private monitoring access. |
+| `SV3-EVIDENCE-STRENGTH` | Restart observation and confirmed send recovery remain distinct states. |
+
 ## Scorecard
 
 | Area | Status | Public evidence | Residual risk |
 | --- | --- | --- | --- |
-| Same-watch-URL preservation | Measured / tested | `docs/28-day-same-url-sli-case-study.md`, `docs/v3/youtube-lifecycle-safety.md`, resolver freshness tests | Public numbers are historical windows, not a current uptime promise. |
+| Same-watch-URL preservation | Measured / tested | `docs/28-day-same-url-sli-case-study.md`, `docs/v3/youtube-lifecycle-safety.md`, resolver freshness tests | The approximately 80-day checkpoint preserves one video ID with zero observed replacement actions, but it does not prove uninterrupted frames; the exact V2-to-V3 authority handoff was not logged separately. |
 | Guarded recovery | Tested | `ops/scripts/v3_shadow_acceptance.py`, `tests/test_v3_shadow_acceptance.py`, `src/stream_v2/recovery_orchestrator/gate.py` | Public tests do not perform live mutation. |
 | Scoped recovery authority | Tested / documented | `docs/v3/scoped-recovery-authority.md`, `ops/scripts/stream_v3_scoped_recovery.py`, `ops/scripts/stream_v3_remote_recovery.py`, `tests/test_stream_v3_scoped_recovery.py`, `tests/test_stream_v3_remote_recovery.py` | Public tests verify policy and command rendering; they do not restart live DJ or FFmpeg processes. |
 | Public CI safety | Tested | `.github/workflows/public-snapshot-check.yml`, `docs/test-strategy-and-safety-boundary.md` | CI proves snapshot safety, not production liveness. |

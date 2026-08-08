@@ -22,11 +22,12 @@ def cp(returncode: int, stdout: str = "", stderr: str = "") -> subprocess.Comple
 
 
 class RenderingBootstrapContractTests(unittest.TestCase):
-    def test_build_browser_url_encodes_stream1090_base_and_map_contract(self) -> None:
+    def test_build_browser_url_encodes_custom_adsb_map_and_map_contract(self) -> None:
         cfg = SimpleNamespace(
             use_overlay_wrapper=True,
             overlay_view_host="127.0.0.1",
             overlay_port=18080,
+            overlay_map_path="adsb-map/",
             map_lat="36.35",
             map_lon="140.75",
             map_zoom="7.6",
@@ -39,7 +40,7 @@ class RenderingBootstrapContractTests(unittest.TestCase):
         url = rendering_boot.build_browser_url(cfg)
 
         self.assertTrue(url.startswith("http://127.0.0.1:18080/index.html?"))
-        self.assertIn("map_base=http://127.0.0.1:18080/stream1090/", url)
+        self.assertIn("map_base=http://127.0.0.1:18080/adsb-map/", url)
         self.assertIn("&lat=36.35&lon=140.75&zoom=7.6", url)
         self.assertIn("&scale=0.82&iconScale=1.4&labelScale=0.82", url)
         self.assertIn("&largeMode=1", url)
@@ -49,11 +50,20 @@ class RenderingBootstrapContractTests(unittest.TestCase):
 
         self.assertEqual(rendering_boot.build_browser_url(cfg), "http://example.test/stream1090/")
 
-    def test_overlay_http_ready_probe_requires_index_markers_and_stream1090_body(self) -> None:
-        cfg = SimpleNamespace(use_overlay_wrapper=True, overlay_port=18080, overlay_view_host="127.0.0.1")
+    def test_overlay_http_ready_probe_requires_index_map_and_stream1090_body(self) -> None:
+        cfg = SimpleNamespace(
+            use_overlay_wrapper=True,
+            overlay_port=18080,
+            overlay_view_host="127.0.0.1",
+            overlay_map_path="adsb-map/",
+        )
         responses = {
             "http://127.0.0.1:18080/index.html": '<main id="map">Local ADS-B Receiver Evaluated with ARENA</main>',
+            "http://127.0.0.1:18080/adsb-map/": (
+                '<main id="map" aria-label="Live ADS-B aircraft map"></main>' + "x" * 128
+            ),
             "http://127.0.0.1:18080/stream1090/": "x" * 128,
+            "http://127.0.0.1:18080/render/status.json": '{"ready":true}',
         }
 
         with mock.patch.object(rendering_boot, "is_port_listening", return_value=True):
@@ -61,7 +71,112 @@ class RenderingBootstrapContractTests(unittest.TestCase):
                 ok, summary = rendering_boot.overlay_http_ready_probe(cfg)
 
         self.assertTrue(ok)
-        self.assertEqual(summary, "overlay and stream1090 reachable")
+        self.assertEqual(summary, "overlay, ADS-B map, stream1090, and rendered frame ready")
+
+    def test_overlay_http_ready_probe_waits_for_map_tiles_and_adsb_sample(self) -> None:
+        cfg = SimpleNamespace(
+            use_overlay_wrapper=True,
+            overlay_port=18080,
+            overlay_view_host="127.0.0.1",
+            overlay_map_path="adsb-map/",
+        )
+        responses = {
+            "http://127.0.0.1:18080/index.html": '<main id="map">Local ADS-B Receiver Evaluated with ARENA</main>',
+            "http://127.0.0.1:18080/adsb-map/": (
+                '<main id="map" aria-label="Live ADS-B aircraft map"></main>' + "x" * 128
+            ),
+            "http://127.0.0.1:18080/stream1090/": "x" * 128,
+            "http://127.0.0.1:18080/render/status.json": '{"ready":false,"state":"warming_up"}',
+        }
+
+        with mock.patch.object(rendering_boot, "is_port_listening", return_value=True):
+            with mock.patch.object(
+                rendering_boot,
+                "http_get_text",
+                side_effect=lambda url, timeout_sec=2.0: responses[url],
+            ):
+                ok, summary = rendering_boot.overlay_http_ready_probe(cfg)
+
+        self.assertFalse(ok)
+        self.assertEqual(summary, "browser map and ADS-B sample still warming up")
+
+    def test_overlay_http_ready_probe_rejects_previous_browser_report(self) -> None:
+        cfg = SimpleNamespace(
+            use_overlay_wrapper=True,
+            overlay_port=18080,
+            overlay_view_host="127.0.0.1",
+            overlay_map_path="adsb-map/",
+        )
+        responses = {
+            "http://127.0.0.1:18080/index.html": '<main id="map">Local ADS-B Receiver Evaluated with ARENA</main>',
+            "http://127.0.0.1:18080/adsb-map/": (
+                '<main id="map" aria-label="Live ADS-B aircraft map"></main>' + "x" * 128
+            ),
+            "http://127.0.0.1:18080/stream1090/": "x" * 128,
+            "http://127.0.0.1:18080/render/status.json": (
+                '{"ready":true,"reported_at_ms":1000}'
+            ),
+        }
+
+        with mock.patch.object(rendering_boot, "is_port_listening", return_value=True):
+            with mock.patch.object(
+                rendering_boot,
+                "http_get_text",
+                side_effect=lambda url, timeout_sec=2.0: responses[url],
+            ):
+                ok, summary = rendering_boot.overlay_http_ready_probe(
+                    cfg,
+                    min_reported_at_ms=2000,
+                )
+
+        self.assertFalse(ok)
+        self.assertEqual(summary, "render-ready report predates current browser")
+
+    def test_overlay_http_ready_probe_keeps_legacy_stream1090_rollback_compatible(self) -> None:
+        cfg = SimpleNamespace(
+            use_overlay_wrapper=True,
+            overlay_port=18080,
+            overlay_view_host="127.0.0.1",
+            overlay_map_path="stream1090/",
+        )
+        responses = {
+            "http://127.0.0.1:18080/index.html": '<main id="map">Local ADS-B Receiver Evaluated with ARENA</main>',
+            "http://127.0.0.1:18080/stream1090/": "x" * 128,
+        }
+        requested_urls: list[str] = []
+
+        def get_text(url: str, timeout_sec: float = 2.0) -> str:
+            requested_urls.append(url)
+            return responses[url]
+
+        with mock.patch.object(rendering_boot, "is_port_listening", return_value=True):
+            with mock.patch.object(rendering_boot, "http_get_text", side_effect=get_text):
+                ok, _summary = rendering_boot.overlay_http_ready_probe(
+                    cfg,
+                    min_reported_at_ms=999999,
+                )
+
+        self.assertTrue(ok)
+        self.assertNotIn("http://127.0.0.1:18080/render/status.json", requested_urls)
+
+    def test_build_browser_url_can_roll_back_to_stream1090_map(self) -> None:
+        cfg = SimpleNamespace(
+            use_overlay_wrapper=True,
+            overlay_view_host="127.0.0.1",
+            overlay_port=18080,
+            overlay_map_path="stream1090/",
+            map_lat="36.35",
+            map_lon="140.75",
+            map_zoom="7.6",
+            map_scale="0.82",
+            map_icon_scale="1.4",
+            map_label_scale="0.82",
+            map_large_mode="1",
+        )
+
+        url = rendering_boot.build_browser_url(cfg)
+
+        self.assertIn("map_base=http://127.0.0.1:18080/stream1090/", url)
 
     def test_overlay_http_ready_probe_rejects_missing_wrapper_markers(self) -> None:
         cfg = SimpleNamespace(use_overlay_wrapper=True, overlay_port=18080, overlay_view_host="127.0.0.1")
@@ -81,6 +196,30 @@ class RenderingBootstrapContractTests(unittest.TestCase):
             self.assertEqual(rendering_boot.resolve_browser_bin("chromium"), "chromium")
             self.assertIsNone(rendering_boot.resolve_browser_bin("missing-browser"))
             self.assertEqual(rendering_boot.resolve_browser_bin(""), "chromium")
+
+    def test_start_browser_enables_swiftshader_webgl_for_chromium(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            cfg = SimpleNamespace(
+                auto_start_browser=True,
+                browser_bin="chromium",
+                reset_browser_profile=False,
+                browser_profile_dir=root / "profile",
+                browser_window_size="1920,1080",
+                video_size="1920x1080",
+                display_name=":99",
+                browser_log_file=root / "browser.log",
+                browser_window_pos="0,0",
+            )
+
+            with mock.patch.object(rendering_boot, "resolve_browser_bin", return_value="chromium"):
+                with mock.patch.object(rendering_boot.subprocess, "Popen") as popen:
+                    rendering_boot.start_browser(cfg, settle_sec=0, url="http://127.0.0.1/map")
+
+            args = popen.call_args.args[0]
+            self.assertIn("--enable-unsafe-swiftshader", args)
+            self.assertIn("--use-gl=angle", args)
+            self.assertIn("--use-angle=swiftshader", args)
 
 
 class AudioBootstrapContractTests(unittest.TestCase):
@@ -170,6 +309,7 @@ class FfmpegArgumentContractTests(unittest.TestCase):
             "audio_bitrate": "192k",
             "draw_mouse": 0,
             "frame_rate": 5,
+            "video_queue_size": 32,
             "video_size": "1920x1080",
             "audio_queue_size": 8192,
             "output_size": "1920x1080",
@@ -217,6 +357,7 @@ class FfmpegArgumentContractTests(unittest.TestCase):
         self.assertIn("-f", args)
         self.assertIn("x11grab", args)
         self.assertIn("stream_sink.monitor", args)
+        self.assertEqual(args[args.index("-thread_queue_size") + 1], "32")
         self.assertEqual(args[args.index("-c:v") + 1], "libx264")
         self.assertEqual(args[args.index("-preset") + 1], "ultrafast")
         self.assertEqual(args[args.index("-r") + 1], "5")

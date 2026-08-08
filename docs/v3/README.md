@@ -13,6 +13,7 @@
   - `public-status-snapshot.md`
   - `observability-plane-self-check.md`
   - `notification-diagnostic-boundary.md`
+  - `map-rendering-and-monitoring.md`
   - `fast-recovery-classifier-replay.md`
   - `youtube-lifecycle-safety.md`
   - `encoder-upload-case-study.md`
@@ -80,6 +81,9 @@ For a focused reliability review:
 - `notification-diagnostic-boundary.md` documents what notification messages
   can diagnose directly, what evidence they add for fast recovery and report
   incidents, and where raw logs remain necessary for ownership.
+- `map-rendering-and-monitoring.md` documents the custom aircraft map,
+  analysis-only precipitation, render warmup, GPU readiness, read-only map and
+  viewer probes, Prometheus alerts, and Discord/Slack routing boundary.
 - `../compliance-and-licensing-boundary.md` documents how ADS-B publication,
   receiver privacy, and NCS attribution were treated as design constraints
   rather than informal operator memory.

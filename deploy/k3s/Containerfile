@@ -17,6 +17,7 @@ RUN apt-get update \
         procps \
         pulseaudio \
         pulseaudio-utils \
+        python3-pil \
         rsync \
         python3 \
         python3-venv \

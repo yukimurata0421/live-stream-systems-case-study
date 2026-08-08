@@ -109,6 +109,26 @@ spec:
             limits:
               cpu: "500m"
               memory: 512Mi
+        - name: precipitation-fetcher
+          image: stream-v3:local
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh", "-lc"]
+          args:
+            - >-
+              PYTHONPATH=/app/src python3 -m stream_core.precipitation_fetcher --loop
+          envFrom:
+            - configMapRef:
+                name: stream-v3-shadow-env
+          volumeMounts:
+            - name: state
+              mountPath: /state
+          resources:
+            requests:
+              cpu: "50m"
+              memory: 64Mi
+            limits:
+              cpu: "300m"
+              memory: 256Mi
       volumes:
         - name: state
           persistentVolumeClaim:

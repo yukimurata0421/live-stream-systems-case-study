@@ -19,6 +19,35 @@ patches:
       - op: add
         path: /spec/template/spec/serviceAccountName
         value: stream-v3-recovery
+      - op: add
+        path: /spec/template/spec/schedulingGates
+        value:
+          - name: stream-v3.io/gpu-ready
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: STREAM_V3_POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: STREAM_V3_POD_UID
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.uid
+      - op: add
+        path: /spec/template/spec/containers/0/readinessProbe
+        value:
+          exec:
+            command:
+              - python3
+              - /app/src/stream_core/runtime_readiness.py
+          periodSeconds: 5
+          timeoutSeconds: 4
+          failureThreshold: 2
+          successThreshold: 1
       - op: replace
         path: /spec/template/spec/volumes/2
         value:
@@ -44,6 +73,15 @@ patches:
             - secretRef:
                 name: stream-v3-secrets
                 optional: true
+          env:
+            - name: STREAM_V3_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: STREAM_V3_POD_UID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.uid
           volumeMounts:
             - name: state
               mountPath: /state

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 import shutil
 import socket
@@ -62,7 +63,15 @@ def http_get_text(url: str, timeout_sec: float = 2.0) -> str:
         return r.read().decode("utf-8", errors="ignore")
 
 
-def overlay_http_ready_probe(cfg) -> tuple[bool, str]:
+def normalized_overlay_map_path(cfg) -> str:
+    raw = str(getattr(cfg, "overlay_map_path", "adsb-map/") or "adsb-map/").strip()
+    candidate = raw.lstrip("/")
+    if "://" in candidate or any(part == ".." for part in Path(candidate).parts):
+        return "adsb-map/"
+    return candidate.rstrip("/") + "/"
+
+
+def overlay_http_ready_probe(cfg, *, min_reported_at_ms: int = 0) -> tuple[bool, str]:
     if not cfg.use_overlay_wrapper:
         return True, "overlay wrapper disabled"
     if not is_port_listening("127.0.0.1", cfg.overlay_port):
@@ -80,15 +89,44 @@ def overlay_http_ready_probe(cfg) -> tuple[bool, str]:
     if not all(marker in html for marker in markers):
         return False, "overlay index missing expected markers"
 
+    map_path = normalized_overlay_map_path(cfg)
     try:
-        map_html = http_get_text(f"{base}/stream1090/", timeout_sec=2.0)
+        map_html = http_get_text(f"{base}/{map_path}", timeout_sec=2.0)
+    except urllib.error.URLError as e:
+        return False, f"ADS-B map fetch failed: {e}"
+    except Exception as e:
+        return False, f"ADS-B map fetch failed: {e}"
+    if len(map_html.strip()) < 64:
+        return False, "ADS-B map response too short"
+    if map_path != "stream1090/" and 'aria-label="Live ADS-B aircraft map"' not in map_html:
+        return False, "ADS-B map missing expected marker"
+
+    try:
+        stream1090_html = http_get_text(f"{base}/stream1090/", timeout_sec=2.0)
     except urllib.error.URLError as e:
         return False, f"stream1090 fetch failed: {e}"
     except Exception as e:
         return False, f"stream1090 fetch failed: {e}"
-    if len(map_html.strip()) < 64:
+    if len(stream1090_html.strip()) < 64:
         return False, "stream1090 response too short"
-    return True, "overlay and stream1090 reachable"
+    if map_path != "stream1090/":
+        try:
+            render_status = json.loads(http_get_text(f"{base}/render/status.json", timeout_sec=2.0))
+        except urllib.error.URLError as e:
+            return False, f"render-ready fetch failed: {e}"
+        except (json.JSONDecodeError, TypeError, ValueError) as e:
+            return False, f"render-ready response invalid: {e}"
+        except Exception as e:
+            return False, f"render-ready fetch failed: {e}"
+        if not isinstance(render_status, dict) or render_status.get("ready") is not True:
+            return False, "browser map and ADS-B sample still warming up"
+        reported_at_ms = render_status.get("reported_at_ms")
+        if min_reported_at_ms > 0 and (
+            not isinstance(reported_at_ms, (int, float))
+            or reported_at_ms < min_reported_at_ms
+        ):
+            return False, "render-ready report predates current browser"
+    return True, "overlay, ADS-B map, stream1090, and rendered frame ready"
 
 
 def start_overlay_server(cfg) -> subprocess.Popen | None:
@@ -121,7 +159,8 @@ def start_overlay_server(cfg) -> subprocess.Popen | None:
 def build_browser_url(cfg) -> str:
     if not cfg.use_overlay_wrapper:
         return cfg.browser_url
-    base = quote(f"http://{cfg.overlay_view_host}:{cfg.overlay_port}/stream1090/", safe=":/?=%#-_.~")
+    map_path = normalized_overlay_map_path(cfg)
+    base = quote(f"http://{cfg.overlay_view_host}:{cfg.overlay_port}/{map_path}", safe=":/?=%#-_.~")
     return (
         f"http://{cfg.overlay_view_host}:{cfg.overlay_port}/index.html"
         f"?map_base={base}&lat={cfg.map_lat}&lon={cfg.map_lon}&zoom={cfg.map_zoom}"
@@ -167,6 +206,9 @@ def start_browser(cfg, *, settle_sec: float, url: str) -> subprocess.Popen | Non
                 "--no-default-browser-check",
                 "--no-sandbox",
                 "--disable-dev-shm-usage",
+                "--enable-unsafe-swiftshader",
+                "--use-gl=angle",
+                "--use-angle=swiftshader",
                 "--disable-translate",
                 "--disable-features=Translate,TranslateUI,LanguageDetection",
                 "--disable-extensions",

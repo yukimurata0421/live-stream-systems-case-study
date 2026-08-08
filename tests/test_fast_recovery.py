@@ -10,6 +10,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "src" / "watchers"))
 
 import fast_recovery  # type: ignore
@@ -383,6 +384,13 @@ class FastRecoveryMainBehaviorTests(unittest.TestCase):
             "EMERGENCY_LOW_UPLOAD_VIDEO_MAXRATE": fast_recovery.EMERGENCY_LOW_UPLOAD_VIDEO_MAXRATE,
             "EMERGENCY_LOW_UPLOAD_VIDEO_BUFSIZE": fast_recovery.EMERGENCY_LOW_UPLOAD_VIDEO_BUFSIZE,
             "EMERGENCY_LOW_UPLOAD_AUDIO_BITRATE": fast_recovery.EMERGENCY_LOW_UPLOAD_AUDIO_BITRATE,
+            "GPU_PREFLIGHT_ENABLED": fast_recovery.GPU_PREFLIGHT_ENABLED,
+            "GPU_PREFLIGHT_TIMEOUT_SEC": fast_recovery.GPU_PREFLIGHT_TIMEOUT_SEC,
+            "GPU_PREFLIGHT_DEPLOYMENT": fast_recovery.GPU_PREFLIGHT_DEPLOYMENT,
+            "GPU_PREFLIGHT_SELECTOR": fast_recovery.GPU_PREFLIGHT_SELECTOR,
+            "GPU_PREFLIGHT_CONTAINER": fast_recovery.GPU_PREFLIGHT_CONTAINER,
+            "FFMPEG_MISSING_REQUIRE_CURRENT_POD_ESTABLISHED": fast_recovery.FFMPEG_MISSING_REQUIRE_CURRENT_POD_ESTABLISHED,
+            "BOOT_ESTABLISHED_FILE": fast_recovery.BOOT_ESTABLISHED_FILE,
         }
 
         fast_recovery.STATE_FILE = self._state_path
@@ -420,6 +428,13 @@ class FastRecoveryMainBehaviorTests(unittest.TestCase):
         fast_recovery.EMERGENCY_LOW_UPLOAD_VIDEO_MAXRATE = "2500k"
         fast_recovery.EMERGENCY_LOW_UPLOAD_VIDEO_BUFSIZE = "5000k"
         fast_recovery.EMERGENCY_LOW_UPLOAD_AUDIO_BITRATE = ""
+        fast_recovery.GPU_PREFLIGHT_ENABLED = False
+        fast_recovery.GPU_PREFLIGHT_TIMEOUT_SEC = 3.0
+        fast_recovery.GPU_PREFLIGHT_DEPLOYMENT = "stream-v3-runtime"
+        fast_recovery.GPU_PREFLIGHT_SELECTOR = "app.kubernetes.io/name=stream-v3,app.kubernetes.io/component=runtime"
+        fast_recovery.GPU_PREFLIGHT_CONTAINER = "stream-engine"
+        fast_recovery.FFMPEG_MISSING_REQUIRE_CURRENT_POD_ESTABLISHED = True
+        fast_recovery.BOOT_ESTABLISHED_FILE = Path(self._tmpdir.name) / "stream_boot_established.json"
 
     def tearDown(self) -> None:
         for name, value in self._orig_values.items():
@@ -513,6 +528,8 @@ class FastRecoveryMainBehaviorTests(unittest.TestCase):
         ffmpeg_pid: int = 222,
         ffmpeg_uptime_sec: int = 120,
         tcp_metrics: dict[str, int | str] | None = None,
+        gpu_restart_block: dict[str, object] | None = None,
+        stream_establishment: dict[str, object] | None = None,
     ):
         if isinstance(ping_results, bool):
             def ping_side_effect(_target: str, _timeout_sec: int = 1) -> bool:
@@ -535,12 +552,22 @@ class FastRecoveryMainBehaviorTests(unittest.TestCase):
                     else {"bytes_sent": 100, "notsent": 0, "unacked": 0, "lastsnd_ms": 0},
                 )
             )
-            stack.enter_context(patch.object(fast_recovery, "get_default_gateway", return_value="192.0.2.1"))
+            stack.enter_context(patch.object(fast_recovery, "get_default_gateway", return_value="192.168.0.1"))
             stack.enter_context(patch.object(fast_recovery, "ping_ok", side_effect=ping_side_effect))
             stack.enter_context(patch.object(fast_recovery, "dns_ok", return_value=dns_ok_value))
             stack.enter_context(patch.object(fast_recovery, "tcp_probe_ok", return_value=tcp_ok_value))
             restart_mock = stack.enter_context(
                 patch.object(fast_recovery, "restart_stream", return_value=restart_return)
+            )
+            stack.enter_context(
+                patch.object(fast_recovery, "runtime_gpu_restart_block", return_value=gpu_restart_block or {})
+            )
+            stack.enter_context(
+                patch.object(
+                    fast_recovery,
+                    "current_stream_establishment",
+                    return_value=stream_establishment or {"established": True, "reason": "test established"},
+                )
             )
             if youtube_warning is not None:
                 if youtube_warning[0] and not youtube_warning[2]:
@@ -657,6 +684,98 @@ class FastRecoveryMainBehaviorTests(unittest.TestCase):
         events = self._read_events()
         self.assertEqual(events[-1].get("kind"), "restart")
         self.assertEqual(events[-1].get("trigger"), "tcp_stall")
+
+    def test_tcp_stall_restart_guard_blocks_second_rollout_for_new_ffmpeg(self) -> None:
+        fast_recovery.STALL_CONFIRM = 1
+        stall_metrics = {
+            "bytes_sent": 500,
+            "notsent": fast_recovery.STALL_NOTSENT_BYTES,
+            "unacked": 0,
+            "lastsnd_ms": fast_recovery.STALL_LASTSND_MS,
+        }
+        self._write_state(
+            last_pid=222,
+            last_bytes_sent=500,
+            last_bytes_sent_ts=1_995,
+            last_restart_ts=1_000,
+        )
+
+        rc1, restart_mock1 = self._invoke_main(
+            now_ts=2_000,
+            dns_ok_value=True,
+            tcp_ok_value=True,
+            ping_results=True,
+            restart_return=(True, ""),
+            youtube_warning=(False, "youtube ok", {}),
+            ffmpeg_pid=222,
+            tcp_metrics=stall_metrics,
+        )
+        self.assertEqual(rc1, 0)
+        restart_mock1.assert_called_once()
+
+        rc2, restart_mock2 = self._invoke_main(
+            now_ts=2_001,
+            dns_ok_value=True,
+            tcp_ok_value=True,
+            ping_results=True,
+            restart_return=(True, ""),
+            youtube_warning=(False, "youtube ok", {}),
+            ffmpeg_pid=333,
+            tcp_metrics={"bytes_sent": 900, "notsent": 0, "unacked": 0, "lastsnd_ms": 0},
+        )
+        self.assertEqual(rc2, 0)
+        restart_mock2.assert_not_called()
+        self.assertEqual(self._read_state().get("last_pid"), 333)
+
+        rc3, restart_mock3 = self._invoke_main(
+            now_ts=2_003,
+            dns_ok_value=True,
+            tcp_ok_value=True,
+            ping_results=True,
+            restart_return=(True, ""),
+            youtube_warning=(False, "youtube ok", {}),
+            ffmpeg_pid=333,
+            tcp_metrics={**stall_metrics, "bytes_sent": 900},
+        )
+        self.assertEqual(rc3, 0)
+        restart_mock3.assert_not_called()
+        self.assertIn("restart guard active", str(self._read_state().get("last_reason")))
+        restart_events = [event for event in self._read_events() if event.get("kind") == "restart"]
+        self.assertEqual(len(restart_events), 1)
+        self.assertEqual(restart_events[0].get("trigger"), "tcp_stall")
+
+    def test_new_ffmpeg_pid_clears_stale_tcp_stall_streak(self) -> None:
+        fast_recovery.STALL_CONFIRM = 2
+        self._write_state(
+            last_pid=222,
+            last_bytes_sent=50_000_000,
+            last_bytes_sent_ts=1_999,
+            stall_streak=1,
+            last_restart_ts=2_000,
+        )
+
+        rc, restart_mock = self._invoke_main(
+            now_ts=2_003,
+            dns_ok_value=True,
+            tcp_ok_value=True,
+            ping_results=True,
+            restart_return=(True, ""),
+            youtube_warning=(False, "youtube ok", {}),
+            ffmpeg_pid=333,
+            tcp_metrics={
+                "bytes_sent": 100,
+                "notsent": fast_recovery.STALL_NOTSENT_BYTES,
+                "unacked": 0,
+                "lastsnd_ms": fast_recovery.STALL_LASTSND_MS,
+            },
+        )
+
+        self.assertEqual(rc, 0)
+        restart_mock.assert_not_called()
+        state = self._read_state()
+        self.assertEqual(state.get("last_pid"), 333)
+        self.assertEqual(state.get("stall_streak"), 0)
+        self.assertEqual(state.get("last_reason"), "healthy")
 
     def test_tcp_send_sample_logs_effective_mbps_without_restart(self) -> None:
         self._write_state(
@@ -1070,6 +1189,61 @@ class FastRecoveryMainBehaviorTests(unittest.TestCase):
         self.assertEqual(state.get("ffmpeg_missing_first_ts"), 0)
         self.assertEqual(state.get("ffmpeg_missing_success_backoff_until"), now_ts + 60)
         self.assertEqual(state.get("restart_events", [{}])[-1].get("reason"), "ffmpeg_missing")
+
+    def test_main_blocks_ffmpeg_missing_restart_when_gpu_preflight_reports_mismatch(self) -> None:
+        now_ts = 9_050
+        self._write_state(ffmpeg_missing_first_ts=now_ts - 21)
+
+        rc, restart_mock = self._invoke_main(
+            now_ts=now_ts,
+            dns_ok_value=True,
+            tcp_ok_value=True,
+            ping_results=True,
+            restart_return=(True, ""),
+            youtube_warning=None,
+            ffmpeg_pid=0,
+            ffmpeg_uptime_sec=0,
+            gpu_restart_block={
+                "restart_blocked": True,
+                "status": "driver_mismatch",
+                "restart_block_reason": "RunContainerError: Failed to initialize NVML: Driver/library version mismatch",
+            },
+        )
+
+        self.assertEqual(rc, 0)
+        restart_mock.assert_not_called()
+        state = self._read_state()
+        self.assertIn("restart blocked by GPU preflight", str(state.get("last_reason")))
+        events = self._read_events()
+        self.assertEqual(events[0].get("kind"), "restart_blocked_gpu")
+        self.assertEqual(events[0].get("trigger"), "ffmpeg_missing")
+
+    def test_main_blocks_ffmpeg_missing_restart_before_current_pod_established(self) -> None:
+        now_ts = 9_075
+        self._write_state(ffmpeg_missing_first_ts=now_ts - 21)
+
+        rc, restart_mock = self._invoke_main(
+            now_ts=now_ts,
+            dns_ok_value=True,
+            tcp_ok_value=True,
+            ping_results=True,
+            restart_return=(True, ""),
+            youtube_warning=None,
+            ffmpeg_pid=0,
+            ffmpeg_uptime_sec=0,
+            stream_establishment={
+                "established": False,
+                "reason": "readiness establishment marker belongs to another Pod",
+            },
+        )
+
+        self.assertEqual(rc, 0)
+        restart_mock.assert_not_called()
+        state = self._read_state()
+        self.assertIn("before current Pod established streaming", str(state.get("last_reason")))
+        events = self._read_events()
+        self.assertEqual(events[0].get("kind"), "restart_blocked_startup")
+        self.assertEqual(events[0].get("trigger"), "ffmpeg_missing")
 
     def test_main_ffmpeg_missing_success_backoff_prevents_restart_loop(self) -> None:
         now_ts = 9_100

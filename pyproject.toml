@@ -1,11 +1,12 @@
 [project]
 name = "stream-v3"
 version = "3.4.0"
-description = "k3s-oriented parallel build for ADS-B YouTube 24/7 streaming"
+description = "Reliability engineering case study for a self-built 24/7 YouTube Live pipeline"
 requires-python = ">=3.10"
 license = { text = "MIT" }
 dependencies = [
   "mutagen",
+  "Pillow",
   "PyYAML",
   "requests",
   "tzdata; platform_system == 'Windows'",

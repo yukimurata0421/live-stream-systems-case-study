@@ -1,0 +1,19 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {"type":"Feature","properties":{"code":"NRT","name":"Narita International Airport"},"geometry":{"type":"Point","coordinates":[140.388714,35.76858]}},
+    {"type":"Feature","properties":{"code":"IBR","name":"Ibaraki Airport"},"geometry":{"type":"Point","coordinates":[140.414434,36.181456]}},
+    {"type":"Feature","properties":{"code":"KIX","name":"Kansai International Airport"},"geometry":{"type":"Point","coordinates":[135.244003,34.427299]}},
+    {"type":"Feature","properties":{"code":"UKB","name":"Kobe Airport"},"geometry":{"type":"Point","coordinates":[135.223999,34.632801]}},
+    {"type":"Feature","properties":{"code":"NGO","name":"Chubu Centrair International Airport"},"geometry":{"type":"Point","coordinates":[136.804993,34.858398]}},
+    {"type":"Feature","properties":{"code":"KMQ","name":"Komatsu Airport"},"geometry":{"type":"Point","coordinates":[136.406895,36.393407]}},
+    {"type":"Feature","properties":{"code":"FSZ","name":"Mount Fuji Shizuoka Airport"},"geometry":{"type":"Point","coordinates":[138.190976,34.795022]}},
+    {"type":"Feature","properties":{"code":"OKJ","name":"Okayama Momotaro Airport"},"geometry":{"type":"Point","coordinates":[133.854996,34.756901]}},
+    {"type":"Feature","properties":{"code":"ITM","name":"Osaka Itami International Airport"},"geometry":{"type":"Point","coordinates":[135.440829,34.780853]}},
+    {"type":"Feature","properties":{"code":"TKS","name":"Tokushima Awaodori Airport"},"geometry":{"type":"Point","coordinates":[134.607816,34.132559]}},
+    {"type":"Feature","properties":{"code":"TAK","name":"Takamatsu Airport"},"geometry":{"type":"Point","coordinates":[134.015454,34.214963]}},
+    {"type":"Feature","properties":{"code":"KIJ","name":"Niigata Airport"},"geometry":{"type":"Point","coordinates":[139.112189,37.954166]}},
+    {"type":"Feature","properties":{"code":"SDJ","name":"Sendai Airport"},"geometry":{"type":"Point","coordinates":[140.917007,38.139702]}},
+    {"type":"Feature","properties":{"code":"HND","name":"Tokyo Haneda International Airport"},"geometry":{"type":"Point","coordinates":[139.786958,35.549678]}}
+  ]
+}

@@ -99,6 +99,7 @@ def shadow_tasks(source: Mapping[str, str]) -> list[ControlTask]:
     status_interval = max(5.0, env_float(source, "V3_SUBSYSTEMS_STATUS_INTERVAL_SEC", 60.0))
     recovery_interval = max(5.0, env_float(source, "V3_RECOVERY_ORCHESTRATOR_INTERVAL_SEC", 60.0))
     shadow_sli_interval = max(60.0, env_float(source, "V3_SHADOW_SLI_INTERVAL_SEC", 300.0))
+    shadow_sli_timeout = max(timeout, env_float(source, "V3_SHADOW_SLI_TIMEOUT_SEC", 120.0))
     summary_interval = max(shadow_interval, env_float(source, "V3_OPS_SUMMARY_INTERVAL_SEC", 300.0))
     notify_interval = max(60.0, env_float(source, "V3_NOTIFY_DRY_RUN_INTERVAL_SEC", 300.0))
 
@@ -134,12 +135,6 @@ def shadow_tasks(source: Mapping[str, str]) -> list[ControlTask]:
             command=(stream_cli, "recovery-orchestrator", "--json"),
         ),
         ControlTask(
-            name="shadow_sli",
-            interval_sec=shadow_sli_interval,
-            timeout_sec=timeout,
-            command=(stream_cli, "shadow-sli", "--json"),
-        ),
-        ControlTask(
             name="ops_summary",
             interval_sec=summary_interval,
             timeout_sec=timeout,
@@ -154,6 +149,16 @@ def shadow_tasks(source: Mapping[str, str]) -> list[ControlTask]:
             ),
         ),
     ]
+    if env_bool(source, "V3_ENABLE_INLINE_SHADOW_SLI", default=False):
+        tasks.insert(
+            -1,
+            ControlTask(
+                name="shadow_sli",
+                interval_sec=shadow_sli_interval,
+                timeout_sec=shadow_sli_timeout,
+                command=(stream_cli, "shadow-sli", "--json"),
+            ),
+        )
     if env_bool(source, "V3_ENABLE_NOTIFY_DRY_RUN", default=False):
         tasks.append(
             ControlTask(
@@ -188,13 +193,18 @@ def monitor_tasks(source: Mapping[str, str]) -> list[ControlTask]:
     timeout = env_float(source, "V3_CONTROL_TASK_TIMEOUT_SEC", 45.0)
     video_resolver_interval = max(1.0, env_float(source, "V3_VIDEO_RESOLVER_INTERVAL_SEC", 5.0))
     youtube_monitor_interval = max(5.0, env_float(source, "V3_YOUTUBE_MONITOR_INTERVAL_SEC", 45.0))
+    map_runtime_probe_interval = max(30.0, env_float(source, "V3_MAP_RUNTIME_PROBE_INTERVAL_SEC", 60.0))
+    map_runtime_probe_timeout = max(5.0, env_float(source, "V3_MAP_RUNTIME_PROBE_TIMEOUT_SEC", 25.0))
+    viewer_synthetic_interval = max(60.0, env_float(source, "V3_VIEWER_SYNTHETIC_INTERVAL_SEC", 300.0))
+    viewer_synthetic_timeout = max(15.0, env_float(source, "V3_VIEWER_SYNTHETIC_TIMEOUT_SEC", 75.0))
     stream_watchdog_interval = max(5.0, env_float(source, "V3_STREAM_WATCHDOG_INTERVAL_SEC", 60.0))
     notify_interval = max(30.0, env_float(source, "V3_NOTIFY_INTERVAL_SEC", 60.0))
     subsystems_interval = max(30.0, env_float(source, "V3_SUBSYSTEMS_STATUS_INTERVAL_SEC", 60.0))
     recovery_interval = max(30.0, env_float(source, "V3_RECOVERY_ORCHESTRATOR_INTERVAL_SEC", 60.0))
     shadow_sli_interval = max(60.0, env_float(source, "V3_SHADOW_SLI_INTERVAL_SEC", 300.0))
+    shadow_sli_timeout = max(timeout, env_float(source, "V3_SHADOW_SLI_TIMEOUT_SEC", 120.0))
 
-    return [
+    tasks = [
         ControlTask(
             name="youtube_video_resolver",
             interval_sec=video_resolver_interval,
@@ -206,6 +216,18 @@ def monitor_tasks(source: Mapping[str, str]) -> list[ControlTask]:
             interval_sec=youtube_monitor_interval,
             timeout_sec=timeout,
             command=(python_bin, str(root / "src" / "watchers" / "youtube_watchdog.py")),
+        ),
+        ControlTask(
+            name="map_runtime_probe",
+            interval_sec=map_runtime_probe_interval,
+            timeout_sec=map_runtime_probe_timeout,
+            command=(python_bin, str(root / "ops" / "scripts" / "stream_v3_map_runtime_probe.py")),
+        ),
+        ControlTask(
+            name="viewer_synthetic_probe",
+            interval_sec=viewer_synthetic_interval,
+            timeout_sec=viewer_synthetic_timeout,
+            command=(python_bin, str(root / "ops" / "scripts" / "stream_v3_viewer_synthetic_probe.py")),
         ),
         ControlTask(
             name="stream_watchdog",
@@ -231,13 +253,17 @@ def monitor_tasks(source: Mapping[str, str]) -> list[ControlTask]:
             timeout_sec=timeout,
             command=(stream_cli, "recovery-orchestrator", "--json"),
         ),
-        ControlTask(
-            name="shadow_sli",
-            interval_sec=shadow_sli_interval,
-            timeout_sec=timeout,
-            command=(stream_cli, "shadow-sli", "--json"),
-        ),
     ]
+    if env_bool(source, "V3_ENABLE_INLINE_SHADOW_SLI", default=False):
+        tasks.append(
+            ControlTask(
+                name="shadow_sli",
+                interval_sec=shadow_sli_interval,
+                timeout_sec=shadow_sli_timeout,
+                command=(stream_cli, "shadow-sli", "--json"),
+            )
+        )
+    return tasks
 
 
 def cutover_tasks(source: Mapping[str, str]) -> list[ControlTask]:
@@ -250,6 +276,8 @@ def run_task(task: ControlTask, *, env: Mapping[str, str] | None = None) -> Task
         completed = subprocess.run(
             list(task.command),
             text=True,
+            encoding="utf-8",
+            errors="replace",
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             timeout=task.timeout_sec,
@@ -258,13 +286,26 @@ def run_task(task: ControlTask, *, env: Mapping[str, str] | None = None) -> Task
         )
     except subprocess.TimeoutExpired as exc:
         duration = time.monotonic() - started
+        stderr = output_text(exc.stderr)
+        timeout_detail = f"timeout after {task.timeout_sec:g}s"
+        stderr = f"{stderr.rstrip()}\n{timeout_detail}" if stderr.strip() else timeout_detail
         return TaskResult(
             name=task.name,
             command=task.command,
             returncode=124,
             duration_sec=duration,
-            stdout_tail=tail(exc.stdout or ""),
-            stderr_tail=tail((exc.stderr or "") + "\ntimeout"),
+            stdout_tail=tail(exc.stdout),
+            stderr_tail=tail(stderr),
+        )
+    except Exception as exc:
+        duration = time.monotonic() - started
+        return TaskResult(
+            name=task.name,
+            command=task.command,
+            returncode=125,
+            duration_sec=duration,
+            stdout_tail="",
+            stderr_tail=tail(f"task runner {type(exc).__name__}: {exc}"),
         )
     duration = time.monotonic() - started
     return TaskResult(
@@ -277,8 +318,16 @@ def run_task(task: ControlTask, *, env: Mapping[str, str] | None = None) -> Task
     )
 
 
-def tail(text: str, *, limit: int = 1000) -> str:
-    text = text.strip()
+def output_text(value: str | bytes | None) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, bytes):
+        return value.decode("utf-8", errors="replace")
+    return str(value)
+
+
+def tail(text: str | bytes | None, *, limit: int = 1000) -> str:
+    text = output_text(text).strip()
     if len(text) <= limit:
         return text
     return text[-limit:]

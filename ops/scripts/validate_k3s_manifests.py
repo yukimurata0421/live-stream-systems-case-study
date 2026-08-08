@@ -247,6 +247,8 @@ def validate_required_resources(resources: dict[ResourceId, dict[str, Any]], *, 
             ("ServiceAccount", "stream-v3", "stream-v3-recovery"),
             ("Role", "stream-v3", "stream-v3-recovery"),
             ("RoleBinding", "stream-v3", "stream-v3-recovery"),
+            ("ClusterRole", "", "stream-v3-recovery-node-boot-reader"),
+            ("ClusterRoleBinding", "", "stream-v3-recovery-node-boot-reader"),
             ("Secret", "stream-v3", "stream-v3-recovery-token"),
         }
         return [f"missing required resource {format_id(rid)}" for rid in sorted(required - set(resources))]
@@ -296,6 +298,7 @@ def validate_configmap(resources: dict[ResourceId, dict[str, Any]]) -> list[str]
         "VIDEO_NVENC_BFRAMES": "0",
         "VIDEO_NVENC_B_REF_MODE": "",
         "FRAME_RATE": "5",
+        "VIDEO_QUEUE_SIZE": "32",
         "VIDEO_BITRATE": "3400k",
         "VIDEO_MAXRATE": "3400k",
         "VIDEO_BUFSIZE": "6800k",
@@ -312,6 +315,14 @@ def validate_configmap(resources: dict[ResourceId, dict[str, Any]]) -> list[str]
         "FR_YTW_STATS_FILE": "/state/youtube_watchdog_stats.json",
         "FR_QUOTA_STATE_FILE": "/state/youtube_quota_state.json",
         "FR_RESTART_REASON_FILE": "/state/restart_reason.json",
+        "FR_LOW_UPLOAD_PRESSURE_ENABLED": "0",
+        "FR_GPU_PREFLIGHT_ENABLED": "1",
+        "FR_GPU_PREFLIGHT_DEPLOYMENT": "stream-v3-runtime",
+        "FR_GPU_PREFLIGHT_CONTAINER": "stream-engine",
+        "FR_FFMPEG_MISSING_REQUIRE_CURRENT_POD_ESTABLISHED": "1",
+        "STREAM_BOOT_ESTABLISHED_FILE": "/state/runtime/stream_boot_established.json",
+        "STREAM_READINESS_MIN_FFMPEG_UPTIME_SEC": "10",
+        "STREAM_READINESS_RTMP_PORTS": "443,1935",
         "V3_FAST_RECOVERY_INTERVAL_SEC": "10",
         "V3_VIDEO_RESOLVER_INTERVAL_SEC": "5",
         "V3_YOUTUBE_MONITOR_INTERVAL_SEC": "45",
@@ -471,6 +482,21 @@ def validate_control_loop_contract(resources: dict[ResourceId, dict[str, Any]], 
             return ["stream-v3-runtime does not include fast recovery sidecar running stream_v3.control_loop --mode streaming"]
         if pod_spec.get("serviceAccountName") != "stream-v3-recovery":
             return ["stream-v3-runtime must use stream-v3-recovery serviceAccountName in streaming overlay"]
+        gates = pod_spec.get("schedulingGates") if isinstance(pod_spec.get("schedulingGates"), list) else []
+        if not any(isinstance(gate, dict) and gate.get("name") == "stream-v3.io/gpu-ready" for gate in gates):
+            return ["stream-v3-runtime must use the GPU startup scheduling gate in streaming overlay"]
+        stream_engine = next(
+            (
+                container
+                for container in containers
+                if isinstance(container, dict) and container.get("name") == "stream-engine"
+            ),
+            None,
+        )
+        if not isinstance(stream_engine, dict) or "/app/src/stream_core/runtime_readiness.py" not in stringify(
+            stream_engine.get("readinessProbe")
+        ):
+            return ["stream-engine must use the GPU/NVENC/FFmpeg runtime readiness probe"]
         return []
 
     deployment = resources.get(("Deployment", "stream-v3", "stream-v3-control"))

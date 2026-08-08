@@ -148,6 +148,200 @@ def compact_report_context(*, item: dict, age_sec: int | None, max_age_sec: int,
     )[:320]
 
 
+def _status_age(payload: dict, now_ts: int) -> tuple[int, int | None]:
+    observed_ts = parse_utc_ts(str(payload.get("checked_at_utc") or payload.get("ts_utc") or ""))
+    return observed_ts, max(0, now_ts - observed_ts) if observed_ts > 0 else None
+
+
+def _trailing_problem_duration(
+    path: Path,
+    *,
+    now_ts: int,
+    predicate: Callable[[dict], bool],
+    max_sample_gap_sec: int = 180,
+) -> tuple[int, int]:
+    started_ts = 0
+    latest_ts = 0
+    for item in iter_jsonl(path):
+        ts = parse_utc_ts(str(item.get("checked_at_utc") or item.get("ts_utc") or ""))
+        if ts <= 0 or ts > now_ts + 60:
+            continue
+        if latest_ts and ts - latest_ts > max_sample_gap_sec:
+            started_ts = 0
+        if predicate(item):
+            if started_ts <= 0:
+                started_ts = ts
+        else:
+            started_ts = 0
+        latest_ts = ts
+    if started_ts <= 0 or latest_ts <= 0 or now_ts - latest_ts > max_sample_gap_sec:
+        return 0, 0
+    return started_ts, max(0, latest_ts - started_ts)
+
+
+def map_runtime_incidents(
+    *,
+    status_file: Path | None,
+    history_file: Path | None,
+    now_ts: int,
+) -> list[dict]:
+    if status_file is None:
+        return []
+    status = read_json_file(status_file)
+    observed_ts, age = _status_age(status, now_ts)
+    if not status or age is None or age > 360:
+        return [
+            incident(
+                ident="map:monitor_missing_or_stale",
+                severity="warning",
+                component="production_map_monitoring",
+                summary="production map monitor sample is missing or stale",
+                evidence=f"sample_age={seconds_to_human(age)} source={status_file.name}",
+                recovery_type="arena_monitor_probe_recovery",
+                follow_up="arena monitor control loop と map_runtime_probe の更新を確認する",
+                observed_ts=observed_ts or now_ts,
+            )
+        ]
+    if history_file is None:
+        return []
+
+    incidents: list[dict] = []
+    webgl_bad = lambda item: item.get("webgl2_blocklisted") is True or item.get("webgl_context_fatal") is True
+    webgl_since, webgl_sec = _trailing_problem_duration(history_file, now_ts=now_ts, predicate=webgl_bad)
+    delivery_since, delivery_sec = _trailing_problem_duration(
+        history_file,
+        now_ts=now_ts,
+        predicate=lambda item: item.get("delivery_critical_ok") is False,
+    )
+    weather_since, weather_sec = _trailing_problem_duration(
+        history_file,
+        now_ts=now_ts,
+        predicate=lambda item: item.get("weather_ok") is False,
+    )
+    restart_since, restart_sec = _trailing_problem_duration(
+        history_file,
+        now_ts=now_ts,
+        predicate=lambda item: any(
+            int(value or 0) > 0
+            for value in (item.get("container_restart_counts") or {}).values()
+        ),
+    )
+
+    browser = status.get("browser") if isinstance(status.get("browser"), dict) else {}
+    if webgl_sec >= 60:
+        incidents.append(
+            incident(
+                ident="map:webgl_failure",
+                severity="critical",
+                component="production_map_delivery",
+                summary="production Chromium reported a WebGL failure",
+                evidence=(
+                    f"active={seconds_to_human(webgl_sec)} "
+                    f"webgl2_blocklisted={browser.get('webgl2_blocklisted')} "
+                    f"context_fatal={browser.get('context_fatal_failure')}"
+                ),
+                recovery_type="runtime_browser_or_pod_recovery",
+                follow_up="browser.log、stream_engine_events.jsonl、render heartbeatを突き合わせる",
+                observed_ts=webgl_since,
+            )
+        )
+    elif delivery_sec >= 120:
+        incidents.append(
+            incident(
+                ident="map:delivery_critical",
+                severity="critical",
+                component="production_map_delivery",
+                summary="production map delivery contract is unhealthy",
+                evidence=f"active={seconds_to_human(delivery_sec)} reasons={','.join(str(v) for v in status.get('critical_reasons', [])[:5])}",
+                recovery_type="runtime_delivery_recovery",
+                follow_up="Pod topology、NVENC/RTMP、render heartbeat、Chromiumを確認する",
+                observed_ts=delivery_since,
+            )
+        )
+    if weather_sec >= 1200:
+        incidents.append(
+            incident(
+                ident="map:precipitation_unavailable",
+                severity="warning",
+                component="production_map_precipitation",
+                summary="JMA precipitation layer or fetcher is unhealthy",
+                evidence=f"active={seconds_to_human(weather_sec)} reasons={','.join(str(v) for v in status.get('weather_reasons', [])[:4])}",
+                recovery_type="precipitation_fetch_retry_recovery",
+                follow_up="降水status/healthとJMA取得履歴を確認する。配信runtimeは自動restartしない",
+                observed_ts=weather_since,
+            )
+        )
+    if restart_sec >= 120:
+        pod = status.get("pod") if isinstance(status.get("pod"), dict) else {}
+        containers = pod.get("containers") if isinstance(pod.get("containers"), dict) else {}
+        restarted = [f"{name}:{item.get('restart_count')}" for name, item in containers.items() if isinstance(item, dict) and int(item.get("restart_count") or 0) > 0]
+        incidents.append(
+            incident(
+                ident="map:container_restart",
+                severity="warning",
+                component="production_map_runtime",
+                summary="a production map runtime container has restarted",
+                evidence=f"active={seconds_to_human(restart_sec)} containers={','.join(restarted[:5])}",
+                recovery_type="k8s_container_self_recovery",
+                follow_up="Pod/container historyとrestart前後の永続event logを確認する",
+                observed_ts=restart_since,
+            )
+        )
+    return incidents
+
+
+def viewer_synthetic_incidents(*, status_file: Path | None, now_ts: int) -> list[dict]:
+    if status_file is None:
+        return []
+    status = read_json_file(status_file)
+    observed_ts, age = _status_age(status, now_ts)
+    if not status or age is None or age > 900:
+        return [
+            incident(
+                ident="viewer:synthetic_missing_or_stale",
+                severity="warning",
+                component="youtube_viewer_synthetic",
+                summary="viewer-side synthetic sample is missing or stale",
+                evidence=f"sample_age={seconds_to_human(age)} source={status_file.name}",
+                recovery_type="viewer_probe_recovery",
+                follow_up="yt-dlp/ffmpegとarena monitor viewer probeの更新を確認する",
+                observed_ts=observed_ts or now_ts,
+            )
+        ]
+    visual_failures = int(status.get("consecutive_visual_failures") or 0)
+    probe_failures = int(status.get("consecutive_probe_failures") or 0)
+    if visual_failures >= 2:
+        return [
+            incident(
+                ident="viewer:visual_failure",
+                severity="critical",
+                component="youtube_viewer_delivery",
+                summary="public viewer frames are repeatedly black or frozen",
+                evidence=(
+                    f"visual_failures={visual_failures} black={status.get('black_detected')} "
+                    f"freeze={status.get('freeze_detected')} video_id={status.get('video_id', '')}"
+                ),
+                recovery_type="youtube_or_runtime_delivery_recovery",
+                follow_up="viewer capture、YouTube health、local NVENC/RTMP、render heartbeatを突き合わせる",
+                observed_ts=observed_ts,
+            )
+        ]
+    if probe_failures >= 2:
+        return [
+            incident(
+                ident="viewer:synthetic_probe_failed",
+                severity="warning",
+                component="youtube_viewer_synthetic",
+                summary="viewer-side synthetic capture repeatedly failed",
+                evidence=f"probe_failures={probe_failures} reason={status.get('reason', '')}",
+                recovery_type="viewer_probe_or_public_path_recovery",
+                follow_up="YouTube live stateとyt-dlp/ffmpeg probeを確認し、local delivery failureと分離する",
+                observed_ts=observed_ts,
+            )
+        ]
+    return []
+
+
 def recovery_type_from_observe(payload: dict) -> str:
     if payload.get("watchdog_restart_reasons"):
         return "stream_watchdog_restart"
@@ -161,6 +355,8 @@ def recovery_type_from_observe(payload: dict) -> str:
 
 
 def observe_payload_has_current_stream_problem(checks: dict, payload: dict) -> bool:
+    if is_monitoring_only_youtube_stats_gap(checks):
+        return False
     if checks.get("current_fail") is True:
         return True
     if checks.get("youtube_current_degraded") is True:
@@ -172,6 +368,10 @@ def observe_payload_has_current_stream_problem(checks: dict, payload: dict) -> b
     if payload.get("fast_mode_current_active") is True:
         return True
     return False
+
+
+def fast_mode_notification_currently_active(checks: dict, payload: dict) -> bool:
+    return checks.get("fast_mode_current_active") is True or payload.get("fast_mode_current_active") is True
 
 
 def youtube_encoder_gap_currently_active(stats: dict, *, now_ts: int | None = None, max_age_sec: int = 300) -> bool:
@@ -214,11 +414,17 @@ def youtube_encoder_gap_currently_active(stats: dict, *, now_ts: int | None = No
 
 
 def is_bootstrap_youtube_stats_gap(checks: dict) -> bool:
+    return is_monitoring_only_youtube_stats_gap(checks)
+
+
+def is_monitoring_only_youtube_stats_gap(checks: dict) -> bool:
     return (
         checks.get("current_fail") is True
         and checks.get("youtube_stats_stale") is True
         and not str(checks.get("youtube_current_status", "") or "").strip()
         and not str(checks.get("youtube_current_judgment", "") or "").strip()
+        and checks.get("youtube_observability_current_fail") is not True
+        and checks.get("fast_mode_current_active") is not True
         and checks.get("pulse_pass") is True
     )
 
@@ -227,6 +433,22 @@ def is_bootstrap_api_report_gap(payload: dict) -> bool:
     judgment = str(payload.get("api_report_judgment", "") or "")
     reason = str(payload.get("api_report_judgment_reason", "") or "").lower()
     return judgment == "api_open_day_report_stale" and ("missing" in reason or "stale" in reason)
+
+
+def is_api_report_timer_monitoring_gap(payload: dict) -> bool:
+    if str(payload.get("api_report_judgment", "") or "") != "api_report_timer_attention":
+        return False
+    if payload.get("api_report_timers_active") is False:
+        return True
+    reports = payload.get("api_cost_reports") if isinstance(payload.get("api_cost_reports"), dict) else {}
+    timers = reports.get("timers") if isinstance(reports.get("timers"), dict) else {}
+    if not timers:
+        return False
+    return not any(isinstance(item, dict) and item.get("active") is True for item in timers.values())
+
+
+def is_report_output_gap(item: dict, age_sec: int | None, *, max_age_sec: int) -> bool:
+    return not item or age_sec is None or age_sec > max_age_sec
 
 
 def incident(
@@ -267,12 +489,27 @@ def collect_notification_incidents(
     stream1090_report_events_file: Path,
     upstream_report_events_file: Path,
     youtube_watchdog_stats_file: Path | None = None,
+    map_runtime_status_file: Path | None = None,
+    map_runtime_history_file: Path | None = None,
+    viewer_synthetic_status_file: Path | None = None,
     now_ts: int | None = None,
     report_stale_sec: int = 1800,
     bootstrap_grace_active: bool = False,
 ) -> list[dict]:
     now = int(time.time() if now_ts is None else now_ts)
     incidents: list[dict] = []
+    if not bootstrap_grace_active or (map_runtime_status_file is not None and map_runtime_status_file.exists()):
+        incidents.extend(
+            map_runtime_incidents(
+                status_file=map_runtime_status_file,
+                history_file=map_runtime_history_file,
+                now_ts=now,
+            )
+        )
+    if not bootstrap_grace_active or (
+        viewer_synthetic_status_file is not None and viewer_synthetic_status_file.exists()
+    ):
+        incidents.extend(viewer_synthetic_incidents(status_file=viewer_synthetic_status_file, now_ts=now))
     _rc, payload, error = observe_payload(24)
     checks = payload.get("checks") if isinstance(payload.get("checks"), dict) else {}
     recovery_type = recovery_type_from_observe(payload)
@@ -290,7 +527,13 @@ def collect_notification_incidents(
                 follow_up="observe script stderr and systemd notify timer statusを確認する",
             )
         )
-    if checks.get("current_fail") is True and not (bootstrap_grace_active and is_bootstrap_youtube_stats_gap(checks)):
+    monitoring_only_youtube_gap = is_monitoring_only_youtube_stats_gap(checks)
+
+    if (
+        checks.get("current_fail") is True
+        and not monitoring_only_youtube_gap
+        and not (bootstrap_grace_active and is_bootstrap_youtube_stats_gap(checks))
+    ):
         incidents.append(
             incident(
                 ident="stream:current_fail",
@@ -308,7 +551,7 @@ def collect_notification_incidents(
                 diagnostic_context=observe_context,
             )
         )
-    elif checks.get("youtube_current_degraded") is True:
+    elif checks.get("youtube_current_degraded") is True and not monitoring_only_youtube_gap:
         incidents.append(
             incident(
                 ident="youtube:current_degraded",
@@ -325,7 +568,11 @@ def collect_notification_incidents(
             )
         )
 
-    if payload.get("api_report_judgment") != "ok" and not (bootstrap_grace_active and is_bootstrap_api_report_gap(payload)):
+    if (
+        payload.get("api_report_judgment") != "ok"
+        and not is_api_report_timer_monitoring_gap(payload)
+        and not (bootstrap_grace_active and is_bootstrap_api_report_gap(payload))
+    ):
         incidents.append(
             incident(
                 ident="api_report:freshness_or_timer",
@@ -339,7 +586,7 @@ def collect_notification_incidents(
             )
         )
 
-    if checks.get("fast_mode_current_active") is True or payload.get("fast_mode_judgment") == "investigate_fast_mode_runaway":
+    if fast_mode_notification_currently_active(checks, payload):
         incidents.append(
             incident(
                 ident="resolver:fast_mode_active_or_runaway",
@@ -481,6 +728,8 @@ def collect_notification_incidents(
     for ident, component, path, target, label in report_specs:
         item, age = latest_jsonl_item(path, target=target, now_ts=now)
         if is_report_problem(item, age, max_age_sec=report_stale_sec):
+            if is_report_output_gap(item, age, max_age_sec=report_stale_sec) and not current_stream_problem:
+                continue
             if bootstrap_grace_active and not item:
                 continue
             observed_ts = parse_utc_ts(str(item.get("ts_utc", ""))) if item else None

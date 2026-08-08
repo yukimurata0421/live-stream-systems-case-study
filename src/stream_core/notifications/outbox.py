@@ -14,6 +14,11 @@ except ModuleNotFoundError:
 
 
 SendWebhook = Callable[[str, str], tuple[bool, str]]
+DEFAULT_ROUTE = "discord"
+
+
+def notify_route(item: dict) -> str:
+    return str(item.get("route", DEFAULT_ROUTE) or DEFAULT_ROUTE)
 
 
 def load_notify_outbox(path: Path, *, now_ts: int | None = None, ttl_sec: int | None = None) -> list[dict]:
@@ -49,23 +54,28 @@ def save_notify_outbox(path: Path, rows: list[dict]) -> None:
     write_jsonl_atomic(path, rows)
 
 
-def notify_message_id(*, phase: str, incidents: list[dict], now_ts: int) -> str:
+def notify_message_id(*, phase: str, incidents: list[dict], now_ts: int, route: str = DEFAULT_ROUTE) -> str:
     ids = ",".join(sorted(str(item.get("id", "")) for item in incidents if item.get("id")))
     if phase == "status":
-        return f"status|{ids}"
-    if phase == "detected":
+        base = f"status|{ids}"
+    elif phase == "detected":
         first_seen = min(
             (int(item.get("_first_seen_ts", item.get("observed_ts", now_ts)) or now_ts) for item in incidents),
             default=now_ts,
         )
-        return f"detected|{ids}|{first_seen}"
-    if phase == "recovered":
+        base = f"detected|{ids}|{first_seen}"
+    elif phase == "recovered":
         recovered_ts = max((int(item.get("_recovered_ts", now_ts) or now_ts) for item in incidents), default=now_ts)
-        return f"recovered|{ids}|{recovered_ts}"
-    if phase == "auto_recovered":
+        base = f"recovered|{ids}|{recovered_ts}"
+    elif phase in {"restart_observed", "recovery_unconfirmed", "auto_recovered"}:
         event_ts = max((int(item.get("observed_ts", now_ts) or now_ts) for item in incidents), default=now_ts)
-        return f"auto_recovered|{ids}|{event_ts}"
-    return f"{phase}|{ids}|{now_ts}"
+        base = f"{phase}|{ids}|{event_ts}"
+    else:
+        base = f"{phase}|{ids}|{now_ts}"
+    route_name = str(route or DEFAULT_ROUTE)
+    if route_name == DEFAULT_ROUTE:
+        return base
+    return f"{route_name}|{base}"
 
 
 def enqueue_notify_messages(
@@ -75,11 +85,13 @@ def enqueue_notify_messages(
     username: str,
     now_ts: int,
     max_pending: int,
+    route: str = DEFAULT_ROUTE,
 ) -> list[dict]:
+    route_name = str(route or DEFAULT_ROUTE)
     by_id = {str(item.get("message_id")): dict(item) for item in outbox if item.get("message_id")}
     order = [str(item.get("message_id")) for item in outbox if item.get("message_id")]
     for phase, phase_incidents, content in messages:
-        message_id = notify_message_id(phase=phase, incidents=phase_incidents, now_ts=now_ts)
+        message_id = notify_message_id(phase=phase, incidents=phase_incidents, now_ts=now_ts, route=route_name)
         incident_ids = [item.get("id") for item in phase_incidents]
         existing = by_id.get(message_id)
         if existing:
@@ -91,6 +103,7 @@ def enqueue_notify_messages(
                     "incident_ids": incident_ids,
                     "content": content,
                     "username": username,
+                    "route": route_name,
                     "status": "pending",
                 }
             )
@@ -102,6 +115,7 @@ def enqueue_notify_messages(
             "incident_ids": incident_ids,
             "content": content,
             "username": username,
+            "route": route_name,
             "status": "pending",
             "attempts": 0,
             "created_ts": now_ts,
@@ -112,7 +126,13 @@ def enqueue_notify_messages(
         }
         order.append(message_id)
     rows = [by_id[mid] for mid in order if mid in by_id]
-    return rows[-max(1, int(max_pending)) :]
+    same_route_ids = [str(item.get("message_id")) for item in rows if notify_route(item) == route_name]
+    keep_same_route = set(same_route_ids[-max(1, int(max_pending)) :])
+    return [
+        item
+        for item in rows
+        if notify_route(item) != route_name or str(item.get("message_id")) in keep_same_route
+    ]
 
 
 def flush_notify_outbox(
@@ -123,16 +143,21 @@ def flush_notify_outbox(
     now_ts: int,
     send_webhook: Callable[..., tuple[bool, str]],
     dry_run: bool = False,
+    route: str = DEFAULT_ROUTE,
 ) -> tuple[int, int, int]:
+    route_name = str(route or DEFAULT_ROUTE)
     outbox = load_notify_outbox(outbox_path, now_ts=now_ts, ttl_sec=int(cfg["outbox_ttl_sec"]))
     if dry_run or not cfg["enabled"] or not cfg["webhook_url"]:
-        return 0, 0, len(outbox)
+        return 0, 0, sum(1 for item in outbox if notify_route(item) == route_name)
     remaining: list[dict] = []
     sent = 0
     failures = 0
     flush_limit = max(1, int(cfg["outbox_flush_limit"]))
     attempted = 0
     for item in outbox:
+        if notify_route(item) != route_name:
+            remaining.append(item)
+            continue
         if attempted >= flush_limit:
             remaining.append(item)
             continue
@@ -147,6 +172,7 @@ def flush_notify_outbox(
             "incident_ids": item.get("incident_ids", []),
             "dry_run": False,
             "enabled": cfg["enabled"],
+            "route": route_name,
             "message": content,
             "message_id": item.get("message_id", ""),
             "outbox": True,
@@ -166,4 +192,5 @@ def flush_notify_outbox(
             item["updated_ts_utc"] = utc_now_text(now_ts)
             remaining.append(item)
     save_notify_outbox(outbox_path, remaining)
-    return sent, failures, len(remaining)
+    pending = sum(1 for item in remaining if notify_route(item) == route_name)
+    return sent, failures, pending

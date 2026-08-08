@@ -57,7 +57,15 @@ context=pass=... current_fail=... historical_degraded=...
         public_probe=... api_report=...
 ```
 
-For fast-recovery auto-recovered events, the context is transport-specific:
+For fast-recovery events, the notification first exposes the evidence state:
+
+```text
+restart_observed=true
+recovery_confirmed=false
+recovery_lag_sec=unknown
+```
+
+The diagnostic context is transport-specific:
 
 ```text
 context=pre=-60s mbps=... delta=... lastsnd=... notsent=... unacked=... pid=...
@@ -65,8 +73,11 @@ context=pre=-60s mbps=... delta=... lastsnd=... notsent=... unacked=... pid=...
         recovery_lag_sec=...
 ```
 
-That keeps the notification small while preserving the decision-grade facts:
-what was bad, what changed, and what evidence proved recovery.
+`recovery_confirmed=true` is emitted only when a qualifying post-restart send
+sample exists. A low-speed sample may appear as `post_first`, but it leaves
+`recovery_confirmed=false`. That keeps the notification small while preserving
+the decision-grade facts: what was bad, what changed, and whether recovery was
+actually proved.
 
 ## What The Notification Can Separate
 
@@ -75,7 +86,7 @@ what was bad, what changed, and what evidence proved recovery.
 | Is this a current delivery fault? | `current_fail`, YouTube judgment, pulse/audio status, current pass state | Separates active stream failure from stale history. |
 | Is this a report or dashboard problem? | report state, age, stale threshold, `api_report`, public probe judgment | Separates observability gaps from delivery mutations. |
 | Did RTMPS transport stall? | pre-restart `mbps`, `bytes_sent_delta`, `lastsnd`, `notsent`, `unacked` | Shows whether the sender stopped moving bytes or only carried a warning label. |
-| Did recovery restore send throughput? | post-restart TCP sample and `recovery_lag_sec` | Proves restart completion plus delivery recovery at sample granularity. |
+| Did recovery restore send throughput? | `recovery_confirmed`, qualifying post-restart TCP sample, and numeric `recovery_lag_sec` | Proves restart completion plus delivery recovery at sample granularity only when confirmation is true. |
 | Is YouTube lifecycle mutation justified? | same-URL policy context, public/API/OAuth/local split, recovery type | Keeps broadcast replacement out of ambiguous transport or probe incidents. |
 | Is ADS-B overlay data bad or missing? | report-only judgment, report age, warning list, position/message deltas | Separates missing overlay fetches from source-data movement problems. |
 | Is API quota evidence usable? | open-day/closed-day freshness and timer activity | Separates API report warmup/staleness from delivery health. |
@@ -145,15 +156,16 @@ The public repository keeps the portable parts:
 - `src/stream_core/notifications/incidents.py`
   builds incident summaries and compact diagnostic context.
 - `src/stream_core/notifications/status_loop.py`
-  reads nearby fast-recovery TCP samples for auto-recovered restart messages.
+  returns structured restart/recovery evidence, reads nearby TCP samples, and
+  assigns `restart_observed`, `recovery_unconfirmed`, or `auto_recovered`.
 - `src/stream_core/notifications/renderer.py`
   renders `context=` and non-empty recovery evidence into the notification.
 - `tests/test_cli_ops_commands.py`
   verifies that fast-recovery notifications include pre/post TCP context and
   that stream-health recovery messages include current recovery evidence.
 - `tests/test_critical_helper_contracts.py`
-  verifies that a very recent fast-recovery event can wait briefly for a
-  recovery sample before emitting an informational message.
+  verifies missing, low-speed, and qualifying post-restart samples, plus
+  phase-specific promotion and acknowledgement behavior.
 
 The implementation is read-only with respect to delivery control. It improves
 the evidence attached to notifications; it does not change restart authority,

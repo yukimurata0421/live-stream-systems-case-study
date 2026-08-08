@@ -12,7 +12,8 @@ Environment=STREAM_RUNTIME_STATE_DIR=/var/lib/stream-v3/observability-monitor
 Environment=STREAM_V3_EXPORTER_HOST=127.0.0.1
 Environment=STREAM_V3_EXPORTER_PORT=9108
 Environment=STREAM_V3_EXPORTER_CACHE_SEC=60
-ExecStart=/bin/bash -lc 'cd "$${STREAM_V3_REPO_DIR}" && export PYTHONPATH="$${STREAM_V3_REPO_DIR}/src$${PYTHONPATH:+:$${PYTHONPATH}}" && exec /usr/bin/python3 "$${STREAM_V3_REPO_DIR}/ops/scripts/stream_v3_prometheus_exporter.py" --repo-root "$${STREAM_V3_REPO_DIR}" --state-root "$${STREAM_RUNTIME_STATE_DIR}" --host "$${STREAM_V3_EXPORTER_HOST}" --port "$${STREAM_V3_EXPORTER_PORT}" --cache-sec "$${STREAM_V3_EXPORTER_CACHE_SEC}"'
+Environment=STREAM_V3_EXPORTER_TIMEOUT_SEC=75
+ExecStart=/bin/bash -lc 'cd "$${STREAM_V3_REPO_DIR}" && export PYTHONPATH="$${STREAM_V3_REPO_DIR}/src$${PYTHONPATH:+:$${PYTHONPATH}}" && exec /usr/bin/python3 "$${STREAM_V3_REPO_DIR}/ops/scripts/stream_v3_prometheus_exporter.py" --repo-root "$${STREAM_V3_REPO_DIR}" --state-root "$${STREAM_RUNTIME_STATE_DIR}" --host "$${STREAM_V3_EXPORTER_HOST}" --port "$${STREAM_V3_EXPORTER_PORT}" --cache-sec "$${STREAM_V3_EXPORTER_CACHE_SEC}" --timeout-sec "$${STREAM_V3_EXPORTER_TIMEOUT_SEC}"'
 Restart=always
 RestartSec=10
 
