@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Stream v3 Prometheus</title>
+    <style>
+      :root {
+        --bg: #111418;
+        --panel: #181e24;
+        --panel-2: #202832;
+        --border: #33404d;
+        --text: #edf2f7;
+        --muted: #a9b7c6;
+        --ok: #58d68d;
+        --warn: #f4c95d;
+        --bad: #ff6b7a;
+        --accent: #6bb7ff;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: var(--bg);
+        color: var(--text);
+        font-family: "Segoe UI", "Hiragino Sans", "Noto Sans JP", sans-serif;
+      }
+      .wrap { max-width: 1160px; margin: 0 auto; padding: 24px 16px 36px; }
+      header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; border-bottom: 1px solid var(--border); padding-bottom: 16px; }
+      h1 { margin: 0; font-size: 30px; line-height: 1.15; letter-spacing: 0; }
+      .sub { margin: 8px 0 0; color: var(--muted); font-size: 13px; }
+      .actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+      a.button, button {
+        min-height: 36px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--panel-2);
+        color: var(--text);
+        padding: 8px 11px;
+        text-decoration: none;
+        font: inherit;
+        cursor: pointer;
+      }
+      .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 16px 0; }
+      .tile, .card {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--panel);
+      }
+      .tile { padding: 12px; }
+      .label { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; font-weight: 700; }
+      .value { margin-top: 8px; font-size: 26px; font-weight: 700; line-height: 1; }
+      .stamp { color: var(--muted); font-size: 12px; margin-top: 6px; }
+      .groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(310px, 1fr)); gap: 12px; }
+      .card { padding: 14px; }
+      h2 { margin: 0 0 12px; font-size: 17px; letter-spacing: 0; }
+      .metric {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 8px;
+        padding: 10px 0;
+        border-top: 1px solid rgba(255,255,255,.08);
+      }
+      .metric:first-of-type { border-top: 0; }
+      .name { font-weight: 650; }
+      .query { grid-column: 1 / -1; color: var(--muted); font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11px; overflow-wrap: anywhere; }
+      .badge { align-self: start; min-width: 62px; text-align: center; border-radius: 999px; border: 1px solid var(--border); padding: 4px 8px; font-size: 12px; font-weight: 700; }
+      .ok { color: var(--ok); }
+      .warn { color: var(--warn); }
+      .bad { color: var(--bad); }
+      .unknown { color: var(--muted); }
+      .badge.ok { border-color: rgba(88,214,141,.45); background: rgba(88,214,141,.08); }
+      .badge.warn { border-color: rgba(244,201,93,.45); background: rgba(244,201,93,.08); }
+      .badge.bad { border-color: rgba(255,107,122,.5); background: rgba(255,107,122,.1); }
+      .badge.unknown { background: rgba(255,255,255,.05); }
+      @media (max-width: 640px) {
+        header { display: block; }
+        .actions { justify-content: flex-start; margin-top: 12px; }
+        h1 { font-size: 25px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <div>
+          <h1>Stream v3 Prometheus</h1>
+          <p class="sub">Static public snapshot generated from local Grafana datasource proxy.</p>
+          <div id="stamp" class="stamp">Loading...</div>
+        </div>
+        <nav class="actions" aria-label="Page links">
+          <a class="button" href="./index.html">Status Hub</a>
+          <a class="button" href="./stream-v3-loki.html">Loki</a>
+          <button id="refresh" type="button">Refresh</button>
+        </nav>
+      </header>
+
+      <section class="summary" aria-label="Summary">
+        <article class="tile"><div class="label">Severity</div><div id="severity" class="value">-</div></article>
+        <article class="tile"><div class="label">OK</div><div id="ok" class="value">-</div></article>
+        <article class="tile"><div class="label">Warn</div><div id="warn" class="value">-</div></article>
+        <article class="tile"><div class="label">Bad</div><div id="bad" class="value">-</div></article>
+      </section>
+
+      <main id="groups" class="groups"></main>
+    </div>
+
+    <script>
+      const byId = (id) => document.getElementById(id);
+      const num = (value) => Number.isFinite(Number(value)) ? Number(value) : null;
+      const fmt = (value, unit) => {
+        const n = num(value);
+        if (n === null) return "n/a";
+        const rounded = Math.abs(n) >= 100 ? n.toFixed(0) : Math.abs(n) >= 10 ? n.toFixed(1) : n.toFixed(2);
+        return unit && unit !== "flag" ? `${rounded} ${unit}` : rounded;
+      };
+      const cls = (state) => ["ok", "warn", "bad", "unknown"].includes(state) ? state : "unknown";
+
+      function setSummary(summary = {}) {
+        const severity = cls(summary.severity);
+        byId("severity").textContent = severity.toUpperCase();
+        byId("severity").className = `value ${severity}`;
+        byId("ok").textContent = summary.ok ?? 0;
+        byId("warn").textContent = summary.warn ?? 0;
+        byId("bad").textContent = summary.bad ?? 0;
+      }
+
+      function renderGroups(items = []) {
+        const target = byId("groups");
+        const grouped = new Map();
+        items.forEach((item) => {
+          const key = item.group || "Other";
+          if (!grouped.has(key)) grouped.set(key, []);
+          grouped.get(key).push(item);
+        });
+        target.innerHTML = "";
+        for (const [group, rows] of grouped.entries()) {
+          const card = document.createElement("section");
+          card.className = "card";
+          card.innerHTML = `<h2>${group}</h2>`;
+          rows.forEach((row) => {
+            const state = cls(row.state);
+            const metric = document.createElement("div");
+            metric.className = "metric";
+            metric.innerHTML = `
+              <div>
+                <div class="name">${row.label || row.id}</div>
+                <div class="stamp">${fmt(row.value, row.unit)}</div>
+              </div>
+              <div class="badge ${state}">${state.toUpperCase()}</div>
+              <div class="query">${row.query || ""}</div>
+            `;
+            card.appendChild(metric);
+          });
+          target.appendChild(card);
+        }
+      }
+
+      async function refresh() {
+        byId("stamp").textContent = "Loading...";
+        const res = await fetch(`./stream-v3-prometheus.json?t=${Date.now()}`, { cache: "no-store" });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        setSummary(data.summary || {});
+        renderGroups(data.items || []);
+        const ts = data.generated_at ? new Date(Number(data.generated_at) * 1000).toLocaleString() : "n/a";
+        byId("stamp").textContent = `Updated: ${ts}`;
+      }
+
+      byId("refresh").addEventListener("click", () => refresh().catch((err) => {
+        byId("stamp").textContent = `Load failed: ${err.message}`;
+      }));
+      refresh().catch((err) => {
+        byId("stamp").textContent = `Load failed: ${err.message}`;
+        setSummary({ severity: "unknown" });
+      });
+    </script>
+  </body>
+</html>

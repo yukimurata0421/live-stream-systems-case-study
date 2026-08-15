@@ -1,5 +1,5 @@
 [Unit]
-Description=ADS-B Stream v3 observability monitor Prometheus exporter
+Description=ADS-B Stream v3 observability/arena-monitor Prometheus exporter
 After=network-online.target
 Wants=network-online.target
 

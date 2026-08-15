@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  cat <<'EOF'
+Usage:
+  stream -sli-report [--windows 24h,7d,28d,30d] [--json]
+
+Aliases:
+  stream sli-report
+  stream --sli-report
+
+The command connects to the configured monitoring host and runs the read-only SLI report there.
+EOF
+}
+
+if [[ "$#" -eq 0 ]]; then
+  usage
+  exit 2
+fi
+
+case "$1" in
+  -sli-report|--sli-report|sli-report)
+    shift
+    ;;
+  -h|--help|help)
+    usage
+    exit 0
+    ;;
+  *)
+    printf 'stream: unsupported command: %s\n' "$1" >&2
+    usage >&2
+    exit 2
+    ;;
+esac
+
+arena_host="${STREAM_V3_ARENA_SSH_HOST:-stream-monitor}"
+arena_repo="${STREAM_V3_ARENA_REPO:-/opt/stream_v3}"
+
+if [[ -z "$arena_host" || "$arena_host" == -* ]]; then
+  printf 'stream: invalid STREAM_V3_ARENA_SSH_HOST\n' >&2
+  exit 2
+fi
+
+printf -v quoted_repo '%q' "$arena_repo"
+remote_command="cd ${quoted_repo} && bin/stream-prod sli-report"
+for arg in "$@"; do
+  printf -v quoted_arg '%q' "$arg"
+  remote_command+=" ${quoted_arg}"
+done
+
+exec ssh "$arena_host" "$remote_command"

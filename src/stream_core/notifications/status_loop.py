@@ -917,16 +917,26 @@ def notify_status(*, ctx: NotifyStatusContext, dry_run: bool = False, force_test
             "first_seen_ts": first_seen,
             "first_notified_ts": int(existing.get("first_notified_ts", now) or now),
             "last_bad_ts": observed_ts if observed_ts > 0 else now,
-            "last_notified_ts": now,
+            "last_notified_ts": int(existing.get("last_notified_ts", 0) or 0),
             "last_incident": item,
         }
 
     if incidents:
-        last_sent = int(state.get("last_status_sent_ts", 0) or 0)
-        due = (now - last_sent) >= int(cfg["repeat_sec"])
-        if new_ids or due:
+        due_incidents: list[dict] = []
+        for item in incidents:
+            ident = str(item.get("id") or "")
+            stored = active_state.get(ident, {})
+            last_notified = int(stored.get("last_notified_ts", 0) or 0)
+            repeat_sec = max(int(cfg["repeat_sec"]), int(item.get("repeat_sec", 0) or 0))
+            if ident in new_ids or last_notified <= 0 or (now - last_notified) >= repeat_sec:
+                due_incidents.append(item)
+        if due_incidents:
             phase = "detected" if new_ids else "status"
-            messages.append((phase, incidents))
+            messages.append((phase, due_incidents))
+            for item in due_incidents:
+                ident = str(item.get("id") or "")
+                if ident in active_state:
+                    active_state[ident]["last_notified_ts"] = now
             state["last_status_sent_ts"] = now
     if recovered_ids:
         recovered: list[dict] = []

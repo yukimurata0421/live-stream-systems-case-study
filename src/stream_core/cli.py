@@ -15,6 +15,7 @@ from stream_core.cli_support import mutation_guard as cli_mutation_guard
 from stream_core.cli_support import memory_status as memory_status_cli
 from stream_core.cli_support import objective_sli as objective_sli_cli
 from stream_core.cli_support import resource_memory as resource_memory_cli
+from stream_core.cli_support import sli_report as sli_report_cli
 from stream_core.cli_support import parser as cli_parser
 from stream_core.cli_support import paths as cli_paths
 from stream_core.cli_support import router as cli_router
@@ -584,6 +585,9 @@ def collect_notification_incidents(
         map_runtime_status_file=STATE_BASE_DIR / "map_runtime_status.json",
         map_runtime_history_file=LOG_BASE_DIR / "map_runtime_status.jsonl",
         viewer_synthetic_status_file=STATE_BASE_DIR / "viewer_synthetic_status.json",
+        operational_reliability_status_file=STATE_BASE_DIR / "operational_reliability_status.json",
+        operational_reliability_burn_status_file=STATE_BASE_DIR / "operational_reliability_burn_status.json",
+        external_blackbox_status_file=STATE_BASE_DIR / "external_blackbox_status.json",
         now_ts=now,
         report_stale_sec=report_stale_sec,
         bootstrap_grace_active=notify_bootstrap_grace_active(now, startup_grace_sec),
@@ -854,6 +858,28 @@ def objective_sli(*, json_output: bool = False, record: bool = True) -> int:
     return objective_sli_cli.objective_sli(_objective_sli_context(), json_output=json_output, record=record)
 
 
+def _sli_report_context() -> sli_report_cli.SliReportContext:
+    return cli_contexts.sli_report_context(sys.modules[__name__])
+
+
+def sli_report(
+    *,
+    windows: str = sli_report_cli.DEFAULT_WINDOWS,
+    prometheus_url: str = "",
+    end_time: str = "",
+    timeout_sec: float = 15.0,
+    json_output: bool = False,
+) -> int:
+    return sli_report_cli.sli_report(
+        _sli_report_context(),
+        windows=windows,
+        prometheus_url=prometheus_url,
+        end_time=end_time,
+        timeout_sec=timeout_sec,
+        json_output=json_output,
+    )
+
+
 def _memory_status_context() -> memory_status_cli.MemoryStatusContext:
     return cli_contexts.memory_status_context(sys.modules[__name__])
 
@@ -1102,6 +1128,7 @@ def _cli_router() -> cli_router.CliRouter:
         api_usage=api_usage,
         health_summary=health_summary,
         objective_sli=objective_sli,
+        sli_report=sli_report,
         memory_status=memory_status,
         resource_memory=resource_memory,
         subsystems_status=subsystems_status,

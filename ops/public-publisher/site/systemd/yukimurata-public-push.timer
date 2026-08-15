@@ -1,0 +1,11 @@
+[Unit]
+Description=Push yukimurata0421.dev public site to GCS every minute
+
+[Timer]
+OnBootSec=90s
+OnUnitActiveSec=60s
+AccuracySec=15s
+Unit=yukimurata-public-push.service
+
+[Install]
+WantedBy=timers.target

@@ -19,8 +19,10 @@ NOISE_ONLY_REPORT_WARNINGS = {
 
 
 def seconds_to_human(seconds: int | float | None) -> str:
+    if seconds is None:
+        return "unknown"
     try:
-        total = max(0, int(seconds or 0))
+        total = max(0, int(seconds))
     except Exception:
         total = 0
     hours, rem = divmod(total, 3600)
@@ -462,6 +464,7 @@ def incident(
     follow_up: str,
     observed_ts: int | None = None,
     diagnostic_context: str = "",
+    repeat_sec: int | None = None,
 ) -> dict:
     payload = {
         "id": ident,
@@ -475,12 +478,264 @@ def incident(
     if diagnostic_context:
         payload["diagnostic_context"] = str(diagnostic_context)[:320]
     try:
+        repeat_value = int(repeat_sec or 0)
+    except (TypeError, ValueError):
+        repeat_value = 0
+    if repeat_value > 0:
+        payload["repeat_sec"] = repeat_value
+    try:
         value = int(observed_ts or 0)
     except Exception:
         value = 0
     if value > 0:
         payload["observed_ts"] = value
     return payload
+
+
+def _current_input_quality_observation(input_feedback: dict) -> tuple[str, dict]:
+    for source, key in (
+        ("raw_oauth", "raw_current"),
+        ("prometheus", "prometheus_current"),
+    ):
+        current = input_feedback.get(key) if isinstance(input_feedback.get(key), dict) else {}
+        if (
+            current.get("available") is True
+            and current.get("eligible") is True
+            and isinstance(current.get("good"), bool)
+        ):
+            return source, current
+    return "", {}
+
+
+def _actionable_current_input_quality(source: str, current: dict) -> bool:
+    """Return true only for a current raw OAuth warning/error fact.
+
+    The Prometheus series is a cached projection of the same watchdog state, not
+    an independent fallback source. YouTube ``noData`` and unrecognized health
+    values mean that quality information is unavailable; they are diagnostic,
+    not proof of degraded input quality.
+    """
+    if source != "raw_oauth" or current.get("good") is not False:
+        return False
+    return str(current.get("classification", "")) in {
+        "bad_health_warning",
+        "bad_health_error",
+        "bad_configuration_issue",
+    }
+
+
+def operational_reliability_incidents(*, status_file: Path | None, now_ts: int) -> list[dict]:
+    if status_file is None:
+        return []
+    payload = read_json_file(status_file)
+    observed_ts, age = _status_age(payload, now_ts)
+    if not payload or age is None or age > 7200:
+        artifact = (
+            "burn_status"
+            if status_file.name == "operational_reliability_burn_status.json"
+            else "rollup"
+        )
+        return [
+            incident(
+                ident=f"reliability:{artifact}_missing_or_stale",
+                severity="warning",
+                component="operational_reliability_evidence",
+                summary=f"operational reliability {artifact.replace('_', ' ')} is missing or stale",
+                evidence=f"sample_age={seconds_to_human(age)} source={status_file.name}",
+                recovery_type="rollup_timer_recovery",
+                follow_up="rollup timer、Prometheus、SQLite evidence store を確認する",
+                observed_ts=observed_ts or now_ts,
+            )
+        ]
+
+    results: list[dict] = []
+    feedback = payload.get("fast_feedback") if isinstance(payload.get("fast_feedback"), dict) else {}
+    input_feedback = feedback.get("youtube_input_quality") if isinstance(feedback.get("youtube_input_quality"), dict) else {}
+    if input_feedback:
+        reasons = [str(value) for value in input_feedback.get("measurement_unknown_reasons", [])]
+        non_disagreement_reasons = [reason for reason in reasons if reason != "source_disagreement"]
+        current_source, current_quality = _current_input_quality_observation(input_feedback)
+        current_bad = _actionable_current_input_quality(
+            current_source,
+            current_quality,
+        )
+        if current_bad:
+            current_observed_ts = parse_utc_ts(str(current_quality.get("ts_utc", ""))) or observed_ts
+            results.append(
+                incident(
+                    ident="reliability:youtube_input_quality_fast_feedback",
+                    severity="warning",
+                    component="youtube_input_quality",
+                    summary="YouTube current input quality warning is active",
+                    evidence=(
+                        f"current_source={current_source} "
+                        f"current={current_quality.get('classification', 'bad')} "
+                        f"sli_pct={input_feedback.get('sli_pct')} "
+                        f"coverage_pct={input_feedback.get('coverage_pct')}"
+                    ),
+                    recovery_type="current_input_quality_recovery_no_automatic_restart",
+                    follow_up="現在のOAuth issue typeとmulti-window burnを確認し、current goodで復旧扱いにする",
+                    observed_ts=current_observed_ts,
+                    repeat_sec=600,
+                )
+            )
+        if input_feedback.get("measurement_status") != "valid" and non_disagreement_reasons:
+            results.append(
+                incident(
+                    ident="reliability:youtube_input_quality_coverage_or_freshness",
+                    severity="warning",
+                    component="youtube_input_quality_measurement_coverage",
+                    summary="YouTube input quality fast-feedback measurement is unknown",
+                    evidence=(
+                        f"reasons={','.join(non_disagreement_reasons)} "
+                        f"coverage_pct={input_feedback.get('coverage_pct')}"
+                    ),
+                    recovery_type="measurement_source_recovery",
+                    follow_up="OAuth probe freshness と raw/Prometheus coverage を確認する",
+                    observed_ts=observed_ts,
+                )
+            )
+        # raw_current and prometheus_current are two cadences/projections of the
+        # same OAuth watchdog state. Keep disagreement in the reliability JSON
+        # for diagnosis, but never turn this comparison alone into an incident.
+    gates = payload.get("formal_gates") if isinstance(payload.get("formal_gates"), dict) else {}
+    for family, gate in gates.items():
+        if not isinstance(gate, dict):
+            continue
+        status = str(gate.get("compliance_status") or "unknown")
+        reasons = [str(value) for value in gate.get("measurement_unknown_reasons", [])]
+        disagreement = gate.get("source_disagreement") is True
+        if status == "breached" and family == "youtube_input_quality":
+            results.append(
+                incident(
+                    ident="reliability:youtube_input_quality_breached",
+                    severity="warning",
+                    component="youtube_input_quality",
+                    summary="official YouTube input quality SLO is breached",
+                    evidence=f"sli_pct={gate.get('sli_pct')} coverage_pct={gate.get('coverage_pct')}",
+                    recovery_type="human_review_no_automatic_restart",
+                    follow_up="OAuth issue type、encoder contract、YouTube input quality を突合する",
+                    observed_ts=observed_ts,
+                )
+            )
+        coverage_reasons = {
+            "minimum_coverage_not_met",
+            "source_freshness_not_met",
+            "youtube_source_freshness_unavailable",
+            "upload_source_freshness_unavailable",
+            "audio_source_freshness_unavailable",
+            "no_measurement_evidence",
+        }
+        if coverage_reasons.intersection(reasons) or any(
+            "coverage" in reason or "freshness" in reason for reason in reasons
+        ):
+            results.append(
+                incident(
+                    ident=f"reliability:{family}_coverage_or_freshness",
+                    severity="warning",
+                    component=f"{family}_measurement_coverage",
+                    summary=f"{family} formal measurement is unknown",
+                    evidence=(
+                        f"reasons={','.join(reasons)} coverage_pct={gate.get('coverage_pct')} "
+                        f"freshness_pct={gate.get('source_freshness_pct')}"
+                    ),
+                    recovery_type="measurement_source_recovery",
+                    follow_up="source probe と retention gap を直し、SLO値自体は変更しない",
+                    observed_ts=observed_ts,
+                )
+            )
+        # YouTube input-quality raw/Prometheus differences retain
+        # compliance=unknown and remain visible in the payload. They are not an
+        # additional user-facing incident because that series is derived from
+        # the same producer. Preserve the existing behavior for other families.
+        if gate.get("source_disagreement_current") is True and family != "youtube_input_quality":
+            results.append(
+                incident(
+                    ident=f"reliability:{family}_source_disagreement",
+                    severity="warning",
+                    component=f"{family}_source_crosscheck",
+                    summary=f"{family} measurement sources disagree",
+                    evidence=f"sli_pct={gate.get('sli_pct')} reasons={','.join(reasons)}",
+                    recovery_type="source_reconciliation_no_automatic_restart",
+                    follow_up="raw evidence と Prometheus series を同一窓で比較する",
+                    observed_ts=observed_ts,
+                )
+            )
+
+    for alert in payload.get("multi_window_burn_alerts", []):
+        if not isinstance(alert, dict):
+            continue
+        family = str(alert.get("family") or "unknown")
+        results.append(
+            incident(
+                ident=f"reliability:{family}_multi_window_burn",
+                severity=str(alert.get("severity") or "warning"),
+                component=f"{family}_error_budget",
+                summary=f"{family} multi-window error-budget burn",
+                evidence=f"rule={alert.get('rule')} burn_rates={alert.get('burn_rates')}",
+                recovery_type="human_review_no_automatic_restart",
+                follow_up="短窓と長窓の両方を確認し、根拠なしにtargetやruntimeを変更しない",
+                observed_ts=observed_ts,
+            )
+        )
+    return results
+
+
+def external_blackbox_incidents(*, status_file: Path | None, now_ts: int) -> list[dict]:
+    if status_file is None:
+        return []
+    payload = read_json_file(status_file)
+    observed_ts, collector_age = _status_age(payload, now_ts)
+    if not payload or collector_age is None or collector_age > 900:
+        return [
+            incident(
+                ident="external:blackbox_missing_or_stale",
+                severity="warning",
+                component="external_blackbox_evidence",
+                summary="external black-box import is missing or stale",
+                evidence=f"collector_age={seconds_to_human(collector_age)} source={status_file.name}",
+                recovery_type="external_evidence_collection_recovery",
+                follow_up="Cloud Monitoring uptime check、ADC、import timerを確認し、配信runtimeは自動再起動しない",
+                observed_ts=observed_ts or now_ts,
+            )
+        ]
+    status = str(payload.get("status") or "unknown")
+    if status == "ok":
+        return []
+    try:
+        consecutive = max(0, int(payload.get("consecutive_status_samples", 0) or 0))
+    except (TypeError, ValueError):
+        consecutive = 0
+    if status == "unknown" and consecutive < 2:
+        return []
+    targets = payload.get("targets") if isinstance(payload.get("targets"), dict) else {}
+    target_states = ",".join(
+        f"{name}:{item.get('status', 'unknown')}/{item.get('reason', 'unknown')}"
+        for name, item in sorted(targets.items())
+        if isinstance(item, dict)
+    )
+    if status == "failed":
+        summary = "external black-box checker quorum failed"
+        recovery_type = "external_public_path_diagnosis"
+    else:
+        summary = "external black-box evidence is unknown"
+        recovery_type = "external_evidence_collection_recovery"
+    return [
+        incident(
+            ident=f"external:blackbox_{status}",
+            severity="warning",
+            component="external_blackbox_evidence",
+            summary=summary,
+            evidence=(
+                f"reason={payload.get('reason')} consecutive_samples={consecutive} "
+                f"targets={target_states or 'none'}"
+            ),
+            recovery_type=recovery_type,
+            follow_up="外部checker地域別sampleと家庭内raw evidenceを突合し、単独でavailability burnやrestartへ変換しない",
+            observed_ts=parse_utc_ts(str(payload.get("status_since_utc") or "")) or observed_ts or now_ts,
+            repeat_sec=900 if status == "unknown" else 300,
+        )
+    ]
 
 
 def collect_notification_incidents(
@@ -492,12 +747,44 @@ def collect_notification_incidents(
     map_runtime_status_file: Path | None = None,
     map_runtime_history_file: Path | None = None,
     viewer_synthetic_status_file: Path | None = None,
+    operational_reliability_status_file: Path | None = None,
+    operational_reliability_burn_status_file: Path | None = None,
+    external_blackbox_status_file: Path | None = None,
     now_ts: int | None = None,
     report_stale_sec: int = 1800,
     bootstrap_grace_active: bool = False,
 ) -> list[dict]:
     now = int(time.time() if now_ts is None else now_ts)
     incidents: list[dict] = []
+    if not bootstrap_grace_active or (
+        operational_reliability_status_file is not None
+        and operational_reliability_status_file.exists()
+    ):
+        incidents.extend(
+            operational_reliability_incidents(
+                status_file=operational_reliability_status_file,
+                now_ts=now,
+            )
+        )
+    if not bootstrap_grace_active or (
+        operational_reliability_burn_status_file is not None
+        and operational_reliability_burn_status_file.exists()
+    ):
+        incidents.extend(
+            operational_reliability_incidents(
+                status_file=operational_reliability_burn_status_file,
+                now_ts=now,
+            )
+        )
+    if not bootstrap_grace_active or (
+        external_blackbox_status_file is not None and external_blackbox_status_file.exists()
+    ):
+        incidents.extend(
+            external_blackbox_incidents(
+                status_file=external_blackbox_status_file,
+                now_ts=now,
+            )
+        )
     if not bootstrap_grace_active or (map_runtime_status_file is not None and map_runtime_status_file.exists()):
         incidents.extend(
             map_runtime_incidents(

@@ -31,6 +31,8 @@ spec:
                   visual="";
                   if [ "${STREAM1090_UPSTREAM_REPORT_VISUAL:-0}" = "1" ]; then visual="--visual"; fi;
                   exec /app/bin/stream-prod upstream-report
+                  --record
+                  --upstream-url "${STREAM1090_UPSTREAM_REPORT_URL:-http://stream1090.lan/stream1090/}"
                   --sample-sec "${STREAM1090_UPSTREAM_REPORT_SAMPLE_SEC:-5}"
                   --timeout "${STREAM1090_UPSTREAM_REPORT_TIMEOUT_SEC:-5}"
                   ${visual}

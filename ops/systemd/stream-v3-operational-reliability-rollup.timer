@@ -1,0 +1,12 @@
+[Unit]
+Description=Persist stream_v3 operational reliability evidence hourly
+
+[Timer]
+OnBootSec=12min
+OnCalendar=hourly
+Persistent=true
+AccuracySec=1min
+Unit=stream-v3-operational-reliability-rollup.service
+
+[Install]
+WantedBy=timers.target

@@ -51,7 +51,7 @@ class OverlayCornerContractTests(unittest.TestCase):
         html = overlay_html()
 
         adsb = html.split('<aside id="adsb"', 1)[1].split("</aside>", 1)[0]
-        self.assertIn("width: min(420px", html)
+        self.assertIn("width: min(460px", html)
         self.assertIn("#adsb .kicker", html)
         self.assertIn("text-align: center", html.split("#adsb .kicker", 1)[1].split("}", 1)[0])
         self.assertIn("receiverTitleAlignment: getComputedStyle(receiverTitle).textAlign", html)
@@ -65,6 +65,14 @@ class OverlayCornerContractTests(unittest.TestCase):
         self.assertIn("PRECIPITATION", adsb)
         self.assertIn('id="precipitationState"', adsb)
         self.assertIn('u.searchParams.set("embedded", "1");', html)
+
+    def test_primary_overlay_text_is_large_enough_for_mobile_landscape_scaling(self) -> None:
+        html = overlay_html()
+
+        self.assertIn("width: min(460px", html)
+        self.assertRegex(html, re.compile(r"\.metric strong\s*\{[^}]*font-size:\s*24px;", re.S))
+        self.assertRegex(html, re.compile(r"#np \.title\s*\{[^}]*font-size:\s*26px;", re.S))
+        self.assertRegex(html, re.compile(r"\.time-row strong\s*\{[^}]*font-size:\s*17px;", re.S))
 
     def test_precipitation_card_reports_warmup_retry_lkg_and_unavailable_states(self) -> None:
         html = overlay_html()

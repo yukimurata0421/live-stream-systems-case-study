@@ -87,7 +87,8 @@ def format_discord_message(*, phase: str, incidents: list[dict], state: dict, no
         "recovered": "復旧フォローアップ",
         "test": "通知テスト",
     }.get(phase, phase)
-    active_count = 0 if phase == "recovered" else len(incidents)
+    active = state.get("active") if isinstance(state.get("active"), dict) else {}
+    active_count = 0 if phase == "recovered" else len(active)
     lines = [f"[ADS-B Stream] {title}", f"time={jst_text(now_ts)}", f"active_incidents={active_count}"]
     if phase == "recovered":
         lines.append(f"resolved_incidents={len(incidents)}")

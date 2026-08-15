@@ -54,6 +54,11 @@ TIMEOUT_SEC = max(3, int_env("YTW_TIMEOUT_SEC", 8))
 STARTUP_GRACE_SEC = max(0, int_env("YTW_STARTUP_GRACE_SEC", 30))
 STATE_FILE = env("YTW_STATE_FILE", state_path_text("youtube_watchdog_state.json"))
 LOG_FILE = env("YTW_LOG_FILE", log_path_text("youtube_watchdog.jsonl"))
+OPERATIONAL_RELIABILITY_DB_FILE = env(
+    "STREAM_V3_OPERATIONAL_RELIABILITY_DB_FILE",
+    state_path_text("operational_reliability.sqlite3"),
+)
+DEPLOYED_REVISION = env("STREAM_V3_DEPLOYED_REVISION", "")
 API_CALL_LOG_FILE = env("YTW_API_CALL_LOG_FILE", log_path_text("youtube_api_calls.jsonl"))
 OK_LOG_EVERY_SEC = max(0, int_env("YTW_OK_LOG_EVERY_SEC", 300))
 STATS_FILE = env("YTW_STATS_FILE", state_path_text("youtube_watchdog_stats.json"))
@@ -202,6 +207,7 @@ class OAuthProbeResult:
     stream_status: str = ""
     stream_health_status: str = ""
     stream_health_issues: int = 0
+    stream_health_issue_details: tuple[dict[str, str], ...] = ()
     stream_status_required: bool = False
     remote_checked: bool = False
     enable_auto_start: bool | None = None

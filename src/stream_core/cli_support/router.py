@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import sys
 from dataclasses import dataclass
 from typing import Callable
 
@@ -23,6 +24,7 @@ class CliRouter:
     api_usage: Callable[..., int]
     health_summary: Callable[..., int]
     objective_sli: Callable[..., int]
+    sli_report: Callable[..., int]
     memory_status: Callable[..., int]
     resource_memory: Callable[..., int]
     subsystems_status: Callable[..., int]
@@ -71,9 +73,17 @@ def dispatch(args: argparse.Namespace, router: CliRouter) -> int:
     if cmd == "api-usage":
         return router.api_usage(closed_day=args.closed_day, day=args.day, json_output=args.json)
     if cmd == "health-summary":
-        return router.health_summary(windows=args.windows, json_output=args.json)
+        return router.health_summary(windows=args.windows or "1,8,24", json_output=args.json)
     if cmd == "objective-sli":
         return router.objective_sli(json_output=args.json, record=not args.no_record)
+    if cmd == "sli-report":
+        return router.sli_report(
+            windows=args.windows or "24h,7d,28d,30d",
+            prometheus_url=args.prometheus_url,
+            end_time=args.end_time,
+            timeout_sec=args.timeout,
+            json_output=args.json,
+        )
     if cmd == "memory-status":
         return router.memory_status(json_output=args.json, record=not args.no_record)
     if cmd == "resource-memory":
@@ -91,21 +101,27 @@ def dispatch(args: argparse.Namespace, router: CliRouter) -> int:
     if cmd == "remote-warning-compare":
         return router.remote_warning_compare(hours=args.hours, limit=args.limit, json_output=args.json)
     if cmd == "stream1090-report":
+        if args.record and not args.base_url.strip():
+            print("[error] stream1090-report --record requires an explicit --base-url", file=sys.stderr)
+            return 2
         return router.stream1090_report(
-            base_url=args.base_url,
+            base_url=args.base_url or "http://127.0.0.1:18080",
             sample_sec=args.sample_sec,
             timeout=args.timeout,
             visual=args.visual,
-            record=not args.no_record,
+            record=bool(args.record),
             json_output=args.json,
         )
     if cmd == "upstream-report":
+        if args.record and not args.upstream_url.strip():
+            print("[error] upstream-report --record requires an explicit --upstream-url", file=sys.stderr)
+            return 2
         return router.upstream_report(
             upstream_url=args.upstream_url,
             sample_sec=args.sample_sec,
             timeout=args.timeout,
             visual=args.visual,
-            record=not args.no_record,
+            record=bool(args.record),
             json_output=args.json,
         )
     if cmd == "notify-status":

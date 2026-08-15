@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Stream v3 Loki</title>
+    <style>
+      :root {
+        --bg: #111418;
+        --panel: #181e24;
+        --panel-2: #202832;
+        --border: #33404d;
+        --text: #edf2f7;
+        --muted: #a9b7c6;
+        --ok: #58d68d;
+        --warn: #f4c95d;
+        --bad: #ff6b7a;
+        --accent: #6bb7ff;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: var(--bg);
+        color: var(--text);
+        font-family: "Segoe UI", "Hiragino Sans", "Noto Sans JP", sans-serif;
+      }
+      .wrap { max-width: 1180px; margin: 0 auto; padding: 24px 16px 36px; }
+      header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; border-bottom: 1px solid var(--border); padding-bottom: 16px; }
+      h1 { margin: 0; font-size: 30px; line-height: 1.15; letter-spacing: 0; }
+      .sub, .stamp { color: var(--muted); font-size: 13px; }
+      .sub { margin: 8px 0 0; }
+      .stamp { margin-top: 6px; }
+      .actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+      a.button, button, select {
+        min-height: 36px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--panel-2);
+        color: var(--text);
+        padding: 8px 11px;
+        text-decoration: none;
+        font: inherit;
+      }
+      button, select { cursor: pointer; }
+      .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin: 16px 0; }
+      .tile, .section {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--panel);
+      }
+      .tile { padding: 12px; }
+      .label { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; font-weight: 700; }
+      .value { margin-top: 8px; font-size: 26px; font-weight: 700; line-height: 1; }
+      .toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 0 0 12px; }
+      .section { padding: 14px; margin-top: 12px; }
+      h2 { margin: 0 0 4px; font-size: 17px; letter-spacing: 0; }
+      .query { color: var(--muted); font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11px; overflow-wrap: anywhere; margin-bottom: 12px; }
+      .event {
+        border-top: 1px solid rgba(255,255,255,.08);
+        padding: 10px 0;
+        display: grid;
+        grid-template-columns: 190px 1fr;
+        gap: 10px;
+      }
+      .event:first-of-type { border-top: 0; }
+      .time { color: var(--muted); font-size: 12px; }
+      .source { color: var(--accent); font-size: 12px; margin-top: 4px; overflow-wrap: anywhere; }
+      .fields { display: flex; flex-wrap: wrap; gap: 6px; align-items: flex-start; }
+      .chip {
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 4px 8px;
+        font-size: 12px;
+        max-width: 100%;
+        overflow-wrap: anywhere;
+        background: rgba(255,255,255,.04);
+      }
+      .empty { color: var(--muted); font-size: 13px; padding: 8px 0; }
+      .ok { color: var(--ok); }
+      .warn { color: var(--warn); }
+      .bad { color: var(--bad); }
+      @media (max-width: 700px) {
+        header { display: block; }
+        .actions { justify-content: flex-start; margin-top: 12px; }
+        .event { grid-template-columns: 1fr; }
+        h1 { font-size: 25px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <div>
+          <h1>Stream v3 Loki</h1>
+          <p class="sub">Sanitized public event snapshot generated from selected Stream v3 JSONL logs.</p>
+          <div id="stamp" class="stamp">Loading...</div>
+        </div>
+        <nav class="actions" aria-label="Page links">
+          <a class="button" href="./index.html">Status Hub</a>
+          <a class="button" href="./stream-v3-prometheus.html">Prometheus</a>
+          <button id="refresh" type="button">Refresh</button>
+        </nav>
+      </header>
+
+      <section class="summary" aria-label="Summary">
+        <article class="tile"><div class="label">Severity</div><div id="severity" class="value">-</div></article>
+        <article class="tile"><div class="label">Sections</div><div id="sectionsCount" class="value">-</div></article>
+        <article class="tile"><div class="label">Events</div><div id="eventsCount" class="value">-</div></article>
+        <article class="tile"><div class="label">Errors</div><div id="errorsCount" class="value">-</div></article>
+      </section>
+
+      <div class="toolbar">
+        <label class="label" for="sectionFilter">Section</label>
+        <select id="sectionFilter"><option value="all">All</option></select>
+      </div>
+
+      <main id="sections"></main>
+    </div>
+
+    <script>
+      const byId = (id) => document.getElementById(id);
+      let currentData = null;
+      const preferred = ["status", "healthy", "judgment", "judgment_reason", "incident_stage", "incident_reason", "failure_kind", "action", "result", "stream_active", "ingest_connected", "public_ok", "api_ok", "oauth_ok", "local_ok", "api_cost_burn_rate_active", "api_cost_projected_units_per_day", "evidence_state", "evidence_action", "message"];
+      const cls = (state) => state === "bad" || state === "warn" || state === "ok" ? state : "warn";
+      const timeText = (event) => {
+        if (event.ts_utc) return event.ts_utc;
+        if (!event.ts_ns) return "";
+        const ms = Math.floor(Number(event.ts_ns) / 1000000);
+        return Number.isFinite(ms) ? new Date(ms).toLocaleString() : "";
+      };
+      const chipValue = (value) => {
+        if (value === null || value === undefined || value === "") return "n/a";
+        if (typeof value === "boolean") return value ? "true" : "false";
+        return String(value);
+      };
+
+      function setSummary(summary = {}) {
+        const severity = cls(summary.severity);
+        byId("severity").textContent = severity.toUpperCase();
+        byId("severity").className = `value ${severity}`;
+        byId("sectionsCount").textContent = summary.total_sections ?? 0;
+        byId("eventsCount").textContent = summary.total_events ?? 0;
+        byId("errorsCount").textContent = summary.error_sections ?? 0;
+      }
+
+      function fillFilter(sections = []) {
+        const filter = byId("sectionFilter");
+        const selected = filter.value || "all";
+        filter.innerHTML = '<option value="all">All</option>';
+        sections.forEach((section) => {
+          const option = document.createElement("option");
+          option.value = section.id;
+          option.textContent = section.label || section.id;
+          filter.appendChild(option);
+        });
+        filter.value = [...filter.options].some((o) => o.value === selected) ? selected : "all";
+      }
+
+      function eventFields(event) {
+        const keys = preferred.filter((key) => Object.prototype.hasOwnProperty.call(event, key));
+        Object.keys(event).forEach((key) => {
+          if (!["ts_ns", "ts_utc", "source"].includes(key) && !keys.includes(key)) keys.push(key);
+        });
+        return keys;
+      }
+
+      function renderSections() {
+        const target = byId("sections");
+        const filter = byId("sectionFilter").value;
+        const sections = (currentData?.sections || []).filter((section) => filter === "all" || section.id === filter);
+        target.innerHTML = "";
+        sections.forEach((section) => {
+          const node = document.createElement("section");
+          node.className = "section";
+          node.innerHTML = `<h2>${section.label || section.id}</h2><div class="query">${section.query || ""}</div>`;
+          if (section.status !== "ok") {
+            const err = document.createElement("div");
+            err.className = "empty bad";
+            err.textContent = section.error || "section load failed";
+            node.appendChild(err);
+          }
+          if (!section.events || !section.events.length) {
+            const empty = document.createElement("div");
+            empty.className = "empty";
+            empty.textContent = "No events in snapshot.";
+            node.appendChild(empty);
+          } else {
+            section.events.forEach((event) => {
+              const row = document.createElement("article");
+              row.className = "event";
+              const fields = eventFields(event).map((key) => `<span class="chip">${key}: ${chipValue(event[key])}</span>`).join("");
+              row.innerHTML = `
+                <div>
+                  <div class="time">${timeText(event)}</div>
+                  <div class="source">${event.source || section.id}</div>
+                </div>
+                <div class="fields">${fields}</div>
+              `;
+              node.appendChild(row);
+            });
+          }
+          target.appendChild(node);
+        });
+      }
+
+      async function refresh() {
+        byId("stamp").textContent = "Loading...";
+        const res = await fetch(`./stream-v3-loki.json?t=${Date.now()}`, { cache: "no-store" });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        currentData = await res.json();
+        setSummary(currentData.summary || {});
+        fillFilter(currentData.sections || []);
+        renderSections();
+        const ts = currentData.generated_at ? new Date(Number(currentData.generated_at) * 1000).toLocaleString() : "n/a";
+        byId("stamp").textContent = `Updated: ${ts}`;
+      }
+
+      byId("sectionFilter").addEventListener("change", renderSections);
+      byId("refresh").addEventListener("click", () => refresh().catch((err) => {
+        byId("stamp").textContent = `Load failed: ${err.message}`;
+      }));
+      refresh().catch((err) => {
+        byId("stamp").textContent = `Load failed: ${err.message}`;
+        setSummary({ severity: "warn" });
+      });
+    </script>
+  </body>
+</html>

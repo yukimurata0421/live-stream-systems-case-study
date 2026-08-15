@@ -98,6 +98,7 @@ def build_status_payload(
         "oauth_stream_status": oauth.stream_status,
         "oauth_stream_health_status": oauth.stream_health_status,
         "oauth_stream_health_issues": oauth.stream_health_issues,
+        "oauth_stream_health_issue_details": list(oauth.stream_health_issue_details),
         "oauth_enable_auto_start": oauth.enable_auto_start,
         "oauth_enable_auto_stop": oauth.enable_auto_stop,
         "oauth_monitor_stream_enabled": oauth.monitor_stream_enabled,

@@ -48,7 +48,7 @@
           3200, "#735f4e",
           4500, "#806b59"
         ],
-        "color-relief-opacity": 0.42
+        "color-relief-opacity": 0.50
       }
     },
     {
@@ -115,7 +115,7 @@
       "source": "openmaptiles",
       "source-layer": "water",
       "filter": ["match", ["geometry-type"], ["MultiPolygon", "Polygon"], true, false],
-      "paint": {"line-color": "rgba(128,159,155,0.76)", "line-width": 1.0}
+      "paint": {"line-color": "rgba(145,178,173,0.84)", "line-width": 1.25}
     },
     {
       "id": "country-border-shadow",
@@ -133,7 +133,7 @@
       "source-layer": "boundary",
       "filter": ["all", ["==", ["get", "admin_level"], 2], ["!=", ["get", "maritime"], 1]],
       "layout": {"line-cap": "round", "line-join": "round"},
-      "paint": {"line-color": "rgba(118,147,141,0.82)", "line-width": 1.45}
+      "paint": {"line-color": "rgba(136,166,160,0.88)", "line-width": 1.6}
     },
     {
       "id": "prefecture-border-shadow",
@@ -151,7 +151,7 @@
       "source-layer": "boundary",
       "filter": ["all", ["==", ["get", "admin_level"], 4], ["!=", ["get", "maritime"], 1]],
       "layout": {"line-cap": "round", "line-join": "round"},
-      "paint": {"line-color": "rgba(109,145,137,0.84)", "line-width": 1.4, "line-dasharray": [2, 1.6]}
+      "paint": {"line-color": "rgba(127,164,155,0.90)", "line-width": 1.6, "line-dasharray": [2, 1.6]}
     },
     {
       "id": "major-city",
@@ -163,12 +163,12 @@
       "layout": {
         "text-field": ["coalesce", ["get", "name:latin"], ["get", "name_en"]],
         "text-font": ["Noto Sans Regular"],
-        "text-size": ["interpolate", ["linear"], ["zoom"], 5, 9, 8, 12],
+        "text-size": ["interpolate", ["linear"], ["zoom"], 5, 12, 8, 15],
         "text-transform": "none",
         "text-letter-spacing": 0.02
       },
       "paint": {
-        "text-color": "rgba(174,190,193,0.74)",
+        "text-color": "rgba(196,211,213,0.84)",
         "text-halo-color": "rgba(8,17,20,0.90)",
         "text-halo-width": 1.2,
         "text-halo-blur": 0.7
@@ -184,12 +184,12 @@
       "layout": {
         "text-field": ["coalesce", ["get", "name:latin"], ["get", "name_en"]],
         "text-font": ["Noto Sans Regular"],
-        "text-size": ["interpolate", ["linear"], ["zoom"], 5, 12, 8, 17],
+        "text-size": ["interpolate", ["linear"], ["zoom"], 5, 16, 8, 22],
         "text-transform": "none",
         "text-letter-spacing": 0.02
       },
       "paint": {
-        "text-color": "rgba(190,205,207,0.86)",
+        "text-color": "rgba(211,224,225,0.94)",
         "text-halo-color": "rgba(8,17,20,0.92)",
         "text-halo-width": 1.4,
         "text-halo-blur": 0.7
@@ -200,7 +200,7 @@
       "type": "circle",
       "source": "airports",
       "paint": {
-        "circle-radius": 3.7,
+        "circle-radius": 4.5,
         "circle-color": "#c5d4d5",
         "circle-opacity": 0.88,
         "circle-stroke-color": "#0a1519",
@@ -214,7 +214,7 @@
       "layout": {
         "text-field": ["get", "code"],
         "text-font": ["Noto Sans Regular"],
-        "text-size": 10,
+        "text-size": 14,
         "text-offset": [0, 1.15],
         "text-anchor": "top",
         "text-letter-spacing": 0.08

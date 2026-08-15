@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>stream_v3 Operations | Yuki Murata</title>
+    <link rel="stylesheet" href="./assets/site.css" />
+  </head>
+  <body>
+    <main class="page">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">24/7 ADS-B Live Operations</p>
+          <h1>stream_v3 Operations</h1>
+          <p class="lede" id="snapshotLine">snapshot loading</p>
+        </div>
+        <nav class="actions" aria-label="Primary links">
+          <button id="refresh" type="button">Refresh</button>
+          <a href="./stream-v3-prometheus.html">Prometheus raw</a>
+          <a href="./stream-v3-loki.html">Loki raw</a>
+        </nav>
+      </header>
+
+      <section class="decision-grid" aria-label="Decision summary">
+        <article class="decision">
+          <span>Overall</span>
+          <strong id="overallState">Loading</strong>
+          <small id="overallMeta">Prometheus and Loki</small>
+        </article>
+        <article class="decision">
+          <span>Snapshot age</span>
+          <strong id="snapshotState">Loading</strong>
+          <small id="snapshotMeta">freshness gate</small>
+        </article>
+        <article class="decision">
+          <span>YouTube</span>
+          <strong id="youtubeState">Loading</strong>
+          <small id="youtubeMeta">watchdog / ingest / same URL</small>
+        </article>
+        <article class="decision">
+          <span>Map delivery</span>
+          <strong id="mapState">Loading</strong>
+          <small id="mapMeta">render / browser / NVENC / RTMP / precipitation</small>
+        </article>
+        <article class="decision">
+          <span>Auto-recovery</span>
+          <strong id="autonomyState">Loading</strong>
+          <small id="autonomyMeta">executor boundary</small>
+        </article>
+      </section>
+
+      <section class="ops-band" aria-label="Operational checks">
+        <div class="section-title">
+          <h2>Decision checks</h2>
+          <p id="metricCount">-</p>
+        </div>
+        <div class="check-list" id="checkList"></div>
+      </section>
+
+      <section class="ops-band reliability-band" aria-labelledby="reliabilityTitle">
+        <div class="section-title">
+          <div>
+            <h2 id="reliabilityTitle">Operational reliability</h2>
+            <p class="section-copy">
+              Rolling observations from the delivery and monitoring path. References are internal
+              engineering lines, not availability guarantees. Current health is shown above; these
+              cards describe past windows.
+            </p>
+          </div>
+          <p id="reliabilityStamp">measurement loading</p>
+        </div>
+        <div class="reliability-grid" id="reliabilityGrid"></div>
+      </section>
+
+      <section class="ops-band" aria-label="Guardrails">
+        <div class="section-title">
+          <h2>Guardrails</h2>
+          <p>home line / API / ADS-B freshness</p>
+        </div>
+        <div class="guard-grid" id="guardGrid"></div>
+      </section>
+
+      <section class="ops-band" aria-label="Trends">
+        <div class="section-title">
+          <h2>24h trends</h2>
+          <p id="trendCount">-</p>
+        </div>
+        <div class="trend-grid" id="trendGrid"></div>
+      </section>
+
+      <section class="ops-band" aria-label="Evidence">
+        <div class="section-title">
+          <h2>Evidence checks</h2>
+          <p id="evidenceCount">-</p>
+        </div>
+        <div class="evidence-grid" id="evidenceGrid"></div>
+      </section>
+
+      <section class="ops-band" aria-label="Recent events">
+        <div class="section-title">
+          <h2>Recent events</h2>
+          <p id="eventCount">-</p>
+        </div>
+        <div class="event-list" id="eventList"></div>
+      </section>
+    </main>
+    <script src="./assets/site.js" defer></script>
+  </body>
+</html>

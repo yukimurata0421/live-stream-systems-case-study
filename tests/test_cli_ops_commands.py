@@ -711,6 +711,25 @@ class CliOpsCommandsTests(unittest.TestCase):
         self.assertIn("stream1090:overlay_report", incident_ids)
         self.assertNotIn("stream1090:upstream_report", incident_ids)
 
+    def test_collect_notification_incidents_passes_operational_reliability_sources(self) -> None:
+        with mock.patch.object(cli.notify_incidents, "collect_notification_incidents", return_value=[]) as collect:
+            result = cli.collect_notification_incidents(now_ts=100, report_stale_sec=1800)
+
+        self.assertEqual(result, [])
+        kwargs = collect.call_args.kwargs
+        self.assertEqual(
+            kwargs["operational_reliability_status_file"],
+            cli.STATE_BASE_DIR / "operational_reliability_status.json",
+        )
+        self.assertEqual(
+            kwargs["operational_reliability_burn_status_file"],
+            cli.STATE_BASE_DIR / "operational_reliability_burn_status.json",
+        )
+        self.assertEqual(
+            kwargs["external_blackbox_status_file"],
+            cli.STATE_BASE_DIR / "external_blackbox_status.json",
+        )
+
     def test_collect_notification_incidents_suppresses_single_report_only_movement_noise(self) -> None:
         now_ts = cli.parse_utc_ts("2026-05-10T00:00:00Z")
         observe_payload = {
@@ -1262,6 +1281,62 @@ class CliOpsCommandsTests(unittest.TestCase):
         self.assertEqual(len(slack_sent), 1)
         self.assertIn("障害継続ステータス", slack_sent[0])
         self.assertEqual(state["active"]["stream1090:overlay_report"]["slack_first_notified_ts"], 2800)
+
+    def test_notify_status_honors_incident_specific_repeat_interval(self) -> None:
+        config = {
+            "enabled": True,
+            "webhook_url": "https://discord.example/webhook",
+            "repeat_sec": 60,
+            "report_stale_sec": 1800,
+            "username": "discord-bot",
+            "slack_enabled": False,
+            "slack_webhook_url": "",
+            "slack_username": "slack-bot",
+            "slack_min_active_sec": 1800,
+            "outbox_ttl_sec": 86400,
+            "outbox_max_pending": 50,
+            "outbox_flush_limit": 10,
+        }
+        incident_payload = [
+            {
+                "id": "external:blackbox_unknown",
+                "severity": "warning",
+                "component": "external_blackbox_evidence",
+                "summary": "external evidence unknown",
+                "evidence": "regional disagreement",
+                "recovery_type": "external_evidence_collection_recovery",
+                "follow_up": "check samples",
+                "observed_ts": 1000,
+                "repeat_sec": 900,
+            }
+        ]
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            state_file = root / "notify_state.json"
+            events_file = root / "notify_events.jsonl"
+            outbox_file = root / "notify_outbox.jsonl"
+            discord_sent: list[str] = []
+
+            with mock.patch.object(cli, "NOTIFY_STATE_FILE", state_file):
+                with mock.patch.object(cli, "NOTIFY_EVENTS_FILE", events_file):
+                    with mock.patch.object(cli, "NOTIFY_OUTBOX_FILE", outbox_file):
+                        with mock.patch("cli.load_stream_notify_config", return_value=config):
+                            with mock.patch(
+                                "cli.send_discord_webhook",
+                                side_effect=lambda _url, content, **_kwargs: (
+                                    discord_sent.append(content) is None,
+                                    "ok",
+                                ),
+                            ):
+                                with mock.patch("cli.collect_notification_incidents", return_value=incident_payload):
+                                    self.assertEqual(cli.notify_status(now_ts=1000), 0)
+                                    self.assertEqual(cli.notify_status(now_ts=1061), 0)
+                                    self.assertEqual(cli.notify_status(now_ts=1899), 0)
+                                    self.assertEqual(cli.notify_status(now_ts=1900), 0)
+
+        self.assertEqual(len(discord_sent), 2)
+        self.assertIn("障害検知", discord_sent[0])
+        self.assertIn("障害継続ステータス", discord_sent[1])
 
     def test_notify_status_force_test_routes_to_slack_even_without_incidents(self) -> None:
         config = {

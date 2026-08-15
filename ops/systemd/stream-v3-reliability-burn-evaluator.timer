@@ -1,0 +1,12 @@
+[Unit]
+Description=Evaluate stream_v3 multi-window burn every five minutes
+
+[Timer]
+OnBootSec=9min
+OnUnitInactiveSec=5min
+Persistent=true
+AccuracySec=30s
+Unit=stream-v3-reliability-burn-evaluator.service
+
+[Install]
+WantedBy=timers.target

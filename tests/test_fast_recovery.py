@@ -811,7 +811,8 @@ class FastRecoveryMainBehaviorTests(unittest.TestCase):
         self.assertEqual(events[0].get("bytes_sent_delta"), 45_000_000)
         self.assertEqual(events[0].get("mbps"), 6.0)
 
-    def test_low_upload_pressure_restarts_with_emergency_profile(self) -> None:
+    def test_low_upload_pressure_does_not_restart_when_feature_disabled(self) -> None:
+        fast_recovery.LOW_UPLOAD_PRESSURE_ENABLED = False
         fast_recovery.LOW_UPLOAD_PRESSURE_CONFIRM = 3
         fast_recovery.LOW_UPLOAD_PRESSURE_MAX_MBPS = 3.2
         self._write_state(
@@ -849,20 +850,8 @@ class FastRecoveryMainBehaviorTests(unittest.TestCase):
             tcp_metrics={**common_metrics, "bytes_sent": 13_750_000},
         )
         self.assertEqual(rc3, 0)
-        restart_mock3.assert_called_once()
-        self.assertIn("low upload pressure", restart_mock3.call_args.args[0])
-
-        events = self._read_events()
-        self.assertEqual(events[-1].get("kind"), "restart")
-        self.assertEqual(events[-1].get("trigger"), "low_upload_pressure")
-        self.assertEqual(events[-1].get("metrics", {}).get("send_mbps"), 2.0)
-
-        restart_reason = self._read_restart_reason()
-        self.assertEqual(restart_reason.get("trigger"), "low_upload_pressure")
-        profile = restart_reason.get("emergency_low_upload_profile")
-        self.assertIsInstance(profile, dict)
-        self.assertEqual(profile.get("name"), "low_upload_pressure_low_upload")
-        self.assertEqual(profile.get("video_bitrate"), "2500k")
+        restart_mock3.assert_not_called()
+        self.assertFalse(any(item.get("trigger") == "low_upload_pressure" for item in self._read_events()))
 
     def test_low_upload_pressure_requires_queue_pressure(self) -> None:
         fast_recovery.LOW_UPLOAD_PRESSURE_CONFIRM = 1

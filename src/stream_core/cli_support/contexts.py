@@ -197,6 +197,18 @@ def objective_sli_context(ns):
     )
 
 
+def sli_report_context(ns):
+    from stream_core.cli_support import sli_report
+
+    return sli_report.SliReportContext(
+        youtube_watchdog_events_file=ns.YOUTUBE_WATCHDOG_EVENTS_FILE,
+        prometheus_url=os.environ.get("STREAM_V3_PROMETHEUS_URL", sli_report.DEFAULT_PROMETHEUS_URL),
+        operational_reliability_db_file=ns.PATHS.state_base_dir / "operational_reliability.sqlite3",
+        viewer_synthetic_events_file=ns.LOG_BASE_DIR / "viewer_synthetic_status.jsonl",
+        subsystems_status_events_file=ns.PATHS.subsystems_status_events_file,
+    )
+
+
 def memory_status_context(ns):
     from stream_core.cli_support import memory_status
     from stream_core.common import systemd as systemd_common

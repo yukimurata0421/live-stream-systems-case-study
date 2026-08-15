@@ -747,6 +747,113 @@ class StreamV3PrometheusExporterTests(unittest.TestCase):
         self.assertEqual(metric_value(payload, "stream_v3_viewer_synthetic_consecutive_probe_failures"), 2.0)
         self.assertEqual(metric_value(payload, "stream_v3_viewer_synthetic_consecutive_visual_failures"), 3.0)
 
+    def test_exports_oauth_input_quality_without_reusing_watchdog_warn_count(self) -> None:
+        exporter = load_exporter()
+        with tempfile.TemporaryDirectory() as td:
+            state_root = Path(td)
+            (state_root / "youtube_watchdog_stats.json").write_text(
+                json.dumps(
+                    {
+                        "ts_utc": "2026-08-10T00:00:00Z",
+                        "oauth_checked_ts_utc": "2026-08-10T00:00:00Z",
+                        "oauth_probe_ok": True,
+                        "oauth_stream_status": "active",
+                        "oauth_stream_health_status": "ok",
+                        "oauth_stream_health_issues": 1,
+                        "oauth_stream_health_issue_details": [
+                            {"type": "bitrateLow", "severity": "warning"}
+                        ],
+                        "ingest_connected": True,
+                        "healthy": True,
+                    }
+                ),
+                encoding="utf-8",
+            )
+            with (
+                mock.patch.object(exporter, "run_json", side_effect=[{"windows": []}, {"metrics": {}}]),
+                mock.patch.object(exporter, "host_memory_snapshot", return_value={}),
+                mock.patch.object(exporter, "runtime_memory_snapshot", return_value={"containers": []}),
+                mock.patch.object(exporter, "runtime_gpu_snapshot", return_value={}),
+                mock.patch.object(exporter.time, "time", return_value=1_786_320_060.0),
+            ):
+                payload = exporter.build_metrics(repo_root=Path(td), state_root=state_root, timeout_sec=1)
+
+        self.assertEqual(metric_value(payload, "stream_v3_youtube_input_quality_probe_fresh"), 1.0)
+        self.assertEqual(metric_value(payload, "stream_v3_youtube_input_quality_eligible"), 1.0)
+        self.assertEqual(metric_value(payload, "stream_v3_youtube_input_quality_good"), 0.0)
+        self.assertEqual(
+            metric_value(payload, "stream_v3_youtube_input_quality_warning_or_error_issue_count"),
+            1.0,
+        )
+
+    def test_external_blackbox_metrics_keep_unknown_distinct_from_failed(self) -> None:
+        exporter = load_exporter()
+        writer = exporter.MetricWriter()
+        exporter.write_external_blackbox_metrics(
+            writer,
+            {
+                "checked_at_utc": "2026-08-10T00:10:00Z",
+                "evidence_at_utc": "2026-08-10T00:09:00Z",
+                "status": "unknown",
+                "targets": {
+                    "public_status": {
+                        "status": "ok",
+                        "fresh_locations": 3,
+                        "pass_ratio": 1.0,
+                        "sample_age_seconds": 60,
+                    }
+                },
+            },
+            now=1_786_320_660.0,
+        )
+        payload = writer.render()
+
+        self.assertEqual(metric_value(payload, "stream_v3_external_blackbox_ok"), 0.0)
+        self.assertEqual(metric_value(payload, "stream_v3_external_blackbox_status"), -1.0)
+        self.assertEqual(metric_value(payload, "stream_v3_external_blackbox_sample_available"), 1.0)
+        self.assertEqual(metric_value(payload, "stream_v3_external_blackbox_age_seconds"), 120.0)
+
+    def test_adsb_rendering_accepts_either_message_or_position_movement(self) -> None:
+        exporter = load_exporter()
+        for messages, positions, expected in (
+            (True, False, 1.0),
+            (False, True, 1.0),
+            (False, False, 0.0),
+        ):
+            with self.subTest(messages=messages, positions=positions), tempfile.TemporaryDirectory() as td:
+                state_root = Path(td)
+                (state_root / "subsystems_status.json").write_text(
+                    json.dumps(
+                        {
+                            "rendering": {
+                                "state": "healthy",
+                                "aircraft_json_ok": True,
+                                "aircraft_messages_moving": messages,
+                                "aircraft_positions_moving": positions,
+                                "stream1090_report_ok": True,
+                                "upstream_stream1090_report_ok": True,
+                            }
+                        }
+                    ),
+                    encoding="utf-8",
+                )
+                (state_root / "watchdog").mkdir()
+                (state_root / "watchdog" / "adsb_freshness_state.json").write_text(
+                    json.dumps({"last_change_ts": 4070908850, "sample_ts": 4070908855, "status": "ok"}),
+                    encoding="utf-8",
+                )
+                with (
+                    mock.patch.object(exporter, "run_json", side_effect=[{"windows": []}, {"metrics": {}}]),
+                    mock.patch.object(exporter, "host_memory_snapshot", return_value={}),
+                    mock.patch.object(exporter, "runtime_memory_snapshot", return_value={"containers": []}),
+                    mock.patch.object(exporter, "runtime_gpu_snapshot", return_value={}),
+                    mock.patch.object(exporter.time, "time", return_value=4070908860.0),
+                ):
+                    payload = exporter.build_metrics(
+                        repo_root=Path(td), state_root=state_root, timeout_sec=1
+                    )
+            self.assertEqual(metric_value(payload, "stream_v3_adsb_rendering_ok"), expected)
+
 
 if __name__ == "__main__":
     unittest.main()

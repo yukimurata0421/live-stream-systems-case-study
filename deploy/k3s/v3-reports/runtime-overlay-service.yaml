@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: stream-v3-runtime-overlay
+  namespace: stream-v3
+  labels:
+    app.kubernetes.io/name: stream-v3
+    app.kubernetes.io/component: runtime-overlay
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: stream-v3
+    app.kubernetes.io/component: runtime
+  ports:
+    - name: overlay
+      port: 18080
+      targetPort: 18080

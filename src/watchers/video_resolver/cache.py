@@ -35,6 +35,11 @@ def oauth_from_watchdog_stats_cache(stats: dict, now_ts: int, max_age_sec: int, 
         stream_status=str(stats.get("oauth_stream_status", "")).strip(),
         stream_health_status=str(stats.get("oauth_stream_health_status", "")).strip(),
         stream_health_issues=int(stats.get("oauth_stream_health_issues", 0) or 0),
+        stream_health_issue_details=tuple(
+            item
+            for item in (stats.get("oauth_stream_health_issue_details") or [])
+            if isinstance(item, dict)
+        ),
         stream_status_required=False,
         remote_checked=True,
         enable_auto_start=optional_bool(stats, "oauth_enable_auto_start"),

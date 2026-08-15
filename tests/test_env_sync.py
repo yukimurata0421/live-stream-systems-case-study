@@ -57,15 +57,21 @@ class EnvSyncTests(unittest.TestCase):
         self.assertGreater(len(services), 0)
         for path in services:
             text = path.read_text(encoding="utf-8")
+            env_lines = [line.strip() for line in text.splitlines() if line.startswith("EnvironmentFile=")]
             with self.subTest(path=path.name):
-                self.assertNotIn("EnvironmentFile=/etc/default/adsb-streamnew", text)
-                self.assertNotIn("EnvironmentFile=-/etc/default/adsb-streamnew", text)
-                if path.name == "adsb-streamnew-prometheus-exporter.service":
-                    self.assertIn("EnvironmentFile=-/etc/default/stream-v3-observability-monitor", text)
-                    self.assertNotIn("/home/yuki/projects/stream_v2/.state/env/", text)
+                self.assertNotIn("EnvironmentFile=/etc/default/adsb-streamnew", env_lines)
+                self.assertNotIn("EnvironmentFile=-/etc/default/adsb-streamnew", env_lines)
+                if path.name == "adsb-streamnew-notify.service":
+                    self.assertIn("EnvironmentFile=-/etc/default/adsb-streamnew-notify", env_lines)
+                    self.assertNotIn("EnvironmentFile=-/home/yuki/projects/stream_v2/.state/env/adsb-streamnew.env", env_lines)
                     continue
-                if "EnvironmentFile=" in text:
-                    self.assertIn("/home/yuki/projects/stream_v2/.state/env/", text)
+                if "EnvironmentFile=-/etc/default/stream-v3-observability-monitor" in env_lines:
+                    continue
+                if env_lines:
+                    self.assertTrue(
+                        any("/home/yuki/projects/stream_v2/.state/env/" in line for line in env_lines),
+                        env_lines,
+                    )
 
     def test_program_map_shadow_systemd_entrypoints_exist(self) -> None:
         expected = (

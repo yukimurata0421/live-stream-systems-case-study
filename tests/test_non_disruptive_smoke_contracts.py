@@ -181,6 +181,7 @@ class ReadOnlyRoutineCommandContractTests(unittest.TestCase):
             "api-usage",
             "health-summary",
             "objective-sli",
+            "sli-report",
             "memory-status",
             "resource-memory",
             "subsystems-status",
@@ -236,6 +237,7 @@ class ReadOnlyRoutineCommandContractTests(unittest.TestCase):
             api_usage=record("api_usage"),
             health_summary=record("health_summary"),
             objective_sli=record("objective_sli"),
+            sli_report=record("sli_report"),
             memory_status=record("memory_status"),
             resource_memory=record("resource_memory"),
             subsystems_status=record("subsystems_status"),
@@ -259,6 +261,16 @@ class ReadOnlyRoutineCommandContractTests(unittest.TestCase):
             return calls[-1]
 
         self.assertEqual(dispatch(["objective-sli", "--json", "--no-record"])[2], {"json_output": True, "record": False})
+        self.assertEqual(
+            dispatch(["sli-report", "--json", "--windows", "24h,7d", "--end-time", "2026-08-10T00:00:00Z"])[2],
+            {
+                "windows": "24h,7d",
+                "prometheus_url": "",
+                "end_time": "2026-08-10T00:00:00Z",
+                "timeout_sec": 5.0,
+                "json_output": True,
+            },
+        )
         self.assertEqual(dispatch(["memory-status", "--json", "--no-record"])[2], {"json_output": True, "record": False})
         self.assertEqual(dispatch(["resource-memory", "--json", "--no-record"])[2], {"json_output": True, "record": False})
         self.assertEqual(dispatch(["subsystems-status", "--json", "--no-record"])[2], {"json_output": True, "record": False})
@@ -275,6 +287,56 @@ class ReadOnlyRoutineCommandContractTests(unittest.TestCase):
         self.assertEqual(upstream_report[0], "upstream_report")
         self.assertFalse(upstream_report[2]["record"])
         self.assertTrue(upstream_report[2]["json_output"])
+
+    def test_report_cli_requires_explicit_record_and_target_to_mutate_history(self) -> None:
+        calls: list[tuple[str, tuple, dict]] = []
+
+        def record(name: str):
+            def invoke(*args, **kwargs):
+                calls.append((name, args, kwargs))
+                return 0
+
+            return invoke
+
+        router = stream_router.CliRouter(
+            maintenance_top_level_actions={},
+            maintenance_command_aliases=set(),
+            guard_mutating_command=lambda *_args: 0,
+            **{
+                field: record(field)
+                for field in stream_router.CliRouter.__dataclass_fields__
+                if field
+                not in {
+                    "maintenance_top_level_actions",
+                    "maintenance_command_aliases",
+                    "guard_mutating_command",
+                }
+            },
+        )
+
+        args = stream_parser.build_parser().parse_args(["stream1090-report", "--json"])
+        self.assertEqual(stream_router.dispatch(args, router), 0)
+        self.assertEqual(calls[-1][0], "stream1090_report")
+        self.assertFalse(calls[-1][2]["record"])
+        self.assertEqual(calls[-1][2]["base_url"], "http://127.0.0.1:18080")
+
+        args = stream_parser.build_parser().parse_args(
+            ["stream1090-report", "--record", "--base-url", "http://overlay.test"]
+        )
+        self.assertEqual(stream_router.dispatch(args, router), 0)
+        self.assertTrue(calls[-1][2]["record"])
+        self.assertEqual(calls[-1][2]["base_url"], "http://overlay.test")
+
+        calls.clear()
+        args = stream_parser.build_parser().parse_args(["stream1090-report", "--record"])
+        with mock.patch("sys.stderr"):
+            self.assertEqual(stream_router.dispatch(args, router), 2)
+        self.assertFalse(calls)
+
+        args = stream_parser.build_parser().parse_args(["upstream-report", "--record"])
+        with mock.patch("sys.stderr"):
+            self.assertEqual(stream_router.dispatch(args, router), 2)
+        self.assertFalse(calls)
 
 
 class NoRecordReportContractTests(unittest.TestCase):

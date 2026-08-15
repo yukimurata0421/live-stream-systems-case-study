@@ -103,6 +103,8 @@ def build_status_payload(
             "oauth_checked_ts_utc": stats.get("oauth_checked_ts_utc", ""),
             "oauth_stream_status": stats.get("oauth_stream_status", ""),
             "oauth_stream_health_status": stats.get("oauth_stream_health_status", ""),
+            "oauth_stream_health_issues": stats.get("oauth_stream_health_issues", 0),
+            "oauth_stream_health_issue_details": stats.get("oauth_stream_health_issue_details", []),
             "oauth_enable_auto_stop": stats.get("oauth_enable_auto_stop", None),
             "api_ok": stats.get("api_ok", None),
             "status": stats.get("status", ""),
@@ -139,6 +141,8 @@ def attach_live_probe(payload: dict, *, cfg: dict[str, str], base_dir: Path) -> 
             "channel_id": probe.channel_id,
             "stream_status": probe.stream_status,
             "stream_health_status": probe.stream_health_status,
+            "stream_health_issues": probe.stream_health_issues,
+            "stream_health_issue_details": list(probe.stream_health_issue_details),
             "enable_auto_stop": probe.enable_auto_stop,
             "remote_checked": probe.remote_checked,
         }

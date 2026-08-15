@@ -1,0 +1,13 @@
+/var/lib/stream-v3/observability-monitor/logs/*.log
+/var/lib/stream-v3/observability-monitor/logs/*.jsonl {
+    su stream-v3 stream-v3
+    daily
+    maxsize 256M
+    rotate 14
+    compress
+    compressoptions -1
+    delaycompress
+    missingok
+    notifempty
+    copytruncate
+}

@@ -4,6 +4,8 @@ import time
 import urllib.error
 from pathlib import Path
 
+from stream_core.common.youtube_input_quality import normalize_health_issue_details
+
 try:
     from .youtube_watchdog_config import (
         API_KEY,
@@ -983,6 +985,7 @@ def probe_with_oauth() -> OAuthProbeResult:
     stream_status = ""
     stream_health_status = ""
     stream_health_issues = 0
+    stream_health_issue_details: tuple[dict[str, str], ...] = ()
     if bound_stream_id:
         try:
             streams = youtube_live_api_get(
@@ -999,6 +1002,7 @@ def probe_with_oauth() -> OAuthProbeResult:
                 issues = h.get("configurationIssues") or []
                 if isinstance(issues, list):
                     stream_health_issues = len(issues)
+                    stream_health_issue_details = normalize_health_issue_details(issues)
         except urllib.error.HTTPError as e:
             body = _http_error_body(e)
             detail = f"oauth liveStreams http {e.code}: {body[:240]}"
@@ -1073,6 +1077,7 @@ def probe_with_oauth() -> OAuthProbeResult:
         stream_status=stream_status,
         stream_health_status=stream_health_status,
         stream_health_issues=stream_health_issues,
+        stream_health_issue_details=stream_health_issue_details,
         stream_status_required=OAUTH_STREAM_STATUS_REQUIRED,
         remote_checked=True,
         enable_auto_start=enable_auto_start,

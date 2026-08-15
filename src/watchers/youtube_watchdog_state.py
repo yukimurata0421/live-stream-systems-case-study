@@ -27,6 +27,8 @@ try:
         STATE_FILE,
         FORCE_LIVE_STATE_FILE,
         VIDEO_RESOLVER_STATE_FILE,
+        OPERATIONAL_RELIABILITY_DB_FILE,
+        DEPLOYED_REVISION,
     )
 except ImportError:
     from youtube_watchdog_config import (
@@ -40,6 +42,8 @@ except ImportError:
         STATE_FILE,
         FORCE_LIVE_STATE_FILE,
         VIDEO_RESOLVER_STATE_FILE,
+        OPERATIONAL_RELIABILITY_DB_FILE,
+        DEPLOYED_REVISION,
     )
 
 
@@ -185,6 +189,18 @@ def append_event(payload: dict) -> None:
             f.write(json.dumps(payload, ensure_ascii=False, separators=(",", ":")) + "\n")
     except Exception as e:
         log(f"WARN failed to append log file: {e}")
+    try:
+        from stream_core.operational_reliability.evidence_store import record_same_url_event
+
+        record_same_url_event(
+            Path(OPERATIONAL_RELIABILITY_DB_FILE),
+            payload,
+            revision=DEPLOYED_REVISION,
+        )
+    except Exception as e:
+        # The durable ledger must never stop the delivery watchdog. The hourly
+        # backfill repairs missed ledger writes from the append-only JSONL.
+        log(f"WARN failed to update Same URL transition ledger: {e}")
 
 
 def _write_json_file(path: str, payload: dict) -> None:

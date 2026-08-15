@@ -1,0 +1,16 @@
+[Unit]
+Description=Import independent stream_v3 public uptime-check status
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=stream-v3
+EnvironmentFile=-/etc/default/stream-v3-observability-monitor
+Environment=STREAM_V3_REPO_DIR=/opt/stream_v3
+Environment=STREAM_RUNTIME_STATE_DIR=/var/lib/stream-v3/observability-monitor
+ExecStart=/bin/bash -lc 'test -n "$${STREAM_V3_GCP_MONITORING_PROJECT:-}" && exec /usr/bin/python3 "$${STREAM_V3_REPO_DIR}/ops/scripts/stream_v3_external_blackbox_import.py" --project "$${STREAM_V3_GCP_MONITORING_PROJECT}" --output "$${STREAM_RUNTIME_STATE_DIR}/external_blackbox_status.json"'
+TimeoutStartSec=30
+
+[Install]
+WantedBy=multi-user.target

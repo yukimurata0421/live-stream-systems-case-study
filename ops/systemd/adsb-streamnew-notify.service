@@ -5,9 +5,12 @@ Wants=network-online.target
 
 [Service]
 Type=oneshot
-User=yuki
-Group=yuki
-EnvironmentFile=-/home/yuki/projects/stream_v2/.state/env/adsb-streamnew.env
-EnvironmentFile=-/home/yuki/projects/stream_v2/.state/env/adsb-streamnew-notify.env
-Environment=PYTHONPATH=/home/yuki/projects/stream_v2/src
-ExecStart=/home/yuki/projects/stream_v2/bin/stream-new notify-status
+User=stream-v3
+Group=stream-v3
+EnvironmentFile=-/etc/default/adsb-streamnew-notify
+EnvironmentFile=-/etc/default/stream-v3-observability-monitor
+Environment=STREAM_V3_REPO_DIR=/opt/stream_v3
+Environment=STREAM_RUNTIME_STATE_DIR=/var/lib/stream-v3/observability-monitor
+Environment=STREAM_RUNTIME_LOG_DIR=/var/lib/stream-v3/observability-monitor/logs
+Environment=PYTHONPATH=/opt/stream_v3/src
+ExecStart=/opt/stream_v3/bin/stream-prod notify-status

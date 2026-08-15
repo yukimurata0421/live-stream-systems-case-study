@@ -67,10 +67,12 @@ class StreamV3BootstrapTests(unittest.TestCase):
             "deploy/k3s/v2-state-mirror/source-state-pvc.yaml",
             "deploy/k3s/v2-state-mirror/secret.example.yaml",
             "deploy/k3s/v3-reports/kustomization.yaml",
+            "deploy/k3s/v3-reports/runtime-overlay-service.yaml",
             "deploy/k3s/v3-reports/youtube-api-cost-open-day-cronjob.yaml",
             "deploy/k3s/v3-reports/youtube-api-cost-closed-day-cronjob.yaml",
             "deploy/k3s/v3-reports/stream1090-report-cronjob.yaml",
             "deploy/k3s/v3-reports/upstream-report-cronjob.yaml",
+            "deploy/k3s/v3-reports-active/kustomization.yaml",
             "deploy/k3s/v3-runtime/deployment.yaml",
             "deploy/k3s/v3-runtime/state-pvc.yaml",
             "deploy/k3s/v3-runtime/music-pvc.yaml",
@@ -95,6 +97,12 @@ class StreamV3BootstrapTests(unittest.TestCase):
         secret = (ROOT / "deploy/k3s/base/secret.example.yaml").read_text(encoding="utf-8")
         mirror = (ROOT / "deploy/k3s/v2-state-mirror/cronjob.yaml").read_text(encoding="utf-8")
         reports = (ROOT / "deploy/k3s/v3-reports/stream1090-report-cronjob.yaml").read_text(encoding="utf-8")
+        upstream_report = (ROOT / "deploy/k3s/v3-reports/upstream-report-cronjob.yaml").read_text(
+            encoding="utf-8"
+        )
+        active_reports = (ROOT / "deploy/k3s/v3-reports-active/kustomization.yaml").read_text(
+            encoding="utf-8"
+        )
 
         self.assertIn("namespace: stream-v3", configmap)
         self.assertIn("TEST_MODE: \"1\"", configmap)
@@ -156,6 +164,13 @@ class StreamV3BootstrapTests(unittest.TestCase):
         self.assertIn("rsync -az --delete", mirror)
         self.assertIn("suspend: true", reports)
         self.assertIn("/app/bin/stream-prod stream1090-report", reports)
+        self.assertIn("--record", reports)
+        self.assertIn("--base-url", reports)
+        self.assertIn("/app/bin/stream-prod upstream-report", upstream_report)
+        self.assertIn("--record", upstream_report)
+        self.assertIn("--upstream-url", upstream_report)
+        self.assertIn("stream-v3-stream1090-report", active_reports)
+        self.assertIn("value: false", active_reports)
 
         containerfile = (ROOT / "deploy/k3s/Containerfile").read_text(encoding="utf-8")
         self.assertIn("pulseaudio \\", containerfile)

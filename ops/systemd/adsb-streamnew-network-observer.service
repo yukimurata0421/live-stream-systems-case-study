@@ -1,16 +1,17 @@
 [Unit]
-Description=ADS-B Stream-New network observer
+Description=stream_v3 observability/arena-monitor network observer
 After=network-online.target
 Wants=network-online.target
 
 [Service]
 Type=simple
-User=yuki
-Group=yuki
-WorkingDirectory=/home/yuki/projects/stream_v3
-EnvironmentFile=-/home/yuki/projects/stream_v2/.state/env/stream-v3-observability-monitor.env
-Environment=PYTHONPATH=/home/yuki/projects/stream_v3/src
-ExecStart=/usr/bin/python3 /home/yuki/projects/stream_v3/src/watchers/network_observer.py --loop
+User=stream-v3
+Group=stream-v3
+EnvironmentFile=-/etc/default/stream-v3-observability-monitor
+Environment=STREAM_V3_REPO_DIR=/opt/stream_v3
+WorkingDirectory=/opt/stream_v3
+Environment=PYTHONPATH=/opt/stream_v3/src
+ExecStart=/usr/bin/python3 /opt/stream_v3/src/watchers/network_observer.py --loop
 Restart=always
 RestartSec=5
 

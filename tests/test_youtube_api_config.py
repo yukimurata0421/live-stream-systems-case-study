@@ -16,6 +16,54 @@ import youtube_watchdog_config  # type: ignore
 
 
 class YouTubeApiConfigTests(unittest.TestCase):
+    def test_oauth_probe_persists_issue_type_and_severity_only(self) -> None:
+        broadcast = {
+            "id": "BID",
+            "snippet": {"resourceId": {"videoId": "VID"}, "channelId": "UC"},
+            "status": {"lifeCycleStatus": "live"},
+            "contentDetails": {"boundStreamId": "STREAM"},
+        }
+        stream_response = {
+            "items": [
+                {
+                    "status": {
+                        "streamStatus": "active",
+                        "healthStatus": {
+                            "status": "ok",
+                            "configurationIssues": [
+                                {
+                                    "type": "bitrateLow",
+                                    "severity": "warning",
+                                    "reason": "localized reason",
+                                    "description": "detailed description",
+                                }
+                            ],
+                        },
+                    }
+                }
+            ]
+        }
+        with (
+            mock.patch.object(youtube_api, "OAUTH_ENABLE", True),
+            mock.patch.object(youtube_api, "OAUTH_SHADOW_MODE", True),
+            mock.patch.object(youtube_api, "oauth_is_configured", return_value=True),
+            mock.patch.object(
+                youtube_api,
+                "get_oauth_access_token",
+                return_value=("token", 1_900_000_000, "cached token"),
+            ),
+            mock.patch.object(youtube_api, "list_owned_broadcasts", return_value=[broadcast]),
+            mock.patch.object(youtube_api, "youtube_live_api_get", return_value=stream_response),
+        ):
+            result = youtube_api.probe_with_oauth()
+
+        self.assertEqual(result.stream_health_status, "ok")
+        self.assertEqual(result.stream_health_issues, 1)
+        self.assertEqual(
+            result.stream_health_issue_details,
+            ({"type": "bitrateLow", "severity": "warning"},),
+        )
+
     def test_parse_ingest_ports_prefers_explicit_multi_port_contract(self) -> None:
         with (
             mock.patch.object(youtube_api, "INGEST_TCP_PORT", 1935),

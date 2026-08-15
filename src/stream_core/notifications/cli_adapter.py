@@ -158,6 +158,9 @@ def collect_notification_incidents(
         map_runtime_status_file=ctx.state_base_dir / "map_runtime_status.json",
         map_runtime_history_file=ctx.state_base_dir / "logs" / "map_runtime_status.jsonl",
         viewer_synthetic_status_file=ctx.state_base_dir / "viewer_synthetic_status.json",
+        operational_reliability_status_file=ctx.state_base_dir / "operational_reliability_status.json",
+        operational_reliability_burn_status_file=ctx.state_base_dir / "operational_reliability_burn_status.json",
+        external_blackbox_status_file=ctx.state_base_dir / "external_blackbox_status.json",
         now_ts=now,
         report_stale_sec=report_stale_sec,
         bootstrap_grace_active=notify_bootstrap_grace_active(ctx, now, startup_grace_sec),
@@ -165,6 +168,15 @@ def collect_notification_incidents(
 
 
 def recovery_observation_for_incident(ctx: NotifyCliContext, ident: str, now_ts: int) -> tuple[int, str]:
+    if ident == "reliability:youtube_input_quality_fast_feedback":
+        payload = ctx.read_json_file(ctx.youtube_watchdog_stats_file)
+        observed_ts = ctx.parse_utc_ts(str(payload.get("ts_utc", ""))) or now_ts
+        return observed_ts, (
+            f"status={payload.get('status', '')} healthy={payload.get('healthy', '')} "
+            f"oauth_health={payload.get('oauth_stream_health_status', '')} "
+            f"oauth_issues={payload.get('oauth_stream_health_issues', '')} "
+            f"ingest_connected={payload.get('ingest_connected', '')} action={payload.get('action', '')}"
+        )[:320]
     if ident.startswith("map:"):
         payload = ctx.read_json_file(ctx.state_base_dir / "map_runtime_status.json")
         observed_ts = ctx.parse_utc_ts(str(payload.get("checked_at_utc", ""))) or now_ts
@@ -179,6 +191,19 @@ def recovery_observation_for_incident(ctx: NotifyCliContext, ident: str, now_ts:
             f"status={payload.get('status', '')} frame_ok={payload.get('frame_ok', '')} "
             f"black={payload.get('black_detected', '')} freeze={payload.get('freeze_detected', '')} "
             f"probe_failures={payload.get('consecutive_probe_failures', '')}"
+        )[:320]
+    if ident.startswith("external:"):
+        payload = ctx.read_json_file(ctx.state_base_dir / "external_blackbox_status.json")
+        observed_ts = ctx.parse_utc_ts(str(payload.get("checked_at_utc", ""))) or now_ts
+        targets = payload.get("targets") if isinstance(payload.get("targets"), dict) else {}
+        target_states = ",".join(
+            f"{name}:{item.get('status', 'unknown')}"
+            for name, item in sorted(targets.items())
+            if isinstance(item, dict)
+        )
+        return observed_ts, (
+            f"status={payload.get('status', '')} reason={payload.get('reason', '')} "
+            f"targets={target_states or 'none'}"
         )[:320]
     return notify_incidents.recovery_observation_for_incident(
         ident,

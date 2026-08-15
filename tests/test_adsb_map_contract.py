@@ -48,6 +48,8 @@ class AdsbMapContractTests(unittest.TestCase):
         script = (MAP_DIR / "map.js").read_text(encoding="utf-8")
 
         self.assertIn('id: "aircraft-icon"', script)
+        self.assertNotIn('id: "aircraft-position"', script)
+        self.assertNotIn('"circle-radius": AIRCRAFT_POSITION_RADIUS', script)
         self.assertNotIn('id: "tracks"', script)
         self.assertNotIn('id: "track-shadow"', script)
         self.assertNotIn('addSource("tracks"', script)
@@ -175,9 +177,9 @@ document.getElementById("result").textContent = JSON.stringify(samples);
         self.assertTrue(samples["sunrise"]["rising"])
         self.assertFalse(samples["sunset"]["rising"])
         self.assertGreater(samples["sunset"]["warmth"], samples["sunrise"]["warmth"])
-        self.assertEqual(samples["day"]["brightness"], 0.10)
+        self.assertEqual(samples["day"]["brightness"], 0.20)
         self.assertEqual(samples["day"]["warmth"], 0)
-        self.assertEqual(samples["night"]["brightness"], 0)
+        self.assertEqual(samples["night"]["brightness"], 0.07)
         self.assertEqual(samples["night"]["warmth"], 0)
 
     def test_coverage_and_range_rings_are_solid(self) -> None:
@@ -188,14 +190,14 @@ document.getElementById("result").textContent = JSON.stringify(samples);
         ring_block = script.split('id: "range-rings"', 1)[1].split("});", 1)[0]
 
         self.assertIn('const COVERAGE_COLOR = "#A29BBA";', script)
-        self.assertIn('const COVERAGE_OPACITY = 0.62;', script)
-        self.assertIn('const COVERAGE_WIDTH = 1.5;', script)
+        self.assertIn('const COVERAGE_OPACITY = 0.68;', script)
+        self.assertIn('const COVERAGE_WIDTH = 1.8;', script)
         self.assertIn('const COVERAGE_HALO_COLOR = "#030A0F";', script)
         self.assertIn('const COVERAGE_HALO_OPACITY = 0.58;', script)
         self.assertIn('const COVERAGE_HALO_WIDTH = 2.8;', script)
         self.assertIn('const RANGE_RING_COLOR = "#B0CFD4";', script)
-        self.assertIn('const RANGE_RING_OPACITY = 0.55;', script)
-        self.assertIn('const RANGE_RING_WIDTH = 1.0;', script)
+        self.assertIn('const RANGE_RING_OPACITY = 0.65;', script)
+        self.assertIn('const RANGE_RING_WIDTH = 1.35;', script)
         self.assertIn('"line-color": COVERAGE_COLOR', coverage_block)
         self.assertIn('"line-width": COVERAGE_WIDTH', coverage_block)
         self.assertIn('"line-opacity": COVERAGE_OPACITY', coverage_block)
@@ -243,7 +245,23 @@ document.getElementById("result").textContent = JSON.stringify(samples);
         coastline = next(layer for layer in style["layers"] if layer["id"] == "coastline")
         self.assertEqual(sea_veil["paint"]["fill-opacity"], 0.24)
         self.assertEqual(coastline_glow["paint"]["line-width"], 3.6)
-        self.assertEqual(coastline["paint"]["line-width"], 1.0)
+        self.assertEqual(coastline["paint"]["line-width"], 1.25)
+
+    def test_broadcast_scale_keeps_primary_map_content_visible_on_mobile_landscape(self) -> None:
+        script = (MAP_DIR / "map.js").read_text(encoding="utf-8")
+        theme = (MAP_DIR / "solar_theme.mjs").read_text(encoding="utf-8")
+        style = json.loads((MAP_DIR / "style.json").read_text(encoding="utf-8"))
+
+        self.assertIn("const NIGHT_BRIGHTNESS = 0.07;", theme)
+        self.assertIn("const DAY_BRIGHTNESS = 0.20;", theme)
+        self.assertIn("const AIRCRAFT_ICON_SIZE = 0.84;", script)
+        self.assertIn("const RANGE_LABEL_SIZE = 14;", script)
+
+        layers = {layer["id"]: layer for layer in style["layers"]}
+        self.assertGreaterEqual(layers["terrain-relief"]["paint"]["color-relief-opacity"], 0.50)
+        self.assertGreaterEqual(layers["coastline"]["paint"]["line-width"], 1.25)
+        self.assertEqual(layers["airport-label"]["layout"]["text-size"], 14)
+        self.assertEqual(layers["major-city-large"]["layout"]["text-size"][-1], 22)
 
     def test_precipitation_layer_keeps_fresh_lkg_but_hides_expired_data(self) -> None:
         script = (MAP_DIR / "map.js").read_text(encoding="utf-8")

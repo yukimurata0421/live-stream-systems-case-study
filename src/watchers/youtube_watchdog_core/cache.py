@@ -63,6 +63,11 @@ def oauth_from_stats_cache(payload: dict, now_ts: int, max_age_sec: int) -> OAut
         stream_status=str(payload.get("oauth_stream_status", "")).strip(),
         stream_health_status=str(payload.get("oauth_stream_health_status", "")).strip(),
         stream_health_issues=int(payload.get("oauth_stream_health_issues", 0) or 0),
+        stream_health_issue_details=tuple(
+            item
+            for item in (payload.get("oauth_stream_health_issue_details") or [])
+            if isinstance(item, dict)
+        ),
         stream_status_required=False,
         remote_checked=True,
         enable_auto_start=optional_bool("oauth_enable_auto_start"),

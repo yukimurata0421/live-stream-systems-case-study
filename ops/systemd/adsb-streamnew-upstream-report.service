@@ -1,13 +1,15 @@
 [Unit]
-Description=ADS-B Stream-New upstream readsb/tar1090/stream1090 report-only baseline sample
+Description=stream_v3 observability/arena-monitor upstream stream1090 baseline sample
 After=network-online.target
 Wants=network-online.target
 
 [Service]
 Type=oneshot
-User=yuki
-Group=yuki
-EnvironmentFile=-/home/yuki/projects/stream_v2/.state/env/adsb-streamnew.env
-EnvironmentFile=-/home/yuki/projects/stream_v2/.state/env/stream-v3-observability-monitor.env
-Environment=PYTHONPATH=/home/yuki/projects/stream_v3/src
-ExecStart=/bin/bash -lc 'visual=""; if [ "$${STREAM1090_UPSTREAM_REPORT_VISUAL:-0}" = "1" ]; then visual="--visual"; fi; exec /home/yuki/projects/stream_v3/bin/stream-prod upstream-report --upstream-url "$${STREAM1090_UPSTREAM_REPORT_URL:-http://127.0.0.1/stream1090/}" --sample-sec "$${STREAM1090_UPSTREAM_REPORT_SAMPLE_SEC:-5}" --timeout "$${STREAM1090_UPSTREAM_REPORT_TIMEOUT_SEC:-5}" $$visual'
+User=stream-v3
+Group=stream-v3
+EnvironmentFile=-/etc/default/stream-v3-observability-monitor
+Environment=STREAM_V3_REPO_DIR=/opt/stream_v3
+Environment=STREAM_RUNTIME_STATE_DIR=/var/lib/stream-v3/observability-monitor
+Environment=STREAM_RUNTIME_LOG_DIR=/var/lib/stream-v3/observability-monitor/logs
+Environment=PYTHONPATH=/opt/stream_v3/src
+ExecStart=/bin/bash -lc 'visual=""; if [ "$${STREAM1090_UPSTREAM_REPORT_VISUAL:-0}" = "1" ]; then visual="--visual"; fi; exec "$${STREAM_V3_REPO_DIR}/bin/stream-prod" upstream-report --record --upstream-url "$${STREAM1090_UPSTREAM_REPORT_URL:-http://127.0.0.1/stream1090/}" --sample-sec "$${STREAM1090_UPSTREAM_REPORT_SAMPLE_SEC:-5}" --timeout "$${STREAM1090_UPSTREAM_REPORT_TIMEOUT_SEC:-5}" $$visual'

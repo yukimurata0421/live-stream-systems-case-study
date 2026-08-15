@@ -1,6 +1,13 @@
 const DEG_TO_RAD = Math.PI / 180;
 const RAD_TO_DEG = 180 / Math.PI;
 const DAY_MS = 86_400_000;
+// Keep geographic context visible after YouTube compression and mobile scaling.
+// NIGHT is deliberately not zero: the map remains darker than DAY, while the
+// coastline, terrain, and prefecture boundaries do not collapse into black.
+const NIGHT_BRIGHTNESS = 0.07;
+const TWILIGHT_BRIGHTNESS = 0.12;
+const GOLDEN_HOUR_BRIGHTNESS = 0.16;
+const DAY_BRIGHTNESS = 0.20;
 
 function clamp(value, minimum, maximum) {
   return Math.min(maximum, Math.max(minimum, value));
@@ -72,18 +79,18 @@ export function solarTheme(date, latitude, longitude) {
 
   if (altitude <= -6) {
     phase = "NIGHT";
-    brightness = 0;
+    brightness = NIGHT_BRIGHTNESS;
   } else if (altitude < 0) {
     phase = "TWILIGHT";
-    brightness = interpolate(0, 0.055, (altitude + 6) / 6);
+    brightness = interpolate(NIGHT_BRIGHTNESS, TWILIGHT_BRIGHTNESS, (altitude + 6) / 6);
   } else if (altitude < 8) {
     phase = "GOLDEN_HOUR";
     brightness = altitude < 2.5
-      ? interpolate(0.055, 0.08, altitude / 2.5)
-      : interpolate(0.08, 0.10, (altitude - 2.5) / 5.5);
+      ? interpolate(TWILIGHT_BRIGHTNESS, GOLDEN_HOUR_BRIGHTNESS, altitude / 2.5)
+      : interpolate(GOLDEN_HOUR_BRIGHTNESS, DAY_BRIGHTNESS, (altitude - 2.5) / 5.5);
   } else {
     phase = "DAY";
-    brightness = 0.10;
+    brightness = DAY_BRIGHTNESS;
   }
 
   const peakWarmth = rising ? 0.060 : 0.085;

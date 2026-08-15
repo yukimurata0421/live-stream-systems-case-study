@@ -20,6 +20,10 @@ if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
 from stream_core.k8s_gpu_guard import summarize_runtime_gpu
+from stream_core.common.youtube_input_quality import (
+    DEFAULT_INPUT_QUALITY_MAX_AGE_SEC,
+    classify_input_quality_sample,
+)
 
 
 def default_repo_root() -> Path:
@@ -584,6 +588,65 @@ class MetricWriter:
         return "\n".join(self.lines) + "\n"
 
 
+def write_external_blackbox_metrics(writer: MetricWriter, status: dict[str, Any], *, now: float) -> None:
+    current_status = str(status.get("status") or "unknown")
+    status_value = {"ok": 1, "failed": 0, "unknown": -1}.get(current_status, -1)
+    evidence_age = optional_age_seconds(status.get("evidence_at_utc"), now=now)
+    collector_age = optional_age_seconds(status.get("checked_at_utc"), now=now)
+    writer.metric(
+        "stream_v3_external_blackbox_ok",
+        1 if current_status == "ok" else 0,
+        help_text="Compatibility flag for independent external black-box success.",
+    )
+    writer.metric(
+        "stream_v3_external_blackbox_status",
+        status_value,
+        help_text="Independent external black-box status: ok=1 failed=0 unknown=-1.",
+    )
+    writer.metric(
+        "stream_v3_external_blackbox_sample_available",
+        1 if evidence_age is not None else 0,
+        help_text="Independent external black-box source sample availability.",
+    )
+    writer.metric(
+        "stream_v3_external_blackbox_age_seconds",
+        evidence_age if evidence_age is not None else 0,
+        help_text="Age of the oldest latest external source sample across required targets.",
+    )
+    writer.metric(
+        "stream_v3_external_blackbox_collector_age_seconds",
+        collector_age if collector_age is not None else 0,
+        help_text="Age of the monitor-side external black-box import attempt.",
+    )
+    targets = status.get("targets") if isinstance(status.get("targets"), dict) else {}
+    for target_name, target in targets.items():
+        if not isinstance(target, dict):
+            continue
+        labels = {"target": str(target_name)}
+        target_status = str(target.get("status") or "unknown")
+        writer.metric(
+            "stream_v3_external_blackbox_target_status",
+            {"ok": 1, "failed": 0, "unknown": -1}.get(target_status, -1),
+            labels=labels,
+            help_text="Per-target external black-box status: ok=1 failed=0 unknown=-1.",
+        )
+        writer.metric(
+            "stream_v3_external_blackbox_target_fresh_locations",
+            target.get("fresh_locations"),
+            labels=labels,
+        )
+        writer.metric(
+            "stream_v3_external_blackbox_target_pass_ratio",
+            target.get("pass_ratio"),
+            labels=labels,
+        )
+        writer.metric(
+            "stream_v3_external_blackbox_target_sample_age_seconds",
+            target.get("sample_age_seconds"),
+            labels=labels,
+        )
+
+
 def write_map_runtime_metrics(writer: MetricWriter, status: dict[str, Any], *, now: float) -> None:
     checked_at = status.get("checked_at_utc")
     sample_age = optional_age_seconds(checked_at, now=now)
@@ -823,6 +886,9 @@ def build_metrics(*, repo_root: Path, state_root: Path, timeout_sec: float) -> s
     slo_snapshot = read_json(state_root / "slo_snapshot.json")
     map_runtime = read_json(state_root / "map_runtime_status.json")
     viewer_synthetic = read_json(state_root / "viewer_synthetic_status.json")
+    operational_reliability = read_json(state_root / "operational_reliability_status.json")
+    reliability_burn = read_json(state_root / "operational_reliability_burn_status.json")
+    external_blackbox = read_json(state_root / "external_blackbox_status.json")
     now = time.time()
     host_memory = host_memory_snapshot()
     runtime_memory = runtime_memory_snapshot(timeout_sec=timeout_sec, now=now)
@@ -832,6 +898,66 @@ def build_metrics(*, repo_root: Path, state_root: Path, timeout_sec: float) -> s
 
     writer = MetricWriter()
     writer.metric("stream_v3_exporter_up", 1, help_text="Exporter scrape success.")
+    writer.metric(
+        "stream_v3_operational_reliability_rollup_age_seconds",
+        age_seconds(operational_reliability.get("checked_at_utc"), now=now),
+        help_text="Age of the durable SLI and Same URL rollup.",
+    )
+    writer.metric(
+        "stream_v3_operational_reliability_rollup_ok",
+        1 if operational_reliability.get("status") == "ok" else 0,
+        help_text="Durable operational reliability rollup health.",
+    )
+    gates = (
+        operational_reliability.get("formal_gates")
+        if isinstance(operational_reliability.get("formal_gates"), dict)
+        else {}
+    )
+    for family, gate in gates.items():
+        if not isinstance(gate, dict):
+            continue
+        labels = {"family": str(family)}
+        status_value = {"met": 1, "breached": 0, "unknown": -1}.get(
+            str(gate.get("compliance_status") or "unknown"), -1
+        )
+        writer.metric(
+            "stream_v3_formal_sli_compliance_status",
+            status_value,
+            labels=labels,
+            help_text="Formal SLI status: met=1 breached=0 unknown=-1.",
+        )
+        writer.metric("stream_v3_formal_sli_coverage_pct", gate.get("coverage_pct"), labels=labels)
+        writer.metric(
+            "stream_v3_formal_sli_source_freshness_pct",
+            gate.get("source_freshness_pct"),
+            labels=labels,
+        )
+        writer.metric(
+            "stream_v3_formal_sli_source_disagreement",
+            1 if gate.get("source_disagreement") is True else 0,
+            labels=labels,
+        )
+    revision = (
+        operational_reliability.get("revision")
+        if isinstance(operational_reliability.get("revision"), dict)
+        else {}
+    )
+    writer.metric("stream_v3_monitor_worktree_clean", 1 if revision.get("worktree_clean") is True else 0)
+    writer.metric(
+        "stream_v3_monitor_revision_matches_deployed",
+        1 if revision.get("matches_expected_revision") is True else 0,
+    )
+    burn_alerts = (
+        reliability_burn.get("multi_window_burn_alerts")
+        if isinstance(reliability_burn.get("multi_window_burn_alerts"), list)
+        else []
+    )
+    writer.metric("stream_v3_multi_window_burn_alerts", len(burn_alerts))
+    writer.metric(
+        "stream_v3_multi_window_burn_evaluation_age_seconds",
+        age_seconds(reliability_burn.get("checked_at_utc"), now=now),
+    )
+    write_external_blackbox_metrics(writer, external_blackbox, now=now)
     write_map_runtime_metrics(writer, map_runtime, now=now)
     write_viewer_synthetic_metrics(writer, viewer_synthetic, now=now)
     writer.metric(
@@ -869,7 +995,12 @@ def build_metrics(*, repo_root: Path, state_root: Path, timeout_sec: float) -> s
         writer.metric("stream_v3_health_pass", window.get("pass", observe.get("pass")), labels=labels, help_text="Health summary pass by window.")
         writer.metric("stream_v3_current_fail", checks.get("current_fail"), labels=labels, help_text="Current failure flag by window.")
         writer.metric("stream_v3_historical_degraded", checks.get("historical_degraded"), labels=labels, help_text="Historical degraded flag by window.")
-        writer.metric("stream_v3_youtube_warn_count", checks.get("youtube_warn_count"), labels=labels, help_text="YouTube warning count by window.")
+        writer.metric(
+            "stream_v3_youtube_warn_count",
+            checks.get("youtube_warn_count"),
+            labels=labels,
+            help_text="Watchdog warning count by window; supporting history, not the YouTube input-quality SLI.",
+        )
         writer.metric("stream_v3_fast_recovery_restart_count", observe.get("fast_recovery_restart_count"), labels=labels, help_text="Fast recovery restart count by window.")
         writer.metric(
             "stream_v3_ffmpeg_restart_incident_clusters",
@@ -988,6 +1119,57 @@ def build_metrics(*, repo_root: Path, state_root: Path, timeout_sec: float) -> s
     writer.metric("stream_v3_youtube_url_recovery_elapsed_seconds", youtube_watchdog.get("url_recovery_elapsed_sec"), help_text="YouTube URL recovery elapsed seconds.")
     writer.metric("stream_v3_youtube_candidate_new_url_found", youtube_watchdog.get("candidate_new_url_found"), help_text="Candidate replacement URL found flag.")
     writer.metric("stream_v3_youtube_stats_age_seconds", age_seconds(youtube_watchdog.get("stats_file_updated_at_utc") or youtube_watchdog.get("ts_utc"), now=now), help_text="Age of YouTube watchdog stats.")
+    try:
+        input_quality_max_age_sec = max(
+            1,
+            int(
+                os.environ.get(
+                    "STREAM_V3_YOUTUBE_INPUT_QUALITY_MAX_AGE_SEC",
+                    str(DEFAULT_INPUT_QUALITY_MAX_AGE_SEC),
+                )
+            ),
+        )
+    except ValueError:
+        input_quality_max_age_sec = DEFAULT_INPUT_QUALITY_MAX_AGE_SEC
+    input_quality = classify_input_quality_sample(
+        youtube_watchdog,
+        now_ts=int(now),
+        max_age_sec=input_quality_max_age_sec,
+    )
+    writer.metric(
+        "stream_v3_youtube_input_quality_probe_fresh",
+        input_quality.get("fresh"),
+        help_text="Fresh YouTube OAuth input-quality probe flag.",
+    )
+    writer.metric(
+        "stream_v3_youtube_input_quality_eligible",
+        input_quality.get("eligible"),
+        help_text="Input-quality SLI eligibility: fresh OAuth probe, active stream, and connected local ingest.",
+    )
+    writer.metric(
+        "stream_v3_youtube_input_quality_good",
+        input_quality.get("good"),
+        help_text="Eligible YouTube input-quality sample is good with healthStatus=good and no warning/error issue.",
+    )
+    writer.metric(
+        "stream_v3_youtube_input_quality_issue_count",
+        input_quality.get("issue_count"),
+        help_text="YouTube live stream configuration issue count in the latest OAuth probe.",
+    )
+    writer.metric(
+        "stream_v3_youtube_input_quality_warning_or_error_issue_count",
+        input_quality.get("warning_or_worse_count"),
+        help_text="Persisted YouTube configuration issues with warning or error severity.",
+    )
+    writer.metric(
+        "stream_v3_youtube_input_quality_state",
+        1,
+        labels={
+            "classification": input_quality.get("classification", "unknown"),
+            "health_status": input_quality.get("health_status", ""),
+        },
+        help_text="Current YouTube input-quality classification.",
+    )
 
     writer.metric("stream_v3_stream_watchdog_ok", 1 if stream_watchdog.get("status") == "ok" else 0, help_text="Local stream watchdog ok flag.")
     writer.metric("stream_v3_stream_watchdog_ffmpeg_count", dict_value(stream_watchdog, "ffmpeg_count"), help_text="Local stream watchdog ffmpeg process count.", skip_none=True)
@@ -1059,6 +1241,18 @@ def build_metrics(*, repo_root: Path, state_root: Path, timeout_sec: float) -> s
     )
     adsb_source_status = str(adsb_freshness.get("status") or "").strip().lower()
     adsb_source_ok = adsb_source_age is not None and adsb_source_status in {"", "ok", "healthy"}
+    adsb_motion_ok = (
+        boolish(rendering.get("aircraft_messages_moving", True))
+        or boolish(rendering.get("aircraft_positions_moving", True))
+    )
+    adsb_ok = (
+        adsb_source_ok
+        and rendering.get("state") == "healthy"
+        and boolish(rendering.get("aircraft_json_ok", True))
+        and adsb_motion_ok
+        and boolish(rendering.get("stream1090_report_ok", True))
+        and boolish(rendering.get("upstream_stream1090_report_ok", True))
+    )
     writer.metric(
         "stream_v3_adsb_evidence_available",
         1 if adsb_source_age is not None else 0,
@@ -1066,7 +1260,7 @@ def build_metrics(*, repo_root: Path, state_root: Path, timeout_sec: float) -> s
     )
     writer.metric(
         "stream_v3_adsb_rendering_ok",
-        1 if adsb_source_ok and rendering.get("state") == "healthy" else 0,
+        1 if adsb_ok else 0,
         help_text="Rendering subsystem and displayed ADS-B source are healthy.",
     )
     writer.metric(

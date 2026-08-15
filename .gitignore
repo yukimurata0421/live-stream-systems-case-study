@@ -39,3 +39,9 @@ legacy/stream/venv
 legacy/stream/logs/
 legacy/stream/runtime/
 legacy/stream/state/
+ops/public-publisher/status/*.json
+ops/public-publisher/site/public/*.json
+ops/public-publisher/site/public/stream-v3-*.html
+ops/public-publisher/site/cloudflare-worker/node_modules/
+ops/public-publisher/site/cloudflare-worker/.wrangler/
+ops/public-publisher/site/cloudflare-worker/wrangler.toml

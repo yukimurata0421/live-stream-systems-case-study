@@ -28,14 +28,16 @@ const SOLAR_THEME_REFRESH_MS = 60_000;
 const SOLAR_THEME_TRANSITION_MS = 120_000;
 const MAX_POSITION_AGE_SEC = 20;
 const COVERAGE_COLOR = "#A29BBA";
-const COVERAGE_OPACITY = 0.62;
-const COVERAGE_WIDTH = 1.5;
+const COVERAGE_OPACITY = 0.68;
+const COVERAGE_WIDTH = 1.8;
 const COVERAGE_HALO_COLOR = "#030A0F";
 const COVERAGE_HALO_OPACITY = 0.58;
 const COVERAGE_HALO_WIDTH = 2.8;
 const RANGE_RING_COLOR = "#B0CFD4";
-const RANGE_RING_OPACITY = 0.55;
-const RANGE_RING_WIDTH = 1.0;
+const RANGE_RING_OPACITY = 0.65;
+const RANGE_RING_WIDTH = 1.35;
+const RANGE_LABEL_SIZE = 14;
+const AIRCRAFT_ICON_SIZE = 0.84;
 const ALTITUDE_COLORS = {
   ground: "#f3f4f6",
   low: "#ffd166",
@@ -302,31 +304,31 @@ function applySolarTheme({immediate = false} = {}) {
   setThemedPaint(
     "coastline",
     "line-color",
-    themedRgba("#809f9b", 0.76, theme, 0.50, 0.15),
+    themedRgba("#91b2ad", 0.84, theme, 0.55, 0.15),
     transitionMs,
   );
   setThemedPaint(
     "country-border",
     "line-color",
-    themedRgba("#76938d", 0.82, theme, 0.45, 0.12),
+    themedRgba("#88a6a0", 0.88, theme, 0.50, 0.12),
     transitionMs,
   );
   setThemedPaint(
     "prefecture-border",
     "line-color",
-    themedRgba("#6d9189", 0.84, theme, 0.45, 0.12),
+    themedRgba("#7fa49b", 0.90, theme, 0.50, 0.12),
     transitionMs,
   );
   setThemedPaint(
     "major-city",
     "text-color",
-    themedRgba("#aebec1", 0.74, theme, 0.45, 0.10),
+    themedRgba("#c4d3d5", 0.84, theme, 0.50, 0.10),
     transitionMs,
   );
   setThemedPaint(
     "major-city-large",
     "text-color",
-    themedRgba("#becdcf", 0.86, theme, 0.40, 0.10),
+    themedRgba("#d3e0e1", 0.94, theme, 0.45, 0.10),
     transitionMs,
   );
 
@@ -633,7 +635,7 @@ function addLiveLayers() {
     layout: {
       "text-field": ["get", "label"],
       "text-font": ["Noto Sans Regular"],
-      "text-size": 10,
+      "text-size": RANGE_LABEL_SIZE,
       "text-letter-spacing": 0.1,
       "text-allow-overlap": true,
     },
@@ -645,24 +647,12 @@ function addLiveLayers() {
     },
   });
   map.addLayer({
-    id: "aircraft-position",
-    type: "circle",
-    source: "aircraft",
-    paint: {
-      "circle-radius": 6.8,
-      "circle-color": ["get", "color"],
-      "circle-opacity": 0.24,
-      "circle-stroke-color": ["get", "color"],
-      "circle-stroke-width": 1.25,
-    },
-  });
-  map.addLayer({
     id: "aircraft-icon",
     type: "symbol",
     source: "aircraft",
     layout: {
       "icon-image": ["get", "icon"],
-      "icon-size": 0.70,
+      "icon-size": AIRCRAFT_ICON_SIZE,
       "icon-rotate": ["get", "heading"],
       "icon-rotation-alignment": "map",
       "icon-allow-overlap": true,

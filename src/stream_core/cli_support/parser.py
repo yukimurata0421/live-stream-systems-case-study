@@ -21,6 +21,7 @@ COMMAND_CHOICES = (
     "api-usage",
     "health-summary",
     "objective-sli",
+    "sli-report",
     "memory-status",
     "resource-memory",
     "subsystems-status",
@@ -57,16 +58,32 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--closed-day", action="store_true", help="api-usage: report latest closed PT day")
     parser.add_argument("--json", action="store_true", help="print JSON payload for supported commands")
     parser.add_argument("--hours", type=int, default=24, help="remote-warning-compare: observation window")
-    parser.add_argument("--windows", default="1,8,24", help="health-summary: comma-separated hour windows")
-    parser.add_argument("--base-url", default="http://127.0.0.1:18080", help="stream1090-report: overlay base URL")
+    parser.add_argument(
+        "--windows",
+        default="",
+        help="health-summary: hour windows (default 1,8,24); sli-report: duration windows (default 24h,7d,28d,30d)",
+    )
+    parser.add_argument("--prometheus-url", default="", help="sli-report: Prometheus base URL")
+    parser.add_argument("--end-time", default="", help="sli-report: fixed epoch or ISO-8601 window end")
+    parser.add_argument(
+        "--base-url",
+        default="",
+        help="stream1090-report: overlay base URL (required with --record)",
+    )
     parser.add_argument("--upstream-url", default="", help="upstream-report: upstream stream1090 URL")
     parser.add_argument("--sample-sec", type=float, default=5.0, help="stream1090-report: movement sample interval")
     parser.add_argument("--timeout", type=float, default=5.0, help="stream1090-report: HTTP timeout seconds")
     parser.add_argument("--visual", action="store_true", help="stream1090/upstream-report: include chromium screenshot visual probe")
-    parser.add_argument(
+    record_group = parser.add_mutually_exclusive_group()
+    record_group.add_argument(
+        "--record",
+        action="store_true",
+        help="stream1090/upstream-report: explicitly append this scheduled sample to production history",
+    )
+    record_group.add_argument(
         "--no-record",
         action="store_true",
-        help="stream1090/upstream-report/objective-sli/memory-status/resource-memory/subsystems-status/recovery-orchestrator/shadow-once: do not append or write history",
+        help="objective-sli/memory-status/resource-memory/subsystems-status/recovery-orchestrator/shadow-once: do not append or write history; stream1090/upstream-report are read-only by default",
     )
     parser.add_argument("--dry-run", action="store_true", help="notify-status: print notification payload without sending")
     parser.add_argument("--force-test", action="store_true", help="notify-status: send a test notification even without incidents")

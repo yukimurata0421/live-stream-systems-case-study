@@ -1,0 +1,11 @@
+[Unit]
+Description=Push yukimurata0421.dev public site to GCS
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=stream-v3-publisher
+WorkingDirectory=/opt/stream-v3-public-publisher/site
+EnvironmentFile=-/etc/default/stream-v3-public-publisher
+ExecStart=/usr/bin/python3 /opt/stream-v3-public-publisher/site/scripts/push_to_gcs.py

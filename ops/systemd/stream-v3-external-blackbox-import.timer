@@ -1,0 +1,12 @@
+[Unit]
+Description=Import independent stream_v3 black-box status every five minutes
+
+[Timer]
+OnBootSec=7min
+OnUnitInactiveSec=5min
+Persistent=true
+AccuracySec=30s
+Unit=stream-v3-external-blackbox-import.service
+
+[Install]
+WantedBy=timers.target
