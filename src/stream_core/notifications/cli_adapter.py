@@ -161,6 +161,7 @@ def collect_notification_incidents(
         operational_reliability_status_file=ctx.state_base_dir / "operational_reliability_status.json",
         operational_reliability_burn_status_file=ctx.state_base_dir / "operational_reliability_burn_status.json",
         external_blackbox_status_file=ctx.state_base_dir / "external_blackbox_status.json",
+        runtime_state_base_dir=ctx.state_base_dir,
         now_ts=now,
         report_stale_sec=report_stale_sec,
         bootstrap_grace_active=notify_bootstrap_grace_active(ctx, now, startup_grace_sec),

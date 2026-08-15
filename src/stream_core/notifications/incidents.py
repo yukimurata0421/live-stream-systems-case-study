@@ -7,9 +7,11 @@ from typing import Callable
 try:
     from stream_core.common.json_io import iter_jsonl, read_json_file
     from stream_core.common.timeutil import parse_utc_ts
+    from stream_core.notifications.planned_rollout import planned_rollout_context
 except ModuleNotFoundError:
     from common.json_io import iter_jsonl, read_json_file
     from common.timeutil import parse_utc_ts
+    from notifications.planned_rollout import planned_rollout_context
 
 ObservePayload = Callable[[int], tuple[int, dict, str]]
 
@@ -215,10 +217,30 @@ def map_runtime_incidents(
         now_ts=now_ts,
         predicate=lambda item: item.get("delivery_critical_ok") is False,
     )
-    weather_since, weather_sec = _trailing_problem_duration(
+    def precipitation_data_bad(item: dict) -> bool:
+        if isinstance(item.get("precipitation_data_ok"), bool):
+            return item.get("precipitation_data_ok") is False
+        # v1 history did not split acquisition from browser rendering. Treat an
+        # old aggregate weather failure as acquisition failure so an in-flight
+        # incident is not silently reset during the versioned rollout.
+        return item.get("weather_ok") is False
+
+    def precipitation_render_bad(item: dict) -> bool:
+        return bool(
+            item.get("delivery_critical_ok") is True
+            and item.get("precipitation_data_ok") is True
+            and item.get("precipitation_render_applied") is False
+        )
+
+    precipitation_data_since, precipitation_data_sec = _trailing_problem_duration(
         history_file,
         now_ts=now_ts,
-        predicate=lambda item: item.get("weather_ok") is False,
+        predicate=precipitation_data_bad,
+    )
+    precipitation_render_since, precipitation_render_sec = _trailing_problem_duration(
+        history_file,
+        now_ts=now_ts,
+        predicate=precipitation_render_bad,
     )
     restart_since, restart_sec = _trailing_problem_duration(
         history_file,
@@ -260,17 +282,40 @@ def map_runtime_incidents(
                 observed_ts=delivery_since,
             )
         )
-    if weather_sec >= 1200:
+    if precipitation_data_sec >= 1200:
         incidents.append(
             incident(
                 ident="map:precipitation_unavailable",
                 severity="warning",
                 component="production_map_precipitation",
-                summary="JMA precipitation layer or fetcher is unhealthy",
-                evidence=f"active={seconds_to_human(weather_sec)} reasons={','.join(str(v) for v in status.get('weather_reasons', [])[:4])}",
+                summary="JMA precipitation data or fetcher is unhealthy",
+                evidence=f"active={seconds_to_human(precipitation_data_sec)} reasons={','.join(str(v) for v in status.get('weather_reasons', [])[:4])}",
                 recovery_type="precipitation_fetch_retry_recovery",
                 follow_up="降水status/healthとJMA取得履歴を確認する。配信runtimeは自動restartしない",
-                observed_ts=weather_since,
+                observed_ts=precipitation_data_since,
+                repeat_sec=600,
+            )
+        )
+    if precipitation_render_sec >= 1200:
+        precipitation = status.get("precipitation") if isinstance(status.get("precipitation"), dict) else {}
+        render = precipitation.get("render") if isinstance(precipitation.get("render"), dict) else {}
+        incidents.append(
+            incident(
+                ident="map:precipitation_render_mismatch",
+                severity="warning",
+                component="production_map_precipitation_render",
+                summary="current JMA precipitation state is not reflected by the browser map",
+                evidence=(
+                    f"active={seconds_to_human(precipitation_render_sec)} "
+                    f"state={render.get('state', 'unknown')} "
+                    f"expected_validtime={render.get('expected_validtime', '')} "
+                    f"browser_validtime={render.get('validtime', '')} "
+                    f"layer_validtime={render.get('layer_validtime', '')}"
+                ),
+                recovery_type="precipitation_browser_render_retry_recovery",
+                follow_up="browser heartbeat、validtime一致、no-rain状態、MapLibre降水layerを確認する。配信runtimeは自動restartしない",
+                observed_ts=precipitation_render_since,
+                repeat_sec=600,
             )
         )
     if restart_sec >= 120:
@@ -750,12 +795,22 @@ def collect_notification_incidents(
     operational_reliability_status_file: Path | None = None,
     operational_reliability_burn_status_file: Path | None = None,
     external_blackbox_status_file: Path | None = None,
+    runtime_state_base_dir: Path | None = None,
     now_ts: int | None = None,
     report_stale_sec: int = 1800,
     bootstrap_grace_active: bool = False,
 ) -> list[dict]:
     now = int(time.time() if now_ts is None else now_ts)
     incidents: list[dict] = []
+    planned_rollout = (
+        planned_rollout_context(
+            runtime_state_base_dir,
+            observed_ts=now,
+            require_pod_start_match=False,
+        )
+        if runtime_state_base_dir is not None
+        else {}
+    )
     if not bootstrap_grace_active or (
         operational_reliability_status_file is not None
         and operational_reliability_status_file.exists()
@@ -873,7 +928,7 @@ def collect_notification_incidents(
             )
         )
 
-    if fast_mode_notification_currently_active(checks, payload):
+    if fast_mode_notification_currently_active(checks, payload) and not planned_rollout:
         incidents.append(
             incident(
                 ident="resolver:fast_mode_active_or_runaway",

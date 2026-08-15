@@ -1,12 +1,21 @@
 from __future__ import annotations
 
+import json
+import gzip
 import subprocess
 import tempfile
 import unittest
+from datetime import datetime, timezone
 from pathlib import Path
 from unittest import mock
 
-from stream_core.cli_support.resource_memory import ResourceMemoryContext, parse_psi_text, resource_memory, resource_memory_payload
+from stream_core.cli_support.resource_memory import (
+    ResourceMemoryContext,
+    history_items,
+    parse_psi_text,
+    resource_memory,
+    resource_memory_payload,
+)
 
 
 def write_proc(root: Path) -> None:
@@ -74,6 +83,94 @@ def write_cgroup(root: Path, group: str) -> None:
 
 
 class ResourceMemoryTests(unittest.TestCase):
+    def test_history_items_reads_full_seven_day_baseline_across_rotation(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "resource_memory.jsonl"
+            now_ts = 1_770_000_000
+
+            def row(ts: int) -> str:
+                utc = datetime.fromtimestamp(ts, tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+                return json.dumps({"ts_utc": utc, "host_memory": {"mem_available_mb": 8192.0}}) + "\n"
+
+            path.write_text(row(now_ts - 60), encoding="utf-8")
+            with gzip.open(path.with_name(path.name + ".1.gz"), "wt", encoding="utf-8") as fh:
+                fh.write(row(now_ts - 7 * 24 * 3600 - 120))
+
+            rows = history_items(path, now_ts)
+
+        self.assertGreaterEqual(now_ts - min(int(item["_ts"]) for item in rows), 7 * 24 * 3600)
+
+    def test_static_swap_capacity_does_not_become_current_pressure(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            proc = root / "proc"
+            state = root / "state"
+            logs = state / "logs"
+            proc.mkdir()
+            logs.mkdir(parents=True)
+            write_proc(proc)
+            meminfo = proc / "meminfo"
+            meminfo.write_text(
+                meminfo.read_text(encoding="utf-8").replace("SwapFree:        4194304 kB", "SwapFree:        1048576 kB"),
+                encoding="utf-8",
+            )
+            ctx = ResourceMemoryContext(
+                resource_memory_file=state / "resource_memory.json",
+                resource_memory_events_file=logs / "resource_memory.jsonl",
+                resource_memory_assessment_file=state / "resource_memory_assessment.json",
+                memory_status_events_file=logs / "memory_status.jsonl",
+                service_units=(),
+                run_systemctl_readonly=lambda args, check: subprocess.CompletedProcess(
+                    args=args, returncode=0, stdout="", stderr=""
+                ),
+                state_base_dir=state,
+                log_base_dir=logs,
+                proc_root=proc,
+                cgroup_root=root / "cgroup",
+            )
+
+            payload = resource_memory_payload(ctx, now_ts=1_770_000_000)
+
+        self.assertEqual(payload["assessment"]["status"], "observe")
+        self.assertTrue(payload["assessment"]["swap_capacity"]["warn"])
+        self.assertFalse(payload["assessment"]["current_pressure"]["swap_growth"])
+        self.assertFalse(payload["assessment"]["restart_allowed_by_memory_alone"])
+
+    def test_low_mem_available_warns_before_seven_day_baseline(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            proc = root / "proc"
+            state = root / "state"
+            logs = state / "logs"
+            proc.mkdir()
+            logs.mkdir(parents=True)
+            write_proc(proc)
+            meminfo = proc / "meminfo"
+            meminfo.write_text(
+                meminfo.read_text(encoding="utf-8").replace("MemAvailable:  10485760 kB", "MemAvailable:   3145728 kB"),
+                encoding="utf-8",
+            )
+            ctx = ResourceMemoryContext(
+                resource_memory_file=state / "resource_memory.json",
+                resource_memory_events_file=logs / "resource_memory.jsonl",
+                resource_memory_assessment_file=state / "resource_memory_assessment.json",
+                memory_status_events_file=logs / "memory_status.jsonl",
+                service_units=(),
+                run_systemctl_readonly=lambda args, check: subprocess.CompletedProcess(
+                    args=args, returncode=0, stdout="", stderr=""
+                ),
+                state_base_dir=state,
+                log_base_dir=logs,
+                proc_root=proc,
+                cgroup_root=root / "cgroup",
+            )
+
+            payload = resource_memory_payload(ctx, now_ts=1_770_000_000)
+
+        self.assertFalse(payload["assessment"]["baseline_ready"])
+        self.assertEqual(payload["assessment"]["status"], "warn")
+        self.assertTrue(payload["assessment"]["current_pressure"]["mem_available_warn"])
+
     def test_parse_psi_memory_pressure_shape(self) -> None:
         parsed = parse_psi_text("some avg10=1.50 avg60=0.20 avg300=0.10 total=123\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=4\n")
         self.assertEqual(parsed["some_avg10"], 1.5)
@@ -96,7 +193,7 @@ class ResourceMemoryTests(unittest.TestCase):
                 proc,
                 "125",
                 comm="ffmpeg",
-                cmdline="ffmpeg -i /home/yuki/projects/stream_v2/ncs_music/time_tags/evening/example.mp3 -f pulse stream_sink",
+                cmdline="ffmpeg -i /opt/stream_v2/ncs_music/time_tags/evening/example.mp3 -f pulse stream_sink",
                 rss_kb=25000,
                 pss_kb=20000,
             )
@@ -147,9 +244,64 @@ class ResourceMemoryTests(unittest.TestCase):
         self.assertEqual(payload["process_groups"]["audio_player"]["process_count"], 1)
         self.assertEqual(payload["cgroups"]["adsb-streamnew-youtube-stream.service"]["memory_swap_current_mb"], 0.0)
         self.assertIn("current_runtime_state", payload)
+        self.assertTrue(payload["current_runtime_state"]["ffmpeg_alive"])
+        self.assertTrue(payload["current_runtime_state"]["local_ffmpeg_alive"])
+        self.assertEqual(payload["current_runtime_state"]["ffmpeg_alive_source"], "local_process")
         self.assertIn("recent_events", payload)
         self.assertIn("stream_session_id", payload)
         self.assertIn("rendering", payload["subsystems"])
+
+    def test_resource_memory_treats_remote_k8s_ffmpeg_evidence_as_alive(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            proc = root / "proc"
+            cgroup = root / "cgroup"
+            state = root / "state"
+            logs = state / "logs"
+            proc.mkdir()
+            cgroup.mkdir()
+            logs.mkdir(parents=True)
+            write_proc(proc)
+            (state / "youtube_watchdog_stats.json").write_text(
+                json.dumps(
+                    {
+                        "local_ok": True,
+                        "oauth_ok": True,
+                        "api_ok": True,
+                        "public_ok": True,
+                        "expected_video_id": "video-1",
+                        "video_id": "video-1",
+                        "ingest_connected": True,
+                        "ffmpeg_pid": 1955202,
+                        "ffmpeg_uptime_sec": 55446,
+                        "ffmpeg_generation": "ffmpeg_pid=1955202",
+                        "stream_active": True,
+                        "api_live_state": "live",
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            ctx = ResourceMemoryContext(
+                resource_memory_file=state / "resource_memory.json",
+                resource_memory_events_file=logs / "resource_memory.jsonl",
+                resource_memory_assessment_file=state / "resource_memory_assessment.json",
+                memory_status_events_file=logs / "memory_status.jsonl",
+                service_units=(),
+                run_systemctl_readonly=lambda args, check: subprocess.CompletedProcess(args=args, returncode=0, stdout="", stderr=""),
+                state_base_dir=state,
+                log_base_dir=logs,
+                proc_root=proc,
+                cgroup_root=cgroup,
+            )
+
+            payload = resource_memory_payload(ctx, now_ts=1_770_000_000)
+
+        runtime = payload["current_runtime_state"]
+        self.assertTrue(runtime["ffmpeg_alive"])
+        self.assertFalse(runtime["local_ffmpeg_alive"])
+        self.assertEqual(runtime["ffmpeg_alive_source"], "remote_runtime_evidence")
+        self.assertIn("youtube_watchdog.ingest_connected", runtime["ffmpeg_alive_evidence"])
 
 
 if __name__ == "__main__":

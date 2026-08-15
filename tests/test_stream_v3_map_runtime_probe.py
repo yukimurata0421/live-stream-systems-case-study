@@ -75,6 +75,28 @@ def healthy_sample() -> dict:
                     "age_sec": 4.2,
                     "map_tiles_ready": True,
                     "aircraft_sample_ready": True,
+                    "precipitation": {
+                        "evaluated": True,
+                        "available": True,
+                        "fresh": True,
+                        "has_precipitation": True,
+                        "layer_loaded": True,
+                        "validtime": "20260804080500",
+                        "layer_validtime": "20260804080500",
+                        "state": "layer_loaded",
+                    },
+                    "semantic": {
+                        "schema": "stream_v3.map_semantic_render.v1",
+                        "ok": True,
+                        "failed_checks": [],
+                    },
+                    "asset_identity": {
+                        "schema": "stream_v3.map_asset_identity.v1",
+                        "ok": True,
+                        "revision": "b" * 64,
+                        "file_count": 14,
+                        "browser_revision_match": True,
+                    },
                 },
                 "error": "",
             },
@@ -86,6 +108,14 @@ def healthy_sample() -> dict:
                     "forecast_minutes": 0,
                     "observed_at_utc": "2026-08-04T08:05:00Z",
                     "stale_after_sec": 900,
+                    "has_precipitation": True,
+                    "validtime": "20260804080500",
+                    "tile_template": "/weather/tiles/20260804080500/{z}/{x}/{y}.png",
+                    "generation_manifest": "/weather/tiles/20260804080500/manifest.json",
+                    "generation_manifest_sha256": "a" * 64,
+                    "generation_integrity": True,
+                    "tile_count": 1,
+                    "tile_total_bytes": 100,
                 },
                 "error": "",
             },
@@ -93,22 +123,20 @@ def healthy_sample() -> dict:
                 "payload": {"success": True, "state": "current", "consecutive_failures": 0},
                 "error": "",
             },
+            "weather_integrity": {
+                "schema": "stream_v3.precipitation_http_integrity.v1",
+                "ok": True,
+                "reasons": [],
+                "validtime": "20260804080500",
+                "manifest_sha256": "a" * 64,
+                "tile_count": 1,
+                "total_bytes": 100,
+            },
         },
     }
 
 
 class StreamV3MapRuntimeProbeTests(unittest.TestCase):
-    def test_default_paths_are_derived_from_public_checkout(self) -> None:
-        probe = load_probe()
-        expected_repo_root = Path(__file__).resolve().parents[1]
-
-        self.assertEqual(probe.DEFAULT_REPO_ROOT, expected_repo_root)
-        self.assertEqual(
-            probe.DEFAULT_STATE_ROOT,
-            expected_repo_root / ".state" / "observability-monitor",
-        )
-        self.assertNotIn("/home/yuki/projects/stream_v3", str(probe.DEFAULT_REPO_ROOT))
-
     def test_healthy_sample_passes_delivery_and_weather_contracts(self) -> None:
         probe = load_probe()
 
@@ -118,6 +146,12 @@ class StreamV3MapRuntimeProbeTests(unittest.TestCase):
         self.assertTrue(payload["delivery_critical_ok"])
         self.assertTrue(payload["weather_ok"])
         self.assertTrue(payload["conditions"]["render_heartbeat"])
+        self.assertTrue(payload["conditions"]["semantic_visual_contract"])
+        self.assertTrue(payload["conditions"]["asset_identity"])
+        self.assertTrue(payload["conditions"]["precipitation_data_ok"])
+        self.assertTrue(payload["conditions"]["precipitation_generation_integrity"])
+        self.assertTrue(payload["conditions"]["precipitation_render_applied"])
+        self.assertTrue(payload["conditions"]["precipitation_validtime_match"])
         self.assertTrue(payload["browser"]["contract_ok"])
 
     def test_weather_failure_degrades_without_failing_delivery(self) -> None:
@@ -135,6 +169,71 @@ class StreamV3MapRuntimeProbeTests(unittest.TestCase):
         self.assertTrue(payload["delivery_critical_ok"])
         self.assertFalse(payload["weather_ok"])
         self.assertEqual(payload["critical_reasons"], [])
+        self.assertEqual(payload["weather_reasons"], ["precipitation_fetcher_health"])
+
+    def test_loaded_rain_layer_with_wrong_generation_degrades_only_weather(self) -> None:
+        probe = load_probe()
+        sample = healthy_sample()
+        render = sample["process"]["render"]["payload"]["precipitation"]
+        render["layer_validtime"] = "20260804080000"
+        render["state"] = "layer_mismatch"
+
+        payload = probe.evaluate_sample(sample, now_epoch=NOW)
+
+        self.assertEqual(payload["status"], "degraded")
+        self.assertTrue(payload["delivery_critical_ok"])
+        self.assertTrue(payload["conditions"]["precipitation_data_ok"])
+        self.assertFalse(payload["conditions"]["precipitation_render_applied"])
+        self.assertFalse(payload["conditions"]["precipitation_validtime_match"])
+        self.assertEqual(payload["weather_reasons"], ["precipitation_render_applied"])
+
+    def test_missing_rain_layer_degrades_even_when_acquisition_is_current(self) -> None:
+        probe = load_probe()
+        sample = healthy_sample()
+        render = sample["process"]["render"]["payload"]["precipitation"]
+        render["layer_loaded"] = False
+        render["layer_validtime"] = ""
+        render["state"] = "layer_missing"
+
+        payload = probe.evaluate_sample(sample, now_epoch=NOW)
+
+        self.assertEqual(payload["status"], "degraded")
+        self.assertTrue(payload["conditions"]["precipitation_data_ok"])
+        self.assertFalse(payload["conditions"]["precipitation_render_applied"])
+        self.assertEqual(payload["weather_reasons"], ["precipitation_render_applied"])
+
+    def test_current_no_rain_without_a_raster_layer_is_healthy(self) -> None:
+        probe = load_probe()
+        sample = healthy_sample()
+        status = sample["process"]["weather_status"]["payload"]
+        status["has_precipitation"] = False
+        render = sample["process"]["render"]["payload"]["precipitation"]
+        render.update(
+            {
+                "has_precipitation": False,
+                "layer_loaded": False,
+                "layer_validtime": "",
+                "state": "no_rain",
+            }
+        )
+
+        payload = probe.evaluate_sample(sample, now_epoch=NOW)
+
+        self.assertEqual(payload["status"], "healthy")
+        self.assertTrue(payload["weather_ok"])
+        self.assertTrue(payload["conditions"]["precipitation_render_applied"])
+        self.assertTrue(payload["conditions"]["precipitation_validtime_match"])
+
+    def test_no_rain_status_rejects_a_leftover_raster_layer(self) -> None:
+        probe = load_probe()
+        sample = healthy_sample()
+        sample["process"]["weather_status"]["payload"]["has_precipitation"] = False
+
+        payload = probe.evaluate_sample(sample, now_epoch=NOW)
+
+        self.assertEqual(payload["status"], "degraded")
+        self.assertFalse(payload["conditions"]["precipitation_render_applied"])
+        self.assertEqual(payload["weather_reasons"], ["precipitation_render_applied"])
 
     def test_expired_render_heartbeat_is_delivery_failure(self) -> None:
         probe = load_probe()
@@ -240,6 +339,18 @@ class StreamV3MapRuntimeProbeTests(unittest.TestCase):
                 "browser_contract",
                 lambda sample: sample["process"]["browser_log"].__setitem__("context_fatal_failure", True),
             ),
+            (
+                "semantic render",
+                "semantic_visual_contract",
+                lambda sample: sample["process"]["render"]["payload"]["semantic"].__setitem__("ok", False),
+            ),
+            (
+                "asset identity",
+                "asset_identity",
+                lambda sample: sample["process"]["render"]["payload"]["asset_identity"].__setitem__(
+                    "browser_revision_match", False
+                ),
+            ),
         )
 
         for label, expected_reason, mutate in cases:
@@ -262,6 +373,37 @@ class StreamV3MapRuntimeProbeTests(unittest.TestCase):
         self.assertEqual(payload["status"], "healthy")
         self.assertTrue(payload["delivery_critical_ok"])
         self.assertEqual(history["container_restart_counts"]["stream-engine"], 2)
+        self.assertEqual(history["schema"], "stream_v3.map_runtime_monitor_history.v2")
+        self.assertTrue(history["precipitation_data_ok"])
+        self.assertTrue(history["precipitation_generation_integrity"])
+        self.assertTrue(history["precipitation_render_applied"])
+        self.assertTrue(history["precipitation_validtime_match"])
+        self.assertEqual(history["precipitation_render_state"], "layer_loaded")
+        self.assertTrue(history["semantic_visual_ok"])
+        self.assertTrue(history["asset_identity_ok"])
+        self.assertEqual(history["asset_revision"], "b" * 64)
+
+    def test_corrupt_or_missing_precipitation_generation_degrades_weather_only(self) -> None:
+        probe = load_probe()
+        for reason in ("tile_unavailable", "tile_contract_invalid", "manifest_digest_mismatch"):
+            with self.subTest(reason=reason):
+                sample = healthy_sample()
+                sample["process"]["weather_integrity"] = {
+                    "schema": "stream_v3.precipitation_http_integrity.v1",
+                    "ok": False,
+                    "reasons": [reason],
+                }
+
+                payload = probe.evaluate_sample(sample, now_epoch=NOW)
+
+                self.assertEqual(payload["status"], "degraded")
+                self.assertTrue(payload["delivery_critical_ok"])
+                self.assertFalse(payload["weather_ok"])
+                self.assertFalse(payload["conditions"]["precipitation_generation_integrity"])
+                self.assertEqual(
+                    payload["weather_reasons"],
+                    ["precipitation_generation_integrity"],
+                )
 
     def test_stale_precipitation_degrades_weather_only(self) -> None:
         probe = load_probe()

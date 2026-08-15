@@ -1,6 +1,30 @@
 groups:
   - name: stream_v3_production_map_runtime
     rules:
+      - alert: StreamV3MapRequiredMetricMissing
+        expr: |
+          label_replace(absent(stream_v3_map_monitor_sample_available{job="stream_v3_observability_monitor"}), "missing_metric", "stream_v3_map_monitor_sample_available", "job", ".*")
+          or label_replace(absent(stream_v3_map_monitor_sample_age_seconds{job="stream_v3_observability_monitor"}), "missing_metric", "stream_v3_map_monitor_sample_age_seconds", "job", ".*")
+          or label_replace(absent(stream_v3_map_monitor_delivery_critical_ok{job="stream_v3_observability_monitor"}), "missing_metric", "stream_v3_map_monitor_delivery_critical_ok", "job", ".*")
+          or label_replace(absent(stream_v3_map_webgl2_blocklisted{job="stream_v3_observability_monitor"}), "missing_metric", "stream_v3_map_webgl2_blocklisted", "job", ".*")
+          or label_replace(absent(stream_v3_map_webgl_context_fatal{job="stream_v3_observability_monitor"}), "missing_metric", "stream_v3_map_webgl_context_fatal", "job", ".*")
+          or label_replace(absent(stream_v3_map_semantic_visual_contract_ok{job="stream_v3_observability_monitor"}), "missing_metric", "stream_v3_map_semantic_visual_contract_ok", "job", ".*")
+          or label_replace(absent(stream_v3_map_asset_identity_ok{job="stream_v3_observability_monitor"}), "missing_metric", "stream_v3_map_asset_identity_ok", "job", ".*")
+          or label_replace(absent(stream_v3_map_precipitation_data_ok{job="stream_v3_observability_monitor"}), "missing_metric", "stream_v3_map_precipitation_data_ok", "job", ".*")
+          or label_replace(absent(stream_v3_map_precipitation_generation_integrity{job="stream_v3_observability_monitor"}), "missing_metric", "stream_v3_map_precipitation_generation_integrity", "job", ".*")
+          or label_replace(absent(stream_v3_map_precipitation_render_applied{job="stream_v3_observability_monitor"}), "missing_metric", "stream_v3_map_precipitation_render_applied", "job", ".*")
+          or label_replace(absent(stream_v3_map_container_restart_count{job="stream_v3_observability_monitor"}), "missing_metric", "stream_v3_map_container_restart_count", "job", ".*")
+          or label_replace(absent(stream_v3_viewer_synthetic_sample_available{job="stream_v3_observability_monitor"}), "missing_metric", "stream_v3_viewer_synthetic_sample_available", "job", ".*")
+          or label_replace(absent(stream_v3_viewer_synthetic_sample_age_seconds{job="stream_v3_observability_monitor"}), "missing_metric", "stream_v3_viewer_synthetic_sample_age_seconds", "job", ".*")
+          or label_replace(absent(stream_v3_viewer_synthetic_consecutive_probe_failures{job="stream_v3_observability_monitor"}), "missing_metric", "stream_v3_viewer_synthetic_consecutive_probe_failures", "job", ".*")
+          or label_replace(absent(stream_v3_viewer_synthetic_consecutive_visual_failures{job="stream_v3_observability_monitor"}), "missing_metric", "stream_v3_viewer_synthetic_consecutive_visual_failures", "job", ".*")
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: a metric required by the map and viewer alert contract is missing
+          description: Metric absence is a monitoring failure and must not trigger an automatic stream runtime restart.
+
       - alert: StreamV3MapMonitorSampleMissingOrStale
         expr: |
           stream_v3_map_monitor_sample_available{job="stream_v3_observability_monitor"} == 0
@@ -35,13 +59,37 @@ groups:
       - alert: StreamV3MapPrecipitationUnavailable
         expr: |
           stream_v3_map_monitor_sample_available{job="stream_v3_observability_monitor"} == 1
-          and stream_v3_map_monitor_weather_ok{job="stream_v3_observability_monitor"} == 0
+          and stream_v3_map_precipitation_data_ok{job="stream_v3_observability_monitor"} == 0
         for: 20m
         labels:
           severity: warning
         annotations:
-          summary: JMA precipitation layer or fetcher is unhealthy
+          summary: JMA precipitation data or fetcher is unhealthy
           description: This alert is observational and does not request a stream runtime restart.
+
+      - alert: StreamV3MapPrecipitationRenderMismatch
+        expr: |
+          stream_v3_map_monitor_sample_available{job="stream_v3_observability_monitor"} == 1
+          and stream_v3_map_monitor_delivery_critical_ok{job="stream_v3_observability_monitor"} == 1
+          and stream_v3_map_precipitation_data_ok{job="stream_v3_observability_monitor"} == 1
+          and stream_v3_map_precipitation_render_applied{job="stream_v3_observability_monitor"} == 0
+        for: 20m
+        labels:
+          severity: warning
+        annotations:
+          summary: Current JMA precipitation state is not reflected by the browser map
+          description: Check browser validtime, no-rain state, and MapLibre precipitation layer loading. Do not restart the delivery runtime automatically.
+
+      - alert: StreamV3MapPrecipitationGenerationIntegrityFailure
+        expr: |
+          stream_v3_map_monitor_sample_available{job="stream_v3_observability_monitor"} == 1
+          and stream_v3_map_precipitation_generation_integrity{job="stream_v3_observability_monitor"} == 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: Served JMA precipitation generation failed manifest integrity verification
+          description: Check the manifest and bounded local tile set. This weather-only alert must not restart the delivery runtime automatically.
 
       - alert: StreamV3MapRuntimeContainerRestarted
         expr: stream_v3_map_container_restart_count{job="stream_v3_observability_monitor"} > 0

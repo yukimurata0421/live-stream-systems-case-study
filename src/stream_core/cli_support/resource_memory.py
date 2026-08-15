@@ -10,10 +10,16 @@ from pathlib import Path
 from typing import Callable
 
 try:
-    from stream_core.common.json_io import append_jsonl, atomic_write_json_file, iter_jsonl, read_json_file
+    from stream_core.common.json_io import (
+        append_jsonl,
+        atomic_write_json_file,
+        iter_jsonl,
+        iter_jsonl_recent,
+        read_json_file,
+    )
     from stream_core.common.timeutil import parse_utc_ts, utc_text_from_ts
 except ModuleNotFoundError:
-    from common.json_io import append_jsonl, atomic_write_json_file, iter_jsonl, read_json_file
+    from common.json_io import append_jsonl, atomic_write_json_file, iter_jsonl, iter_jsonl_recent, read_json_file
     from common.timeutil import parse_utc_ts, utc_text_from_ts
 
 
@@ -22,6 +28,12 @@ BASELINE_READY_SEC = 7 * 24 * 3600
 PROCESS_LEAK_MIN_GROWTH_8H_BYTES = 256 * MIB
 PROCESS_LEAK_MIN_RATE_BYTES_PER_HOUR = 32 * MIB
 HOST_SWAP_GROWTH_1H_BYTES = 256 * MIB
+HOST_MEM_AVAILABLE_WARN_MB = 4096.0
+HOST_MEM_AVAILABLE_CRITICAL_MB = 2048.0
+HOST_MEM_AVAILABLE_EMERGENCY_MB = 1024.0
+HOST_SWAP_CAPACITY_OBSERVE_RATIO = 0.50
+HOST_SWAP_CAPACITY_WARN_RATIO = 0.75
+HOST_SWAP_CAPACITY_CRITICAL_RATIO = 0.90
 PSWP_ACTIVITY_PER_MIN_FLOOR = 0.0
 PSI_AVG300_FLOOR = 0.0
 SCHEMA_VERSION = "resource_memory.v1"
@@ -392,9 +404,7 @@ def process_uptime_sec(proc_root: Path, pid_dir: Path) -> int | None:
         return None
     try:
         uptime = float((proc_root / "uptime").read_text(encoding="utf-8").split()[0])
-        sysconf = getattr(os, "sysconf", None)
-        sysconf_names = getattr(os, "sysconf_names", {})
-        hz = sysconf(sysconf_names["SC_CLK_TCK"]) if sysconf is not None and "SC_CLK_TCK" in sysconf_names else 100
+        hz = os.sysconf(os.sysconf_names["SC_CLK_TCK"])
     except (OSError, ValueError, KeyError):
         return None
     return max(0, int(uptime - (float(start_ticks) / float(hz))))
@@ -467,15 +477,17 @@ def collect_process_groups(proc_root: Path) -> dict[str, dict]:
     return out
 
 
-def history_items(path: Path, now_ts: int, max_window_sec: int = 24 * 3600) -> list[dict]:
+def history_items(path: Path, now_ts: int, max_window_sec: int = BASELINE_READY_SEC) -> list[dict]:
     cutoff = now_ts - max_window_sec - 3600
     rows: list[dict] = []
-    for item in iter_jsonl(path):
-        ts = parse_utc_ts(str(item.get("ts_utc", "") or item.get("generated_at_utc", "") or ""))
-        if ts >= cutoff:
-            row = dict(item)
-            row["_ts"] = ts
-            rows.append(row)
+    def timestamp(item: dict) -> int:
+        return parse_utc_ts(str(item.get("ts_utc", "") or item.get("generated_at_utc", "") or ""))
+
+    for item in iter_jsonl_recent(path, cutoff_ts=cutoff, timestamp=timestamp):
+        ts = timestamp(item)
+        row = dict(item)
+        row["_ts"] = ts
+        rows.append(row)
     return rows
 
 
@@ -594,6 +606,11 @@ def runtime_correlation(ctx: ResourceMemoryContext, process_groups: dict[str, di
     runtime_snapshot = latest_watchdog.get("runtime_snapshot") if isinstance(latest_watchdog.get("runtime_snapshot"), dict) else {}
     now_playing = latest_watchdog.get("now_playing_state") if isinstance(latest_watchdog.get("now_playing_state"), dict) else {}
     checks = latest_overlay.get("checks") if isinstance(latest_overlay.get("checks"), dict) else {}
+    local_ffmpeg_alive = int(process_groups.get("ffmpeg", {}).get("process_count") or 0) > 0
+    remote_ffmpeg_evidence = ffmpeg_remote_evidence(ytw)
+    remote_ffmpeg_alive = bool(remote_ffmpeg_evidence)
+    ffmpeg_alive = local_ffmpeg_alive or remote_ffmpeg_alive
+    ffmpeg_alive_source = "local_process" if local_ffmpeg_alive else "remote_runtime_evidence" if remote_ffmpeg_alive else "not_observed"
     return {
         "stream_session_id": str(runtime_snapshot.get("run_id") or latest_engine.get("run_id") or ""),
         "runtime_generation": str(ytw.get("ffmpeg_generation") or ""),
@@ -605,7 +622,10 @@ def runtime_correlation(ctx: ResourceMemoryContext, process_groups: dict[str, di
         "current_runtime_state": {
             "youtube_strict_ok": tri_bool(ytw.get("local_ok")) and (tri_bool(ytw.get("oauth_ok")) or tri_bool(ytw.get("api_ok"))) and tri_bool(ytw.get("public_ok")),
             "same_watch_url_ok": tri_bool(bool(ytw.get("expected_video_id")) and str(ytw.get("expected_video_id")) == str(ytw.get("video_id"))),
-            "ffmpeg_alive": int(process_groups.get("ffmpeg", {}).get("process_count") or 0) > 0,
+            "ffmpeg_alive": ffmpeg_alive,
+            "local_ffmpeg_alive": local_ffmpeg_alive,
+            "ffmpeg_alive_source": ffmpeg_alive_source,
+            "ffmpeg_alive_evidence": remote_ffmpeg_evidence if not local_ffmpeg_alive else ["local_process.ffmpeg"],
             "ffmpeg_rtmp_connected": ytw.get("ingest_connected") if isinstance(ytw.get("ingest_connected"), bool) else None,
             "overlay_fresh": bool(overlay_ts and now_ts - overlay_ts <= 1800 and latest_overlay.get("judgment") == "report_only_ok"),
             "aircraft_json_fresh": bool(overlay_ts and now_ts - overlay_ts <= 1800 and checks.get("aircraft_json_ok") is True),
@@ -621,6 +641,34 @@ def runtime_correlation(ctx: ResourceMemoryContext, process_groups: dict[str, di
             "last_oom_event_at": None,
         },
     }
+
+
+def ffmpeg_remote_evidence(ytw: dict) -> list[str]:
+    evidence: list[str] = []
+    if ytw.get("ingest_connected") is True:
+        evidence.append("youtube_watchdog.ingest_connected")
+    if truthy_nonzero(ytw.get("ffmpeg_pid")):
+        evidence.append("youtube_watchdog.ffmpeg_pid")
+    if truthy_nonzero(ytw.get("ffmpeg_uptime_sec")):
+        evidence.append("youtube_watchdog.ffmpeg_uptime_sec")
+    if str(ytw.get("ffmpeg_generation") or "").strip():
+        evidence.append("youtube_watchdog.ffmpeg_generation")
+    if ytw.get("stream_active") is True and str(ytw.get("api_live_state") or "").lower() == "live":
+        evidence.append("youtube_watchdog.stream_active_live")
+    return evidence
+
+
+def truthy_nonzero(value: object) -> bool:
+    if isinstance(value, bool):
+        return value
+    if value is None:
+        return False
+    if isinstance(value, (int, float)):
+        return value != 0
+    text = str(value).strip()
+    if not text or text.lower() in {"0", "false", "none", "null"}:
+        return False
+    return True
 
 
 def tri_bool(value: object) -> bool | None:
@@ -680,6 +728,29 @@ def baseline_coverage_sec(rows: list[dict], now_ts: int) -> int:
     return max(0, now_ts - min(timestamps))
 
 
+def prior_swap_growth_observed(rows: list[dict], now_ts: int) -> bool:
+    """Return whether the immediately preceding 15-minute sample saw real swap-out growth."""
+
+    candidates = sorted(
+        (row for row in rows if 0 < int(row.get("_ts") or 0) < now_ts),
+        key=lambda row: int(row.get("_ts") or 0),
+        reverse=True,
+    )
+    if not candidates:
+        return False
+    previous = candidates[0]
+    if now_ts - int(previous.get("_ts") or 0) > 30 * 60:
+        return False
+    growth = nested_number(previous, ("trends", "host", "swap_used_delta_1h_mb"))
+    pswpout = nested_number(previous, ("vm_activity", "pswpout_delta_per_min"))
+    return bool(
+        growth is not None
+        and growth > mb(HOST_SWAP_GROWTH_1H_BYTES)
+        and pswpout is not None
+        and pswpout > PSWP_ACTIVITY_PER_MIN_FLOOR
+    )
+
+
 def assess(payload: dict, rows: list[dict]) -> dict:
     host = payload["host_memory"]
     pressure = payload["memory_pressure"]
@@ -687,14 +758,18 @@ def assess(payload: dict, rows: list[dict]) -> dict:
     runtime = payload["correlation"]["current_runtime_state"]
     subsystems = payload["subsystems"]
     cgroups = payload["cgroups"]
-    total_mb = host.get("mem_total_mb")
-    low_available_floor_mb = max(1500.0, float(total_mb or 0.0) * 0.10) if total_mb is not None else 1500.0
-    mem_low = host.get("mem_available_mb") is not None and float(host["mem_available_mb"]) < low_available_floor_mb
+    now_ts = parse_utc_ts(payload["ts_utc"])
+    available_mb = float(host["mem_available_mb"]) if host.get("mem_available_mb") is not None else None
+    mem_warn = available_mb is not None and available_mb < HOST_MEM_AVAILABLE_WARN_MB
+    mem_critical = available_mb is not None and available_mb < HOST_MEM_AVAILABLE_CRITICAL_MB
+    mem_emergency = available_mb is not None and available_mb < HOST_MEM_AVAILABLE_EMERGENCY_MB
+    swap_ratio = float(host.get("swap_used_ratio") or 0.0)
     swap_growth = (
         payload["trends"]["host"].get("swap_used_delta_1h_mb") is not None
         and float(payload["trends"]["host"]["swap_used_delta_1h_mb"]) > mb(HOST_SWAP_GROWTH_1H_BYTES)
         and float(vm.get("pswpout_delta_per_min") or 0.0) > PSWP_ACTIVITY_PER_MIN_FLOOR
     )
+    sustained_swap_growth = bool(swap_growth and prior_swap_growth_observed(rows, now_ts))
     psi_some = float(pressure.get("some_avg300") or 0.0) > PSI_AVG300_FLOOR
     psi_full = float(pressure.get("full_avg300") or 0.0) > PSI_AVG300_FLOOR
     oom_delta = int(vm.get("oom_kill_count_delta") or 0)
@@ -706,33 +781,48 @@ def assess(payload: dict, rows: list[dict]) -> dict:
         runtime.get("overlay_fresh") is False or runtime.get("aircraft_json_fresh") is False
     )
     delivery_degraded = (
-        bool(subsystems["delivery"]["leak_suspect"]) or bool(swap_growth) or (mem_low and psi_some)
+        bool(subsystems["delivery"]["leak_suspect"]) or bool(sustained_swap_growth) or (mem_warn and psi_some)
     ) and (runtime.get("ffmpeg_alive") is False or runtime.get("ffmpeg_rtmp_connected") is False)
     runtime_degraded = rendering_degraded or delivery_degraded or runtime.get("audio_active") is False
-    coverage_sec = baseline_coverage_sec(rows, parse_utc_ts(payload["ts_utc"]))
+    coverage_sec = baseline_coverage_sec(rows, now_ts)
 
     reasons: list[str] = []
     status = "ok"
     if any(item.get("leak_suspect") for item in subsystems.values()):
         status = "observe"
         reasons.append("subsystem PSS growth crossed initial leak-suspect floor")
-    if mem_low:
+    if swap_ratio >= HOST_SWAP_CAPACITY_OBSERVE_RATIO:
+        status = max_status(status, "observe")
+        reasons.append("resident swap crossed the 50% capacity observation floor; current pressure not inferred")
+    if psi_some:
+        status = max_status(status, "observe")
+        reasons.append("PSI memory pressure observed")
+    if swap_growth:
+        status = max_status(status, "observe")
+        reasons.append("swap-out growth observed in the current sample")
+    if mem_warn:
         status = max_status(status, "warn")
-        reasons.append(f"MemAvailable below max(1500MiB,total*10%) floor ({low_available_floor_mb:.1f}MiB)")
-    if swap_growth or psi_some:
+        reasons.append("MemAvailable below 4096MiB watch floor")
+    if psi_full or sustained_swap_growth or (swap_growth and psi_some):
         status = max_status(status, "warn")
-        reasons.append("swap growth or PSI memory pressure observed")
-    if (mem_low and (swap_growth or psi_full)) or rendering_degraded or delivery_degraded:
+        reasons.append("sustained swap growth or corroborated memory pressure observed")
+    if rendering_degraded or delivery_degraded:
         status = max_status(status, "degraded")
         reasons.append("memory pressure correlates with runtime degradation candidate")
+    if mem_critical:
+        status = "critical"
+        reasons.append("MemAvailable below 2048MiB critical floor")
+    if mem_emergency:
+        status = "critical"
+        reasons.append("MemAvailable below 1024MiB emergency floor")
+    if swap_ratio >= HOST_SWAP_CAPACITY_CRITICAL_RATIO and (swap_growth or psi_some):
+        status = "critical"
+        reasons.append("swap capacity at or above 90% with current growth or PSI pressure")
     if oom_delta > 0:
         status = "critical"
         reasons.append("OOM event delta observed in vmstat or cgroup memory.events")
 
     baseline_ready = coverage_sec >= BASELINE_READY_SEC
-    if not baseline_ready and status in {"warn", "degraded"} and oom_delta == 0:
-        status = "observe"
-        reasons.append("7d baseline not ready; keeping non-OOM memory findings report-only")
 
     supporting = status in {"degraded", "critical"} and bool(runtime_degraded or oom_delta > 0)
     primary_suspect = None
@@ -753,10 +843,29 @@ def assess(payload: dict, rows: list[dict]) -> dict:
         "primary_suspect": primary_suspect,
         "baseline_ready": baseline_ready,
         "baseline_coverage_sec": coverage_sec,
+        "current_pressure": {
+            "mem_available_warn": mem_warn,
+            "mem_available_critical": mem_critical,
+            "mem_available_emergency": mem_emergency,
+            "swap_growth": swap_growth,
+            "sustained_swap_growth": sustained_swap_growth,
+            "psi_some": psi_some,
+            "psi_full": psi_full,
+            "oom_event_delta": oom_delta,
+        },
+        "swap_capacity": {
+            "used_ratio": swap_ratio,
+            "observe": swap_ratio >= HOST_SWAP_CAPACITY_OBSERVE_RATIO,
+            "warn": swap_ratio >= HOST_SWAP_CAPACITY_WARN_RATIO,
+            "critical": swap_ratio >= HOST_SWAP_CAPACITY_CRITICAL_RATIO,
+            "contributes_to_current_pressure_only_with_growth_or_psi": True,
+        },
         "initial_thresholds": {
-            "mem_available_low": "mem_available_mb < max(1500MiB, total_memory * 0.10)",
+            "mem_available": "warn <4096MiB; critical <2048MiB; emergency <1024MiB",
+            "swap_capacity": "observe >=50%; warn >=75%; critical >=90%; capacity alone is not a current incident",
             "swap_growth": "swap_used_delta_1h_mb > 256MiB and pswpout_delta_per_min > 0",
-            "memory_pressure": "memory.some_avg300 > 0",
+            "swap_growth_warning": "two consecutive samples within 30m, or one sample corroborated by memory.some_avg300 > 0",
+            "memory_pressure": "memory.some_avg300 > 0 observes; memory.full_avg300 > 0 warns",
             "leak_suspect": "8h PSS growth > 256MiB and > 32MiB/hour until 7d baseline is available",
         },
         "reason": "; ".join(reasons) if reasons else "No sustained growth, swap usage, PSI pressure, OOM event, or runtime correlation observed.",

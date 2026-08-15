@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import concurrent.futures
 import datetime as dt
+import hashlib
 import io
 import json
 import math
@@ -28,6 +29,10 @@ from PIL import Image
 
 
 SCHEMA = "stream_v3.precipitation.v1"
+GENERATION_MANIFEST_SCHEMA = "stream_v3.precipitation_generation_manifest.v1"
+GENERATION_MANIFEST_FILE = "manifest.json"
+MAX_TILE_BYTES = 2 * 1024 * 1024
+MAX_MANIFEST_BYTES = 1024 * 1024
 DEFAULT_METADATA_URL = "https://www.jma.go.jp/bosai/jmatile/data/nowc/targetTimes_N1.json"
 DEFAULT_DATA_ROOT_URL = "https://www.jma.go.jp/bosai/jmatile/data/nowc"
 DEFAULT_SOURCE_PAGE = "https://www.jma.go.jp/bosai/nowc/"
@@ -275,6 +280,206 @@ def write_json_atomic(path: Path, payload: dict[str, object]) -> None:
         temporary.unlink(missing_ok=True)
 
 
+def sha256_bytes(content: bytes) -> str:
+    return hashlib.sha256(content).hexdigest()
+
+
+def _fsync_directory(path: Path) -> None:
+    """Persist rename metadata when the filesystem supports directory fsync."""
+
+    descriptor = os.open(path, os.O_RDONLY | getattr(os, "O_DIRECTORY", 0))
+    try:
+        os.fsync(descriptor)
+    finally:
+        os.close(descriptor)
+
+
+def tile_relative_path(tile: tuple[int, int, int]) -> str:
+    zoom, x, y = tile
+    return f"{zoom}/{x}/{y}.png"
+
+
+def generation_manifest(
+    *,
+    basetime: str,
+    validtime: str,
+    bounds: tuple[float, float, float, float],
+    tile_zooms: tuple[int, ...],
+    tiles: list[dict[str, object]],
+) -> dict[str, object]:
+    ordered = sorted(tiles, key=lambda item: str(item["path"]))
+    return {
+        "schema": GENERATION_MANIFEST_SCHEMA,
+        "basetime": basetime,
+        "validtime": validtime,
+        "bounds": list(bounds),
+        "tile_zooms": list(tile_zooms),
+        "expected_tile_count": len(tiles_for_bounds(bounds, tile_zooms)),
+        "tile_count": len(ordered),
+        "total_bytes": sum(int(item["size_bytes"]) for item in ordered),
+        "active_pixel_count": sum(int(item["active_pixel_count"]) for item in ordered),
+        "tiles": ordered,
+    }
+
+
+def verify_generation(
+    generation: Path,
+    *,
+    expected_validtime: str | None = None,
+    expected_manifest_sha256: str | None = None,
+) -> dict[str, object]:
+    """Verify a complete precipitation generation from manifest to decoded PNGs."""
+
+    generation = Path(generation)
+    if generation.is_symlink() or not generation.is_dir():
+        raise ValueError("precipitation generation must be a real directory")
+    validtime = expected_validtime or generation.name
+    if not re.fullmatch(r"\d{14}", validtime):
+        raise ValueError("invalid precipitation generation validtime")
+    manifest_path = generation / GENERATION_MANIFEST_FILE
+    if manifest_path.is_symlink() or not manifest_path.is_file():
+        raise ValueError("precipitation generation manifest is missing")
+    raw_manifest = manifest_path.read_bytes()
+    if not raw_manifest or len(raw_manifest) > MAX_MANIFEST_BYTES:
+        raise ValueError("precipitation generation manifest size is invalid")
+    digest = sha256_bytes(raw_manifest)
+    if expected_manifest_sha256 and digest != expected_manifest_sha256:
+        raise ValueError("precipitation generation manifest digest mismatch")
+    try:
+        manifest = json.loads(raw_manifest)
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise ValueError("precipitation generation manifest is invalid JSON") from exc
+    if not isinstance(manifest, dict) or manifest.get("schema") != GENERATION_MANIFEST_SCHEMA:
+        raise ValueError("precipitation generation manifest schema mismatch")
+    if manifest.get("validtime") != validtime or manifest.get("basetime") != validtime:
+        raise ValueError("precipitation generation time contract mismatch")
+    try:
+        bounds = tuple(float(value) for value in manifest["bounds"])
+        zooms = tuple(int(value) for value in manifest["tile_zooms"])
+    except (KeyError, TypeError, ValueError) as exc:
+        raise ValueError("precipitation generation bounds or zooms are invalid") from exc
+    if len(bounds) != 4 or not zooms:
+        raise ValueError("precipitation generation bounds or zooms are incomplete")
+    expected_tiles = tiles_for_bounds(bounds, zooms)  # type: ignore[arg-type]
+    expected_paths = {tile_relative_path(tile) for tile in expected_tiles}
+    raw_tiles = manifest.get("tiles")
+    if not isinstance(raw_tiles, list):
+        raise ValueError("precipitation generation tile ledger is missing")
+    if manifest.get("expected_tile_count") != len(expected_paths):
+        raise ValueError("precipitation generation expected tile count mismatch")
+    if manifest.get("tile_count") != len(raw_tiles) or len(raw_tiles) != len(expected_paths):
+        raise ValueError("precipitation generation tile count mismatch")
+
+    observed_paths: set[str] = set()
+    total_bytes = 0
+    total_active_pixels = 0
+    for raw_item in raw_tiles:
+        if not isinstance(raw_item, dict):
+            raise ValueError("precipitation generation tile entry is invalid")
+        relative = raw_item.get("path")
+        if not isinstance(relative, str) or relative not in expected_paths or relative in observed_paths:
+            raise ValueError("precipitation generation tile path is invalid")
+        observed_paths.add(relative)
+        match = re.fullmatch(r"(\d{1,2})/(\d+)/(\d+)\.png", relative)
+        if match is None:
+            raise ValueError("precipitation generation tile path is malformed")
+        tile = tuple(int(value) for value in match.groups())
+        path = generation.joinpath(*relative.split("/"))
+        if path.is_symlink() or not path.is_file():
+            raise ValueError("precipitation generation tile is missing or linked")
+        content = path.read_bytes()
+        if not content or len(content) > MAX_TILE_BYTES:
+            raise ValueError("precipitation generation tile size is invalid")
+        if raw_item.get("size_bytes") != len(content):
+            raise ValueError("precipitation generation tile size mismatch")
+        if raw_item.get("sha256") != sha256_bytes(content):
+            raise ValueError("precipitation generation tile digest mismatch")
+        try:
+            with Image.open(io.BytesIO(content)) as image:
+                image.load()
+                if image.format != "PNG" or image.size != (256, 256):
+                    raise ValueError("precipitation generation tile image contract mismatch")
+        except (OSError, ValueError) as exc:
+            raise ValueError("precipitation generation tile cannot be decoded") from exc
+        active_pixels = count_active_pixels_in_bounds(
+            content,
+            tile,  # type: ignore[arg-type]
+            bounds,  # type: ignore[arg-type]
+        )
+        if raw_item.get("active_pixel_count") != active_pixels:
+            raise ValueError("precipitation generation active pixel count mismatch")
+        if raw_item.get("width") != 256 or raw_item.get("height") != 256:
+            raise ValueError("precipitation generation declared dimensions mismatch")
+        total_bytes += len(content)
+        total_active_pixels += active_pixels
+
+    actual_files: set[str] = set()
+    for path in generation.rglob("*"):
+        if path.is_symlink():
+            raise ValueError("precipitation generation contains a symlink")
+        if path.is_file():
+            actual_files.add(path.relative_to(generation).as_posix())
+        elif not path.is_dir():
+            raise ValueError("precipitation generation contains a special file")
+    if actual_files != expected_paths | {GENERATION_MANIFEST_FILE}:
+        raise ValueError("precipitation generation contains missing or unexpected files")
+    if manifest.get("total_bytes") != total_bytes:
+        raise ValueError("precipitation generation total byte count mismatch")
+    if manifest.get("active_pixel_count") != total_active_pixels:
+        raise ValueError("precipitation generation total active pixel count mismatch")
+    return {
+        "manifest": manifest,
+        "manifest_sha256": digest,
+        "tile_count": len(observed_paths),
+        "total_bytes": total_bytes,
+        "active_pixel_count": total_active_pixels,
+    }
+
+
+def _recover_interrupted_generation(generations_root: Path, validtime: str) -> None:
+    """Restore a verified previous directory if a crash hit the rename gap."""
+
+    target = generations_root / validtime
+    if target.exists() or target.is_symlink():
+        return
+    candidates = sorted(
+        generations_root.glob(f".{validtime}.previous.*"),
+        key=lambda path: path.stat().st_mtime_ns if path.exists() else 0,
+        reverse=True,
+    )
+    for candidate in candidates:
+        try:
+            verify_generation(candidate, expected_validtime=validtime)
+        except (OSError, ValueError):
+            continue
+        os.replace(candidate, target)
+        _fsync_directory(generations_root)
+        return
+
+
+def _publish_generation(stage: Path, target: Path, *, validtime: str) -> None:
+    """Publish a verified directory while retaining a recoverable predecessor."""
+
+    generations_root = target.parent
+    previous: Path | None = None
+    if target.exists() or target.is_symlink():
+        previous = Path(tempfile.mkdtemp(prefix=f".{validtime}.previous.", dir=generations_root))
+        previous.rmdir()
+        os.replace(target, previous)
+        _fsync_directory(generations_root)
+    try:
+        os.replace(stage, target)
+        _fsync_directory(generations_root)
+    except Exception:
+        if previous is not None and previous.exists() and not target.exists():
+            os.replace(previous, target)
+            _fsync_directory(generations_root)
+        raise
+    if previous is not None and previous.exists():
+        shutil.rmtree(previous)
+        _fsync_directory(generations_root)
+
+
 def read_status(path: Path) -> dict[str, object] | None:
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))
@@ -332,12 +537,30 @@ def refresh_once(
     target = generations_root / validtime
     status_path = config.output_root / "status.json"
     current = read_status(status_path)
+    _recover_interrupted_generation(generations_root, validtime)
     if current and current.get("validtime") == validtime and target.is_dir():
-        return current, False
+        try:
+            verified = verify_generation(
+                target,
+                expected_validtime=validtime,
+                expected_manifest_sha256=str(current.get("generation_manifest_sha256") or "") or None,
+            )
+            if (
+                current.get("generation_integrity") is True
+                and current.get("tile_count") == verified["tile_count"]
+                and current.get("tile_total_bytes") == verified["total_bytes"]
+                and current.get("active_pixel_count") == verified["active_pixel_count"]
+            ):
+                return current, False
+        except (OSError, ValueError):
+            # Re-fetch this validtime into a separate stage.  The suspect
+            # generation remains available until replacement is complete.
+            pass
 
     tiles = tiles_for_bounds(config.bounds, config.tile_zooms)
     stage = Path(tempfile.mkdtemp(prefix=f".{validtime}.", dir=generations_root))
     active_pixels = 0
+    tile_entries: list[dict[str, object]] = []
     try:
         with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, config.workers)) as executor:
             futures = [
@@ -350,9 +573,26 @@ def refresh_once(
                 destination.parent.mkdir(parents=True, exist_ok=True)
                 destination.write_bytes(processed)
                 active_pixels += tile_active_pixels
-        if target.exists():
-            shutil.rmtree(target)
-        os.replace(stage, target)
+                tile_entries.append(
+                    {
+                        "path": tile_relative_path((zoom, x, y)),
+                        "sha256": sha256_bytes(processed),
+                        "size_bytes": len(processed),
+                        "width": 256,
+                        "height": 256,
+                        "active_pixel_count": tile_active_pixels,
+                    }
+                )
+        manifest = generation_manifest(
+            basetime=basetime,
+            validtime=validtime,
+            bounds=config.bounds,
+            tile_zooms=config.tile_zooms,
+            tiles=tile_entries,
+        )
+        write_json_atomic(stage / GENERATION_MANIFEST_FILE, manifest)
+        verified = verify_generation(stage, expected_validtime=validtime)
+        _publish_generation(stage, target, validtime=validtime)
     finally:
         if stage.exists():
             shutil.rmtree(stage, ignore_errors=True)
@@ -378,9 +618,13 @@ def refresh_once(
         "minzoom": min(config.tile_zooms),
         "maxzoom": max(config.tile_zooms),
         "tile_count": len(tiles),
+        "tile_total_bytes": verified["total_bytes"],
         "active_pixel_count": active_pixels,
         "has_precipitation": active_pixels > 0,
         "tile_template": f"/weather/tiles/{validtime}/{{z}}/{{x}}/{{y}}.png",
+        "generation_manifest": f"/weather/tiles/{validtime}/{GENERATION_MANIFEST_FILE}",
+        "generation_manifest_sha256": verified["manifest_sha256"],
+        "generation_integrity": True,
         "processing": "JMA intensity classes recolored; values below 1 mm/h transparent",
     }
     write_json_atomic(status_path, status)

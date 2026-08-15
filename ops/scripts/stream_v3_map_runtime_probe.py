@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -16,12 +17,18 @@ from typing import Any, Sequence
 
 
 def default_repo_root() -> Path:
-    return Path(os.environ.get("STREAM_V3_REPO_DIR", Path(__file__).resolve().parents[2])).expanduser()
+    return Path(
+        os.environ.get("STREAM_V3_REPO_DIR", Path(__file__).resolve().parents[2])
+    ).expanduser()
 
 
 def default_state_root(repo_root: Path) -> Path:
-    configured = os.environ.get("STREAM_V3_OBSERVABILITY_STATE_ROOT") or os.environ.get("STREAM_RUNTIME_STATE_DIR")
-    return Path(configured).expanduser() if configured else repo_root / ".state" / "observability-monitor"
+    configured = os.environ.get("STREAM_V3_OBSERVABILITY_STATE_ROOT") or os.environ.get(
+        "STREAM_RUNTIME_STATE_DIR"
+    )
+    if configured:
+        return Path(configured).expanduser()
+    return repo_root / ".state" / "observability-monitor"
 
 
 DEFAULT_REPO_ROOT = default_repo_root()
@@ -38,7 +45,10 @@ DEFAULT_EXPECTED_CONTAINERS = (
 
 
 PROCESS_PROBE = r'''
+import hashlib
 import json
+import re
+import struct
 import urllib.request
 from pathlib import Path
 
@@ -65,6 +75,91 @@ def http_json(path):
         return {"payload": payload if isinstance(payload, dict) else {}, "error": ""}
     except Exception as exc:
         return {"payload": {}, "error": (type(exc).__name__ + ":" + str(exc))[:240]}
+
+def http_bytes(path, max_bytes):
+    try:
+        with urllib.request.urlopen("http://127.0.0.1:18080" + path, timeout=3) as response:
+            length = response.headers.get("Content-Length")
+            if length and int(length) > max_bytes:
+                raise ValueError("asset_too_large")
+            body = response.read(max_bytes + 1)
+        if not body or len(body) > max_bytes:
+            raise ValueError("asset_size_invalid")
+        return body, ""
+    except Exception as exc:
+        return b"", (type(exc).__name__ + ":" + str(exc))[:240]
+
+def precipitation_integrity(status_result):
+    status = status_result.get("payload") if isinstance(status_result, dict) else None
+    if not isinstance(status, dict) or status_result.get("error"):
+        return {"schema": "stream_v3.precipitation_http_integrity.v1", "ok": False, "reasons": ["status_unavailable"]}
+    validtime = str(status.get("validtime") or "")
+    manifest_path = str(status.get("generation_manifest") or "")
+    expected_path = "/weather/tiles/" + validtime + "/manifest.json"
+    expected_digest = str(status.get("generation_manifest_sha256") or "")
+    if not re.fullmatch(r"\d{14}", validtime) or manifest_path != expected_path:
+        return {"schema": "stream_v3.precipitation_http_integrity.v1", "ok": False, "reasons": ["manifest_path_invalid"]}
+    raw_manifest, manifest_error = http_bytes(manifest_path, 1024 * 1024)
+    if manifest_error:
+        return {"schema": "stream_v3.precipitation_http_integrity.v1", "ok": False, "reasons": ["manifest_unavailable"]}
+    manifest_digest = hashlib.sha256(raw_manifest).hexdigest()
+    if not re.fullmatch(r"[0-9a-f]{64}", expected_digest) or manifest_digest != expected_digest:
+        return {"schema": "stream_v3.precipitation_http_integrity.v1", "ok": False, "reasons": ["manifest_digest_mismatch"]}
+    try:
+        manifest = json.loads(raw_manifest)
+    except Exception:
+        return {"schema": "stream_v3.precipitation_http_integrity.v1", "ok": False, "reasons": ["manifest_json_invalid"]}
+    tiles = manifest.get("tiles") if isinstance(manifest, dict) else None
+    if (
+        not isinstance(manifest, dict)
+        or manifest.get("schema") != "stream_v3.precipitation_generation_manifest.v1"
+        or manifest.get("validtime") != validtime
+        or manifest.get("basetime") != validtime
+        or not isinstance(tiles, list)
+        or not 1 <= len(tiles) <= 64
+        or manifest.get("tile_count") != len(tiles)
+        or manifest.get("expected_tile_count") != len(tiles)
+    ):
+        return {"schema": "stream_v3.precipitation_http_integrity.v1", "ok": False, "reasons": ["manifest_contract_invalid"]}
+    seen = set()
+    total_bytes = 0
+    total_active = 0
+    for item in tiles:
+        if not isinstance(item, dict):
+            return {"schema": "stream_v3.precipitation_http_integrity.v1", "ok": False, "reasons": ["tile_ledger_invalid"]}
+        relative = str(item.get("path") or "")
+        if not re.fullmatch(r"\d{1,2}/\d+/\d+\.png", relative) or relative in seen:
+            return {"schema": "stream_v3.precipitation_http_integrity.v1", "ok": False, "reasons": ["tile_path_invalid"]}
+        seen.add(relative)
+        body, tile_error = http_bytes("/weather/tiles/" + validtime + "/" + relative, 2 * 1024 * 1024)
+        if tile_error:
+            return {"schema": "stream_v3.precipitation_http_integrity.v1", "ok": False, "reasons": ["tile_unavailable"]}
+        if (
+            item.get("size_bytes") != len(body)
+            or item.get("sha256") != hashlib.sha256(body).hexdigest()
+            or not body.startswith(b"\x89PNG\r\n\x1a\n")
+            or len(body) < 24
+            or struct.unpack(">II", body[16:24]) != (256, 256)
+            or item.get("width") != 256
+            or item.get("height") != 256
+        ):
+            return {"schema": "stream_v3.precipitation_http_integrity.v1", "ok": False, "reasons": ["tile_contract_invalid"]}
+        total_bytes += len(body)
+        active = item.get("active_pixel_count")
+        if not isinstance(active, int) or isinstance(active, bool) or active < 0:
+            return {"schema": "stream_v3.precipitation_http_integrity.v1", "ok": False, "reasons": ["tile_active_count_invalid"]}
+        total_active += active
+    if manifest.get("total_bytes") != total_bytes or manifest.get("active_pixel_count") != total_active:
+        return {"schema": "stream_v3.precipitation_http_integrity.v1", "ok": False, "reasons": ["manifest_totals_mismatch"]}
+    return {
+        "schema": "stream_v3.precipitation_http_integrity.v1",
+        "ok": True,
+        "reasons": [],
+        "validtime": validtime,
+        "manifest_sha256": manifest_digest,
+        "tile_count": len(tiles),
+        "total_bytes": total_bytes,
+    }
 
 browser_main_count = 0
 swiftshader_main_count = 0
@@ -103,6 +198,7 @@ for candidate in (Path("/app/logs/browser.log"), Path("/state/logs/browser.log")
     }
     break
 
+weather_status = http_json("/weather/status.json")
 print(json.dumps({
     "browser": {
         "main_process_count": browser_main_count,
@@ -111,8 +207,9 @@ print(json.dumps({
     },
     "browser_log": browser_log,
     "render": http_json("/render/status.json"),
-    "weather_status": http_json("/weather/status.json"),
+    "weather_status": weather_status,
     "weather_health": http_json("/weather/health.json"),
+    "weather_integrity": precipitation_integrity(weather_status),
 }, separators=(",", ":")))
 '''
 
@@ -325,8 +422,12 @@ def evaluate_sample(
     readiness = as_dict(sample.get("readiness"))
     process = as_dict(sample.get("process"))
     render, render_error = endpoint_payload(process, "render")
+    render_precipitation = as_dict(render.get("precipitation"))
+    render_semantic = as_dict(render.get("semantic"))
+    asset_identity = as_dict(render.get("asset_identity"))
     weather_status, weather_status_error = endpoint_payload(process, "weather_status")
     weather_health, weather_health_error = endpoint_payload(process, "weather_health")
+    weather_integrity = as_dict(process.get("weather_integrity"))
     browser = as_dict(process.get("browser"))
     browser_log = as_dict(process.get("browser_log"))
 
@@ -365,6 +466,18 @@ def evaluate_sample(
         and render.get("aircraft_sample_ready") is True
         and 0 <= render_age_value <= render_max_age_sec
     )
+    semantic_visual_ok = bool(
+        render_semantic.get("schema") == "stream_v3.map_semantic_render.v1"
+        and render_semantic.get("ok") is True
+        and as_list(render_semantic.get("failed_checks")) == []
+    )
+    asset_identity_ok = bool(
+        asset_identity.get("schema") == "stream_v3.map_asset_identity.v1"
+        and asset_identity.get("ok") is True
+        and asset_identity.get("browser_revision_match") is True
+        and re.fullmatch(r"[0-9a-f]{64}", str(asset_identity.get("revision") or ""))
+        and int(asset_identity.get("file_count") or 0) > 0
+    )
     browser_contract_ok = bool(
         int(browser.get("main_process_count") or 0) >= 1
         and int(browser.get("swiftshader_main_process_count") or 0) >= 1
@@ -380,12 +493,28 @@ def evaluate_sample(
         stale_after_sec = max(60.0, float(weather_status.get("stale_after_sec") or 900.0))
     except (TypeError, ValueError):
         stale_after_sec = 900.0
+    precipitation_validtime = str(weather_status.get("validtime") or "")
+    precipitation_has_rain = weather_status.get("has_precipitation")
+    precipitation_generation_ok = bool(
+        re.fullmatch(r"\d{14}", precipitation_validtime)
+        and weather_status.get("tile_template")
+        == f"/weather/tiles/{precipitation_validtime}/{{z}}/{{x}}/{{y}}.png"
+        and weather_status.get("generation_manifest")
+        == f"/weather/tiles/{precipitation_validtime}/manifest.json"
+        and re.fullmatch(
+            r"[0-9a-f]{64}",
+            str(weather_status.get("generation_manifest_sha256") or ""),
+        )
+        and weather_status.get("generation_integrity") is True
+    )
     weather_status_ok = bool(
         not weather_status_error
         and weather_status.get("available") is True
         and weather_status.get("analysis_only") is True
         and weather_status.get("processed") is True
         and weather_status.get("forecast_minutes") == 0
+        and isinstance(precipitation_has_rain, bool)
+        and precipitation_generation_ok
         and observed_age_sec is not None
         and observed_age_sec <= stale_after_sec
     )
@@ -395,24 +524,76 @@ def evaluate_sample(
         and weather_health.get("state") == "current"
         and int(weather_health.get("consecutive_failures") or 0) == 0
     )
-    weather_ok = weather_status_ok and weather_health_ok
+    precipitation_generation_integrity = bool(
+        weather_integrity.get("schema") == "stream_v3.precipitation_http_integrity.v1"
+        and weather_integrity.get("ok") is True
+        and weather_integrity.get("validtime") == precipitation_validtime
+        and weather_integrity.get("manifest_sha256")
+        == weather_status.get("generation_manifest_sha256")
+        and weather_integrity.get("tile_count") == weather_status.get("tile_count")
+        and weather_integrity.get("total_bytes") == weather_status.get("tile_total_bytes")
+    )
+    precipitation_data_ok = (
+        weather_status_ok and weather_health_ok and precipitation_generation_integrity
+    )
+
+    render_precipitation_validtime = str(render_precipitation.get("validtime") or "")
+    render_precipitation_layer_validtime = str(render_precipitation.get("layer_validtime") or "")
+    precipitation_validtime_match = bool(
+        weather_status_ok
+        and render_precipitation_validtime == precipitation_validtime
+        and render_precipitation.get("has_precipitation") is precipitation_has_rain
+        and (
+            render_precipitation_layer_validtime == precipitation_validtime
+            if precipitation_has_rain is True
+            else render_precipitation_layer_validtime == ""
+        )
+    )
+    if precipitation_has_rain is True:
+        precipitation_render_applied = bool(
+            render_ok
+            and render_precipitation.get("evaluated") is True
+            and render_precipitation.get("fresh") is True
+            and render_precipitation.get("layer_loaded") is True
+            and render_precipitation.get("state") in {"layer_loaded", "layer_loaded_lkg"}
+            and precipitation_validtime_match
+        )
+    elif precipitation_has_rain is False:
+        precipitation_render_applied = bool(
+            render_ok
+            and render_precipitation.get("evaluated") is True
+            and render_precipitation.get("available") is True
+            and render_precipitation.get("fresh") is True
+            and render_precipitation.get("layer_loaded") is False
+            and render_precipitation.get("state") == "no_rain"
+            and precipitation_validtime_match
+        )
+    else:
+        precipitation_render_applied = False
+    weather_ok = precipitation_data_ok and precipitation_render_applied
 
     critical_checks = {
         "deployment_ready": deployment_ok,
         "pod_topology_ready": pod_ok,
         "runtime_readiness": readiness_ok,
         "render_heartbeat": render_ok,
+        "semantic_visual_contract": semantic_visual_ok,
+        "asset_identity": asset_identity_ok,
         "browser_contract": browser_contract_ok,
     }
     critical_reasons = [name for name, ok in critical_checks.items() if not ok]
+    delivery_critical_ok = not critical_reasons
     weather_reasons: list[str] = []
     if not weather_status_ok:
         weather_reasons.append("precipitation_status")
     if not weather_health_ok:
         weather_reasons.append("precipitation_fetcher_health")
+    if not precipitation_generation_integrity:
+        weather_reasons.append("precipitation_generation_integrity")
+    if precipitation_data_ok and delivery_critical_ok and not precipitation_render_applied:
+        weather_reasons.append("precipitation_render_applied")
     probe_errors = [str(item)[:500] for item in as_list(sample.get("probe_errors"))]
 
-    delivery_critical_ok = not critical_reasons
     discovery_failed = any(
         item.startswith("deployment:") or item.startswith("pods:") for item in probe_errors
     )
@@ -426,7 +607,7 @@ def evaluate_sample(
         status = "healthy"
 
     return {
-        "schema": "stream_v3.map_runtime_monitor.v1",
+        "schema": "stream_v3.map_runtime_monitor.v2",
         "checked_at_utc": str(sample.get("checked_at_utc") or utc_now()),
         "status": status,
         "delivery_critical_ok": delivery_critical_ok,
@@ -441,6 +622,15 @@ def evaluate_sample(
         "precipitation": {
             "status": weather_status,
             "health": weather_health,
+            "generation_integrity": weather_integrity,
+            "render": {
+                **render_precipitation,
+                "expected_has_precipitation": precipitation_has_rain
+                if isinstance(precipitation_has_rain, bool)
+                else None,
+                "expected_validtime": precipitation_validtime,
+                "validtime_match": precipitation_validtime_match,
+            },
             "status_probe_error": weather_status_error,
             "health_probe_error": weather_health_error,
             "observed_age_sec": round(observed_age_sec, 3) if observed_age_sec is not None else None,
@@ -448,8 +638,12 @@ def evaluate_sample(
         },
         "conditions": {
             **critical_checks,
+            "precipitation_data_ok": precipitation_data_ok,
             "precipitation_status": weather_status_ok,
             "precipitation_fetcher_health": weather_health_ok,
+            "precipitation_generation_integrity": precipitation_generation_integrity,
+            "precipitation_render_applied": precipitation_render_applied,
+            "precipitation_validtime_match": precipitation_validtime_match,
         },
         "critical_reasons": critical_reasons,
         "weather_reasons": weather_reasons,
@@ -521,9 +715,11 @@ def history_row(payload: dict[str, Any]) -> dict[str, Any]:
     readiness = as_dict(payload.get("readiness"))
     render = as_dict(payload.get("render"))
     precipitation = as_dict(payload.get("precipitation"))
+    conditions = as_dict(payload.get("conditions"))
+    precipitation_render = as_dict(precipitation.get("render"))
     browser = as_dict(payload.get("browser"))
     return {
-        "schema": "stream_v3.map_runtime_monitor_history.v1",
+        "schema": "stream_v3.map_runtime_monitor_history.v2",
         "checked_at_utc": payload.get("checked_at_utc"),
         "status": payload.get("status"),
         "delivery_critical_ok": payload.get("delivery_critical_ok"),
@@ -538,9 +734,17 @@ def history_row(payload: dict[str, Any]) -> dict[str, Any]:
         "nvenc_active": readiness.get("nvenc_active"),
         "rtmp_socket_established": readiness.get("rtmp_socket_established"),
         "render_age_sec": render.get("age_sec"),
+        "semantic_visual_ok": conditions.get("semantic_visual_contract"),
+        "asset_identity_ok": conditions.get("asset_identity"),
+        "asset_revision": as_dict(render.get("asset_identity")).get("revision", ""),
         "webgl2_blocklisted": browser.get("webgl2_blocklisted"),
         "webgl_context_fatal": browser.get("context_fatal_failure"),
         "precipitation_observed_age_sec": precipitation.get("observed_age_sec"),
+        "precipitation_data_ok": conditions.get("precipitation_data_ok"),
+        "precipitation_generation_integrity": conditions.get("precipitation_generation_integrity"),
+        "precipitation_render_applied": conditions.get("precipitation_render_applied"),
+        "precipitation_validtime_match": conditions.get("precipitation_validtime_match"),
+        "precipitation_render_state": precipitation_render.get("state", ""),
         "critical_reasons": payload.get("critical_reasons") or [],
         "weather_reasons": payload.get("weather_reasons") or [],
         "probe_errors": payload.get("probe_errors") or [],
@@ -593,7 +797,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         exit_code = 0
     except Exception as exc:  # pragma: no cover - defensive service boundary
         payload = {
-            "schema": "stream_v3.map_runtime_monitor.v1",
+            "schema": "stream_v3.map_runtime_monitor.v2",
             "checked_at_utc": utc_now(),
             "status": "unknown",
             "delivery_critical_ok": False,

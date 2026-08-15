@@ -20,6 +20,72 @@ def write_cgroup(root: Path, group: str, *, current: int, peak: int, stat: dict[
 
 
 class MemoryStatusTests(unittest.TestCase):
+    def test_resident_swap_is_capacity_evidence_not_current_pressure(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            meminfo = root / "meminfo"
+            meminfo.write_text(
+                "MemTotal: 16777216 kB\nMemAvailable: 10485760 kB\n"
+                "SwapTotal: 4194304 kB\nSwapFree: 1048576 kB\n",
+                encoding="utf-8",
+            )
+            ctx = MemoryStatusContext(
+                memory_status_file=root / "memory_status.json",
+                memory_status_events_file=root / "logs" / "memory_status.jsonl",
+                service_units=(),
+                run_systemctl_readonly=lambda args, check: subprocess.CompletedProcess(
+                    args=args, returncode=0, stdout="", stderr=""
+                ),
+                proc_meminfo_path=meminfo,
+                cgroup_root=root / "cgroup",
+            )
+
+            payload = memory_status_payload(ctx, now_ts=1_770_000_000)
+
+        self.assertEqual(payload["classification_policy_version"], 6)
+        self.assertEqual(payload["overall"]["severity"], "ok")
+        self.assertFalse(payload["overall"]["current_incident"])
+        self.assertEqual(payload["host"]["swap_capacity"]["severity"], "warn")
+        self.assertFalse(payload["host"]["swap_capacity"]["contributes_to_current_severity"])
+        self.assertEqual(payload["operational_adequacy"]["severity"], "warn")
+
+    def test_mem_available_uses_four_two_one_gib_floors(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            meminfo = root / "meminfo"
+            meminfo.write_text(
+                "MemTotal: 16777216 kB\nMemAvailable: 3145728 kB\nSwapTotal: 0 kB\nSwapFree: 0 kB\n",
+                encoding="utf-8",
+            )
+            ctx = MemoryStatusContext(
+                memory_status_file=root / "memory_status.json",
+                memory_status_events_file=root / "logs" / "memory_status.jsonl",
+                service_units=(),
+                run_systemctl_readonly=lambda args, check: subprocess.CompletedProcess(
+                    args=args, returncode=0, stdout="", stderr=""
+                ),
+                proc_meminfo_path=meminfo,
+                cgroup_root=root / "cgroup",
+            )
+
+            warning = memory_status_payload(ctx, now_ts=1_770_000_000)
+            meminfo.write_text(
+                "MemTotal: 16777216 kB\nMemAvailable: 1572864 kB\nSwapTotal: 0 kB\nSwapFree: 0 kB\n",
+                encoding="utf-8",
+            )
+            critical = memory_status_payload(ctx, now_ts=1_770_000_001)
+            meminfo.write_text(
+                "MemTotal: 16777216 kB\nMemAvailable: 524288 kB\nSwapTotal: 0 kB\nSwapFree: 0 kB\n",
+                encoding="utf-8",
+            )
+            emergency = memory_status_payload(ctx, now_ts=1_770_000_002)
+
+        self.assertEqual(warning["overall"]["severity"], "warn")
+        self.assertEqual(critical["overall"]["severity"], "critical")
+        self.assertTrue(any("2GiB critical" in reason for reason in critical["host"]["reasons"]))
+        self.assertEqual(emergency["overall"]["severity"], "critical")
+        self.assertTrue(any("1GiB emergency" in reason for reason in emergency["host"]["reasons"]))
+
     def test_memory_status_splits_file_cache_from_anonymous_memory(self) -> None:
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)

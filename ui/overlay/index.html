@@ -325,6 +325,82 @@
       #np { top: 174px; }
       #info { bottom: 10px; }
     }
+    @media (max-width: 480px) {
+      #adsb,
+      #np,
+      #info {
+        left: 8px;
+        width: calc(100vw - 16px);
+        min-width: 0;
+      }
+      #adsb { top: 8px; }
+      #adsb .altitude-section { display: none; }
+      .instrument-section { padding: 7px 12px; }
+      #adsb .kicker {
+        margin-bottom: 3px;
+        font-size: 12px;
+      }
+      .metric-grid {
+        gap: 3px 12px;
+        margin-top: 3px;
+      }
+      .metric { padding-top: 3px; }
+      .metric span { font-size: 12px; }
+      .metric strong { font-size: 20px; }
+      .receiver-status-row {
+        margin-top: 4px;
+        padding-top: 5px;
+        font-size: 12px;
+      }
+      .status-badge {
+        min-width: 64px;
+        padding: 2px 8px;
+        font-size: 12px;
+      }
+      .instrument-heading { font-size: 12px; }
+      .instrument-unit { font-size: 11px; }
+      .precipitation-meta {
+        gap: 4px;
+        font-size: 11px;
+      }
+      .precipitation-notice { font-size: 10px; }
+      .rain-scale {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 4px;
+        margin-top: 5px;
+        padding-top: 5px;
+      }
+      .rain-scale .legend-item { font-size: 10px; }
+      .rain {
+        width: 14px;
+        height: 8px;
+        margin-right: 3px;
+      }
+      #np {
+        top: 230px;
+        padding: 7px 10px;
+      }
+      #np .kicker {
+        margin-bottom: 2px;
+        font-size: 11px;
+      }
+      #np .title { font-size: 20px; }
+      #np .credit {
+        margin-top: 2px;
+        font-size: 11px;
+      }
+      #info {
+        bottom: 8px;
+        padding: 6px 8px;
+      }
+      #info .time-row {
+        justify-content: center;
+        gap: 10px;
+        font-size: 13px;
+      }
+      #info .time-row strong { font-size: 15px; }
+      #info .time-row span:last-child { display: none; }
+    }
   </style>
 </head>
 <body class="notranslate" translate="no">

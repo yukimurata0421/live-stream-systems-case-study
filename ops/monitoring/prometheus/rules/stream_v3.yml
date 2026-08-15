@@ -1,6 +1,44 @@
 groups:
   - name: stream_v3_observability_monitor
     rules:
+      - alert: StreamV3RequiredMetricMissing
+        expr: |
+          label_replace(absent(up{job="stream_v3_observability_monitor"}), "missing_metric", "up", "job", ".*")
+          or label_replace(absent(stream_v3_exporter_up{job="stream_v3_observability_monitor"}), "missing_metric", "stream_v3_exporter_up", "job", ".*")
+          or label_replace(absent(stream_v3_exporter_last_refresh_success{job="stream_v3_observability_monitor"}), "missing_metric", "stream_v3_exporter_last_refresh_success", "job", ".*")
+          or label_replace(absent(stream_v3_exporter_cache_age_seconds{job="stream_v3_observability_monitor"}), "missing_metric", "stream_v3_exporter_cache_age_seconds", "job", ".*")
+          or label_replace(absent(stream_v3_health_snapshot_used{job="stream_v3_observability_monitor"}), "missing_metric", "stream_v3_health_snapshot_used", "job", ".*")
+          or label_replace(absent(stream_v3_health_snapshot_available{job="stream_v3_observability_monitor"}), "missing_metric", "stream_v3_health_snapshot_available", "job", ".*")
+          or label_replace(absent(stream_v3_health_snapshot_age_seconds{job="stream_v3_observability_monitor"}), "missing_metric", "stream_v3_health_snapshot_age_seconds", "job", ".*")
+          or label_replace(absent(stream_v3_objective_snapshot_used{job="stream_v3_observability_monitor"}), "missing_metric", "stream_v3_objective_snapshot_used", "job", ".*")
+          or label_replace(absent(stream_v3_objective_snapshot_available{job="stream_v3_observability_monitor"}), "missing_metric", "stream_v3_objective_snapshot_available", "job", ".*")
+          or label_replace(absent(stream_v3_objective_snapshot_age_seconds{job="stream_v3_observability_monitor"}), "missing_metric", "stream_v3_objective_snapshot_age_seconds", "job", ".*")
+          or label_replace(absent(stream_v3_monitoring_watchdog_age_seconds{job="stream_v3_observability_monitor"}), "missing_metric", "stream_v3_monitoring_watchdog_age_seconds", "job", ".*")
+          or label_replace(absent(stream_v3_monitoring_watchdog_all_ok{job="stream_v3_observability_monitor"}), "missing_metric", "stream_v3_monitoring_watchdog_all_ok", "job", ".*")
+          or label_replace(absent(stream_v3_monitoring_watchdog_check_ok{job="stream_v3_observability_monitor",check="monitoring_v4_host_sentinel"}), "missing_metric", "stream_v3_monitoring_watchdog_check_ok:monitoring_v4_host_sentinel", "job", ".*")
+          or label_replace(absent(stream_v3_current_fail{job="stream_v3_observability_monitor",window_hours="1"}), "missing_metric", "stream_v3_current_fail", "job", ".*")
+          or label_replace(absent(stream_v3_health_pass{job="stream_v3_observability_monitor",window_hours="1"}), "missing_metric", "stream_v3_health_pass", "job", ".*")
+          or label_replace(absent(stream_v3_subsystems_healthy{job="stream_v3_observability_monitor"}), "missing_metric", "stream_v3_subsystems_healthy", "job", ".*")
+          or label_replace(absent(stream_v3_same_url_live{job="stream_v3_observability_monitor"}), "missing_metric", "stream_v3_same_url_live", "job", ".*")
+          or label_replace(absent(stream_v3_youtube_ingest_connected{job="stream_v3_observability_monitor"}), "missing_metric", "stream_v3_youtube_ingest_connected", "job", ".*")
+          or label_replace(absent(stream_v3_youtube_watchdog_healthy{job="stream_v3_observability_monitor"}), "missing_metric", "stream_v3_youtube_watchdog_healthy", "job", ".*")
+          or label_replace(absent(stream_v3_stream_watchdog_ok{job="stream_v3_observability_monitor"}), "missing_metric", "stream_v3_stream_watchdog_ok", "job", ".*")
+          or label_replace(absent(stream_v3_network_ok{job="stream_v3_observability_monitor"}), "missing_metric", "stream_v3_network_ok", "job", ".*")
+          or label_replace(absent(stream_v3_network_observer_age_seconds{job="stream_v3_observability_monitor"}), "missing_metric", "stream_v3_network_observer_age_seconds", "job", ".*")
+          or label_replace(absent(stream_v3_notify_active_incidents{job="stream_v3_observability_monitor"}), "missing_metric", "stream_v3_notify_active_incidents", "job", ".*")
+          or label_replace(absent(stream_v3_notify_pending{job="stream_v3_observability_monitor"}), "missing_metric", "stream_v3_notify_pending", "job", ".*")
+          or label_replace(absent(stream_v3_memory_current_ok{job="stream_v3_observability_monitor"}), "missing_metric", "stream_v3_memory_current_ok", "job", ".*")
+          or label_replace(absent(stream_v3_runtime_memory_sample_available{job="stream_v3_observability_monitor"}), "missing_metric", "stream_v3_runtime_memory_sample_available", "job", ".*")
+          or label_replace(absent(stream_v3_runtime_memory_current_ok{job="stream_v3_observability_monitor"}), "missing_metric", "stream_v3_runtime_memory_current_ok", "job", ".*")
+          or label_replace(absent(stream_v3_youtube_api_burn_rate_active{job="stream_v3_observability_monitor"}), "missing_metric", "stream_v3_youtube_api_burn_rate_active", "job", ".*")
+          or label_replace(absent(stream_v3_recovery_action_pending{job="stream_v3_observability_monitor"}), "missing_metric", "stream_v3_recovery_action_pending", "job", ".*")
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: a metric required by the stream_v3 alert contract is missing
+          description: The missing_metric label identifies the absent series. Absence is a monitoring failure, not proof that the underlying runtime is unhealthy.
+
       - alert: StreamV3ObservabilityMonitorExporterDown
         expr: up{job="stream_v3_observability_monitor"} == 0
         for: 2m
@@ -17,18 +55,189 @@ groups:
         annotations:
           summary: stream_v3 observability monitor exporter is failing
 
-      - alert: StreamV3MonitoringWatchdogFailing
-        expr: stream_v3_monitoring_watchdog_ok{job="stream_v3_observability_monitor"} == 0
+      - alert: StreamV3ExporterRefreshFailing
+        expr: stream_v3_exporter_last_refresh_success{job="stream_v3_observability_monitor"} == 0
         for: 2m
         labels:
           severity: warning
         annotations:
-          summary: stream_v3 monitoring-plane self-check is failing
+          summary: stream_v3 exporter refresh is failing while the process is still alive
 
-      - alert: StreamV3ExporterSnapshotFallbackActive
-        expr: stream_v3_exporter_snapshot_fallback{job="stream_v3_observability_monitor"} == 1
+      - alert: StreamV3ExporterCacheStale
+        expr: stream_v3_exporter_cache_age_seconds{job="stream_v3_observability_monitor"} > 600
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: stream_v3 exporter cache is stale
+
+      - alert: StreamV3HealthSnapshotMissingOrStale
+        expr: stream_v3_health_snapshot_used{job="stream_v3_observability_monitor"} == 0 or stream_v3_health_snapshot_available{job="stream_v3_observability_monitor"} == 0 or stream_v3_health_snapshot_age_seconds{job="stream_v3_observability_monitor"} > 600
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: stream_v3 health-summary snapshot is missing or stale
+
+      - alert: StreamV3ObjectiveSnapshotMissingOrStale
+        expr: stream_v3_objective_snapshot_used{job="stream_v3_observability_monitor"} == 0 or stream_v3_objective_snapshot_available{job="stream_v3_observability_monitor"} == 0 or stream_v3_objective_snapshot_age_seconds{job="stream_v3_observability_monitor"} > 600
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: stream_v3 objective SLI snapshot is missing or stale
+
+      - alert: StreamV3MonitoringWatchdogStale
+        expr: stream_v3_monitoring_watchdog_age_seconds{job="stream_v3_observability_monitor"} > 180
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: stream_v3 monitoring watchdog state is stale
+
+      - alert: StreamV3MonitoringWatchdogFailed
+        expr: stream_v3_monitoring_watchdog_all_ok{job="stream_v3_observability_monitor"} == 0
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: stream_v3 monitoring watchdog detected a broken monitoring contract
+
+      - alert: StreamV3MonitoringV4SentinelUnhealthy
+        expr: |
+          absent(stream_v3_monitoring_watchdog_check_ok{job="stream_v3_observability_monitor",check="monitoring_v4_host_sentinel"})
+          or stream_v3_monitoring_watchdog_check_ok{job="stream_v3_observability_monitor",check="monitoring_v4_host_sentinel"} == 0
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: the host-level detection-only Monitoring v4 sentinel is missing or unhealthy
+          description: This observer has no k3s restart, runtime mutation, or notification authority. Investigate its status file and failed checks; do not infer a stream delivery failure from this alert alone.
+
+      - alert: StreamV3CurrentFail
+        expr: max(stream_v3_current_fail{job="stream_v3_observability_monitor",window_hours="1"}) > 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: stream_v3 current health check is failing
+
+      - alert: StreamV3HealthPassMissingOrFalse
+        expr: max(stream_v3_health_pass{job="stream_v3_observability_monitor",window_hours="1"}) < 1
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: stream_v3 1h health pass is false
+
+      - alert: StreamV3SubsystemsUnhealthy
+        expr: stream_v3_subsystems_healthy{job="stream_v3_observability_monitor"} == 0
+        for: 3m
+        labels:
+          severity: critical
+        annotations:
+          summary: stream_v3 subsystem aggregate is unhealthy
+
+      - alert: StreamV3SameUrlNotLive
+        expr: stream_v3_same_url_live{job="stream_v3_observability_monitor"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: stream_v3 same-url live state is not healthy
+
+      - alert: StreamV3IngestDisconnected
+        expr: stream_v3_youtube_ingest_connected{job="stream_v3_observability_monitor"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: stream_v3 YouTube ingest is disconnected
+
+      - alert: StreamV3YouTubeWatchdogUnhealthy
+        expr: stream_v3_youtube_watchdog_healthy{job="stream_v3_observability_monitor"} == 0
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: stream_v3 YouTube watchdog is unhealthy
+
+      - alert: StreamV3StreamWatchdogNotOk
+        expr: stream_v3_stream_watchdog_ok{job="stream_v3_observability_monitor"} == 0
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: stream_v3 local stream watchdog is not ok
+
+      - alert: StreamV3NetworkObserverNotOk
+        expr: stream_v3_network_ok{job="stream_v3_observability_monitor"} == 0
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: stream_v3 network observer is not ok
+
+      - alert: StreamV3NetworkObserverStale
+        expr: stream_v3_network_observer_age_seconds{job="stream_v3_observability_monitor"} > 180
         for: 5m
         labels:
           severity: warning
         annotations:
-          summary: stream_v3 exporter is serving snapshot fallback data
+          summary: stream_v3 network observer data is stale
+
+      - alert: StreamV3NotifyActiveIncident
+        expr: stream_v3_notify_active_incidents{job="stream_v3_observability_monitor"} > 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: stream_v3 notifier has an active incident
+
+      - alert: StreamV3NotifyBacklog
+        expr: stream_v3_notify_pending{job="stream_v3_observability_monitor"} > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: stream_v3 notifier outbox is not empty
+
+      - alert: StreamV3MemoryCurrentNotOk
+        expr: stream_v3_memory_current_ok{job="stream_v3_observability_monitor"} == 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: stream_v3 host memory guardrail is not ok
+
+      - alert: StreamV3RuntimeMemorySampleMissing
+        expr: stream_v3_runtime_memory_sample_available{job="stream_v3_observability_monitor"} == 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: stream_v3 runtime pod memory sample is missing
+
+      - alert: StreamV3RuntimeMemoryOverWarning
+        expr: stream_v3_runtime_memory_current_ok{job="stream_v3_observability_monitor"} == 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: stream_v3 runtime pod memory guardrail is not ok
+
+      - alert: StreamV3YouTubeApiBurnRateActive
+        expr: stream_v3_youtube_api_burn_rate_active{job="stream_v3_observability_monitor"} > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: stream_v3 YouTube API burn-rate guard is active
+
+      - alert: StreamV3RecoveryActionPending
+        expr: stream_v3_recovery_action_pending{job="stream_v3_observability_monitor"} > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: stream_v3 recovery orchestrator has a pending action

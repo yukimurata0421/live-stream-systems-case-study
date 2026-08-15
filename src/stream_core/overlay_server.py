@@ -10,6 +10,7 @@ import math
 import os
 import re
 import socketserver
+import sqlite3
 import threading
 import time
 import urllib.error
@@ -18,6 +19,27 @@ import urllib.request
 from collections import OrderedDict
 from functools import partial
 from pathlib import Path
+
+try:  # package import in tests and tooling
+    from .map_asset_manifest import verify_asset_manifest
+    from .map_render_contract import (
+        empty_semantic_render_report,
+        normalize_semantic_render_report,
+    )
+    from .precipitation_render_contract import (
+        empty_precipitation_render_report,
+        normalize_precipitation_render_report,
+    )
+except ImportError:  # direct script execution in the runtime container
+    from map_asset_manifest import verify_asset_manifest
+    from map_render_contract import (
+        empty_semantic_render_report,
+        normalize_semantic_render_report,
+    )
+    from precipitation_render_contract import (
+        empty_precipitation_render_report,
+        normalize_precipitation_render_report,
+    )
 
 SCRIPT_PATH = Path(__file__).resolve()
 BASE_DIR = SCRIPT_PATH.parents[2]
@@ -28,8 +50,10 @@ class OverlayHandler(http.server.SimpleHTTPRequestHandler):
     stream1090_url = "http://stream1090.lan/stream1090/"
     now_playing_file = Path("now_playing.txt")
     now_playing_json_file = Path("now_playing.json")
+    actual_range_ledger_file = Path("/state/overlay/coverage/actual_range_ledger.sqlite3")
     actual_range_supplement_file = Path("/dev/shm/adsb-streamnew/overlay_actual_range_supplement.json")
     actual_range_supplement_hours = 24.0
+    actual_range_bucket_sec = 300.0
     actual_range_max_nmi = 500.0
     actual_range_receiver_height_ft = 0.0
     # Keep one bogus decoded position from turning into a day-long range spike.
@@ -39,6 +63,12 @@ class OverlayHandler(http.server.SimpleHTTPRequestHandler):
     actual_range_neighbor_support_degrees = 2
     actual_range_neighbor_support_margin_nmi = 20.0
     actual_range_aircraft_max_seen_pos_sec = 120.0
+    actual_range_ledger_lock = threading.RLock()
+    actual_range_ledger_status: dict[str, object] = {
+        "schema": "stream_v3.actual_range_ledger_status.v1",
+        "state": "not_initialized",
+        "persisted": False,
+    }
     openfreemap_tilejson_url = "https://tiles.openfreemap.org/planet"
     mapterhorn_tile_template = "https://tiles.mapterhorn.com/{z}/{x}/{y}.webp"
     map_tile_cache_max_entries = 256
@@ -87,6 +117,12 @@ class OverlayHandler(http.server.SimpleHTTPRequestHandler):
         if parsed.path == "/render/status.json":
             self.serve_render_status(send_body=send_body)
             return True
+        if parsed.path == "/asset/manifest.json":
+            self.serve_asset_manifest(send_body=send_body)
+            return True
+        if parsed.path == "/coverage/status.json":
+            self.send_json_payload(type(self).actual_range_ledger_status_snapshot(), send_body=send_body)
+            return True
         if parsed.path == "/stream1090" or parsed.path.startswith("/stream1090/"):
             self.proxy_stream1090(parsed, send_body=send_body)
             return True
@@ -130,11 +166,31 @@ class OverlayHandler(http.server.SimpleHTTPRequestHandler):
         if not required:
             self.send_error(400, "render is not ready")
             return
+        try:
+            precipitation = normalize_precipitation_render_report(payload.get("precipitation"))
+            semantic = normalize_semantic_render_report(payload.get("semantic"))
+        except ValueError as exc:
+            self.send_error(400, str(exc))
+            return
+        asset_identity = self.asset_identity_snapshot()
+        asset_revision = payload.get("asset_revision")
+        modern_report = "semantic" in payload or "asset_revision" in payload
+        if modern_report and (
+            semantic.get("ok") is not True
+            or asset_identity.get("ok") is not True
+            or not isinstance(asset_revision, str)
+            or asset_revision != asset_identity.get("revision")
+        ):
+            self.send_error(400, "render semantic or asset identity contract failed")
+            return
         accepted = {
             "ready": True,
             "map_tiles_ready": True,
             "aircraft_sample_ready": True,
             "reported_at_ms": payload.get("reported_at_ms"),
+            "precipitation": precipitation,
+            "semantic": semantic,
+            "asset_revision": asset_revision if isinstance(asset_revision, str) else "",
         }
         with self.render_status_lock:
             type(self).render_ready_payload = accepted
@@ -149,9 +205,24 @@ class OverlayHandler(http.server.SimpleHTTPRequestHandler):
             started_at = type(self).render_server_started_at
         age_sec = now - received_at if received_at > 0 else None
         ready = bool(report.get("ready")) and age_sec is not None and age_sec <= self.render_ready_max_age_sec
+        try:
+            precipitation = normalize_precipitation_render_report(report.get("precipitation"))
+        except ValueError:
+            precipitation = empty_precipitation_render_report()
+        try:
+            semantic = normalize_semantic_render_report(report.get("semantic"))
+        except ValueError:
+            semantic = empty_semantic_render_report()
+        asset_identity = self.asset_identity_snapshot()
+        browser_asset_revision = report.get("asset_revision")
+        asset_identity["browser_revision_match"] = bool(
+            asset_identity.get("ok") is True
+            and isinstance(browser_asset_revision, str)
+            and browser_asset_revision == asset_identity.get("revision")
+        )
         self.send_json_payload(
             {
-                "schema": "stream_v3.render_ready.v1",
+                "schema": "stream_v3.render_ready.v2",
                 "ready": ready,
                 "state": "ready" if ready else "warming_up",
                 "age_sec": round(age_sec, 3) if age_sec is not None else None,
@@ -159,9 +230,48 @@ class OverlayHandler(http.server.SimpleHTTPRequestHandler):
                 "map_tiles_ready": report.get("map_tiles_ready") is True,
                 "aircraft_sample_ready": report.get("aircraft_sample_ready") is True,
                 "reported_at_ms": report.get("reported_at_ms"),
+                "precipitation": precipitation,
+                "semantic": semantic,
+                "asset_identity": asset_identity,
             },
             send_body=send_body,
         )
+
+    def asset_identity_snapshot(self) -> dict[str, object]:
+        root = Path(self.directory)
+        try:
+            manifest = verify_asset_manifest(root)
+        except (OSError, ValueError) as exc:
+            return {
+                "schema": "stream_v3.map_asset_identity.v1",
+                "ok": False,
+                "revision": "",
+                "file_count": 0,
+                "reason": type(exc).__name__,
+            }
+        files = manifest.get("files")
+        return {
+            "schema": "stream_v3.map_asset_identity.v1",
+            "ok": True,
+            "revision": manifest["revision"],
+            "file_count": len(files) if isinstance(files, list) else 0,
+            "reason": "",
+        }
+
+    def serve_asset_manifest(self, *, send_body: bool = True) -> None:
+        identity = self.asset_identity_snapshot()
+        if identity.get("ok") is not True:
+            body = (json.dumps(identity, sort_keys=True, separators=(",", ":")) + "\n").encode(
+                "utf-8"
+            )
+            self.send_response(503)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            if send_body:
+                self.wfile.write(body)
+            return
+        self.send_json_payload(identity, send_body=send_body)
 
     def serve_precipitation_asset(
         self,
@@ -173,22 +283,31 @@ class OverlayHandler(http.server.SimpleHTTPRequestHandler):
             path = self.precipitation_root / parsed.path.rsplit("/", 1)[-1]
             content_type = "application/json"
         else:
+            manifest_match = re.fullmatch(
+                r"/weather/tiles/(\d{14})/manifest\.json",
+                parsed.path,
+            )
             match = re.fullmatch(
                 r"/weather/tiles/(\d{14})/(\d{1,2})/(\d+)/(\d+)\.png",
                 parsed.path,
             )
-            if not match:
+            if manifest_match:
+                validtime = manifest_match.group(1)
+                path = self.precipitation_root / "generations" / validtime / "manifest.json"
+                content_type = "application/json"
+            elif match:
+                validtime, zoom_text, x_text, y_text = match.groups()
+                zoom = int(zoom_text)
+                x = int(x_text)
+                y = int(y_text)
+                if zoom > 10 or x >= 1 << zoom or y >= 1 << zoom:
+                    self.send_error(404, "invalid precipitation tile")
+                    return
+                path = self.precipitation_root / "generations" / validtime / zoom_text / x_text / f"{y_text}.png"
+                content_type = "image/png"
+            else:
                 self.send_error(404, "unknown precipitation asset")
                 return
-            validtime, zoom_text, x_text, y_text = match.groups()
-            zoom = int(zoom_text)
-            x = int(x_text)
-            y = int(y_text)
-            if zoom > 10 or x >= 1 << zoom or y >= 1 << zoom:
-                self.send_error(404, "invalid precipitation tile")
-                return
-            path = self.precipitation_root / "generations" / validtime / zoom_text / x_text / f"{y_text}.png"
-            content_type = "image/png"
 
         try:
             body = path.read_bytes()
@@ -500,18 +619,20 @@ SiteCirclesLineDash = [];
 
         receiver_height_ft = cls.receiver_height_ft(receiver)
         base_records = cls.outline_records_by_bearing(outline, float(site_lat), float(site_lon))
-        supplement = cls.load_actual_range_supplement(now_ts)
-        cls.update_actual_range_supplement(
-            supplement,
-            aircraft,
-            float(site_lat),
-            float(site_lon),
-            now_ts,
-            receiver_height_ft,
-        )
-        supplement = cls.prune_actual_range_supplement(supplement, now_ts)
-        supplement = cls.prune_rejected_actual_range_supplement(supplement, receiver_height_ft)
-        mergeable_supplement = cls.filter_actual_range_supplement(supplement, base_records, receiver_height_ft)
+        base_bearing_count = len(base_records)
+        try:
+            mergeable_supplement = cls.update_actual_range_ledger(
+                aircraft,
+                float(site_lat),
+                float(site_lon),
+                now_ts,
+                receiver_height_ft,
+                base_records,
+            )
+        except Exception as exc:
+            # The upstream outline remains usable when the persistent ledger is unavailable.
+            cls.record_actual_range_ledger_error(exc)
+            mergeable_supplement = {}
 
         changed = False
         for key, record in mergeable_supplement.items():
@@ -525,17 +646,450 @@ SiteCirclesLineDash = [];
                     "distance_m": record_distance_m,
                 }
                 changed = True
-        cls.save_actual_range_supplement(supplement)
 
-        if not changed:
-            return outline
-
-        points = [
-            [round(float(rec["lat"]), 4), round(float(rec["lon"]), 4), int(rec.get("alt") or 0)]
-            for _key, rec in sorted(base_records.items(), key=lambda item: int(item[0]))
-        ]
-        outline.setdefault("actualRange", {}).setdefault("last24h", {})["points"] = points
+        last24h = outline.setdefault("actualRange", {}).setdefault("last24h", {})
+        if changed:
+            last24h["points"] = [
+                [round(float(rec["lat"]), 4), round(float(rec["lon"]), 4), int(rec.get("alt") or 0)]
+                for _key, rec in sorted(base_records.items(), key=lambda item: int(item[0]))
+            ]
+        status = cls.actual_range_ledger_status_snapshot()
+        status["base_bearing_count"] = base_bearing_count
+        status["merged_bearing_count"] = len(base_records)
+        last24h["streamV3CoverageLedger"] = status
         return outline
+
+    @classmethod
+    def actual_range_ledger_status_snapshot(cls) -> dict[str, object]:
+        with cls.actual_range_ledger_lock:
+            return dict(cls.actual_range_ledger_status)
+
+    @classmethod
+    def record_actual_range_ledger_error(cls, exc: Exception) -> None:
+        with cls.actual_range_ledger_lock:
+            status = dict(cls.actual_range_ledger_status)
+            status.update(
+                {
+                    "schema": "stream_v3.actual_range_ledger_status.v1",
+                    "state": "degraded",
+                    "persisted": cls.actual_range_ledger_file.exists(),
+                    "last_error": type(exc).__name__,
+                    "last_error_at_utc": cls.utc_timestamp(time.time()),
+                }
+            )
+            cls.actual_range_ledger_status = status
+
+    @classmethod
+    def update_actual_range_ledger(
+        cls,
+        aircraft: dict,
+        site_lat: float,
+        site_lon: float,
+        now_ts: float,
+        receiver_height_ft: float,
+        base_records: dict[str, ActualRangeRecord],
+    ) -> dict[str, ActualRangeRecord]:
+        """Persist time-bucketed observations and return the rolling maximum per bearing."""
+
+        window_sec = max(60.0, cls.actual_range_supplement_hours * 3600.0)
+        bucket_sec = max(60.0, cls.actual_range_bucket_sec)
+        cutoff_ts = now_ts - window_sec
+        with cls.actual_range_ledger_lock:
+            cls.actual_range_ledger_file.parent.mkdir(parents=True, exist_ok=True)
+            connection = sqlite3.connect(str(cls.actual_range_ledger_file), timeout=3.0)
+            connection.row_factory = sqlite3.Row
+            try:
+                connection.execute("PRAGMA busy_timeout = 3000")
+                cls.initialize_actual_range_ledger(connection)
+                metadata = cls.actual_range_ledger_metadata(connection)
+                receiver_key = f"{site_lat:.6f},{site_lon:.6f},{receiver_height_ft:.1f}"
+                receiver_reset = metadata.get("receiver_key") not in {None, receiver_key}
+                if receiver_reset:
+                    connection.execute("DELETE FROM actual_range_samples")
+                    reset_count = cls.safe_int(metadata.get("receiver_reset_count", "0")) + 1
+                    cls.set_actual_range_ledger_metadata(connection, "receiver_reset_count", str(reset_count))
+                    cls.set_actual_range_ledger_metadata(connection, "last_receiver_reset_at", str(now_ts))
+                    cls.set_actual_range_ledger_metadata(connection, "first_collected_at", str(now_ts))
+                cls.set_actual_range_ledger_metadata(connection, "receiver_key", receiver_key)
+
+                imported_count, imported_earliest = cls.import_legacy_actual_range_supplement(
+                    connection,
+                    cutoff_ts,
+                    bucket_sec,
+                    receiver_height_ft,
+                )
+                metadata = cls.actual_range_ledger_metadata(connection)
+                if "first_collected_at" not in metadata:
+                    first_collected_at = imported_earliest if imported_earliest is not None else now_ts
+                    cls.set_actual_range_ledger_metadata(connection, "first_collected_at", str(first_collected_at))
+
+                source_now = cls.coerce_source_epoch(aircraft.get("now"), now_ts)
+                source_messages = aircraft.get("messages")
+                previous_messages = cls.safe_int(metadata.get("last_source_messages", "0"))
+                source_reset_count = cls.safe_int(metadata.get("source_reset_count", "0"))
+                if isinstance(source_messages, (int, float)):
+                    current_messages = max(0, int(source_messages))
+                    if previous_messages > 0 and current_messages < previous_messages:
+                        source_reset_count += 1
+                        cls.set_actual_range_ledger_metadata(connection, "source_reset_count", str(source_reset_count))
+                        cls.set_actual_range_ledger_metadata(connection, "last_source_reset_at", str(now_ts))
+                    cls.set_actual_range_ledger_metadata(connection, "last_source_messages", str(current_messages))
+                cls.set_actual_range_ledger_metadata(connection, "last_collected_at", str(now_ts))
+                cls.store_actual_range_aircraft_samples(
+                    connection,
+                    aircraft,
+                    site_lat,
+                    site_lon,
+                    source_now,
+                    now_ts,
+                    receiver_height_ft,
+                    cutoff_ts,
+                    bucket_sec,
+                )
+                connection.execute("DELETE FROM actual_range_samples WHERE observed_ts < ?", (cutoff_ts,))
+
+                rows = list(
+                    connection.execute(
+                        """
+                        SELECT bucket_ts, bearing, quality, lat, lon, alt, distance_m,
+                               observed_ts, radio_los_nmi, los_ratio, repeat_count
+                          FROM actual_range_samples
+                         WHERE observed_ts >= ?
+                         ORDER BY bearing ASC, distance_m DESC, observed_ts DESC
+                        """,
+                        (cutoff_ts,),
+                    )
+                )
+                selected: dict[str, ActualRangeRecord] = {}
+                valid_rows: list[sqlite3.Row] = []
+                rejected_keys: list[tuple[int, int, str]] = []
+                for row in rows:
+                    key = str(int(row["bearing"]))
+                    record: ActualRangeRecord = {
+                        "lat": float(row["lat"]),
+                        "lon": float(row["lon"]),
+                        "alt": int(row["alt"]),
+                        "distance_m": float(row["distance_m"]),
+                        "updated_ts": float(row["observed_ts"]),
+                        "radio_los_nmi": float(row["radio_los_nmi"]),
+                        "los_ratio": float(row["los_ratio"]),
+                        "los_status": str(row["quality"]),
+                        "los_repeat_count": int(row["repeat_count"]),
+                    }
+                    if not cls.is_actual_range_supplement_plausible(
+                        key,
+                        float(record["distance_m"]),
+                        record.get("alt", 0),
+                        receiver_height_ft,
+                    ):
+                        rejected_keys.append((int(row["bucket_ts"]), int(row["bearing"]), str(row["quality"])))
+                        continue
+                    valid_rows.append(row)
+                    if key not in selected and cls.is_actual_range_supplement_mergeable(
+                        key,
+                        record,
+                        base_records,
+                        receiver_height_ft,
+                    ):
+                        selected[key] = record
+                if rejected_keys:
+                    connection.executemany(
+                        "DELETE FROM actual_range_samples WHERE bucket_ts = ? AND bearing = ? AND quality = ?",
+                        rejected_keys,
+                    )
+
+                metadata = cls.actual_range_ledger_metadata(connection)
+                first_collected_at = cls.coerce_float(metadata.get("first_collected_at"), now_ts)
+                maturity_sec = max(0.0, now_ts - first_collected_at)
+                maturity_ratio = min(1.0, maturity_sec / window_sec)
+                observed_times = [float(row["observed_ts"]) for row in valid_rows]
+                source_age_sec = max(0.0, now_ts - source_now)
+                state = "ready" if maturity_ratio >= 0.999 else "warming_up"
+                if not valid_rows:
+                    state = "empty"
+                if source_age_sec > cls.actual_range_aircraft_max_seen_pos_sec:
+                    state = "source_stale"
+                status: dict[str, object] = {
+                    "schema": "stream_v3.actual_range_ledger_status.v1",
+                    "state": state,
+                    "persisted": True,
+                    "storage_schema": "stream_v3.actual_range_ledger.sqlite.v1",
+                    "window_sec": int(window_sec),
+                    "bucket_sec": int(bucket_sec),
+                    "maturity_ratio": round(maturity_ratio, 6),
+                    "maturity_age_sec": round(maturity_sec, 3),
+                    "sample_count": len(valid_rows),
+                    "bucket_count": len({int(row["bucket_ts"]) for row in valid_rows}),
+                    "bearing_count": len({int(row["bearing"]) for row in valid_rows}),
+                    "selected_bearing_count": len(selected),
+                    "source_sample_age_sec": round(source_age_sec, 3),
+                    "source_reset_count": cls.safe_int(metadata.get("source_reset_count", "0")),
+                    "receiver_reset_count": cls.safe_int(metadata.get("receiver_reset_count", "0")),
+                    "legacy_records_imported": cls.safe_int(metadata.get("legacy_records_imported", "0")),
+                    "oldest_sample_age_sec": round(max(0.0, now_ts - min(observed_times)), 3)
+                    if observed_times
+                    else None,
+                    "newest_sample_age_sec": round(max(0.0, now_ts - max(observed_times)), 3)
+                    if observed_times
+                    else None,
+                    "last_source_reset_at_utc": cls.optional_utc_timestamp(metadata.get("last_source_reset_at")),
+                    "last_receiver_reset_at_utc": cls.optional_utc_timestamp(metadata.get("last_receiver_reset_at")),
+                    "updated_at_utc": cls.utc_timestamp(now_ts),
+                    "last_error": None,
+                }
+                connection.commit()
+                cls.actual_range_ledger_status = status
+                return selected
+            except Exception:
+                connection.rollback()
+                raise
+            finally:
+                connection.close()
+
+    @staticmethod
+    def initialize_actual_range_ledger(connection: sqlite3.Connection) -> None:
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS actual_range_samples (
+                bucket_ts INTEGER NOT NULL,
+                bearing INTEGER NOT NULL CHECK (bearing >= 0 AND bearing < 360),
+                quality TEXT NOT NULL CHECK (quality IN ('accept', 'quarantine')),
+                lat REAL NOT NULL,
+                lon REAL NOT NULL,
+                alt INTEGER NOT NULL,
+                distance_m REAL NOT NULL,
+                observed_ts REAL NOT NULL,
+                radio_los_nmi REAL NOT NULL,
+                los_ratio REAL NOT NULL,
+                repeat_count INTEGER NOT NULL DEFAULT 1,
+                PRIMARY KEY (bucket_ts, bearing, quality)
+            )
+            """
+        )
+        connection.execute(
+            "CREATE INDEX IF NOT EXISTS actual_range_samples_observed_idx ON actual_range_samples(observed_ts)"
+        )
+        connection.execute(
+            "CREATE TABLE IF NOT EXISTS actual_range_metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL)"
+        )
+        connection.execute("PRAGMA user_version = 1")
+
+    @staticmethod
+    def actual_range_ledger_metadata(connection: sqlite3.Connection) -> dict[str, str]:
+        return {str(row[0]): str(row[1]) for row in connection.execute("SELECT key, value FROM actual_range_metadata")}
+
+    @staticmethod
+    def set_actual_range_ledger_metadata(connection: sqlite3.Connection, key: str, value: str) -> None:
+        connection.execute(
+            "INSERT INTO actual_range_metadata(key, value) VALUES (?, ?) "
+            "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+            (key, value),
+        )
+
+    @classmethod
+    def import_legacy_actual_range_supplement(
+        cls,
+        connection: sqlite3.Connection,
+        cutoff_ts: float,
+        bucket_sec: float,
+        receiver_height_ft: float,
+    ) -> tuple[int, float | None]:
+        metadata = cls.actual_range_ledger_metadata(connection)
+        if metadata.get("legacy_import_complete") == "1":
+            return 0, None
+        try:
+            raw = json.loads(cls.actual_range_supplement_file.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return 0, None
+        if not isinstance(raw, dict) or raw.get("schema") != "overlay_actual_range_supplement/v1":
+            return 0, None
+        records = raw.get("records")
+        if not isinstance(records, dict):
+            return 0, None
+
+        imported = 0
+        earliest: float | None = None
+        for key, value in records.items():
+            if not isinstance(key, str) or not key.isdigit() or not isinstance(value, dict):
+                continue
+            if not all(isinstance(value.get(name), (int, float)) for name in ("lat", "lon", "distance_m", "updated_ts")):
+                continue
+            observed_ts = float(value["updated_ts"])
+            if observed_ts < cutoff_ts:
+                continue
+            bearing = int(key) % 360
+            distance_m = float(value["distance_m"])
+            alt = value.get("alt", 0)
+            if not cls.is_actual_range_supplement_plausible(key, distance_m, alt, receiver_height_ft):
+                continue
+            quality = cls.actual_range_los_status(distance_m, alt, receiver_height_ft)
+            radio_los_nmi = cls.radio_los_nmi(cls.coerce_non_negative_float(alt), receiver_height_ft)
+            repeat_count = max(1, cls.safe_int(value.get("los_repeat_count", 1)))
+            bucket_ts = int(math.floor(observed_ts / bucket_sec) * bucket_sec)
+            cls.upsert_actual_range_ledger_candidate(
+                connection,
+                bucket_ts=bucket_ts,
+                bearing=bearing,
+                quality=quality,
+                lat=float(value["lat"]),
+                lon=float(value["lon"]),
+                alt=int(alt) if isinstance(alt, (int, float)) else 0,
+                distance_m=distance_m,
+                observed_ts=observed_ts,
+                radio_los_nmi=radio_los_nmi,
+                los_ratio=distance_m / 1852.0 / radio_los_nmi if radio_los_nmi > 0 else 0.0,
+                repeat_count=repeat_count,
+                increment_quarantine=False,
+            )
+            imported += 1
+            earliest = observed_ts if earliest is None else min(earliest, observed_ts)
+        cls.set_actual_range_ledger_metadata(connection, "legacy_import_complete", "1")
+        cls.set_actual_range_ledger_metadata(connection, "legacy_records_imported", str(imported))
+        return imported, earliest
+
+    @classmethod
+    def store_actual_range_aircraft_samples(
+        cls,
+        connection: sqlite3.Connection,
+        aircraft: dict,
+        site_lat: float,
+        site_lon: float,
+        source_now: float,
+        now_ts: float,
+        receiver_height_ft: float,
+        cutoff_ts: float,
+        bucket_sec: float,
+    ) -> None:
+        max_distance_m = cls.actual_range_max_nmi * 1852.0
+        for ac in aircraft.get("aircraft", []):
+            if not isinstance(ac, dict):
+                continue
+            lat = ac.get("lat")
+            lon = ac.get("lon")
+            seen_pos = ac.get("seen_pos", 0)
+            if not isinstance(lat, (int, float)) or not isinstance(lon, (int, float)):
+                continue
+            if not isinstance(seen_pos, (int, float)) or seen_pos < 0 or seen_pos > cls.actual_range_aircraft_max_seen_pos_sec:
+                continue
+            observed_ts = source_now - float(seen_pos)
+            if observed_ts < cutoff_ts or observed_ts > now_ts + 5.0:
+                continue
+            distance_m, bearing_deg = range_distance_bearing_m(site_lat, site_lon, float(lat), float(lon))
+            if distance_m <= 0 or distance_m > max_distance_m:
+                continue
+            bearing = int(round(bearing_deg)) % 360
+            alt = ac.get("alt_baro")
+            if not isinstance(alt, (int, float)):
+                alt = ac.get("alt_geom", 0)
+            quality = cls.actual_range_los_status(distance_m, alt, receiver_height_ft)
+            if quality == "reject":
+                continue
+            radio_los_nmi = cls.radio_los_nmi(cls.coerce_non_negative_float(alt), receiver_height_ft)
+            bucket_ts = int(math.floor(observed_ts / bucket_sec) * bucket_sec)
+            cls.upsert_actual_range_ledger_candidate(
+                connection,
+                bucket_ts=bucket_ts,
+                bearing=bearing,
+                quality=quality,
+                lat=float(lat),
+                lon=float(lon),
+                alt=int(alt) if isinstance(alt, (int, float)) else 0,
+                distance_m=distance_m,
+                observed_ts=observed_ts,
+                radio_los_nmi=radio_los_nmi,
+                los_ratio=distance_m / 1852.0 / radio_los_nmi if radio_los_nmi > 0 else 0.0,
+                repeat_count=1,
+                increment_quarantine=True,
+            )
+
+    @staticmethod
+    def upsert_actual_range_ledger_candidate(
+        connection: sqlite3.Connection,
+        *,
+        bucket_ts: int,
+        bearing: int,
+        quality: str,
+        lat: float,
+        lon: float,
+        alt: int,
+        distance_m: float,
+        observed_ts: float,
+        radio_los_nmi: float,
+        los_ratio: float,
+        repeat_count: int,
+        increment_quarantine: bool,
+    ) -> None:
+        current = connection.execute(
+            "SELECT distance_m, repeat_count FROM actual_range_samples "
+            "WHERE bucket_ts = ? AND bearing = ? AND quality = ?",
+            (bucket_ts, bearing, quality),
+        ).fetchone()
+        confirmations = repeat_count
+        if current is not None and quality == "quarantine" and increment_quarantine:
+            confirmations = max(confirmations, int(current["repeat_count"]) + 1)
+        if current is not None and distance_m <= float(current["distance_m"]):
+            if quality == "quarantine" and confirmations > int(current["repeat_count"]):
+                connection.execute(
+                    "UPDATE actual_range_samples SET repeat_count = ? "
+                    "WHERE bucket_ts = ? AND bearing = ? AND quality = ?",
+                    (confirmations, bucket_ts, bearing, quality),
+                )
+            return
+        connection.execute(
+            """
+            INSERT INTO actual_range_samples(
+                bucket_ts, bearing, quality, lat, lon, alt, distance_m,
+                observed_ts, radio_los_nmi, los_ratio, repeat_count
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(bucket_ts, bearing, quality) DO UPDATE SET
+                lat = excluded.lat,
+                lon = excluded.lon,
+                alt = excluded.alt,
+                distance_m = excluded.distance_m,
+                observed_ts = excluded.observed_ts,
+                radio_los_nmi = excluded.radio_los_nmi,
+                los_ratio = excluded.los_ratio,
+                repeat_count = excluded.repeat_count
+            """,
+            (
+                bucket_ts,
+                bearing,
+                quality,
+                lat,
+                lon,
+                alt,
+                distance_m,
+                observed_ts,
+                radio_los_nmi,
+                los_ratio,
+                confirmations,
+            ),
+        )
+
+    @staticmethod
+    def coerce_source_epoch(value: object, fallback: float) -> float:
+        if isinstance(value, (int, float)) and math.isfinite(float(value)):
+            epoch = float(value)
+            if epoch > 0 and epoch <= fallback + 300.0:
+                return epoch
+        return fallback
+
+    @staticmethod
+    def coerce_float(value: object, fallback: float) -> float:
+        try:
+            result = float(value)
+        except (TypeError, ValueError):
+            return fallback
+        return result if math.isfinite(result) else fallback
+
+    @staticmethod
+    def utc_timestamp(value: float) -> str:
+        return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(value))
+
+    @classmethod
+    def optional_utc_timestamp(cls, value: object) -> str | None:
+        timestamp = cls.coerce_float(value, -1.0)
+        return cls.utc_timestamp(timestamp) if timestamp >= 0 else None
 
     @staticmethod
     def outline_records_by_bearing(outline: dict, site_lat: float, site_lon: float) -> dict[str, ActualRangeRecord]:
@@ -738,6 +1292,11 @@ SiteCirclesLineDash = [];
             return 0
         if isinstance(value, (int, float)):
             return int(value)
+        if isinstance(value, str):
+            try:
+                return int(value.strip())
+            except ValueError:
+                return 0
         return 0
 
     @classmethod
@@ -833,6 +1392,13 @@ def main() -> int:
         default=os.environ.get("NOW_PLAYING_JSON") or os.environ.get("NOW_PLAYING_SNAPSHOT_FILE"),
     )
     parser.add_argument(
+        "--actual-range-ledger-file",
+        default=os.environ.get(
+            "OVERLAY_ACTUAL_RANGE_LEDGER_FILE",
+            "/state/overlay/coverage/actual_range_ledger.sqlite3",
+        ),
+    )
+    parser.add_argument(
         "--actual-range-supplement-file",
         default=os.environ.get(
             "OVERLAY_ACTUAL_RANGE_SUPPLEMENT_FILE",
@@ -843,6 +1409,11 @@ def main() -> int:
         "--actual-range-supplement-hours",
         type=float,
         default=float(os.environ.get("OVERLAY_ACTUAL_RANGE_SUPPLEMENT_HOURS", "24")),
+    )
+    parser.add_argument(
+        "--actual-range-bucket-sec",
+        type=float,
+        default=float(os.environ.get("OVERLAY_ACTUAL_RANGE_BUCKET_SEC", "300")),
     )
     parser.add_argument(
         "--actual-range-receiver-height-ft",
@@ -863,13 +1434,20 @@ def main() -> int:
         if args.now_playing_json_file
         else default_now_playing_json_file(OverlayHandler.now_playing_file).resolve()
     )
+    OverlayHandler.actual_range_ledger_file = Path(args.actual_range_ledger_file).resolve()
     OverlayHandler.actual_range_supplement_file = Path(args.actual_range_supplement_file).resolve()
     OverlayHandler.actual_range_supplement_hours = args.actual_range_supplement_hours
+    OverlayHandler.actual_range_bucket_sec = args.actual_range_bucket_sec
     OverlayHandler.actual_range_receiver_height_ft = args.actual_range_receiver_height_ft
     OverlayHandler.precipitation_root = Path(args.precipitation_root).resolve()
     OverlayHandler.render_ready_payload = {}
     OverlayHandler.render_ready_received_at = 0.0
     OverlayHandler.render_server_started_at = time.time()
+    OverlayHandler.actual_range_ledger_status = {
+        "schema": "stream_v3.actual_range_ledger_status.v1",
+        "state": "not_initialized",
+        "persisted": OverlayHandler.actual_range_ledger_file.exists(),
+    }
     handler = partial(OverlayHandler, directory=str(overlay_dir))
     socketserver.ThreadingTCPServer.allow_reuse_address = True
     with socketserver.ThreadingTCPServer((args.host, args.port), handler) as httpd:

@@ -36,10 +36,11 @@ class StreamV3HealthSnapshotTests(unittest.TestCase):
             health = json.loads((output / "health_summary_snapshot.json").read_text(encoding="utf-8"))
             objective = json.loads((output / "objective_sli_snapshot.json").read_text(encoding="utf-8"))
 
-        self.assertEqual(health["windows"], [])
-        self.assertEqual(objective["metrics"], {})
-        self.assertEqual(health["_snapshot"]["snapshot_source"], "stream_v3_health_snapshot")
-        self.assertIn(str(root / "bin" / "stream-new"), health["_snapshot"]["command"][0])
+        self.assertEqual(health["payload"]["windows"], [])
+        self.assertEqual(objective["payload"]["metrics"], {})
+        self.assertEqual(health["schema_version"], 1)
+        self.assertTrue(health["ok"])
+        self.assertIn(str(root / "bin" / "stream-new"), health["command"][0])
 
 
 if __name__ == "__main__":

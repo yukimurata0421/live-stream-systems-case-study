@@ -1,4 +1,5 @@
 import * as maplibregl from "./vendor/maplibre-gl.mjs";
+import {precipitationRenderSnapshot} from "./precipitation_render.mjs";
 import {solarTheme} from "./solar_theme.mjs";
 
 const params = new URLSearchParams(window.location.search);
@@ -38,6 +39,16 @@ const RANGE_RING_OPACITY = 0.65;
 const RANGE_RING_WIDTH = 1.35;
 const RANGE_LABEL_SIZE = 14;
 const AIRCRAFT_ICON_SIZE = 0.84;
+const REQUIRED_SEMANTIC_SOURCES = [
+  "openmaptiles", "terrain-dem", "coverage", "range-rings", "range-labels", "aircraft",
+];
+const REQUIRED_SEMANTIC_LAYERS = [
+  "water", "coastline", "coverage-shadow", "coverage-line", "range-ring-shadow",
+  "range-rings", "range-labels", "aircraft-icon",
+];
+const REQUIRED_SEMANTIC_UI = [
+  "mapLegends", "altitudeLegend", "precipitationStatus", "mapAttribution",
+];
 const ALTITUDE_COLORS = {
   ground: "#f3f4f6",
   low: "#ffd166",
@@ -92,6 +103,7 @@ let renderReadyLastPostedAt = 0;
 let renderReadyEstablished = false;
 let renderContextHealthy = true;
 let aircraftLastReceivedAt = 0;
+let assetRevision = "";
 let solarObserver = {lat: center[1], lon: center[0], source: "map-center"};
 let solarThemeInitialized = false;
 
@@ -99,6 +111,10 @@ const diagnostics = {
   aircraftCount: 0,
   aircraftTracks: false,
   coveragePoints: 0,
+  coverageSourceFeatureCount: 0,
+  aircraftSourceFeatureCount: 0,
+  rangeRingFeatureCount: 0,
+  rangeLabelFeatureCount: 0,
   lastAircraftEpoch: 0,
   coverageLine: "solid",
   coverageColor: COVERAGE_COLOR,
@@ -118,7 +134,9 @@ const diagnostics = {
   precipitationFresh: false,
   precipitationHasRain: false,
   precipitationValidtime: null,
+  precipitationLayerValidtime: null,
   precipitationLayerLoaded: false,
+  precipitationEvaluated: false,
   precipitationLayerOpacity: PRECIPITATION_LAYER_OPACITY,
   precipitationAnalysisOnly: true,
   renderReadyReported: false,
@@ -173,6 +191,57 @@ function showStatus(message) {
   status.classList.toggle("visible", Boolean(message));
 }
 
+async function refreshAssetIdentity() {
+  try {
+    const identity = await fetchJson("/asset/manifest.json");
+    if (
+      identity?.schema !== "stream_v3.map_asset_identity.v1"
+      || identity?.ok !== true
+      || !/^[0-9a-f]{64}$/.test(String(identity?.revision || ""))
+    ) {
+      throw new Error("asset identity contract failed");
+    }
+    assetRevision = identity.revision;
+  } catch (_error) {
+    assetRevision = "";
+    diagnostics.renderReadyReported = false;
+  }
+}
+
+function semanticRenderSnapshot() {
+  let aircraftRenderedFeatureCount = 0;
+  try {
+    aircraftRenderedFeatureCount = map.queryRenderedFeatures(
+      undefined,
+      {layers: ["aircraft-icon"]},
+    ).length;
+  } catch (_error) {
+    aircraftRenderedFeatureCount = 0;
+  }
+  return {
+    schema: "stream_v3.map_semantic_render.v1",
+    map_style_loaded: mapLoaded && Boolean(map.getStyle()),
+    render_context_healthy: renderContextHealthy,
+    required_sources: Object.fromEntries(
+      REQUIRED_SEMANTIC_SOURCES.map((name) => [name, Boolean(map.getSource(name))]),
+    ),
+    required_layers: Object.fromEntries(
+      REQUIRED_SEMANTIC_LAYERS.map((name) => [name, Boolean(map.getLayer(name))]),
+    ),
+    ui_elements: Object.fromEntries(
+      REQUIRED_SEMANTIC_UI.map((name) => [name, Boolean(document.getElementById(name))]),
+    ),
+    aircraft_sample_count: diagnostics.aircraftCount,
+    aircraft_source_feature_count: diagnostics.aircraftSourceFeatureCount,
+    aircraft_rendered_feature_count: aircraftRenderedFeatureCount,
+    coverage_point_count: diagnostics.coveragePoints,
+    coverage_source_feature_count: diagnostics.coverageSourceFeatureCount,
+    range_ring_feature_count: diagnostics.rangeRingFeatureCount,
+    range_label_feature_count: diagnostics.rangeLabelFeatureCount,
+    map_error_count: errors.length,
+  };
+}
+
 async function publishRenderReady() {
   const now = Date.now();
   if (renderReadyPostInFlight || now - renderReadyLastPostedAt < RENDER_READY_REPUBLISH_MS) return;
@@ -190,7 +259,7 @@ async function publishRenderReady() {
   const aircraftSampleReady = diagnostics.lastAircraftEpoch > 0
     && aircraftLastReceivedAt > 0
     && now - aircraftLastReceivedAt <= RENDER_READY_AIRCRAFT_MAX_AGE_MS;
-  if (!mapTilesReady || !aircraftSampleReady) return;
+  if (!mapTilesReady || !aircraftSampleReady || !assetRevision) return;
   renderReadyPostInFlight = true;
   try {
     const response = await fetch("/render/ready", {
@@ -202,6 +271,9 @@ async function publishRenderReady() {
         map_tiles_ready: true,
         aircraft_sample_ready: true,
         reported_at_ms: now,
+        precipitation: precipitationRenderSnapshot(diagnostics),
+        semantic: semanticRenderSnapshot(),
+        asset_revision: assetRevision,
       }),
     });
     if (!response.ok) throw new Error(`render-ready HTTP ${response.status}`);
@@ -265,9 +337,11 @@ function terrainReliefExpression(theme) {
   return expression;
 }
 
-function setThemedPaint(layerId, property, value, transitionMs) {
+function setThemedPaint(layerId, property, value, transitionMs, transitionable = true) {
   if (!map.getLayer(layerId)) return;
-  map.setPaintProperty(layerId, `${property}-transition`, {duration: transitionMs, delay: 0});
+  if (transitionable) {
+    map.setPaintProperty(layerId, `${property}-transition`, {duration: transitionMs, delay: 0});
+  }
   map.setPaintProperty(layerId, property, value);
 }
 
@@ -277,8 +351,16 @@ function applySolarTheme({immediate = false} = {}) {
   const theme = solarTheme(sampleDate, solarObserver.lat, solarObserver.lon);
   const transitionMs = immediate || !solarThemeInitialized ? 0 : SOLAR_THEME_TRANSITION_MS;
 
-  setThemedPaint("background", "background-color", themedColor("#1b2729", theme, 0.70, 0.15), transitionMs);
-  setThemedPaint("terrain-relief", "color-relief-color", terrainReliefExpression(theme), transitionMs);
+  setThemedPaint("background", "background-color", "#04090f", transitionMs);
+  // MapLibre supports the color-relief color expression, but not its transition property.
+  // Setting the unsupported sibling emits a map error even though the color itself renders.
+  setThemedPaint(
+    "terrain-relief",
+    "color-relief-color",
+    terrainReliefExpression(theme),
+    transitionMs,
+    false,
+  );
   setThemedPaint(
     "terrain-hillshade",
     "hillshade-shadow-color",
@@ -299,12 +381,12 @@ function applySolarTheme({immediate = false} = {}) {
   );
   setThemedPaint("wood-muted", "fill-color", themedColor("#395046", theme, 1.00, 0.65), transitionMs);
   setThemedPaint("park-muted", "fill-color", themedColor("#425446", theme, 1.00, 0.55), transitionMs);
-  setThemedPaint("water", "fill-color", themedColor("#101e29", theme, 0.80, 0.10), transitionMs);
+  setThemedPaint("water", "fill-color", "#04090f", transitionMs);
   setThemedPaint("weather-sea-veil", "fill-color", themedColor("#071923", theme, 0.50, 0.05), transitionMs);
   setThemedPaint(
     "coastline",
     "line-color",
-    themedRgba("#91b2ad", 0.84, theme, 0.55, 0.15),
+    "#70a8b6",
     transitionMs,
   );
   setThemedPaint(
@@ -370,11 +452,11 @@ function addPlaneImage(name, color) {
   context.bezierCurveTo(-4, -10, -3, -18, 0, -21);
   context.closePath();
   context.lineJoin = "round";
-  context.lineWidth = 5;
-  context.strokeStyle = "rgba(3,10,13,0.96)";
-  context.stroke();
+  context.lineWidth = 1;
+  context.strokeStyle = "#080b10";
   context.fillStyle = color;
   context.fill();
+  context.stroke();
   map.addImage(`plane-${name}`, context.getImageData(0, 0, 48, 48), {pixelRatio: 1});
 }
 
@@ -437,6 +519,7 @@ function fadeOutActivePrecipitation() {
   const previous = activePrecipitation;
   activePrecipitation = null;
   diagnostics.precipitationLayerLoaded = false;
+  diagnostics.precipitationLayerValidtime = null;
   if (!previous) return;
   if (map.getLayer(previous.layerId)) map.setPaintProperty(previous.layerId, "raster-opacity", 0);
   setTimeout(() => removePrecipitationLayer(previous), PRECIPITATION_FADE_MS + 150);
@@ -475,6 +558,7 @@ async function installPrecipitationLayer(payload, observedMs, staleAfterMs) {
     activePrecipitation.observedMs = observedMs;
     activePrecipitation.staleAfterMs = staleAfterMs;
     diagnostics.precipitationLayerLoaded = true;
+    diagnostics.precipitationLayerValidtime = validtime;
     return;
   }
 
@@ -527,6 +611,7 @@ async function installPrecipitationLayer(payload, observedMs, staleAfterMs) {
     setTimeout(() => removePrecipitationLayer(previous), PRECIPITATION_FADE_MS + 150);
   }
   diagnostics.precipitationLayerLoaded = true;
+  diagnostics.precipitationLayerValidtime = validtime;
 }
 
 async function refreshPrecipitation() {
@@ -572,6 +657,7 @@ async function refreshPrecipitation() {
         diagnostics.precipitationFresh = true;
         diagnostics.precipitationValidtime = activePrecipitation.validtime;
         diagnostics.precipitationLayerLoaded = true;
+        diagnostics.precipitationLayerValidtime = activePrecipitation.validtime;
       }
     } else {
       setPrecipitationStatus("hidden");
@@ -579,6 +665,7 @@ async function refreshPrecipitation() {
       diagnostics.precipitationLayerLoaded = false;
     }
   } finally {
+    diagnostics.precipitationEvaluated = true;
     precipitationRefreshInFlight = false;
   }
 }
@@ -690,6 +777,8 @@ async function refreshReceiverAndRings() {
     }
     map.getSource("range-rings").setData({type: "FeatureCollection", features: rings});
     map.getSource("range-labels").setData({type: "FeatureCollection", features: labels});
+    diagnostics.rangeRingFeatureCount = rings.length;
+    diagnostics.rangeLabelFeatureCount = labels.length;
     updateRangeRingLegendOverlap();
   } catch (_error) {
     // The receiver marker is intentionally absent; stale rings are safer than visual churn.
@@ -715,6 +804,7 @@ async function refreshCoverage() {
       }],
     });
     diagnostics.coveragePoints = coordinates.length - 1;
+    diagnostics.coverageSourceFeatureCount = 1;
   } catch (_error) {
     // Preserve the last valid 24-hour outline during a short upstream outage.
   }
@@ -747,6 +837,7 @@ async function refreshAircraft() {
 
     map.getSource("aircraft").setData({type: "FeatureCollection", features: currentFeatures});
     diagnostics.aircraftCount = currentFeatures.length;
+    diagnostics.aircraftSourceFeatureCount = currentFeatures.length;
     diagnostics.lastAircraftEpoch = sampleEpoch;
     aircraftLastReceivedAt = Date.now();
     aircraftFailures = 0;
@@ -766,10 +857,12 @@ map.on("load", () => {
   refreshCoverage();
   refreshAircraft();
   refreshPrecipitation();
+  refreshAssetIdentity();
   setInterval(refreshAircraft, AIRCRAFT_REFRESH_MS);
   setInterval(refreshReceiverAndRings, RANGE_REFRESH_MS);
   setInterval(refreshCoverage, RANGE_REFRESH_MS);
   setInterval(refreshPrecipitation, PRECIPITATION_REFRESH_MS);
+  setInterval(refreshAssetIdentity, RANGE_REFRESH_MS);
   setInterval(applySolarTheme, SOLAR_THEME_REFRESH_MS);
   setInterval(publishRenderReady, RENDER_READY_HEARTBEAT_MS);
 });
@@ -826,7 +919,9 @@ map.on("idle", () => {
     precipitationFresh: diagnostics.precipitationFresh,
     precipitationHasRain: diagnostics.precipitationHasRain,
     precipitationValidtime: diagnostics.precipitationValidtime,
+    precipitationLayerValidtime: diagnostics.precipitationLayerValidtime,
     precipitationLayerLoaded: diagnostics.precipitationLayerLoaded,
+    precipitationEvaluated: diagnostics.precipitationEvaluated,
     precipitationLayerOpacity: diagnostics.precipitationLayerOpacity,
     precipitationAnalysisOnly: diagnostics.precipitationAnalysisOnly,
     solarTheme: diagnostics.solarTheme,

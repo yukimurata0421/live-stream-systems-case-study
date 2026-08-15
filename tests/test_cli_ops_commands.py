@@ -1678,7 +1678,8 @@ class CliOpsCommandsTests(unittest.TestCase):
             state = json.loads(state_file.read_text(encoding="utf-8"))
 
         self.assertEqual(len(sent), 1)
-        self.assertIn("自動復旧確認", sent[0])
+        self.assertIn("FFmpeg自己再起動イベント", sent[0])
+        self.assertNotIn("自動復旧確認", sent[0])
         self.assertIn("trigger=ffmpeg_exit_code_1", sent[0])
         self.assertIn("ffmpeg child restart completed", sent[0])
         self.assertIn("evt-ffmpeg-1", state["stream_engine_ffmpeg_auto_recovered_notified"])

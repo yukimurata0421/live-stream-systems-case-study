@@ -17,7 +17,7 @@ body,
   height: 100%;
   margin: 0;
   overflow: hidden;
-  background: #101e29;
+  background: #04090f;
 }
 
 body {
@@ -216,6 +216,20 @@ body {
 #mapAttribution span { white-space: nowrap; }
 #mapAttribution span + span { margin-top: 2px; }
 #mapAttribution span { display: block; }
+
+@media (max-width: 700px) {
+  #mapAttribution {
+    right: 8px;
+    bottom: 52px;
+    left: 8px;
+    width: auto;
+    max-width: none;
+    padding: 5px 7px;
+    font-size: 8px;
+    line-height: 1.2;
+  }
+  #mapAttribution span { white-space: normal; }
+}
 
 #mapStatus {
   position: absolute;

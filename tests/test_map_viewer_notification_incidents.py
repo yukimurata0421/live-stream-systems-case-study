@@ -82,6 +82,59 @@ class MapViewerNotificationIncidentTests(unittest.TestCase):
 
         item = next(row for row in found if row["id"] == "map:precipitation_unavailable")
         self.assertEqual(item["severity"], "warning")
+        self.assertEqual(item["repeat_sec"], 600)
+
+    def test_precipitation_render_mismatch_is_independent_from_acquisition(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            state = root / "map.json"
+            history = root / "map.jsonl"
+            write_json(
+                state,
+                {
+                    "schema": "stream_v3.map_runtime_monitor.v2",
+                    "checked_at_utc": "2026-08-07T00:00:00Z",
+                    "delivery_critical_ok": True,
+                    "weather_ok": False,
+                    "conditions": {
+                        "precipitation_data_ok": True,
+                        "precipitation_render_applied": False,
+                    },
+                    "weather_reasons": ["precipitation_render_applied"],
+                    "precipitation": {
+                        "render": {
+                            "state": "layer_mismatch",
+                            "expected_validtime": "20260807000000",
+                            "validtime": "20260807000000",
+                            "layer_validtime": "20260806235500",
+                        }
+                    },
+                    "browser": {},
+                    "pod": {"containers": {}},
+                },
+            )
+            for minute in range(21, -1, -1):
+                ts = NOW - minute * 60
+                append_jsonl(
+                    history,
+                    {
+                        "checked_at_utc": __import__("datetime").datetime.fromtimestamp(
+                            ts, __import__("datetime").timezone.utc
+                        ).isoformat().replace("+00:00", "Z"),
+                        "delivery_critical_ok": True,
+                        "weather_ok": False,
+                        "precipitation_data_ok": True,
+                        "precipitation_render_applied": False,
+                    },
+                )
+
+            found = incidents.map_runtime_incidents(status_file=state, history_file=history, now_ts=NOW)
+
+        item = next(row for row in found if row["id"] == "map:precipitation_render_mismatch")
+        self.assertEqual(item["severity"], "warning")
+        self.assertEqual(item["repeat_sec"], 600)
+        self.assertIn("layer_mismatch", item["evidence"])
+        self.assertNotIn("map:precipitation_unavailable", {row["id"] for row in found})
 
     def test_viewer_visual_failure_is_critical_after_two_samples(self) -> None:
         with tempfile.TemporaryDirectory() as td:

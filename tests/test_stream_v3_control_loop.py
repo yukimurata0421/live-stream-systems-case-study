@@ -203,7 +203,108 @@ class StreamV3ControlLoopTests(unittest.TestCase):
             event = json.loads(event_log.read_text(encoding="utf-8").splitlines()[0])
 
         self.assertTrue(state["ok"])
+        self.assertEqual(state["schema"], control_loop.CONTROL_STATE_SCHEMA)
+        self.assertTrue(state["all_tasks_observed"])
+        self.assertEqual(state["configured_tasks"], ["ok"])
+        self.assertEqual(state["tasks"]["ok"]["status"], "good")
         self.assertEqual(event["results"][0]["name"], "ok")
+
+    def test_control_state_preserves_complete_task_matrix_and_failure_history(self) -> None:
+        tasks = (
+            control_loop.ControlTask("first", 60, ("first-command",), timeout_sec=10),
+            control_loop.ControlTask("second", 120, ("second-command",), timeout_sec=20),
+        )
+        state = control_loop.load_control_state(
+            Path("/missing/state.json"),
+            tasks,
+            mode="monitor",
+            updated_at="2026-08-15T00:00:00Z",
+        )
+        first = control_loop.TaskResult("first", tasks[0].command, 0, 1.0, "secret", "")
+        control_loop.record_task_result(
+            state,
+            tasks[0],
+            first,
+            started_at="2026-08-15T00:00:01Z",
+            completed_at="2026-08-15T00:00:02Z",
+        )
+        self.assertFalse(state["all_tasks_observed"])
+        self.assertFalse(state["ok"])
+        self.assertEqual(state["tasks"]["second"]["status"], "never_run")
+
+        failed = control_loop.TaskResult("second", tasks[1].command, 7, 2.0, "", "failure")
+        control_loop.record_task_result(
+            state,
+            tasks[1],
+            failed,
+            started_at="2026-08-15T00:00:03Z",
+            completed_at="2026-08-15T00:00:05Z",
+        )
+        self.assertTrue(state["all_tasks_observed"])
+        self.assertFalse(state["ok"])
+        self.assertEqual(state["failed_tasks"], ["second"])
+        self.assertEqual(state["tasks"]["first"]["status"], "good")
+        self.assertEqual(state["tasks"]["second"]["consecutive_failures"], 1)
+        self.assertNotIn("first-command", repr(state))
+        self.assertNotIn("secret", repr(state))
+
+        recovered = control_loop.TaskResult("second", tasks[1].command, 0, 1.0, "", "")
+        control_loop.record_task_result(
+            state,
+            tasks[1],
+            recovered,
+            started_at="2026-08-15T00:00:09Z",
+            completed_at="2026-08-15T00:00:10Z",
+        )
+        self.assertTrue(state["ok"])
+        self.assertEqual(state["failed_tasks"], [])
+        self.assertEqual(state["tasks"]["second"]["consecutive_failures"], 0)
+        self.assertEqual(state["tasks"]["second"]["last_failure_at_utc"], "2026-08-15T00:00:05Z")
+
+        control_loop.evaluate_control_state(state, now_at="2026-08-15T00:04:00Z")
+        self.assertFalse(state["fresh"])
+        self.assertFalse(state["ok"])
+        self.assertEqual(state["stale_or_unobserved_tasks"], ["first", "second"])
+
+    def test_changed_task_contract_is_reinitialized_without_hiding_other_tasks(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "state.json"
+            tasks = (
+                control_loop.ControlTask("first", 60, ("first-command",)),
+                control_loop.ControlTask("second", 60, ("second-command",)),
+            )
+            state = control_loop.load_control_state(
+                path,
+                tasks,
+                mode="monitor",
+                updated_at="2026-08-15T00:00:00Z",
+            )
+            for index, task in enumerate(tasks):
+                result = control_loop.TaskResult(task.name, task.command, 0, 1.0, "", "")
+                control_loop.record_task_result(
+                    state,
+                    task,
+                    result,
+                    started_at=f"2026-08-15T00:00:0{index + 1}Z",
+                    completed_at=f"2026-08-15T00:00:0{index + 2}Z",
+                )
+            control_loop.write_state(path, state)
+
+            changed = (
+                tasks[0],
+                control_loop.ControlTask("second", 60, ("replacement-command",)),
+            )
+            reloaded = control_loop.load_control_state(
+                path,
+                changed,
+                mode="monitor",
+                updated_at="2026-08-15T00:00:10Z",
+            )
+
+            self.assertEqual(reloaded["tasks"]["first"]["status"], "good")
+            self.assertEqual(reloaded["tasks"]["second"]["status"], "never_run")
+            self.assertFalse(reloaded["all_tasks_observed"])
+            self.assertFalse(reloaded["ok"])
 
     def test_timeout_bytes_are_normalized_and_persisted_without_crashing(self) -> None:
         with tempfile.TemporaryDirectory() as td:

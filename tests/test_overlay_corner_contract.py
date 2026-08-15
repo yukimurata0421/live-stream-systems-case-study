@@ -74,6 +74,17 @@ class OverlayCornerContractTests(unittest.TestCase):
         self.assertRegex(html, re.compile(r"#np \.title\s*\{[^}]*font-size:\s*26px;", re.S))
         self.assertRegex(html, re.compile(r"\.time-row strong\s*\{[^}]*font-size:\s*17px;", re.S))
 
+    def test_phone_layout_compacts_panels_without_overlapping_fixed_offsets(self) -> None:
+        html = overlay_html()
+        phone = html.split("@media (max-width: 480px)", 1)[1].split("</style>", 1)[0]
+
+        self.assertIn("#adsb .altitude-section { display: none; }", phone)
+        self.assertRegex(phone, re.compile(r"#adsb\s*\{\s*top:\s*8px;\s*\}"))
+        self.assertRegex(phone, re.compile(r"#np\s*\{[^}]*top:\s*230px;", re.S))
+        self.assertIn("grid-template-columns: repeat(4, minmax(0, 1fr))", phone)
+        self.assertIn("#info .time-row span:last-child { display: none; }", phone)
+        self.assertIn("width: calc(100vw - 16px)", phone)
+
     def test_precipitation_card_reports_warmup_retry_lkg_and_unavailable_states(self) -> None:
         html = overlay_html()
 

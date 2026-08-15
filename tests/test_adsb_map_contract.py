@@ -28,6 +28,7 @@ class AdsbMapContractTests(unittest.TestCase):
             "index.html",
             "map.css",
             "map.js",
+            "precipitation_render.mjs",
             "solar_theme.mjs",
             "style.json",
             "airports.geojson",
@@ -84,6 +85,39 @@ class AdsbMapContractTests(unittest.TestCase):
         self.assertNotIn("document.body.style.filter", script)
         self.assertNotIn("map.getCanvas().style.filter", script)
 
+    def test_robust_ocean_coastline_and_aircraft_outline_contract(self) -> None:
+        script = (MAP_DIR / "map.js").read_text(encoding="utf-8")
+        css = (MAP_DIR / "map.css").read_text(encoding="utf-8")
+        style = json.loads((MAP_DIR / "style.json").read_text(encoding="utf-8"))
+        layers = {layer["id"]: layer for layer in style["layers"]}
+
+        self.assertEqual(layers["background"]["paint"]["background-color"], "#04090f")
+        self.assertEqual(layers["water"]["paint"]["fill-color"], "#04090f")
+        self.assertEqual(layers["coastline"]["paint"]["line-color"], "#70a8b6")
+        self.assertEqual(layers["coastline"]["paint"]["line-width"], 1.0)
+        self.assertIn("background: #04090f", css)
+
+        apply_block = script.split("function applySolarTheme", 1)[1].split(
+            "function addPlaneImage",
+            1,
+        )[0]
+        self.assertIn('setThemedPaint("background", "background-color", "#04090f"', apply_block)
+        self.assertIn('setThemedPaint("water", "fill-color", "#04090f"', apply_block)
+        self.assertIn('"coastline",\n    "line-color",\n    "#70a8b6"', apply_block)
+        self.assertIn(
+            '"terrain-relief",\n    "color-relief-color",\n    terrainReliefExpression(theme),\n'
+            "    transitionMs,\n    false,",
+            apply_block,
+        )
+
+        plane_block = script.split("function addPlaneImage", 1)[1].split(
+            "function destination",
+            1,
+        )[0]
+        self.assertIn("context.lineWidth = 1", plane_block)
+        self.assertIn('context.strokeStyle = "#080b10"', plane_block)
+        self.assertLess(plane_block.index("context.fill();"), plane_block.index("context.stroke();"))
+
     def test_solar_theme_calculation_tracks_tokyo_daylight_without_an_api(self) -> None:
         chromium = next(
             (
@@ -122,38 +156,22 @@ document.getElementById("result").textContent = JSON.stringify(samples);
             thread.start()
             host, port = server.server_address
             try:
-                command = [
-                    chromium,
-                    "--headless",
-                    "--no-sandbox",
-                    "--disable-gpu",
-                    "--disable-dev-shm-usage",
-                    "--virtual-time-budget=1000",
-                    "--dump-dom",
-                    f"http://{host}:{port}/",
-                ]
-                try:
-                    completed = subprocess.run(
-                        command,
-                        text=True,
-                        capture_output=True,
-                        timeout=20,
-                        check=False,
-                    )
-                except subprocess.TimeoutExpired as exc:
-                    stdout = (
-                        exc.stdout.decode("utf-8", "replace")
-                        if isinstance(exc.stdout, bytes)
-                        else (exc.stdout or "")
-                    )
-                    stderr = (
-                        exc.stderr.decode("utf-8", "replace")
-                        if isinstance(exc.stderr, bytes)
-                        else (exc.stderr or "")
-                    )
-                    if '<pre id="result">' not in stdout or "pending</pre>" in stdout:
-                        self.skipTest("Chromium did not produce a completed DOM before timeout")
-                    completed = subprocess.CompletedProcess(command, 0, stdout, stderr)
+                completed = subprocess.run(
+                    [
+                        chromium,
+                        "--headless",
+                        "--no-sandbox",
+                        "--disable-gpu",
+                        "--disable-dev-shm-usage",
+                        "--virtual-time-budget=1000",
+                        "--dump-dom",
+                        f"http://{host}:{port}/",
+                    ],
+                    text=True,
+                    capture_output=True,
+                    timeout=20,
+                    check=False,
+                )
             finally:
                 server.shutdown()
                 server.server_close()
@@ -245,7 +263,7 @@ document.getElementById("result").textContent = JSON.stringify(samples);
         coastline = next(layer for layer in style["layers"] if layer["id"] == "coastline")
         self.assertEqual(sea_veil["paint"]["fill-opacity"], 0.24)
         self.assertEqual(coastline_glow["paint"]["line-width"], 3.6)
-        self.assertEqual(coastline["paint"]["line-width"], 1.25)
+        self.assertEqual(coastline["paint"]["line-width"], 1.0)
 
     def test_broadcast_scale_keeps_primary_map_content_visible_on_mobile_landscape(self) -> None:
         script = (MAP_DIR / "map.js").read_text(encoding="utf-8")
@@ -259,7 +277,7 @@ document.getElementById("result").textContent = JSON.stringify(samples);
 
         layers = {layer["id"]: layer for layer in style["layers"]}
         self.assertGreaterEqual(layers["terrain-relief"]["paint"]["color-relief-opacity"], 0.50)
-        self.assertGreaterEqual(layers["coastline"]["paint"]["line-width"], 1.25)
+        self.assertEqual(layers["coastline"]["paint"]["line-width"], 1.0)
         self.assertEqual(layers["airport-label"]["layout"]["text-size"], 14)
         self.assertEqual(layers["major-city-large"]["layout"]["text-size"][-1], 22)
 
@@ -285,7 +303,12 @@ document.getElementById("result").textContent = JSON.stringify(samples);
 
     def test_map_reports_real_render_readiness_after_tiles_and_adsb_sample(self) -> None:
         script = (MAP_DIR / "map.js").read_text(encoding="utf-8")
+        precipitation_render = (MAP_DIR / "precipitation_render.mjs").read_text(encoding="utf-8")
 
+        self.assertIn(
+            'import {precipitationRenderSnapshot} from "./precipitation_render.mjs";',
+            script,
+        )
         self.assertIn('fetch("/render/ready"', script)
         self.assertIn("map.areTilesLoaded()", script)
         self.assertIn('map.isSourceLoaded("openmaptiles")', script)
@@ -293,6 +316,12 @@ document.getElementById("result").textContent = JSON.stringify(samples);
         self.assertIn("diagnostics.lastAircraftEpoch > 0", script)
         self.assertIn("map_tiles_ready: true", script)
         self.assertIn("aircraft_sample_ready: true", script)
+        self.assertIn("precipitation: precipitationRenderSnapshot(diagnostics)", script)
+        self.assertIn("precipitationLayerValidtime", script)
+        self.assertIn('state = "no_rain"', precipitation_render)
+        self.assertIn('"layer_mismatch"', precipitation_render)
+        self.assertIn('"layer_loaded"', precipitation_render)
+        self.assertIn('"layer_loaded_lkg"', precipitation_render)
         self.assertIn("const payload = await response.json();", script)
         self.assertIn("payload?.accepted !== true", script)
         self.assertLess(
@@ -301,6 +330,112 @@ document.getElementById("result").textContent = JSON.stringify(samples);
         )
         self.assertIn("renderReadyReported: false", script)
         self.assertIn('map.on("idle"', script)
+
+    def test_precipitation_render_report_distinguishes_all_semantic_states(self) -> None:
+        chromium = next(
+            (
+                path
+                for name in ("chromium", "chromium-browser", "google-chrome")
+                if (path := shutil.which(name))
+            ),
+            None,
+        )
+        if chromium is None:
+            self.skipTest("Chromium is not installed")
+
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            shutil.copy2(MAP_DIR / "precipitation_render.mjs", root / "precipitation_render.mjs")
+            (root / "index.html").write_text(
+                """<!doctype html><html><body><pre id="result">pending</pre>
+<script type="module">
+import {precipitationRenderSnapshot} from "./precipitation_render.mjs";
+const current = "20260815013500";
+const base = {
+  precipitationEvaluated: true,
+  precipitationAvailable: true,
+  precipitationFresh: true,
+  precipitationHasRain: true,
+  precipitationLayerLoaded: true,
+  precipitationValidtime: current,
+  precipitationLayerValidtime: current,
+};
+const report = (overrides) => precipitationRenderSnapshot({...base, ...overrides});
+const results = {
+  warming: report({precipitationEvaluated: false}),
+  unavailable: report({
+    precipitationAvailable: false,
+    precipitationFresh: false,
+    precipitationLayerLoaded: false,
+    precipitationLayerValidtime: null,
+  }),
+  stale: report({
+    precipitationFresh: false,
+    precipitationLayerLoaded: false,
+    precipitationLayerValidtime: null,
+  }),
+  noRain: report({
+    precipitationHasRain: false,
+    precipitationLayerLoaded: false,
+    precipitationLayerValidtime: null,
+  }),
+  missing: report({precipitationLayerLoaded: false, precipitationLayerValidtime: null}),
+  mismatch: report({precipitationLayerValidtime: "20260815013000"}),
+  loaded: report({}),
+  lkg: report({precipitationAvailable: false}),
+};
+document.getElementById("result").textContent = JSON.stringify(results);
+</script></body></html>""",
+                encoding="utf-8",
+            )
+            handler = partial(_QuietStaticHandler, directory=str(root))
+            server = ThreadingHTTPServer(("127.0.0.1", 0), handler)
+            thread = threading.Thread(target=server.serve_forever, daemon=True)
+            thread.start()
+            host, port = server.server_address
+            try:
+                completed = subprocess.run(
+                    [
+                        chromium,
+                        "--headless",
+                        "--no-sandbox",
+                        "--disable-gpu",
+                        "--disable-dev-shm-usage",
+                        "--virtual-time-budget=1000",
+                        "--dump-dom",
+                        f"http://{host}:{port}/",
+                    ],
+                    text=True,
+                    capture_output=True,
+                    timeout=20,
+                    check=False,
+                )
+            finally:
+                server.shutdown()
+                server.server_close()
+
+        self.assertEqual(completed.returncode, 0, completed.stderr[-1000:])
+        match = re.search(r'<pre id="result">(.*?)</pre>', completed.stdout, re.S)
+        self.assertIsNotNone(match, completed.stdout[-2000:])
+        assert match is not None
+        results = json.loads(html_lib.unescape(match.group(1)))
+        self.assertEqual(
+            {name: report["state"] for name, report in results.items()},
+            {
+                "warming": "warming_up",
+                "unavailable": "unavailable",
+                "stale": "stale",
+                "noRain": "no_rain",
+                "missing": "layer_missing",
+                "mismatch": "layer_mismatch",
+                "loaded": "layer_loaded",
+                "lkg": "layer_loaded_lkg",
+            },
+        )
+        self.assertIsNone(results["warming"]["has_precipitation"])
+        self.assertFalse(results["noRain"]["layer_loaded"])
+        self.assertEqual(results["mismatch"]["layer_validtime"], "20260815013000")
+        self.assertEqual(results["loaded"]["validtime"], results["loaded"]["layer_validtime"])
 
     def test_render_readiness_heartbeat_does_not_depend_on_map_idle(self) -> None:
         script = (MAP_DIR / "map.js").read_text(encoding="utf-8")
@@ -366,6 +501,24 @@ document.getElementById("result").textContent = JSON.stringify(samples);
         self.assertIn("font-size: 11px", attribution)
         self.assertNotIn("transform:", attribution)
         self.assertIn("attributionUnusedWidth", (MAP_DIR / "map.js").read_text(encoding="utf-8"))
+
+    def test_mobile_attribution_wraps_above_the_clock_panel(self) -> None:
+        css = (MAP_DIR / "map.css").read_text(encoding="utf-8")
+        mobile_scope = css.rsplit("@media (max-width: 700px)", 1)[1]
+        mobile = mobile_scope.split(
+            "#mapAttribution {",
+            1,
+        )[1].split("}", 1)[0]
+
+        self.assertIn("bottom: 52px", mobile)
+        self.assertIn("left: 8px", mobile)
+        self.assertIn("right: 8px", mobile)
+        self.assertIn("width: auto", mobile)
+        self.assertIn("font-size: 8px", mobile)
+        self.assertIn(
+            "#mapAttribution span { white-space: normal; }",
+            mobile_scope,
+        )
 
     def test_labels_are_latin_or_english_and_roads_are_not_rendered(self) -> None:
         style = json.loads((MAP_DIR / "style.json").read_text(encoding="utf-8"))

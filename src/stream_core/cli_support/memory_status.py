@@ -17,7 +17,7 @@ except ModuleNotFoundError:
 
 MIB = 1024 * 1024
 GIB = 1024 * MIB
-MEMORY_STATUS_POLICY_VERSION = 5
+MEMORY_STATUS_POLICY_VERSION = 6
 
 
 SERVICE_ROLES: dict[str, str] = {
@@ -49,14 +49,16 @@ LONG_RUNNING_UNITS = {
 ACTIVE_RUNTIME_STATES = {"active", "activating", "reloading"}
 ONESHOT_PEAK_WARN_BYTES = 1 * GIB
 ONESHOT_PEAK_CRITICAL_BYTES = 4 * GIB
-HOST_AVAILABLE_WARN_BYTES = 2 * GIB
-HOST_AVAILABLE_CRITICAL_BYTES = 1 * GIB
-SWAP_USED_WARN_BYTES = 512 * MIB
-SWAP_USED_CRITICAL_BYTES = 1 * GIB
+HOST_AVAILABLE_WARN_BYTES = 4 * GIB
+HOST_AVAILABLE_CRITICAL_BYTES = 2 * GIB
+HOST_AVAILABLE_EMERGENCY_BYTES = 1 * GIB
+SWAP_USED_OBSERVE_RATIO = 0.50
+SWAP_USED_WARN_RATIO = 0.75
+SWAP_USED_CRITICAL_RATIO = 0.90
 HOST_NON_RECLAIMABLE_WARN_BYTES = 10 * GIB
 HOST_NON_RECLAIMABLE_CRITICAL_BYTES = 12 * GIB
-HOST_AVAILABLE_ADEQUACY_WARN_BYTES = 4 * GIB
-HOST_AVAILABLE_ADEQUACY_CRITICAL_BYTES = 2 * GIB
+HOST_AVAILABLE_ADEQUACY_WARN_BYTES = HOST_AVAILABLE_WARN_BYTES
+HOST_AVAILABLE_ADEQUACY_CRITICAL_BYTES = HOST_AVAILABLE_CRITICAL_BYTES
 
 
 @dataclass(frozen=True)
@@ -189,17 +191,27 @@ def host_memory_status(meminfo: dict[str, int]) -> dict:
         reasons.append("MemAvailable missing")
     elif available < HOST_AVAILABLE_CRITICAL_BYTES:
         severity = "critical"
-        reasons.append("host MemAvailable below 1GiB absolute floor")
+        if available < HOST_AVAILABLE_EMERGENCY_BYTES:
+            reasons.append("host MemAvailable below 1GiB emergency floor")
+        else:
+            reasons.append("host MemAvailable below 2GiB critical floor")
     elif available < HOST_AVAILABLE_WARN_BYTES:
         severity = "warn"
-        reasons.append("host MemAvailable below 2GiB absolute watch floor")
-    if swap_used is not None:
-        if swap_used >= SWAP_USED_CRITICAL_BYTES:
-            severity = max_severity(severity, "critical")
-            reasons.append("swap used above 1GiB absolute floor")
-        elif swap_used >= SWAP_USED_WARN_BYTES:
-            severity = max_severity(severity, "warn")
-            reasons.append("swap used above 512MiB watch floor")
+        reasons.append("host MemAvailable below 4GiB watch floor")
+
+    swap_capacity_severity = "ok"
+    swap_capacity_reasons: list[str] = []
+    if swap_used is not None and swap_total:
+        swap_used_ratio = float(swap_used) / float(swap_total)
+        if swap_used_ratio >= SWAP_USED_CRITICAL_RATIO:
+            swap_capacity_severity = "critical"
+            swap_capacity_reasons.append("swap capacity usage at or above 90%")
+        elif swap_used_ratio >= SWAP_USED_WARN_RATIO:
+            swap_capacity_severity = "warn"
+            swap_capacity_reasons.append("swap capacity usage at or above 75%")
+        elif swap_used_ratio >= SWAP_USED_OBSERVE_RATIO:
+            swap_capacity_severity = "observe"
+            swap_capacity_reasons.append("swap capacity usage at or above 50%")
     return {
         "severity": severity,
         "reasons": reasons,
@@ -221,6 +233,18 @@ def host_memory_status(meminfo: dict[str, int]) -> dict:
         "swap_total_bytes": swap_total,
         "swap_used_bytes": swap_used,
         "swap_used_reference_pct": ratio_pct(swap_used, swap_total),
+        "swap_capacity": {
+            "severity": swap_capacity_severity,
+            "reasons": swap_capacity_reasons,
+            "contributes_to_current_severity": False,
+            "evaluation_basis": "capacity guardrail only; resident swap without current pressure is not an incident",
+            "observe_ratio": SWAP_USED_OBSERVE_RATIO,
+            "warn_ratio": SWAP_USED_WARN_RATIO,
+            "critical_ratio": SWAP_USED_CRITICAL_RATIO,
+            "observe_bytes": int(swap_total * SWAP_USED_OBSERVE_RATIO) if swap_total else None,
+            "warn_bytes": int(swap_total * SWAP_USED_WARN_RATIO) if swap_total else None,
+            "critical_bytes": int(swap_total * SWAP_USED_CRITICAL_RATIO) if swap_total else None,
+        },
         "cached_bytes": meminfo.get("Cached"),
         "buffers_bytes": meminfo.get("Buffers"),
         "sreclaimable_bytes": meminfo.get("SReclaimable"),
@@ -473,14 +497,14 @@ def operational_adequacy_status(host: dict, services: list[dict]) -> dict:
             severity = max_severity(severity, "warn")
             reasons.append("host MemAvailable below 4GiB operational adequacy watch floor")
 
-    swap_used = host.get("swap_used_bytes")
-    if swap_used is not None:
-        if swap_used >= SWAP_USED_CRITICAL_BYTES:
-            severity = max_severity(severity, "critical")
-            reasons.append("swap used above 1GiB operational ceiling")
-        elif swap_used >= SWAP_USED_WARN_BYTES:
-            severity = max_severity(severity, "warn")
-            reasons.append("swap used above 512MiB operational watch floor")
+    swap_capacity = host.get("swap_capacity") if isinstance(host.get("swap_capacity"), dict) else {}
+    swap_capacity_severity = str(swap_capacity.get("severity") or "ok")
+    if swap_capacity_severity == "critical":
+        severity = max_severity(severity, "critical")
+        reasons.append("swap capacity usage at or above 90% operational ceiling")
+    elif swap_capacity_severity == "warn":
+        severity = max_severity(severity, "warn")
+        reasons.append("swap capacity usage at or above 75% operational watch floor")
 
     for item in services:
         unit = str(item.get("unit") or "")
@@ -526,6 +550,10 @@ def operational_adequacy_status(host: dict, services: list[dict]) -> dict:
         "host_non_reclaimable_critical_bytes": HOST_NON_RECLAIMABLE_CRITICAL_BYTES,
         "host_mem_available_watch_floor_bytes": HOST_AVAILABLE_ADEQUACY_WARN_BYTES,
         "host_mem_available_critical_floor_bytes": HOST_AVAILABLE_ADEQUACY_CRITICAL_BYTES,
+        "host_mem_available_emergency_floor_bytes": HOST_AVAILABLE_EMERGENCY_BYTES,
+        "swap_capacity_observe_ratio": SWAP_USED_OBSERVE_RATIO,
+        "swap_capacity_warn_ratio": SWAP_USED_WARN_RATIO,
+        "swap_capacity_critical_ratio": SWAP_USED_CRITICAL_RATIO,
         "contributes_to_current_incident": False,
         "evaluation_basis": "operational adequacy guardrail; not primary availability and not htop used",
     }
@@ -658,6 +686,8 @@ def memory_status_payload(ctx: MemoryStatusContext, *, now_ts: int | None = None
         "evaluation_policy": {
             "primary_basis": "absolute bytes, cgroup anon/file split, memory.events, and per-service peaks",
             "current_severity_rule": "overall.severity uses host pressure, long-running anon, and memory.events only",
+            "host_available_rule": "MemAvailable below 4GiB warns, below 2GiB is critical, and below 1GiB is the emergency floor",
+            "swap_capacity_rule": "resident swap alone is capacity evidence, not current pressure; observe at 50%, warn at 75%, critical at 90%",
             "oneshot_peak_rule": "active and inactive oneshot peaks are retained as peak guardrail fields but do not raise current severity",
             "historical_peak_rule": "inactive systemd MemoryPeak is retained as peak history but does not raise current severity",
             "reference_only": "host/system percentage fields are included only for operator orientation",

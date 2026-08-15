@@ -28,7 +28,7 @@
     {
       "id": "background",
       "type": "background",
-      "paint": {"background-color": "#1b2729"}
+      "paint": {"background-color": "#04090f"}
     },
     {
       "id": "terrain-relief",
@@ -87,7 +87,7 @@
       "source": "openmaptiles",
       "source-layer": "water",
       "filter": ["match", ["geometry-type"], ["MultiPolygon", "Polygon"], true, false],
-      "paint": {"fill-color": "#101e29", "fill-opacity": 1, "fill-antialias": true}
+      "paint": {"fill-color": "#04090f", "fill-opacity": 1, "fill-antialias": true}
     },
     {
       "id": "weather-sea-veil",
@@ -115,7 +115,7 @@
       "source": "openmaptiles",
       "source-layer": "water",
       "filter": ["match", ["geometry-type"], ["MultiPolygon", "Polygon"], true, false],
-      "paint": {"line-color": "rgba(145,178,173,0.84)", "line-width": 1.25}
+      "paint": {"line-color": "#70a8b6", "line-width": 1.0}
     },
     {
       "id": "country-border-shadow",

@@ -168,13 +168,96 @@ class PrecipitationFetcherTests(unittest.TestCase):
             self.assertTrue(status["analysis_only"])
             self.assertEqual(status["forecast_minutes"], 0)
             self.assertTrue(status["has_precipitation"])
+            self.assertTrue(status["generation_integrity"])
+            self.assertRegex(str(status["generation_manifest_sha256"]), r"^[0-9a-f]{64}$")
+            self.assertEqual(
+                status["generation_manifest"],
+                "/weather/tiles/20260802080000/manifest.json",
+            )
             self.assertEqual(status["tile_template"], "/weather/tiles/20260802080000/{z}/{x}/{y}.png")
             self.assertEqual(status_again["validtime"], "20260802080000")
             self.assertTrue((Path(td) / "status.json").is_file())
             generation = Path(td) / "generations" / "20260802080000"
             self.assertEqual(len(list(generation.rglob("*.png"))), status["tile_count"])
+            verified = fetcher.verify_generation(
+                generation,
+                expected_manifest_sha256=str(status["generation_manifest_sha256"]),
+            )
+            self.assertEqual(verified["tile_count"], status["tile_count"])
+            self.assertEqual(verified["total_bytes"], status["tile_total_bytes"])
             tile_calls = [url for url in calls if url != metadata_url]
             self.assertEqual(len(tile_calls), status["tile_count"])
+
+    def test_same_validtime_corruption_is_rebuilt_before_unchanged_is_reported(self) -> None:
+        metadata_url = "https://www.jma.go.jp/example-target-times.json"
+        validtime = "20260802080000"
+        metadata = json.dumps(
+            [{"basetime": validtime, "validtime": validtime, "elements": ["hrpns"]}]
+        ).encode("utf-8")
+        tile = palette_tile([3] * (256 * 256), (256, 256))
+        calls: list[str] = []
+
+        def fake_fetch(url: str, _timeout: float) -> bytes:
+            calls.append(url)
+            return metadata if url == metadata_url else tile
+
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            config = fetcher.FetcherConfig(
+                output_root=root,
+                metadata_url=metadata_url,
+                data_root_url="https://www.jma.go.jp/tiles",
+                bounds=(140.0, 35.0, 141.0, 36.0),
+                tile_zooms=(6,),
+            )
+            original, changed = fetcher.refresh_once(config, fetch=fake_fetch)
+            self.assertTrue(changed)
+            generation = root / "generations" / validtime
+            tile_path = next(generation.rglob("*.png"))
+            tile_path.write_bytes(b"not-a-png")
+            call_count_before_repair = len(calls)
+
+            repaired, repaired_changed = fetcher.refresh_once(config, fetch=fake_fetch)
+
+            self.assertTrue(repaired_changed)
+            self.assertGreater(len(calls), call_count_before_repair)
+            self.assertEqual(repaired["generation_manifest_sha256"], original["generation_manifest_sha256"])
+            fetcher.verify_generation(
+                generation,
+                expected_manifest_sha256=str(repaired["generation_manifest_sha256"]),
+            )
+
+    def test_generation_verifier_rejects_unexpected_files_and_symlinks(self) -> None:
+        metadata_url = "https://www.jma.go.jp/example-target-times.json"
+        validtime = "20260802080000"
+        metadata = json.dumps(
+            [{"basetime": validtime, "validtime": validtime, "elements": ["hrpns"]}]
+        ).encode("utf-8")
+        tile = palette_tile([3] * (256 * 256), (256, 256))
+
+        def fake_fetch(url: str, _timeout: float) -> bytes:
+            return metadata if url == metadata_url else tile
+
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            config = fetcher.FetcherConfig(
+                output_root=root,
+                metadata_url=metadata_url,
+                data_root_url="https://www.jma.go.jp/tiles",
+                bounds=(140.0, 35.0, 141.0, 36.0),
+                tile_zooms=(6,),
+            )
+            fetcher.refresh_once(config, fetch=fake_fetch)
+            generation = root / "generations" / validtime
+            unexpected = generation / "unexpected.txt"
+            unexpected.write_text("unexpected", encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "unexpected files"):
+                fetcher.verify_generation(generation)
+            unexpected.unlink()
+            link = generation / "linked.png"
+            link.symlink_to(next(generation.rglob("*.png")))
+            with self.assertRaisesRegex(ValueError, "symlink"):
+                fetcher.verify_generation(generation)
 
     def test_failed_new_generation_preserves_last_known_good_status_and_tiles(self) -> None:
         metadata_url = "https://www.jma.go.jp/example-target-times.json"

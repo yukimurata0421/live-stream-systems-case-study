@@ -38,13 +38,13 @@ def atomic_write_json(path: Path, payload: dict[str, Any]) -> None:
 
 
 def snapshot_payload(payload: dict[str, Any], *, command: list[str], snapshot_ts: str) -> dict[str, Any]:
-    result = dict(payload)
-    result["_snapshot"] = {
+    return {
+        "schema_version": 1,
+        "updated_at_utc": snapshot_ts,
+        "ok": True,
         "command": command,
-        "snapshot_source": "stream_v3_health_snapshot",
-        "snapshot_ts_utc": snapshot_ts,
+        "payload": payload,
     }
-    return result
 
 
 def build_snapshots(

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import subprocess
@@ -10,6 +11,9 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Mapping, Sequence
+
+
+CONTROL_STATE_SCHEMA = "stream_v3.control_loop_state.v2"
 
 
 @dataclass(frozen=True)
@@ -89,7 +93,11 @@ def default_tasks(env: Mapping[str, str] | None = None, *, mode: str | None = No
 def shadow_tasks(source: Mapping[str, str]) -> list[ControlTask]:
     root = repo_root()
     state_root = env_path_arg(source, "STREAM_RUNTIME_STATE_DIR", str(root / ".state" / "adsb-streamnew-v3"))
-    source_state_root = env_path_arg(source, "STREAM_V2_SOURCE_STATE_ROOT", str(root / ".state" / "source-v2-readonly"))
+    source_state_root = env_path_arg(
+        source,
+        "STREAM_V2_SOURCE_STATE_ROOT",
+        str(root / ".state" / "source-v2-readonly"),
+    )
     python_bin = source.get("PYTHON_BIN", sys.executable)
     stream_cli = source.get("STREAM_V3_STREAM_CLI_BIN", str(root / "bin" / "stream-prod"))
     supervisor_mode = source.get("STREAM_RUNTIME_SUPERVISOR", "systemd").strip().lower() or "systemd"
@@ -342,13 +350,227 @@ def append_event(path: Path, payload: dict[str, object]) -> None:
 
 def write_state(path: Path, payload: dict[str, object]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_suffix(path.suffix + ".tmp")
-    tmp.write_text(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    tmp.replace(path)
+    tmp = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    try:
+        with tmp.open("w", encoding="utf-8") as handle:
+            json.dump(payload, handle, ensure_ascii=False, indent=2, sort_keys=True)
+            handle.write("\n")
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(tmp, path)
+        directory = os.open(path.parent, os.O_RDONLY | getattr(os, "O_DIRECTORY", 0))
+        try:
+            os.fsync(directory)
+        finally:
+            os.close(directory)
+    finally:
+        tmp.unlink(missing_ok=True)
 
 
 def iso_now() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
+
+
+def parse_utc(value: object) -> datetime | None:
+    if not isinstance(value, str) or not value.strip():
+        return None
+    try:
+        parsed = datetime.fromisoformat(value.strip().replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return parsed.astimezone(timezone.utc) if parsed.tzinfo is not None else None
+
+
+def iso_after(value: str, seconds: float) -> str:
+    parsed = parse_utc(value)
+    if parsed is None:
+        raise ValueError("invalid control-loop timestamp")
+    future = datetime.fromtimestamp(
+        parsed.timestamp() + max(0.0, seconds),
+        tz=timezone.utc,
+    )
+    return future.isoformat(timespec="seconds").replace("+00:00", "Z")
+
+
+def task_fingerprint(task: ControlTask) -> str:
+    content = json.dumps(
+        {
+            "name": task.name,
+            "interval_sec": task.interval_sec,
+            "timeout_sec": task.timeout_sec,
+            "command": list(task.command),
+        },
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    return hashlib.sha256(content).hexdigest()
+
+
+def _task_initial(task: ControlTask) -> dict[str, object]:
+    return {
+        "name": task.name,
+        "interval_sec": task.interval_sec,
+        "timeout_sec": task.timeout_sec,
+        "command_sha256": task_fingerprint(task),
+        "status": "never_run",
+        "run_count": 0,
+        "consecutive_failures": 0,
+        "last_returncode": None,
+        "last_duration_sec": None,
+        "last_started_at_utc": None,
+        "last_completed_at_utc": None,
+        "last_success_at_utc": None,
+        "last_failure_at_utc": None,
+        "next_due_at_utc": None,
+        "fresh_until_utc": None,
+    }
+
+
+def _validated_tasks(tasks: Sequence[ControlTask]) -> tuple[ControlTask, ...]:
+    configured = tuple(tasks)
+    names = [task.name for task in configured]
+    if not configured:
+        raise ValueError("control loop requires at least one task")
+    if len(names) != len(set(names)):
+        raise ValueError("control loop task names must be unique")
+    if any(not task.name.strip() or task.interval_sec <= 0 or task.timeout_sec <= 0 for task in configured):
+        raise ValueError("control loop task contract is invalid")
+    return configured
+
+
+def load_control_state(
+    path: Path,
+    tasks: Sequence[ControlTask],
+    *,
+    mode: str,
+    updated_at: str,
+) -> dict[str, object]:
+    configured = _validated_tasks(tasks)
+    previous: dict[str, object] = {}
+    try:
+        if path.is_symlink():
+            raise OSError("control state must not be a symlink")
+        raw = json.loads(path.read_text(encoding="utf-8"))
+        if isinstance(raw, dict) and raw.get("schema") == CONTROL_STATE_SCHEMA:
+            previous = raw
+    except (FileNotFoundError, OSError, UnicodeDecodeError, json.JSONDecodeError):
+        previous = {}
+    previous_tasks = previous.get("tasks") if isinstance(previous.get("tasks"), dict) else {}
+    task_states: dict[str, object] = {}
+    for task in configured:
+        initial = _task_initial(task)
+        candidate = previous_tasks.get(task.name) if isinstance(previous_tasks, dict) else None
+        if (
+            isinstance(candidate, dict)
+            and candidate.get("command_sha256") == initial["command_sha256"]
+            and candidate.get("interval_sec") == task.interval_sec
+            and candidate.get("timeout_sec") == task.timeout_sec
+        ):
+            for key in initial:
+                if key in candidate:
+                    initial[key] = candidate[key]
+        task_states[task.name] = initial
+    state: dict[str, object] = {
+        "schema": CONTROL_STATE_SCHEMA,
+        "updated_at_utc": updated_at,
+        "mode": mode,
+        "configured_task_count": len(configured),
+        "configured_tasks": [task.name for task in configured],
+        "all_tasks_observed": False,
+        "ok": False,
+        "tasks": task_states,
+        "latest_result": None,
+    }
+    return evaluate_control_state(state, now_at=updated_at)
+
+
+def evaluate_control_state(
+    state: dict[str, object],
+    *,
+    now_at: str,
+) -> dict[str, object]:
+    now = parse_utc(now_at)
+    if now is None:
+        raise ValueError("invalid control-loop evaluation timestamp")
+    raw_tasks = state.get("tasks")
+    tasks = raw_tasks if isinstance(raw_tasks, dict) else {}
+    all_observed = bool(tasks) and all(
+        isinstance(item, dict) and item.get("status") in {"good", "failed"}
+        for item in tasks.values()
+    )
+    fresh = all_observed and all(
+        (deadline := parse_utc(item.get("fresh_until_utc"))) is not None
+        and now <= deadline
+        for item in tasks.values()
+        if isinstance(item, dict)
+    )
+    all_good = all_observed and all(
+        isinstance(item, dict) and item.get("status") == "good"
+        for item in tasks.values()
+    )
+    state["updated_at_utc"] = now_at
+    state["all_tasks_observed"] = all_observed
+    state["fresh"] = fresh
+    state["ok"] = all_good and fresh
+    state["failed_tasks"] = sorted(
+        name
+        for name, item in tasks.items()
+        if isinstance(item, dict) and item.get("status") == "failed"
+    )
+    state["stale_or_unobserved_tasks"] = sorted(
+        name
+        for name, item in tasks.items()
+        if not isinstance(item, dict)
+        or item.get("status") == "never_run"
+        or (parse_utc(item.get("fresh_until_utc")) or datetime.min.replace(tzinfo=timezone.utc)) < now
+    )
+    return state
+
+
+def record_task_result(
+    state: dict[str, object],
+    task: ControlTask,
+    result: TaskResult,
+    *,
+    started_at: str,
+    completed_at: str,
+) -> dict[str, object]:
+    raw_tasks = state.get("tasks")
+    if not isinstance(raw_tasks, dict) or not isinstance(raw_tasks.get(task.name), dict):
+        raise ValueError(f"task is outside the configured state contract: {task.name}")
+    item = dict(raw_tasks[task.name])
+    previous_failures = item.get("consecutive_failures")
+    consecutive_failures = int(previous_failures) if isinstance(previous_failures, int) else 0
+    item.update(
+        {
+            "status": "good" if result.ok else "failed",
+            "run_count": max(0, int(item.get("run_count") or 0)) + 1,
+            "consecutive_failures": 0 if result.ok else consecutive_failures + 1,
+            "last_returncode": result.returncode,
+            "last_duration_sec": round(result.duration_sec, 3),
+            "last_started_at_utc": started_at,
+            "last_completed_at_utc": completed_at,
+            "next_due_at_utc": iso_after(completed_at, task.interval_sec),
+            "fresh_until_utc": iso_after(
+                completed_at,
+                task.interval_sec + task.timeout_sec + max(15.0, task.interval_sec * 0.25),
+            ),
+        }
+    )
+    if result.ok:
+        item["last_success_at_utc"] = completed_at
+    else:
+        item["last_failure_at_utc"] = completed_at
+    raw_tasks[task.name] = item
+    state["latest_result"] = {
+        "name": result.name,
+        "ok": result.ok,
+        "returncode": result.returncode,
+        "duration_sec": round(result.duration_sec, 3),
+        "completed_at_utc": completed_at,
+    }
+    return evaluate_control_state(state, now_at=completed_at)
 
 
 def run_once(
@@ -359,15 +581,31 @@ def run_once(
     mode: str = "shadow",
     env: Mapping[str, str] | None = None,
 ) -> list[TaskResult]:
-    results = [run_task(task, env=env) for task in tasks]
+    configured = _validated_tasks(tasks)
+    initialized_at = iso_now()
+    state = load_control_state(state_file, configured, mode=mode, updated_at=initialized_at)
+    results: list[TaskResult] = []
+    for task in configured:
+        started_at = iso_now()
+        result = run_task(task, env=env)
+        completed_at = iso_now()
+        results.append(result)
+        record_task_result(
+            state,
+            task,
+            result,
+            started_at=started_at,
+            completed_at=completed_at,
+        )
     payload = {
-        "ts_utc": iso_now(),
+        "schema": "stream_v3.control_loop_event.v2",
+        "ts_utc": str(state["updated_at_utc"]),
         "mode": mode,
         "results": [result.to_dict() for result in results],
         "ok": all(result.ok for result in results),
     }
     append_event(event_log, payload)
-    write_state(state_file, payload)
+    write_state(state_file, state)
     return results
 
 
@@ -378,23 +616,40 @@ def run_loop(
     event_log: Path,
     mode: str = "shadow",
     env: Mapping[str, str] | None = None,
+    max_task_runs: int | None = None,
 ) -> int:
-    next_due = {task.name: 0.0 for task in tasks}
+    configured = _validated_tasks(tasks)
+    state = load_control_state(state_file, configured, mode=mode, updated_at=iso_now())
+    next_due = {task.name: 0.0 for task in configured}
+    task_runs = 0
     while True:
         now = time.monotonic()
-        due = [task for task in tasks if now >= next_due[task.name]]
+        due = [task for task in configured if now >= next_due[task.name]]
         if due:
             for task in due:
+                started_at = iso_now()
                 result = run_task(task, env=env)
+                completed_at = iso_now()
                 payload = {
-                    "ts_utc": iso_now(),
+                    "schema": "stream_v3.control_loop_event.v2",
+                    "ts_utc": completed_at,
                     "mode": mode,
                     "results": [result.to_dict()],
                     "ok": result.ok,
                 }
                 append_event(event_log, payload)
-                write_state(state_file, payload)
+                record_task_result(
+                    state,
+                    task,
+                    result,
+                    started_at=started_at,
+                    completed_at=completed_at,
+                )
+                write_state(state_file, state)
                 next_due[task.name] = time.monotonic() + task.interval_sec
+                task_runs += 1
+                if max_task_runs is not None and task_runs >= max_task_runs:
+                    return 0
         sleep_sec = min(max(1.0, next_due[name] - time.monotonic()) for name in next_due)
         time.sleep(min(sleep_sec, 5.0))
 

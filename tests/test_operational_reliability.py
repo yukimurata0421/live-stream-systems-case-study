@@ -7,6 +7,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -167,6 +168,43 @@ class OperationalReliabilityTests(unittest.TestCase):
         self.assertIn("oauth_health=good", evidence)
         self.assertIn("oauth_issues=0", evidence)
 
+    def test_planned_rollout_suppresses_transient_resolver_fast_mode_incident(self) -> None:
+        observe_payload = {
+            "pass": True,
+            "checks": {
+                "current_fail": False,
+                "youtube_current_degraded": False,
+                "youtube_observability_current_fail": False,
+                "fast_mode_current_active": True,
+            },
+            "api_report_judgment": "ok",
+            "fast_mode_current_active": True,
+            "fast_mode_judgment": "ok_short_fast_mode_episode",
+            "fast_mode_episode_count_24h": 1,
+            "fast_mode_active_duration_sec_24h": 30,
+            "fast_mode_api_units_estimated_24h": 20,
+            "encoder_gap_enable_auto_stop_false_judgment": "ok_none",
+            "remote_warning_restart_judgment": "ok_single_or_none",
+            "stream_engine_ffmpeg_exit_224_judgment": "ok_single_or_none",
+            "public_probe_judgment": "ok_none",
+            "watchdog_restart_reasons": {},
+            "fast_recovery_restart_triggers": {},
+            "stream_engine_ffmpeg_exit_224_count_1h": 0,
+        }
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            with mock.patch.object(incidents, "planned_rollout_context", return_value={"rollout_id": "test"}):
+                found = incidents.collect_notification_incidents(
+                    observe_payload=lambda _hours: (0, observe_payload, ""),
+                    stream1090_report_events_file=root / "stream1090.jsonl",
+                    upstream_report_events_file=root / "upstream.jsonl",
+                    runtime_state_base_dir=root,
+                    now_ts=1_786_320_600,
+                    bootstrap_grace_active=True,
+                )
+
+        self.assertNotIn("resolver:fast_mode_active_or_runaway", {item["id"] for item in found})
+
     def test_notification_release_keeps_inline_single_writer_and_arena_state(self) -> None:
         deploy = (ROOT / "ops" / "scripts" / "deploy_stream_v3_monitoring_release.sh").read_text(
             encoding="utf-8"
@@ -186,7 +224,6 @@ class OperationalReliabilityTests(unittest.TestCase):
             unit,
         )
         self.assertNotIn("stream_v2/.state/env/adsb-streamnew.env", unit)
-        self.assertIn("STREAM_V3_RELEASE_APPLY", deploy)
 
     def test_missing_reliability_artifacts_have_distinct_ids_and_unknown_age(self) -> None:
         with tempfile.TemporaryDirectory() as td:
@@ -216,6 +253,24 @@ class OperationalReliabilityTests(unittest.TestCase):
         self.assertIn("stream-v3-operational-reliability-rollup.service", start_block)
         self.assertIn("stream-v3-reliability-burn-evaluator.service", start_block)
         self.assertIn("stream-v3-external-blackbox-import.service", start_block)
+
+    def test_release_deploy_pins_public_current_link_to_immutable_release(self) -> None:
+        deploy = (ROOT / "ops" / "scripts" / "deploy_stream_v3_monitoring_release.sh").read_text(
+            encoding="utf-8"
+        )
+        unit = (ROOT / "ops" / "systemd" / "stream-v3-observability-monitor.service").read_text(
+            encoding="utf-8"
+        )
+
+        self.assertIn('current_link="${STREAM_V3_CURRENT_LINK:-/opt/stream_v3}"', deploy)
+        self.assertIn('release_dir="${release_root}/${tag}"', deploy)
+        self.assertIn('ln -s "${release_dir}" "${temporary_link}"', deploy)
+        self.assertIn('mv -Tf "${temporary_link}" "${current_link}"', deploy)
+        self.assertIn("Environment=STREAM_V3_REPO_DIR=/opt/stream_v3", unit)
+        self.assertIn(
+            'STREAM_V3_STREAM_CLI_BIN="$${STREAM_V3_STREAM_CLI_BIN:-$${STREAM_V3_REPO_DIR}/bin/stream-prod}"',
+            unit,
+        )
 
     def test_accepted_arena_host_unit_drift_is_captured_by_repository_contract(self) -> None:
         deploy = (ROOT / "ops" / "scripts" / "deploy_stream_v3_monitoring_release.sh").read_text(

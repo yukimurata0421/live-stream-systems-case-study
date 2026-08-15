@@ -25,10 +25,15 @@ def format_discord_message(*, phase: str, incidents: list[dict], state: dict, no
         "restart_observed": "再起動観測・送信回復確認待ち",
         "recovery_unconfirmed": "再起動後の送信回復未確認",
         "auto_recovered": "自動復旧確認",
+        "planned_rollout": "計画更新完了",
     }
     if phase in recovery_titles:
+        title = recovery_titles[phase]
+        components = {str(item.get("component", "")) for item in incidents}
+        if phase == "auto_recovered" and components == {"stream_engine_ffmpeg"}:
+            title = "FFmpeg自己再起動イベント"
         lines = [
-            f"[ADS-B Stream] {recovery_titles[phase]}",
+            f"[ADS-B Stream] {title}",
             f"time={jst_text(now_ts)}",
             "active_incidents=0",
             f"events={len(incidents)}",
