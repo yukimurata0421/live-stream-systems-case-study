@@ -45,6 +45,29 @@ than a host or Pod. The controlled object is the exact managed FFmpeg child,
 with a logical generation retained across PID changes where required by the
 recovery transaction.
 
+## Applying transaction semantics to recovery
+
+CRA applies transaction semantics to recovery work rather than treating a
+restart as a best-effort remote procedure call. The important ordering rule is
+to persist intent or reserve an effect before the related message or physical
+signal can leave its local failure domain.
+
+- Central commits the decision, command intent, and outbox entry in one local
+  SQLite transaction before delivery.
+- Dell commits admission, the exact target, and the effect fence before
+  execution can cross the physical boundary.
+- The runtime reserves the first physical attempt before invoking the narrow
+  FFmpeg effect.
+- A crash or lost acknowledgement after that boundary becomes
+  `OUTCOME_UNKNOWN`; it does not roll back reality or authorize another attempt.
+
+This is not a distributed ACID claim. Central, Dell, and the runtime retain
+separate local truths, and no coordinator can atomically roll back a process
+signal across hosts. Signed messages, stable scope identifiers, authority
+leases, state transitions, and append-only reconciliation connect those local
+transactions. When their records cannot establish one outcome, recovery fails
+closed instead of converting uncertainty into a duplicate restart.
+
 ## The CRA decision
 
 CRA introduces one central intent truth while keeping observation, decision,
