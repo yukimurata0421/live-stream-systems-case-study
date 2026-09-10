@@ -51,6 +51,18 @@ split and the higher-resolution attribution model. The raw outputs remain
 private because they can contain public IPs, CPE details, socket peers, or
 packet metadata.
 
+### Bounded FFmpeg writer timeout
+
+The FFmpeg output builder exposes an opt-in `-rw_timeout` for direct FLV and
+FIFO outputs. `FFMPEG_RW_TIMEOUT_ENABLED` defaults to disabled, and
+`FFMPEG_RW_TIMEOUT_USEC` is accepted only between 100,000 and 300,000,000
+microseconds. Test outputs never receive the network option.
+
+This is a bounded mechanism for ending a stalled network write; its presence
+in source does not enable it or prove that a live RTMPS session used it.
+Activation remains a separate production configuration decision with its own
+external evidence and rollback checks.
+
 ## Reading Rules
 
 ### DNS Is Supporting Evidence

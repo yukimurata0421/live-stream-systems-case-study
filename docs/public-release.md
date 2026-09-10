@@ -26,6 +26,8 @@ contracts, and operational decisions without publishing runtime data or secrets.
   postboot readiness, and read-only NVIDIA package observation.
 - Connectivity-aware FFmpeg launch suppression, browser-only recovery, and
   arena-side incident correlation without live host configuration or state.
+- An explicitly disabled-by-default FFmpeg network writer timeout with bounded
+  configuration validation and no claim of production activation.
 - Public review docs for executive summary, operational scorecard, test safety
   boundary, incident review, and migration cutover reasoning.
 - A sanitized renderer-cutover case study with failure, rollback, repair, and

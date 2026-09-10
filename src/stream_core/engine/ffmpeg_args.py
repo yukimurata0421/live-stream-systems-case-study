@@ -1,7 +1,29 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Any
+
+
+def network_rw_timeout_args(cfg: Any) -> list[str]:
+    if cfg.test_mode:
+        return []
+    enabled = os.environ.get("FFMPEG_RW_TIMEOUT_ENABLED", "0").strip().lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
+    if not enabled:
+        return []
+    raw = os.environ.get("FFMPEG_RW_TIMEOUT_USEC", "15000000").strip()
+    try:
+        timeout_usec = int(raw)
+    except ValueError as exc:
+        raise ValueError("FFMPEG_RW_TIMEOUT_USEC_INVALID") from exc
+    if timeout_usec < 100_000 or timeout_usec > 300_000_000:
+        raise ValueError("FFMPEG_RW_TIMEOUT_USEC_OUT_OF_RANGE")
+    return ["-rw_timeout", str(timeout_usec)]
 
 
 def build_output_args(cfg: Any) -> list[str]:
@@ -11,6 +33,7 @@ def build_output_args(cfg: Any) -> list[str]:
         return ["-f", "null", "-"]
     if cfg.use_fifo_recovery:
         return [
+            *network_rw_timeout_args(cfg),
             "-f",
             "fifo",
             "-fifo_format",
@@ -31,7 +54,7 @@ def build_output_args(cfg: Any) -> list[str]:
             "1" if cfg.fifo_restart_with_keyframe else "0",
             cfg.rtmp_url,
         ]
-    return ["-f", "flv", cfg.rtmp_url]
+    return [*network_rw_timeout_args(cfg), "-f", "flv", cfg.rtmp_url]
 
 
 def build_filter(output_size: str) -> str:

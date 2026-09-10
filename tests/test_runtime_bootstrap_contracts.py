@@ -344,6 +344,35 @@ class FfmpegArgumentContractTests(unittest.TestCase):
         self.assertIn("-drop_pkts_on_overflow", fifo)
         self.assertEqual(fifo[-3:], ["-restart_with_keyframe", "0", "rtmps://a.rtmps.youtube.com:443/live2/key"])
 
+    def test_network_rw_timeout_is_explicitly_gated_and_output_scoped(self) -> None:
+        with mock.patch.dict(
+            "os.environ",
+            {
+                "FFMPEG_RW_TIMEOUT_ENABLED": "1",
+                "FFMPEG_RW_TIMEOUT_USEC": "15000000",
+            },
+            clear=False,
+        ):
+            direct = ffmpeg_args.build_output_args(self.cfg())
+            test_output = ffmpeg_args.build_output_args(self.cfg(test_mode=True))
+
+        self.assertEqual(
+            direct,
+            ["-rw_timeout", "15000000", "-f", "flv", "rtmps://a.rtmps.youtube.com:443/live2/key"],
+        )
+        self.assertEqual(test_output, ["-f", "null", "-"])
+
+    def test_network_rw_timeout_is_disabled_by_default_and_rejects_unsafe_values(self) -> None:
+        with mock.patch.dict("os.environ", {}, clear=True):
+            self.assertNotIn("-rw_timeout", ffmpeg_args.build_output_args(self.cfg()))
+        with mock.patch.dict(
+            "os.environ",
+            {"FFMPEG_RW_TIMEOUT_ENABLED": "1", "FFMPEG_RW_TIMEOUT_USEC": "not-an-int"},
+            clear=False,
+        ):
+            with self.assertRaisesRegex(ValueError, "FFMPEG_RW_TIMEOUT_USEC_INVALID"):
+                ffmpeg_args.build_output_args(self.cfg())
+
     def test_build_ffmpeg_args_preserves_stream_contract_and_profile_overrides(self) -> None:
         args = ffmpeg_args.build_ffmpeg_args(
             self.cfg(),
