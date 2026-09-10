@@ -1,72 +1,48 @@
 # CRA Harness Engineering
 
-このdirectoryは、CRA/Dell Recovery Agent Protocol v1のSUT検証とは別に、検証基盤そのものを検証するtest-only Harnessの入口である。
+This directory contains the immutable scenario catalogs, evidence-lineage
+schema, and sanitized fixtures for the test-only CRA harness.
 
 ```text
-Scenario Registry
-      -> Environment Factory
-      -> Fault Injector (requested -> armed -> triggered -> completed)
-      -> SUT (CRA + Dell Agent + separate SQLite)
-      -> Observer (raw facts only)
-      -> append-only Evidence
-      -> Independent Oracle
-      -> Classifier
-      -> Trust Gate / Report
+scenario registry
+  -> environment factory
+  -> fault injector: requested -> armed -> triggered -> completed
+  -> SUT: CRA + Dell Agent + separate SQLite stores
+  -> observer: facts only
+  -> append-only evidence
+  -> independent oracle
+  -> classifier
+  -> trust gate and report
 ```
 
-`harness/scenarios/protocol_v1.json`がdeterministic、negative control、randomized explorationの共通registryである。実行は次のとおり。
+`harness/scenarios/protocol_v1.json` is the common registry for deterministic
+protocol scenarios, negative controls, and randomized exploration. A local run
+uses an immutable run ID:
 
 ```bash
 .venv/bin/cra-harness --run-id <immutable-run-id>
 ```
 
-同じrun IDへの上書きは拒否する。成果物は`artifacts/harness/<run_id>/`へ保存される。production credentialを読み込まず、実signal、process、Pod、Deployment、network操作は行わない。
+Reusing a run ID is rejected. Generated artifacts remain outside the public Git
+snapshot. The base harness uses a `FakePhysicalAdapter`; it does not load a
+production credential or perform a real signal, process, Pod, Deployment, or
+network mutation.
 
-探索caseをregressionへ昇格する場合は、元seed、case index、最小化したinputs/fault、期待不変条件、sourceを固定し、`deterministic=true`の新しいstable scenario IDを付ける。探索結果をそのまま合格根拠へ混ぜない。
+When an exploratory case becomes a regression, preserve its seed, case index,
+minimized input and fault, expected invariant, and source identity under a new
+stable deterministic scenario ID. Unvisited state-space cells are not passes.
 
-Operational State Space v3は既存v2 randomized 200件を維持し、7-axis weighted randomized 500件、mandatory high-risk coverage、15 Negative Control、accelerated lifecycleを追加する。
+The postmortem-derived I/O catalog in `harness/scenarios/postmortem_io_v1.json`
+uses temporary files, controlled loopback mTLS, and disposable test children in
+a separate integration-test population. These mechanisms still do not prove a
+production fault or soak result.
 
-```bash
-tools/sqlite_runtime/run-fixed.sh .venv/bin/python -m cra_harness.runner.cli_v3 --run-id <immutable-v3-run-id>
-```
+Read the public design records before extending a catalog:
 
-`coverage/operational_state_matrix.json`は全直積を定義し、探索済みcellだけをmaterializeする。未探索cellをPASSとは扱わず、mandatory high-risk predicateがminimum hit未達なら`HARNESS_V3_TRUSTED=false`とする。
+- [`docs/harness-trust.md`](../docs/harness-trust.md)
+- [`docs/harness-engineering-draft.md`](../docs/harness-engineering-draft.md)
+- [`docs/failure-injection-draft.md`](../docs/failure-injection-draft.md)
+- [`docs/chaos-testing-draft.md`](../docs/chaos-testing-draft.md)
 
-## 公開postmortem由来のI/O境界テスト
-
-[現構成への適用・修正記録](../docs/engineering/records/2026-09-06_100_postmortem_io_fault_hardening.md)のPF-01〜06は、
-次の独立したintegration suiteで再実行できる。このsuiteは一時file、loopback mTLS、専用test childの終了を使う。
-上記Protocol v1のfake-only runnerとは別のtest populationであり、production host/network/credentialを使わない。
-
-```bash
-timeout 120s nice -n 19 tools/run_full_regression.sh \
-  tests/harness/integration/test_postmortem_io_faults.py -q
-```
-
-入力不正、HTTP途中切断、error responseの解放、append/state境界、short write、FIFOを検証する。
-faultが起きた証拠、保存bytes、連番、別hostのGET継続をassertし、PF-01〜06の各防御を壊した
-negative control 6種類も検出する。事例、仮説、注入点、必須観測、test node、未証明範囲は
-`harness/scenarios/postmortem_io_v1.json`へ固定し、次のrunnerは既存runを上書きしない。
-
-```bash
-tools/sqlite_runtime/run-fixed.sh .venv/bin/python -m tools.run_postmortem_io_harness \
-  --output artifacts/postmortem-io-<immutable-run-id>/harness
-```
-
-候補全体の回帰と、関連6モジュールのbranch measurementは別populationとして保存する。
-
-```bash
-.venv/bin/python -m tools.run_candidate_full_validation \
-  --output artifacts/postmortem-io-<immutable-run-id>/full
-```
-
-テスト成功を7日soak PASS、production fault injection、physical effectの実証へ読み替えない。
-24時間checkpointと配備前gateは
-[専用runbook](../docs/runbooks/2026-09-06_postmortem_io_predeploy_24h_checkpoint.md)を使う。
-実装・Harness trust・未配備境界の結果は
-[記録101](../docs/engineering/records/2026-09-06_101_postmortem_harness_and_24h_predeploy_gate.md)に固定した。
-
-後続の[記録102](../docs/engineering/records/2026-09-06_102_checkpoint_resources_and_soak_evidence_gap.md)では、
-実署名packetの2-hop→collector→復旧判定、実archiveのcheckpoint CLI→gate、collectorのprocess終了後再開を検証する。
-`--preserve-incomplete`の診断prefixは欠落を保持し、配備gateを開かない。通常のpytest assertion失敗を
-`HARNESS_FAILURE`へまとめず、`TEST_FAILURE`として原因未確定のまま記録する。
+Harness success must not be relabeled as a seven-day soak pass, production
+fault injection, real physical-effect proof, or viewer recovery.

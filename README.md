@@ -110,7 +110,10 @@ private evidence or cross-repository candidates.
 
 Start with [`docs/architecture.md`](docs/architecture.md), then read
 [`docs/safety-model.md`](docs/safety-model.md) and
-[`docs/harness-trust.md`](docs/harness-trust.md).
+[`docs/harness-trust.md`](docs/harness-trust.md). The current repository-only
+design record is split into [harness engineering](docs/harness-engineering-draft.md),
+[failure injection](docs/failure-injection-draft.md), and
+[chaos testing](docs/chaos-testing-draft.md) drafts.
 
 ## Public boundary
 

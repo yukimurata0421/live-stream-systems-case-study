@@ -26,7 +26,8 @@ be inferred from the public commit.
   with a machine-readable public-CI exclusion manifest;
 - inert systemd, PostgreSQL, Kubernetes, logrotate, and needrestart examples;
 - build, validation, replay, and harness tools; and
-- curated architecture and safety documentation.
+- curated architecture and safety documentation, including repository-only
+  harness-engineering, failure-injection, and chaos-testing drafts.
 
 ## Excluded
 
