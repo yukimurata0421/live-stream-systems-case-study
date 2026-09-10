@@ -46,7 +46,7 @@ class YouTubeWatchdogCacheFreshnessTests(unittest.TestCase):
         )
         self.assertFalse(reused)
 
-    def test_cache_falls_back_to_stats_ts_when_checked_ts_missing(self) -> None:
+    def test_cache_does_not_fall_back_to_stats_ts_when_checked_ts_missing(self) -> None:
         mod = importlib.reload(youtube_watchdog)
         payload = {
             "ts_utc": "2026-05-05T09:59:00Z",
@@ -58,7 +58,55 @@ class YouTubeWatchdogCacheFreshnessTests(unittest.TestCase):
         }
         now_ts = mod.parse_iso_ts("2026-05-05T10:00:00Z")
         cached = mod.oauth_from_stats_cache(payload, now_ts, max_age_sec=300)
-        self.assertIsNotNone(cached)
+        self.assertIsNone(cached)
+
+    def test_oauth_cache_rejects_future_invalid_and_exact_refresh_boundary(
+        self,
+    ) -> None:
+        mod = importlib.reload(youtube_watchdog)
+        now_ts = mod.parse_iso_ts("2026-05-05T10:00:00Z")
+        for source_time in ("2026-05-05T10:00:01Z", "2026-05-05T09:58:00Z", "bad"):
+            with self.subTest(source_time=source_time):
+                payload = {
+                    "ts_utc": "2026-05-05T10:00:00Z",
+                    "oauth_checked_ts_utc": source_time,
+                    "oauth_probe_ok": True,
+                }
+                self.assertIsNone(
+                    mod.oauth_from_stats_cache(payload, now_ts, max_age_sec=120)
+                )
+
+    def test_data_cache_does_not_promote_missing_future_or_expired_source_time(
+        self,
+    ) -> None:
+        mod = importlib.reload(youtube_watchdog)
+        now_ts = mod.parse_iso_ts("2026-05-05T10:00:00Z")
+        for source_time in ("", "2026-05-05T10:00:01Z", "2026-05-05T09:58:00Z"):
+            with self.subTest(source_time=source_time):
+                payload = {
+                    "ts_utc": "2026-05-05T10:00:00Z",
+                    "data_api_checked_ts_utc": source_time,
+                    "video_id": "VID",
+                    "api_ok": True,
+                    "api_live_state": "live",
+                }
+                self.assertFalse(
+                    mod.data_api_from_stats_cache(
+                        payload,
+                        now_ts=now_ts,
+                        max_age_sec=120,
+                        selected_video_id="VID",
+                    )[0]
+                )
+
+    def test_zero_interval_disables_response_cache(self) -> None:
+        mod = importlib.reload(youtube_watchdog)
+        payload = {
+            "oauth_checked_ts_utc": "2026-05-05T10:00:00Z",
+            "oauth_probe_ok": True,
+        }
+        now_ts = mod.parse_iso_ts("2026-05-05T10:00:00Z")
+        self.assertIsNone(mod.oauth_from_stats_cache(payload, now_ts, max_age_sec=0))
 
     def test_oauth_cache_requires_oauth_fields(self) -> None:
         mod = importlib.reload(youtube_watchdog)

@@ -1,0 +1,14 @@
+# LOCAL CANDIDATE ONLY. Not installed, not a deployment authorization.
+# Apply to the exact approved stream-v3-arena-monitor.service release only.
+# This is a ~60s monitor schedule, NOT a hard upper bound under queueing.
+[Service]
+Environment=V3_YOUTUBE_MONITOR_INTERVAL_SEC=60
+# Poll OAuth-backed APIs each monitor invocation; reuse the ACCESS TOKEN.
+# Setting this to 60 would skip the next cycle if completion is <60s old.
+Environment=YTW_OAUTH_PROBE_MIN_INTERVAL_SEC=0
+# Retain the separate Data API cache and existing quota/burn-rate protection.
+Environment=YTW_DATA_API_CHECK_MIN_INTERVAL_SEC=120
+Environment=YTW_API_COST_BURN_RATE_ENABLE=1
+Environment=YTW_API_COST_BURN_RATE_FAIL_CLOSED=1
+# Healthy human-facing event logs remain thinned. These are NOT API samples.
+Environment=YTW_OK_LOG_EVERY_SEC=300

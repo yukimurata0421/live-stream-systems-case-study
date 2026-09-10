@@ -377,11 +377,7 @@ def main(force_live_once: bool = False) -> int:
     quota_guard_reason = str(quota_guard.get("reason", ""))
     oauth_checked_ts_utc = str(last_stats.get("oauth_checked_ts_utc", "")).strip()
     data_api_checked_ts_utc = str(last_stats.get("data_api_checked_ts_utc", "")).strip()
-    legacy_stats_ts_utc = str(last_stats.get("ts_utc", "")).strip()
-    if not oauth_checked_ts_utc and legacy_stats_ts_utc and "oauth_probe_ok" in last_stats:
-        oauth_checked_ts_utc = legacy_stats_ts_utc
-    if not data_api_checked_ts_utc and legacy_stats_ts_utc and "api_live_state" in last_stats:
-        data_api_checked_ts_utc = legacy_stats_ts_utc
+    oauth_probe_performed = False
     if quota_guard_active:
         oauth = OAuthProbeResult(
             enabled=False,
@@ -398,6 +394,7 @@ def main(force_live_once: bool = False) -> int:
         else:
             oauth = probe_with_oauth()
             if oauth.remote_checked:
+                oauth_probe_performed = True
                 oauth_checked_ts_utc = utc_now()
     resolver_state = load_video_resolver_state()
 
@@ -615,6 +612,8 @@ def main(force_live_once: bool = False) -> int:
                 failure_kind=failure_kind_value,
                 oauth_checked_ts_utc=oauth_checked_ts_utc,
                 data_api_checked_ts_utc=data_api_checked_ts_utc,
+                oauth_probe_performed=oauth_probe_performed,
+                oauth_cache_min_interval_sec=oauth_probe_interval_sec,
                 api_cost_burn_rate_active=api_cost_guard.active,
                 api_cost_burn_rate_reason=api_cost_guard.reason,
                 api_cost_projected_units_per_day=api_cost_guard.projected_units_per_day,

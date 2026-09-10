@@ -52,11 +52,23 @@ timestamp. If an OAuth or Data API probe was not checked recently, its cached
 result is not treated as fresh merely because the containing stats file was
 rewritten.
 
+The later source contract also records whether an OAuth probe was actually
+performed and the response-cache interval that governed the cycle. A missing,
+future, or expired source timestamp is a cache miss; rewriting the wrapper
+timestamp does not promote old OAuth evidence to fresh evidence. Healthy event
+logging may still be thinned independently, so event frequency is not used as
+the API retrieval cadence.
+
 Public tests cover this behavior:
 
 - `tests/test_youtube_video_id_resolver_cache_freshness.py`
 - `tests/test_youtube_watchdog_cache_freshness.py`
 - `tests/test_youtube_watchdog_checked_timestamps.py`
+- `tests/test_youtube_oauth_cadence_contract.py`
+
+`ops/systemd/arena-server/youtube-oauth-one-minute.conf.example` is an inert
+schedule example. It preserves Data API quota guards and access-token reuse,
+but public CI neither installs the drop-in nor performs YouTube API calls.
 
 ## Quota Guard
 

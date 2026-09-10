@@ -28,6 +28,8 @@ contracts, and operational decisions without publishing runtime data or secrets.
   arena-side incident correlation without live host configuration or state.
 - An explicitly disabled-by-default FFmpeg network writer timeout with bounded
   configuration validation and no claim of production activation.
+- OAuth evidence timestamps that distinguish a real API attempt from response
+  cache reuse, plus an inert arena-server schedule example.
 - Public review docs for executive summary, operational scorecard, test safety
   boundary, incident review, and migration cutover reasoning.
 - A sanitized renderer-cutover case study with failure, rollback, repair, and

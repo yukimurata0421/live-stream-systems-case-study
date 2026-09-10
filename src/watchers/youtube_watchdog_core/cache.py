@@ -38,9 +38,9 @@ def oauth_from_stats_cache(payload: dict, now_ts: int, max_age_sec: int) -> OAut
     if "oauth_probe_ok" not in payload:
         return None
     ts = parse_iso_ts(str(payload.get("oauth_checked_ts_utc", "")).strip())
-    if ts <= 0:
-        ts = parse_iso_ts(str(payload.get("ts_utc", "")))
-    if ts <= 0 or (now_ts - ts) > max_age_sec:
+    # File rewrites and cache reuse do not constitute a remote observation.
+    # At the refresh boundary fetch again; a future source is not a cache hit.
+    if ts <= 0 or not 0 <= (now_ts - ts) < max_age_sec:
         return None
 
     def optional_bool(key: str) -> bool | None:
@@ -88,9 +88,7 @@ def data_api_from_stats_cache(
     if "api_live_state" not in payload:
         return False, False, "", ""
     ts = parse_iso_ts(str(payload.get("data_api_checked_ts_utc", "")).strip())
-    if ts <= 0:
-        ts = parse_iso_ts(str(payload.get("ts_utc", "")))
-    if ts <= 0 or (now_ts - ts) > max_age_sec:
+    if ts <= 0 or not 0 <= (now_ts - ts) < max_age_sec:
         return False, False, "", ""
     cached_video_id = str(payload.get("video_id", "")).strip()
     if not selected_video_id or not cached_video_id or cached_video_id != selected_video_id:
