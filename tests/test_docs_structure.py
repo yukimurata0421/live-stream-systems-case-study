@@ -83,6 +83,7 @@ class PublicDocsStructureTests(unittest.TestCase):
             DOCS / "v3" / "public-publisher-boundary.md",
             DOCS / "v3" / "three-host-source-consolidation.md",
             DOCS / "v3" / "scoped-recovery-authority.md",
+            DOCS / "v3" / "failure-injection-and-chaos-draft.md",
         )
 
         for path in required:
@@ -153,7 +154,7 @@ class PublicDocsStructureTests(unittest.TestCase):
             "Measurement start",
             "Measurement endpoint",
             "Expected video ID",
-            "Current selected video ID",
+            "Selected video ID at endpoint",
             "Observed replacement actions",
             "Candidate-new-URL samples",
             "V2 stopped",
@@ -164,7 +165,7 @@ class PublicDocsStructureTests(unittest.TestCase):
 
         for checkpoint in (
             "2026-05-06 10:36:17 JST",
-            "2026-07-25 08:22:08 JST",
+            "2026-08-23 14:31:53 JST",
             "2026-05-28 22:29:43 JST",
             "2026-05-28 22:41:31 JST",
             "OpMzOBFwM7M",

@@ -38,7 +38,7 @@ without freezing their prose or section layout.
 
 | Area | Status | Public evidence | Residual risk |
 | --- | --- | --- | --- |
-| Same-watch-URL preservation | Measured / tested | `docs/28-day-same-url-sli-case-study.md`, `docs/v3/youtube-lifecycle-safety.md`, resolver freshness tests | The approximately 80-day checkpoint preserves one video ID with zero observed replacement actions, but it does not prove uninterrupted frames; the exact V2-to-V3 authority handoff was not logged separately. |
+| Same-watch-URL preservation | Measured / tested | `docs/28-day-same-url-sli-case-study.md`, `docs/v3/youtube-lifecycle-safety.md`, resolver freshness tests | The at-least-109-day checkpoint preserves one video ID with zero observed replacement actions in retained windows, but it does not prove uninterrupted frames or current state; the exact V2-to-V3 authority handoff was not logged separately. |
 | Guarded recovery | Tested | `ops/scripts/v3_shadow_acceptance.py`, `tests/test_v3_shadow_acceptance.py`, `src/stream_v2/recovery_orchestrator/gate.py` | Public tests do not perform live mutation. |
 | Scoped recovery authority | Tested / documented | `docs/v3/scoped-recovery-authority.md`, `ops/scripts/stream_v3_scoped_recovery.py`, `ops/scripts/stream_v3_remote_recovery.py`, `tests/test_stream_v3_scoped_recovery.py`, `tests/test_stream_v3_remote_recovery.py` | Public tests verify policy and command rendering; they do not restart live DJ or FFmpeg processes. |
 | Public CI safety | Tested | `.github/workflows/public-snapshot-check.yml`, `docs/test-strategy-and-safety-boundary.md` | CI proves snapshot safety, not production liveness. |

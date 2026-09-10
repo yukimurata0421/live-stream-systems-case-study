@@ -73,6 +73,7 @@ Use the rest of this page as a reference catalog.
 - `v3/runbook-validation.md`
 - `v3/runbooks.md`
 - `v3/open-followups.md`
+- `v3/failure-injection-and-chaos-draft.md`
 
 ## Design Review
 

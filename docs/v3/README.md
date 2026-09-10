@@ -33,6 +33,7 @@
   - `decisions.md`
   - `migration-cutover-case-study.md`
   - `failure-taxonomy.md`
+  - `failure-injection-and-chaos-draft.md`
   - `visual-audio-health-model.md`
   - `notification-and-auto-recovery.md`
   - `single-node-dr-case-study.md`

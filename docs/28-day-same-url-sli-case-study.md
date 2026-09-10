@@ -6,19 +6,20 @@ objective, measure the denominator, separate invariants from availability, and
 publish the unresolved risks instead of hiding them behind a single uptime
 number.
 
-## Approximately 80-Day Continuity Checkpoint
+## At-Least-109-Day Continuity Checkpoint
 
 Retained evidence from `2026-05-06 10:36:17 JST` through
-`2026-07-25 08:22:08 JST` covers `79 days, 21 hours, 45 minutes`. It preserves
-the same public YouTube Live identity across the production cutover from the v2
-single-host runtime to the v3 k3s split-plane architecture.
+`2026-08-23 14:31:53 JST` covers `109 days, 3 hours, 55 minutes, 36 seconds`.
+The same public YouTube Live identity was selected at the start, across the
+production cutover from the v2 single-host runtime to the v3 k3s split-plane
+architecture, and at the endpoint.
 
 | Evidence item | Observed value | Interpretation boundary |
 | --- | --- | --- |
 | Measurement start | `2026-05-06 10:36:17 JST` | Start of the retained 14-day same-URL observation. |
-| Measurement endpoint | `2026-07-25 08:22:08 JST` | Fresh resolver state at this checkpoint, not a continuously sampled 80-day denominator. |
+| Measurement endpoint | `2026-08-23 14:31:53 JST` | Resolver, watchdog, and OAuth evidence selected the same ID at this checkpoint; this is not a continuously sampled 109-day denominator. |
 | Expected video ID | `OpMzOBFwM7M` | The configured identity contract. |
-| Current selected video ID | `OpMzOBFwM7M` | The fresh resolver selection at the endpoint. |
+| Selected video ID at endpoint | `OpMzOBFwM7M` | The explicit identity selection at the evidence endpoint. |
 | Selected replacement actions | `0` observed across retained review windows | This is not a full YouTube broadcast inventory audit. |
 | Candidate-new-URL samples | `2` transient samples in the initial 14-day window | Both samples came from one short resolver mismatch interval and recovered without selection. |
 | V2 stopped | `2026-05-28 22:29:43 JST` | Final V2 runtime state was `stopped`; its resolver selected `OpMzOBFwM7M`. |
@@ -30,6 +31,11 @@ The defensible claim is URL identity preservation without a selected replacement
 broadcast. It is not a zero-downtime or frame-continuity claim. The retained
 V2-stop to first V3-send evidence gap is `11 minutes, 48 seconds`, so exact
 viewer-visible interruption during the handoff remains unknown.
+
+Sanitized records after the endpoint contain later platform-health observations,
+but they do not explicitly bind those observations to the exact video ID. They
+are therefore excluded from this duration rather than being promoted to current
+same-URL evidence.
 
 ## What Was Ported
 

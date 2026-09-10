@@ -50,17 +50,17 @@ explicit evidence and safety boundaries, not enterprise scale.
 
 ## Evidence Snapshot
 
-**Approximately 80 days on one public YouTube Live URL.** The same public Live
-identity was preserved from the initial measurement checkpoint through the
-production cutover from the v2 single-host runtime to the v3 k3s split-plane
-architecture, with no selected replacement action observed.
+**At least 109 days on one public YouTube Live URL.** The same public Live
+identity was selected at the initial measurement checkpoint, across the v2-to-v3
+production cutover, and again at the evidence endpoint. No selected replacement
+action was observed in the retained review windows.
 
 | Continuity evidence | Measured value |
 | --- | --- |
 | Measurement start | `2026-05-06 10:36:17 JST` |
-| Measurement endpoint | `2026-07-25 08:22:08 JST` (`79 days, 21 hours, 45 minutes`) |
+| Measurement endpoint | `2026-08-23 14:31:53 JST` (`109 days, 3 hours, 55 minutes, 36 seconds`) |
 | Expected video ID | `OpMzOBFwM7M` |
-| Current selected video ID | `OpMzOBFwM7M` |
+| Selected video ID at endpoint | `OpMzOBFwM7M` |
 | Observed replacement actions | `0` across the retained review windows |
 | Candidate-new-URL samples | `2` transient samples in the initial 14-day window; neither was selected |
 | V2 stopped | `2026-05-28 22:29:43 JST` |
@@ -70,6 +70,8 @@ architecture, with no selected replacement action observed.
 This establishes URL identity preservation, not uninterrupted frame delivery.
 The exact production-authority handoff was not logged as a standalone event,
 and the retained V2-stop to V3-send evidence gap is `11 minutes, 48 seconds`.
+Later platform-health records are not counted because they do not re-bind the
+exact video ID; this endpoint is an evidence cutoff, not a current-state claim.
 The detailed evidence and counting boundaries are in the
 [same-URL SLI case study](docs/28-day-same-url-sli-case-study.md).
 
@@ -170,6 +172,7 @@ configuration are intentionally excluded. The full publication boundary is
 documented in [public release notes](docs/public-release.md).
 
 The latest [three-host source consolidation](docs/v3/three-host-source-consolidation.md) is repository-only; its [external evidence contract](docs/v3/operational-reliability-and-external-evidence.md) does not claim a live rollout.
+The [failure-injection and chaos-testing draft](docs/v3/failure-injection-and-chaos-draft.md) likewise defines test-only work, not production authorization.
 
 ## Review Paths
 
