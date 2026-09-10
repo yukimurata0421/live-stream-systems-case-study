@@ -52,7 +52,7 @@ class OverlayPrecipitationStateTests(unittest.TestCase):
         chromium = next(
             (
                 path
-                for name in ("chromium", "chromium-browser", "google-chrome")
+                for name in ("google-chrome", "chromium", "chromium-browser")
                 if (path := shutil.which(name))
             ),
             None,
