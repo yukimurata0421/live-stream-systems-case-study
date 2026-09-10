@@ -1,6 +1,6 @@
 # Architecture
 
-`stream_v3` is the current production streaming platform. It is built around
+`stream_v3` is the public source snapshot of the streaming platform. It is built around
 one principle: keep media delivery and operational observation separate, while
 also naming the ADS-B source chain as its own evidence boundary.
 
@@ -41,8 +41,10 @@ public status publication
 
 ## Physical Topology
 
-The running system is intentionally split across three home hosts plus a public
-static edge:
+The historical public data path is split across three home hosts plus a public
+static edge. The current recovery-control contract additionally names
+`arena-server` and `cra-01`; this repository does not infer their deployment
+state from the older topology record.
 
 - HP ProDesk `monitoring-host` source role: Airspy USB receiver, `airspy_adsb`,
   and ProDesk-side readsb.
@@ -71,19 +73,22 @@ source chain distinguishable from delivery failures.
 ## Plane Split
 
 Delivery-plane components are optimized for keeping video and audio alive.
-Observability-plane components are optimized for retaining evidence, explaining
-faults, and deciding whether a recovery action is safe.
+Observability-plane components are optimized for retaining evidence and
+explaining faults. They do not own the current recovery authorization decision.
 
-The HP ProDesk observability plane runs `stream_v3.control_loop --mode monitor`
+The retained HP ProDesk observability implementation runs
+`stream_v3.control_loop --mode monitor`
 as the k3s `stream-v3-control` workload. That monitor mode runs the YouTube
 video resolver, YouTube watchdog, stream watchdog, notification status loop,
 subsystem status summary, recovery orchestrator, and shadow SLI tasks. It pulls
 read-only YouTube Data API, OAuth, public watch-page, k3s runtime, state-file,
 and log evidence before recovery is planned.
 
-The split prevents a monitoring failure from automatically becoming a delivery
-failure. It also prevents delivery recovery code from owning dashboard,
-long-window SLI state, or YouTube API decision state.
+The current contract routes Monitoring facts through arena-server to cra-01.
+CRA owns policy, budget, cooldown, authorization, command lifecycle, and final
+verification. Dell can execute only an exact fenced FFmpeg-child command and
+must not escalate an absent child to a broader restart. Raspberry Pi remains a
+one-way publisher with no control feedback.
 
 `ops/monitoring/` defines Prometheus, Loki, Grafana, and Alloy as a
 host-local evidence and presentation stack. It is not a third delivery plane and
@@ -133,11 +138,17 @@ The k3s manifests are intentionally shadow-first:
 
 ## Recovery Model
 
-Recovery is staged:
+The current model is staged across distinct authorities:
 
 1. collect evidence;
 2. classify the subsystem state;
-3. build an action plan;
-4. block destructive actions when evidence is stale, ambiguous, or in shadow
-   mode;
-5. request delivery-plane recovery only when the guard allows it.
+3. publish facts-only Monitoring evidence from arena-server;
+4. let cra-01 apply policy, budget, cooldown, authorization, and command
+   lifecycle rules;
+5. execute at most one exact fenced FFmpeg-child effect on Dell; and
+6. return durable result/evidence to CRA for final verification or explicit
+   uncertainty.
+
+The older direct arena/k3s scripts remain reviewable migration surfaces, not
+the current authority contract. See
+[scoped recovery authority](v3/scoped-recovery-authority.md).

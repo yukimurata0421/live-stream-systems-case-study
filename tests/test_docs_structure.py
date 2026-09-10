@@ -113,7 +113,7 @@ class PublicDocsStructureTests(unittest.TestCase):
         text = read(README)
         headings = re.findall(r"^## (.+)$", text, flags=re.MULTILINE)
 
-        self.assertLessEqual(len(text.splitlines()), 180)
+        self.assertLessEqual(len(text.splitlines()), 200)
         self.assertEqual(
             headings,
             [
@@ -256,10 +256,15 @@ class PublicDocsStructureTests(unittest.TestCase):
 
         for owner in (
             "HP ProDesk / source + private observability",
+            "arena-server / Monitoring evidence",
+            "cra-01 / central recovery authority",
             "Dell / k3s delivery",
             "Raspberry Pi / public snapshot publisher",
             "Public static edge",
-            "recovery orchestrator + guard",
+            "legacy recovery plan",
+            "exact FFmpeg-child executor",
+            "facts-only projection",
+            "fenced command",
             "outbound upload",
         ):
             with self.subTest(owner=owner):

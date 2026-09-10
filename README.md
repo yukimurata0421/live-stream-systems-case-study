@@ -30,7 +30,7 @@ are in the [map rendering and monitoring contract](docs/v3/map-rendering-and-mon
 
 The repository also contains a reviewed but not live-deployed [mobile map legibility proposal](docs/v3/map-mobile-legibility-review.md).
 
-The system runs across three home hosts:
+The public data path historically spans three home hosts:
 
 - an HP ProDesk owns the Airspy/readsb source and private k3s observability
   workloads;
@@ -38,6 +38,12 @@ The system runs across three home hosts:
   local fast recovery;
 - a Raspberry Pi pulls allowlisted evidence through its local Grafana proxy and
   publishes a static snapshot to GCS, which Cloudflare serves publicly.
+
+The current recovery-control contract adds two named logical roles:
+`arena-server` owns Monitoring facts and `cra-01` owns recovery policy,
+authorization, command lifecycle, and final verification. Dell owns only the
+exact fenced FFmpeg-child effect. These repositories do not claim that the CRA
+path is deployed or production-enabled.
 
 This is a single-operator system with a small blast radius. Its value is the
 explicit evidence and safety boundaries, not enterprise scale.
@@ -86,15 +92,25 @@ flowchart LR
         MON["stream-v3-control"]
         EXP["stream-v3-observer"]
         GRAF["Prometheus + Loki + Grafana"]
-        GUARD["recovery orchestrator + guard"]
+        GUARD["legacy recovery plan<br/>migration surface"]
         MON --> EXP --> GRAF
         MON --> GUARD
+    end
+
+    subgraph ARENA["arena-server / Monitoring evidence"]
+        FACTS["current + incident + parity<br/>facts-only projection"]
+    end
+
+    subgraph CRA["cra-01 / central recovery authority"]
+        AUTH["policy + budget + cooldown<br/>command + final verification"]
     end
 
     subgraph DELL["Dell / k3s delivery"]
         RS["readsb + modified tar1090 ADS-B source"]
         RUN["stream-v3-runtime<br/>MapLibre + weather + audio + NVENC + recovery"]
+        EXEC["exact FFmpeg-child executor<br/>production disabled in public source"]
         RS --> RUN
+        RUN --> EXEC
     end
 
     subgraph PI["Raspberry Pi / public snapshot publisher"]
@@ -114,7 +130,10 @@ flowchart LR
     AIR -->|"beast feed"| RS
     RUN -->|"RTMPS"| YT
     MON -. "read-only runtime + YouTube evidence" .-> RUN
-    GUARD -. "scoped k3s recovery" .-> RUN
+    GUARD -. "facts only" .-> FACTS
+    RUN -. "signed local facts" .-> FACTS
+    FACTS -. "signed projection" .-> AUTH
+    AUTH -. "fenced command" .-> EXEC
     GRAF -->|"datasource JSON"| PROXY
     BUILD -->|"outbound upload"| GCS
 ```
@@ -128,7 +147,7 @@ contracts are in [physical topology](docs/physical-topology.md) and
 ## Key Design Decisions
 
 - `SV3-SAME-URL`: preserve the current YouTube watch URL when a fault is recoverable; replacement is never inferred from transport noise alone.
-- `SV3-RECOVERY-GUARD`: monitors collect evidence and request staged recovery, while the delivery tier retains FFmpeg ownership.
+- `SV3-RECOVERY-GUARD`: arena publishes facts, CRA owns the recovery decision and command lifecycle, and Dell retains only exact FFmpeg-child ownership.
 - `SV3-PUBLIC-BOUNDARY`: publish only an allowlisted static snapshot through GCS and Cloudflare.
 - `SV3-EVIDENCE-STRENGTH`: keep restart observation separate from confirmed TCP send recovery; stale, missing, or ambiguous evidence cannot claim recovery.
 - Treat API quota exhaustion and public-probe failures as degraded evidence, not immediate proof of stream failure.
@@ -142,7 +161,7 @@ contracts are in [physical topology](docs/physical-topology.md) and
 | Claim ID | What the repository supports | What it does not claim |
 | --- | --- | --- |
 | `SV3-SAME-URL` | Historical same-URL windows and zero selected replacement actions. | Contractual availability or continuous frame-by-frame auditing. |
-| `SV3-RECOVERY-GUARD` | Public policy tests, shadow acceptance, and scoped recovery command rendering. | Live production mutation from public CI or ideal multi-node HA. |
+| `SV3-RECOVERY-GUARD` | Public CRA protocol/fence tests plus V3 legacy-surface auditability. | A deployed CRA path, production mutation authorization, or ideal multi-node HA. |
 | `SV3-PUBLIC-BOUNDARY` | Static GCS/Cloudflare publication with private monitoring kept off the public path. | Public Grafana, raw logs, credentials, or home-network ingress. |
 | `SV3-EVIDENCE-STRENGTH` | Notifications distinguish restart observed, recovery unconfirmed, and TCP send recovery confirmed. | CPE-versus-carrier ownership or exact viewer impact from a notification alone. |
 
