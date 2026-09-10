@@ -6,6 +6,7 @@ import json
 import re
 import shutil
 import subprocess
+import tempfile
 import threading
 import unittest
 from pathlib import Path
@@ -27,6 +28,23 @@ class _HarnessHandler(http.server.BaseHTTPRequestHandler):
 
     def log_message(self, _format: str, *_args: object) -> None:
         return
+
+
+def _chromium_command(chromium: str, profile: Path, url: str) -> list[str]:
+    return [
+        chromium,
+        "--headless",
+        "--no-sandbox",
+        "--disable-gpu",
+        "--disable-dev-shm-usage",
+        "--disable-background-networking",
+        "--no-first-run",
+        "--no-default-browser-check",
+        f"--user-data-dir={profile}",
+        "--virtual-time-budget=1000",
+        "--dump-dom",
+        url,
+    ]
 
 
 class OverlayPrecipitationStateTests(unittest.TestCase):
@@ -127,22 +145,14 @@ document.getElementById("result").textContent = JSON.stringify(results);
         thread.start()
         host, port = server.server_address
         try:
-            completed = subprocess.run(
-                [
-                    chromium,
-                    "--headless",
-                    "--no-sandbox",
-                    "--disable-gpu",
-                    "--disable-dev-shm-usage",
-                    "--virtual-time-budget=1000",
-                    "--dump-dom",
-                    f"http://{host}:{port}/",
-                ],
-                text=True,
-                capture_output=True,
-                timeout=20,
-                check=False,
-            )
+            with tempfile.TemporaryDirectory() as td:
+                completed = subprocess.run(
+                    _chromium_command(chromium, Path(td) / "chromium-profile", f"http://{host}:{port}/"),
+                    text=True,
+                    capture_output=True,
+                    timeout=20,
+                    check=False,
+                )
         finally:
             server.shutdown()
             server.server_close()

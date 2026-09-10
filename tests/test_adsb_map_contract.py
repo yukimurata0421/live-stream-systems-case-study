@@ -22,6 +22,23 @@ class _QuietStaticHandler(SimpleHTTPRequestHandler):
         return
 
 
+def _chromium_command(chromium: str, profile: Path, url: str) -> list[str]:
+    return [
+        chromium,
+        "--headless",
+        "--no-sandbox",
+        "--disable-gpu",
+        "--disable-dev-shm-usage",
+        "--disable-background-networking",
+        "--no-first-run",
+        "--no-default-browser-check",
+        f"--user-data-dir={profile}",
+        "--virtual-time-budget=1000",
+        "--dump-dom",
+        url,
+    ]
+
+
 class AdsbMapContractTests(unittest.TestCase):
     def test_runtime_assets_and_vendored_licence_are_present(self) -> None:
         required = (
@@ -158,16 +175,7 @@ document.getElementById("result").textContent = JSON.stringify(samples);
             host, port = server.server_address
             try:
                 completed = subprocess.run(
-                    [
-                        chromium,
-                        "--headless",
-                        "--no-sandbox",
-                        "--disable-gpu",
-                        "--disable-dev-shm-usage",
-                        "--virtual-time-budget=1000",
-                        "--dump-dom",
-                        f"http://{host}:{port}/",
-                    ],
+                    _chromium_command(chromium, root / "chromium-profile", f"http://{host}:{port}/"),
                     text=True,
                     capture_output=True,
                     timeout=20,
@@ -370,16 +378,7 @@ document.getElementById("result").textContent = JSON.stringify({
             host, port = server.server_address
             try:
                 completed = subprocess.run(
-                    [
-                        chromium,
-                        "--headless",
-                        "--no-sandbox",
-                        "--disable-gpu",
-                        "--disable-dev-shm-usage",
-                        "--virtual-time-budget=1000",
-                        "--dump-dom",
-                        f"http://{host}:{port}/",
-                    ],
+                    _chromium_command(chromium, root / "chromium-profile", f"http://{host}:{port}/"),
                     text=True,
                     capture_output=True,
                     timeout=20,
@@ -496,16 +495,7 @@ document.getElementById("result").textContent = JSON.stringify(results);
             host, port = server.server_address
             try:
                 completed = subprocess.run(
-                    [
-                        chromium,
-                        "--headless",
-                        "--no-sandbox",
-                        "--disable-gpu",
-                        "--disable-dev-shm-usage",
-                        "--virtual-time-budget=1000",
-                        "--dump-dom",
-                        f"http://{host}:{port}/",
-                    ],
+                    _chromium_command(chromium, root / "chromium-profile", f"http://{host}:{port}/"),
                     text=True,
                     capture_output=True,
                     timeout=20,
