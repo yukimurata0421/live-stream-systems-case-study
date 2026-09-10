@@ -1,5 +1,6 @@
 import * as maplibregl from "./vendor/maplibre-gl.mjs";
 import {precipitationRenderSnapshot} from "./precipitation_render.mjs";
+import {waitForMapSourceReady} from "./precipitation_source_ready.mjs";
 import {solarTheme} from "./solar_theme.mjs";
 
 const params = new URLSearchParams(window.location.search);
@@ -22,6 +23,8 @@ const PRECIPITATION_REFRESH_MS = 60_000;
 const PRECIPITATION_DEFAULT_STALE_MS = 15 * 60 * 1_000;
 const PRECIPITATION_FADE_MS = 1_000;
 const PRECIPITATION_LAYER_OPACITY = 0.82;
+const PRECIPITATION_SOURCE_READY_TIMEOUT_MS = 120_000;
+const PRECIPITATION_SOURCE_READY_POLL_MS = 250;
 const RENDER_READY_REPUBLISH_MS = 10_000;
 const RENDER_READY_HEARTBEAT_MS = 5_000;
 const RENDER_READY_AIRCRAFT_MAX_AGE_MS = 15_000;
@@ -139,6 +142,10 @@ const diagnostics = {
   precipitationEvaluated: false,
   precipitationLayerOpacity: PRECIPITATION_LAYER_OPACITY,
   precipitationAnalysisOnly: true,
+  precipitationLoadState: "idle",
+  precipitationPendingValidtime: null,
+  precipitationLastLoadReason: null,
+  precipitationLastLoadDurationMs: null,
   renderReadyReported: false,
   solarTheme: "PENDING",
   solarAltitudeDegrees: null,
@@ -525,28 +532,6 @@ function fadeOutActivePrecipitation() {
   setTimeout(() => removePrecipitationLayer(previous), PRECIPITATION_FADE_MS + 150);
 }
 
-function waitForPrecipitationSource(sourceId, timeoutMs = 8_000) {
-  const started = Date.now();
-  return new Promise((resolve) => {
-    function check() {
-      if (!map.getSource(sourceId)) {
-        resolve(false);
-        return;
-      }
-      if (map.isSourceLoaded(sourceId)) {
-        resolve(true);
-        return;
-      }
-      if (Date.now() - started >= timeoutMs) {
-        resolve(false);
-        return;
-      }
-      setTimeout(check, 100);
-    }
-    check();
-  });
-}
-
 async function installPrecipitationLayer(payload, observedMs, staleAfterMs) {
   const validtime = String(payload.validtime || "");
   const tileTemplate = String(payload.tile_template || "");
@@ -559,6 +544,8 @@ async function installPrecipitationLayer(payload, observedMs, staleAfterMs) {
     activePrecipitation.staleAfterMs = staleAfterMs;
     diagnostics.precipitationLayerLoaded = true;
     diagnostics.precipitationLayerValidtime = validtime;
+    diagnostics.precipitationLoadState = "loaded";
+    diagnostics.precipitationPendingValidtime = null;
     return;
   }
 
@@ -590,10 +577,21 @@ async function installPrecipitationLayer(payload, observedMs, staleAfterMs) {
     },
   }, "weather-sea-veil");
 
-  const loaded = await waitForPrecipitationSource(sourceId);
-  if (!loaded || sequence !== precipitationSequence) {
+  diagnostics.precipitationLoadState = "loading";
+  diagnostics.precipitationPendingValidtime = validtime;
+  const sourceReady = await waitForMapSourceReady(map, sourceId, {
+    timeoutMs: PRECIPITATION_SOURCE_READY_TIMEOUT_MS,
+    pollMs: PRECIPITATION_SOURCE_READY_POLL_MS,
+  });
+  diagnostics.precipitationLastLoadReason = sourceReady.reason;
+  diagnostics.precipitationLastLoadDurationMs = sourceReady.elapsed_ms;
+  diagnostics.precipitationPendingValidtime = null;
+  if (!sourceReady.ready || sequence !== precipitationSequence) {
+    diagnostics.precipitationLoadState = "failed";
     removePrecipitationLayer({sourceId, layerId});
-    if (!loaded) throw new Error("local precipitation tiles did not load");
+    if (!sourceReady.ready) {
+      throw new Error(`local precipitation source was not ready: ${sourceReady.reason}`);
+    }
     return;
   }
 
@@ -612,6 +610,7 @@ async function installPrecipitationLayer(payload, observedMs, staleAfterMs) {
   }
   diagnostics.precipitationLayerLoaded = true;
   diagnostics.precipitationLayerValidtime = validtime;
+  diagnostics.precipitationLoadState = "loaded";
 }
 
 async function refreshPrecipitation() {
@@ -924,6 +923,10 @@ map.on("idle", () => {
     precipitationEvaluated: diagnostics.precipitationEvaluated,
     precipitationLayerOpacity: diagnostics.precipitationLayerOpacity,
     precipitationAnalysisOnly: diagnostics.precipitationAnalysisOnly,
+    precipitationLoadState: diagnostics.precipitationLoadState,
+    precipitationPendingValidtime: diagnostics.precipitationPendingValidtime,
+    precipitationLastLoadReason: diagnostics.precipitationLastLoadReason,
+    precipitationLastLoadDurationMs: diagnostics.precipitationLastLoadDurationMs,
     solarTheme: diagnostics.solarTheme,
     solarAltitudeDegrees: diagnostics.solarAltitudeDegrees,
     solarAzimuthDegrees: diagnostics.solarAzimuthDegrees,

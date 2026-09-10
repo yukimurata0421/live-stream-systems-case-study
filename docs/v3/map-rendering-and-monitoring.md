@@ -64,6 +64,13 @@ poll interval is 300 seconds, the stale limit is 900 seconds, and retained
 generations are bounded. A weather failure degrades weather evidence; by
 itself it is not a delivery failure and does not authorize a stream restart.
 
+The renderer also separates source readiness from layer readiness during a
+generation handoff. It accepts the previous fresh source while the new source
+loads, switches only after the new layer is ready, and removes the old source
+after the handoff. This avoids presenting a valid generation as missing when
+browser work is delayed, without extending the stale limit or turning a failed
+load into last-known-good success.
+
 The JMA website tile route is an operational interface rather than a contracted
 API. Its metadata and data roots are configurable, and the attribution file
 records the replacement boundary for deployments that require an SLA.
@@ -176,7 +183,8 @@ outbox rather than discarding the incident.
 The public tests cover:
 
 - required renderer assets, attribution, lack of tracks/labels, solar-layer
-  isolation, precipitation ordering, stale behavior, and render heartbeat;
+  isolation, precipitation ordering, source handoff, stale behavior, and
+  render heartbeat;
 - precipitation metadata selection, recoloring, atomic publication, retries,
   and last-known-good state;
 - render warmup fail-open and fail-closed behavior;

@@ -85,6 +85,7 @@ class MapRenderContractTests(unittest.TestCase):
 
         verified = verify_asset_manifest(root)
 
+        self.assertIn("adsb-map/precipitation_source_ready.mjs", ASSET_FILES)
         self.assertEqual(len(verified["files"]), len(ASSET_FILES))
         self.assertEqual(verified, build_asset_manifest(root))
 

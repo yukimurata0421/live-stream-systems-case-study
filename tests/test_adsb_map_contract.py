@@ -29,6 +29,7 @@ class AdsbMapContractTests(unittest.TestCase):
             "map.css",
             "map.js",
             "precipitation_render.mjs",
+            "precipitation_source_ready.mjs",
             "solar_theme.mjs",
             "style.json",
             "airports.geojson",
@@ -300,6 +301,106 @@ document.getElementById("result").textContent = JSON.stringify(samples);
         self.assertIn("diagnostics.precipitationLayerLoaded = true", refresh_block)
         self.assertIn("diagnostics.precipitationLayerLoaded = false", refresh_block)
         self.assertIn("invalid local precipitation tile template", script)
+
+    def test_precipitation_source_wait_is_event_driven_and_load_tolerant(self) -> None:
+        script = (MAP_DIR / "map.js").read_text(encoding="utf-8")
+        helper = (MAP_DIR / "precipitation_source_ready.mjs").read_text(encoding="utf-8")
+
+        self.assertIn('import {waitForMapSourceReady} from "./precipitation_source_ready.mjs";', script)
+        self.assertIn("PRECIPITATION_SOURCE_READY_TIMEOUT_MS = 120_000", script)
+        self.assertIn("PRECIPITATION_SOURCE_READY_POLL_MS = 250", script)
+        self.assertIn('map.on("sourcedata", onSourceData)', helper)
+        self.assertIn('map.off("sourcedata", onSourceData)', helper)
+        self.assertNotIn("waitForPrecipitationSource", script)
+
+        chromium = next(
+            (
+                path
+                for name in ("chromium", "chromium-browser", "google-chrome")
+                if (path := shutil.which(name))
+            ),
+            None,
+        )
+        if chromium is None:
+            self.skipTest("Chromium is not installed")
+
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            shutil.copy2(MAP_DIR / "precipitation_source_ready.mjs", root / "precipitation_source_ready.mjs")
+            (root / "index.html").write_text(
+                """<!doctype html><html><body><pre id="result">pending</pre>
+<script type="module">
+import {waitForMapSourceReady} from "./precipitation_source_ready.mjs";
+
+class FakeMap {
+  constructor(present = true) {
+    this.present = present;
+    this.loaded = false;
+    this.listeners = new Set();
+  }
+  getSource() { return this.present ? {} : null; }
+  isSourceLoaded() { return this.loaded; }
+  on(name, listener) { if (name === "sourcedata") this.listeners.add(listener); }
+  off(name, listener) { if (name === "sourcedata") this.listeners.delete(listener); }
+  emit(sourceId) { for (const listener of [...this.listeners]) listener({sourceId}); }
+}
+
+const slowMap = new FakeMap();
+const slowPromise = waitForMapSourceReady(slowMap, "rain", {timeoutMs: 200, pollMs: 5});
+setTimeout(() => {
+  slowMap.loaded = true;
+  slowMap.emit("rain");
+}, 60);
+const slow = await slowPromise;
+const timedOut = await waitForMapSourceReady(new FakeMap(), "rain", {timeoutMs: 30, pollMs: 5});
+const removed = await waitForMapSourceReady(new FakeMap(false), "rain", {timeoutMs: 30, pollMs: 5});
+document.getElementById("result").textContent = JSON.stringify({
+  slow,
+  slowListenerCount: slowMap.listeners.size,
+  timedOut,
+  removed,
+});
+</script></body></html>""",
+                encoding="utf-8",
+            )
+            handler = partial(_QuietStaticHandler, directory=str(root))
+            server = ThreadingHTTPServer(("127.0.0.1", 0), handler)
+            thread = threading.Thread(target=server.serve_forever, daemon=True)
+            thread.start()
+            host, port = server.server_address
+            try:
+                completed = subprocess.run(
+                    [
+                        chromium,
+                        "--headless",
+                        "--no-sandbox",
+                        "--disable-gpu",
+                        "--disable-dev-shm-usage",
+                        "--virtual-time-budget=1000",
+                        "--dump-dom",
+                        f"http://{host}:{port}/",
+                    ],
+                    text=True,
+                    capture_output=True,
+                    timeout=20,
+                    check=False,
+                )
+            finally:
+                server.shutdown()
+                server.server_close()
+
+        self.assertEqual(completed.returncode, 0, completed.stderr[-1000:])
+        match = re.search(r'<pre id="result">(.*?)</pre>', completed.stdout, re.S)
+        self.assertIsNotNone(match, completed.stdout[-2000:])
+        assert match is not None
+        results = json.loads(html_lib.unescape(match.group(1)))
+        self.assertTrue(results["slow"]["ready"])
+        self.assertEqual(results["slow"]["reason"], "loaded")
+        self.assertEqual(results["slowListenerCount"], 0)
+        self.assertFalse(results["timedOut"]["ready"])
+        self.assertEqual(results["timedOut"]["reason"], "timeout")
+        self.assertFalse(results["removed"]["ready"])
+        self.assertEqual(results["removed"]["reason"], "source_removed")
 
     def test_map_reports_real_render_readiness_after_tiles_and_adsb_sample(self) -> None:
         script = (MAP_DIR / "map.js").read_text(encoding="utf-8")

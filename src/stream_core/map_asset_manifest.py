@@ -17,6 +17,7 @@ ASSET_FILES = (
     "adsb-map/map.css",
     "adsb-map/map.js",
     "adsb-map/precipitation_render.mjs",
+    "adsb-map/precipitation_source_ready.mjs",
     "adsb-map/solar_theme.mjs",
     "adsb-map/style.json",
     "adsb-map/airports.geojson",
