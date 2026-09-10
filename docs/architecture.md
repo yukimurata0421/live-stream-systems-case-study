@@ -5,6 +5,8 @@
 The control plane reduces recovery time without allowing one monitoring
 process, one stale cache, or one host to both decide and perform a restart.
 Host, Pod, container, and FFmpeg child are distinct failure domains.
+The observed duplicate-decision history behind this split is summarized in
+[`why-cra.md`](why-cra.md).
 
 ## Ownership
 

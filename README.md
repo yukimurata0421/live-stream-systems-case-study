@@ -37,6 +37,11 @@ The monitoring plane cannot authorize an action. The central authority cannot
 signal a process. The Dell Agent cannot redefine central policy. Only the
 Effect Executor owns the physical effect boundary.
 
+CRA was introduced after independent recovery decisions collided and later
+ledger review found seven duplicate restart scopes against the same managed
+FFmpeg generations. The design rationale and the limits of that evidence are
+recorded in [`docs/why-cra.md`](docs/why-cra.md).
+
 ## Current source posture
 
 The included policy declares:
@@ -108,7 +113,8 @@ under the ignored `.runtime/` directory. `tools/run_full_regression.sh` retains
 the private full-regression entrypoint, but running it does not restore excluded
 private evidence or cross-repository candidates.
 
-Start with [`docs/architecture.md`](docs/architecture.md), then read
+Start with [`docs/why-cra.md`](docs/why-cra.md), then read
+[`docs/architecture.md`](docs/architecture.md),
 [`docs/safety-model.md`](docs/safety-model.md) and
 [`docs/harness-trust.md`](docs/harness-trust.md). The current repository-only
 design record is split into [harness engineering](docs/harness-engineering-draft.md),
