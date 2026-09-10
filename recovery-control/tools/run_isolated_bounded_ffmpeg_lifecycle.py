@@ -18,7 +18,9 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
-STREAM_V3_SRC = ROOT.parent / "stream_v3" / "src"
+REPOSITORY_CONTAINER = ROOT.parent
+STREAM_V3_ROOT = REPOSITORY_CONTAINER if (REPOSITORY_CONTAINER / "src" / "stream_v3").is_dir() else REPOSITORY_CONTAINER / "stream_v3"
+STREAM_V3_SRC = STREAM_V3_ROOT / "src"
 for source_root in (ROOT / "src", STREAM_V3_SRC):
     if str(source_root) not in sys.path:
         sys.path.insert(0, str(source_root))

@@ -8,6 +8,7 @@ from urllib.parse import unquote
 
 ROOT = Path(__file__).resolve().parents[1]
 DOCS = ROOT / "docs"
+RECOVERY_CONTROL = ROOT / "recovery-control"
 README = ROOT / "README.md"
 MARKDOWN_LINK_RE = re.compile(r"!?\[[^\]]*\]\(([^)]+)\)")
 MERMAID_BLOCK_RE = re.compile(r"^```mermaid\s*$\n(.*?)^```\s*$", re.MULTILINE | re.DOTALL)
@@ -84,6 +85,11 @@ class PublicDocsStructureTests(unittest.TestCase):
             DOCS / "v3" / "three-host-source-consolidation.md",
             DOCS / "v3" / "scoped-recovery-authority.md",
             DOCS / "v3" / "failure-injection-and-chaos-draft.md",
+            RECOVERY_CONTROL / "README.md",
+            RECOVERY_CONTROL / "docs" / "why-cra.md",
+            RECOVERY_CONTROL / "docs" / "architecture.md",
+            RECOVERY_CONTROL / "docs" / "safety-model.md",
+            RECOVERY_CONTROL / "docs" / "harness-trust.md",
         )
 
         for path in required:

@@ -15,7 +15,10 @@ from unittest import mock
 
 import pytest
 
-STREAM_V3_SRC = Path(__file__).resolve().parents[3] / "stream_v3" / "src"
+RECOVERY_CONTROL_ROOT = Path(__file__).resolve().parents[2]
+REPOSITORY_CONTAINER = RECOVERY_CONTROL_ROOT.parent
+STREAM_V3_ROOT = REPOSITORY_CONTAINER if (REPOSITORY_CONTAINER / "src" / "stream_v3").is_dir() else REPOSITORY_CONTAINER / "stream_v3"
+STREAM_V3_SRC = STREAM_V3_ROOT / "src"
 if str(STREAM_V3_SRC) not in sys.path:
     sys.path.insert(0, str(STREAM_V3_SRC))
 

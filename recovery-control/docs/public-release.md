@@ -2,9 +2,9 @@
 
 Recorded: 2026-09-10 JST
 
-Status: local sanitized snapshot; no remote, push, tag, deployment, service
-restart, credential operation, or production action was created by this
-publication work.
+Status: sanitized snapshot integrated under `recovery-control/` in the public
+`live-stream-systems-case-study` repository. This publication does not create a
+tag, deployment, service restart, credential operation, or production action.
 
 ## Provenance
 

@@ -34,6 +34,9 @@ Start with the top-level `README.md`. Most reviewers should then read only:
 - `v3/tcp-stall-case-study.md`
 - `v3/tcp-stall-resolution-depth.md`
 - `v3/scoped-recovery-authority.md`
+- `../recovery-control/docs/why-cra.md`
+- `../recovery-control/docs/architecture.md`
+- `../recovery-control/docs/safety-model.md`
 - `v3/map-rendering-and-monitoring.md`
 - `v3/map-production-cutover-case-study.md`
 - `v3/map-mobile-legibility-review.md`

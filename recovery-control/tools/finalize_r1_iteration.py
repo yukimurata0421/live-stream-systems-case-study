@@ -42,6 +42,13 @@ def git_state(name: str, root: Path) -> dict[str, Any]:
     }
 
 
+def related_repository_root(project_root: Path, name: str) -> Path:
+    container = project_root.parent
+    if (container / "src" / "stream_v3").is_dir():
+        return container if name == "stream_v3" else container.parent / name
+    return container / name
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--artifact-root", type=Path, required=True)
@@ -57,8 +64,8 @@ def main() -> int:
     ledgers = {name: load(root / f"end/{name}_change_ledger.json") for name in ("stream_recovery_control", "stream_v3", "stream_v4")}
     git_states = {
         "stream_recovery_control": git_state("stream_recovery_control", project_root),
-        "stream_v3": git_state("stream_v3", project_root.parent / "stream_v3"),
-        "stream_v4": git_state("stream_v4", project_root.parent / "stream_v4"),
+        "stream_v3": git_state("stream_v3", related_repository_root(project_root, "stream_v3")),
+        "stream_v4": git_state("stream_v4", related_repository_root(project_root, "stream_v4")),
     }
     now = datetime.now(UTC)
     now_utc = now.isoformat(timespec="seconds").replace("+00:00", "Z")

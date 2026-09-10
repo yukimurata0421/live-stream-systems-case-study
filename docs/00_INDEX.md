@@ -63,6 +63,13 @@ Use the rest of this page as a reference catalog.
 
 - `v3/connectivity-aware-delivery-recovery.md`
 - `v3/scoped-recovery-authority.md`
+- `../recovery-control/docs/why-cra.md`
+- `../recovery-control/docs/architecture.md`
+- `../recovery-control/docs/safety-model.md`
+- `../recovery-control/docs/harness-trust.md`
+- `../recovery-control/docs/harness-engineering-draft.md`
+- `../recovery-control/docs/failure-injection-draft.md`
+- `../recovery-control/docs/chaos-testing-draft.md`
 - `v3/youtube-lifecycle-safety.md`
 - `v3/migration-cutover-case-study.md`
 - `v3/failure-taxonomy.md`

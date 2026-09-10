@@ -19,11 +19,14 @@ automatic retry signal.
 
 ## Published integration status
 
-The sibling public `stream_recovery_control` repository contains the CRA,
-facts-only arena projection, Dell Agent, protocol schemas, durable fences, and
-repository-only tests. Its published policy keeps production behavior disabled.
+The integrated [`recovery-control/`](../../recovery-control/README.md)
+subproject contains the CRA, facts-only arena projection, Dell Agent, protocol
+schemas, durable fences, and isolated public tests. Its published policy keeps
+production behavior disabled. The reason for applying local transaction
+boundaries, effect fencing, and cross-host reconciliation is documented in
+[`why-cra.md`](../../recovery-control/docs/why-cra.md).
 
-This V3 repository contains the delivery runtime and legacy recovery surfaces,
+The stream delivery tree contains the runtime and legacy recovery surfaces,
 but it does not yet publish a self-contained runtime-boundary entrypoint that
 can be enabled against that CRA package. The private integration candidate also
 depends on uncommitted V3 lifecycle/evidence changes. Copying only the adapter
@@ -48,9 +51,9 @@ Their committed defaults remain fail closed and public CI does not install or
 run them against a cluster. Production retirement or replacement of these
 surfaces requires a separate host-verified deployment and rollback task.
 
-## What the public repositories prove
+## What the public repository proves
 
-The repositories support code review and local tests of message integrity,
+The repository supports code review and local tests of message integrity,
 freshness, exact-target fencing, idempotency, reconciliation, and bounded
-test-owned child effects. They do not prove a live CRA deployment, a completed
+test-owned child effects. It does not prove a live CRA deployment, a completed
 soak, production mutation authorization, or an external recovery outcome.

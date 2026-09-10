@@ -16,7 +16,9 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
-STREAM_V3_SRC = ROOT.parent / "stream_v3" / "src"
+REPOSITORY_CONTAINER = ROOT.parent
+STREAM_V3_ROOT = REPOSITORY_CONTAINER if (REPOSITORY_CONTAINER / "src" / "stream_v3").is_dir() else REPOSITORY_CONTAINER / "stream_v3"
+STREAM_V3_SRC = STREAM_V3_ROOT / "src"
 RELEASE_ROOT = ROOT / "artifacts/runtime-fence-bounded-ffmpeg-lifecycle-20260903-v21"
 RELEASE_MANIFEST = RELEASE_ROOT / "release_manifest.json"
 for source_root in (ROOT / "src", STREAM_V3_SRC):

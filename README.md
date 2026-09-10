@@ -39,10 +39,12 @@ The public data path historically spans three home hosts:
 - a Raspberry Pi pulls allowlisted evidence through its local Grafana proxy and
   publishes a static snapshot to GCS, which Cloudflare serves publicly.
 
-The current recovery-control contract adds two named logical roles:
-`arena-server` owns Monitoring facts and `cra-01` owns recovery policy,
-authorization, command lifecycle, and final verification. Dell owns only the
-exact fenced FFmpeg-child effect. These repositories do not claim that the CRA
+The integrated [recovery-control subproject](recovery-control/README.md) adds
+two named logical roles: `arena-server` owns Monitoring facts and `cra-01` owns
+recovery policy, authorization, command lifecycle, and final verification.
+Dell owns only the exact fenced FFmpeg-child effect. Its
+[design rationale](recovery-control/docs/why-cra.md) traces that split to
+observed duplicate restart scopes. This repository does not claim that the CRA
 path is deployed or production-enabled.
 
 This is a single-operator system with a small blast radius. Its value is the

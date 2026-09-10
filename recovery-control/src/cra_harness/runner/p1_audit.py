@@ -41,6 +41,13 @@ TARGET = {
 }
 
 
+def _related_repository_root(project_root: Path, name: str) -> Path:
+    container = project_root.parent
+    if (container / "src" / "stream_v3").is_dir():
+        return container if name == "stream_v3" else container.parent / name
+    return container / name
+
+
 def _json(path: Path, value: Any) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("x", encoding="utf-8") as handle:
@@ -608,7 +615,10 @@ def _audit_calls_are_standalone(path: Path) -> tuple[int, list[int]]:
 
 
 def source_mapping_and_static_gates(project_root: Path, inventory: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
-    roots = {"stream_recovery_control": project_root, "stream_v3": project_root.parent / "stream_v3"}
+    roots = {
+        "stream_recovery_control": project_root,
+        "stream_v3": _related_repository_root(project_root, "stream_v3"),
+    }
     mapping: list[dict[str, Any]] = []
     missing_markers: list[str] = []
     all_source_files: set[Path] = set()
@@ -709,7 +719,7 @@ def _run_command(command: list[str], cwd: Path) -> dict[str, Any]:
 
 
 def verification(project_root: Path) -> dict[str, Any]:
-    stream_v3 = project_root.parent / "stream_v3"
+    stream_v3 = _related_repository_root(project_root, "stream_v3")
     commands = {
         "pytest_recovery_control": ([sys.executable, "-m", "pytest", "-q"], project_root),
         "ruff_format_recovery_control": ([sys.executable, "-m", "ruff", "format", "--check", "."], project_root),
@@ -858,14 +868,14 @@ def run_p1_audit_suite(project_root: Path, artifact_root: Path, run_id: str) -> 
         "run_id": run_id,
         "created_at": datetime.now(UTC).isoformat(timespec="seconds").replace("+00:00", "Z"),
         "project_root": str(project_root),
-        "stream_v3_root": str(project_root.parent / "stream_v3"),
+        "stream_v3_root": str(_related_repository_root(project_root, "stream_v3")),
         "harness_revision": "p1_audit_only_production_integration.v1",
         "production_deploy_performed": False,
         "physical_effect_count": 0,
         "git_state_at_artifact": [
             _git_state(project_root),
-            _git_state(project_root.parent / "stream_v3"),
-            _git_state(project_root.parent / "stream_v4"),
+            _git_state(_related_repository_root(project_root, "stream_v3")),
+            _git_state(_related_repository_root(project_root, "stream_v4")),
         ],
     }
     oracle_result = {

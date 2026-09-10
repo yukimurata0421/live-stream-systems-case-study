@@ -1,7 +1,7 @@
 # Central Restart Authority
 
-This repository is a sanitized, repository-only snapshot of the recovery
-control plane behind a self-built 24/7 YouTube Live system. It separates
+This subproject is a sanitized snapshot of the recovery control plane behind a
+self-built 24/7 YouTube Live system. It separates
 monitoring facts, central authorization, and the physical FFmpeg effect across
 three failure domains.
 
@@ -89,6 +89,8 @@ reconciliation.
 | `tests/` | Unit, integration, chaos, release-boundary, and negative-control tests. |
 
 ## Local validation
+
+Run these commands from `recovery-control/`:
 
 ```bash
 python3 -m venv .venv

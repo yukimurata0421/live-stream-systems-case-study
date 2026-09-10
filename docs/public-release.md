@@ -16,6 +16,9 @@ contracts, and operational decisions without publishing runtime data or secrets.
 - k3s manifests for shadow, streaming, observer, reports, and cutover gates.
 - Tests for config contracts, recovery policy, watchdog behavior, and k3s
   manifest validation.
+- The integrated `recovery-control/` subproject: CRA intent handling,
+  arena-server facts projection, Dell admission, exact-target effect fencing,
+  schemas, migrations, isolated tests, and public design records.
 - Read-only map-runtime and public-viewer synthetic probes, Prometheus mappings
   and rules, and Discord/Slack routing policy.
 - Durable operational reliability rollups, external public-video evidence,
@@ -35,8 +38,9 @@ contracts, and operational decisions without publishing runtime data or secrets.
   cache reuse, plus an inert arena-server schedule example.
 - Public review docs for executive summary, operational scorecard, test safety
   boundary, incident review, and migration cutover reasoning.
-- A repository-only failure-injection and chaos-testing draft that keeps
-  component tests, proposed campaigns, and production authorization separate.
+- Repository-level and recovery-control failure-injection and chaos-testing
+  drafts that keep component tests, proposed campaigns, and production
+  authorization separate.
 - A sanitized renderer-cutover case study with failure, rollback, repair, and
   accepted-window aggregates while raw operational artifacts remain excluded.
 - A mobile-legibility source proposal and measured aggregate luma values; raw

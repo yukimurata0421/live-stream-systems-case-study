@@ -10,7 +10,10 @@ from unittest.mock import MagicMock
 
 import pytest
 
-SCRIPT = Path(__file__).resolve().parents[3] / "stream_v3/ops/public-publisher/site/scripts/push_to_gcs.py"
+RECOVERY_CONTROL_ROOT = Path(__file__).resolve().parents[2]
+REPOSITORY_CONTAINER = RECOVERY_CONTROL_ROOT.parent
+STREAM_V3_ROOT = REPOSITORY_CONTAINER if (REPOSITORY_CONTAINER / "src" / "stream_v3").is_dir() else REPOSITORY_CONTAINER / "stream_v3"
+SCRIPT = STREAM_V3_ROOT / "ops/public-publisher/site/scripts/push_to_gcs.py"
 
 
 @pytest.fixture
