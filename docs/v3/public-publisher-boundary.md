@@ -55,6 +55,19 @@ last-good data. Only a first-run failure with no prior snapshot emits an empty
 `measurement unavailable` payload. Publisher success and each collected
 section's success therefore remain separate claims.
 
+The upload step now freezes only the fixed public allowlist into a private
+temporary directory. It rejects links, non-regular or oversized files,
+duplicate JSON keys, non-finite timestamps, stale/future JSON, wildcard or
+root-only GCS destinations, and public-tree status paths. A bounded deadline
+kills only the invocation-owned process group. Upload completion is recorded
+durably but does not claim that an external reader has verified the mirror.
+
+This hardening was ported from an uncommitted private worktree candidate whose
+`push_to_gcs.py` SHA-256 was
+`5378112b4043be6f281279db02402b1274006d86cfc333800807423b9160c5d6`.
+The source hash identifies the candidate; it is not deployment or external
+visibility evidence.
+
 ## Freshness And Cache Boundaries
 
 The reference timer starts 90 seconds after boot and then runs approximately

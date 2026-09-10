@@ -52,10 +52,14 @@ class PublicPublisherBuildTests(unittest.TestCase):
     def test_push_requires_explicit_gcs_destination(self) -> None:
         push = load_script("push_to_gcs.py")
         push.DEST = ""
-        with self.assertRaisesRegex(RuntimeError, "explicit gs:// destination"):
+        with self.assertRaisesRegex(RuntimeError, "explicit bucket and prefix"):
             push.ensure_destination()
 
         push.DEST = "gs://public-status-test"
+        with self.assertRaisesRegex(RuntimeError, "explicit bucket and prefix"):
+            push.ensure_destination()
+
+        push.DEST = "gs://public-status-test/site"
         push.ensure_destination()
 
     def test_build_runs_both_collectors_and_copies_required_snapshots(self) -> None:
@@ -87,19 +91,36 @@ class PublicPublisherBuildTests(unittest.TestCase):
 
     def test_push_builds_then_syncs_and_sets_cache_control(self) -> None:
         push = load_script("push_to_gcs.py")
-        push.DEST = "gs://public-status-test"
-        with (
-            mock.patch.object(push, "ensure_gcloud") as ensure_gcloud,
-            mock.patch.object(push, "run") as run,
-        ):
-            self.assertEqual(push.main(), 0)
+        push.DEST = "gs://public-status-test/site"
+        with tempfile.TemporaryDirectory() as temporary_dir:
+            status_file = Path(temporary_dir) / "publication-status.json"
+            with (
+                mock.patch.dict(
+                    push.os.environ,
+                    {"YUKIMURATA_PUBLISH_STATUS_FILE": str(status_file)},
+                ),
+                mock.patch.object(push, "ensure_gcloud") as ensure_gcloud,
+                mock.patch.object(push, "run") as run,
+                mock.patch.object(
+                    push,
+                    "stage_public_tree",
+                    return_value={"index.html": "0" * 64},
+                ) as stage_public_tree,
+            ):
+                self.assertEqual(push.main(), 0)
+
+            status = push.read_status(status_file)
 
         ensure_gcloud.assert_called_once_with()
+        stage_public_tree.assert_called_once()
         commands = [call.args[0] for call in run.call_args_list]
         self.assertEqual(commands[0][0], push.sys.executable)
         self.assertEqual(commands[1][:3], ["gcloud", "storage", "rsync"])
-        self.assertTrue(any("**.json" in argument for argument in commands[2]))
-        self.assertTrue(any("assets/**" in argument for argument in commands[3]))
+        self.assertEqual(commands[2][:3], ["gcloud", "storage", "rsync"])
+        self.assertTrue(any("json" in argument for argument in commands[1]))
+        self.assertTrue(any("json" in argument for argument in commands[2]))
+        self.assertEqual(status["status"], "SUCCEEDED")
+        self.assertFalse(status["public_mirror_verified"])
 
     def test_systemd_source_keeps_host_values_in_external_environment_file(self) -> None:
         unit = (
