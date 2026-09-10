@@ -81,6 +81,14 @@ class Config:
     monitor_loopback_latency_msec: int
     font_file: str
     restart_delay_sec: int
+    connectivity_gate_enabled: bool
+    connectivity_poll_sec: float
+    connectivity_dns_timeout_sec: float
+    connectivity_tcp_timeout_sec: float
+    render_self_recovery_enabled: bool
+    render_self_recovery_confirmations: int
+    render_self_recovery_grace_sec: float
+    render_self_recovery_cooldown_sec: float
     stream_lock_dir: Path
     require_systemd_launch: bool
     allow_direct_stream_sh: bool
@@ -208,6 +216,14 @@ def load_config() -> Config:
         monitor_loopback_latency_msec=max(10, to_int(e("MONITOR_LOOPBACK_LATENCY_MSEC", "60"), 60)),
         font_file=e("FONT_FILE", "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"),
         restart_delay_sec=max(1, to_int(e("RESTART_DELAY_SEC", "5"), 5)),
+        connectivity_gate_enabled=to_bool(e("CONNECTIVITY_GATE_ENABLED", "1"), True),
+        connectivity_poll_sec=max(0.5, to_float(e("CONNECTIVITY_POLL_SEC", "2"), 2.0)),
+        connectivity_dns_timeout_sec=max(0.2, to_float(e("CONNECTIVITY_DNS_TIMEOUT_SEC", "2"), 2.0)),
+        connectivity_tcp_timeout_sec=max(0.1, to_float(e("CONNECTIVITY_TCP_TIMEOUT_SEC", "1"), 1.0)),
+        render_self_recovery_enabled=to_bool(e("RENDER_SELF_RECOVERY_ENABLED", "1"), True),
+        render_self_recovery_confirmations=max(1, to_int(e("RENDER_SELF_RECOVERY_CONFIRMATIONS", "3"), 3)),
+        render_self_recovery_grace_sec=max(0.0, to_float(e("RENDER_SELF_RECOVERY_GRACE_SEC", "30"), 30.0)),
+        render_self_recovery_cooldown_sec=max(1.0, to_float(e("RENDER_SELF_RECOVERY_COOLDOWN_SEC", "60"), 60.0)),
         stream_lock_dir=Path(e("STREAM_LOCK_DIR", "/var/tmp")),
         require_systemd_launch=to_bool(e("REQUIRE_SYSTEMD_LAUNCH", "1"), True),
         allow_direct_stream_sh=to_bool(e("ALLOW_DIRECT_STREAM_SH", "0"), False),

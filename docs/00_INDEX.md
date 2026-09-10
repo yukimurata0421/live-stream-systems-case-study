@@ -61,6 +61,7 @@ Use the rest of this page as a reference catalog.
 
 ## Recovery And Safety
 
+- `v3/connectivity-aware-delivery-recovery.md`
 - `v3/scoped-recovery-authority.md`
 - `v3/youtube-lifecycle-safety.md`
 - `v3/migration-cutover-case-study.md`

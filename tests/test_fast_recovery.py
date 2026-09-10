@@ -1024,7 +1024,7 @@ class FastRecoveryMainBehaviorTests(unittest.TestCase):
         self.assertEqual(state.get("net_fail_streak"), 0)
         self.assertEqual(state.get("last_reason"), "healthy")
 
-    def test_main_dns_and_rtmp_fail_triggers_network_down(self) -> None:
+    def test_main_dns_and_rtmp_fail_holds_runtime_restart_until_connectivity_recovers(self) -> None:
         self._write_state()
 
         rc, restart_mock = self._invoke_main(
@@ -1037,23 +1037,19 @@ class FastRecoveryMainBehaviorTests(unittest.TestCase):
         )
 
         self.assertEqual(rc, 0)
-        restart_mock.assert_called_once()
-        self.assertIn("network down", restart_mock.call_args.args[0])
-        self.assertIn("dns_ok=False", restart_mock.call_args.args[0])
-        self.assertIn("tcp_probe_ok=False", restart_mock.call_args.args[0])
+        restart_mock.assert_not_called()
 
         events = self._read_events()
         self.assertEqual(len(events), 1)
-        self.assertEqual(events[0].get("kind"), "restart")
+        self.assertEqual(events[0].get("kind"), "connectivity_wait")
         self.assertEqual(events[0].get("trigger"), "network_down")
-        restart_reason = self._read_restart_reason()
-        self.assertEqual(restart_reason.get("source"), "fast_recovery")
-        self.assertEqual(restart_reason.get("trigger"), "network_down")
-        profile = restart_reason.get("emergency_low_upload_profile")
-        self.assertIsInstance(profile, dict)
-        self.assertEqual(profile.get("video_bitrate"), "2500k")
-        self.assertEqual(profile.get("video_maxrate"), "2500k")
-        self.assertEqual(profile.get("video_bufsize"), "5000k")
+        self.assertEqual(events[0].get("recovery_scope"), "connectivity_restore")
+        self.assertFalse(events[0].get("dns_ok"))
+        self.assertFalse(events[0].get("tcp_probe_ok"))
+        state = self._read_state()
+        self.assertTrue(state.get("connectivity_wait_active"))
+        self.assertEqual(state.get("connectivity_wait_since_ts"), 3_000)
+        self.assertEqual(self._read_restart_reason(), {})
 
     def test_main_restart_failed_enters_30s_backoff(self) -> None:
         self._write_state()

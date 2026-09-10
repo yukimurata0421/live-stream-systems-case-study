@@ -13,6 +13,7 @@ from typing import Any
 try:
     from .systemctl_control import run_systemctl
     from .fast_recovery_core import budget as budget_policy
+    from .fast_recovery_core import connectivity_policy
     from .fast_recovery_core import decision as recovery_decision
     from .fast_recovery_core import executor as recovery_executor
     from .fast_recovery_core import probes, state as recovery_state
@@ -25,6 +26,7 @@ try:
 except ImportError:
     from systemctl_control import run_systemctl
     from fast_recovery_core import budget as budget_policy
+    from fast_recovery_core import connectivity_policy
     from fast_recovery_core import decision as recovery_decision
     from fast_recovery_core import executor as recovery_executor
     from fast_recovery_core import probes, state as recovery_state
@@ -291,6 +293,16 @@ def load_state(now_ts: int) -> dict[str, Any]:
         "last_tcp_send_sample_ts": 0,
         "last_tcp_send_sample_pid": 0,
         "last_tcp_send_sample_bytes_sent": 0,
+        "observed_ts": 0,
+        "connectivity_wait_active": False,
+        "connectivity_wait_since_ts": 0,
+        "connectivity_last_observed_ts": 0,
+        "connectivity_recovered_ts": 0,
+        "connectivity_gateway_present": False,
+        "connectivity_gateway_ok": False,
+        "connectivity_public_ok_count": 0,
+        "connectivity_dns_ok": False,
+        "connectivity_tcp_probe_ok": False,
         "restart_events": [],
         "samples": [],
     }
@@ -304,6 +316,7 @@ def load_state(now_ts: int) -> dict[str, Any]:
 
 
 def save_state(state: dict[str, Any]) -> None:
+    state["observed_ts"] = int(time.time())
     recovery_state.save_state_file(STATE_FILE, state)
 
 
@@ -442,8 +455,74 @@ def restart_stream(reason: str) -> tuple[bool, str]:
     )
 
 
+def restart_ffmpeg_child(ffmpeg_pid: int, reason: str) -> tuple[bool, str]:
+    return recovery_executor.restart_ffmpeg_child(
+        ffmpeg_pid=ffmpeg_pid,
+        reason=reason,
+        log=log,
+    )
+
+
 def k8s_supervisor_active() -> bool:
     return env("STREAM_RUNTIME_SUPERVISOR", "systemd").strip().lower() in {"k8s", "k3s", "kubernetes"}
+
+
+def current_network_observation() -> recovery_decision.NetworkObservation:
+    gateway = get_default_gateway()
+    gateway_ok = ping_ok(gateway) if gateway else False
+    public_ok_count = sum(1 for target in PUBLIC_PING_TARGETS if ping_ok(target))
+    dns_probe_ok = dns_ok(DNS_HOST)
+    tcp_probe = tcp_probe_ok(RTMP_HOST, RTMP_PORTS)
+    return recovery_decision.network_observation(
+        gateway=gateway,
+        gateway_ok=gateway_ok,
+        public_ok_count=public_ok_count,
+        dns_ok=dns_probe_ok,
+        tcp_probe_ok=tcp_probe,
+    )
+
+
+def mark_connectivity_wait(
+    state: dict[str, Any],
+    *,
+    now_ts: int,
+    network: recovery_decision.NetworkObservation,
+    ffmpeg_pid: int,
+) -> None:
+    connectivity_policy.mark_wait(
+        state,
+        now_ts=now_ts,
+        network=network,
+        ffmpeg_pid=ffmpeg_pid,
+        append_event=append_event,
+    )
+
+
+def clear_connectivity_wait(
+    state: dict[str, Any],
+    *,
+    now_ts: int,
+    network: recovery_decision.NetworkObservation | None = None,
+) -> None:
+    connectivity_policy.clear_wait(
+        state,
+        now_ts=now_ts,
+        append_event=append_event,
+        network=network,
+    )
+
+
+def execute_recovery_action(
+    *,
+    reason_kind: str,
+    reason: str,
+    ffmpeg_pid: int,
+) -> tuple[bool, str, str]:
+    if k8s_supervisor_active() and reason_kind in {"tcp_stall", "remote_warning"}:
+        ok, detail = restart_ffmpeg_child(ffmpeg_pid, reason)
+        return ok, detail, "ffmpeg_child"
+    ok, detail = restart_stream(reason)
+    return ok, detail, "runtime"
 
 
 def kubectl_json(args: list[str], *, timeout_sec: float) -> dict[str, Any]:
@@ -677,6 +756,27 @@ def main() -> int:
         )
         success_backoff_until = int(state.get("ffmpeg_missing_success_backoff_until", 0) or 0)
         success_backoff_left = max(0, success_backoff_until - now_ts)
+        if state.get("connectivity_wait_active") is True or should_restart_missing:
+            missing_network = current_network_observation()
+            if missing_network.network_down:
+                mark_connectivity_wait(
+                    state,
+                    now_ts=now_ts,
+                    network=missing_network,
+                    ffmpeg_pid=0,
+                )
+                state.update(
+                    {
+                        "last_pid": 0,
+                        "last_bytes_sent": 0,
+                        "last_bytes_sent_ts": 0,
+                        "last_tcp_send_sample_pid": 0,
+                        "last_tcp_send_sample_bytes_sent": 0,
+                    }
+                )
+                save_state(state)
+                return 0
+            clear_connectivity_wait(state, now_ts=now_ts, network=missing_network)
         if should_restart_missing and not guard_active and backoff_left <= 0 and success_backoff_left <= 0:
             restart_events = trim_restart_events(state.get("restart_events", []), now_ts)
             state["restart_events"] = restart_events
@@ -804,6 +904,17 @@ def main() -> int:
     state["ffmpeg_missing_first_ts"] = 0
 
     if ffmpeg_uptime_sec < MIN_FFMPEG_UPTIME_SEC:
+        if state.get("connectivity_wait_active") is True:
+            warmup_network = current_network_observation()
+            if warmup_network.network_down:
+                mark_connectivity_wait(
+                    state,
+                    now_ts=now_ts,
+                    network=warmup_network,
+                    ffmpeg_pid=ffmpeg_pid,
+                )
+            else:
+                clear_connectivity_wait(state, now_ts=now_ts, network=warmup_network)
         state.update(
             {
                 "last_pid": ffmpeg_pid,
@@ -827,18 +938,7 @@ def main() -> int:
     metrics = parse_ffmpeg_tcp_metrics(ffmpeg_pid, RTMP_PORTS)
     recovery_decision.reset_pid_dependent_state(state, ffmpeg_pid)
 
-    gw = get_default_gateway()
-    gw_ok = ping_ok(gw) if gw else False
-    public_ok_count = sum(1 for target in PUBLIC_PING_TARGETS if ping_ok(target))
-    dns_probe_ok = dns_ok(DNS_HOST)
-    tcp_probe = tcp_probe_ok(RTMP_HOST, RTMP_PORTS)
-    network = recovery_decision.network_observation(
-        gateway=gw,
-        gateway_ok=gw_ok,
-        public_ok_count=public_ok_count,
-        dns_ok=dns_probe_ok,
-        tcp_probe_ok=tcp_probe,
-    )
+    network = current_network_observation()
     state["net_fail_streak"] = recovery_decision.update_streak(
         state,
         "net_fail_streak",
@@ -893,6 +993,24 @@ def main() -> int:
         )
     )
     state["samples"] = list(samples)
+
+    if network.network_down:
+        mark_connectivity_wait(
+            state,
+            now_ts=now_ts,
+            network=network,
+            ffmpeg_pid=ffmpeg_pid,
+        )
+        state["remote_warning_streak"] = 0
+        recovery_decision.mark_latest_transport_sample(
+            state,
+            ffmpeg_pid=ffmpeg_pid,
+            bytes_sent=tcp.bytes_sent,
+            now_ts=now_ts,
+        )
+        save_state(state)
+        return 0
+    clear_connectivity_wait(state, now_ts=now_ts, network=network)
 
     reason_kind, reason = recovery_decision.select_restart_reason(
         state,
@@ -1042,7 +1160,11 @@ def main() -> int:
             ffmpeg_uptime_sec=ffmpeg_uptime_sec,
             metrics=restart_metrics,
         )
-        restart_ok, restart_detail = restart_stream(reason)
+        restart_ok, restart_detail, recovery_scope = execute_recovery_action(
+            reason_kind=reason_kind,
+            reason=reason,
+            ffmpeg_pid=ffmpeg_pid,
+        )
         if restart_ok:
             restart_events = trim_restart_events(
                 [
@@ -1076,6 +1198,7 @@ def main() -> int:
                     "ffmpeg_uptime_sec": ffmpeg_uptime_sec,
                     "metrics": restart_metrics,
                     "restart_context": restart_context,
+                    "recovery_scope": recovery_scope,
                     "youtube_hint": recovery_decision.youtube_hint(ytw_payload),
                 },
             )
@@ -1101,6 +1224,7 @@ def main() -> int:
                 "restart_failure_count": restart_failure_count,
                 "backoff_sec": RESTART_FAILURE_BACKOFF_SEC,
                 "detail": restart_detail,
+                "recovery_scope": recovery_scope,
             },
         )
         save_state(state)

@@ -24,6 +24,8 @@ contracts, and operational decisions without publishing runtime data or secrets.
   construction, and Cloudflare Worker source under `ops/public-publisher/`.
 - Host-maintenance decision logic and inert unit examples for GPU startup,
   postboot readiness, and read-only NVIDIA package observation.
+- Connectivity-aware FFmpeg launch suppression, browser-only recovery, and
+  arena-side incident correlation without live host configuration or state.
 - Public review docs for executive summary, operational scorecard, test safety
   boundary, incident review, and migration cutover reasoning.
 - A sanitized renderer-cutover case study with failure, rollback, repair, and

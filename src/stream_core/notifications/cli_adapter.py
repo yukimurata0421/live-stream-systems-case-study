@@ -161,6 +161,7 @@ def collect_notification_incidents(
         operational_reliability_status_file=ctx.state_base_dir / "operational_reliability_status.json",
         operational_reliability_burn_status_file=ctx.state_base_dir / "operational_reliability_burn_status.json",
         external_blackbox_status_file=ctx.state_base_dir / "external_blackbox_status.json",
+        fast_recovery_state_file=ctx.state_base_dir / "fast_recovery_state.json",
         runtime_state_base_dir=ctx.state_base_dir,
         now_ts=now,
         report_stale_sec=report_stale_sec,
@@ -169,6 +170,22 @@ def collect_notification_incidents(
 
 
 def recovery_observation_for_incident(ctx: NotifyCliContext, ident: str, now_ts: int) -> tuple[int, str]:
+    if ident == "network:delivery_connectivity_unavailable":
+        payload = ctx.read_json_file(ctx.state_base_dir / "fast_recovery_state.json")
+        try:
+            observed_ts = int(
+                payload.get("connectivity_recovered_ts")
+                or payload.get("observed_ts")
+                or now_ts
+            )
+        except (TypeError, ValueError):
+            observed_ts = now_ts
+        return observed_ts, (
+            f"connectivity_wait_active={payload.get('connectivity_wait_active', '')} "
+            f"gateway_ok={payload.get('connectivity_gateway_ok', '')} "
+            f"dns_ok={payload.get('connectivity_dns_ok', '')} "
+            f"rtmps_tcp_ok={payload.get('connectivity_tcp_probe_ok', '')}"
+        )[:320]
     if ident == "reliability:youtube_input_quality_fast_feedback":
         payload = ctx.read_json_file(ctx.youtube_watchdog_stats_file)
         observed_ts = ctx.parse_utc_ts(str(payload.get("ts_utc", ""))) or now_ts

@@ -24,6 +24,7 @@
   - `encoder-fps-tuning-2026-05-31.md`
   - `tcp-stall-case-study.md`
   - `tcp-stall-resolution-depth.md`
+  - `connectivity-aware-delivery-recovery.md`
   - `memory-guard-case-study.md`
   - `scoped-recovery-authority.md`
 - Safety and operation:
@@ -63,6 +64,9 @@ For a focused reliability review:
 - `tcp-stall-resolution-depth.md` records the later evidence ladder for RTMPS
   socket bursts, netlink route events, CPE evidence, and bounded packet
   metadata. The observer code is public; generated evidence artifacts are not.
+- `connectivity-aware-delivery-recovery.md` explains why a physical outage
+  suppresses repeated FFmpeg launches and Pod recreation while preserving the
+  short retry path for an ordinary child-only exit.
 - `rolling-sli-error-budget-feedback.md` shows how the current dashboard
   feedback windows are read without replacing the historical 14-day and 28-day
   SLI reviews.

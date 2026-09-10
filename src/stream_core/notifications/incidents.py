@@ -7,10 +7,12 @@ from typing import Callable
 try:
     from stream_core.common.json_io import iter_jsonl, read_json_file
     from stream_core.common.timeutil import parse_utc_ts
+    from stream_core.notifications import connectivity_correlation
     from stream_core.notifications.planned_rollout import planned_rollout_context
 except ModuleNotFoundError:
     from common.json_io import iter_jsonl, read_json_file
     from common.timeutil import parse_utc_ts
+    from notifications import connectivity_correlation
     from notifications.planned_rollout import planned_rollout_context
 
 ObservePayload = Callable[[int], tuple[int, dict, str]]
@@ -537,6 +539,29 @@ def incident(
     return payload
 
 
+def active_connectivity_wait(*, state_file: Path | None, now_ts: int) -> dict:
+    return connectivity_correlation.active_wait(
+        state_file=state_file,
+        now_ts=now_ts,
+        read_json=read_json_file,
+    )
+
+
+def correlate_connectivity_incidents(
+    incidents: list[dict],
+    *,
+    state_file: Path | None,
+    now_ts: int,
+) -> list[dict]:
+    return connectivity_correlation.correlate(
+        incidents,
+        state_file=state_file,
+        now_ts=now_ts,
+        read_json=read_json_file,
+        incident_factory=incident,
+    )
+
+
 def _current_input_quality_observation(input_feedback: dict) -> tuple[str, dict]:
     for source, key in (
         ("raw_oauth", "raw_current"),
@@ -795,6 +820,7 @@ def collect_notification_incidents(
     operational_reliability_status_file: Path | None = None,
     operational_reliability_burn_status_file: Path | None = None,
     external_blackbox_status_file: Path | None = None,
+    fast_recovery_state_file: Path | None = None,
     runtime_state_base_dir: Path | None = None,
     now_ts: int | None = None,
     report_stale_sec: int = 1800,
@@ -1094,7 +1120,11 @@ def collect_notification_incidents(
                 )
             )
 
-    return incidents
+    return correlate_connectivity_incidents(
+        incidents,
+        state_file=fast_recovery_state_file,
+        now_ts=now,
+    )
 
 
 def recovery_observation_for_incident(

@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Optional
 
 try:
-    from stream_core.engine import audio_boot, browser_diagnostics, ffmpeg_lifecycle, ingest, locks as engine_locks, preflight, process_discovery, rendering_boot, restart_context, runtime_state, target_runtime
+    from stream_core.engine import audio_boot, browser_diagnostics, connectivity, ffmpeg_lifecycle, ingest, locks as engine_locks, preflight, process_discovery, rendering_boot, restart_context, runtime_recovery, runtime_state, target_runtime
     from stream_core.engine.config import Config, load_config, to_bool, to_float, to_int
     from stream_core.engine.encoder_profile import (
         effective_encoder_profile as choose_effective_encoder_profile,
@@ -22,7 +22,7 @@ try:
     from stream_core.engine.events import StreamEventWriter
     from stream_core.engine.ffmpeg_args import build_ffmpeg_args, build_filter as build_video_filter, build_output_args as build_ffmpeg_output_args
 except ModuleNotFoundError:
-    from engine import audio_boot, browser_diagnostics, ffmpeg_lifecycle, ingest, locks as engine_locks, preflight, process_discovery, rendering_boot, restart_context, runtime_state, target_runtime
+    from engine import audio_boot, browser_diagnostics, connectivity, ffmpeg_lifecycle, ingest, locks as engine_locks, preflight, process_discovery, rendering_boot, restart_context, runtime_recovery, runtime_state, target_runtime
     from engine.config import Config, load_config, to_bool, to_float, to_int
     from engine.encoder_profile import (
         effective_encoder_profile as choose_effective_encoder_profile,
@@ -62,6 +62,7 @@ class StreamEngine:
         self.capture_helpers_force_restart_reason = ""
         self.render_ready_not_before_ms = 0
         self.browser_log_offset = 0
+        self.render_recovery_state = runtime_recovery.RenderRecoveryState()
 
     def log(self, msg: str) -> None:
         print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] {msg}", flush=True)
@@ -334,6 +335,34 @@ class StreamEngine:
             min_reported_at_ms=self.render_ready_not_before_ms,
         )
 
+    def render_status_ready_probe(self) -> tuple[bool, str]:
+        return rendering_boot.render_status_ready_probe(
+            self.cfg,
+            min_reported_at_ms=self.render_ready_not_before_ms,
+        )
+
+    def ingest_connectivity_probe(self) -> connectivity.ConnectivityResult:
+        endpoint = connectivity.endpoint_from_rtmp_url(self.cfg.rtmp_url)
+        return connectivity.probe_ingest_connectivity(
+            endpoint,
+            dns_timeout_sec=self.cfg.connectivity_dns_timeout_sec,
+            tcp_timeout_sec=self.cfg.connectivity_tcp_timeout_sec,
+        )
+
+    def wait_for_ingest_connectivity(self) -> bool:
+        endpoint = connectivity.endpoint_from_rtmp_url(self.cfg.rtmp_url)
+        return runtime_recovery.wait_for_connectivity(
+            enabled=not self.cfg.test_mode and self.cfg.connectivity_gate_enabled,
+            endpoint=endpoint,
+            poll_sec=self.cfg.connectivity_poll_sec,
+            probe=self.ingest_connectivity_probe,
+            stop_requested=lambda: self.stop_requested,
+            append_event=self.append_event,
+            write_snapshot=self.write_runtime_snapshot,
+            log=self.log,
+            sleep=time.sleep,
+        )
+
     def start_overlay_server(self) -> None:
         if not self.cfg.use_overlay_wrapper:
             return
@@ -527,6 +556,7 @@ class StreamEngine:
             return
         settle_sec, settle_mode = self.effective_browser_settle_sec()
         self.render_ready_not_before_ms = int(time.time() * 1000)
+        self.render_recovery_state.browser_started_monotonic = time.monotonic()
         try:
             self.browser_log_offset = self.cfg.browser_log_file.stat().st_size
         except OSError:
@@ -544,6 +574,29 @@ class StreamEngine:
         )
         if settle_sec > 0:
             time.sleep(settle_sec)
+
+    def recover_stale_render_heartbeat(self) -> bool:
+        return runtime_recovery.recover_stale_render(
+            self.render_recovery_state,
+            enabled=(
+                self.cfg.render_self_recovery_enabled
+                and self.cfg.use_overlay_wrapper
+                and self.cfg.auto_start_browser
+            ),
+            confirmations=self.cfg.render_self_recovery_confirmations,
+            grace_sec=self.cfg.render_self_recovery_grace_sec,
+            cooldown_sec=self.cfg.render_self_recovery_cooldown_sec,
+            render_probe=self.render_status_ready_probe,
+            connectivity_probe=self.ingest_connectivity_probe,
+            restart_browser=lambda: self.ensure_browser_running(
+                force=True,
+                reason="render_heartbeat_stale",
+            ),
+            browser_pid=lambda: self.browser_proc.pid if self.browser_proc else 0,
+            ffmpeg_pid=lambda: self.ffmpeg_proc.pid if self.ffmpeg_proc else 0,
+            append_event=self.append_event,
+            monotonic=time.monotonic,
+        )
 
     def has_recent_restart_context(self) -> bool:
         return restart_context.has_recent_restart_context(self.cfg)
@@ -668,6 +721,7 @@ class StreamEngine:
         restarted_helpers = self.ensure_capture_helpers_running()
         if "xvfb" in restarted_helpers:
             return ffmpeg_lifecycle.HeartbeatAction(stop_reason="capture display restarted")
+        self.recover_stale_render_heartbeat()
         if self.encoder_profile_expired(encoder_profile):
             self.log("Emergency low-upload profile expired; restarting ffmpeg with normal encoder profile.")
             self.append_event(
@@ -795,6 +849,10 @@ class StreamEngine:
             self.log(f"ffmpeg exited with code {rc}. Restarting in {self.cfg.restart_delay_sec}s...")
             self.append_event("ffmpeg_restart_scheduled", exit_code=rc, delay_sec=self.cfg.restart_delay_sec)
             time.sleep(self.cfg.restart_delay_sec)
+            if not self.wait_for_ingest_connectivity():
+                self.write_runtime_snapshot("stopping", "", "stop requested during connectivity wait")
+                self.append_event("engine_stopping", note="stop requested during connectivity wait")
+                break
 
         self.log("stream engine stopped.")
         return 0

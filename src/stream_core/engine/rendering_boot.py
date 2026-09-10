@@ -85,7 +85,7 @@ def overlay_http_ready_probe(cfg, *, min_reported_at_ms: int = 0) -> tuple[bool,
     except Exception as e:
         return False, f"overlay index fetch failed: {e}"
 
-    markers = ('id="map"', "Local ADS-B Receiver", "Evaluated with ARENA")
+    markers = ('id="map"', "Local ADS-B Receiver")
     if not all(marker in html for marker in markers):
         return False, "overlay index missing expected markers"
 
@@ -110,23 +110,33 @@ def overlay_http_ready_probe(cfg, *, min_reported_at_ms: int = 0) -> tuple[bool,
     if len(stream1090_html.strip()) < 64:
         return False, "stream1090 response too short"
     if map_path != "stream1090/":
-        try:
-            render_status = json.loads(http_get_text(f"{base}/render/status.json", timeout_sec=2.0))
-        except urllib.error.URLError as e:
-            return False, f"render-ready fetch failed: {e}"
-        except (json.JSONDecodeError, TypeError, ValueError) as e:
-            return False, f"render-ready response invalid: {e}"
-        except Exception as e:
-            return False, f"render-ready fetch failed: {e}"
-        if not isinstance(render_status, dict) or render_status.get("ready") is not True:
-            return False, "browser map and ADS-B sample still warming up"
-        reported_at_ms = render_status.get("reported_at_ms")
-        if min_reported_at_ms > 0 and (
-            not isinstance(reported_at_ms, (int, float))
-            or reported_at_ms < min_reported_at_ms
-        ):
-            return False, "render-ready report predates current browser"
+        ready, detail = render_status_ready_probe(cfg, min_reported_at_ms=min_reported_at_ms)
+        if not ready:
+            return False, detail
     return True, "overlay, ADS-B map, stream1090, and rendered frame ready"
+
+
+def render_status_ready_probe(cfg, *, min_reported_at_ms: int = 0) -> tuple[bool, str]:
+    if not cfg.use_overlay_wrapper:
+        return True, "overlay wrapper disabled"
+    base = f"http://{cfg.overlay_view_host}:{cfg.overlay_port}"
+    try:
+        render_status = json.loads(http_get_text(f"{base}/render/status.json", timeout_sec=2.0))
+    except urllib.error.URLError as e:
+        return False, f"render-ready fetch failed: {e}"
+    except (json.JSONDecodeError, TypeError, ValueError) as e:
+        return False, f"render-ready response invalid: {e}"
+    except Exception as e:
+        return False, f"render-ready fetch failed: {e}"
+    if not isinstance(render_status, dict) or render_status.get("ready") is not True:
+        return False, "browser map and ADS-B sample still warming up"
+    reported_at_ms = render_status.get("reported_at_ms")
+    if min_reported_at_ms > 0 and (
+        not isinstance(reported_at_ms, (int, float))
+        or reported_at_ms < min_reported_at_ms
+    ):
+        return False, "render-ready report predates current browser"
+    return True, "render heartbeat ready"
 
 
 def start_overlay_server(cfg) -> subprocess.Popen | None:

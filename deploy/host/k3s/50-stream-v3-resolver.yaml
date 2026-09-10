@@ -1,0 +1,4 @@
+# K3s loads this file from /etc/rancher/k3s/config.yaml.d/ on the next
+# service start. Point kubelet and dnsPolicy=Default workloads such as CoreDNS
+# at the host's real upstream resolver list, not the systemd-resolved stub.
+resolv-conf: /run/systemd/resolve/resolv.conf

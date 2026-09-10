@@ -9,10 +9,12 @@ from typing import Callable
 try:
     from stream_core.common.json_io import append_jsonl, iter_jsonl, read_json_file
     from stream_core.common.timeutil import parse_utc_ts, utc_now_text
+    from stream_core.notifications import connectivity_correlation
     from stream_core.notifications import outbox as notify_outbox
 except ModuleNotFoundError:
     from common.json_io import append_jsonl, iter_jsonl, read_json_file
     from common.timeutil import parse_utc_ts, utc_now_text
+    from notifications import connectivity_correlation
     from notifications import outbox as notify_outbox
 
 
@@ -900,8 +902,13 @@ def notify_status(*, ctx: NotifyStatusContext, dry_run: bool = False, force_test
         startup_grace_sec=int(cfg.get("startup_grace_sec", 0) or 0),
     )
     incident_by_id = {str(item.get("id")): item for item in incidents}
-    previous_ids = set(active_state.keys())
     current_ids = set(incident_by_id.keys())
+    connectivity_correlation.reconcile_deferred_active(
+        state=state,
+        active_state=active_state,
+        current_ids=current_ids,
+    )
+    previous_ids = set(active_state.keys())
     new_ids = current_ids - previous_ids
     recovered_ids = previous_ids - current_ids
 
