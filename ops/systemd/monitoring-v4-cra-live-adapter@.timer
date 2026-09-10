@@ -1,0 +1,11 @@
+[Unit]
+Description=Diagnostic-only facts adapter refresh for immutable release %i
+
+[Timer]
+OnBootSec=4s
+OnUnitActiveSec=5s
+AccuracySec=200ms
+RandomizedDelaySec=0
+Unit=monitoring-v4-cra-live-adapter@%i.service
+
+# Do not enable independently. The signer timer starts pull -> adapter -> signer as one ordered transaction.

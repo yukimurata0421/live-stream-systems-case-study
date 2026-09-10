@@ -1,0 +1,12 @@
+[Unit]
+Description=Refresh signed arena NO_ACTION host status for immutable release %i
+
+[Timer]
+OnBootSec=5s
+OnUnitInactiveSec=3s
+AccuracySec=200ms
+RandomizedDelaySec=0
+Unit=monitoring-v4-no-action-host-status-publisher@%i.service
+
+[Install]
+WantedBy=timers.target

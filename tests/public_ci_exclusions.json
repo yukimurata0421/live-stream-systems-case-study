@@ -1,0 +1,57 @@
+{
+  "schema": "stream_recovery_control.public_ci_exclusions.v1",
+  "excluded": [
+    {
+      "path": "tests/harness/integration/test_checkpoint_release_roundtrip.py",
+      "reason": "extended 86400-second synthetic prefix and resource-bound replay"
+    },
+    {
+      "path": "tests/harness/integration/test_coverage_closure_artifacts.py",
+      "reason": "requires private source-bound execution artifacts"
+    },
+    {
+      "path": "tests/harness/integration/test_dell_failure_domain_chaos.py",
+      "reason": "requires private source-bound execution artifacts"
+    },
+    {
+      "path": "tests/harness/integration/test_dell_invariant_lattice_chaos.py",
+      "reason": "requires private source-bound execution artifacts"
+    },
+    {
+      "path": "tests/harness/integration/test_real_sqlite_concurrency_replay.py",
+      "reason": "requires private source-bound execution artifacts"
+    },
+    {
+      "path": "tests/harness/unit/test_evidence_lineage.py",
+      "reason": "binds private operator documentation and workflow adapters"
+    },
+    {
+      "path": "tests/harness/unit/test_task_contract.py",
+      "reason": "binds private operator documentation and skills"
+    },
+    {
+      "path": "tests/harness/unit/test_traceability.py",
+      "reason": "binds private operator documentation and workflow adapters"
+    },
+    {
+      "path": "tests/harness/unit/test_traceability_ci.py",
+      "reason": "binds private CI-provider adapters"
+    },
+    {
+      "path": "tests/harness/unit/test_verification_gate.py",
+      "reason": "binds private operator documentation and workflow adapters"
+    },
+    {
+      "path": "tests/runtime_boundary/test_bounded_ffmpeg_recovery.py",
+      "reason": "requires the matching stream_v3 integration candidate"
+    },
+    {
+      "path": "tests/runtime_boundary/test_bounded_lifecycle_controller_overlay.py",
+      "reason": "requires an excluded immutable controller release artifact"
+    },
+    {
+      "path": "tests/runtime_boundary/test_v21_incident_matrix.py",
+      "reason": "requires an excluded immutable controller release artifact"
+    }
+  ]
+}

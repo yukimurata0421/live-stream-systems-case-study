@@ -1,0 +1,103 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "stream-recovery-control"
+version = "0.1.0"
+description = "CRA and Dell Recovery Agent Protocol v1 shadow/fake implementation"
+requires-python = ">=3.11"
+dependencies = [
+  "cryptography>=46,<47",
+  "jsonschema>=4.19,<5",
+  "psycopg[binary]>=3.3,<3.4",
+  "rfc8785>=0.1.4,<0.2",
+]
+
+[project.optional-dependencies]
+test = [
+  "hypothesis>=6.138,<7",
+  "mypy>=1.17,<2",
+  "pytest>=8.4,<9",
+  "pytest-cov>=6.2,<7",
+  "PyYAML>=6,<7",
+  "ruff>=0.12,<1",
+  "types-jsonschema>=4.26,<5",
+]
+
+[project.scripts]
+cra-authority = "cra_authority.cli:main"
+cra-runtime = "cra_authority.runtime:main"
+cra-provision = "cra_authority.provision:main"
+cra-monitoring-project = "monitoring_projection.producer:main"
+cra-monitoring-serve = "monitoring_projection.server:main"
+cra-monitoring-live-adapt = "monitoring_projection.live_adapter:main"
+cra-dell-observation-pull = "monitoring_projection.dell_observation_pull:main"
+dell-observation-serve = "dell_recovery_agent.observation_server:main"
+cra-monitoring-pull = "cra_authority.projection_pull:main"
+cra-phase4-shadow = "cra_authority.phase4_shadow:main"
+dell-recovery-agent-shadow = "dell_recovery_agent.cli:main"
+dell-target-snapshot-shadow = "dell_recovery_agent.target_snapshot:main"
+cra-harness = "cra_harness.runner.cli:main"
+cra-harness-v2 = "cra_harness.runner.cli_v2:main"
+cra-harness-v3 = "cra_harness.runner.cli_v3:main"
+cra-no-action-soak-gate = "cra_no_action_soak.gate:main"
+cra-no-action-soak-sample = "cra_no_action_soak.sample:main"
+cra-no-action-host-status-publish = "cra_no_action_soak.host_status_publisher:main"
+cra-no-action-host-status-pull = "cra_no_action_soak.host_status_pull:main"
+cra-resilient-host-status-publish = "cra_no_action_soak.resilient_host_status_publisher:main"
+cra-resilient-host-status-pull = "cra_no_action_soak.resilient_host_status_pull:main"
+cra-resilient-host-status-relay = "cra_no_action_soak.resilient_host_status_relay:main"
+cra-resilient-status-soak = "cra_no_action_soak.resilient_soak:main"
+cra-recovery-soak = "cra_no_action_soak.recovery_soak:main"
+cra-recovery-observer = "cra_no_action_soak.recovery_observer:main"
+cra-no-action-randomized-harness = "cra_harness.runner.no_action_randomized:main"
+cra-no-action-covering-harness = "cra_harness.runner.no_action_covering:main"
+cra-external-boundary-covering = "cra_harness.runner.external_boundary_covering:main"
+cra-no-action-sqlite-chaos = "cra_harness.runner.no_action_sqlite_chaos:main"
+cra-dell-failure-domain-chaos = "cra_harness.dell_failure_domain_chaos:main"
+cra-dell-invariant-lattice-chaos = "cra_harness.dell_invariant_lattice_chaos:main"
+cra-sqlite-concurrency-stress = "cra_harness.runner.sqlite_concurrency:main"
+cra-real-shadow-replay = "cra_harness.runner.real_shadow:main"
+cra-maintenance-harness = "cra_harness.runner.cli_maintenance:main"
+cra-p1-audit-harness = "cra_harness.runner.cli_p1_audit:main"
+maintenance-shadow = "maintenance_shadow.service:main"
+maintenance-shadow-control = "maintenance_shadow.control:main"
+cra-evidence-binding-harness = "cra_harness.runner.evidence_binding:main"
+cra-p2-disabled-harness = "cra_harness.runner.p2_disabled:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src", "."]
+testpaths = ["tests"]
+addopts = "--strict-markers -ra"
+
+[tool.ruff]
+line-length = 140
+target-version = "py311"
+exclude = ["artifacts", ".runtime", ".deploy"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+packages = [
+  "cra_dell_recovery",
+  "cra_authority",
+  "dell_recovery_agent",
+  "fast_recovery_controller",
+  "cra_harness",
+  "cra_no_action_soak",
+  "maintenance_audit",
+  "maintenance_shadow",
+  "maintenance_enforcement",
+  "release_boundary",
+  "snapshot_projection",
+  "runtime_boundary",
+  "monitoring_projection",
+]
+mypy_path = "src"

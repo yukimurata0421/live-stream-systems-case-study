@@ -1,0 +1,6 @@
+{
+  "regression_id": "REG-HARNESS-2026-08-23-005",
+  "origin_run_id": "20260823T_cra_prephase5_harness_v2_v3",
+  "problem": "17 legacy deterministic scenarios used 0.0 ms as a missing duration sentinel and polluted scenario latency statistics",
+  "expected": "every included deterministic duration is measured and greater than zero"
+}

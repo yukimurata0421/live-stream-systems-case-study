@@ -1,0 +1,48 @@
+[Unit]
+Description=Sign CRA facts projection for immutable arena release %i
+StartLimitIntervalSec=10s
+StartLimitBurst=10
+Requires=monitoring-v4-cra-live-adapter@%i.service
+After=monitoring-v4-cra-live-adapter@%i.service
+ConditionPathExists=/opt/stream-monitoring-cra-projection/releases/%i/release_manifest.json
+ConditionPathExists=/opt/stream-monitoring-cra-projection/runtimes/%i/runtime_manifest.json
+ConditionPathExists=/etc/stream-monitoring-cra-projection/releases/%i/projection.json
+
+[Service]
+Type=oneshot
+User=stream-monitoring-projection
+Group=stream-monitoring-projection
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=PYTHONNOUSERSITE=1
+Environment=PYTHONPATH=/opt/stream-monitoring-cra-projection/releases/%i/src
+Environment=CRA_IMMUTABLE_RELEASE_ID=%i
+ExecStart=/opt/stream-monitoring-cra-projection/runtimes/%i/.venv/bin/python -m monitoring_projection.producer --config /etc/stream-monitoring-cra-projection/releases/%i/projection.json
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectClock=true
+ProtectHostname=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+ProtectProc=invisible
+ProcSubset=pid
+RestrictSUIDSGID=true
+RestrictRealtime=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+RemoveIPC=true
+CapabilityBoundingSet=
+RestrictAddressFamilies=AF_UNIX
+ReadOnlyPaths=/opt/stream-monitoring-cra-projection/releases/%i /opt/stream-monitoring-cra-projection/runtimes/%i /etc/stream-monitoring-cra-projection/releases/%i
+ReadOnlyPaths=/etc/stream-monitoring-cra-projection/credentials/monitoring-ed25519-private.pem
+ReadOnlyPaths=/var/lib/stream-monitoring-v4/cra-facts /var/lib/stream-monitoring-v4/cra-target-inbox
+ReadWritePaths=/var/lib/stream-monitoring-v4/cra-projection
+InaccessiblePaths=/etc/stream-monitoring-v4/cra-projection-postgres.conninfo /etc/stream-monitoring-cra-projection/credentials/dell-observation-client-key.pem
+InaccessiblePaths=/var/lib/stream-recovery-control
+
+# Local signing only. It has neither network access nor a Monitoring database credential.

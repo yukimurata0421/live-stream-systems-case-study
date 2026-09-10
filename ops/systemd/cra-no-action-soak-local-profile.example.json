@@ -1,0 +1,53 @@
+{
+  "schema": "cra.no_action_soak_collector_profile.v4",
+  "collection_mode": "local_host_status_v1",
+  "state_directory": "/var/lib/cra-no-action-soak/replace-with-fresh-epoch-id",
+  "arena_host_status_file": "/var/lib/stream-recovery-control/monitoring-inbox/releases/replace-with-immutable-cra-release-id/host-status.json",
+  "host_status_schema_file": "/opt/stream-recovery-control/releases/replace-with-immutable-cra-release-id/contracts/cra_no_action_soak/host_status.v1.schema.json",
+  "host_status_sources": {
+    "arena": {
+      "host_id": "arena-monitoring-facts",
+      "key_id": "replace-with-monitoring-projection-key-id",
+      "public_key_file": "/etc/stream-recovery-control/monitoring-ed25519-public.pem"
+    },
+    "dell": {
+      "host_id": "dell-stream-runtime",
+      "key_id": "replace-with-dell-observation-key-id",
+      "public_key_file": "/etc/stream-recovery-control/dell-observation-ed25519-public.pem"
+    }
+  },
+  "releases": {
+    "arena": "replace-with-immutable-arena-projection-release-id",
+    "cra": "replace-with-immutable-cra-release-id",
+    "dell": "replace-with-immutable-dell-observation-release-id"
+  },
+  "epoch_started_at": "replace-with-fresh-epoch-start-utc",
+  "effect_baseline": {
+    "effect_request_count": 0,
+    "effect_boundary_count": 0,
+    "raw_outcome_unknown_count": 0,
+    "reconciliation_count": 0,
+    "duplicate_scope_count": 0
+  },
+  "remote_counter_baseline": {
+    "resource_limit_breach_count": {"arena": 0, "dell": 0},
+    "service_failed_invocation_count": {
+      "arena_dell_host_status_pull": 0,
+      "arena_dell_pull": 0,
+      "arena_host_status_publisher": 0,
+      "arena_live_adapter": 0,
+      "arena_projection": 0,
+      "arena_projection_server": 0,
+      "dell_host_status_publisher": 0,
+      "dell_observation_server": 0
+    },
+    "legacy_arena_recovery_invocation_count": 0
+  },
+  "legacy_arena_recovery_baseline": 0,
+  "cra_runtime_event_file": "/var/lib/stream-recovery-control/cra/releases/replace-with-immutable-cra-release-id/runtime-events.jsonl",
+  "rehearsal_evidence_sha256": {
+    "cra_backup_restore": "replace-with-sha256",
+    "cra_single_writer": "replace-with-sha256",
+    "credential_rotation": "replace-with-sha256"
+  }
+}

@@ -1,0 +1,12 @@
+[Unit]
+Description=Periodically evaluate seven-day resilient signed-status soak gate for immutable CRA release %i
+
+[Timer]
+OnBootSec=1min
+OnUnitInactiveSec=1h
+AccuracySec=1s
+RandomizedDelaySec=0
+Unit=cra-resilient-status-soak-gate@%i.service
+
+[Install]
+WantedBy=timers.target

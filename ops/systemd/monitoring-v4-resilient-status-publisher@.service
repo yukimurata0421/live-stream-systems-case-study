@@ -1,0 +1,48 @@
+[Unit]
+Description=Publish signed arena resilient relay status for immutable release %i
+Wants=monitoring-v4-clock-status-probe@%i.service monitoring-v4-dell-resilient-status-pull@%i.service
+After=monitoring-v4-clock-status-probe@%i.service monitoring-v4-cra-projection-server@%i.service monitoring-v4-dell-resilient-status-pull@%i.service
+ConditionPathExists=/opt/stream-monitoring-cra-projection/releases/%i/release_manifest.json
+ConditionPathExists=/opt/stream-monitoring-cra-projection/runtimes/%i/runtime_manifest.json
+ConditionPathExists=/etc/stream-monitoring-cra-projection/releases/%i/resilient-status-publisher.json
+StartLimitIntervalSec=10s
+StartLimitBurst=10
+
+[Service]
+Type=oneshot
+User=stream-monitoring-projection
+Group=stream-monitoring-projection
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=PYTHONNOUSERSITE=1
+Environment=PYTHONPATH=/opt/stream-monitoring-cra-projection/releases/%i/src
+Environment=CRA_IMMUTABLE_RELEASE_ID=%i
+ExecStart=/opt/stream-monitoring-cra-projection/runtimes/%i/.venv/bin/python -m cra_no_action_soak.resilient_host_status_relay --config /etc/stream-monitoring-cra-projection/releases/%i/resilient-status-publisher.json
+TimeoutStartSec=15s
+TimeoutStopSec=5s
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectClock=true
+ProtectHostname=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+RemoveIPC=true
+CapabilityBoundingSet=
+RestrictAddressFamilies=AF_UNIX
+ReadOnlyPaths=/opt/stream-monitoring-cra-projection/releases/%i /opt/stream-monitoring-cra-projection/runtimes/%i /etc/stream-monitoring-cra-projection/releases/%i
+ReadOnlyPaths=/etc/stream-monitoring-cra-projection/credentials /etc/stream-recovery-control/host-contract.json /etc/needrestart/conf.d/stream-recovery-control.conf /var/lib/stream-monitoring-v4
+ReadOnlyPaths=/var/lib/stream-monitoring-v4/clock-status/releases/%i
+ReadWritePaths=/var/lib/stream-monitoring-v4/cra-projection/releases/%i
+InaccessiblePaths=/etc/stream-monitoring-v4/cra-projection-postgres.conninfo /var/lib/stream-recovery-control
+
+# The relay verifies and nests the Dell signature. It owns no network socket,
+# Monitoring database credential, CRA policy, command route, or Dell effect path.

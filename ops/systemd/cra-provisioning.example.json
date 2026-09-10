@@ -1,0 +1,6 @@
+{
+  "host_id": "dell-yuki",
+  "agent_id": "dell-recovery-agent",
+  "controller_instance_id": "replace-with-cra-controller-instance-id",
+  "agent_installation_id": "replace-after-read-only-Dell-identity-verification"
+}

@@ -1,0 +1,12 @@
+[Unit]
+Description=Sample three-host CRA NO_ACTION soak epoch %i
+
+[Timer]
+OnBootSec=10s
+OnUnitInactiveSec=10s
+AccuracySec=1s
+RandomizedDelaySec=0
+Unit=cra-no-action-soak-collector@%i.service
+
+[Install]
+WantedBy=timers.target

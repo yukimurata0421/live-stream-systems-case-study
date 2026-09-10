@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cra_dell_recovery.command_receipt.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "protocol", "message_type", "receipt_id", "command_id", "authority_epoch",
+    "command_seq", "disposition", "command_state", "reason_code",
+    "highest_authority_epoch_seen", "highest_command_seq_consumed",
+    "agent_installation_id", "agent_observed_at", "key_id", "payload_sha256", "signature"
+  ],
+  "properties": {
+    "protocol": {"const": "cra_dell_recovery.command_receipt.v1"},
+    "message_type": {"const": "command_receipt"},
+    "receipt_id": {"$ref": "#/$defs/id"},
+    "command_id": {"$ref": "#/$defs/id"},
+    "authority_epoch": {"type": "integer", "minimum": 0},
+    "command_seq": {"type": "integer", "minimum": 0},
+    "disposition": {"enum": ["ACCEPTED", "DUPLICATE", "REJECTED"]},
+    "command_state": {"type": "string", "minLength": 1, "maxLength": 80},
+    "reason_code": {"type": "string", "minLength": 1, "maxLength": 120},
+    "highest_authority_epoch_seen": {"type": "integer", "minimum": 0},
+    "highest_command_seq_consumed": {"type": "integer", "minimum": 0},
+    "agent_installation_id": {"$ref": "#/$defs/id"},
+    "agent_observed_at": {"type": "string", "format": "date-time"},
+    "key_id": {"$ref": "#/$defs/id"},
+    "payload_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "signature": {"type": "string", "minLength": 40, "maxLength": 200}
+  },
+  "$defs": {"id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:/-]{0,239}$"}}
+}

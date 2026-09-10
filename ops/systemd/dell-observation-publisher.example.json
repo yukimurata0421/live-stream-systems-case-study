@@ -1,0 +1,30 @@
+{
+  "schema": "cra_dell_recovery.observation_publisher_config.v1",
+  "publisher_release_id": "replace-with-immutable-dell-observation-release-id",
+  "source_instance_id": "dell-stream-runtime-observer",
+  "source_release_id": "replace-with-immutable-dell-observation-release-id",
+  "expected_target": {
+    "host_id": "dell-yuki",
+    "namespace": "stream-v3",
+    "container_name": "stream-engine"
+  },
+  "target_snapshot_file": "/var/lib/stream-recovery-control/dell/target_snapshot.json",
+  "transport_snapshot_file": "/var/lib/stream-recovery-control/controller/mp03-active/runtime/ffmpeg_transport_latest.json",
+  "controller_state_file": "/var/lib/stream-recovery-control/controller/mp03-active/fast_recovery_state.json",
+  "maintenance_snapshot_file": "/var/lib/stream-recovery-control/projection/mp03/maintenance-snapshot.json",
+  "target_snapshot_schema_file": "/opt/stream-recovery-observation/releases/replace-with-immutable-dell-observation-release-id/contracts/cra_dell_recovery/target_snapshot.v1.schema.json",
+  "observation_schema_file": "/opt/stream-recovery-observation/releases/replace-with-immutable-dell-observation-release-id/contracts/cra_dell_recovery/v1/observation_bundle.schema.json",
+  "signing_private_key_file": "/etc/stream-recovery-observation/credentials/dell-observation-ed25519-private.pem",
+  "key_id": "replace-with-dell-observation-key-id",
+  "maximum_transport_age_seconds": 30,
+  "maximum_state_age_seconds": 30,
+  "maximum_bundle_ttl_seconds": 30,
+  "stall_confirm_threshold": 3,
+  "stall_lastsnd_ms": 5000,
+  "stall_notsent_bytes": 1048576,
+  "stall_unacked": 16,
+  "healthy_lastsnd_ms": 2000,
+  "minimum_upload_progress_bytes": 1,
+  "minimum_healthy_send_mbps": 0.1,
+  "startup_gate_uptime_seconds": 30
+}

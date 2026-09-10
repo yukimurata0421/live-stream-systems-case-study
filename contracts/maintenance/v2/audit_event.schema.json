@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "maintenance.audit_event.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "timestamp", "event_id", "host", "process_instance_id",
+    "process_id", "thread_id", "monotonic_ns", "process_service",
+    "path_id", "phase", "operation", "path_role", "resource_identity",
+    "correlation_id", "correlation_owner_path_id", "target_identity",
+    "operation_generation", "maintenance_observed_state", "maintenance_snapshot_observed_at",
+    "maintenance_snapshot_fresh_until", "maintenance_id",
+    "maintenance_generation", "authority_epoch", "authority_session_id",
+    "authorization_id", "in_flight_evidence", "generation_evidence",
+    "audit_verdict", "audit_reason", "audit_hook_latency_us",
+    "queue_depth_before", "queue_capacity", "production_behavior_modified"
+  ],
+  "properties": {
+    "schema_version": {"const": "maintenance.audit_event.v1"},
+    "timestamp": {"type": "string", "format": "date-time"},
+    "event_id": {"type": "string", "minLength": 1},
+    "host": {"type": "string", "minLength": 1},
+    "process_instance_id": {"type": "string", "minLength": 1},
+    "process_id": {"type": "integer", "minimum": 1},
+    "thread_id": {"type": "integer", "minimum": 1},
+    "monotonic_ns": {"type": "integer", "minimum": 1},
+    "process_service": {"type": "string", "minLength": 1},
+    "path_id": {"pattern": "^MP-[0-9]{2}$"},
+    "phase": {
+      "enum": ["OBSERVATION", "ACTION_PLAN_CREATED", "ADMISSION", "EFFECT_BOUNDARY", "EFFECT_RETURNED", "QUIESCE_ACK", "RELEASE_ACK"]
+    },
+    "operation": {"type": "string", "minLength": 1},
+    "path_role": {
+      "enum": [
+        "NORMAL_MUTATOR", "LOCAL_FALLBACK", "PLANNED_EXECUTOR",
+        "MANUAL_PLANNED_EXECUTOR", "AUTHORITY_PRODUCER", "EXECUTION_SUBSTRATE",
+        "HOST_SAFETY", "BREAK_GLASS", "INACTIVE_LEGACY"
+      ]
+    },
+    "resource_identity": {"type": "string"},
+    "correlation_id": {"type": "string", "minLength": 1},
+    "correlation_owner_path_id": {"type": "string"},
+    "native_operation_id": {"type": "string"},
+    "native_operation_generation": {"type": "string"},
+    "target_identity": {
+      "oneOf": [
+        {"type": "null"},
+        {"$ref": "#/$defs/target_identity"}
+      ]
+    },
+    "operation_generation": {"type": ["integer", "null"], "minimum": 1},
+    "maintenance_observed_state": {"type": "string", "minLength": 1},
+    "maintenance_snapshot_observed_at": {"type": "string", "minLength": 1},
+    "maintenance_snapshot_fresh_until": {"type": "string", "minLength": 1},
+    "maintenance_projection_id": {"type": "string", "minLength": 1},
+    "maintenance_projection_sequence": {"type": "integer", "minimum": 1},
+    "maintenance_projection_reason": {"type": "string", "minLength": 1},
+    "maintenance_id": {"type": "string", "minLength": 1},
+    "maintenance_generation": {"type": "integer", "minimum": 0},
+    "authority_epoch": {"type": "integer", "minimum": 0},
+    "authority_session_id": {"type": "string", "minLength": 1},
+    "authorization_id": {"type": "string"},
+    "in_flight_evidence": {"type": "object"},
+    "generation_evidence": {"type": "object"},
+    "audit_verdict": {
+      "enum": ["WOULD_ALLOW", "WOULD_BLOCK", "WOULD_ACK", "WOULD_REJECT", "UNKNOWN", "NOT_APPLICABLE"]
+    },
+    "audit_reason": {"type": "string", "minLength": 1},
+    "audit_hook_latency_us": {"type": "number", "minimum": 0},
+    "queue_depth_before": {"type": "integer", "minimum": 0},
+    "queue_capacity": {"type": "integer", "minimum": 1},
+    "actual_production_decision": {"type": "string"},
+    "actual_production_result": {"type": "string"},
+    "p2_disabled_evaluation_requested": {"type": "boolean"},
+    "p2_disabled_verdict": {
+      "enum": ["NOT_EVALUATED", "UNKNOWN", "ALLOW", "BLOCK", "ACK", "REJECT", "NOT_APPLICABLE"]
+    },
+    "p2_disabled_reason": {"type": "string", "minLength": 1},
+    "p2_enforcement_enabled": {"const": false},
+    "p2_production_branch_signal": {"type": ["boolean", "null"]},
+    "p2_production_adapter_connected": {"const": false},
+    "p2_production_behavior_modified": {"const": false},
+    "p2_physical_effect_count": {"const": 0},
+    "p2_effect_boundary_revalidated": {"type": "boolean"},
+    "production_behavior_modified": {"const": false}
+  },
+  "$defs": {
+    "target_identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "host_id", "host_boot_id", "namespace", "pod_uid",
+        "container_name", "container_id", "ffmpeg_generation", "ffmpeg_pid"
+      ],
+      "properties": {
+        "host_id": {"type": "string", "minLength": 1},
+        "host_boot_id": {"type": "string", "minLength": 1},
+        "namespace": {"type": "string", "minLength": 1},
+        "pod_uid": {"type": "string", "minLength": 1},
+        "container_name": {"const": "stream-engine"},
+        "container_id": {"type": "string", "minLength": 1},
+        "ffmpeg_generation": {"type": "string", "minLength": 1},
+        "ffmpeg_pid": {"type": "integer", "minimum": 2}
+      }
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "schema": "runtime.recovery_evidence_config.v1",
+  "host_id": "dell-stream-runtime",
+  "target_host_id": "dell-yuki",
+  "target_snapshot_owner_uid": 992,
+  "release_id": "replace-with-verified-runtime-release",
+  "source_commit": "replace-with-40-hex-runtime-source-commit",
+  "stream_id": "replace-with-pinned-stream-id",
+  "allowed_producers": ["independent-controller"],
+  "effect_history_policy": {"schema": "cra.recovery_effect_history_policy.v1", "frozen_at": null, "retired_unknown": []},
+  "output_file": "/recovery-evidence/recovery-evidence.json"
+}

@@ -1,0 +1,12 @@
+[Unit]
+Description=Refresh verified Dell resilient status for immutable arena release %i
+
+[Timer]
+OnBootSec=5s
+OnUnitInactiveSec=3s
+AccuracySec=200ms
+RandomizedDelaySec=0
+Unit=monitoring-v4-dell-resilient-status-pull@%i.service
+
+[Install]
+WantedBy=timers.target

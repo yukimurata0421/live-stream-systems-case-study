@@ -1,0 +1,342 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://stream-recovery-control.local/harness/evidence_lineage.v1.schema.json",
+  "title": "CRA evidence lineage and restart-domain map",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "status",
+    "purpose",
+    "boundaries",
+    "owner_verification",
+    "hosts",
+    "layers",
+    "nodes",
+    "edges",
+    "restart_domains",
+    "live_overlay_contract"
+  ],
+  "properties": {
+    "$schema": {"type": "string", "minLength": 1},
+    "schema": {"const": "cra.evidence_lineage.v1"},
+    "status": {"const": "CURRENT_STATE_SPEC"},
+    "purpose": {"type": "string", "minLength": 1},
+    "boundaries": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["canonical_scope", "excluded_current_values", "mutation_authority"],
+      "properties": {
+        "canonical_scope": {"type": "string", "minLength": 1},
+        "excluded_current_values": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "mutation_authority": {"const": "NONE"}
+      }
+    },
+    "owner_verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["catalog", "component_id", "duplication_policy"],
+      "properties": {
+        "catalog": {"type": "string", "minLength": 1},
+        "component_id": {"type": "string", "minLength": 1},
+        "duplication_policy": {"const": "REFERENCE_CANONICAL_CATALOG"}
+      }
+    },
+    "hosts": {
+      "type": "array",
+      "minItems": 3,
+      "items": {"$ref": "#/$defs/host"}
+    },
+    "layers": {
+      "type": "array",
+      "minItems": 5,
+      "items": {"$ref": "#/$defs/layer"}
+    },
+    "nodes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/node"}
+    },
+    "edges": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/edge"}
+    },
+    "restart_domains": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/restartDomain"}
+    },
+    "live_overlay_contract": {"$ref": "#/$defs/liveOverlayContract"}
+  },
+  "$defs": {
+    "identifier": {"type": "string", "pattern": "^[a-z][a-z0-9_.-]*$"},
+    "nonEmptyStringArray": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "host": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "expected_host_id", "role", "authority"],
+      "properties": {
+        "id": {"$ref": "#/$defs/identifier"},
+        "expected_host_id": {"type": "string", "minLength": 1},
+        "role": {"type": "string", "minLength": 1},
+        "authority": {"type": "string", "minLength": 1}
+      }
+    },
+    "layer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label", "order"],
+      "properties": {
+        "id": {"$ref": "#/$defs/identifier"},
+        "label": {"type": "string", "minLength": 1},
+        "order": {"type": "integer", "minimum": 1}
+      }
+    },
+    "unitTemplate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["template", "definition"],
+      "properties": {
+        "template": {"type": "string", "minLength": 1},
+        "definition": {"type": "string", "minLength": 1}
+      }
+    },
+    "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "label",
+        "kind",
+        "layer",
+        "host",
+        "authority",
+        "failure_domain",
+        "source_refs",
+        "implementation_refs",
+        "unit_templates",
+        "identity_fields",
+        "freshness_fields",
+        "current_value_policy"
+      ],
+      "properties": {
+        "id": {"$ref": "#/$defs/identifier"},
+        "label": {"type": "string", "minLength": 1},
+        "kind": {
+          "enum": ["SUT", "OBSERVER", "TRANSPORT", "STORE", "HARNESS", "ORACLE", "CONTROL", "DISABLED_BOUNDARY"]
+        },
+        "layer": {"$ref": "#/$defs/identifier"},
+        "host": {"$ref": "#/$defs/identifier"},
+        "authority": {
+          "enum": [
+            "SUT_OWNER",
+            "OBSERVATION_ONLY",
+            "TRANSPORT_ONLY",
+            "HARNESS_ONLY",
+            "ORACLE_ONLY",
+            "CONTROL_NO_ACTION",
+            "CONTROL_DISABLED",
+            "EFFECT_FENCE"
+          ]
+        },
+        "failure_domain": {
+          "enum": ["SUT", "OBSERVATION_SOURCE", "TRANSPORT", "HARNESS", "ORACLE", "CONTROL_SAFETY"]
+        },
+        "source_refs": {"$ref": "#/$defs/nonEmptyStringArray"},
+        "implementation_refs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "pattern": "^[a-zA-Z0-9_.]+::[a-zA-Z0-9_.]+$"}
+        },
+        "unit_templates": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/unitTemplate"}
+        },
+        "identity_fields": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "freshness_fields": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "current_value_policy": {"const": "LIVE_OVERLAY_ONLY"}
+      }
+    },
+    "failurePolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["evidence_loss_domain", "current_sut_state", "soak_impact", "breach_domain"],
+      "properties": {
+        "evidence_loss_domain": {
+          "enum": ["OBSERVATION_SOURCE", "TRANSPORT", "HARNESS", "ORACLE", "CONTROL_SAFETY"]
+        },
+        "current_sut_state": {"enum": ["NOT_OBSERVABLE", "UNCHANGED"]},
+        "soak_impact": {"enum": ["CERTIFICATION_PAUSED", "FAIL", "NONE"]},
+        "breach_domain": {"enum": ["SUT", "HARNESS", "ORACLE", "CONTROL_SAFETY"]}
+      }
+    },
+    "edge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to",
+        "relationship",
+        "mode",
+        "evidence",
+        "contract_refs",
+        "required_bindings",
+        "assertion",
+        "failure_policy"
+      ],
+      "properties": {
+        "id": {"$ref": "#/$defs/identifier"},
+        "from": {"$ref": "#/$defs/identifier"},
+        "to": {"$ref": "#/$defs/identifier"},
+        "relationship": {"type": "string", "minLength": 1},
+        "mode": {
+          "enum": [
+            "OWNERSHIP",
+            "PARENT_CHILD",
+            "LOCAL_ATOMIC_FILE",
+            "LOCAL_READ_ONLY",
+            "MTLS_GET",
+            "BYTE_PRESERVING_RELAY",
+            "APPEND_ONLY",
+            "ATOMIC_STATE",
+            "QUERY_ONLY_SQLITE",
+            "DETERMINISTIC_REPLAY",
+            "DISABLED_PATH"
+          ]
+        },
+        "evidence": {"type": "string", "minLength": 1},
+        "contract_refs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "required_bindings": {"$ref": "#/$defs/nonEmptyStringArray"},
+        "assertion": {
+          "enum": ["MUST_MATCH", "MUST_BE_FRESH", "MUST_PRESERVE_BYTES", "MUST_APPEND", "MUST_REPLAY_PREFIX", "MUST_REMAIN_DISABLED"]
+        },
+        "failure_policy": {"$ref": "#/$defs/failurePolicy"}
+      }
+    },
+    "restartDomain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "label",
+        "scope_nodes",
+        "event",
+        "identity_changes",
+        "must_preserve",
+        "observed_by_edges",
+        "observation_sources",
+        "normal_meaning",
+        "soak_rule",
+        "new_epoch_when"
+      ],
+      "properties": {
+        "id": {"$ref": "#/$defs/identifier"},
+        "label": {"type": "string", "minLength": 1},
+        "scope_nodes": {"$ref": "#/$defs/nonEmptyStringArray"},
+        "event": {"type": "string", "minLength": 1},
+        "identity_changes": {"$ref": "#/$defs/nonEmptyStringArray"},
+        "must_preserve": {"$ref": "#/$defs/nonEmptyStringArray"},
+        "observed_by_edges": {"$ref": "#/$defs/nonEmptyStringArray"},
+        "observation_sources": {"$ref": "#/$defs/nonEmptyStringArray"},
+        "normal_meaning": {
+          "enum": ["EXPECTED_CHURN", "RECOVERY_EPISODE", "PLANNED_REPLACEMENT", "SERVICE_RESTART", "READ_ONLY_EVALUATION", "SAFETY_VIOLATION"]
+        },
+        "soak_rule": {
+          "enum": [
+            "CONTINUE_IF_EVIDENCE_COMPLETE",
+            "CONTINUE_IF_CHAIN_VALID",
+            "CERTIFICATION_PAUSED_IF_UNOBSERVABLE",
+            "ORACLE_DECIDES_FROM_RECORDED_HISTORY",
+            "NEW_EPOCH_REQUIRED",
+            "FAIL_CURRENT_EPOCH"
+          ]
+        },
+        "new_epoch_when": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "liveOverlayContract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "mapping_digest_required",
+        "window_timezone",
+        "component_statuses",
+        "component_coverage_policy",
+        "restart_coverage_policy",
+        "required_conclusion_axes",
+        "conclusion_statuses",
+        "failure_domains",
+        "bare_unknown_forbidden",
+        "source_pointer_required"
+      ],
+      "properties": {
+        "schema": {"const": "cra.evidence_lineage_live_overlay.v1"},
+        "mapping_digest_required": {"const": true},
+        "window_timezone": {"const": "JST"},
+        "component_statuses": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"enum": ["OBSERVED", "NOT_OBSERVABLE", "NOT_APPLICABLE"]}
+        },
+        "component_coverage_policy": {"const": "ALL_NODES_EXPLICIT"},
+        "restart_coverage_policy": {"const": "ALL_DOMAINS_EXPLICIT"},
+        "required_conclusion_axes": {
+          "type": "array",
+          "minItems": 3,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "conclusion_statuses": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["current_stream_health", "evidence_harness_status", "formal_soak_status"],
+          "properties": {
+            "current_stream_health": {"$ref": "#/$defs/nonEmptyStringArray"},
+            "evidence_harness_status": {"$ref": "#/$defs/nonEmptyStringArray"},
+            "formal_soak_status": {"$ref": "#/$defs/nonEmptyStringArray"}
+          }
+        },
+        "failure_domains": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": ["NONE", "SUT", "OBSERVATION_SOURCE", "TRANSPORT", "HARNESS", "ORACLE", "CONTROL_SAFETY"]
+          }
+        },
+        "bare_unknown_forbidden": {"const": true},
+        "source_pointer_required": {"const": true}
+      }
+    }
+  }
+}

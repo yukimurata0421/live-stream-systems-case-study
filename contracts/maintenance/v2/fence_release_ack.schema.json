@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "maintenance.fence_release_ready_ack.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "protocol",
+    "maintenance_id",
+    "maintenance_generation",
+    "mutator_id",
+    "prepared",
+    "fence_still_active",
+    "acknowledged_at",
+    "target_identity"
+  ],
+  "properties": {
+    "protocol": {"const": "maintenance.fence_release_ready_ack.v1"},
+    "maintenance_id": {"type": "string", "minLength": 1, "maxLength": 128},
+    "maintenance_generation": {"type": "integer", "minimum": 1},
+    "mutator_id": {
+      "enum": [
+        "cra_command",
+        "dell_recovery_agent",
+        "dell_fast_recovery",
+        "arena_remote_recovery",
+        "arena_youtube_watchdog",
+        "arena_stream_watchdog",
+        "dell_local_fallback",
+        "stream_engine_self_recovery",
+        "kubernetes_autoreconcile"
+      ]
+    },
+    "prepared": {"const": true},
+    "fence_still_active": {"const": true},
+    "acknowledged_at": {"type": "string", "format": "date-time"},
+    "target_identity": {"$ref": "#/$defs/target_identity"}
+  },
+  "$defs": {
+    "target_identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "host_id",
+        "host_boot_id",
+        "namespace",
+        "pod_uid",
+        "container_name",
+        "container_id",
+        "ffmpeg_generation",
+        "ffmpeg_pid"
+      ],
+      "properties": {
+        "host_id": {"type": "string", "minLength": 1},
+        "host_boot_id": {"type": "string", "minLength": 1},
+        "namespace": {"type": "string", "minLength": 1},
+        "pod_uid": {"type": "string", "minLength": 1},
+        "container_name": {"const": "stream-engine"},
+        "container_id": {"type": "string", "minLength": 1},
+        "ffmpeg_generation": {"type": "string", "minLength": 1},
+        "ffmpeg_pid": {"type": "integer", "minimum": 2}
+      }
+    }
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cra_dell_recovery.reconciliation_commit.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "protocol", "message_type", "commit_id", "reconciliation_id", "challenge_id",
+    "challenge_nonce", "target_id", "controller_instance_id", "agent_installation_id",
+    "proposed_authority_epoch", "proposed_authority_session_id", "issued_at",
+    "journal_ack_sequence", "journal_ack_record_digest", "expires_at", "key_id", "payload_sha256", "signature"
+  ],
+  "properties": {
+    "protocol": {"const": "cra_dell_recovery.reconciliation_commit.v1"},
+    "message_type": {"const": "reconciliation_commit"},
+    "commit_id": {"$ref": "#/$defs/id"},
+    "reconciliation_id": {"$ref": "#/$defs/id"},
+    "challenge_id": {"$ref": "#/$defs/id"},
+    "challenge_nonce": {"type": "string", "minLength": 32, "maxLength": 200},
+    "target_id": {"type": "string", "minLength": 1, "maxLength": 200},
+    "controller_instance_id": {"$ref": "#/$defs/id"},
+    "agent_installation_id": {"$ref": "#/$defs/id"},
+    "proposed_authority_epoch": {"type": "integer", "minimum": 1},
+    "proposed_authority_session_id": {"$ref": "#/$defs/id"},
+    "journal_ack_sequence": {"type": "integer", "minimum": 0},
+    "journal_ack_record_digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "issued_at": {"type": "string", "format": "date-time"},
+    "expires_at": {"type": "string", "format": "date-time"},
+    "key_id": {"$ref": "#/$defs/id"},
+    "payload_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "signature": {"type": "string", "minLength": 40, "maxLength": 200}
+  },
+  "$defs": {"id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:/-]{0,239}$"}}
+}

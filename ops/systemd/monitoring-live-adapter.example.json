@@ -1,0 +1,35 @@
+{
+  "schema": "monitoring_v4.cra_live_adapter_config.v1",
+  "adapter_release_id": "replace-with-immutable-arena-projection-release-id",
+  "source_instance_id": "arena-monitoring-v4",
+  "source_release_id": "replace-with-immutable-arena-projection-release-id",
+  "expected_monitoring_build_revision": "replace-with-running-monitoring-build-revision",
+  "expected_monitoring_source_revision": "replace-with-running-stream-v3-source-revision",
+  "target_id": "stream-v3-youtube-primary",
+  "expected_database_role": "stream_monitoring_cra_projection_ro",
+  "postgres_conninfo_file": "/etc/stream-monitoring-v4/cra-projection-postgres.conninfo",
+  "dell_observation_file": "/var/lib/stream-monitoring-v4/cra-dell-observation/releases/replace-with-immutable-arena-projection-release-id/latest.json",
+  "dell_observation_schema_file": "/opt/stream-monitoring-cra-projection/releases/replace-with-immutable-arena-projection-release-id/contracts/cra_dell_recovery/v1/observation_bundle.schema.json",
+  "dell_key_id": "replace-with-dell-observation-key-id",
+  "dell_public_key_file": "/etc/stream-monitoring-cra-projection/credentials/dell-observation-ed25519-public.pem",
+  "dell_source_instance_id": "dell-stream-runtime-observer",
+  "dell_source_release_id": "replace-with-immutable-dell-observation-release-id",
+  "expected_target": {
+    "host_id": "dell-yuki",
+    "namespace": "stream-v3",
+    "container_name": "stream-engine"
+  },
+  "fact_bundle_schema_file": "/opt/stream-monitoring-cra-projection/releases/replace-with-immutable-arena-projection-release-id/contracts/monitoring_v4/cra_fact_bundle.v1.schema.json",
+  "output_file": "/var/lib/stream-monitoring-v4/cra-facts/releases/replace-with-immutable-arena-projection-release-id/latest.json",
+  "target_snapshot_output_file": "/var/lib/stream-monitoring-v4/cra-target-inbox/releases/replace-with-immutable-arena-projection-release-id/latest.json",
+  "status_file": "/var/lib/stream-monitoring-v4/cra-facts/releases/replace-with-immutable-arena-projection-release-id/status.json",
+  "required_components": [
+    "observer",
+    "current_reducer",
+    "reliability_projector"
+  ],
+  "maximum_cycle_age_seconds": 90,
+  "maximum_component_age_seconds": 90,
+  "fact_ttl_seconds": 20,
+  "statement_timeout_ms": 2000
+}

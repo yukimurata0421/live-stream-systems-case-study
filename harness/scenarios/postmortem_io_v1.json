@@ -1,0 +1,186 @@
+{
+  "schema": "cra.postmortem_io_fault_catalog.v1",
+  "catalog_id": "postmortem-io-20260906-v1",
+  "execution_boundary": {
+    "network": "loopback_mtls_only",
+    "paths": "pytest_tmp_path_only",
+    "processes": "pytest_owned_children_only",
+    "production_credentials": false,
+    "production_mutation": false
+  },
+  "scenarios": [
+    {
+      "scenario_id": "PF-01",
+      "fault_family": "unbounded_or_noncanonical_json",
+      "sources": [
+        {
+          "incident_date": "2025-06-12",
+          "name": "Google Cloud Service Control incident",
+          "url": "https://status.cloud.google.com/incidents/ow5i3PPK96RduMcb1SsW"
+        },
+        {
+          "incident_date": "2025-11-18",
+          "name": "Cloudflare outage report",
+          "url": "https://blog.cloudflare.com/18-november-2025-outage/"
+        }
+      ],
+      "hypothesis": "One malformed recovery fact must be rejected without stopping collection of independent roles.",
+      "target_modules": [
+        "src/cra_dell_recovery/json_input.py",
+        "src/cra_no_action_soak/recovery_facts.py"
+      ],
+      "injection_points": ["JSON decode", "canonicalization input"],
+      "required_observations": ["invalid input rejected", "independent role retained", "formal result is not PASS"],
+      "invariants": ["no fabricated packet", "no cross-role suppression"],
+      "regression_nodeids": [
+        "tests/harness/integration/test_postmortem_io_faults.py::test_recovery_parser_rejects_noncanonical_or_unbounded_input",
+        "tests/harness/integration/test_postmortem_io_faults.py::test_bad_inbox_is_recorded_without_stopping_other_roles"
+      ],
+      "negative_control_nodeids": [
+        "tests/harness/integration/test_postmortem_io_faults.py::test_negative_control_detects_permissive_json"
+      ],
+      "unproven_scope": ["production producer correctness", "physical resource exhaustion"]
+    },
+    {
+      "scenario_id": "PF-02",
+      "fault_family": "http_protocol_exception_cross_role_propagation",
+      "sources": [
+        {
+          "incident_date": "2021-10-04",
+          "name": "Meta outage details",
+          "url": "https://engineering.fb.com/2021/10/05/networking-traffic/outage-details/"
+        },
+        {
+          "incident_date": "2018-10-21",
+          "name": "GitHub post-incident analysis",
+          "url": "https://github.blog/news-insights/company-news/oct21-post-incident-analysis/"
+        }
+      ],
+      "hypothesis": "A truncated or malformed response from one role must not suppress the next role's GET and evidence.",
+      "target_modules": ["src/cra_no_action_soak/recovery_transport.py"],
+      "injection_points": ["chunked response body", "HTTP status line"],
+      "required_observations": ["both GET paths observed", "failed role output absent", "healthy role original bytes persisted"],
+      "invariants": ["role-local failure containment", "no forged replacement input"],
+      "regression_nodeids": [
+        "tests/harness/integration/test_postmortem_io_faults.py::test_protocol_failure_does_not_suppress_next_role",
+        "tests/harness/integration/test_postmortem_io_faults.py::test_two_hop_loopback_mtls_recovers_without_fabricating_missing_dell_packet",
+        "tests/harness/integration/test_postmortem_io_faults.py::test_signed_two_hop_fault_reaches_collector_recovery_and_rejects_tampering"
+      ],
+      "negative_control_nodeids": [
+        "tests/harness/integration/test_postmortem_io_faults.py::test_negative_control_detects_missing_protocol_exception_isolation"
+      ],
+      "unproven_scope": ["physical multi-host partition", "PMTU", "conntrack exhaustion"]
+    },
+    {
+      "scenario_id": "PF-03",
+      "fault_family": "http_error_response_retention",
+      "sources": [
+        {
+          "incident_date": "2025-06-12",
+          "name": "Google Cloud Service Control incident",
+          "url": "https://status.cloud.google.com/incidents/ow5i3PPK96RduMcb1SsW"
+        }
+      ],
+      "hypothesis": "Every HTTP error response must be closed before retry, observer callback, or terminal exit.",
+      "target_modules": ["src/cra_dell_recovery/bounded_http.py"],
+      "injection_points": ["HTTP 503 before response context manager"],
+      "required_observations": ["prior body closed before next GET", "all retained error bodies closed"],
+      "invariants": ["bounded retry budget", "no response resource retained by the puller"],
+      "regression_nodeids": [
+        "tests/harness/integration/test_postmortem_io_faults.py::test_http_error_responses_are_closed_before_retry_or_exit"
+      ],
+      "negative_control_nodeids": [
+        "tests/harness/integration/test_postmortem_io_faults.py::test_negative_control_detects_error_response_leak"
+      ],
+      "unproven_scope": ["production FD ceiling", "kernel socket reclamation latency"]
+    },
+    {
+      "scenario_id": "PF-04",
+      "fault_family": "append_state_commit_interruption",
+      "sources": [
+        {
+          "incident_date": "2025-10-19",
+          "name": "AWS DynamoDB disruption",
+          "url": "https://aws.amazon.com/message/101925/"
+        },
+        {
+          "incident_date": "2017-01-31",
+          "name": "GitLab database outage postmortem",
+          "url": "https://about.gitlab.com/blog/postmortem-of-database-outage-of-january-31/"
+        }
+      ],
+      "hypothesis": "A committed first or later frame must recover once after state replacement failure or abrupt process exit.",
+      "target_modules": [
+        "src/cra_no_action_soak/recovery_soak.py",
+        "src/cra_no_action_soak/resilient_soak.py"
+      ],
+      "injection_points": ["empty head commit", "frame append", "state replace", "abrupt child exit"],
+      "required_observations": ["old prefix retained", "next sequence is monotonic", "no duplicate frame"],
+      "invariants": ["state never blesses uncommitted evidence", "only one complete frame may be recovered"],
+      "regression_nodeids": [
+        "tests/harness/integration/test_postmortem_io_faults.py::test_state_replace_failure_after_append_recovers_exactly_once",
+        "tests/harness/integration/test_postmortem_io_faults.py::test_first_append_survives_abrupt_test_process_exit",
+        "tests/harness/integration/test_postmortem_io_faults.py::test_complete_append_fsync_failure_recovers_one_frame_without_sequence_reuse",
+        "tests/harness/integration/test_postmortem_io_faults.py::test_missing_state_with_existing_evidence_is_not_silently_reinitialized",
+        "tests/harness/unit/test_resilient_soak.py::test_first_resilient_append_state_failure_recovers_exactly_once"
+      ],
+      "negative_control_nodeids": [
+        "tests/harness/integration/test_postmortem_io_faults.py::test_negative_control_detects_missing_initial_committed_head",
+        "tests/harness/unit/test_resilient_soak.py::test_negative_control_detects_missing_initial_resilient_head"
+      ],
+      "unproven_scope": ["power-loss cache durability", "filesystem corruption", "host restore RPO and RTO"]
+    },
+    {
+      "scenario_id": "PF-05",
+      "fault_family": "short_or_failed_evidence_write",
+      "sources": [
+        {
+          "incident_date": "2021-06-08",
+          "name": "Fastly outage summary",
+          "url": "https://www.fastly.com/blog/summary-of-june-8-outage"
+        },
+        {
+          "incident_date": "2017-01-31",
+          "name": "GitLab database outage postmortem",
+          "url": "https://about.gitlab.com/blog/postmortem-of-database-outage-of-january-31/"
+        }
+      ],
+      "hypothesis": "Short writes must be completed; zero progress, ENOSPC, and EIO must not advance committed state.",
+      "target_modules": ["src/cra_no_action_soak/resilient_soak.py"],
+      "injection_points": ["regular-file write progress", "mid-frame ENOSPC", "mid-frame EIO"],
+      "required_observations": ["complete JSONL frame after short writes", "state bytes unchanged after incomplete append", "partial tail rejected"],
+      "invariants": ["no incomplete frame reported committed", "no silent truncation"],
+      "regression_nodeids": [
+        "tests/harness/integration/test_postmortem_io_faults.py::test_append_retries_short_regular_file_writes",
+        "tests/harness/integration/test_postmortem_io_faults.py::test_incomplete_append_never_advances_committed_state"
+      ],
+      "negative_control_nodeids": [
+        "tests/harness/integration/test_postmortem_io_faults.py::test_negative_control_detects_single_short_write"
+      ],
+      "unproven_scope": ["real device write-cache behavior", "controller-level media errors"]
+    },
+    {
+      "scenario_id": "PF-06",
+      "fault_family": "blocking_non_regular_evidence_path",
+      "sources": [
+        {
+          "incident_date": "2021-10-04",
+          "name": "Meta outage details",
+          "url": "https://engineering.fb.com/2021/10/05/networking-traffic/outage-details/"
+        }
+      ],
+      "hypothesis": "A FIFO in place of evidence must be rejected without blocking collector or watchdog progress.",
+      "target_modules": ["src/cra_no_action_soak/resilient_soak.py"],
+      "injection_points": ["tail open", "append open"],
+      "required_observations": ["child exits before outer timeout", "non-regular path is rejected"],
+      "invariants": ["bounded invocation", "type error never becomes READY"],
+      "regression_nodeids": [
+        "tests/harness/integration/test_postmortem_io_faults.py::test_evidence_fifo_does_not_block_before_type_check"
+      ],
+      "negative_control_nodeids": [
+        "tests/harness/integration/test_postmortem_io_faults.py::test_negative_control_detects_blocking_fifo_open"
+      ],
+      "unproven_scope": ["production filesystem replacement", "remote filesystem semantics"]
+    }
+  ]
+}

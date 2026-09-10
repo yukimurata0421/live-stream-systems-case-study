@@ -1,0 +1,26 @@
+{
+  "fixture_version": 1,
+  "timezone": "Asia/Tokyo",
+  "source_classification": "MISSING_EVIDENCE",
+  "source_note": "The requested repository read-only search did not locate a complete authorization/target/evidence tuple. Unknown values are preserved and are not inferred.",
+  "events": [
+    {
+      "event_id": "2026-08-21T17:21:45+09:00-deployment-restart",
+      "occurred_at_jst": "2026-08-21T17:21:45+09:00",
+      "event_type": "deployment_restart"
+    },
+    {
+      "event_id": "2026-08-21T17:21:45+09:00-old-target",
+      "occurred_at_jst": "2026-08-21T17:21:45+09:00",
+      "event_type": "old_target_command"
+    },
+    {
+      "event_id": "2026-08-21T17:22:54+09:00-new-pod-ffmpeg",
+      "occurred_at_jst": "2026-08-21T17:22:54+09:00",
+      "event_type": "new_pod_ffmpeg_restart",
+      "fresh_target_identity": null,
+      "fresh_confirmed_tcp_stall": null,
+      "fresh_authorization": null
+    }
+  ]
+}

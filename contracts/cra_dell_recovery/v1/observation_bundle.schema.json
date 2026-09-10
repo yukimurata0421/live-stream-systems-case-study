@@ -1,0 +1,229 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cra_dell_recovery.observation_bundle.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "source_instance_id",
+    "source_release_id",
+    "observation_id",
+    "observation_revision",
+    "observation_sequence",
+    "observed_at",
+    "valid_until",
+    "target_snapshot",
+    "transport",
+    "recovery",
+    "maintenance",
+    "checks",
+    "measurements",
+    "evidence_refs",
+    "key_id",
+    "payload_sha256",
+    "signature"
+  ],
+  "properties": {
+    "schema": {"const": "cra_dell_recovery.observation_bundle.v1"},
+    "source_instance_id": {"$ref": "#/$defs/id"},
+    "source_release_id": {"$ref": "#/$defs/id"},
+    "observation_id": {"$ref": "#/$defs/id"},
+    "observation_revision": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "observation_sequence": {"type": "integer", "minimum": 1},
+    "observed_at": {"type": "string", "format": "date-time"},
+    "valid_until": {"type": "string", "format": "date-time"},
+    "target_snapshot": {"$ref": "#/$defs/target_snapshot"},
+    "transport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["observed_at", "controller_id", "ffmpeg_pid", "ffmpeg_uptime_sec", "metrics", "network"],
+      "properties": {
+        "observed_at": {"type": "string", "format": "date-time"},
+        "controller_id": {"$ref": "#/$defs/id"},
+        "ffmpeg_pid": {"type": "integer", "minimum": 2},
+        "ffmpeg_uptime_sec": {"type": "integer", "minimum": 0},
+        "metrics": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "bytes_sent_delta", "bytes_sent", "bytes_acked", "bytes_elapsed_sec", "send_mbps",
+            "send_q", "lastsnd_ms", "notsent", "unacked", "rto_ms", "network_down",
+            "remote_warning", "low_upload_pressure"
+          ],
+          "properties": {
+            "bytes_sent_delta": {"type": "integer", "minimum": 0},
+            "bytes_sent": {"type": "integer", "minimum": 0},
+            "bytes_acked": {"type": "integer", "minimum": 0},
+            "bytes_elapsed_sec": {"type": "integer", "minimum": 0},
+            "send_mbps": {
+              "oneOf": [
+                {"type": "number", "minimum": 0},
+                {"type": "null"}
+              ]
+            },
+            "send_q": {"type": "integer", "minimum": 0},
+            "lastsnd_ms": {"type": "integer", "minimum": 0},
+            "notsent": {"type": "integer", "minimum": 0},
+            "unacked": {"type": "integer", "minimum": 0},
+            "rto_ms": {"type": "integer", "minimum": 0},
+            "network_down": {"type": "boolean"},
+            "remote_warning": {"type": "boolean"},
+            "low_upload_pressure": {"type": "boolean"}
+          }
+        },
+        "network": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["gateway_ok", "public_ok_count", "dns_ok", "tcp_probe_ok", "network_down"],
+          "properties": {
+            "gateway_ok": {"type": "boolean"},
+            "public_ok_count": {"type": "integer", "minimum": 0},
+            "dns_ok": {"type": "boolean"},
+            "tcp_probe_ok": {"type": "boolean"},
+            "network_down": {"type": "boolean"}
+          }
+        }
+      }
+    },
+    "recovery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["observed_at", "stall_streak", "stall_confirm_threshold", "net_fail_streak"],
+      "properties": {
+        "observed_at": {"type": "string", "format": "date-time"},
+        "stall_streak": {"type": "integer", "minimum": 0},
+        "stall_confirm_threshold": {"type": "integer", "minimum": 1},
+        "net_fail_streak": {"type": "integer", "minimum": 0}
+      }
+    },
+    "maintenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "observed_at", "evidence_ref"],
+      "properties": {
+        "status": {"enum": ["TRUE", "FALSE", "UNKNOWN"]},
+        "observed_at": {"type": "string", "format": "date-time"},
+        "evidence_ref": {"$ref": "#/$defs/evidence_ref"}
+      }
+    },
+    "checks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tcp_stall", "network_down", "ffmpeg_present", "target_stable", "maintenance",
+        "stream_engine_ready", "tcp_flow_healthy", "upload_progress_healthy", "startup_gate"
+      ],
+      "properties": {
+        "tcp_stall": {"$ref": "#/$defs/check"},
+        "network_down": {"$ref": "#/$defs/check"},
+        "ffmpeg_present": {"$ref": "#/$defs/check"},
+        "target_stable": {"$ref": "#/$defs/check"},
+        "maintenance": {"$ref": "#/$defs/check"},
+        "stream_engine_ready": {"$ref": "#/$defs/check"},
+        "tcp_flow_healthy": {"$ref": "#/$defs/check"},
+        "upload_progress_healthy": {"$ref": "#/$defs/check"},
+        "startup_gate": {"$ref": "#/$defs/check"}
+      }
+    },
+    "measurements": {
+      "type": "array",
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "value", "unit", "evidence_ref"],
+        "properties": {
+          "name": {"type": "string", "pattern": "^[a-z][a-z0-9_]{0,63}$"},
+          "value": {"type": "number"},
+          "unit": {"type": "string", "minLength": 1, "maxLength": 32},
+          "evidence_ref": {"$ref": "#/$defs/evidence_ref"}
+        }
+      }
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/evidence_ref"},
+      "minItems": 3,
+      "uniqueItems": true
+    },
+    "key_id": {"$ref": "#/$defs/id"},
+    "payload_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "signature": {"type": "string", "minLength": 40, "maxLength": 200}
+  },
+  "$defs": {
+    "id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:/-]{0,239}$"},
+    "evidence_ref": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:/-]{0,511}$"},
+    "check": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "observed_at", "evidence_ref"],
+      "properties": {
+        "status": {"enum": ["TRUE", "FALSE", "CONFIRMED", "UNKNOWN"]},
+        "observed_at": {"type": "string", "format": "date-time"},
+        "evidence_ref": {"$ref": "#/$defs/evidence_ref"}
+      }
+    },
+    "target_identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "host_id", "host_boot_id", "namespace", "pod_uid", "container_name",
+        "container_id", "ffmpeg_generation", "ffmpeg_pid"
+      ],
+      "properties": {
+        "host_id": {"type": "string", "minLength": 1},
+        "host_boot_id": {"type": "string", "minLength": 1},
+        "namespace": {"type": "string", "minLength": 1},
+        "pod_uid": {"type": "string", "minLength": 1},
+        "container_name": {"const": "stream-engine"},
+        "container_id": {"type": "string", "minLength": 1},
+        "ffmpeg_generation": {"type": "string", "minLength": 1},
+        "ffmpeg_pid": {"type": "integer", "minimum": 2}
+      }
+    },
+    "runtime_identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "host_id", "host_boot_id", "namespace", "pod_uid", "stream_engine_container_name",
+        "stream_engine_container_id", "runtime_generation"
+      ],
+      "properties": {
+        "host_id": {"type": "string", "minLength": 1},
+        "host_boot_id": {"type": "string", "minLength": 1},
+        "namespace": {"type": "string", "minLength": 1},
+        "pod_uid": {"type": "string", "minLength": 1},
+        "stream_engine_container_name": {"const": "stream-engine"},
+        "stream_engine_container_id": {"type": "string", "minLength": 1},
+        "runtime_generation": {"type": "string", "minLength": 1}
+      }
+    },
+    "target_snapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema", "snapshot_id", "observed_at", "valid_until", "source_revision",
+        "read_started_at", "read_finished_at", "status", "reason_code", "target_identity",
+        "runtime_snapshot_id", "runtime_status", "runtime_reason_code", "runtime_identity",
+        "runtime_container_ready"
+      ],
+      "properties": {
+        "schema": {"const": "cra_dell_recovery.target_snapshot.v1"},
+        "snapshot_id": {"$ref": "#/$defs/id"},
+        "observed_at": {"type": "string", "format": "date-time"},
+        "valid_until": {"type": "string", "format": "date-time"},
+        "source_revision": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "read_started_at": {"type": "string", "format": "date-time"},
+        "read_finished_at": {"type": "string", "format": "date-time"},
+        "status": {"const": "VALID"},
+        "reason_code": {"const": "SNAPSHOT_CONSISTENT"},
+        "target_identity": {"$ref": "#/$defs/target_identity"},
+        "runtime_snapshot_id": {"$ref": "#/$defs/id"},
+        "runtime_status": {"const": "VALID"},
+        "runtime_reason_code": {"const": "RUNTIME_SNAPSHOT_CONSISTENT"},
+        "runtime_identity": {"$ref": "#/$defs/runtime_identity"},
+        "runtime_container_ready": {"const": true}
+      }
+    }
+  }
+}

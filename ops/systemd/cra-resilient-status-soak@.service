@@ -1,0 +1,47 @@
+[Unit]
+Description=Collect local-only resilient signed-status soak sample for immutable CRA release %i
+After=cra-arena-resilient-status-pull@%i.service
+Wants=cra-arena-resilient-status-pull@%i.service
+ConditionPathExists=/opt/stream-recovery-control/releases/%i/release_manifest.json
+ConditionPathExists=/opt/stream-recovery-control/runtimes/%i/runtime_manifest.json
+ConditionPathExists=/etc/stream-recovery-control/releases/%i/resilient-status-soak.json
+
+[Service]
+Type=oneshot
+User=stream-recovery
+Group=stream-recovery
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=PYTHONNOUSERSITE=1
+Environment=PYTHONPATH=/opt/stream-recovery-control/releases/%i/src
+Environment=CRA_IMMUTABLE_RELEASE_ID=%i
+ExecStart=/opt/stream-recovery-control/runtimes/%i/.venv/bin/python -m cra_no_action_soak.resilient_soak --config /etc/stream-recovery-control/releases/%i/resilient-status-soak.json
+TimeoutStartSec=10s
+TimeoutStopSec=5s
+UMask=0077
+Nice=5
+MemoryMax=128M
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectClock=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+CapabilityBoundingSet=
+RestrictAddressFamilies=AF_UNIX
+ReadOnlyPaths=/etc/stream-recovery-control/releases/%i /opt/stream-recovery-control/releases/%i /opt/stream-recovery-control/runtimes/%i
+ReadOnlyPaths=/etc/stream-recovery-control/monitoring-ed25519-public.pem /etc/stream-recovery-control/dell-observation-ed25519-public.pem
+ReadOnlyPaths=/var/lib/stream-recovery-control/monitoring-inbox/releases/%i
+ReadWritePaths=/var/lib/stream-recovery-control/cra/releases/%i
+InaccessiblePaths=/var/lib/stream-recovery-control/cra/central.db
+InaccessiblePaths=-/var/lib/stream-recovery-control/cra/central.db-wal -/var/lib/stream-recovery-control/cra/central.db-shm
+InaccessiblePaths=-/var/lib/stream-recovery-control/cra/central.sqlite3 -/var/lib/stream-recovery-control/cra/central.sqlite3-wal -/var/lib/stream-recovery-control/cra/central.sqlite3-shm
+
+# Reads only the local admitted inbox and appends one hash-chained sample. No network family, Central SQLite,
+# command database, effect adapter, or full-history replay.

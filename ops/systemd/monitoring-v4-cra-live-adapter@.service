@@ -1,0 +1,49 @@
+[Unit]
+Description=Build facts-only CRA input from Monitoring and Dell for immutable release %i
+StartLimitIntervalSec=10s
+StartLimitBurst=10
+Requires=monitoring-v4-dell-observation-pull@%i.service
+After=network-online.target monitoring-v4-dell-observation-pull@%i.service
+Wants=network-online.target
+ConditionPathExists=/opt/stream-monitoring-cra-projection/releases/%i/release_manifest.json
+ConditionPathExists=/opt/stream-monitoring-cra-projection/runtimes/%i/runtime_manifest.json
+ConditionPathExists=/etc/stream-monitoring-cra-projection/releases/%i/live-adapter.json
+
+[Service]
+Type=oneshot
+User=stream-monitoring-projection
+Group=stream-monitoring-projection
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=PYTHONNOUSERSITE=1
+Environment=PYTHONPATH=/opt/stream-monitoring-cra-projection/releases/%i/src
+Environment=CRA_IMMUTABLE_RELEASE_ID=%i
+ExecStart=/opt/stream-monitoring-cra-projection/runtimes/%i/.venv/bin/python -m monitoring_projection.live_adapter --config /etc/stream-monitoring-cra-projection/releases/%i/live-adapter.json
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectClock=true
+ProtectHostname=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+ProtectProc=invisible
+ProcSubset=pid
+RestrictSUIDSGID=true
+RestrictRealtime=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+RemoveIPC=true
+CapabilityBoundingSet=
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+ReadOnlyPaths=/opt/stream-monitoring-cra-projection/releases/%i /opt/stream-monitoring-cra-projection/runtimes/%i /etc/stream-monitoring-cra-projection/releases/%i
+ReadOnlyPaths=/etc/stream-monitoring-v4/cra-projection-postgres.conninfo /etc/stream-monitoring-cra-projection/credentials/dell-observation-ed25519-public.pem
+ReadOnlyPaths=/var/lib/stream-monitoring-v4/cra-dell-observation
+ReadWritePaths=/var/lib/stream-monitoring-v4/cra-facts /var/lib/stream-monitoring-v4/cra-target-inbox
+InaccessiblePaths=/etc/stream-monitoring-cra-projection/credentials/monitoring-ed25519-private.pem /etc/stream-monitoring-cra-projection/credentials/dell-observation-client-key.pem
+InaccessiblePaths=/var/lib/stream-monitoring-v4/cra-projection /var/lib/stream-recovery-control
+
+# Fixed SELECT statements run in REPEATABLE READ READ ONLY; this process has no control or projection signing key.

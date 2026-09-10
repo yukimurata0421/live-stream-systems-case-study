@@ -1,0 +1,21 @@
+{
+  "regression_id": "REG-HARNESS-2026-08-23-010",
+  "origin": "OPERATIONAL_STATE_SPACE_V3",
+  "minimum_hit_count_per_high_risk_predicate": 20,
+  "mandatory_risk_ids": [
+    "HR-01",
+    "HR-02",
+    "HR-03",
+    "HR-04",
+    "HR-05",
+    "HR-06",
+    "HR-07",
+    "HR-08",
+    "HR-09",
+    "HR-10",
+    "HR-11"
+  ],
+  "required_negative_controls": ["NC-11", "NC-12", "NC-13", "NC-14", "NC-15"],
+  "physical_adapter": "ABSENT_FAKE_NO_ACTION",
+  "classification": "REGRESSION_CONTRACT"
+}

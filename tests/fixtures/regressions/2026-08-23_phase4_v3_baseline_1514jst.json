@@ -1,0 +1,45 @@
+{
+  "observed_window_jst": "2026-08-23 15:00:31-15:14:21 JST",
+  "evidence_kind": "LIVE_READONLY_PHASE4_NO_ACTION",
+  "dell": {
+    "target_snapshot_service": "active",
+    "target_snapshot_service_restarts": 0,
+    "snapshot_samples": 982,
+    "snapshot_journal_bytes": 784372,
+    "snapshot_latest_status": "VALID",
+    "snapshot_identity_field_count": 8,
+    "snapshot_interval_seconds": 5,
+    "snapshot_cpu_seconds": 405.539465,
+    "snapshot_elapsed_seconds_approx": 4066,
+    "snapshot_average_one_cpu_fraction_approx": 0.0997,
+    "snapshot_projected_journal_bytes_per_day_approx": 13800000,
+    "agent_service": "active",
+    "agent_service_restarts": 2,
+    "highest_authority_epoch": 26,
+    "agent_commands": 0,
+    "execution_attempts": 0,
+    "local_actions": 0,
+    "ledger_integrity": "ok"
+  },
+  "arena": {
+    "cra_service": "active",
+    "cra_service_restarts": 0,
+    "authority_sessions": 26,
+    "commands": 1,
+    "command_note": "diagnostic no-action shadow only",
+    "recovery_verification_messages": 0,
+    "ledger_integrity": "ok"
+  },
+  "safety": {
+    "physical_attempt": 0,
+    "ffmpeg_signal": 0,
+    "pod_mutation": 0,
+    "deployment_mutation": 0,
+    "host_restart": 0
+  },
+  "limitations": [
+    "the exact cause of the two Agent KeyError exits is not fully proven",
+    "snapshot CPU is a cumulative service counter divided by approximate elapsed wall time",
+    "no live RecoveryVerification message exists because Phase 4 physical action is zero"
+  ]
+}

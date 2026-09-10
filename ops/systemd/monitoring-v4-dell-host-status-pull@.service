@@ -1,0 +1,48 @@
+[Unit]
+Description=Pull signed Dell NO_ACTION host status for immutable arena release %i
+After=network-online.target
+Wants=network-online.target
+ConditionPathExists=/opt/stream-monitoring-cra-projection/releases/%i/release_manifest.json
+ConditionPathExists=/opt/stream-monitoring-cra-projection/runtimes/%i/runtime_manifest.json
+ConditionPathExists=/etc/stream-monitoring-cra-projection/releases/%i/dell-host-status-pull.json
+StartLimitIntervalSec=10s
+StartLimitBurst=10
+
+[Service]
+Type=oneshot
+User=stream-monitoring-projection
+Group=stream-monitoring-projection
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=PYTHONNOUSERSITE=1
+Environment=PYTHONPATH=/opt/stream-monitoring-cra-projection/releases/%i/src
+Environment=CRA_IMMUTABLE_RELEASE_ID=%i
+ExecStart=/opt/stream-monitoring-cra-projection/runtimes/%i/.venv/bin/python -m cra_no_action_soak.host_status_pull --config /etc/stream-monitoring-cra-projection/releases/%i/dell-host-status-pull.json
+TimeoutStartSec=20s
+TimeoutStopSec=5s
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectClock=true
+ProtectHostname=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+ProtectProc=invisible
+ProcSubset=pid
+RestrictSUIDSGID=true
+RestrictRealtime=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+RemoveIPC=true
+CapabilityBoundingSet=
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+ReadOnlyPaths=/opt/stream-monitoring-cra-projection/releases/%i /opt/stream-monitoring-cra-projection/runtimes/%i /etc/stream-monitoring-cra-projection/releases/%i /etc/stream-monitoring-cra-projection/credentials
+ReadWritePaths=/var/lib/stream-monitoring-v4/cra-dell-observation
+InaccessiblePaths=/etc/stream-monitoring-v4/cra-projection-postgres.conninfo /etc/stream-monitoring-cra-projection/credentials/monitoring-ed25519-private.pem
+InaccessiblePaths=/var/lib/stream-monitoring-v4/cra-projection /var/lib/stream-recovery-control
+
+# Independent soak-status transport only. Production observation and projection state are not writable.

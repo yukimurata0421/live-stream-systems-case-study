@@ -1,0 +1,13 @@
+[Unit]
+Description=Schedule collect recovery-aware seven-day soak for immutable release %i
+
+[Timer]
+OnBootSec=15s
+OnUnitInactiveSec=15s
+AccuracySec=500ms
+RandomizedDelaySec=0
+Persistent=false
+Unit=cra-recovery-soak@%i.service
+
+[Install]
+WantedBy=timers.target

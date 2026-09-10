@@ -1,0 +1,27 @@
+[Unit]
+Description=Dell Recovery Agent (mTLS no-action shadow template)
+After=network-online.target
+Wants=network-online.target
+ConditionPathExists=/etc/stream-recovery-control/dell-shadow.json
+
+[Service]
+Type=simple
+User=stream-recovery
+Group=stream-recovery
+Environment=PYTHONPATH=/opt/stream-recovery-control/src:/opt/stream-recovery-control/vendor
+ExecStart=/opt/stream-recovery-control/tools/sqlite_runtime/run-fixed.sh /usr/bin/python3 -m dell_recovery_agent.cli --config /etc/stream-recovery-control/dell-shadow.json
+Restart=on-failure
+RestartSec=5s
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadOnlyPaths=/etc/stream-recovery-control /opt/stream-recovery-control
+ReadWritePaths=/var/lib/stream-recovery-control/dell
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+
+# This template exposes no-action command and authority-heartbeat endpoints. No signal-capable adapter is present.
+
+[Install]
+WantedBy=multi-user.target

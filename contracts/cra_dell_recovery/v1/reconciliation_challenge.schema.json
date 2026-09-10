@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cra_dell_recovery.reconciliation_challenge.v1",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["protocol", "message_type", "request_id", "target_id", "controller_instance_id", "issued_at", "expires_at", "key_id", "payload_sha256", "signature"],
+      "properties": {
+        "protocol": {"const": "cra_dell_recovery.reconciliation_challenge.v1"},
+        "message_type": {"const": "reconciliation_challenge_request"},
+        "request_id": {"$ref": "#/$defs/id"},
+        "target_id": {"type": "string", "minLength": 1, "maxLength": 200},
+        "controller_instance_id": {"$ref": "#/$defs/id"},
+        "issued_at": {"type": "string", "format": "date-time"},
+        "expires_at": {"type": "string", "format": "date-time"},
+        "key_id": {"$ref": "#/$defs/id"},
+        "payload_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "signature": {"type": "string", "minLength": 40, "maxLength": 200}
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["protocol", "message_type", "reconciliation_id", "challenge_id", "challenge_nonce", "target_id", "agent_installation_id", "highest_authority_epoch_seen", "highest_command_seq_consumed", "unresolved_command_ids", "unresolved_local_action_ids", "local_journal_high_water", "local_journal_high_digest", "local_journal_ack_watermark", "target_identity", "issued_at", "expires_at", "key_id", "payload_sha256", "signature"],
+      "properties": {
+        "protocol": {"const": "cra_dell_recovery.reconciliation_challenge.v1"},
+        "message_type": {"const": "reconciliation_challenge"},
+        "reconciliation_id": {"$ref": "#/$defs/id"},
+        "challenge_id": {"$ref": "#/$defs/id"},
+        "challenge_nonce": {"type": "string", "minLength": 32, "maxLength": 200},
+        "target_id": {"type": "string", "minLength": 1, "maxLength": 200},
+        "agent_installation_id": {"$ref": "#/$defs/id"},
+        "highest_authority_epoch_seen": {"type": "integer", "minimum": 0},
+        "highest_command_seq_consumed": {"type": "integer", "minimum": 0},
+        "unresolved_command_ids": {"type": "array", "items": {"$ref": "#/$defs/id"}, "uniqueItems": true},
+        "unresolved_local_action_ids": {"type": "array", "items": {"$ref": "#/$defs/id"}, "uniqueItems": true},
+        "local_journal_high_water": {"type": "integer", "minimum": 0},
+        "local_journal_high_digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "local_journal_ack_watermark": {"type": "integer", "minimum": 0},
+        "target_identity": {"anyOf": [{"$ref": "#/$defs/target_identity"}, {"type": "null"}]},
+        "issued_at": {"type": "string", "format": "date-time"},
+        "expires_at": {"type": "string", "format": "date-time"},
+        "key_id": {"$ref": "#/$defs/id"},
+        "payload_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "signature": {"type": "string", "minLength": 40, "maxLength": 200}
+      }
+    }
+  ],
+  "$defs": {
+    "id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:/-]{0,239}$"},
+    "target_identity": {
+      "type": "object", "additionalProperties": false,
+      "required": ["host_id", "host_boot_id", "namespace", "pod_uid", "container_name", "container_id", "ffmpeg_generation", "ffmpeg_pid"],
+      "properties": {
+        "host_id": {"type": "string", "minLength": 1}, "host_boot_id": {"type": "string", "minLength": 1},
+        "namespace": {"type": "string", "minLength": 1}, "pod_uid": {"type": "string", "minLength": 1},
+        "container_name": {"const": "stream-engine"}, "container_id": {"type": "string", "minLength": 1},
+        "ffmpeg_generation": {"type": "string", "minLength": 1}, "ffmpeg_pid": {"type": "integer", "minimum": 2}
+      }
+    }
+  }
+}

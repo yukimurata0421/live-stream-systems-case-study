@@ -1,0 +1,21 @@
+{
+  "fixture_version": 1,
+  "regression_id": "REG-HARNESS-2026-08-23-001",
+  "origin_run_id": "20260823T_harness_engineering_v1",
+  "first_seen_at": "2026-08-23T03:25:32.214Z",
+  "classification": "HARNESS_DEFECT",
+  "root_cause": "failed git rev-parse HEAD stdout was accepted without checking the subprocess exit code",
+  "fix_reference": "docs/engineering/records/2026-08-23_05_manifest_git_identity.md",
+  "invariant": "unborn repository requires git.commit=null and git.unborn=true; committed repository requires a 40-character commit hash",
+  "failure_before_fix": {
+    "git_commit": "HEAD",
+    "git_unborn": false,
+    "manifest_complete": true
+  },
+  "expected_after_fix": {
+    "git_commit": null,
+    "git_unborn": true,
+    "manifest_complete": true
+  },
+  "negative_protection": "inconsistent commit/unborn combinations must make manifest_complete false"
+}

@@ -1,0 +1,12 @@
+[Unit]
+Description=Refresh verified Dell NO_ACTION host status for immutable arena release %i
+
+[Timer]
+OnBootSec=4s
+OnUnitInactiveSec=3s
+AccuracySec=200ms
+RandomizedDelaySec=0
+Unit=monitoring-v4-dell-host-status-pull@%i.service
+
+[Install]
+WantedBy=timers.target

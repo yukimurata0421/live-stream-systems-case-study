@@ -1,0 +1,44 @@
+[Unit]
+Description=Collect CRA-local signed-host-status NO_ACTION soak sample for immutable release %i
+Wants=cra-arena-host-status-pull@%i.service
+After=cra-runtime-no-action@%i.service cra-arena-host-status-pull@%i.service
+ConditionPathExists=/opt/stream-recovery-control/releases/%i/tools/collect_cra_no_action_soak.py
+ConditionPathExists=/opt/stream-recovery-control/runtimes/%i/runtime_manifest.json
+ConditionPathExists=/etc/stream-recovery-control/releases/%i/cra-no-action-soak-local-profile.json
+
+[Service]
+Type=oneshot
+User=stream-recovery
+Group=stream-recovery
+SupplementaryGroups=systemd-journal
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=PYTHONNOUSERSITE=1
+Environment=PYTHONPATH=/opt/stream-recovery-control/releases/%i/src
+Environment=CRA_IMMUTABLE_RELEASE_ID=%i
+Environment=CRA_SOAK_LOCAL_DIRECT=1
+Environment=CRA_SOAK_REMOTE_EXECUTION=forbidden
+Environment=LD_LIBRARY_PATH=/opt/stream-recovery-control/runtimes/%i/sqlite/lib
+ExecStart=/opt/stream-recovery-control/runtimes/%i/.venv/bin/python /opt/stream-recovery-control/releases/%i/tools/collect_cra_no_action_soak.py --profile /etc/stream-recovery-control/releases/%i/cra-no-action-soak-local-profile.json
+TimeoutStartSec=30s
+TimeoutStopSec=5s
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+CapabilityBoundingSet=
+RestrictAddressFamilies=AF_UNIX
+ReadOnlyPaths=/etc/stream-recovery-control/releases/%i /etc/stream-recovery-control/cra-monitoring-client.pem /etc/stream-recovery-control/monitoring-ed25519-public.pem /etc/stream-recovery-control/dell-observation-ed25519-public.pem /etc/needrestart/conf.d/stream-recovery-control.conf
+ReadOnlyPaths=/opt/stream-recovery-control/releases/%i /opt/stream-recovery-control/runtimes/%i /var/lib/stream-recovery-control
+ReadWritePaths=/var/lib/cra-no-action-soak
+InaccessiblePaths=-/usr/bin/ssh -/bin/ssh
+InaccessiblePaths=/etc/stream-recovery-control/cra-monitoring-client-key.pem /etc/stream-recovery-control/cra-archive-signing-private.pem
+
+# Formal soak collection is local-only. The unit has no IP socket family and the SSH executable is hidden.

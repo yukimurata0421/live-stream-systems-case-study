@@ -1,0 +1,39 @@
+[Unit]
+Description=Central Restart Authority no-action runtime for immutable release %i
+After=local-fs.target cra-monitoring-projection-pull@%i.service
+ConditionPathExists=/opt/stream-recovery-control/releases/%i/release_manifest.json
+ConditionPathExists=/opt/stream-recovery-control/runtimes/%i/runtime_manifest.json
+ConditionPathExists=/etc/stream-recovery-control/releases/%i/cra-runtime.json
+
+[Service]
+Type=simple
+User=stream-recovery
+Group=stream-recovery
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=PYTHONNOUSERSITE=1
+Environment=PYTHONPATH=/opt/stream-recovery-control/releases/%i/src
+Environment=CRA_IMMUTABLE_RELEASE_ID=%i
+Environment=LD_LIBRARY_PATH=/opt/stream-recovery-control/runtimes/%i/sqlite/lib
+ExecStart=/opt/stream-recovery-control/runtimes/%i/.venv/bin/python -m cra_authority.runtime --config /etc/stream-recovery-control/releases/%i/cra-runtime.json
+Restart=on-failure
+RestartSec=5s
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+RestrictAddressFamilies=AF_UNIX
+ReadOnlyPaths=/etc/stream-recovery-control/releases/%i /opt/stream-recovery-control/releases/%i /opt/stream-recovery-control/runtimes/%i /var/lib/stream-recovery-control/monitoring-inbox
+ReadWritePaths=/var/lib/stream-recovery-control/cra
+InaccessiblePaths=/etc/stream-recovery-control/cra-monitoring-client-key.pem
+
+# NO_ACTION only: no network socket and no Dell/Effect Executor credential is available.
+
+[Install]
+WantedBy=multi-user.target

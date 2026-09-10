@@ -1,0 +1,17 @@
+{
+  "fixture_version": 1,
+  "regression_id": "REG-HARNESS-2026-08-23-002",
+  "origin_run_id": "20260823T_harness_engineering_v4",
+  "first_seen_at": "2026-08-23T03:37:00.000Z",
+  "classification": "HARNESS_DEFECT",
+  "root_cause": "run_verification executed before build_manifest, so manifest.started_at did not cover pytest execution",
+  "fix_reference": "docs/engineering/records/2026-08-23_06_manifest_start_order.md",
+  "invariant": "manifest.started_at <= verification.started_at <= verification.finished_at <= manifest.finished_at",
+  "failure_before_fix": {
+    "verification_covered_by_manifest_window": false
+  },
+  "expected_after_fix": {
+    "verification_covered_by_manifest_window": true
+  },
+  "negative_protection": "artifact consistency must reject a verification window outside the manifest run window"
+}

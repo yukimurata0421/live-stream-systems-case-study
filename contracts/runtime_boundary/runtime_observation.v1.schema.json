@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://stream-recovery-control.local/runtime.ffmpeg_observation.v1.schema.json",
+  "title": "Runtime FFmpeg Observation v1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "observation_id",
+    "executor_instance_id",
+    "sequence",
+    "observed_at",
+    "ffmpeg_running",
+    "ffmpeg_generation",
+    "target_snapshot_status",
+    "maintenance_evidence_status",
+    "production_behavior_modified"
+  ],
+  "properties": {
+    "schema_version": {"const": "runtime.ffmpeg_observation.v1"},
+    "observation_id": {"type": "string", "minLength": 1},
+    "executor_instance_id": {"type": "string", "minLength": 1},
+    "sequence": {"type": "integer", "minimum": 1},
+    "observed_at": {"type": "string", "format": "date-time"},
+    "ffmpeg_running": {"type": "boolean"},
+    "ffmpeg_generation": {"type": "string"},
+    "target_snapshot_status": {"enum": ["VALID", "UNKNOWN"]},
+    "target_identity": {"type": ["object", "null"]},
+    "runtime_snapshot_status": {"enum": ["VALID", "UNKNOWN"]},
+    "runtime_identity": {"type": ["object", "null"]},
+    "runtime_lifecycle_state": {"type": "string"},
+    "managed_child_cardinality": {"enum": ["0", "1", "2+", "UNKNOWN"]},
+    "maintenance_evidence_status": {"enum": ["AVAILABLE", "UNKNOWN", "STALE", "INVALID"]},
+    "production_behavior_modified": {"const": false}
+  }
+}

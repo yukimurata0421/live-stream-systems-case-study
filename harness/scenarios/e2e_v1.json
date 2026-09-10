@@ -1,0 +1,11 @@
+{
+  "registry_version": 1,
+  "scenarios": [
+    {"scenario_id": "E2E-01", "mode": "normal", "expected_command_state": "VERIFIED", "expected_verdict": "RECOVERED", "max_physical_attempts": 1},
+    {"scenario_id": "E2E-02", "mode": "ack_loss", "expected_command_state": "VERIFIED", "expected_verdict": "RECOVERED", "max_physical_attempts": 1},
+    {"scenario_id": "E2E-03", "mode": "verification_delay", "expected_command_state": "VERIFICATION_UNKNOWN", "expected_verdict": "UNKNOWN", "max_physical_attempts": 1},
+    {"scenario_id": "E2E-04", "mode": "agent_crash", "expected_command_state": "OUTCOME_UNKNOWN", "expected_verdict": "NOT_EMITTED", "max_physical_attempts": 0},
+    {"scenario_id": "E2E-05", "mode": "monitoring_stale", "expected_command_state": "VERIFICATION_UNKNOWN", "expected_verdict": "UNKNOWN", "max_physical_attempts": 1},
+    {"scenario_id": "E2E-06", "mode": "target_mutation", "expected_command_state": "OUTCOME_UNKNOWN", "expected_verdict": "NOT_EMITTED", "max_physical_attempts": 1}
+  ]
+}

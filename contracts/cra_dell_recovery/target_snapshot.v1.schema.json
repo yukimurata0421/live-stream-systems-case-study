@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cra_dell_recovery.target_snapshot.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "snapshot_id", "observed_at", "valid_until", "source_revision",
+    "read_started_at", "read_finished_at", "status", "reason_code",
+    "target_identity", "runtime_snapshot_id", "runtime_status",
+    "runtime_reason_code", "runtime_identity", "runtime_container_ready"
+  ],
+  "properties": {
+    "schema": {"const": "cra_dell_recovery.target_snapshot.v1"},
+    "snapshot_id": {"$ref": "#/$defs/id"},
+    "observed_at": {"type": "string", "format": "date-time"},
+    "valid_until": {"type": "string", "format": "date-time"},
+    "source_revision": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "read_started_at": {"type": "string", "format": "date-time"},
+    "read_finished_at": {"type": "string", "format": "date-time"},
+    "status": {"enum": ["VALID", "INVALID"]},
+    "reason_code": {"type": "string", "minLength": 1, "maxLength": 160},
+    "target_identity": {
+      "oneOf": [
+        {"type": "null"},
+        {"$ref": "#/$defs/target_identity"}
+      ]
+    },
+    "runtime_snapshot_id": {"$ref": "#/$defs/id"},
+    "runtime_status": {"enum": ["VALID", "INVALID"]},
+    "runtime_reason_code": {"type": "string", "minLength": 1, "maxLength": 160},
+    "runtime_identity": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "host_id", "host_boot_id", "namespace", "pod_uid",
+            "stream_engine_container_name", "stream_engine_container_id",
+            "runtime_generation"
+          ],
+          "properties": {
+            "host_id": {"type": "string", "minLength": 1},
+            "host_boot_id": {"type": "string", "minLength": 1},
+            "namespace": {"type": "string", "minLength": 1},
+            "pod_uid": {"type": "string", "minLength": 1},
+            "stream_engine_container_name": {"const": "stream-engine"},
+            "stream_engine_container_id": {"type": "string", "minLength": 1},
+            "runtime_generation": {"type": "string", "minLength": 1}
+          }
+        }
+      ]
+    },
+    "runtime_container_ready": {"type": ["boolean", "null"]}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"status": {"const": "VALID"}}},
+      "then": {"properties": {"target_identity": {"$ref": "#/$defs/target_identity"}}}
+    }
+  ],
+  "$defs": {
+    "id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:/-]{0,239}$"},
+    "target_identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "host_id", "host_boot_id", "namespace", "pod_uid", "container_name",
+        "container_id", "ffmpeg_generation", "ffmpeg_pid"
+      ],
+      "properties": {
+        "host_id": {"type": "string", "minLength": 1},
+        "host_boot_id": {"type": "string", "minLength": 1},
+        "namespace": {"type": "string", "minLength": 1},
+        "pod_uid": {"type": "string", "minLength": 1},
+        "container_name": {"const": "stream-engine"},
+        "container_id": {"type": "string", "minLength": 1},
+        "ffmpeg_generation": {"type": "string", "minLength": 1},
+        "ffmpeg_pid": {"type": "integer", "minimum": 2}
+      }
+    }
+  }
+}

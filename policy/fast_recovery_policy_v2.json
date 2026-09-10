@@ -1,0 +1,128 @@
+{
+  "schema_version": "fast_recovery.policy.v2",
+  "status": "PROPOSED_LOCAL_VERIFICATION",
+  "production_behavior_change_authorized": false,
+  "gates_owned_by_legacy_loop": [
+    "confirmation_streak",
+    "minimum_ffmpeg_uptime",
+    "restart_guard",
+    "failure_backoff",
+    "success_backoff",
+    "hourly_downtime_budget",
+    "daily_downtime_budget",
+    "emergency_budget_override",
+    "current_pod_establishment",
+    "gpu_preflight",
+    "durable_effect_authority"
+  ],
+  "rows": [
+    {
+      "reason_kind": "tcp_stall",
+      "classifier": "confirmed local TCP transport stall",
+      "intent_type": "RESTART_FFMPEG",
+      "failure_domain": "DELIVERY_PATH",
+      "target_type": "FfmpegTargetIdentity",
+      "effect_owner": "stream-engine-effect-executor",
+      "effect_scope": "ffmpeg_child",
+      "retry": "no automatic retry after OUTCOME_UNKNOWN",
+      "verification": "new exact FFmpeg generation and positive transport progress",
+      "parity": "EXACT_PARITY_FOR_K8S_PRODUCTION"
+    },
+    {
+      "reason_kind": "remote_warning",
+      "classifier": "confirmed remote YouTube pre-loss warning under existing local-evidence gate",
+      "intent_type": "RESTART_FFMPEG",
+      "failure_domain": "DELIVERY_PATH",
+      "target_type": "FfmpegTargetIdentity",
+      "effect_owner": "stream-engine-effect-executor",
+      "effect_scope": "ffmpeg_child",
+      "retry": "no automatic retry after OUTCOME_UNKNOWN",
+      "verification": "new exact FFmpeg generation and positive transport progress",
+      "parity": "EXACT_PARITY_FOR_K8S_PRODUCTION"
+    },
+    {
+      "reason_kind": "ffmpeg_missing",
+      "classifier": "stable owner runtime in RESTART_DELAY with zero managed FFmpeg children",
+      "intent_type": "RECONCILE_FFMPEG",
+      "failure_domain": "FFMPEG_LOCAL",
+      "target_type": "RuntimeIdentity",
+      "effect_owner": "stream-engine-effect-executor",
+      "effect_scope": "ffmpeg_child_convergence",
+      "retry": "single durable request; no automatic retry after OUTCOME_UNKNOWN",
+      "verification": "exactly one new managed FFmpeg child observed",
+      "parity": "SEMANTIC_PARITY_WHEN_RECONCILABLE"
+    },
+    {
+      "reason_kind": "ffmpeg_missing",
+      "classifier": "runtime-local missing child outside a safe reconcile lifecycle",
+      "intent_type": "ESCALATE_RUNTIME_RECOVERY",
+      "failure_domain": "RUNTIME_LOCAL",
+      "target_type": "RuntimeIdentity",
+      "effect_owner": "legacy-runtime-recovery-adapter",
+      "effect_scope": "runtime",
+      "retry": "no automatic retry after OUTCOME_UNKNOWN",
+      "verification": "new runtime and FFmpeg identities with transport progress",
+      "parity": "EXACT_SCOPE_PARITY"
+    },
+    {
+      "reason_kind": "network_down",
+      "classifier": "network failure domain is not localized",
+      "intent_type": "NO_ACTION",
+      "failure_domain": "UNKNOWN_NETWORK",
+      "target_type": "none",
+      "effect_owner": "none",
+      "effect_scope": "none",
+      "retry": "continued connectivity observation",
+      "verification": "connectivity recovered",
+      "parity": "EXACT_PARITY_WITH_REACHABLE_PRODUCTION_BRANCH"
+    },
+    {
+      "reason_kind": "low_upload_pressure",
+      "classifier": "observable throughput pressure",
+      "intent_type": "NO_ACTION",
+      "failure_domain": "NONE_OR_INSUFFICIENT_EVIDENCE",
+      "target_type": "none",
+      "effect_owner": "none",
+      "effect_scope": "none",
+      "retry": "continued observation",
+      "verification": "continued observation",
+      "parity": "EXACT_PARITY"
+    },
+    {
+      "reason_kind": "healthy",
+      "classifier": "no confirmed recovery reason",
+      "intent_type": "NO_ACTION",
+      "failure_domain": "NONE_OR_INSUFFICIENT_EVIDENCE",
+      "target_type": "none",
+      "effect_owner": "none",
+      "effect_scope": "none",
+      "retry": "continued observation",
+      "verification": "continued observation",
+      "parity": "EXACT_PARITY"
+    },
+    {
+      "reason_kind": "startup_transient",
+      "classifier": "startup/warmup/current Pod not established",
+      "intent_type": "NO_ACTION",
+      "failure_domain": "NONE_OR_INSUFFICIENT_EVIDENCE",
+      "target_type": "none",
+      "effect_owner": "none",
+      "effect_scope": "none",
+      "retry": "continued observation",
+      "verification": "runtime establishment",
+      "parity": "EXACT_PARITY"
+    },
+    {
+      "reason_kind": "target_unavailable",
+      "classifier": "exact target/runtime evidence unavailable or unsafe child cardinality",
+      "intent_type": "NO_ACTION",
+      "failure_domain": "UNKNOWN",
+      "target_type": "none",
+      "effect_owner": "none",
+      "effect_scope": "none",
+      "retry": "continued observation; no automatic effect retry",
+      "verification": "fresh stable identity evidence",
+      "parity": "SAFETY_PRESERVING_AVAILABILITY_DIFFERENCE"
+    }
+  ]
+}

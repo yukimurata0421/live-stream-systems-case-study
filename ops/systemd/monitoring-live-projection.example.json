@@ -1,0 +1,26 @@
+{
+  "schema": "monitoring_v4.cra_projection_producer_config.v1",
+  "producer_release_id": "replace-with-immutable-arena-projection-release-id",
+  "source_instance_id": "arena-monitoring-v4",
+  "source_release_id": "replace-with-immutable-arena-projection-release-id",
+  "target_id": "stream-v3-youtube-primary",
+  "expected_target": {
+    "host_id": "dell-yuki",
+    "namespace": "stream-v3",
+    "container_name": "stream-engine"
+  },
+  "fact_bundle_file": "/var/lib/stream-monitoring-v4/cra-facts/releases/replace-with-immutable-arena-projection-release-id/latest.json",
+  "target_snapshot_file": "/var/lib/stream-monitoring-v4/cra-target-inbox/releases/replace-with-immutable-arena-projection-release-id/latest.json",
+  "fact_bundle_schema_file": "/opt/stream-monitoring-cra-projection/releases/replace-with-immutable-arena-projection-release-id/contracts/monitoring_v4/cra_fact_bundle.v1.schema.json",
+  "target_snapshot_schema_file": "/opt/stream-monitoring-cra-projection/releases/replace-with-immutable-arena-projection-release-id/contracts/cra_dell_recovery/target_snapshot.v1.schema.json",
+  "projection_schema_file": "/opt/stream-monitoring-cra-projection/releases/replace-with-immutable-arena-projection-release-id/contracts/monitoring_v4/evidence_projection.v1.schema.json",
+  "private_key_file": "/etc/stream-monitoring-cra-projection/credentials/monitoring-ed25519-private.pem",
+  "key_id": "replace-with-monitoring-projection-key-id",
+  "output_file": "/var/lib/stream-monitoring-v4/cra-projection/releases/replace-with-immutable-arena-projection-release-id/latest.json",
+  "status_file": "/var/lib/stream-monitoring-v4/cra-projection/releases/replace-with-immutable-arena-projection-release-id/status.json",
+  "state_database": "/var/lib/stream-monitoring-v4/cra-projection/releases/replace-with-immutable-arena-projection-release-id/sequence.sqlite3",
+  "projection_ttl_seconds": 20,
+  "maximum_fact_age_seconds": 30,
+  "maximum_target_age_seconds": 30,
+  "maximum_observation_skew_seconds": 90
+}

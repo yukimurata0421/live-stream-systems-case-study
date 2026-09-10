@@ -1,0 +1,26 @@
+[Unit]
+Description=Monitoring v4 facts-only signed CRA projection
+After=local-fs.target
+ConditionPathExists=/etc/stream-recovery-control/monitoring-projection.json
+
+[Service]
+Type=oneshot
+User=stream-monitoring-projection
+Group=stream-monitoring-projection
+ExecStart=/opt/stream-recovery-control/.venv/bin/cra-monitoring-project --config /etc/stream-recovery-control/monitoring-projection.json
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+RestrictAddressFamilies=AF_UNIX
+ReadOnlyPaths=/etc/stream-recovery-control /opt/stream-recovery-control /var/lib/stream-monitoring-v4/cra-facts /var/lib/stream-monitoring-v4/cra-target-inbox
+ReadWritePaths=/var/lib/stream-monitoring-v4/cra-projection
+
+# Facts/signing only. This process has no command, Dell, or effect credential.

@@ -1,0 +1,36 @@
+[Unit]
+Description=Maintenance Protocol v2 Coordinator Shadow (audit evidence only)
+After=local-fs.target
+ConditionPathExists=/etc/stream-recovery-control/maintenance-shadow.json
+
+[Service]
+Type=simple
+User=maintenance-shadow
+Group=yuki
+SupplementaryGroups=stream-recovery
+Environment=PYTHONPATH=/opt/stream-recovery-control/src:/opt/stream-recovery-control/vendor
+ExecStart=/opt/stream-recovery-control/tools/sqlite_runtime/run-fixed.sh /usr/bin/python3 -m maintenance_shadow.service --config /etc/stream-recovery-control/maintenance-shadow.json
+Restart=on-failure
+RestartSec=5s
+UMask=0027
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+PrivateNetwork=true
+ReadOnlyPaths=/etc/stream-recovery-control /opt/stream-recovery-control /var/lib/stream-recovery-control/cra/maintenance-evidence
+ReadWritePaths=/var/lib/stream-recovery-control/maintenance-shadow /var/lib/stream-recovery-control/maintenance-audit-cache
+RestrictAddressFamilies=AF_UNIX
+
+# This process owns only a separate shadow SQLite WAL and atomic JSON snapshot.
+# It has no restart, signal, Kubernetes, Dell physical-action, or production mutation credential.
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,44 @@
+[Unit]
+Description=Publish non-privileged chrony tracking fact for immutable release %i
+ConditionPathExists=/opt/stream-recovery-observation/releases/%i/release_manifest.json
+ConditionPathExists=/opt/stream-recovery-observation/runtimes/%i/runtime_manifest.json
+
+[Service]
+Type=oneshot
+User=_chrony
+Group=stream-recovery
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=PYTHONNOUSERSITE=1
+Environment=PYTHONPATH=/opt/stream-recovery-observation/releases/%i/src
+Environment=CRA_IMMUTABLE_RELEASE_ID=%i
+ExecStart=/opt/stream-recovery-observation/runtimes/%i/.venv/bin/python -m cra_no_action_soak.clock_status_probe --output /var/lib/stream-recovery-observation/clock-status/releases/%i/tracking.json
+TimeoutStartSec=5s
+TimeoutStopSec=2s
+UMask=0027
+StateDirectory=stream-recovery-observation/clock-status/releases/%i
+StateDirectoryMode=0750
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectClock=true
+ProtectHostname=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+RemoveIPC=true
+CapabilityBoundingSet=
+RestrictAddressFamilies=AF_UNIX
+ReadOnlyPaths=/opt/stream-recovery-observation/releases/%i /opt/stream-recovery-observation/runtimes/%i
+ReadWritePaths=/var/lib/stream-recovery-observation/clock-status/releases/%i
+InaccessiblePaths=-/run/stream-v3-control /var/lib/rancher/k3s /var/lib/stream-recovery-control
+InaccessiblePaths=/etc/stream-recovery-observation
+
+# This fact producer already runs as _chrony, so chronyc performs no privileged
+# identity transition. It owns no credential, control route, or stream state.

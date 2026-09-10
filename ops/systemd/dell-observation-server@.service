@@ -1,0 +1,60 @@
+[Unit]
+Description=Dell signed GET-only observation server for immutable release %i
+After=network-online.target dell-target-snapshot-shadow.service stream-v3-fast-recovery-controller.timer maintenance-snapshot-projection-shadow.service
+Wants=network-online.target
+ConditionPathExists=/opt/stream-recovery-observation/releases/%i/release_manifest.json
+ConditionPathExists=/opt/stream-recovery-observation/runtimes/%i/runtime_manifest.json
+ConditionPathExists=/etc/stream-recovery-observation/releases/%i/dell-observation-server.json
+
+[Service]
+Type=simple
+User=stream-recovery-observer
+Group=stream-recovery
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=PYTHONNOUSERSITE=1
+Environment=PYTHONPATH=/opt/stream-recovery-observation/releases/%i/src
+Environment=CRA_IMMUTABLE_RELEASE_ID=%i
+ExecStart=/opt/stream-recovery-observation/runtimes/%i/.venv/bin/python -m dell_recovery_agent.observation_server --config /etc/stream-recovery-observation/releases/%i/dell-observation-server.json
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=on-failure
+RestartSec=5s
+UMask=0077
+StateDirectory=stream-recovery-observation/releases/%i
+StateDirectoryMode=0750
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectClock=true
+ProtectHostname=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+ProtectProc=invisible
+ProcSubset=pid
+RestrictSUIDSGID=true
+RestrictRealtime=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+RemoveIPC=true
+CapabilityBoundingSet=
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+ReadOnlyPaths=/opt/stream-recovery-observation/releases/%i /opt/stream-recovery-observation/runtimes/%i /etc/stream-recovery-observation/releases/%i /etc/stream-recovery-observation/credentials
+ReadOnlyPaths=/var/lib/stream-recovery-control/dell/target_snapshot.json
+ReadOnlyPaths=/var/lib/stream-recovery-control/controller/mp03-active/runtime/ffmpeg_transport_latest.json
+ReadOnlyPaths=/var/lib/stream-recovery-control/controller/mp03-active/fast_recovery_state.json
+ReadOnlyPaths=/var/lib/stream-recovery-control/projection/mp03/maintenance-snapshot.json
+ReadOnlyPaths=-/var/lib/stream-recovery-observation/host-status/releases/%i
+ReadWritePaths=/var/lib/stream-recovery-observation/releases/%i
+InaccessiblePaths=-/var/lib/stream-recovery-control/dell/agent.sqlite3 -/var/lib/stream-recovery-control/dell/agent.sqlite3-wal -/var/lib/stream-recovery-control/dell/agent.sqlite3-shm
+InaccessiblePaths=-/var/lib/stream-recovery-control/dell/agent.db -/var/lib/stream-recovery-control/dell/dell.db -/var/lib/stream-recovery-control/dell/dell_agent.sqlite3
+InaccessiblePaths=-/var/lib/stream-recovery-control/dell/effect-ledger.sqlite3 -/var/lib/stream-recovery-control/dell/effect_ledger.sqlite3 -/var/lib/stream-recovery-control/dell/backups
+InaccessiblePaths=-/run/stream-v3-control/effect.sock -/run/stream-v3-control/runtime-recovery.sock
+
+# This process has observation signing and server TLS keys only. Its sole writable path stores the exact signed
+# observation served to arena; persistence failure blocks the soak status path but not the production observation GET.
+
+[Install]
+WantedBy=multi-user.target

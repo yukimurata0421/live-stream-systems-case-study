@@ -1,0 +1,19 @@
+{
+  "regression_id": "REG-CRA-2026-08-23-AGENT-SQLITE-ROLE-SEPARATION",
+  "origin": "Phase 4 live Dell Agent authority_fences read failures",
+  "original_failure": "A shared check_same_thread=False connection served writer, lease reader, status reader, reconciliation reader, checkpoint, and backup roles.",
+  "fixed_architecture": {
+    "writer": "one serialized writer connection with bounded lock acquisition",
+    "reader": "one short-lived read-only connection and transaction per calling thread",
+    "checkpoint": "independent role connection",
+    "backup": "independent read source connection"
+  },
+  "required_invariants": [
+    "Dell runtime source has no direct shared writer connection reads",
+    "critical reads return one committed WAL snapshot",
+    "SQLite uncertainty returns SAFE_BLOCKED and invalidates the process lease",
+    "checkpoint, backup, heartbeat, reconciliation, and status concurrency produce no KeyError or SQLite exception",
+    "agent restart never restores a persisted monotonic lease"
+  ],
+  "physical_effect_allowed": false
+}

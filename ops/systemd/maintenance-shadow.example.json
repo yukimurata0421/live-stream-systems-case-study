@@ -1,0 +1,10 @@
+{
+  "database": "/var/lib/stream-recovery-control/maintenance-shadow/maintenance-shadow.db",
+  "migration": "/opt/stream-recovery-control/migrations/maintenance_shadow/001_initial.sql",
+  "producer_id": "arena-maintenance-shadow",
+  "target_snapshot": "/var/lib/stream-recovery-control/cra/maintenance-evidence/target_snapshot.json",
+  "authority_projection": "/var/lib/stream-recovery-control/cra/maintenance-evidence/authority_projection.json",
+  "output_snapshot": "/var/lib/stream-recovery-control/maintenance-audit-cache/maintenance-audit-state.json",
+  "ttl_seconds": 20.0,
+  "interval_seconds": 1.0
+}
