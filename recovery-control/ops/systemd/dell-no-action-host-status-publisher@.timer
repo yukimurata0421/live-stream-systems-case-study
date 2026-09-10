@@ -1,0 +1,12 @@
+[Unit]
+Description=Refresh signed Dell NO_ACTION host status for immutable release %i
+
+[Timer]
+OnBootSec=3s
+OnUnitInactiveSec=5s
+AccuracySec=200ms
+RandomizedDelaySec=0
+Unit=dell-no-action-host-status-publisher@%i.service
+
+[Install]
+WantedBy=timers.target

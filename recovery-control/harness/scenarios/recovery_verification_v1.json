@@ -1,0 +1,12 @@
+{
+  "registry_version": 1,
+  "scenarios": [
+    {"scenario_id": "V-01", "mode": "healthy", "expected_verdict": "RECOVERED", "expected_ingest": "ACCEPTED"},
+    {"scenario_id": "V-02", "mode": "stale", "expected_verdict": "UNKNOWN", "expected_ingest": "ACCEPTED"},
+    {"scenario_id": "V-03", "mode": "tcp_stalled", "expected_verdict": "FAILED", "expected_ingest": "ACCEPTED"},
+    {"scenario_id": "V-04", "mode": "pod_ready_only", "expected_verdict": "UNKNOWN", "expected_ingest": "ACCEPTED"},
+    {"scenario_id": "V-05", "mode": "youtube_only", "expected_verdict": "UNKNOWN", "expected_ingest": "ACCEPTED"},
+    {"scenario_id": "V-06", "mode": "old_command", "expected_verdict": "RECOVERED", "expected_ingest": "REJECTED_OLD_COMMAND"},
+    {"scenario_id": "V-07", "mode": "unexpected_target", "expected_verdict": "UNKNOWN", "expected_ingest": "RECONCILE"}
+  ]
+}

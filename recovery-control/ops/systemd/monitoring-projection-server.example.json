@@ -1,0 +1,15 @@
+{
+  "schema": "monitoring_v4.cra_projection_server_config.v3",
+  "server_release_id": "replace-with-immutable-arena-projection-release-id",
+  "projection_file": "/var/lib/stream-monitoring-v4/cra-projection/releases/replace-with-immutable-arena-projection-release-id/latest.json",
+  "host_status_file": "/var/lib/stream-monitoring-v4/cra-projection/releases/replace-with-immutable-arena-projection-release-id/host-status.json",
+  "resilient_host_status_file": "/var/lib/stream-monitoring-v4/cra-projection/releases/replace-with-immutable-arena-projection-release-id/resilient-host-status.json",
+  "host_status_host_id": "arena-monitoring-facts",
+  "server_resource_status_file": "/var/lib/stream-monitoring-v4/cra-projection/releases/replace-with-immutable-arena-projection-release-id/server-resource-status.json",
+  "tls_certificate": "/etc/stream-monitoring-cra-projection/credentials/monitoring-server.pem",
+  "tls_private_key": "/etc/stream-monitoring-cra-projection/credentials/monitoring-server-key.pem",
+  "client_ca_certificate": "/etc/stream-monitoring-cra-projection/credentials/cra-client-ca.pem",
+  "listen_host": "replace-with-arena-private-lan-address",
+  "listen_port": 9444,
+  "maximum_response_bytes": 2097152
+}

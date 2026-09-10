@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "maintenance.audit_state_snapshot.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "available",
+    "observed_at",
+    "fresh_until",
+    "maintenance_state",
+    "maintenance_id",
+    "maintenance_generation",
+    "authority_epoch",
+    "authority_session_id",
+    "target_identity",
+    "authorizations"
+  ],
+  "properties": {
+    "schema_version": {"const": "maintenance.audit_state_snapshot.v1"},
+    "available": {"type": "boolean"},
+    "observed_at": {"type": "string", "format": "date-time"},
+    "fresh_until": {"type": "string", "format": "date-time"},
+    "maintenance_state": {
+      "enum": [
+        "INACTIVE", "REQUESTED", "QUIESCING", "ESTABLISHED", "MUTATING",
+        "VERIFYING_TARGET", "RECONCILING", "EXIT_PENDING", "COMPLETED",
+        "QUIESCE_FAILED", "ABORTING", "ABORTED", "SAFE_BLOCKED", "UNKNOWN"
+      ]
+    },
+    "maintenance_id": {"type": "string"},
+    "maintenance_generation": {"type": "integer", "minimum": 0},
+    "authority_epoch": {"type": "integer", "minimum": 0},
+    "authority_session_id": {"type": "string"},
+    "target_identity": {
+      "oneOf": [
+        {"type": "null"},
+        {"$ref": "#/$defs/target_identity"}
+      ]
+    },
+    "authorizations": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/authorization_projection"}
+    }
+  },
+  "$defs": {
+    "target_identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "host_id", "host_boot_id", "namespace", "pod_uid",
+        "container_name", "container_id", "ffmpeg_generation", "ffmpeg_pid"
+      ],
+      "properties": {
+        "host_id": {"type": "string", "minLength": 1},
+        "host_boot_id": {"type": "string", "minLength": 1},
+        "namespace": {"type": "string", "minLength": 1},
+        "pod_uid": {"type": "string", "minLength": 1},
+        "container_name": {"const": "stream-engine"},
+        "container_id": {"type": "string", "minLength": 1},
+        "ffmpeg_generation": {"type": "string", "minLength": 1},
+        "ffmpeg_pid": {"type": "integer", "minimum": 2}
+      }
+    },
+    "authorization_projection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "authorization_id", "authorization_kind", "state", "single_use",
+        "use_count", "maintenance_generation", "executor_id", "operation",
+        "resource_identity", "source_target_identity", "expires_at"
+      ],
+      "properties": {
+        "authorization_id": {"type": "string", "minLength": 1},
+        "authorization_kind": {"type": "string", "minLength": 1},
+        "state": {"type": "string", "minLength": 1},
+        "single_use": {"type": "boolean"},
+        "use_count": {"type": "integer", "minimum": 0},
+        "maintenance_generation": {"type": "integer", "minimum": 1},
+        "executor_id": {"type": "string", "minLength": 1},
+        "operation": {"type": "string", "minLength": 1},
+        "resource_identity": {"type": "string", "minLength": 1},
+        "source_target_identity": {"$ref": "#/$defs/target_identity"},
+        "expires_at": {"type": "string", "format": "date-time"}
+      }
+    }
+  }
+}

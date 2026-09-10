@@ -1,0 +1,602 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://stream-recovery-control.local/contracts/cra_no_action_soak/resilient_host_status.v3.schema.json",
+  "title": "Resilient signed host status v3",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "role",
+    "host_id",
+    "release_id",
+    "producer_instance_id",
+    "producer_sequence",
+    "host_boot_id",
+    "observed_at",
+    "report_lease_until",
+    "state",
+    "reason_codes",
+    "clock",
+    "identity",
+    "components",
+    "current",
+    "last_good",
+    "upstream_status",
+    "transition",
+    "health_transition",
+    "control_capability_count",
+    "physical_effect_count",
+    "key_id",
+    "payload_sha256",
+    "signature"
+  ],
+  "properties": {
+    "schema": {
+      "const": "cra.resilient_host_status.v3"
+    },
+    "role": {
+      "enum": [
+        "dell",
+        "arena"
+      ]
+    },
+    "host_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "release_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "producer_instance_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "producer_sequence": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "host_boot_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "observed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "report_lease_until": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "state": {
+      "enum": [
+        "READY",
+        "DEGRADED_SOURCE",
+        "DEGRADED_OBSERVABILITY",
+        "RECOVERING",
+        "MAINTENANCE",
+        "COMMUNICATION_DEGRADED",
+        "SOURCE_UNREACHABLE"
+      ]
+    },
+    "reason_codes": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 32,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Z][A-Z0-9_]{2,127}$"
+      }
+    },
+    "clock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state",
+        "uncertainty_ms"
+      ],
+      "properties": {
+        "state": {
+          "enum": [
+            "SYNCED",
+            "UNCERTAIN"
+          ]
+        },
+        "uncertainty_ms": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 86400000
+        }
+      }
+    },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "release_manifest_sha256",
+        "runtime_manifest_sha256",
+        "configuration_set_sha256",
+        "maintenance_restart_policy_sha256"
+      ],
+      "properties": {
+        "release_manifest_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "runtime_manifest_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "configuration_set_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "maintenance_restart_policy_sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "components": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 32,
+      "items": {
+        "$ref": "#/$defs/component"
+      }
+    },
+    "current": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_observed_at",
+        "source_valid_until",
+        "target_identity_sha256",
+        "source_payload_sha256",
+        "origin_host_id"
+      ],
+      "properties": {
+        "source_observed_at": {
+          "$ref": "#/$defs/nullableDateTime"
+        },
+        "source_valid_until": {
+          "$ref": "#/$defs/nullableDateTime"
+        },
+        "target_identity_sha256": {
+          "$ref": "#/$defs/nullableSha256"
+        },
+        "source_payload_sha256": {
+          "$ref": "#/$defs/nullableSha256"
+        },
+        "origin_host_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "maxLength": 128
+        }
+      }
+    },
+    "last_good": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "present",
+        "diagnostic_only",
+        "observed_at",
+        "valid_until",
+        "retained_until",
+        "target_identity_sha256",
+        "source_payload_sha256",
+        "origin_host_id"
+      ],
+      "properties": {
+        "present": {
+          "type": "boolean"
+        },
+        "diagnostic_only": {
+          "const": true
+        },
+        "observed_at": {
+          "$ref": "#/$defs/nullableDateTime"
+        },
+        "valid_until": {
+          "$ref": "#/$defs/nullableDateTime"
+        },
+        "retained_until": {
+          "$ref": "#/$defs/nullableDateTime"
+        },
+        "target_identity_sha256": {
+          "$ref": "#/$defs/nullableSha256"
+        },
+        "source_payload_sha256": {
+          "$ref": "#/$defs/nullableSha256"
+        },
+        "origin_host_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "maxLength": 128
+        }
+      }
+    },
+    "upstream_status": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object"
+        }
+      ]
+    },
+    "transition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "journal_id",
+        "high_watermark",
+        "last_event_hash",
+        "causal_state",
+        "open_episode_count",
+        "open_episodes",
+        "event_tail"
+      ],
+      "properties": {
+        "journal_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "high_watermark": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "last_event_hash": {
+          "$ref": "#/$defs/nullableSha256"
+        },
+        "causal_state": {
+          "enum": [
+            "NONE",
+            "EXACT",
+            "UNBOUND"
+          ]
+        },
+        "open_episode_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 64
+        },
+        "open_episodes": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/$defs/transitionEpisode"
+          }
+        },
+        "event_tail": {
+          "type": "array",
+          "maxItems": 32,
+          "items": {
+            "$ref": "#/$defs/transitionEvent"
+          }
+        }
+      }
+    },
+    "control_capability_count": {
+      "const": 0
+    },
+    "physical_effect_count": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "key_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "payload_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "signature": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1024
+    },
+    "health_transition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "journal_id",
+        "high_watermark",
+        "last_event_hash",
+        "event_tail"
+      ],
+      "properties": {
+        "journal_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "high_watermark": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "last_event_hash": {
+          "$ref": "#/$defs/nullableSha256"
+        },
+        "event_tail": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "schema",
+              "journal_id",
+              "sequence",
+              "producer_sequence",
+              "observed_at",
+              "previous_event_hash",
+              "previous_state",
+              "state",
+              "reason_codes",
+              "event_hash"
+            ],
+            "properties": {
+              "schema": {
+                "const": "cra.resilient_host_status_health_transition.v1"
+              },
+              "journal_id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "sequence": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "producer_sequence": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "observed_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "previous_event_hash": {
+                "$ref": "#/$defs/nullableSha256"
+              },
+              "previous_state": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "enum": [
+                      "READY",
+                      "DEGRADED_SOURCE",
+                      "DEGRADED_OBSERVABILITY",
+                      "RECOVERING",
+                      "MAINTENANCE",
+                      "COMMUNICATION_DEGRADED",
+                      "SOURCE_UNREACHABLE"
+                    ]
+                  }
+                ]
+              },
+              "state": {
+                "enum": [
+                  "READY",
+                  "DEGRADED_SOURCE",
+                  "DEGRADED_OBSERVABILITY",
+                  "RECOVERING",
+                  "MAINTENANCE",
+                  "COMMUNICATION_DEGRADED",
+                  "SOURCE_UNREACHABLE"
+                ]
+              },
+              "reason_codes": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 32,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "pattern": "^[A-Z][A-Z0-9_]{2,127}$"
+                }
+              },
+              "event_hash": {
+                "$ref": "#/$defs/sha256"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "nullableSha256": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/sha256"
+        }
+      ]
+    },
+    "nullableDateTime": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string",
+          "format": "date-time"
+        }
+      ]
+    },
+    "component": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "state",
+        "reason_code",
+        "observed_at",
+        "valid_until",
+        "identity_sha256"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{1,63}$"
+        },
+        "state": {
+          "enum": [
+            "FRESH",
+            "INVALID",
+            "STALE",
+            "MISSING",
+            "ERROR"
+          ]
+        },
+        "reason_code": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Z0-9_]{2,127}$"
+        },
+        "observed_at": {
+          "$ref": "#/$defs/nullableDateTime"
+        },
+        "valid_until": {
+          "$ref": "#/$defs/nullableDateTime"
+        },
+        "identity_sha256": {
+          "$ref": "#/$defs/nullableSha256"
+        }
+      }
+    },
+    "transitionEpisode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "episode_id",
+        "event_type",
+        "started_at",
+        "before_target_identity_sha256",
+        "after_target_identity_sha256",
+        "effect_request_id",
+        "effect_scope_id"
+      ],
+      "properties": {
+        "episode_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "event_type": {
+          "enum": [
+            "TARGET_CHANGED",
+            "TARGET_LOST",
+            "TARGET_RECOVERED"
+          ]
+        },
+        "started_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "before_target_identity_sha256": {
+          "$ref": "#/$defs/nullableSha256"
+        },
+        "after_target_identity_sha256": {
+          "$ref": "#/$defs/nullableSha256"
+        },
+        "effect_request_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "effect_scope_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "maxLength": 256
+        }
+      }
+    },
+    "transitionEvent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "journal_id",
+        "sequence",
+        "observed_at",
+        "previous_event_hash",
+        "event_action",
+        "episode",
+        "causal_state",
+        "event_hash"
+      ],
+      "properties": {
+        "schema": {
+          "const": "cra.resilient_host_status_transition_event.v1"
+        },
+        "journal_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "observed_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "previous_event_hash": {
+          "$ref": "#/$defs/nullableSha256"
+        },
+        "event_action": {
+          "enum": [
+            "OBSERVED",
+            "CAUSAL_BOUND"
+          ]
+        },
+        "episode": {
+          "$ref": "#/$defs/transitionEpisode"
+        },
+        "causal_state": {
+          "enum": [
+            "EXACT",
+            "UNBOUND"
+          ]
+        },
+        "event_hash": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    }
+  }
+}

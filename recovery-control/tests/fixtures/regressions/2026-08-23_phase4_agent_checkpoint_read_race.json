@@ -1,0 +1,17 @@
+{
+  "regression_id": "REG-SUT-2026-08-23-009",
+  "origin": "REAL_PHASE4_SHADOW",
+  "first_observed_at": "2026-08-23T06:00:32.534Z",
+  "second_observed_at": "2026-08-23T06:11:58.600Z",
+  "symptom": "lease tick read returned no authority_fences row and raised KeyError for the configured target",
+  "correlation": "both failures occurred when the WAL was checkpointed into the main database after sustained concurrent heartbeat writes and lease reads",
+  "root_cause_status": "HIGH_CONFIDENCE_CONCURRENCY_HYPOTHESIS_NOT_DIRECTLY_PROVEN",
+  "fix": "serialize critical fence and identity reads with the same process writer lock and make repeated identical state transitions no-op",
+  "invariants": [
+    "critical fence read cannot interleave with a write or auto-checkpoint on the shared connection",
+    "repeated CENTRAL_SUSPECT ticks do not append duplicate transitions",
+    "physical attempt remains zero"
+  ],
+  "deployed_fix": false,
+  "classification": "SUT_FAILURE"
+}

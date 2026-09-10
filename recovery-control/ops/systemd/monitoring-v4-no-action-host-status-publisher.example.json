@@ -1,0 +1,47 @@
+{
+  "schema": "cra.no_action_host_status_publisher.v1",
+  "role": "arena",
+  "host_id": "arena-monitoring-facts",
+  "host_contract_file": "/etc/stream-recovery-control/host-contract.json",
+  "release_id": "replace-with-immutable-arena-projection-release-id",
+  "release_manifest_file": "/opt/stream-monitoring-cra-projection/releases/replace-with-immutable-arena-projection-release-id/release_manifest.json",
+  "runtime_manifest_file": "/opt/stream-monitoring-cra-projection/runtimes/replace-with-immutable-arena-projection-release-id/runtime_manifest.json",
+  "configuration_directory": "/etc/stream-monitoring-cra-projection/releases/replace-with-immutable-arena-projection-release-id",
+  "maintenance_restart_policy_file": "/etc/needrestart/conf.d/stream-recovery-control.conf",
+  "disk_path": "/var/lib/stream-monitoring-v4",
+  "service_units": {
+    "arena_dell_host_status_pull": "monitoring-v4-dell-host-status-pull@replace-with-immutable-arena-projection-release-id.service",
+    "arena_dell_pull": "monitoring-v4-dell-observation-pull@replace-with-immutable-arena-projection-release-id.service",
+    "arena_host_status_publisher": "monitoring-v4-no-action-host-status-publisher@replace-with-immutable-arena-projection-release-id.service",
+    "arena_live_adapter": "monitoring-v4-cra-live-adapter@replace-with-immutable-arena-projection-release-id.service",
+    "arena_projection": "monitoring-v4-cra-projection@replace-with-immutable-arena-projection-release-id.service",
+    "arena_projection_server": "monitoring-v4-cra-projection-server@replace-with-immutable-arena-projection-release-id.service"
+  },
+  "persistent_service_name": "arena_projection_server",
+  "credential_files": {
+    "arena_dell": "/etc/stream-monitoring-cra-projection/credentials/dell-observation-client.pem"
+  },
+  "signing_private_key_file": "/etc/stream-monitoring-cra-projection/credentials/monitoring-ed25519-private.pem",
+  "key_id": "replace-with-monitoring-projection-key-id",
+  "host_status_schema_file": "/opt/stream-monitoring-cra-projection/releases/replace-with-immutable-arena-projection-release-id/contracts/cra_no_action_soak/host_status.v1.schema.json",
+  "output_file": "/var/lib/stream-monitoring-v4/cra-projection/releases/replace-with-immutable-arena-projection-release-id/host-status.json",
+  "output_owner": "stream-monitoring-projection",
+  "output_group": "stream-monitoring-projection",
+  "maximum_ttl_seconds": 30,
+  "maximum_input_age_seconds": 30,
+  "minimum_remaining_validity_seconds": 10,
+  "role_inputs": {
+    "dell_host_status_file": "/var/lib/stream-monitoring-v4/cra-dell-observation/releases/replace-with-immutable-arena-projection-release-id/host-status.json",
+    "dell_host_status_schema_file": "/opt/stream-monitoring-cra-projection/releases/replace-with-immutable-arena-projection-release-id/contracts/cra_no_action_soak/host_status.v1.schema.json",
+    "dell_key_id": "replace-with-dell-observation-key-id",
+    "dell_public_key_file": "/etc/stream-monitoring-cra-projection/credentials/dell-observation-ed25519-public.pem",
+    "dell_host_id": "dell-stream-runtime",
+    "dell_release_id": "replace-with-immutable-dell-observation-release-id",
+    "dell_pull_status_file": "/var/lib/stream-monitoring-v4/cra-dell-observation/releases/replace-with-immutable-arena-projection-release-id/status.json",
+    "live_adapter_status_file": "/var/lib/stream-monitoring-v4/cra-facts/releases/replace-with-immutable-arena-projection-release-id/status.json",
+    "projection_status_file": "/var/lib/stream-monitoring-v4/cra-projection/releases/replace-with-immutable-arena-projection-release-id/status.json",
+    "transport_recovery_state_file": "/var/lib/stream-monitoring-v4/cra-dell-observation/releases/replace-with-immutable-arena-projection-release-id/recovery-state.json",
+    "legacy_recovery_unit": "stream-v3-remote-recovery.timer",
+    "server_resource_status_file": "/var/lib/stream-monitoring-v4/cra-projection/releases/replace-with-immutable-arena-projection-release-id/server-resource-status.json"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cra_dell_recovery.heartbeat.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "protocol", "message_type", "heartbeat_id", "sender_id", "receiver_id",
+    "controller_instance_id", "authority_session_id", "authority_epoch",
+    "heartbeat_seq", "target_id", "decision_ready", "monitoring_observed_at",
+    "issued_at", "expires_at", "key_id", "payload_sha256", "signature"
+  ],
+  "properties": {
+    "protocol": {"const": "cra_dell_recovery.heartbeat.v1"},
+    "message_type": {"const": "authority_heartbeat"},
+    "heartbeat_id": {"$ref": "#/$defs/id"},
+    "sender_id": {"$ref": "#/$defs/id"},
+    "receiver_id": {"$ref": "#/$defs/id"},
+    "controller_instance_id": {"$ref": "#/$defs/id"},
+    "authority_session_id": {"$ref": "#/$defs/id"},
+    "authority_epoch": {"type": "integer", "minimum": 1},
+    "heartbeat_seq": {"type": "integer", "minimum": 1},
+    "target_id": {"type": "string", "minLength": 1, "maxLength": 200},
+    "decision_ready": {"type": "boolean"},
+    "monitoring_observed_at": {"type": "string", "format": "date-time"},
+    "issued_at": {"type": "string", "format": "date-time"},
+    "expires_at": {"type": "string", "format": "date-time"},
+    "key_id": {"$ref": "#/$defs/id"},
+    "payload_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "signature": {"type": "string", "minLength": 40, "maxLength": 200}
+  },
+  "$defs": {"id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:/-]{0,239}$"}}
+}

@@ -1,0 +1,12 @@
+[Unit]
+Description=Sample CRA-local signed-host-status NO_ACTION soak for immutable release %i
+
+[Timer]
+OnBootSec=10s
+OnUnitInactiveSec=10s
+AccuracySec=1s
+RandomizedDelaySec=0
+Unit=cra-no-action-soak-local-collector@%i.service
+
+[Install]
+WantedBy=timers.target

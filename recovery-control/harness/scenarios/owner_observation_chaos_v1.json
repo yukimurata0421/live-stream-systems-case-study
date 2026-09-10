@@ -1,0 +1,3553 @@
+{
+  "schema": "cra.owner_observation_chaos_catalog.v1",
+  "corpus": {
+    "root": "tests/fixtures/postmortems",
+    "legacy_sha256": "84e0443c46b25bda742c1d6db6ffda46c80320948dde5220cb2ab3a103196310",
+    "legacy_rows": 201,
+    "legacy_unique_sources": 200,
+    "index_id": "hybrid-index-20260906T105002Z",
+    "index_unique_sources": 373,
+    "queries": 6,
+    "hits": 60,
+    "retrieved_unique_sources": 51,
+    "selected_unique_sources": 2,
+    "selected_fraction_of_index": 0.005361930294906166,
+    "cumulative_selected_unique_sources_with_SP": 17,
+    "cumulative_selected_fraction_of_index": 0.045576407506702415
+  },
+  "execution_boundary": {
+    "production_mutation": false,
+    "production_credentials": false,
+    "external_network": false,
+    "maximum_test_seconds": 120,
+    "owned_kernel_children_only": true
+  },
+  "sources": [
+    {
+      "row": 37,
+      "url": "https://status.cloud.google.com/incidents/6PM5mNd43NbMqjCZ5REh",
+      "content_sha256": "037557b35d070dae996ca3938549f284c042f6f311154187265bb7ec6706ac2a",
+      "spans": [
+        {
+          "term": "race condition",
+          "start": 2936,
+          "end": 3916,
+          "sha256": "599bac1c8bfe8709c669bd8a34a64dd75ed34e4a1657d712a898f1b2bf4ae8c3"
+        },
+        {
+          "term": "validation",
+          "start": 3127,
+          "end": 4107,
+          "sha256": "0ef1f387271803a3cf989b45f494cc76ba2320f20e1661bba536d70a2b34cfac"
+        }
+      ]
+    },
+    {
+      "row": 66,
+      "url": "https://aws.amazon.com/message/101925",
+      "content_sha256": "e771785b4e7504862f1b29ff696bf530f863c58cac04056be0c5d15c71ad04cc",
+      "spans": [
+        {
+          "term": "race condition",
+          "start": 2458,
+          "end": 3438,
+          "sha256": "c52892de2860ac7aafc64889da7f997cc6624ac0bbfca45e37e937ee5d7e5ed7"
+        },
+        {
+          "term": "one-time check and clean-up",
+          "start": 4000,
+          "end": 6500,
+          "sha256": "b2765ea7413aa65540343077d3779183787f7d2edce1ffdb46056c4915f63f51"
+        }
+      ]
+    }
+  ],
+  "test_files": [
+    "tests/harness/integration/test_owner_observation_chaos.py",
+    "tests/harness/integration/test_owner_lifecycle_evidence.py",
+    "tests/runtime_boundary/test_recovery_publisher.py",
+    "tests/runtime_boundary/test_child_registry.py",
+    "tests/harness/integration/test_owner_cmdline_exit.py"
+  ],
+  "mechanisms": [
+    {
+      "id": "OC-01",
+      "source_row": 66,
+      "hypothesis": "通常の補助プロセス終了と観測の競合が、稼働中の同一FFmpegまでUNKNOWNにする。",
+      "injections": [
+        "helper exit at stat/cmdline/final stat",
+        "thread exit/create",
+        "child set replacement",
+        "real kernel helper and thread exit",
+        "real kernel ESRCH after cmdline open, both reads and both snapshot contexts",
+        "unreaped kernel child exit between stat and each cmdline read in both snapshot contexts"
+      ],
+      "expected": "同一childを前後で再証明し、全体を上限付き再読。成功した競合も診断証拠を保存。"
+    },
+    {
+      "id": "OC-02",
+      "source_row": 37,
+      "hypothesis": "最初の検査後にmanaged childやownerが変わると、検査済みidentityの流用が誤った正常判定を生む。",
+      "injections": [
+        "managed exit",
+        "PID reuse",
+        "owner reuse",
+        "second managed child",
+        "post-ledger transition",
+        "stale activation",
+        "auxiliary exec to ffmpeg after final cmdline read",
+        "ESRCH of managed child; missing or changed retry anchor",
+        "empty cmdline with no proven exit, PID or parent changes, missing anchor, or stat read failure",
+        "registered empty-cmdline helper, unregistered child, registry PID reuse, stable launcher exec, exec to delivery, and unbound delivery child"
+      ],
+      "expected": "UNKNOWN/ABSENT/TRANSITIONとfalse/nullを保持し、古いlivenessを再使用しない。"
+    },
+    {
+      "id": "OC-03",
+      "source_row": 66,
+      "hypothesis": "競合の再試行が続くと観測周期を塞ぎ、原因を残さずに証拠欠落を増幅する。",
+      "injections": [
+        "continuous churn",
+        "permission and I/O errors",
+        "100ms retry deadline",
+        "500ms snapshot deadline",
+        "ENOSPC and SQLite failure"
+      ],
+      "expected": "各scan最大3回、100ms再試行予算、全snapshot 500ms。非競合エラーは再試行しない。失敗exportは旧bytes維持とallowlist診断。"
+    },
+    {
+      "id": "OC-04",
+      "source_row": 37,
+      "hypothesis": "証拠の署名や集計が欠測を隠すと、正常化した現在状態に過去の未観測を混同する。",
+      "injections": [
+        "diagnostic malformed types",
+        "signed facts tamper",
+        "target-less activation null",
+        "malformed transport"
+      ],
+      "expected": "署名と厳密型を検証し、欠測sampleを集計。後続READYでも過去UNKNOWNを保持する。"
+    }
+  ],
+  "unproven_scope": [
+    "全373事例の自動再現ではない",
+    "本番LAN断・停電・host停止",
+    "CRA action実行",
+    "視聴者側end-to-end停止時間",
+    "本番sample46の直接原因は診断未記録のため未確定",
+    "本番 sample585 の errno=ESRCH は記録済みだが、終了した PID と process 種別は未記録"
+  ],
+  "assurance": {
+    "schema": "cra.owner_contract_bindings.v3",
+    "spec": "docs/oracle/04_owner_observation_contract.md",
+    "bindings": [
+      {
+        "invariant_id": "I-OWNER-CLEANUP",
+        "mechanism": "OC-01",
+        "injection": "helper stat read during child enumeration",
+        "negative_controls": [
+          "deployed_baseline",
+          "no_retry",
+          "deployed_esrch_baseline",
+          "missing_esrch_retry",
+          "deployed_empty_cmdline_baseline"
+        ],
+        "probes": [
+          {
+            "nodeid": "tests/harness/integration/test_owner_observation_chaos.py::test_auxiliary_exit_does_not_invalidate_running_child",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.state",
+              "observed.retries",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "eq",
+                "expected": "RUNNING"
+              },
+              {
+                "evidence": "observed.retries",
+                "operator": "gte",
+                "expected": 1
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_observation_chaos.py::test_real_kernel_exit_after_cmdline_open[auxiliary-child_command-1]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.kernel_errno",
+              "observed.physical_attempts",
+              "observed.state",
+              "observed.same_target",
+              "observed.retries",
+              "observed.native_cycles",
+              "observed.maximum_cycle_seconds"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.kernel_errno",
+                "operator": "eq",
+                "expected": 3
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "eq",
+                "expected": "RUNNING"
+              },
+              {
+                "evidence": "observed.same_target",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.retries",
+                "operator": "gte",
+                "expected": 1
+              },
+              {
+                "evidence": "observed.native_cycles",
+                "operator": "eq",
+                "expected": 8
+              },
+              {
+                "evidence": "observed.maximum_cycle_seconds",
+                "operator": "lte",
+                "expected": 0.5
+              }
+            ],
+            "environment": "process"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_observation_chaos.py::test_real_kernel_exit_after_cmdline_open[auxiliary-child_command-2]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.kernel_errno",
+              "observed.physical_attempts",
+              "observed.state",
+              "observed.same_target",
+              "observed.retries",
+              "observed.native_cycles",
+              "observed.maximum_cycle_seconds"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.kernel_errno",
+                "operator": "eq",
+                "expected": 3
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "eq",
+                "expected": "RUNNING"
+              },
+              {
+                "evidence": "observed.same_target",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.retries",
+                "operator": "gte",
+                "expected": 1
+              },
+              {
+                "evidence": "observed.native_cycles",
+                "operator": "eq",
+                "expected": 8
+              },
+              {
+                "evidence": "observed.maximum_cycle_seconds",
+                "operator": "lte",
+                "expected": 0.5
+              }
+            ],
+            "environment": "process"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_observation_chaos.py::test_real_kernel_exit_after_cmdline_open[auxiliary-child_command_final-1]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.kernel_errno",
+              "observed.physical_attempts",
+              "observed.state",
+              "observed.same_target",
+              "observed.retries",
+              "observed.native_cycles",
+              "observed.maximum_cycle_seconds"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.kernel_errno",
+                "operator": "eq",
+                "expected": 3
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "eq",
+                "expected": "RUNNING"
+              },
+              {
+                "evidence": "observed.same_target",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.retries",
+                "operator": "gte",
+                "expected": 1
+              },
+              {
+                "evidence": "observed.native_cycles",
+                "operator": "eq",
+                "expected": 8
+              },
+              {
+                "evidence": "observed.maximum_cycle_seconds",
+                "operator": "lte",
+                "expected": 0.5
+              }
+            ],
+            "environment": "process"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_observation_chaos.py::test_real_kernel_exit_after_cmdline_open[auxiliary-child_command_final-2]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.kernel_errno",
+              "observed.physical_attempts",
+              "observed.state",
+              "observed.same_target",
+              "observed.retries",
+              "observed.native_cycles",
+              "observed.maximum_cycle_seconds"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.kernel_errno",
+                "operator": "eq",
+                "expected": 3
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "eq",
+                "expected": "RUNNING"
+              },
+              {
+                "evidence": "observed.same_target",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.retries",
+                "operator": "gte",
+                "expected": 1
+              },
+              {
+                "evidence": "observed.native_cycles",
+                "operator": "eq",
+                "expected": 8
+              },
+              {
+                "evidence": "observed.maximum_cycle_seconds",
+                "operator": "lte",
+                "expected": 0.5
+              }
+            ],
+            "environment": "process"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_cmdline_exit.py::test_real_kernel_unreaped_exit_returns_empty_cmdline[auxiliary-child_command-1]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.kernel_read_bytes",
+              "observed.physical_attempts",
+              "observed.maximum_cycle_seconds",
+              "observed.state",
+              "observed.same_target",
+              "observed.retries",
+              "observed.native_cycles"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.kernel_read_bytes",
+                "operator": "eq",
+                "expected": 0
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              },
+              {
+                "evidence": "observed.maximum_cycle_seconds",
+                "operator": "lte",
+                "expected": 0.5
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "eq",
+                "expected": "RUNNING"
+              },
+              {
+                "evidence": "observed.same_target",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.retries",
+                "operator": "gte",
+                "expected": 1
+              },
+              {
+                "evidence": "observed.native_cycles",
+                "operator": "eq",
+                "expected": 8
+              }
+            ],
+            "environment": "process"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_cmdline_exit.py::test_real_kernel_unreaped_exit_returns_empty_cmdline[auxiliary-child_command-2]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.kernel_read_bytes",
+              "observed.physical_attempts",
+              "observed.maximum_cycle_seconds",
+              "observed.state",
+              "observed.same_target",
+              "observed.retries",
+              "observed.native_cycles"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.kernel_read_bytes",
+                "operator": "eq",
+                "expected": 0
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              },
+              {
+                "evidence": "observed.maximum_cycle_seconds",
+                "operator": "lte",
+                "expected": 0.5
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "eq",
+                "expected": "RUNNING"
+              },
+              {
+                "evidence": "observed.same_target",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.retries",
+                "operator": "gte",
+                "expected": 1
+              },
+              {
+                "evidence": "observed.native_cycles",
+                "operator": "eq",
+                "expected": 8
+              }
+            ],
+            "environment": "process"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_cmdline_exit.py::test_real_kernel_unreaped_exit_returns_empty_cmdline[auxiliary-child_command_final-1]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.kernel_read_bytes",
+              "observed.physical_attempts",
+              "observed.maximum_cycle_seconds",
+              "observed.state",
+              "observed.same_target",
+              "observed.retries",
+              "observed.native_cycles"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.kernel_read_bytes",
+                "operator": "eq",
+                "expected": 0
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              },
+              {
+                "evidence": "observed.maximum_cycle_seconds",
+                "operator": "lte",
+                "expected": 0.5
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "eq",
+                "expected": "RUNNING"
+              },
+              {
+                "evidence": "observed.same_target",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.retries",
+                "operator": "gte",
+                "expected": 1
+              },
+              {
+                "evidence": "observed.native_cycles",
+                "operator": "eq",
+                "expected": 8
+              }
+            ],
+            "environment": "process"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_cmdline_exit.py::test_real_kernel_unreaped_exit_returns_empty_cmdline[auxiliary-child_command_final-2]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.kernel_read_bytes",
+              "observed.physical_attempts",
+              "observed.maximum_cycle_seconds",
+              "observed.state",
+              "observed.same_target",
+              "observed.retries",
+              "observed.native_cycles"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.kernel_read_bytes",
+                "operator": "eq",
+                "expected": 0
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              },
+              {
+                "evidence": "observed.maximum_cycle_seconds",
+                "operator": "lte",
+                "expected": 0.5
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "eq",
+                "expected": "RUNNING"
+              },
+              {
+                "evidence": "observed.same_target",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.retries",
+                "operator": "gte",
+                "expected": 1
+              },
+              {
+                "evidence": "observed.native_cycles",
+                "operator": "eq",
+                "expected": 8
+              }
+            ],
+            "environment": "process"
+          }
+        ],
+        "sut": [
+          "src/runtime_boundary/recovery_publisher.py"
+        ],
+        "verification_case_id": "VC-OWNER-CLEANUP-001",
+        "component_id": "OwnerObservationPipeline",
+        "oracle_ref": "owner-independent-expectations"
+      },
+      {
+        "invariant_id": "I-OWNER-REGISTRY",
+        "mechanism": "OC-02",
+        "injection": "registered live/zombie helper, scheduler-state churn, stable launcher exec, and unregistered or delivery-drifted child",
+        "negative_controls": [
+          "conflate_scheduler_state_with_identity",
+          "trust_unregistered_child",
+          "trust_auxiliary_exec_as_delivery",
+          "prune_reaped_identity_before_snapshot"
+        ],
+        "probes": [
+          {
+            "nodeid": "tests/harness/integration/test_owner_lifecycle_evidence.py::test_registered_empty_cmdline_auxiliary_does_not_hide_exact_delivery_child[R]",
+            "required_evidence": [
+              "observed.state",
+              "observed.target_present",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {"evidence": "observed.state", "operator": "eq", "expected": "RUNNING"},
+              {"evidence": "observed.target_present", "operator": "true", "expected": true},
+              {"evidence": "observed.physical_attempts", "operator": "eq", "expected": 0}
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_lifecycle_evidence.py::test_registered_empty_cmdline_auxiliary_does_not_hide_exact_delivery_child[Z]",
+            "required_evidence": [
+              "observed.state",
+              "observed.target_present",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {"evidence": "observed.state", "operator": "eq", "expected": "RUNNING"},
+              {"evidence": "observed.target_present", "operator": "true", "expected": true},
+              {"evidence": "observed.physical_attempts", "operator": "eq", "expected": 0}
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_lifecycle_evidence.py::test_registry_ambiguity_remains_unknown[unregistered]",
+            "required_evidence": [
+              "observed.state",
+              "observed.target",
+              "observed.physical_attempts",
+              "observed.diagnostic_count"
+            ],
+            "expectations": [
+              {"evidence": "observed.state", "operator": "eq", "expected": "UNKNOWN"},
+              {"evidence": "observed.target", "operator": "eq", "expected": null},
+              {"evidence": "observed.physical_attempts", "operator": "eq", "expected": 0},
+              {"evidence": "observed.diagnostic_count", "operator": "gte", "expected": 1}
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_lifecycle_evidence.py::test_registered_auxiliary_launcher_exec_drift_remains_non_delivery",
+            "required_evidence": [
+              "observed.state",
+              "observed.target_present",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {"evidence": "observed.state", "operator": "eq", "expected": "RUNNING"},
+              {"evidence": "observed.target_present", "operator": "true", "expected": true},
+              {"evidence": "observed.physical_attempts", "operator": "eq", "expected": 0}
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_lifecycle_evidence.py::test_registered_auxiliary_scheduler_state_churn_keeps_exact_delivery_child",
+            "required_evidence": [
+              "observed.scheduler_state_changed",
+              "observed.state",
+              "observed.target_present",
+              "observed.retries",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {"evidence": "observed.scheduler_state_changed", "operator": "true", "expected": true},
+              {"evidence": "observed.state", "operator": "eq", "expected": "RUNNING"},
+              {"evidence": "observed.target_present", "operator": "true", "expected": true},
+              {"evidence": "observed.retries", "operator": "eq", "expected": 0},
+              {"evidence": "observed.physical_attempts", "operator": "eq", "expected": 0}
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_lifecycle_evidence.py::test_registered_auxiliary_executable_churn_remains_unknown",
+            "required_evidence": [
+              "observed.executable_changed",
+              "observed.state",
+              "observed.target",
+              "observed.diagnostic_count",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {"evidence": "observed.executable_changed", "operator": "true", "expected": true},
+              {"evidence": "observed.state", "operator": "eq", "expected": "UNKNOWN"},
+              {"evidence": "observed.target", "operator": "eq", "expected": null},
+              {"evidence": "observed.diagnostic_count", "operator": "gte", "expected": 1},
+              {"evidence": "observed.physical_attempts", "operator": "eq", "expected": 0}
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_lifecycle_evidence.py::test_real_kernel_auxiliary_stop_state_does_not_invalidate_managed_child",
+            "required_evidence": [
+              "observed.scheduler_state_changed",
+              "observed.state",
+              "observed.target_present",
+              "observed.retries",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {"evidence": "observed.scheduler_state_changed", "operator": "true", "expected": true},
+              {"evidence": "observed.state", "operator": "eq", "expected": "RUNNING"},
+              {"evidence": "observed.target_present", "operator": "true", "expected": true},
+              {"evidence": "observed.retries", "operator": "eq", "expected": 0},
+              {"evidence": "observed.physical_attempts", "operator": "eq", "expected": 0}
+            ],
+            "environment": "process"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_lifecycle_evidence.py::test_registry_ambiguity_remains_unknown[exec-to-delivery]",
+            "required_evidence": [
+              "observed.state",
+              "observed.target",
+              "observed.physical_attempts",
+              "observed.diagnostic_count"
+            ],
+            "expectations": [
+              {"evidence": "observed.state", "operator": "eq", "expected": "UNKNOWN"},
+              {"evidence": "observed.target", "operator": "eq", "expected": null},
+              {"evidence": "observed.physical_attempts", "operator": "eq", "expected": 0},
+              {"evidence": "observed.diagnostic_count", "operator": "gte", "expected": 1}
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_lifecycle_evidence.py::test_managed_executable_read_failure_remains_unknown",
+            "required_evidence": [
+              "observed.state",
+              "observed.target",
+              "observed.permission_diagnostic",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {"evidence": "observed.state", "operator": "eq", "expected": "UNKNOWN"},
+              {"evidence": "observed.target", "operator": "eq", "expected": null},
+              {"evidence": "observed.permission_diagnostic", "operator": "true", "expected": true},
+              {"evidence": "observed.physical_attempts", "operator": "eq", "expected": 0}
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/runtime_boundary/test_child_registry.py::test_registry_records_post_exec_identity_without_argv_or_environment",
+            "required_evidence": [
+              "observed.registered",
+              "observed.credential_field_count",
+              "observed.parent_matches"
+            ],
+            "expectations": [
+              {"evidence": "observed.registered", "operator": "true", "expected": true},
+              {"evidence": "observed.credential_field_count", "operator": "eq", "expected": 0},
+              {"evidence": "observed.parent_matches", "operator": "true", "expected": true}
+            ],
+            "environment": "process"
+          },
+          {
+            "nodeid": "tests/runtime_boundary/test_child_registry.py::test_registry_keeps_pid_identity_across_auxiliary_exec",
+            "required_evidence": [
+              "observed.exec_changed",
+              "observed.pid_identity_retained",
+              "observed.credential_field_count"
+            ],
+            "expectations": [
+              {"evidence": "observed.exec_changed", "operator": "true", "expected": true},
+              {"evidence": "observed.pid_identity_retained", "operator": "true", "expected": true},
+              {"evidence": "observed.credential_field_count", "operator": "eq", "expected": 0}
+            ],
+            "environment": "process"
+          },
+          {
+            "nodeid": "tests/runtime_boundary/test_child_registry.py::test_registry_returns_reaped_identity_once_then_prunes_it",
+            "required_evidence": [
+              "observed.registered_identity_retained",
+              "observed.pruned_after_snapshot"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.registered_identity_retained",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.pruned_after_snapshot",
+                "operator": "true",
+                "expected": true
+              }
+            ],
+            "environment": "process"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_observation_chaos.py::test_registered_child_reaped_between_enumeration_and_prune_is_retried",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.state",
+              "observed.same_target",
+              "observed.retries",
+              "observed.registered_disappearance"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "eq",
+                "expected": "RUNNING"
+              },
+              {
+                "evidence": "observed.same_target",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.retries",
+                "operator": "eq",
+                "expected": 1
+              },
+              {
+                "evidence": "observed.registered_disappearance",
+                "operator": "true",
+                "expected": true
+              }
+            ],
+            "environment": "fake"
+          }
+        ],
+        "sut": [
+          "src/runtime_boundary/child_registry.py",
+          "src/runtime_boundary/recovery_publisher.py"
+        ],
+        "verification_case_id": "VC-OWNER-REGISTRY-001",
+        "component_id": "OwnerObservationPipeline",
+        "oracle_ref": "owner-independent-expectations"
+      },
+      {
+        "invariant_id": "I-OWNER-IDENTITY",
+        "mechanism": "OC-02",
+        "injection": "permission at child stat / auxiliary exec after final command read",
+        "negative_controls": [
+          "swallow_permission",
+          "skip_command_recheck",
+          "deployed_empty_final_baseline",
+          "accept_unproven_empty",
+          "skip_empty_identity",
+          "skip_empty_final_check"
+        ],
+        "probes": [
+          {
+            "nodeid": "tests/harness/integration/test_owner_observation_chaos.py::test_retry_never_certifies_unknown_or_changed_identity[permission]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.state",
+              "observed.target",
+              "observed.diagnostic_count"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "in",
+                "expected": [
+                  "UNKNOWN",
+                  "ABSENT",
+                  "TRANSITION"
+                ]
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.diagnostic_count",
+                "operator": "gte",
+                "expected": 1
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_observation_chaos.py::test_retry_never_certifies_unknown_or_changed_identity[auxiliary-exec]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.state",
+              "observed.target",
+              "observed.diagnostic_count"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "in",
+                "expected": [
+                  "UNKNOWN",
+                  "ABSENT",
+                  "TRANSITION"
+                ]
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.diagnostic_count",
+                "operator": "gte",
+                "expected": 1
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_observation_chaos.py::test_real_kernel_exit_after_cmdline_open[managed-child_command-1]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.kernel_errno",
+              "observed.physical_attempts",
+              "observed.target",
+              "observed.retries"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.kernel_errno",
+                "operator": "eq",
+                "expected": 3
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.retries",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "process"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_observation_chaos.py::test_real_kernel_exit_after_cmdline_open[managed-child_command-2]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.kernel_errno",
+              "observed.physical_attempts",
+              "observed.target",
+              "observed.retries"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.kernel_errno",
+                "operator": "eq",
+                "expected": 3
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.retries",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "process"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_observation_chaos.py::test_real_kernel_exit_after_cmdline_open[managed-child_command_final-1]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.kernel_errno",
+              "observed.physical_attempts",
+              "observed.target",
+              "observed.retries"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.kernel_errno",
+                "operator": "eq",
+                "expected": 3
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.retries",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "process"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_observation_chaos.py::test_real_kernel_exit_after_cmdline_open[managed-child_command_final-2]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.kernel_errno",
+              "observed.physical_attempts",
+              "observed.target",
+              "observed.retries"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.kernel_errno",
+                "operator": "eq",
+                "expected": 3
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.retries",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "process"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_observation_chaos.py::test_esrch_retry_requires_live_anchor[permission-child_command]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.target",
+              "observed.retries",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.retries",
+                "operator": "eq",
+                "expected": 0
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_observation_chaos.py::test_esrch_retry_requires_live_anchor[permission-child_command_final]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.target",
+              "observed.retries",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.retries",
+                "operator": "eq",
+                "expected": 0
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_observation_chaos.py::test_esrch_retry_requires_live_anchor[io-child_command]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.target",
+              "observed.retries",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.retries",
+                "operator": "eq",
+                "expected": 0
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_observation_chaos.py::test_esrch_retry_requires_live_anchor[io-child_command_final]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.target",
+              "observed.retries",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.retries",
+                "operator": "eq",
+                "expected": 0
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_observation_chaos.py::test_esrch_retry_requires_live_anchor[no-anchor-child_command]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.target",
+              "observed.retries",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.retries",
+                "operator": "eq",
+                "expected": 0
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_observation_chaos.py::test_esrch_retry_requires_live_anchor[no-anchor-child_command_final]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.target",
+              "observed.retries",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.retries",
+                "operator": "eq",
+                "expected": 0
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_observation_chaos.py::test_esrch_retry_requires_live_anchor[managed-exit-child_command]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.target",
+              "observed.retries",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.retries",
+                "operator": "eq",
+                "expected": 0
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_observation_chaos.py::test_esrch_retry_requires_live_anchor[managed-exit-child_command_final]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.target",
+              "observed.retries",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.retries",
+                "operator": "eq",
+                "expected": 0
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_observation_chaos.py::test_esrch_retry_requires_live_anchor[owner-reuse-child_command]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.target",
+              "observed.retries",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.retries",
+                "operator": "eq",
+                "expected": 0
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_observation_chaos.py::test_esrch_retry_requires_live_anchor[owner-reuse-child_command_final]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.target",
+              "observed.retries",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.retries",
+                "operator": "eq",
+                "expected": 0
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_cmdline_exit.py::test_real_kernel_unreaped_exit_returns_empty_cmdline[managed-child_command-1]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.kernel_read_bytes",
+              "observed.physical_attempts",
+              "observed.maximum_cycle_seconds",
+              "observed.state",
+              "observed.target",
+              "observed.retries"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.kernel_read_bytes",
+                "operator": "eq",
+                "expected": 0
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              },
+              {
+                "evidence": "observed.maximum_cycle_seconds",
+                "operator": "lte",
+                "expected": 0.5
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "in",
+                "expected": [
+                  "UNKNOWN",
+                  "ABSENT",
+                  "TRANSITION"
+                ]
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.retries",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "process"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_cmdline_exit.py::test_real_kernel_unreaped_exit_returns_empty_cmdline[managed-child_command-2]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.kernel_read_bytes",
+              "observed.physical_attempts",
+              "observed.maximum_cycle_seconds",
+              "observed.state",
+              "observed.target",
+              "observed.retries"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.kernel_read_bytes",
+                "operator": "eq",
+                "expected": 0
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              },
+              {
+                "evidence": "observed.maximum_cycle_seconds",
+                "operator": "lte",
+                "expected": 0.5
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "in",
+                "expected": [
+                  "UNKNOWN",
+                  "ABSENT",
+                  "TRANSITION"
+                ]
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.retries",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "process"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_cmdline_exit.py::test_real_kernel_unreaped_exit_returns_empty_cmdline[managed-child_command_final-1]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.kernel_read_bytes",
+              "observed.physical_attempts",
+              "observed.maximum_cycle_seconds",
+              "observed.state",
+              "observed.target",
+              "observed.retries"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.kernel_read_bytes",
+                "operator": "eq",
+                "expected": 0
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              },
+              {
+                "evidence": "observed.maximum_cycle_seconds",
+                "operator": "lte",
+                "expected": 0.5
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "in",
+                "expected": [
+                  "UNKNOWN",
+                  "ABSENT",
+                  "TRANSITION"
+                ]
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.retries",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "process"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_cmdline_exit.py::test_real_kernel_unreaped_exit_returns_empty_cmdline[managed-child_command_final-2]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.kernel_read_bytes",
+              "observed.physical_attempts",
+              "observed.maximum_cycle_seconds",
+              "observed.state",
+              "observed.target",
+              "observed.retries"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.kernel_read_bytes",
+                "operator": "eq",
+                "expected": 0
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              },
+              {
+                "evidence": "observed.maximum_cycle_seconds",
+                "operator": "lte",
+                "expected": 0.5
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "in",
+                "expected": [
+                  "UNKNOWN",
+                  "ABSENT",
+                  "TRANSITION"
+                ]
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.retries",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "process"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_cmdline_exit.py::test_empty_cmdline_never_bypasses_identity_or_read_failure[live-empty-child_command-1]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.state",
+              "observed.target",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "in",
+                "expected": [
+                  "UNKNOWN",
+                  "ABSENT",
+                  "TRANSITION"
+                ]
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_cmdline_exit.py::test_empty_cmdline_never_bypasses_identity_or_read_failure[live-empty-child_command-2]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.state",
+              "observed.target",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "in",
+                "expected": [
+                  "UNKNOWN",
+                  "ABSENT",
+                  "TRANSITION"
+                ]
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_cmdline_exit.py::test_empty_cmdline_never_bypasses_identity_or_read_failure[live-empty-child_command_final-1]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.state",
+              "observed.target",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "in",
+                "expected": [
+                  "UNKNOWN",
+                  "ABSENT",
+                  "TRANSITION"
+                ]
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_cmdline_exit.py::test_empty_cmdline_never_bypasses_identity_or_read_failure[live-empty-child_command_final-2]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.state",
+              "observed.target",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "in",
+                "expected": [
+                  "UNKNOWN",
+                  "ABSENT",
+                  "TRANSITION"
+                ]
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_cmdline_exit.py::test_empty_cmdline_never_bypasses_identity_or_read_failure[oversize-child_command-1]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.state",
+              "observed.target",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "in",
+                "expected": [
+                  "UNKNOWN",
+                  "ABSENT",
+                  "TRANSITION"
+                ]
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_cmdline_exit.py::test_empty_cmdline_never_bypasses_identity_or_read_failure[oversize-child_command-2]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.state",
+              "observed.target",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "in",
+                "expected": [
+                  "UNKNOWN",
+                  "ABSENT",
+                  "TRANSITION"
+                ]
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_cmdline_exit.py::test_empty_cmdline_never_bypasses_identity_or_read_failure[oversize-child_command_final-1]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.state",
+              "observed.target",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "in",
+                "expected": [
+                  "UNKNOWN",
+                  "ABSENT",
+                  "TRANSITION"
+                ]
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_cmdline_exit.py::test_empty_cmdline_never_bypasses_identity_or_read_failure[oversize-child_command_final-2]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.state",
+              "observed.target",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "in",
+                "expected": [
+                  "UNKNOWN",
+                  "ABSENT",
+                  "TRANSITION"
+                ]
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_cmdline_exit.py::test_empty_cmdline_never_bypasses_identity_or_read_failure[no-anchor-child_command-1]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.state",
+              "observed.target",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "in",
+                "expected": [
+                  "UNKNOWN",
+                  "ABSENT",
+                  "TRANSITION"
+                ]
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_cmdline_exit.py::test_empty_cmdline_never_bypasses_identity_or_read_failure[no-anchor-child_command-2]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.state",
+              "observed.target",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "in",
+                "expected": [
+                  "UNKNOWN",
+                  "ABSENT",
+                  "TRANSITION"
+                ]
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_cmdline_exit.py::test_empty_cmdline_never_bypasses_identity_or_read_failure[no-anchor-child_command_final-1]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.state",
+              "observed.target",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "in",
+                "expected": [
+                  "UNKNOWN",
+                  "ABSENT",
+                  "TRANSITION"
+                ]
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_cmdline_exit.py::test_empty_cmdline_never_bypasses_identity_or_read_failure[no-anchor-child_command_final-2]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.state",
+              "observed.target",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "in",
+                "expected": [
+                  "UNKNOWN",
+                  "ABSENT",
+                  "TRANSITION"
+                ]
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_cmdline_exit.py::test_empty_cmdline_never_bypasses_identity_or_read_failure[pid-reuse-child_command-1]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.state",
+              "observed.target",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "in",
+                "expected": [
+                  "UNKNOWN",
+                  "ABSENT",
+                  "TRANSITION"
+                ]
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_cmdline_exit.py::test_empty_cmdline_never_bypasses_identity_or_read_failure[pid-reuse-child_command-2]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.state",
+              "observed.target",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "in",
+                "expected": [
+                  "UNKNOWN",
+                  "ABSENT",
+                  "TRANSITION"
+                ]
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_cmdline_exit.py::test_empty_cmdline_never_bypasses_identity_or_read_failure[pid-reuse-child_command_final-1]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.state",
+              "observed.target",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "in",
+                "expected": [
+                  "UNKNOWN",
+                  "ABSENT",
+                  "TRANSITION"
+                ]
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_cmdline_exit.py::test_empty_cmdline_never_bypasses_identity_or_read_failure[pid-reuse-child_command_final-2]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.state",
+              "observed.target",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "in",
+                "expected": [
+                  "UNKNOWN",
+                  "ABSENT",
+                  "TRANSITION"
+                ]
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_cmdline_exit.py::test_empty_cmdline_never_bypasses_identity_or_read_failure[reparent-child_command-1]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.state",
+              "observed.target",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "in",
+                "expected": [
+                  "UNKNOWN",
+                  "ABSENT",
+                  "TRANSITION"
+                ]
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_cmdline_exit.py::test_empty_cmdline_never_bypasses_identity_or_read_failure[reparent-child_command-2]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.state",
+              "observed.target",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "in",
+                "expected": [
+                  "UNKNOWN",
+                  "ABSENT",
+                  "TRANSITION"
+                ]
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_cmdline_exit.py::test_empty_cmdline_never_bypasses_identity_or_read_failure[reparent-child_command_final-1]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.state",
+              "observed.target",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "in",
+                "expected": [
+                  "UNKNOWN",
+                  "ABSENT",
+                  "TRANSITION"
+                ]
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_cmdline_exit.py::test_empty_cmdline_never_bypasses_identity_or_read_failure[reparent-child_command_final-2]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.state",
+              "observed.target",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "in",
+                "expected": [
+                  "UNKNOWN",
+                  "ABSENT",
+                  "TRANSITION"
+                ]
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_cmdline_exit.py::test_empty_cmdline_never_bypasses_identity_or_read_failure[managed-exit-child_command-1]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.state",
+              "observed.target",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "in",
+                "expected": [
+                  "UNKNOWN",
+                  "ABSENT",
+                  "TRANSITION"
+                ]
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_cmdline_exit.py::test_empty_cmdline_never_bypasses_identity_or_read_failure[managed-exit-child_command-2]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.state",
+              "observed.target",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "in",
+                "expected": [
+                  "UNKNOWN",
+                  "ABSENT",
+                  "TRANSITION"
+                ]
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_cmdline_exit.py::test_empty_cmdline_never_bypasses_identity_or_read_failure[managed-exit-child_command_final-1]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.state",
+              "observed.target",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "in",
+                "expected": [
+                  "UNKNOWN",
+                  "ABSENT",
+                  "TRANSITION"
+                ]
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_cmdline_exit.py::test_empty_cmdline_never_bypasses_identity_or_read_failure[managed-exit-child_command_final-2]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.state",
+              "observed.target",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "in",
+                "expected": [
+                  "UNKNOWN",
+                  "ABSENT",
+                  "TRANSITION"
+                ]
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_cmdline_exit.py::test_empty_cmdline_never_bypasses_identity_or_read_failure[owner-reuse-child_command-1]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.state",
+              "observed.target",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "in",
+                "expected": [
+                  "UNKNOWN",
+                  "ABSENT",
+                  "TRANSITION"
+                ]
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_cmdline_exit.py::test_empty_cmdline_never_bypasses_identity_or_read_failure[owner-reuse-child_command-2]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.state",
+              "observed.target",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "in",
+                "expected": [
+                  "UNKNOWN",
+                  "ABSENT",
+                  "TRANSITION"
+                ]
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_cmdline_exit.py::test_empty_cmdline_never_bypasses_identity_or_read_failure[owner-reuse-child_command_final-1]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.state",
+              "observed.target",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "in",
+                "expected": [
+                  "UNKNOWN",
+                  "ABSENT",
+                  "TRANSITION"
+                ]
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_cmdline_exit.py::test_empty_cmdline_never_bypasses_identity_or_read_failure[owner-reuse-child_command_final-2]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.state",
+              "observed.target",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "in",
+                "expected": [
+                  "UNKNOWN",
+                  "ABSENT",
+                  "TRANSITION"
+                ]
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_cmdline_exit.py::test_empty_cmdline_never_bypasses_identity_or_read_failure[permission-child_command-1]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.state",
+              "observed.target",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "in",
+                "expected": [
+                  "UNKNOWN",
+                  "ABSENT",
+                  "TRANSITION"
+                ]
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_cmdline_exit.py::test_empty_cmdline_never_bypasses_identity_or_read_failure[permission-child_command-2]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.state",
+              "observed.target",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "in",
+                "expected": [
+                  "UNKNOWN",
+                  "ABSENT",
+                  "TRANSITION"
+                ]
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_cmdline_exit.py::test_empty_cmdline_never_bypasses_identity_or_read_failure[permission-child_command_final-1]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.state",
+              "observed.target",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "in",
+                "expected": [
+                  "UNKNOWN",
+                  "ABSENT",
+                  "TRANSITION"
+                ]
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_cmdline_exit.py::test_empty_cmdline_never_bypasses_identity_or_read_failure[permission-child_command_final-2]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.state",
+              "observed.target",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "in",
+                "expected": [
+                  "UNKNOWN",
+                  "ABSENT",
+                  "TRANSITION"
+                ]
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_cmdline_exit.py::test_empty_cmdline_never_bypasses_identity_or_read_failure[io-child_command-1]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.state",
+              "observed.target",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "in",
+                "expected": [
+                  "UNKNOWN",
+                  "ABSENT",
+                  "TRANSITION"
+                ]
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_cmdline_exit.py::test_empty_cmdline_never_bypasses_identity_or_read_failure[io-child_command-2]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.state",
+              "observed.target",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "in",
+                "expected": [
+                  "UNKNOWN",
+                  "ABSENT",
+                  "TRANSITION"
+                ]
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_cmdline_exit.py::test_empty_cmdline_never_bypasses_identity_or_read_failure[io-child_command_final-1]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.state",
+              "observed.target",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "in",
+                "expected": [
+                  "UNKNOWN",
+                  "ABSENT",
+                  "TRANSITION"
+                ]
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_cmdline_exit.py::test_empty_cmdline_never_bypasses_identity_or_read_failure[io-child_command_final-2]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.state",
+              "observed.target",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "in",
+                "expected": [
+                  "UNKNOWN",
+                  "ABSENT",
+                  "TRANSITION"
+                ]
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          }
+        ],
+        "sut": [
+          "src/runtime_boundary/recovery_publisher.py"
+        ],
+        "verification_case_id": "VC-OWNER-IDENTITY-001",
+        "component_id": "OwnerObservationPipeline",
+        "oracle_ref": "owner-independent-expectations"
+      },
+      {
+        "invariant_id": "I-OWNER-FINAL",
+        "mechanism": "OC-02",
+        "injection": "managed child exit after ledger snapshot",
+        "negative_controls": [
+          "skip_final_identity"
+        ],
+        "probes": [
+          {
+            "nodeid": "tests/harness/integration/test_owner_lifecycle_evidence.py::test_owner_snapshot_transition_preserves_only_proven_claims[exit]",
+            "required_evidence": [
+              "observed.state",
+              "observed.target"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.state",
+                "operator": "eq",
+                "expected": "ABSENT"
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              }
+            ],
+            "environment": "fake"
+          }
+        ],
+        "sut": [
+          "src/runtime_boundary/recovery_publisher.py"
+        ],
+        "verification_case_id": "VC-OWNER-FINAL-001",
+        "component_id": "OwnerObservationPipeline",
+        "oracle_ref": "owner-independent-expectations",
+        "coverage_gaps": [
+          {
+            "environment": "process",
+            "reason": "INJECTOR_MISSING",
+            "missing_capability": "deterministic test-owned child exit barrier after the ledger snapshot and before final owner observation",
+            "next_action": "add a bounded process injector that records the post-ledger transition without touching a live process"
+          }
+        ]
+      },
+      {
+        "invariant_id": "I-OWNER-BOUNDED",
+        "mechanism": "OC-03",
+        "injection": "zero retry deadline under repeated churn / real test-owned helper and thread exit",
+        "negative_controls": [
+          "ignore_scan_deadline"
+        ],
+        "probes": [
+          {
+            "nodeid": "tests/harness/integration/test_owner_observation_chaos.py::test_retry_never_certifies_unknown_or_changed_identity[deadline]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.state",
+              "observed.attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "eq",
+                "expected": "UNKNOWN"
+              },
+              {
+                "evidence": "observed.attempts",
+                "operator": "lte",
+                "expected": 2
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_observation_chaos.py::test_real_kernel_normal_cleanup_has_no_evidence_gap[helper-exit]",
+            "required_evidence": [
+              "observed.native_cycles",
+              "observed.maximum_cycle_seconds"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.native_cycles",
+                "operator": "eq",
+                "expected": 16
+              },
+              {
+                "evidence": "observed.maximum_cycle_seconds",
+                "operator": "lte",
+                "expected": 0.5
+              }
+            ],
+            "environment": "process"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_observation_chaos.py::test_real_kernel_normal_cleanup_has_no_evidence_gap[thread-exit]",
+            "required_evidence": [
+              "observed.native_cycles",
+              "observed.maximum_cycle_seconds"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.native_cycles",
+                "operator": "eq",
+                "expected": 16
+              },
+              {
+                "evidence": "observed.maximum_cycle_seconds",
+                "operator": "lte",
+                "expected": 0.5
+              }
+            ],
+            "environment": "process"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_cmdline_exit.py::test_empty_cmdline_reobservation_remains_bounded_and_fresh[continuous-exit]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.physical_attempts",
+              "observed.state",
+              "observed.attempts",
+              "observed.retries"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "eq",
+                "expected": "UNKNOWN"
+              },
+              {
+                "evidence": "observed.attempts",
+                "operator": "lte",
+                "expected": 6
+              },
+              {
+                "evidence": "observed.retries",
+                "operator": "lte",
+                "expected": 4
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_cmdline_exit.py::test_empty_cmdline_reobservation_remains_bounded_and_fresh[deadline]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.physical_attempts",
+              "observed.state",
+              "observed.attempts",
+              "observed.retries"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "eq",
+                "expected": "UNKNOWN"
+              },
+              {
+                "evidence": "observed.attempts",
+                "operator": "lte",
+                "expected": 2
+              },
+              {
+                "evidence": "observed.retries",
+                "operator": "lte",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          }
+        ],
+        "sut": [
+          "src/runtime_boundary/recovery_publisher.py"
+        ],
+        "verification_case_id": "VC-OWNER-BOUNDED-001",
+        "component_id": "OwnerObservationPipeline",
+        "oracle_ref": "owner-independent-expectations"
+      },
+      {
+        "invariant_id": "I-OWNER-DIAGNOSTICS",
+        "mechanism": "OC-04",
+        "injection": "out of range diagnostic attempt count",
+        "negative_controls": [
+          "accept_bad_diagnostics"
+        ],
+        "probes": [
+          {
+            "nodeid": "tests/harness/integration/test_owner_observation_chaos.py::test_diagnostics_are_strictly_admitted[attempts]",
+            "required_evidence": [
+              "observed.exception_type"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.exception_type",
+                "operator": "eq",
+                "expected": "ValueError"
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_observation_chaos.py::test_diagnostics_are_strictly_admitted[process-digest]",
+            "required_evidence": [
+              "observed.exception_type"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.exception_type",
+                "operator": "eq",
+                "expected": "ValueError"
+              }
+            ],
+            "environment": "fake"
+          }
+        ],
+        "sut": [
+          "src/cra_no_action_soak/recovery_facts.py",
+          "src/cra_dell_recovery/owner_diagnostics.py"
+        ],
+        "verification_case_id": "VC-OWNER-DIAGNOSTICS-001",
+        "component_id": "OwnerObservationPipeline",
+        "oracle_ref": "owner-independent-expectations",
+        "coverage_gaps": [
+          {
+            "environment": "process",
+            "reason": "PROCESS_NOT_APPLICABLE",
+            "missing_capability": "none; this invariant validates process-independent diagnostic schema admission",
+            "next_action": "retain the fake schema proof unless process-specific diagnostic serialization is introduced"
+          }
+        ]
+      },
+      {
+        "invariant_id": "I-OWNER-ACTIVATION",
+        "mechanism": "OC-02",
+        "injection": "remove asynchronous target then disable actual child activation",
+        "negative_controls": [
+          "cache_activation"
+        ],
+        "probes": [
+          {
+            "nodeid": "tests/harness/integration/test_owner_lifecycle_evidence.py::test_live_child_revalidation_does_not_cache_activation_or_depend_on_async_target",
+            "required_evidence": [
+              "observed.bounded_termination_enabled",
+              "observed.rw_timeout_enabled",
+              "observed.ledger_changes"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.bounded_termination_enabled",
+                "operator": "false",
+                "expected": false
+              },
+              {
+                "evidence": "observed.rw_timeout_enabled",
+                "operator": "false",
+                "expected": false
+              },
+              {
+                "evidence": "observed.ledger_changes",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_cmdline_exit.py::test_empty_cmdline_reobservation_remains_bounded_and_fresh[activation-off]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.physical_attempts",
+              "observed.state",
+              "observed.rw_timeout"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "eq",
+                "expected": "RUNNING"
+              },
+              {
+                "evidence": "observed.rw_timeout",
+                "operator": "false",
+                "expected": false
+              }
+            ],
+            "environment": "fake"
+          }
+        ],
+        "sut": [
+          "src/runtime_boundary/recovery_publisher.py",
+          "src/runtime_boundary/recovery_evidence.py"
+        ],
+        "verification_case_id": "VC-OWNER-ACTIVATION-001",
+        "component_id": "OwnerObservationPipeline",
+        "oracle_ref": "owner-independent-expectations",
+        "coverage_gaps": [
+          {
+            "environment": "process",
+            "reason": "INJECTOR_MISSING",
+            "missing_capability": "test-owned child environment mutation combined with an independently removed asynchronous target",
+            "next_action": "add an isolated child fixture that proves fresh activation reads and zero ledger writes"
+          }
+        ]
+      },
+      {
+        "invariant_id": "I-OWNER-RETENTION",
+        "mechanism": "OC-04",
+        "injection": "signed permission gap / transport=null followed by healthy samples",
+        "negative_controls": [
+          "forget_unknown",
+          "misclassify_unverified_owner_as_healthy"
+        ],
+        "probes": [
+          {
+            "nodeid": "tests/harness/integration/test_owner_observation_chaos.py::test_signed_cleanup_and_unknown_retained_through_collector[permission]",
+            "required_evidence": [
+              "observed.physical_delta",
+              "observed.eligible",
+              "observed.unknown_count",
+              "observed.live_health",
+              "observed.operator_sut_state",
+              "observed.operator_failure_domain",
+              "observed.operator_soak_impact"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.physical_delta",
+                "operator": "eq",
+                "expected": 0
+              },
+              {
+                "evidence": "observed.eligible",
+                "operator": "false",
+                "expected": false
+              },
+              {
+                "evidence": "observed.unknown_count",
+                "operator": "gte",
+                "expected": 1
+              },
+              {
+                "evidence": "observed.live_health",
+                "operator": "eq",
+                "expected": "READY"
+              },
+              {
+                "evidence": "observed.operator_sut_state",
+                "operator": "eq",
+                "expected": "NOT_OBSERVABLE"
+              },
+              {
+                "evidence": "observed.operator_failure_domain",
+                "operator": "eq",
+                "expected": "OBSERVATION_SOURCE"
+              },
+              {
+                "evidence": "observed.operator_soak_impact",
+                "operator": "eq",
+                "expected": "CERTIFICATION_PAUSED"
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_observation_chaos.py::test_signed_cleanup_and_unknown_retained_through_collector[transport-null]",
+            "required_evidence": [
+              "observed.physical_delta",
+              "observed.eligible",
+              "observed.unknown_count",
+              "observed.live_health"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.physical_delta",
+                "operator": "eq",
+                "expected": 0
+              },
+              {
+                "evidence": "observed.eligible",
+                "operator": "false",
+                "expected": false
+              },
+              {
+                "evidence": "observed.unknown_count",
+                "operator": "gte",
+                "expected": 1
+              },
+              {
+                "evidence": "observed.live_health",
+                "operator": "eq",
+                "expected": "READY"
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_observation_chaos.py::test_signed_cleanup_and_unknown_retained_through_collector[zombie-cleanup]",
+            "required_evidence": [
+              "observed.physical_delta",
+              "observed.eligible",
+              "observed.unknown_count",
+              "observed.live_health"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.physical_delta",
+                "operator": "eq",
+                "expected": 0
+              },
+              {
+                "evidence": "observed.eligible",
+                "operator": "false",
+                "expected": false
+              },
+              {
+                "evidence": "observed.unknown_count",
+                "operator": "eq",
+                "expected": 0
+              },
+              {
+                "evidence": "observed.live_health",
+                "operator": "eq",
+                "expected": "READY"
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_observation_chaos.py::test_signed_cleanup_and_unknown_retained_through_collector[live-empty]",
+            "required_evidence": [
+              "observed.physical_delta",
+              "observed.eligible",
+              "observed.unknown_count",
+              "observed.live_health"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.physical_delta",
+                "operator": "eq",
+                "expected": 0
+              },
+              {
+                "evidence": "observed.eligible",
+                "operator": "false",
+                "expected": false
+              },
+              {
+                "evidence": "observed.unknown_count",
+                "operator": "gte",
+                "expected": 1
+              },
+              {
+                "evidence": "observed.live_health",
+                "operator": "eq",
+                "expected": "READY"
+              }
+            ],
+            "environment": "fake"
+          }
+        ],
+        "sut": [
+          "src/cra_no_action_soak/recovery_soak.py",
+          "src/cra_no_action_soak/recovery_live.py",
+          "src/cra_no_action_soak/recovery_window.py",
+          "src/cra_no_action_soak/operator_status.py",
+          "src/cra_no_action_soak/recovery_facts.py",
+          "src/cra_no_action_soak/recovery_observer.py",
+          "src/cra_no_action_soak/recovery_transport.py"
+        ],
+        "verification_case_id": "VC-OWNER-RETENTION-001",
+        "component_id": "OwnerObservationPipeline",
+        "oracle_ref": "owner-independent-expectations",
+        "coverage_gaps": [
+          {
+            "environment": "process",
+            "reason": "PROCESS_NOT_APPLICABLE",
+            "missing_capability": "none; retention is a signed evidence and temporal collector invariant rather than a kernel-process behavior",
+            "next_action": "retain signed fixture coverage unless the process environment gains a distinct retention boundary"
+          }
+        ]
+      }
+    ],
+    "traceability": {
+      "schema": "cra.verification_traceability.v1",
+      "system_ir": {
+        "schema": "cra.system_semantic_ir.v1",
+        "components": [
+          {
+            "id": "OwnerObservationPipeline",
+            "authority": "observation_only",
+            "symbols": [
+              "runtime_boundary.child_registry::ChildLifecycleRegistry.install",
+              "runtime_boundary.child_registry::ChildLifecycleRegistry.snapshot_locked",
+              "runtime_boundary.recovery_publisher::RecoveryEvidencePublisher.publish",
+              "runtime_boundary.recovery_evidence::owner_evidence",
+              "cra_no_action_soak.recovery_facts::runtime_evidence_fact",
+              "cra_no_action_soak.recovery_observer::observe",
+              "cra_no_action_soak.recovery_transport::pull",
+              "cra_no_action_soak.recovery_live::observation",
+              "cra_no_action_soak.recovery_window::RecoveryWindow.observe",
+              "cra_no_action_soak.recovery_soak::collect",
+              "cra_no_action_soak.recovery_soak::evaluate",
+              "cra_no_action_soak.operator_status::classify_gate",
+              "cra_dell_recovery.owner_diagnostics::validate_diagnostics"
+            ]
+          }
+        ]
+      },
+      "collectors": [
+        {
+          "id": "pytest-cra-evidence-property",
+          "implementation": "cra_harness.task_contract::contract_gate",
+          "evidence_prefixes": [
+            "observed."
+          ]
+        }
+      ],
+      "oracles": [
+        {
+          "id": "owner-independent-expectations",
+          "implementation": "cra_harness.oracles.contract::IndependentOracle.evaluate_expectations",
+          "collector_ref": "pytest-cra-evidence-property"
+        }
+      ],
+      "environments": [
+        {
+          "id": "fake",
+          "boundary": "synthetic proc, files, clocks, and signed fixtures",
+          "unmapped_status": "NOT_VERIFIED"
+        },
+        {
+          "id": "process",
+          "boundary": "test-owned kernel child; Python executable may use argv[0]=ffmpeg",
+          "unmapped_status": "NOT_VERIFIED"
+        },
+        {
+          "id": "production",
+          "boundary": "live stream, production credentials, network, and CRA effects",
+          "unmapped_status": "OUT_OF_SCOPE"
+        }
+      ],
+      "regression_only_tests": [
+        {
+          "path": "tests/runtime_boundary/test_recovery_publisher.py",
+          "reason": "broad publisher regression selected by the runner; it does not emit cra_evidence and is not invariant proof"
+        }
+      ]
+    }
+  }
+}

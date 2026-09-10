@@ -1,0 +1,10 @@
+{
+  "origin": "REAL_PHASE4_SHADOW",
+  "origin_run_id": "20260823T1352JST_phase4_shadow_v1",
+  "first_seen_at": "2026-08-23T05:05:46Z",
+  "environment": "Dell read-only Kubernetes and proc observer",
+  "root_cause": "two Kubernetes GET calls and a proc scan every two seconds consumed 125.109 CPU seconds in about nine minutes",
+  "classification": "EXPECTED_ENVIRONMENT_DIFFERENCE",
+  "fix_reference": "dell-target-snapshot-shadow.service interval_seconds=5",
+  "invariant": "snapshot cadence must stay below target TTL while remaining low impact on the streaming host"
+}

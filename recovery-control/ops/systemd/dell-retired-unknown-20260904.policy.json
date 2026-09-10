@@ -1,0 +1,24 @@
+{
+  "schema": "cra.recovery_effect_history_policy.v1",
+  "frozen_at": "2026-09-04T02:14:11.687991Z",
+  "retired_unknown": [
+    {
+      "effect_scope_id": "54e7fe8d488b56e4023bc9baee09fa4f961fd520cea2720b7c2362259c15d348",
+      "target_sha256": "9dc0fdf37dabe73f7b9d1dc303f8912960df082dec62f3e1e18b4ca8620191b2",
+      "retirement_sha256": "65d3f5303d4678d6ab99c06a0593b4f7f855b965c04ba9c36c927f82b895dedc",
+      "created_at": "2026-08-31T21:28:57.250Z",
+      "retired_at": "2026-09-01T07:56:57.377Z",
+      "physical_attempt_count": 1,
+      "physical_effect_outcome": "UNKNOWN"
+    },
+    {
+      "effect_scope_id": "c8a382a2d4d2d5b126622f046a420a29e05aa60035470c2f309f6bf2c9efe824",
+      "target_sha256": "4c5998cca9a01d85118c48614c7a152f53822a348e144a299b5a800516841a83",
+      "retirement_sha256": "2e8dcce8110164dbe0bc7b5166db6bb6ee54d0596325703638bb855de079d237",
+      "created_at": "2026-08-31T21:10:17.351Z",
+      "retired_at": "2026-09-01T07:56:57.369Z",
+      "physical_attempt_count": 1,
+      "physical_effect_outcome": "UNKNOWN"
+    }
+  ]
+}

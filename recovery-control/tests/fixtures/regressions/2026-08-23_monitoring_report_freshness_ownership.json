@@ -1,0 +1,10 @@
+{
+  "origin": "REAL_PHASE4_SHADOW",
+  "origin_run_id": "20260823T1352JST_phase4_shadow_v2",
+  "first_seen_at": "2026-08-23T04:59:54Z",
+  "environment": "arena-server to Dell real LAN no-action shadow",
+  "root_cause": "CRA first applied an invented 240 second age limit, then required exact same-cycle equality between the sentinel assessment and a report that refreshes after the sentinel; both bypassed Monitoring v4 freshness ownership and bounded source skew",
+  "classification": "SUT_ASSUMPTION_INVALIDATED",
+  "fix_reference": "cra_authority.phase4_shadow._monitoring_readiness",
+  "invariant": "CRA must use the report assessment embedded in one fresh Monitoring v4 sentinel cycle; a newer direct report is supporting evidence and must not invalidate the assessed cycle"
+}

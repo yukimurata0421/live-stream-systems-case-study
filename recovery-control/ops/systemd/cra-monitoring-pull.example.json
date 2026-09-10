@@ -1,0 +1,22 @@
+{
+  "schema": "cra.monitoring_projection_pull.v3",
+  "puller_release_id": "replace-with-immutable-release-id",
+  "endpoint_url": "https://arena-server:9444/v1/monitoring-evidence/latest",
+  "tls_certificate": "/etc/stream-recovery-control/cra-monitoring-client.pem",
+  "tls_private_key": "/etc/stream-recovery-control/cra-monitoring-client-key.pem",
+  "server_ca_certificate": "/etc/stream-recovery-control/monitoring-server-ca.pem",
+  "projection_schema_file": "/opt/stream-recovery-control/releases/replace-with-immutable-release-id/contracts/monitoring_v4/evidence_projection.v1.schema.json",
+  "monitoring_key_id": "replace-with-monitoring-key-id",
+  "monitoring_public_key_file": "/etc/stream-recovery-control/monitoring-ed25519-public.pem",
+  "source_instance_id": "arena-monitoring-v4",
+  "source_release_id": "replace-with-monitoring-release-id",
+  "maximum_ttl_seconds": 60,
+  "maximum_check_age_seconds": 180,
+  "timeout_seconds": 0.5,
+  "transient_retry_delays_seconds": [0.1, 0.2, 0.4, 0.8],
+  "maximum_retry_elapsed_seconds": 10,
+  "projection_file": "/var/lib/stream-recovery-control/monitoring-inbox/releases/replace-with-immutable-release-id/latest.json",
+  "status_file": "/var/lib/stream-recovery-control/monitoring-inbox/releases/replace-with-immutable-release-id/pull-status.json",
+  "recovery_state_file": "/var/lib/stream-recovery-control/monitoring-inbox/releases/replace-with-immutable-release-id/recovery-state.json",
+  "recovery_event_file": "/var/lib/stream-recovery-control/monitoring-inbox/releases/replace-with-immutable-release-id/recovery-events.jsonl"
+}

@@ -1,0 +1,25 @@
+[Unit]
+Description=Dell stream-v3 read-only target snapshot producer (Phase 4 shadow)
+After=network-online.target k3s.service
+Wants=network-online.target
+ConditionPathExists=/etc/stream-recovery-control/dell-target-observer.kubeconfig
+
+[Service]
+Type=simple
+User=stream-recovery
+Group=stream-recovery
+Environment=PYTHONPATH=/opt/stream-recovery-control/src:/opt/stream-recovery-control/vendor
+ExecStart=/opt/stream-recovery-control/tools/sqlite_runtime/run-fixed.sh /usr/bin/python3 -m dell_recovery_agent.target_snapshot --output /var/lib/stream-recovery-control/dell/target_snapshot.json --journal /var/lib/stream-recovery-control/dell/target_snapshots.jsonl --host-id dell-yuki --namespace stream-v3 --label-selector app.kubernetes.io/name=stream-v3,app.kubernetes.io/component=runtime --container-name stream-engine --kubeconfig /etc/stream-recovery-control/dell-target-observer.kubeconfig --ttl-seconds 10 --interval-seconds 5
+Restart=on-failure
+RestartSec=5s
+UMask=0027
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadOnlyPaths=/proc /etc/stream-recovery-control /opt/stream-recovery-control
+ReadWritePaths=/var/lib/stream-recovery-control/dell
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+
+[Install]
+WantedBy=multi-user.target

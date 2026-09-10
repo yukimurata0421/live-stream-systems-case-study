@@ -1,0 +1,6 @@
+{
+  "regression_id": "REG-HARNESS-2026-08-23-006",
+  "origin_run_id": "20260823T_cra_prephase5_harness_v2_v4",
+  "problem": "equal checkpoint values were reported different because decoded JSON used list while the live probe retained tuple",
+  "expected": "normalize both checkpoint triples before equality comparison"
+}

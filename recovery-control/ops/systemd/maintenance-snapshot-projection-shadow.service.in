@@ -1,0 +1,25 @@
+[Unit]
+Description=Maintenance snapshot read-only projection (shadow only)
+After=dell-recovery-agent-shadow.service
+Requires=dell-recovery-agent-shadow.service
+
+[Service]
+Type=simple
+User=stream-recovery
+Group=stream-recovery
+Environment=PYTHONPATH=@RELEASE_PATH@/src
+ExecStart=/usr/bin/python3 -m snapshot_projection.service --source /var/lib/stream-recovery-control/dell/p1-live/maintenance-audit-state.json --output /var/lib/stream-recovery-control/projection/mp03/maintenance-snapshot.json --sequence-state /var/lib/stream-recovery-control/projection/mp03/sequence.json --producer-id dell-maintenance-snapshot-projector --producer-instance-state /var/lib/stream-recovery-control/projection/mp03/producer-instance-id --expected-source-producer-id arena-maintenance-shadow --ttl-seconds 20 --interval-seconds 1
+Restart=on-failure
+RestartSec=2
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadOnlyPaths=/var/lib/stream-recovery-control/dell/p1-live
+ReadWritePaths=/var/lib/stream-recovery-control/projection/mp03
+RestrictAddressFamilies=AF_UNIX
+LockPersonality=true
+MemoryDenyWriteExecute=true
+
+[Install]
+WantedBy=multi-user.target

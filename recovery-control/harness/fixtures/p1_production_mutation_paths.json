@@ -1,0 +1,599 @@
+{
+  "schema_version": "maintenance.p1.production_mutation_paths.v1",
+  "baseline_inventory": "harness/fixtures/maintenance_mutation_paths.json",
+  "logical_path_count": 14,
+  "manual_path_coverage": "PARTIAL",
+  "unknown_automatic_mutation_paths": [],
+  "paths": [
+    {
+      "path_id": "MP-01",
+      "name": "planned rollout executor",
+      "host": "operator or arena host",
+      "process_service": "stream_v3_planned_rollout.py",
+      "path_role": "PLANNED_EXECUTOR",
+      "trigger": "explicit planned rollout request",
+      "pre_admission": "rollout patch and bounded annotation constructed",
+      "admission": {
+        "repository": "stream_v3",
+        "source_file": "ops/scripts/stream_v3_planned_rollout.py",
+        "symbol": "main",
+        "marker": "path_id=\"MP-01\", phase=\"ADMISSION\"",
+        "status": "IMPLEMENTED"
+      },
+      "effect_boundaries": [
+        {
+          "source_file": "ops/scripts/stream_v3_planned_rollout.py",
+          "symbol": "main",
+          "physical_call": "run_command(command) -> kubectl PATCH Deployment",
+          "marker": "path_id=\"MP-01\", phase=\"EFFECT_BOUNDARY\"",
+          "status": "IMPLEMENTED"
+        }
+      ],
+      "retry_point": "operator/script retry before confirmed rollout completion",
+      "in_flight": {
+        "status": "PROPOSED",
+        "definition": "kubectl PATCH accepted or Deployment observed progressing until rollout terminal",
+        "start": "Kubernetes API accepts PATCH",
+        "end": "Deployment rollout terminal or reconciled unknown",
+        "crash_reconstruction": "Deployment generation, ReplicaSet and Pod conditions",
+        "queued_included": true,
+        "api_timeout_included": true
+      },
+      "generation": {
+        "status": "PROPOSED",
+        "existing_source": "planned-rollout-id annotation plus Deployment generation/resourceVersion",
+        "maintenance_mapping": "explicit --maintenance-generation audit metadata; no enforcement binding"
+      },
+      "target_identity": "MISSING_AT_HOOK",
+      "idempotency": "rollout ID annotation classifies a change but does not prevent another PATCH",
+      "restart_persistence": "Kubernetes rollout persists after script exit",
+      "stale_context": "request admitted before maintenance can reach PATCH after maintenance begins",
+      "hook_coverage": "COMPLETE_FOR_PRIMARY_SCRIPT"
+    },
+    {
+      "path_id": "MP-02",
+      "name": "normal manual planned operation",
+      "host": "operator or arena host",
+      "process_service": "stream_v3_staged_restart.py and direct operator commands",
+      "path_role": "MANUAL_PLANNED_EXECUTOR",
+      "trigger": "manual rollout restart, Pod delete, scale or systemd command",
+      "pre_admission": "operator selects step/hard escalation",
+      "admission": {
+        "repository": "stream_v3",
+        "source_file": "ops/scripts/stream_v3_staged_restart.py",
+        "symbol": "rollout_restart/delete_runtime_pods/scale_runtime",
+        "marker": "path_id=\"MP-02\", phase=\"ADMISSION\"",
+        "status": "IMPLEMENTED_PRIMARY_SCRIPT_ONLY"
+      },
+      "effect_boundaries": [
+        {
+          "source_file": "ops/scripts/stream_v3_staged_restart.py",
+          "symbol": "rollout_restart/delete_runtime_pods/scale_runtime",
+          "physical_call": "kubectl rollout restart/delete/scale",
+          "marker": "path_id=\"MP-02\", phase=\"EFFECT_BOUNDARY\"",
+          "status": "IMPLEMENTED_PRIMARY_SCRIPT_ONLY"
+        },
+        {
+          "source_file": "external shell/runbook",
+          "symbol": "direct kubectl/systemctl",
+          "physical_call": "arbitrary credential-authorized CLI",
+          "marker": "none",
+          "status": "NOT_INTERCEPTABLE_WITHOUT_RBAC_OR_WRAPPER"
+        }
+      ],
+      "retry_point": "human retry or hard-mode escalation",
+      "in_flight": {
+        "status": "PROPOSED",
+        "definition": "each API request plus resulting rollout until terminal",
+        "start": "Kubernetes/systemd request accepted",
+        "end": "resource terminal and target reconciled",
+        "crash_reconstruction": "Kubernetes objects or systemd journal; script-local state is lost",
+        "queued_included": true,
+        "api_timeout_included": true
+      },
+      "generation": {
+        "status": "MISSING",
+        "existing_source": "Kubernetes generation/resourceVersion per operation; direct systemd has none",
+        "maintenance_mapping": "manual_planned_executor authorization wrapper and future RBAC restriction required"
+      },
+      "target_identity": "MISSING_AT_HOOK",
+      "idempotency": "none across direct retries",
+      "restart_persistence": "external effects persist; local intent does not",
+      "stale_context": "operator pauses between preflight and mutation or repeats an uncertain command",
+      "hook_coverage": "PARTIAL"
+    },
+    {
+      "path_id": "MP-03",
+      "name": "Dell Fast Recovery",
+      "host": "Dell runtime Pod",
+      "process_service": "fast-recovery-loop",
+      "path_role": "NORMAL_MUTATOR",
+      "trigger": "local TCP/network/FFmpeg/remote-warning decision",
+      "pre_admission": "failure streak, cooldown, budget, startup and GPU preflight",
+      "admission": {
+        "repository": "stream_v3",
+        "source_file": "src/watchers/fast_recovery.py",
+        "symbol": "execute_recovery_action and ffmpeg-missing branch",
+        "marker": "path_id=\"MP-03\", phase=\"ADMISSION\"",
+        "status": "IMPLEMENTED"
+      },
+      "effect_boundaries": [
+        {
+          "source_file": "src/watchers/fast_recovery.py",
+          "symbol": "restart_ffmpeg_child",
+          "physical_call": "fast_recovery_core.executor.restart_ffmpeg_child -> os.kill(SIGTERM)",
+          "marker": "path_id=\"MP-03\", phase=\"EFFECT_BOUNDARY\"",
+          "status": "IMPLEMENTED"
+        },
+        {
+          "source_file": "src/watchers/fast_recovery.py",
+          "symbol": "restart_stream",
+          "physical_call": "RuntimeSupervisor.restart or systemctl restart",
+          "marker": "path_id=\"MP-03\", phase=\"EFFECT_BOUNDARY\"",
+          "status": "IMPLEMENTED"
+        }
+      ],
+      "retry_point": "fast loop after guard/cooldown/failure backoff",
+      "in_flight": {
+        "status": "PROPOSED",
+        "definition": "recovery action from dispatch start through observed target result",
+        "start": "restart wrapper call",
+        "end": "dispatch result plus recovery verification",
+        "crash_reconstruction": "recovery event/context files are partial; no durable in-flight row",
+        "queued_included": false,
+        "api_timeout_included": true
+      },
+      "generation": {
+        "status": "PROPOSED",
+        "existing_source": "recovery_action_id, event ID, FFmpeg PID/generation evidence",
+        "maintenance_mapping": "separate maintenance generation field required"
+      },
+      "target_identity": "MISSING_EXACT_8_FIELD_AT_HOOK",
+      "idempotency": "restart guard, cooldown, budget and recovery_action_id",
+      "restart_persistence": "selected state persists on PVC but call-stack in-flight is lost",
+      "stale_context": "candidate survives policy evaluation while maintenance starts before wrapper call",
+      "hook_coverage": "COMPLETE_FOR_CURRENT_EFFECT_WRAPPERS"
+    },
+    {
+      "path_id": "MP-04",
+      "name": "arena remote recovery timer/service and scoped helper",
+      "host": "arena-server",
+      "process_service": "stream-v3-remote-recovery.timer/service",
+      "path_role": "NORMAL_MUTATOR",
+      "trigger": "one-minute timer, inactive workload or recovery action plan",
+      "pre_admission": "timer fire starts oneshot; timer fire itself is not admission",
+      "admission": {
+        "repository": "stream_v3",
+        "source_file": "ops/scripts/stream_v3_remote_recovery.py",
+        "symbol": "maybe_restart and execute_action_plan",
+        "marker": "path_id=\"MP-04\", phase=\"ADMISSION\"",
+        "status": "IMPLEMENTED_AFTER_POLICY_COOLDOWN_PREFLIGHT"
+      },
+      "effect_boundaries": [
+        {
+          "source_file": "ops/scripts/stream_v3_remote_recovery.py",
+          "symbol": "restart_workload",
+          "physical_call": "run(kubectl rollout restart)",
+          "marker": "path_id=\"MP-04\", phase=\"EFFECT_BOUNDARY\"",
+          "status": "IMPLEMENTED"
+        },
+        {
+          "source_file": "ops/scripts/stream_v3_remote_recovery.py",
+          "symbol": "execute_action_plan",
+          "physical_call": "spawn scoped recovery subprocess",
+          "marker": "path_id=\"MP-04\", phase=\"EFFECT_BOUNDARY\"",
+          "status": "IMPLEMENTED"
+        },
+        {
+          "source_file": "ops/scripts/stream_v3_scoped_recovery.py",
+          "symbol": "restart_dj/restart_ffmpeg",
+          "physical_call": "kubectl exec then kill TERM container PID1 or FFmpeg child",
+          "marker": "path_id=\"MP-04\", phase=\"EFFECT_BOUNDARY\"",
+          "status": "IMPLEMENTED"
+        }
+      ],
+      "retry_point": "timer next fire; cooldown and action-plan event ID",
+      "in_flight": {
+        "status": "PROPOSED",
+        "definition": "oneshot after admission through kubectl/helper terminal and target observation",
+        "start": "validated decision/action-plan",
+        "end": "kubectl/helper terminal plus target verification",
+        "crash_reconstruction": "systemd service state, action-plan event ID, Kubernetes state; no durable shared row",
+        "queued_included": true,
+        "api_timeout_included": true
+      },
+      "generation": {
+        "status": "PROPOSED",
+        "existing_source": "action-plan event_id, recovery_action_id, cooldown timestamp",
+        "maintenance_mapping": "event IDs remain correlation; maintenance generation must be additional"
+      },
+      "target_identity": "MISSING_EXACT_8_FIELD_AT_HOOK",
+      "idempotency": "last_action_plan_event_id and cooldown",
+      "restart_persistence": "state.json partial; enabled timer recreates oneshot",
+      "stale_context": "action plan created before maintenance and executed after it begins",
+      "hook_coverage": "COMPLETE_FOR_ACTIVE_TIMER_SERVICE_AND_SCOPED_HELPER"
+    },
+    {
+      "path_id": "MP-05",
+      "name": "arena YouTube lifecycle watchdog",
+      "host": "arena-server",
+      "process_service": "stream-v3-arena-monitor.service",
+      "path_role": "NORMAL_MUTATOR",
+      "trigger": "confirmed lifecycle/availability incident after policy and budget",
+      "pre_admission": "observation, incident classification, restart decision",
+      "admission": {
+        "repository": "stream_v3",
+        "source_file": "src/watchers/youtube_watchdog.py",
+        "symbol": "main restart_decision.should_restart branch",
+        "marker": "path_id=\"MP-05\", phase=\"ADMISSION\"",
+        "status": "IMPLEMENTED"
+      },
+      "effect_boundaries": [
+        {
+          "source_file": "src/watchers/youtube_watchdog.py",
+          "symbol": "restart_stream",
+          "physical_call": "youtube_lifecycle.actions -> RuntimeSupervisor/systemctl restart",
+          "marker": "path_id=\"MP-05\", phase=\"EFFECT_BOUNDARY\"",
+          "status": "IMPLEMENTED"
+        }
+      ],
+      "retry_point": "monitor cadence after cooldown/budget/backoff",
+      "in_flight": {
+        "status": "PROPOSED",
+        "definition": "restart wrapper call until supervisor result and target verification",
+        "start": "restart_stream call",
+        "end": "supervisor return plus recovery evidence",
+        "crash_reconstruction": "watchdog ledger records epoch but has no durable in-flight row",
+        "queued_included": false,
+        "api_timeout_included": true
+      },
+      "generation": {
+        "status": "PROPOSED",
+        "existing_source": "watchdog target_epoch/restart_epoch and status event",
+        "maintenance_mapping": "watchdog identity is YouTube-oriented and is not Protocol v1 TargetIdentity"
+      },
+      "target_identity": "MISSING_EXACT_8_FIELD_AT_HOOK",
+      "idempotency": "restart epoch, cooldown and budget",
+      "restart_persistence": "ledger/state files survive process restart",
+      "stale_context": "restart decision may precede delegated supervisor call",
+      "hook_coverage": "COMPLETE_FOR_RESTART_DELEGATION"
+    },
+    {
+      "path_id": "MP-06",
+      "name": "arena runtime delivery/stream watchdog",
+      "host": "arena-server",
+      "process_service": "stream-v3-arena-monitor.service",
+      "path_role": "NORMAL_MUTATOR",
+      "trigger": "runtime/delivery/audio/rendering degraded decision",
+      "pre_admission": "observation and component-specific degraded decision",
+      "admission": {
+        "repository": "stream_v3",
+        "source_file": "src/watchers/local_health/actions.py",
+        "symbol": "restart_service after allow_restart",
+        "marker": "path_id=\"MP-06\", phase=\"ADMISSION\"",
+        "status": "IMPLEMENTED_SHARED_ACTION_OWNER"
+      },
+      "effect_boundaries": [
+        {
+          "source_file": "src/watchers/local_health/actions.py",
+          "symbol": "restart_service",
+          "physical_call": "RuntimeSupervisor.restart or systemctl restart",
+          "marker": "path_id=\"MP-06\", phase=\"EFFECT_BOUNDARY\"",
+          "status": "IMPLEMENTED"
+        }
+      ],
+      "retry_point": "watchdog cadence and restart budget",
+      "in_flight": {
+        "status": "PROPOSED",
+        "definition": "restart event through supervisor result",
+        "start": "shared restart_service action",
+        "end": "supervisor return and subsequent health observation",
+        "crash_reconstruction": "event/budget files show request but not authoritative completion",
+        "queued_included": false,
+        "api_timeout_included": true
+      },
+      "generation": {
+        "status": "PROPOSED",
+        "existing_source": "watchdog event_id and per-resource Kubernetes generation",
+        "maintenance_mapping": "additional maintenance generation required"
+      },
+      "target_identity": "MISSING_EXACT_8_FIELD_AT_HOOK",
+      "idempotency": "restart event and budget/cooldown",
+      "restart_persistence": "event/budget files survive; call stack does not",
+      "stale_context": "decision producer delegates after allow_restart",
+      "hook_coverage": "COMPLETE_FOR_SHARED_RESTART_ACTION"
+    },
+    {
+      "path_id": "MP-07",
+      "name": "CRA recovery command authorization",
+      "host": "arena-server",
+      "process_service": "cra-authority-shadow.service",
+      "path_role": "AUTHORITY_PRODUCER",
+      "trigger": "authorized fresh monitoring decision",
+      "pre_admission": "recovery authorization and Central authority checks",
+      "admission": {
+        "repository": "stream_recovery_control",
+        "source_file": "src/cra_authority/storage.py",
+        "symbol": "CentralStore.create_command",
+        "marker": "path_id=\"MP-07\", phase=\"ADMISSION\"",
+        "status": "IMPLEMENTED_BEFORE_COMMAND_INTENT_COMMIT"
+      },
+      "effect_boundaries": [],
+      "no_effect_reason": "CRA owns Authority Truth and command intent/outbox, not physical execution",
+      "retry_point": "transactional outbox delivery using same command identity",
+      "in_flight": {
+        "status": "CONFIRMED",
+        "definition": "command OUTBOX_PENDING/IN_FLIGHT until terminal status reconciliation",
+        "start": "command and outbox transaction commit",
+        "end": "terminal command status/reconciliation",
+        "crash_reconstruction": "Central SQLite command/outbox rows",
+        "queued_included": true,
+        "api_timeout_included": true
+      },
+      "generation": {
+        "status": "CONFIRMED",
+        "existing_source": "authority_epoch, authority_session_id, command_seq, command_id, idempotency_key",
+        "maintenance_mapping": "separate maintenance generation; do not replace command sequence"
+      },
+      "target_identity": "CONFIRMED_EXACT_8_FIELD",
+      "idempotency": "Central command ID/epoch/sequence and transactional outbox",
+      "restart_persistence": "Central SQLite",
+      "stale_context": "authorization can expire or authority can change before commit",
+      "hook_coverage": "COMPLETE_FOR_AUTHORITY_PRODUCER"
+    },
+    {
+      "path_id": "MP-08",
+      "name": "Dell Recovery Agent command executor",
+      "host": "Dell",
+      "process_service": "dell-recovery-agent-shadow.service",
+      "path_role": "NORMAL_MUTATOR",
+      "trigger": "signed CRA recovery command",
+      "pre_admission": "signature, ledger, authority, sequence, budget and exact target validation",
+      "admission": {
+        "repository": "stream_recovery_control",
+        "source_file": "src/dell_recovery_agent/execution.py",
+        "symbol": "AgentService.handle_command",
+        "marker": "path_id=\"MP-08\", phase=\"ADMISSION\"",
+        "status": "IMPLEMENTED_BEFORE_ACCEPT_COMMIT"
+      },
+      "effect_boundaries": [
+        {
+          "source_file": "src/dell_recovery_agent/execution.py",
+          "symbol": "AgentService.handle_command",
+          "physical_call": "adapter.restart_ffmpeg after durable EXECUTION_STARTED and exact pre-effect observation",
+          "marker": "path_id=\"MP-08\", phase=\"EFFECT_BOUNDARY\"",
+          "status": "IMPLEMENTED"
+        }
+      ],
+      "retry_point": "same command becomes duplicate; uncertain started action becomes OUTCOME_UNKNOWN",
+      "in_flight": {
+        "status": "CONFIRMED",
+        "definition": "agent_commands/execution_attempts ACCEPTED, EXECUTION_STARTED or OUTCOME_UNKNOWN",
+        "start": "durable accept/reservation",
+        "end": "EFFECT_OBSERVED/EFFECT_FAILED or reconciled terminal",
+        "crash_reconstruction": "Dell SQLite WAL ledger",
+        "queued_included": true,
+        "api_timeout_included": true
+      },
+      "generation": {
+        "status": "CONFIRMED",
+        "existing_source": "authority_epoch/session, command_seq high-water, exact command ID",
+        "maintenance_mapping": "additional Maintenance Authorization kind/generation required"
+      },
+      "target_identity": "CONFIRMED_EXACT_8_FIELD_ADMISSION_AND_EFFECT",
+      "idempotency": "Dell unique epoch/sequence/command and durable execution reservation",
+      "restart_persistence": "Dell SQLite; started uncertainty is OUTCOME_UNKNOWN",
+      "stale_context": "authority/target can change between acceptance and effect re-observation",
+      "hook_coverage": "COMPLETE"
+    },
+    {
+      "path_id": "MP-09",
+      "name": "Dell Local Fallback",
+      "host": "Dell",
+      "process_service": "dell-recovery-agent-shadow.service",
+      "path_role": "LOCAL_FALLBACK",
+      "trigger": "monotonic central lease expiry plus allowlisted local evidence",
+      "pre_admission": "CENTRAL_SUSPECT then lease TTL expiry",
+      "admission": {
+        "repository": "stream_recovery_control",
+        "source_file": "src/dell_recovery_agent/authority.py and src/dell_recovery_agent/execution.py",
+        "symbol": "AgentAuthorityLease.tick and AgentService.handle_local_candidate",
+        "marker": "path_id=\"MP-09\", phase=\"ADMISSION\"",
+        "status": "IMPLEMENTED_AT_AUTHORITY_TRANSITION_AND_ACTION_ACCEPTANCE"
+      },
+      "effect_boundaries": [
+        {
+          "source_file": "src/dell_recovery_agent/execution.py",
+          "symbol": "AgentService.handle_local_candidate",
+          "physical_call": "adapter.restart_ffmpeg after local_actions EXECUTION_STARTED",
+          "marker": "path_id=\"MP-09\", phase=\"EFFECT_BOUNDARY\"",
+          "status": "IMPLEMENTED"
+        }
+      ],
+      "retry_point": "local candidate loop subject to unresolved action and hard cooldown",
+      "in_flight": {
+        "status": "CONFIRMED",
+        "definition": "local_actions/agent_commands unresolved states",
+        "start": "local_actions EXECUTION_STARTED commit",
+        "end": "EFFECT_OBSERVED/EFFECT_FAILED or reconciliation",
+        "crash_reconstruction": "Dell SQLite WAL",
+        "queued_included": true,
+        "api_timeout_included": true
+      },
+      "generation": {
+        "status": "CONFIRMED",
+        "existing_source": "local_session_id and local_action_seq plus authority epoch high-water",
+        "maintenance_mapping": "maintenance generation remains separate and higher-priority"
+      },
+      "target_identity": "CONFIRMED_AT_ACTION_ADMISSION_AND_EFFECT; MISSING_AT_LEASE_TRANSITION",
+      "idempotency": "local session/action ID/sequence and unresolved-action fence",
+      "restart_persistence": "Dell SQLite; monotonic lease is intentionally not restored",
+      "stale_context": "lease can expire during maintenance or target can drift before effect",
+      "hook_coverage": "COMPLETE_FOR_CURRENT_LOCAL_ACTION"
+    },
+    {
+      "path_id": "MP-10",
+      "name": "stream-engine self-recovery",
+      "host": "Dell runtime Pod",
+      "process_service": "stream-engine",
+      "path_role": "NORMAL_MUTATOR",
+      "trigger": "FFmpeg exit, missing helper, takeover, stale process or memory guard",
+      "pre_admission": "process/health observation and restart scheduling",
+      "admission": {
+        "repository": "stream_v3",
+        "source_file": "src/stream_core/stream_engine.py and src/stream_core/engine/rendering_boot.py",
+        "symbol": "StreamEngine.run/audit_self_recovery and helper start functions",
+        "marker": "path_id=\"MP-10\", phase=\"ADMISSION\"",
+        "status": "IMPLEMENTED_FOR_FFMPEG_HELPER_TAKEOVER_STALE_PROCESS"
+      },
+      "effect_boundaries": [
+        {
+          "source_file": "src/stream_core/stream_engine.py",
+          "symbol": "StreamEngine.run",
+          "physical_call": "subprocess.Popen FFmpeg",
+          "marker": "phase=\"EFFECT_BOUNDARY\", operation=\"start_ffmpeg\"",
+          "status": "IMPLEMENTED"
+        },
+        {
+          "source_file": "src/stream_core/stream_engine.py",
+          "symbol": "takeover/cleanup/terminate_helper_proc",
+          "physical_call": "os.kill or Popen.terminate/kill",
+          "marker": "phase=\"EFFECT_BOUNDARY\"",
+          "status": "IMPLEMENTED"
+        },
+        {
+          "source_file": "src/stream_core/engine/rendering_boot.py",
+          "symbol": "start_x_display/start_overlay_server/start_browser",
+          "physical_call": "subprocess.Popen helper",
+          "marker": "path_id=\"MP-10\", phase=\"EFFECT_BOUNDARY\"",
+          "status": "IMPLEMENTED"
+        }
+      ],
+      "retry_point": "engine loop after restart delay/connectivity gate; helper heartbeat cadence",
+      "in_flight": {
+        "status": "PROPOSED",
+        "definition": "scheduled restart or helper/FFmpeg process transition until child stable",
+        "start": "restart schedule or process API call",
+        "end": "new PID/generation stable or terminal failure",
+        "crash_reconstruction": "event/context files plus process discovery; no shared durable in-flight row",
+        "queued_included": true,
+        "api_timeout_included": false
+      },
+      "generation": {
+        "status": "PROPOSED",
+        "existing_source": "run_id, event sequence, restart_count, FFmpeg PID/start generation",
+        "maintenance_mapping": "additional maintenance generation required"
+      },
+      "target_identity": "MISSING_EXACT_8_FIELD_BEFORE_CHILD_START",
+      "idempotency": "single-instance/capture locks, process discovery and event context",
+      "restart_persistence": "process/event evidence partial; host/Pod restart changes identity",
+      "stale_context": "restart scheduled before maintenance and Popen/kill occurs afterward",
+      "hook_coverage": "COMPLETE_FOR_INVENTORIED_PROCESS_EFFECTS"
+    },
+    {
+      "path_id": "MP-11",
+      "name": "Kubernetes autoreconcile",
+      "host": "Dell k3s control plane/node",
+      "process_service": "k3s controllers and kubelet",
+      "path_role": "EXECUTION_SUBSTRATE",
+      "trigger": "accepted desired-state/API mutation or unexpected Pod/container exit",
+      "pre_admission": "API request admission or controller workqueue observation",
+      "admission": {
+        "repository": "external Kubernetes implementation",
+        "source_file": "Kubernetes API audit/event stream",
+        "symbol": "Deployment/ReplicaSet/Pod controller",
+        "marker": "none in application source",
+        "status": "PROPOSED_OBSERVATION_NOT_CONTROLLER_MODIFICATION"
+      },
+      "effect_boundaries": [
+        {
+          "source_file": "application kubectl callers plus Kubernetes events",
+          "symbol": "mutating API request then ReplicaSet/Pod consequence",
+          "physical_call": "PATCH/DELETE/scale accepted; controller creates/deletes Pod/container",
+          "marker": "owner hooks MP-01/02/03/04/05/06 plus future API audit correlation",
+          "status": "OWNER_SIDE_HOOKED_CONTROLLER_CORRELATION_PROPOSED"
+        }
+      ],
+      "retry_point": "controller workqueue and kubelet restart policy",
+      "in_flight": {
+        "status": "PROPOSED",
+        "definition": "accepted owner API mutation until Deployment observedGeneration/current ReplicaSet/Pods stabilize",
+        "start": "mutating API request resourceVersion/generation change",
+        "end": "rollout terminal and exact target reconciliation",
+        "crash_reconstruction": "Kubernetes API objects, ownerReferences, events and container status",
+        "queued_included": true,
+        "api_timeout_included": true
+      },
+      "generation": {
+        "status": "CONFIRMED_EXISTING_PROPOSED_MAPPING",
+        "existing_source": "resourceVersion, metadata.generation, status.observedGeneration, ReplicaSet revision, Pod UID",
+        "maintenance_mapping": "intentional owner carries maintenance correlation; controller consequence does not acquire independent mutation authority"
+      },
+      "target_identity": "CONFIRMED_AFTER_OBSERVATION_NOT_AT_CONTROLLER_QUEUE",
+      "idempotency": "Kubernetes desired-state reconciliation",
+      "restart_persistence": "API objects and controller state survive application process exit",
+      "stale_context": "accepted desired state continues after owner exits or maintenance begins",
+      "hook_coverage": "PROPOSED_API_EVENT_CORRELATION"
+    },
+    {
+      "path_id": "MP-12",
+      "name": "kernel/PID1 watchdog and power failure",
+      "host": "Dell",
+      "process_service": "kernel, systemd and hardware",
+      "path_role": "HOST_SAFETY",
+      "trigger": "panic, lockup, watchdog or power loss",
+      "pre_admission": "not application-controlled",
+      "admission": {"status": "UNSUPPORTED_CONDITION"},
+      "effect_boundaries": [],
+      "no_effect_reason": "application audit hook must not intercept host safety effects",
+      "in_flight": {"status": "MISSING", "definition": "not representable before abrupt failure"},
+      "generation": {"status": "CONFIRMED", "existing_source": "host boot ID after reboot", "maintenance_mapping": "startup reconstruction input"},
+      "target_identity": "RECONSTRUCT_AFTER_REBOOT",
+      "stale_context": "not application-controlled; reboot reconstruction is a separate startup-order problem",
+      "hook_coverage": "UNSUPPORTED_CONDITION"
+    },
+    {
+      "path_id": "MP-13",
+      "name": "installed inactive legacy recovery timer",
+      "host": "Dell",
+      "process_service": "adsb-streamnew-fast-recovery.timer/service",
+      "path_role": "INACTIVE_LEGACY",
+      "trigger": "manual start or future enable",
+      "pre_admission": "unit start",
+      "admission": {"status": "INACTIVE_IN_LIVE_AUDIT"},
+      "effect_boundaries": [],
+      "no_effect_reason": "installed path is disabled; enabling requires inventory promotion and hook review",
+      "in_flight": {"status": "CONFIRMED", "definition": "systemd unit state", "crash_reconstruction": "systemd state"},
+      "generation": {"status": "MISSING", "existing_source": "none while inactive"},
+      "target_identity": "MISSING",
+      "stale_context": "inactive now; a later enable would require inventory promotion before operation",
+      "hook_coverage": "INACTIVE_LEGACY"
+    },
+    {
+      "path_id": "MP-14",
+      "name": "external manual root / break-glass equivalent",
+      "host": "Dell or arena-server",
+      "process_service": "interactive shell, sudo, direct kubectl/systemctl/kill",
+      "path_role": "BREAK_GLASS",
+      "trigger": "operator with existing credentials bypasses primary scripts",
+      "pre_admission": "outside application",
+      "admission": {"status": "UNSUPPORTED_CONDITION"},
+      "effect_boundaries": [
+        {
+          "source_file": "external shell",
+          "symbol": "kubectl/systemctl/kill",
+          "physical_call": "direct privileged operation",
+          "marker": "none",
+          "status": "NOT_INTERCEPTABLE_WITHOUT_RBAC_SUDO_OR_API_AUDIT"
+        }
+      ],
+      "in_flight": {"status": "MISSING", "definition": "external process and resulting resource state"},
+      "generation": {"status": "MISSING", "existing_source": "command-specific only"},
+      "target_identity": "MISSING",
+      "idempotency": "operator-dependent",
+      "restart_persistence": "effect persists, intent may not",
+      "stale_context": "unbounded protocol bypass",
+      "hook_coverage": "UNSUPPORTED_CONDITION"
+    }
+  ]
+}

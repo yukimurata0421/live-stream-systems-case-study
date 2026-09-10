@@ -1,0 +1,12 @@
+[Unit]
+Description=Refresh signed CRA projection for immutable arena release %i
+
+[Timer]
+OnBootSec=5s
+OnUnitInactiveSec=1s
+AccuracySec=100ms
+RandomizedDelaySec=0
+Unit=monitoring-v4-cra-projection@%i.service
+
+[Install]
+WantedBy=timers.target

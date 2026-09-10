@@ -1,0 +1,51 @@
+[Unit]
+Description=Publish signed Dell NO_ACTION host status for immutable release %i
+StartLimitIntervalSec=10s
+StartLimitBurst=10
+After=dell-observation-server@%i.service
+ConditionPathExists=/opt/stream-recovery-observation/releases/%i/release_manifest.json
+ConditionPathExists=/opt/stream-recovery-observation/runtimes/%i/runtime_manifest.json
+ConditionPathExists=/etc/stream-recovery-observation/releases/%i/no-action-host-status-publisher.json
+
+[Service]
+Type=oneshot
+User=root
+Group=stream-recovery
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=PYTHONNOUSERSITE=1
+Environment=PYTHONPATH=/opt/stream-recovery-observation/releases/%i/src
+Environment=CRA_IMMUTABLE_RELEASE_ID=%i
+Environment=CRA_HOST_STATUS_SIGNING_KEY_FILE=%d/dell-host-status-signing-key.pem
+LoadCredential=dell-host-status-signing-key.pem:/etc/stream-recovery-observation/credentials/dell-observation-ed25519-private.pem
+ExecStart=/opt/stream-recovery-observation/runtimes/%i/.venv/bin/python -m cra_no_action_soak.host_status_publisher --config /etc/stream-recovery-observation/releases/%i/no-action-host-status-publisher.json
+TimeoutStartSec=15s
+TimeoutStopSec=5s
+UMask=0077
+StateDirectory=stream-recovery-observation/host-status/releases/%i
+StateDirectoryMode=0750
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectClock=true
+ProtectHostname=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+RemoveIPC=true
+CapabilityBoundingSet=
+RestrictAddressFamilies=AF_UNIX
+ReadOnlyPaths=/opt/stream-recovery-observation/releases/%i /opt/stream-recovery-observation/runtimes/%i /etc/stream-recovery-observation/releases/%i
+ReadOnlyPaths=/etc/stream-recovery-observation/credentials/dell-observation-server.pem
+ReadOnlyPaths=/etc/stream-recovery-control/host-contract.json /etc/needrestart/conf.d/stream-recovery-control.conf /var/lib/stream-recovery-control /var/lib/rancher/k3s/storage
+ReadWritePaths=/var/lib/stream-recovery-observation/host-status/releases/%i
+InaccessiblePaths=-/run/stream-v3-control/effect.sock -/run/stream-v3-control/runtime-recovery.sock
+InaccessiblePaths=/etc/stream-recovery-observation/credentials/dell-observation-ed25519-private.pem /etc/stream-recovery-observation/credentials/dell-observation-server-key.pem
+
+# Read-only local fact synthesis and signing. No network or control socket is visible.

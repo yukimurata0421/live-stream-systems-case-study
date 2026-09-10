@@ -1,0 +1,40 @@
+[Unit]
+Description=Pull and verify Monitoring projection for immutable release %i
+After=network-online.target
+Wants=network-online.target
+ConditionPathExists=/opt/stream-recovery-control/releases/%i/release_manifest.json
+ConditionPathExists=/opt/stream-recovery-control/runtimes/%i/runtime_manifest.json
+ConditionPathExists=/etc/stream-recovery-control/releases/%i/cra-monitoring-pull.json
+StartLimitIntervalSec=10s
+StartLimitBurst=60
+
+[Service]
+Type=oneshot
+# Socket timeouts do not bound DNS resolution or a slowly dripped header.
+# The supervisor bounds the complete invocation, including all retries.
+TimeoutStartSec=30s
+TimeoutStopSec=5s
+User=stream-recovery
+Group=stream-recovery
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=PYTHONNOUSERSITE=1
+Environment=PYTHONPATH=/opt/stream-recovery-control/releases/%i/src
+Environment=CRA_IMMUTABLE_RELEASE_ID=%i
+ExecStart=/opt/stream-recovery-control/runtimes/%i/.venv/bin/python -m cra_authority.projection_pull --config /etc/stream-recovery-control/releases/%i/cra-monitoring-pull.json
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+ReadOnlyPaths=/etc/stream-recovery-control/releases/%i /opt/stream-recovery-control/releases/%i /opt/stream-recovery-control/runtimes/%i
+ReadWritePaths=/var/lib/stream-recovery-control/monitoring-inbox
+InaccessiblePaths=/var/lib/stream-recovery-control/cra
+
+# Transport only. It cannot open Central SQLite or deliver a Dell command.

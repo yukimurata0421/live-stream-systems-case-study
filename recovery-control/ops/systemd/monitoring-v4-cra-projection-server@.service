@@ -1,0 +1,52 @@
+[Unit]
+Description=Serve signed CRA projection for immutable arena release %i
+After=network-online.target monitoring-v4-cra-projection@%i.service
+Wants=network-online.target
+ConditionPathExists=/opt/stream-monitoring-cra-projection/releases/%i/release_manifest.json
+ConditionPathExists=/opt/stream-monitoring-cra-projection/runtimes/%i/runtime_manifest.json
+ConditionPathExists=/etc/stream-monitoring-cra-projection/releases/%i/projection-server.json
+ConditionPathExists=/var/lib/stream-monitoring-v4/cra-projection/releases/%i/latest.json
+
+[Service]
+Type=simple
+User=stream-monitoring-projection
+Group=stream-monitoring-projection
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=PYTHONNOUSERSITE=1
+Environment=PYTHONPATH=/opt/stream-monitoring-cra-projection/releases/%i/src
+Environment=CRA_IMMUTABLE_RELEASE_ID=%i
+ExecStart=/opt/stream-monitoring-cra-projection/runtimes/%i/.venv/bin/python -m monitoring_projection.server --config /etc/stream-monitoring-cra-projection/releases/%i/projection-server.json
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=on-failure
+RestartSec=5s
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectClock=true
+ProtectHostname=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+ProtectProc=invisible
+ProcSubset=pid
+RestrictSUIDSGID=true
+RestrictRealtime=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+RemoveIPC=true
+CapabilityBoundingSet=
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+ReadOnlyPaths=/opt/stream-monitoring-cra-projection/releases/%i /opt/stream-monitoring-cra-projection/runtimes/%i /etc/stream-monitoring-cra-projection/credentials /var/lib/stream-monitoring-v4/cra-projection
+ReadWritePaths=/var/lib/stream-monitoring-v4/cra-projection/releases/%i
+InaccessiblePaths=/etc/stream-monitoring-cra-projection/credentials/monitoring-ed25519-private.pem /etc/stream-monitoring-v4/cra-projection-postgres.conninfo
+InaccessiblePaths=/var/lib/stream-monitoring-v4/cra-facts /var/lib/stream-monitoring-v4/cra-target-inbox /var/lib/stream-recovery-control
+
+# GET-only server for an already signed projection. Its only write is a local self-resource snapshot;
+# it cannot rebuild facts or sign a payload.
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,45 @@
+[Unit]
+Description=Collect recovery-aware seven-day soak for immutable release %i
+ConditionPathExists=/opt/stream-recovery-control/releases/%i/release_manifest.json
+ConditionPathExists=/opt/stream-recovery-control/runtimes/%i/runtime_manifest.json
+ConditionPathExists=/etc/stream-recovery-control/releases/%i/recovery-soak.json
+
+[Service]
+Type=oneshot
+User=stream-recovery
+Group=stream-recovery
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=PYTHONNOUSERSITE=1
+Environment=PYTHONPATH=/opt/stream-recovery-control/releases/%i/src
+Environment=CRA_IMMUTABLE_RELEASE_ID=%i
+ExecStart=/opt/stream-recovery-control/runtimes/%i/.venv/bin/python -m cra_no_action_soak.recovery_soak --config /etc/stream-recovery-control/releases/%i/recovery-soak.json
+TimeoutStartSec=10s
+TimeoutStopSec=5s
+UMask=0077
+Nice=5
+IOSchedulingClass=idle
+MemoryMax=128M
+NoNewPrivileges=true
+PrivateNetwork=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectClock=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+CapabilityBoundingSet=
+RestrictAddressFamilies=AF_UNIX
+ReadOnlyPaths=/etc/stream-recovery-control/releases/%i /opt/stream-recovery-control/releases/%i /opt/stream-recovery-control/runtimes/%i
+ReadOnlyPaths=/var/lib/stream-recovery-control/recovery-inbox/%i
+ReadWritePaths=/var/lib/stream-recovery-control/recovery-soak/%i
+InaccessiblePaths=-/var/lib/stream-recovery-control/cra
+InaccessiblePaths=-/var/lib/stream-recovery-control/controller -/run/stream-v3-control -/run/credentials
+InaccessiblePaths=-/etc/stream-recovery-control/cra-archive-signing-private.pem -/etc/stream-recovery-control/cra-monitoring-client-key.pem
+
+# Local signed files only. No automatic pull, runtime restart, action, or old-soak activation.

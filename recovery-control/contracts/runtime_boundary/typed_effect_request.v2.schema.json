@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://stream-recovery-control.local/runtime.typed_effect_request.v2.schema.json",
+  "title": "Typed Runtime Effect Request v2",
+  "type": "object",
+  "required": [
+    "schema_version", "request_id", "producer_id", "producer_generation",
+    "intent_type", "reason", "failure_domain", "issued_at", "expires_at",
+    "ffmpeg_target_identity", "runtime_identity", "expected_ffmpeg_generation",
+    "idempotency_key", "correlation_id", "target_snapshot_id", "runtime_snapshot_id",
+    "runtime_observation_id", "expected_executor_instance_id",
+    "maintenance_evidence_status", "projection_id", "projection_sequence"
+  ],
+  "properties": {
+    "schema_version": {"const": "runtime.typed_effect_request.v2"},
+    "request_id": {"type": "string", "minLength": 1},
+    "producer_id": {"type": "string", "minLength": 1},
+    "producer_generation": {"type": "integer", "minimum": 1},
+    "intent_type": {"enum": ["RESTART_FFMPEG", "RECONCILE_FFMPEG", "ESCALATE_RUNTIME_RECOVERY"]},
+    "reason": {"type": "string", "minLength": 1, "maxLength": 512},
+    "failure_domain": {"type": "string", "minLength": 1},
+    "issued_at": {"type": "string", "format": "date-time"},
+    "expires_at": {"type": "string", "format": "date-time"},
+    "ffmpeg_target_identity": {"oneOf": [{"$ref": "#/$defs/ffmpegTarget"}, {"type": "null"}]},
+    "runtime_identity": {"oneOf": [{"$ref": "#/$defs/runtimeIdentity"}, {"type": "null"}]},
+    "expected_ffmpeg_generation": {"type": "string"},
+    "idempotency_key": {"type": "string", "minLength": 1},
+    "correlation_id": {"type": "string", "minLength": 1},
+    "target_snapshot_id": {"type": "string"},
+    "runtime_snapshot_id": {"type": "string"},
+    "runtime_observation_id": {"type": "string"},
+    "expected_executor_instance_id": {"type": "string", "minLength": 1},
+    "maintenance_evidence_status": {"enum": ["AVAILABLE", "UNKNOWN", "STALE", "INVALID"]},
+    "projection_id": {"type": "string"},
+    "projection_sequence": {"type": "integer", "minimum": 0}
+  },
+  "$defs": {
+    "ffmpegTarget": {
+      "type": "object",
+      "required": ["host_id", "host_boot_id", "namespace", "pod_uid", "container_name", "container_id", "ffmpeg_generation", "ffmpeg_pid"],
+      "properties": {
+        "host_id": {"type": "string", "minLength": 1},
+        "host_boot_id": {"type": "string", "minLength": 1},
+        "namespace": {"type": "string", "minLength": 1},
+        "pod_uid": {"type": "string", "minLength": 1},
+        "container_name": {"const": "stream-engine"},
+        "container_id": {"type": "string", "minLength": 1},
+        "ffmpeg_generation": {"type": "string", "minLength": 1},
+        "ffmpeg_pid": {"type": "integer", "minimum": 2}
+      },
+      "additionalProperties": false
+    },
+    "runtimeIdentity": {
+      "type": "object",
+      "required": ["host_id", "host_boot_id", "namespace", "pod_uid", "stream_engine_container_name", "stream_engine_container_id", "runtime_generation"],
+      "properties": {
+        "host_id": {"type": "string", "minLength": 1},
+        "host_boot_id": {"type": "string", "minLength": 1},
+        "namespace": {"type": "string", "minLength": 1},
+        "pod_uid": {"type": "string", "minLength": 1},
+        "stream_engine_container_name": {"const": "stream-engine"},
+        "stream_engine_container_id": {"type": "string", "pattern": "^containerd://"},
+        "runtime_generation": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"intent_type": {"const": "RESTART_FFMPEG"}}},
+      "then": {
+        "properties": {
+          "ffmpeg_target_identity": {"$ref": "#/$defs/ffmpegTarget"},
+          "runtime_identity": {"type": "null"},
+          "expected_ffmpeg_generation": {"type": "string", "minLength": 1},
+          "target_snapshot_id": {"type": "string", "minLength": 1},
+          "runtime_snapshot_id": {"const": ""}
+        }
+      },
+      "else": {
+        "properties": {
+          "ffmpeg_target_identity": {"type": "null"},
+          "runtime_identity": {"$ref": "#/$defs/runtimeIdentity"},
+          "expected_ffmpeg_generation": {"const": ""},
+          "target_snapshot_id": {"const": ""},
+          "runtime_snapshot_id": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  ],
+  "additionalProperties": false
+}

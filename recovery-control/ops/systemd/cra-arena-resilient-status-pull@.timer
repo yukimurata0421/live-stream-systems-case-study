@@ -1,0 +1,12 @@
+[Unit]
+Description=Refresh verified arena resilient status for immutable CRA release %i
+
+[Timer]
+OnBootSec=8s
+OnUnitInactiveSec=3s
+AccuracySec=200ms
+RandomizedDelaySec=0
+Unit=cra-arena-resilient-status-pull@%i.service
+
+[Install]
+WantedBy=timers.target

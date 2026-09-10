@@ -1,0 +1,43 @@
+[Unit]
+Description=Pull signed arena resilient status for immutable CRA release %i
+After=network-online.target
+Wants=network-online.target
+ConditionPathExists=/opt/stream-recovery-control/releases/%i/release_manifest.json
+ConditionPathExists=/opt/stream-recovery-control/runtimes/%i/runtime_manifest.json
+ConditionPathExists=/etc/stream-recovery-control/releases/%i/arena-resilient-status-pull.json
+StartLimitIntervalSec=10s
+StartLimitBurst=10
+
+[Service]
+Type=oneshot
+User=stream-recovery
+Group=stream-recovery
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=PYTHONNOUSERSITE=1
+Environment=PYTHONPATH=/opt/stream-recovery-control/releases/%i/src
+Environment=CRA_IMMUTABLE_RELEASE_ID=%i
+ExecStart=/opt/stream-recovery-control/runtimes/%i/.venv/bin/python -m cra_no_action_soak.resilient_host_status_pull --config /etc/stream-recovery-control/releases/%i/arena-resilient-status-pull.json
+TimeoutStartSec=15s
+TimeoutStopSec=5s
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectClock=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+CapabilityBoundingSet=
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+ReadOnlyPaths=/etc/stream-recovery-control/releases/%i /opt/stream-recovery-control/releases/%i /opt/stream-recovery-control/runtimes/%i
+ReadOnlyPaths=/etc/stream-recovery-control/cra-monitoring-client.pem /etc/stream-recovery-control/cra-monitoring-client-key.pem /etc/stream-recovery-control/cra-monitoring-server-ca.pem /etc/stream-recovery-control/monitoring-ed25519-public.pem /etc/stream-recovery-control/dell-observation-ed25519-public.pem
+ReadWritePaths=/var/lib/stream-recovery-control/monitoring-inbox
+InaccessiblePaths=/var/lib/stream-recovery-control/cra
+
+# Independent signed-status transport only; Central SQLite and command delivery are inaccessible.

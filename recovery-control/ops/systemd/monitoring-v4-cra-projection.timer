@@ -1,0 +1,12 @@
+[Unit]
+Description=Refresh signed Monitoring v4 CRA projection
+
+[Timer]
+OnBootSec=2s
+OnUnitActiveSec=2s
+AccuracySec=200ms
+RandomizedDelaySec=0
+Unit=monitoring-v4-cra-projection.service
+
+[Install]
+WantedBy=timers.target

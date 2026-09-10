@@ -1,0 +1,7 @@
+{
+  "regression_id": "REG-SUT-2026-08-23-001",
+  "origin": "RF-05 old Central restore plus unresolved Dell local action",
+  "invariant": "an unresolved local action must block a central physical attempt after reconciliation",
+  "expected_reason_code": "ACTIVE_UNRESOLVED_ACTION",
+  "expected_physical_attempt_count": 0
+}

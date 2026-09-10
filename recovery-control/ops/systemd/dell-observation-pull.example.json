@@ -1,0 +1,26 @@
+{
+  "schema": "monitoring_v4.dell_observation_pull.v2",
+  "puller_release_id": "replace-with-immutable-arena-projection-release-id",
+  "endpoint_url": "https://replace-with-dell-observation-hostname:9445/v1/dell-observations/latest",
+  "tls_certificate": "/etc/stream-monitoring-cra-projection/credentials/dell-observation-client.pem",
+  "tls_private_key": "/etc/stream-monitoring-cra-projection/credentials/dell-observation-client-key.pem",
+  "server_ca_certificate": "/etc/stream-monitoring-cra-projection/credentials/dell-observation-server-ca.pem",
+  "observation_schema_file": "/opt/stream-monitoring-cra-projection/releases/replace-with-immutable-arena-projection-release-id/contracts/cra_dell_recovery/v1/observation_bundle.schema.json",
+  "dell_key_id": "replace-with-dell-observation-key-id",
+  "dell_public_key_file": "/etc/stream-monitoring-cra-projection/credentials/dell-observation-ed25519-public.pem",
+  "source_instance_id": "dell-stream-runtime-observer",
+  "source_release_id": "replace-with-immutable-dell-observation-release-id",
+  "expected_target": {
+    "host_id": "dell-yuki",
+    "namespace": "stream-v3",
+    "container_name": "stream-engine"
+  },
+  "maximum_ttl_seconds": 30,
+  "timeout_seconds": 2,
+  "transient_retry_delays_seconds": [0.1, 0.2, 0.4, 0.8, 1.6],
+  "maximum_retry_elapsed_seconds": 15,
+  "observation_file": "/var/lib/stream-monitoring-v4/cra-dell-observation/releases/replace-with-immutable-arena-projection-release-id/latest.json",
+  "status_file": "/var/lib/stream-monitoring-v4/cra-dell-observation/releases/replace-with-immutable-arena-projection-release-id/status.json",
+  "recovery_state_file": "/var/lib/stream-monitoring-v4/cra-dell-observation/releases/replace-with-immutable-arena-projection-release-id/recovery-state.json",
+  "recovery_event_file": "/var/lib/stream-monitoring-v4/cra-dell-observation/releases/replace-with-immutable-arena-projection-release-id/recovery-events.jsonl"
+}

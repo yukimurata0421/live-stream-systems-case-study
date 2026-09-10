@@ -1,0 +1,9 @@
+[allowlist]
+description = "Allow generated runtime inputs and fixed public identifiers."
+paths = [
+  '''^\.runtime/''',
+]
+regexes = [
+  '''docs/oracle/00_restart_authority_overview\.md": "[0-9a-f]{64}"''',
+  '''STATE_KEY = "ack_delivery_measurement_v1"''',
+]

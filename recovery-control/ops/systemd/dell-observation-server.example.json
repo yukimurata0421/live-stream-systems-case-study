@@ -1,0 +1,16 @@
+{
+  "schema": "cra_dell_recovery.observation_server_config.v3",
+  "server_release_id": "replace-with-immutable-dell-observation-release-id",
+  "publisher_config": "/etc/stream-recovery-observation/releases/replace-with-immutable-dell-observation-release-id/dell-observation-publisher.json",
+  "published_observation_file": "/var/lib/stream-recovery-observation/releases/replace-with-immutable-dell-observation-release-id/observation-current.json",
+  "host_status_file": "/var/lib/stream-recovery-observation/host-status/releases/replace-with-immutable-dell-observation-release-id/host-status.json",
+  "resilient_host_status_file": "/var/lib/stream-recovery-observation/host-status/releases/replace-with-immutable-dell-observation-release-id/resilient-host-status.json",
+  "host_status_host_id": "dell-stream-runtime",
+  "server_resource_status_file": "/var/lib/stream-recovery-observation/releases/replace-with-immutable-dell-observation-release-id/server-resource-status.json",
+  "tls_certificate": "/etc/stream-recovery-observation/credentials/dell-observation-server.pem",
+  "tls_private_key": "/etc/stream-recovery-observation/credentials/dell-observation-server-key.pem",
+  "client_ca_certificate": "/etc/stream-recovery-observation/credentials/arena-observation-client-ca.pem",
+  "listen_host": "replace-with-dell-private-lan-address",
+  "listen_port": 9445,
+  "maximum_response_bytes": 2097152
+}

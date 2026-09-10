@@ -1,0 +1,13 @@
+[Unit]
+Description=Schedule check recovery-aware soak freshness and recovery deadline for immutable release %i
+
+[Timer]
+OnBootSec=2min
+OnUnitInactiveSec=5min
+AccuracySec=500ms
+RandomizedDelaySec=0
+Persistent=false
+Unit=cra-recovery-soak-watchdog@%i.service
+
+[Install]
+WantedBy=timers.target

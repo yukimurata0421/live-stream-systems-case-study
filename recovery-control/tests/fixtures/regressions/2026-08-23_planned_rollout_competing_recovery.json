@@ -1,0 +1,29 @@
+{
+  "classification": "CURRENT_PATH_COMPETING_MUTATION_CONFIRMED",
+  "observed_window": {
+    "end": "2026-08-23T05:25:22Z",
+    "start": "2026-08-23T05:24:13Z"
+  },
+  "phase4_physical_attempt_count": 0,
+  "sequence": [
+    {
+      "at": "2026-08-23T05:24:13Z",
+      "event": "planned rollout changed the stream-v3 runtime pod template",
+      "reason": "Make precipitation layer handoff load-tolerant"
+    },
+    {
+      "at": "2026-08-23T05:24:14Z",
+      "event": "existing arena remote recovery observed ready=0 and issued another Deployment restart"
+    },
+    {
+      "at": "2026-08-23T05:25:22Z",
+      "event": "existing arena remote recovery action plan restarted FFmpeg from pod PID 744 to 1504"
+    },
+    {
+      "at": "2026-08-23T05:27:07Z",
+      "event": "CRA formal readiness was false and Dell shadow state was LOCAL_FALLBACK with physical attempt 0"
+    }
+  ],
+  "required_gate": "planned maintenance fence and retirement of competing direct mutation paths before Phase 5",
+  "stream_v3_changed_by_this_fix": false
+}

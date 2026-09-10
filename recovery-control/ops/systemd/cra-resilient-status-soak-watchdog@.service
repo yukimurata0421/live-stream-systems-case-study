@@ -1,0 +1,44 @@
+[Unit]
+Description=Check live seven-day resilient soak freshness and capacity for immutable CRA release %i
+After=cra-resilient-status-soak@%i.service cra-resilient-status-soak-gate@%i.service
+ConditionPathExists=/opt/stream-recovery-control/releases/%i/release_manifest.json
+ConditionPathExists=/opt/stream-recovery-control/runtimes/%i/runtime_manifest.json
+ConditionPathExists=/etc/stream-recovery-control/releases/%i/resilient-status-soak.json
+
+[Service]
+Type=oneshot
+User=stream-recovery
+Group=stream-recovery
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=PYTHONNOUSERSITE=1
+Environment=PYTHONPATH=/opt/stream-recovery-control/releases/%i/src
+Environment=CRA_IMMUTABLE_RELEASE_ID=%i
+ExecStart=/opt/stream-recovery-control/runtimes/%i/.venv/bin/python -m cra_no_action_soak.resilient_soak --config /etc/stream-recovery-control/releases/%i/resilient-status-soak.json --watchdog
+TimeoutStartSec=15s
+TimeoutStopSec=5s
+UMask=0077
+Nice=10
+IOSchedulingClass=idle
+MemoryMax=128M
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectClock=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+CapabilityBoundingSet=
+RestrictAddressFamilies=AF_UNIX
+ReadOnlyPaths=/etc/stream-recovery-control/releases/%i /opt/stream-recovery-control/releases/%i /opt/stream-recovery-control/runtimes/%i
+ReadWritePaths=/var/lib/stream-recovery-control/cra/releases/%i
+InaccessiblePaths=/var/lib/stream-recovery-control/cra/central.db
+InaccessiblePaths=-/var/lib/stream-recovery-control/cra/central.db-wal -/var/lib/stream-recovery-control/cra/central.db-shm
+InaccessiblePaths=-/var/lib/stream-recovery-control/cra/central.sqlite3 -/var/lib/stream-recovery-control/cra/central.sqlite3-wal -/var/lib/stream-recovery-control/cra/central.sqlite3-shm
+
+# Reads only local soak state, gate, evidence metadata, and filesystem headroom. No network, DB, command, or effect path.

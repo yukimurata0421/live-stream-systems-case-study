@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cra_dell_recovery.command_status.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "protocol", "message_type", "status_id", "command_id", "authority_epoch",
+    "command_seq", "agent_installation_id", "effect_scope_id", "command_state",
+    "reason_code", "attempt_count", "before_target", "after_target",
+    "effect_observed_at", "agent_observed_at", "key_id", "payload_sha256", "signature"
+  ],
+  "properties": {
+    "protocol": {"const": "cra_dell_recovery.command_status.v1"},
+    "message_type": {"const": "command_status"},
+    "status_id": {"$ref": "#/$defs/id"},
+    "command_id": {"$ref": "#/$defs/id"},
+    "authority_epoch": {"type": "integer", "minimum": 0},
+    "command_seq": {"type": "integer", "minimum": 0},
+    "agent_installation_id": {"$ref": "#/$defs/id"},
+    "effect_scope_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "command_state": {"type": "string", "minLength": 1, "maxLength": 80},
+    "reason_code": {"type": "string", "minLength": 1, "maxLength": 120},
+    "attempt_count": {"type": "integer", "minimum": 0, "maximum": 1},
+    "before_target": {"anyOf": [{"$ref": "#/$defs/target_identity"}, {"type": "null"}]},
+    "after_target": {"anyOf": [{"$ref": "#/$defs/target_identity"}, {"type": "null"}]},
+    "effect_observed_at": {"type": ["string", "null"], "format": "date-time"},
+    "agent_observed_at": {"type": "string", "format": "date-time"},
+    "key_id": {"$ref": "#/$defs/id"},
+    "payload_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "signature": {"type": "string", "minLength": 40, "maxLength": 200}
+  },
+  "$defs": {
+    "id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:/-]{0,239}$"},
+    "target_identity": {
+      "type": "object", "additionalProperties": false,
+      "required": ["host_id", "host_boot_id", "namespace", "pod_uid", "container_name", "container_id", "ffmpeg_generation", "ffmpeg_pid"],
+      "properties": {
+        "host_id": {"type": "string", "minLength": 1}, "host_boot_id": {"type": "string", "minLength": 1},
+        "namespace": {"type": "string", "minLength": 1}, "pod_uid": {"type": "string", "minLength": 1},
+        "container_name": {"const": "stream-engine"}, "container_id": {"type": "string", "minLength": 1},
+        "ffmpeg_generation": {"type": "string", "minLength": 1}, "ffmpeg_pid": {"type": "integer", "minimum": 2}
+      }
+    }
+  }
+}

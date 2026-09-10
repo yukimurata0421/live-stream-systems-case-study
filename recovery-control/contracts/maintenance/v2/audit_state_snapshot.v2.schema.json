@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "maintenance.audit_state_snapshot.v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "available", "producer_id", "producer_instance_id", "snapshot_id",
+    "observed_at", "observed_at_wall", "observed_at_monotonic", "observed_at_monotonic_ns", "fresh_until",
+    "maintenance_state", "maintenance_id", "maintenance_generation", "authority_epoch",
+    "authority_session_id", "transaction_state", "authorization_id", "authorization_state",
+    "source_target_identity", "target_identity", "target_snapshot_id", "target_snapshot_status",
+    "target_snapshot_reason", "target_snapshot_age_seconds", "reconciliation_state",
+    "authorizations", "proof", "physical_effect_count", "production_behavior_modified"
+  ],
+  "properties": {
+    "schema_version": {"const": "maintenance.audit_state_snapshot.v2"},
+    "available": {"type": "boolean"},
+    "producer_id": {"type": "string", "minLength": 1},
+    "producer_instance_id": {"type": "string", "minLength": 1},
+    "snapshot_id": {"type": "string", "minLength": 1},
+    "observed_at": {"type": "string", "format": "date-time"},
+    "observed_at_wall": {"type": "string", "format": "date-time"},
+    "observed_at_monotonic_ns": {"type": "integer", "minimum": 1},
+    "observed_at_monotonic": {"type": "number", "exclusiveMinimum": 0},
+    "fresh_until": {"type": "string", "format": "date-time"},
+    "maintenance_state": {
+      "enum": [
+        "STARTUP_RECONCILING", "INACTIVE", "REQUESTED", "QUIESCING", "ESTABLISHED",
+        "MUTATING", "VERIFYING_TARGET", "RECONCILING", "EXIT_PENDING", "COMPLETED",
+        "QUIESCE_FAILED", "ABORTING", "ABORTED", "SAFE_BLOCKED", "UNKNOWN"
+      ]
+    },
+    "maintenance_id": {"type": "string"},
+    "maintenance_generation": {"type": "integer", "minimum": 0},
+    "authority_epoch": {"type": "integer", "minimum": 0},
+    "authority_session_id": {"type": "string"},
+    "transaction_state": {"type": "string", "minLength": 1},
+    "authorization_id": {"type": "string"},
+    "authorization_state": {"type": "string", "minLength": 1},
+    "source_target_identity": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/target_identity"}]},
+    "target_identity": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/target_identity"}]},
+    "target_snapshot_id": {"type": "string"},
+    "target_snapshot_status": {"enum": ["VALID", "STALE", "UNSTABLE", "MISSING", "IDENTITY_MISMATCH"]},
+    "target_snapshot_reason": {"type": "string", "minLength": 1},
+    "target_snapshot_age_seconds": {"type": ["number", "null"]},
+    "reconciliation_state": {"type": "string", "minLength": 1},
+    "authorizations": {"type": "array", "items": {"type": "object"}},
+    "proof": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "integrity_ok", "startup_reconciled", "unresolved_transaction_count", "active_fence_count",
+        "incomplete_abort_count", "incomplete_exit_count", "transaction_uncertain", "positive_inactive_proof"
+      ],
+      "properties": {
+        "integrity_ok": {"type": "boolean"},
+        "startup_reconciled": {"type": "boolean"},
+        "unresolved_transaction_count": {"type": "integer", "minimum": 0},
+        "active_fence_count": {"type": "integer", "minimum": 0},
+        "incomplete_abort_count": {"type": "integer", "minimum": 0},
+        "incomplete_exit_count": {"type": "integer", "minimum": 0},
+        "transaction_uncertain": {"type": "boolean"},
+        "positive_inactive_proof": {"type": "boolean"}
+      }
+    },
+    "physical_effect_count": {"const": 0},
+    "production_behavior_modified": {"const": false}
+  },
+  "$defs": {
+    "target_identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "host_id", "host_boot_id", "namespace", "pod_uid", "container_name",
+        "container_id", "ffmpeg_generation", "ffmpeg_pid"
+      ],
+      "properties": {
+        "host_id": {"type": "string", "minLength": 1},
+        "host_boot_id": {"type": "string", "minLength": 1},
+        "namespace": {"type": "string", "minLength": 1},
+        "pod_uid": {"type": "string", "minLength": 1},
+        "container_name": {"const": "stream-engine"},
+        "container_id": {"type": "string", "minLength": 1},
+        "ffmpeg_generation": {"type": "string", "minLength": 1},
+        "ffmpeg_pid": {"type": "integer", "minimum": 2}
+      }
+    }
+  }
+}

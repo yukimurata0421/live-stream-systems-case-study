@@ -1,0 +1,8 @@
+/var/lib/stream-recovery-control/audit/maintenance-audit.jsonl {
+    daily
+    rotate 14
+    compress
+    missingok
+    notifempty
+    su stream-recovery stream-recovery
+}

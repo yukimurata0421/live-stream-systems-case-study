@@ -1,0 +1,11 @@
+[Unit]
+Description=Diagnostic-only Dell observation refresh for immutable arena release %i
+
+[Timer]
+OnBootSec=2s
+OnUnitActiveSec=2s
+AccuracySec=200ms
+RandomizedDelaySec=0
+Unit=monitoring-v4-dell-observation-pull@%i.service
+
+# Do not enable independently. The signer timer starts pull -> adapter -> signer as one ordered transaction.

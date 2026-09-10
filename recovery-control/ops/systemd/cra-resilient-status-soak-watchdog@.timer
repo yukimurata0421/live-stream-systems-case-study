@@ -1,0 +1,12 @@
+[Unit]
+Description=Periodically check live seven-day resilient soak freshness and capacity for immutable CRA release %i
+
+[Timer]
+OnBootSec=2min
+OnUnitInactiveSec=5min
+AccuracySec=1s
+RandomizedDelaySec=0
+Unit=cra-resilient-status-soak-watchdog@%i.service
+
+[Install]
+WantedBy=timers.target

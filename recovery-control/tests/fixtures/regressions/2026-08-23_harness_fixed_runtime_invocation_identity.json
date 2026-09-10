@@ -1,0 +1,10 @@
+{
+  "classification": "HARNESS_DEFECT_FIXED",
+  "detected_by": "20260823T_cra_phase4_regression_v6",
+  "failure": "Harness v2 was invoked without tools/sqlite_runtime/run-fixed.sh while the manifest still labelled runtime_mode as project-local fixed",
+  "false_green_prevented": true,
+  "fix": "Derive runtime_mode from both SQLite version and the actually mapped project-local library",
+  "replacement_run": "20260823T_cra_phase4_regression_v8",
+  "required_fixed_library": ".runtime/sqlite-3.51.3/install/lib/libsqlite3.so.3.51.3",
+  "required_runtime_version": "3.51.3"
+}

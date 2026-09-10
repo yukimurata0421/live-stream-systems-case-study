@@ -1,0 +1,28 @@
+[Unit]
+Description=Central Restart Authority (no-action shadow template)
+After=network-online.target
+Wants=network-online.target
+ConditionPathExists=/etc/stream-recovery-control/cra-shadow.json
+
+[Service]
+Type=simple
+User=stream-recovery
+Group=stream-recovery
+SupplementaryGroups=yuki
+Environment=PYTHONPATH=/opt/stream-recovery-control/src:/opt/stream-recovery-control/vendor
+ExecStart=/opt/stream-recovery-control/tools/sqlite_runtime/run-fixed.sh /usr/bin/python3 -m cra_authority.phase4_shadow --config /etc/stream-recovery-control/cra-shadow.json
+Restart=on-failure
+RestartSec=5s
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadOnlyPaths=/etc/stream-recovery-control /opt/stream-recovery-control /var/lib/stream-monitoring-v4
+ReadWritePaths=/var/lib/stream-recovery-control/cra
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+
+# This unit only sends signed shadow protocol traffic. It has no restart credential or mutation adapter.
+
+[Install]
+WantedBy=multi-user.target

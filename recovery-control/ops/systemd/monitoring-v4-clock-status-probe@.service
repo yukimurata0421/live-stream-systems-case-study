@@ -1,0 +1,45 @@
+[Unit]
+Description=Publish non-privileged arena chrony tracking fact for immutable release %i
+ConditionPathExists=/opt/stream-monitoring-cra-projection/releases/%i/release_manifest.json
+ConditionPathExists=/opt/stream-monitoring-cra-projection/runtimes/%i/runtime_manifest.json
+
+[Service]
+Type=oneshot
+User=_chrony
+Group=stream-monitoring-projection
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=PYTHONNOUSERSITE=1
+Environment=PYTHONPATH=/opt/stream-monitoring-cra-projection/releases/%i/src
+Environment=CRA_IMMUTABLE_RELEASE_ID=%i
+ExecStart=/opt/stream-monitoring-cra-projection/runtimes/%i/.venv/bin/python -m cra_no_action_soak.clock_status_probe --output /var/lib/stream-monitoring-v4/clock-status/releases/%i/tracking.json
+TimeoutStartSec=5s
+TimeoutStopSec=2s
+UMask=0027
+StateDirectory=stream-monitoring-v4/clock-status/releases/%i
+StateDirectoryMode=0750
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectClock=true
+ProtectHostname=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+RemoveIPC=true
+CapabilityBoundingSet=
+RestrictAddressFamilies=AF_UNIX
+ReadOnlyPaths=/opt/stream-monitoring-cra-projection/releases/%i /opt/stream-monitoring-cra-projection/runtimes/%i
+ReadWritePaths=/var/lib/stream-monitoring-v4/clock-status/releases/%i
+InaccessiblePaths=/etc/stream-monitoring-cra-projection /etc/stream-monitoring-v4 /var/lib/stream-recovery-control
+InaccessiblePaths=-/var/lib/stream-monitoring-v4/cra-dell-observation -/var/lib/stream-monitoring-v4/cra-facts
+InaccessiblePaths=-/var/lib/stream-monitoring-v4/cra-projection -/var/lib/stream-monitoring-v4/cra-target-inbox
+
+# This fact producer runs as _chrony and owns no credential, Monitoring data,
+# control route, network family, or projection state.

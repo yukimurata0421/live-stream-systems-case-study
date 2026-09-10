@@ -1,0 +1,12 @@
+[Unit]
+Description=Refresh verified arena NO_ACTION host status for immutable CRA release %i
+
+[Timer]
+OnBootSec=6s
+OnUnitInactiveSec=3s
+AccuracySec=200ms
+RandomizedDelaySec=0
+Unit=cra-arena-host-status-pull@%i.service
+
+[Install]
+WantedBy=timers.target

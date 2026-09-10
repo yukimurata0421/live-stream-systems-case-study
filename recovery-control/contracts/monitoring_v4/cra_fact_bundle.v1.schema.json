@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "monitoring_v4.cra_fact_bundle.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "target_id", "source_instance_id", "source_release_id",
+    "monitoring_cycle_id", "observation_revision", "observation_sequence",
+    "observed_at", "valid_until", "readiness", "incident", "checks",
+    "measurements", "evidence_refs"
+  ],
+  "properties": {
+    "schema": {"const": "monitoring_v4.cra_fact_bundle.v1"},
+    "target_id": {"type": "string", "minLength": 1, "maxLength": 200},
+    "source_instance_id": {"$ref": "#/$defs/id"},
+    "source_release_id": {"$ref": "#/$defs/id"},
+    "monitoring_cycle_id": {"$ref": "#/$defs/id"},
+    "observation_revision": {"$ref": "#/$defs/id"},
+    "observation_sequence": {"type": "integer", "minimum": 1},
+    "observed_at": {"type": "string", "format": "date-time"},
+    "valid_until": {"type": "string", "format": "date-time"},
+    "readiness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["input_fresh", "parity_clean", "projection_clean", "source_ready"],
+      "properties": {
+        "input_fresh": {"type": "boolean"},
+        "parity_clean": {"type": "boolean"},
+        "projection_clean": {"type": "boolean"},
+        "source_ready": {"type": "boolean"}
+      }
+    },
+    "incident": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["incident_id", "source_episode_id", "domain", "state", "reason_codes"],
+      "properties": {
+        "incident_id": {"$ref": "#/$defs/id"},
+        "source_episode_id": {"$ref": "#/$defs/id"},
+        "domain": {"enum": ["delivery", "network_transport"]},
+        "state": {"enum": ["OPEN", "CONFIRMED", "CLEAR"]},
+        "reason_codes": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/id"},
+          "uniqueItems": true
+        }
+      }
+    },
+    "checks": {
+      "type": "object",
+      "minProperties": 1,
+      "maxProperties": 32,
+      "additionalProperties": {"$ref": "#/$defs/check"},
+      "propertyNames": {"pattern": "^[a-z][a-z0-9_]{0,63}$"}
+    },
+    "measurements": {
+      "type": "array",
+      "maxItems": 64,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "value", "unit", "evidence_ref"],
+        "properties": {
+          "name": {"type": "string", "pattern": "^[a-z][a-z0-9_]{0,63}$"},
+          "value": {"type": "number"},
+          "unit": {"type": "string", "minLength": 1, "maxLength": 32},
+          "evidence_ref": {"$ref": "#/$defs/evidence_ref"}
+        }
+      }
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/evidence_ref"},
+      "uniqueItems": true
+    }
+  },
+  "$defs": {
+    "id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:/-]{0,239}$"},
+    "evidence_ref": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:/-]{0,511}$"},
+    "check": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "observed_at", "evidence_ref"],
+      "properties": {
+        "status": {"enum": ["TRUE", "FALSE", "CONFIRMED", "UNKNOWN"]},
+        "observed_at": {"type": "string", "format": "date-time"},
+        "evidence_ref": {"$ref": "#/$defs/evidence_ref"}
+      }
+    }
+  }
+}

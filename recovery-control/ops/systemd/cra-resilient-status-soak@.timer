@@ -1,0 +1,12 @@
+[Unit]
+Description=Sample seven-day resilient signed-status soak for immutable CRA release %i
+
+[Timer]
+OnBootSec=15s
+OnUnitInactiveSec=15s
+AccuracySec=500ms
+RandomizedDelaySec=0
+Unit=cra-resilient-status-soak@%i.service
+
+[Install]
+WantedBy=timers.target

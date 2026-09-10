@@ -1,0 +1,12 @@
+[Unit]
+Description=Refresh signed arena resilient relay status for immutable release %i
+
+[Timer]
+OnBootSec=7s
+OnUnitInactiveSec=3s
+AccuracySec=200ms
+RandomizedDelaySec=0
+Unit=monitoring-v4-resilient-status-publisher@%i.service
+
+[Install]
+WantedBy=timers.target

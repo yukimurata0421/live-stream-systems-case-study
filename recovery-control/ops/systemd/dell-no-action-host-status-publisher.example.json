@@ -1,0 +1,36 @@
+{
+  "schema": "cra.no_action_host_status_publisher.v1",
+  "role": "dell",
+  "host_id": "dell-stream-runtime",
+  "host_contract_file": "/etc/stream-recovery-control/host-contract.json",
+  "release_id": "replace-with-immutable-dell-observation-release-id",
+  "release_manifest_file": "/opt/stream-recovery-observation/releases/replace-with-immutable-dell-observation-release-id/release_manifest.json",
+  "runtime_manifest_file": "/opt/stream-recovery-observation/runtimes/replace-with-immutable-dell-observation-release-id/runtime_manifest.json",
+  "configuration_directory": "/etc/stream-recovery-observation/releases/replace-with-immutable-dell-observation-release-id",
+  "maintenance_restart_policy_file": "/etc/needrestart/conf.d/stream-recovery-control.conf",
+  "disk_path": "/var/lib/stream-recovery-observation",
+  "service_units": {
+    "dell_host_status_publisher": "dell-no-action-host-status-publisher@replace-with-immutable-dell-observation-release-id.service",
+    "dell_observation_server": "dell-observation-server@replace-with-immutable-dell-observation-release-id.service"
+  },
+  "persistent_service_name": "dell_observation_server",
+  "credential_files": {
+    "dell_target_observer": "/etc/stream-recovery-observation/credentials/dell-observation-server.pem"
+  },
+  "signing_private_key_file": "/etc/stream-recovery-observation/credentials/dell-observation-ed25519-private.pem",
+  "key_id": "replace-with-dell-observation-key-id",
+  "host_status_schema_file": "/opt/stream-recovery-observation/releases/replace-with-immutable-dell-observation-release-id/contracts/cra_no_action_soak/host_status.v1.schema.json",
+  "output_file": "/var/lib/stream-recovery-observation/host-status/releases/replace-with-immutable-dell-observation-release-id/host-status.json",
+  "output_owner": "root",
+  "output_group": "stream-recovery",
+  "maximum_ttl_seconds": 30,
+  "maximum_input_age_seconds": 30,
+  "minimum_remaining_validity_seconds": 5,
+  "role_inputs": {
+    "target_snapshot_file": "/var/lib/stream-recovery-control/dell/target_snapshot.json",
+    "observation_file": "/var/lib/stream-recovery-observation/releases/replace-with-immutable-dell-observation-release-id/observation-current.json",
+    "observation_schema_file": "/opt/stream-recovery-observation/releases/replace-with-immutable-dell-observation-release-id/contracts/cra_dell_recovery/v1/observation_bundle.schema.json",
+    "effect_database": "/replace-with-read-only-fast-recovery-effect-ledger.sqlite3",
+    "server_resource_status_file": "/var/lib/stream-recovery-observation/releases/replace-with-immutable-dell-observation-release-id/server-resource-status.json"
+  }
+}

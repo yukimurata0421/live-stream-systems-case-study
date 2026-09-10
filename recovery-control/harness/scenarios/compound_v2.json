@@ -1,0 +1,103 @@
+{
+  "registry_version": 2,
+  "scenarios": [
+    {
+      "scenario_id": "RF-01",
+      "title": "Heartbeat delay plus in-flight command plus lease expiry",
+      "operations": ["send_heartbeat", "create_command", "begin_delivery", "delay_heartbeat", "expire_lease", "deliver_late_command", "attempt_local_action"],
+      "state_axes": ["heartbeat", "command", "lease", "authority", "physical_attempt"],
+      "expected": [
+        {"path": "central_physical_attempt_count", "operator": "eq", "value": 0},
+        {"path": "dual_authority_physical_attempt", "operator": "false"},
+        {"path": "late_central_reason", "operator": "eq", "value": "LOCAL_AUTHORITY_ACTIVE"}
+      ]
+    },
+    {
+      "scenario_id": "RF-02",
+      "title": "ACK loss plus Dell Agent restart plus duplicate retry",
+      "operations": ["deliver_command", "drop_receipt", "restart_dell_agent", "duplicate_command"],
+      "state_axes": ["command", "dell_ledger", "agent_process", "physical_attempt"],
+      "expected": [
+        {"path": "physical_attempt_count", "operator": "lte", "value": 1},
+        {"path": "duplicate_disposition", "operator": "eq", "value": "DUPLICATE"}
+      ]
+    },
+    {
+      "scenario_id": "RF-03",
+      "title": "Central commit plus target mutation plus send",
+      "operations": ["commit_command", "mutate_target_identity", "deliver_command"],
+      "state_axes": ["central_db", "command", "target_identity", "physical_attempt"],
+      "expected": [
+        {"path": "reason_code", "operator": "eq", "value": "STALE_TARGET"},
+        {"path": "physical_attempt_count", "operator": "eq", "value": 0}
+      ]
+    },
+    {
+      "scenario_id": "RF-04",
+      "title": "Local fallback plus late central command plus target generation change",
+      "operations": ["enter_local_fallback", "mutate_target_generation", "deliver_late_command"],
+      "state_axes": ["authority", "command", "target_identity", "physical_attempt"],
+      "expected": [
+        {"path": "central_physical_attempt_count", "operator": "eq", "value": 0},
+        {"path": "reason_code", "operator": "eq", "value": "LOCAL_AUTHORITY_ACTIVE"}
+      ]
+    },
+    {
+      "scenario_id": "RF-05",
+      "title": "Old Central restore plus higher Dell epoch plus unresolved local action",
+      "operations": ["backup_central", "advance_dell_epoch", "persist_unresolved_local_action", "restore_old_central", "mark_restored", "attempt_reconciliation", "verify_safe_block"],
+      "state_axes": ["central_db", "dell_ledger", "epoch", "reconciliation", "local_action", "command", "physical_attempt"],
+      "expected": [
+        {"path": "restored_pending_replay_count", "operator": "eq", "value": 0},
+        {"path": "delivery_allowed_before_reconciliation", "operator": "false"},
+        {"path": "unresolved_local_action_reported", "operator": "true"},
+        {"path": "reconciliation_blocked", "operator": "true"},
+        {"path": "central_authority_state", "operator": "eq", "value": "RESTORED_NEEDS_RECONCILIATION"},
+        {"path": "dell_authority_state", "operator": "eq", "value": "RECONCILING"},
+        {"path": "physical_attempt_count", "operator": "eq", "value": 0}
+      ]
+    },
+    {
+      "scenario_id": "RF-06",
+      "title": "Dell execution-started crash plus reconciliation",
+      "operations": ["deliver_command", "crash_after_execution_started", "restart_dell_agent", "reconcile", "duplicate_command"],
+      "state_axes": ["command", "dell_ledger", "agent_process", "reconciliation", "physical_attempt"],
+      "expected": [
+        {"path": "recovered_state", "operator": "eq", "value": "OUTCOME_UNKNOWN"},
+        {"path": "reconciliation_blocked", "operator": "true"},
+        {"path": "automatic_retry_count", "operator": "eq", "value": 0},
+        {"path": "physical_attempt_count", "operator": "eq", "value": 0}
+      ]
+    },
+    {
+      "scenario_id": "RF-07",
+      "title": "Central suspect plus new authorization plus heartbeat recovery",
+      "operations": ["send_heartbeat", "delay_to_suspect", "create_authorization", "deliver_command", "recover_heartbeat"],
+      "state_axes": ["heartbeat", "lease", "authority", "authorization", "command", "physical_attempt"],
+      "expected": [
+        {"path": "suspect_state", "operator": "eq", "value": "CENTRAL_SUSPECT"},
+        {"path": "physical_attempt_during_suspect", "operator": "eq", "value": 0},
+        {"path": "recovered_state", "operator": "eq", "value": "CENTRAL_ACTIVE"}
+      ]
+    },
+    {
+      "scenario_id": "RF-08",
+      "title": "Monitoring stale while CRA process and SQLite remain healthy",
+      "operations": ["send_heartbeat", "make_monitoring_stale", "publish_not_ready_authority_heartbeat", "keep_central_authority_lease", "block_central_action_admission"],
+      "state_axes": ["monitoring", "cra_process", "sqlite", "heartbeat", "lease", "authority"],
+      "expected": [
+        {"path": "stale_heartbeat_generated", "operator": "true"},
+        {"path": "action_ready", "operator": "false"},
+        {"path": "cra_process_healthy", "operator": "true"},
+        {"path": "sqlite_integrity", "operator": "eq", "value": "ok"},
+        {"path": "final_state", "operator": "eq", "value": "CENTRAL_ACTIVE"}
+      ]
+    }
+  ],
+  "negative_controls": [
+    {"scenario_id": "NC-07", "path": "central_attempt_after_fallback", "operator": "eq", "value": 0, "injected": 1},
+    {"scenario_id": "NC-08", "path": "central_active_without_reconciliation", "operator": "false", "injected": true},
+    {"scenario_id": "NC-09", "path": "action_ready_during_monitoring_stale", "operator": "false", "injected": true},
+    {"scenario_id": "NC-10", "path": "restored_pending_replay_count", "operator": "eq", "value": 0, "injected": 1}
+  ]
+}

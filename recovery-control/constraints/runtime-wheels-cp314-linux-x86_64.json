@@ -1,0 +1,128 @@
+{
+  "runtime_platform": {
+    "libc": "glibc",
+    "libc_version": "2.43",
+    "machine": "x86_64",
+    "python_implementation": "cpython",
+    "python_major_minor": "3.14",
+    "python_soabi": "cpython-314-x86_64-linux-gnu",
+    "python_version": "3.14.4"
+  },
+  "schema": "cra.runtime_wheel_lock.v1",
+  "wheel_count": 11,
+  "wheels": [
+    {
+      "distribution": "attrs",
+      "filename": "attrs-26.1.0-py3-none-any.whl",
+      "sha256": "c647aa4a12dfbad9333ca4e71fe62ddc36f4e63b2d260a37a8b83d2f043ac309",
+      "size": 67548,
+      "tags": [
+        "py3-none-any"
+      ],
+      "version": "26.1.0"
+    },
+    {
+      "distribution": "cffi",
+      "filename": "cffi-2.1.1-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+      "sha256": "b0431303acaea1089ad4b3e9ce4e6518193def1118d4073ca848635ee4ea2e96",
+      "size": 221525,
+      "tags": [
+        "cp314-cp314-manylinux2014_x86_64",
+        "cp314-cp314-manylinux_2_17_x86_64"
+      ],
+      "version": "2.1.1"
+    },
+    {
+      "distribution": "cryptography",
+      "filename": "cryptography-46.0.7-cp311-abi3-manylinux_2_34_x86_64.whl",
+      "sha256": "42a1e5f98abb6391717978baf9f90dc28a743b7d9be7f0751a6f56a75d14065b",
+      "size": 4459756,
+      "tags": [
+        "cp311-abi3-manylinux_2_34_x86_64"
+      ],
+      "version": "46.0.7"
+    },
+    {
+      "distribution": "jsonschema",
+      "filename": "jsonschema-4.26.0-py3-none-any.whl",
+      "sha256": "d489f15263b8d200f8387e64b4c3a75f06629559fb73deb8fdfb525f2dab50ce",
+      "size": 90630,
+      "tags": [
+        "py3-none-any"
+      ],
+      "version": "4.26.0"
+    },
+    {
+      "distribution": "jsonschema-specifications",
+      "filename": "jsonschema_specifications-2025.9.1-py3-none-any.whl",
+      "sha256": "98802fee3a11ee76ecaca44429fda8a41bff98b00a0f2838151b113f210cc6fe",
+      "size": 18437,
+      "tags": [
+        "py3-none-any"
+      ],
+      "version": "2025.9.1"
+    },
+    {
+      "distribution": "psycopg",
+      "filename": "psycopg-3.3.4-py3-none-any.whl",
+      "sha256": "b6bbc25ccf05c8fad3b061d9db2ef0909a555171b84b07f29458a447253d679a",
+      "size": 213001,
+      "tags": [
+        "py3-none-any"
+      ],
+      "version": "3.3.4"
+    },
+    {
+      "distribution": "psycopg-binary",
+      "filename": "psycopg_binary-3.3.4-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+      "sha256": "8c0056529e68dbe9184cd4019a1f3d8f3a4ead2f6fc7a5afcf27d3314edd1277",
+      "size": 5168745,
+      "tags": [
+        "cp314-cp314-manylinux2014_x86_64",
+        "cp314-cp314-manylinux_2_17_x86_64"
+      ],
+      "version": "3.3.4"
+    },
+    {
+      "distribution": "pycparser",
+      "filename": "pycparser-3.0-py3-none-any.whl",
+      "sha256": "b727414169a36b7d524c1c3e31839a521725078d7b2ff038656844266160a992",
+      "size": 48172,
+      "tags": [
+        "py3-none-any"
+      ],
+      "version": "3.0"
+    },
+    {
+      "distribution": "referencing",
+      "filename": "referencing-0.37.0-py3-none-any.whl",
+      "sha256": "381329a9f99628c9069361716891d34ad94af76e461dcb0335825aecc7692231",
+      "size": 26766,
+      "tags": [
+        "py3-none-any"
+      ],
+      "version": "0.37.0"
+    },
+    {
+      "distribution": "rfc8785",
+      "filename": "rfc8785-0.1.4-py3-none-any.whl",
+      "sha256": "520d690b448ecf0703691c76e1a34a24ddcd4fc5bc41d589cb7c58ec651bcd48",
+      "size": 9240,
+      "tags": [
+        "py3-none-any"
+      ],
+      "version": "0.1.4"
+    },
+    {
+      "distribution": "rpds-py",
+      "filename": "rpds_py-2026.6.3-cp314-cp314-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+      "sha256": "dc319e5a1de4b6913aac94bf6a2f9e847371e0a140a43dd4991db1a09bc2d504",
+      "size": 367255,
+      "tags": [
+        "cp314-cp314-manylinux2014_x86_64",
+        "cp314-cp314-manylinux_2_17_x86_64"
+      ],
+      "version": "2026.6.3"
+    }
+  ]
+}

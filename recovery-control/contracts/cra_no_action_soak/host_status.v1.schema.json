@@ -1,0 +1,260 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cra.no_action_host_status.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "role",
+    "host_id",
+    "release_id",
+    "sequence",
+    "observed_at",
+    "valid_until",
+    "host_boot_id",
+    "identity",
+    "resources",
+    "services",
+    "service_failed_invocation_count",
+    "credential_minimum_remaining_seconds",
+    "payload",
+    "key_id",
+    "payload_sha256",
+    "signature"
+  ],
+  "properties": {
+    "schema": {
+      "const": "cra.no_action_host_status.v1"
+    },
+    "role": {
+      "enum": ["dell", "arena"]
+    },
+    "host_id": {
+      "$ref": "#/$defs/id"
+    },
+    "release_id": {
+      "$ref": "#/$defs/id"
+    },
+    "sequence": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "observed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "valid_until": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "host_boot_id": {
+      "$ref": "#/$defs/id"
+    },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "release_manifest_sha256",
+        "runtime_manifest_sha256",
+        "configuration_set_sha256",
+        "maintenance_restart_policy_sha256"
+      ],
+      "properties": {
+        "release_manifest_sha256": {"$ref": "#/$defs/sha256"},
+        "runtime_manifest_sha256": {"$ref": "#/$defs/sha256"},
+        "configuration_set_sha256": {"$ref": "#/$defs/sha256"},
+        "maintenance_restart_policy_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "resources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "disk_free_bytes",
+        "resident_memory_bytes",
+        "open_fd_count",
+        "resource_limit_breach_count"
+      ],
+      "properties": {
+        "disk_free_bytes": {"type": "integer", "minimum": 0},
+        "resident_memory_bytes": {"type": "integer", "minimum": 0},
+        "open_fd_count": {"type": "integer", "minimum": 0},
+        "resource_limit_breach_count": {"type": "integer", "minimum": 0}
+      }
+    },
+    "services": {
+      "type": "object",
+      "minProperties": 1,
+      "maxProperties": 16,
+      "propertyNames": {"pattern": "^[a-z][a-z0-9_]{0,63}$"},
+      "additionalProperties": {"$ref": "#/$defs/service"}
+    },
+    "service_failed_invocation_count": {
+      "$ref": "#/$defs/nonnegative_integer_map"
+    },
+    "credential_minimum_remaining_seconds": {
+      "$ref": "#/$defs/nonnegative_integer_map"
+    },
+    "payload": {
+      "type": "object"
+    },
+    "key_id": {
+      "$ref": "#/$defs/id"
+    },
+    "payload_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "signature": {
+      "type": "string",
+      "minLength": 40,
+      "maxLength": 200
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"role": {"const": "dell"}}},
+      "then": {"properties": {"payload": {"$ref": "#/$defs/dell_payload"}}}
+    },
+    {
+      "if": {"properties": {"role": {"const": "arena"}}},
+      "then": {"properties": {"payload": {"$ref": "#/$defs/arena_payload"}}}
+    }
+  ],
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:@/-]{0,239}$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "nonnegative_integer_map": {
+      "type": "object",
+      "minProperties": 1,
+      "maxProperties": 32,
+      "propertyNames": {"pattern": "^[a-z][a-z0-9_]{0,63}$"},
+      "additionalProperties": {"type": "integer", "minimum": 0}
+    },
+    "service": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["unit", "active_state", "sub_state", "restart_count", "invocation_id"],
+      "properties": {
+        "unit": {"$ref": "#/$defs/id"},
+        "active_state": {"enum": ["active", "inactive", "failed", "activating", "deactivating", "reloading"]},
+        "sub_state": {"type": "string", "minLength": 1, "maxLength": 64},
+        "restart_count": {"type": "integer", "minimum": 0},
+        "invocation_id": {
+          "oneOf": [
+            {"type": "string", "pattern": "^[0-9a-f]{32}$"},
+            {"type": "null"}
+          ]
+        }
+      }
+    },
+    "effect_counters": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "effect_request_count",
+        "effect_boundary_count",
+        "effect_scope_count",
+        "raw_outcome_unknown_count",
+        "unresolved_scope_count",
+        "reconciliation_count",
+        "duplicate_scope_count",
+        "oldest_unresolved_age_seconds"
+      ],
+      "properties": {
+        "effect_request_count": {"type": "integer", "minimum": 0},
+        "effect_boundary_count": {"type": "integer", "minimum": 0},
+        "effect_scope_count": {"type": "integer", "minimum": 0},
+        "raw_outcome_unknown_count": {"type": "integer", "minimum": 0},
+        "unresolved_scope_count": {"type": "integer", "minimum": 0},
+        "reconciliation_count": {"type": "integer", "minimum": 0},
+        "duplicate_scope_count": {"type": "integer", "minimum": 0},
+        "oldest_unresolved_age_seconds": {"type": "integer", "minimum": 0}
+      }
+    },
+    "observation_summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "source_release_id",
+        "observation_id",
+        "observation_revision",
+        "observation_sequence",
+        "observed_at",
+        "valid_until",
+        "payload_sha256"
+      ],
+      "properties": {
+        "schema": {"const": "cra_dell_recovery.observation_bundle.v1"},
+        "source_release_id": {"$ref": "#/$defs/id"},
+        "observation_id": {"$ref": "#/$defs/id"},
+        "observation_revision": {"$ref": "#/$defs/sha256"},
+        "observation_sequence": {"type": "integer", "minimum": 1},
+        "observed_at": {"type": "string", "format": "date-time"},
+        "valid_until": {"type": "string", "format": "date-time"},
+        "payload_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "dell_payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "observation",
+        "target_snapshot_valid",
+        "target_identity_sha256",
+        "control_capability_count",
+        "physical_effect_count",
+        "effect_counters"
+      ],
+      "properties": {
+        "observation": {"$ref": "#/$defs/observation_summary"},
+        "target_snapshot_valid": {"type": "boolean"},
+        "target_identity_sha256": {"$ref": "#/$defs/sha256"},
+        "control_capability_count": {"const": 0},
+        "physical_effect_count": {"type": "integer", "minimum": 0},
+        "effect_counters": {"$ref": "#/$defs/effect_counters"}
+      }
+    },
+    "component_status": {
+      "type": "object",
+      "required": ["schema", "status", "observed_at", "control_capability_count", "physical_effect_count"],
+      "properties": {
+        "schema": {"type": "string", "minLength": 1, "maxLength": 160},
+        "status": {"type": "string", "minLength": 1, "maxLength": 64},
+        "observed_at": {"type": "string", "format": "date-time"},
+        "control_capability_count": {"const": 0},
+        "physical_effect_count": {"const": 0}
+      }
+    },
+    "arena_payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dell_host_status",
+        "dell_pull_status",
+        "live_adapter_status",
+        "projection_status",
+        "transport_recovery_health",
+        "legacy_arena_recovery_active",
+        "legacy_arena_recovery_restart_count",
+        "legacy_arena_recovery_invocation_count"
+      ],
+      "properties": {
+        "dell_host_status": {"type": "object"},
+        "dell_pull_status": {"$ref": "#/$defs/component_status"},
+        "live_adapter_status": {"$ref": "#/$defs/component_status"},
+        "projection_status": {"$ref": "#/$defs/component_status"},
+        "transport_recovery_health": {"type": "object"},
+        "legacy_arena_recovery_active": {"type": "boolean"},
+        "legacy_arena_recovery_restart_count": {"type": "integer", "minimum": 0},
+        "legacy_arena_recovery_invocation_count": {"type": "integer", "minimum": 0}
+      }
+    }
+  }
+}

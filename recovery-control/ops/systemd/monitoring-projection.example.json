@@ -1,0 +1,26 @@
+{
+  "schema": "monitoring_v4.cra_projection_producer_config.v1",
+  "producer_release_id": "replace-with-immutable-projection-producer-release-id",
+  "source_instance_id": "arena-monitoring-v4",
+  "source_release_id": "replace-with-monitoring-release-id",
+  "target_id": "stream-target",
+  "expected_target": {
+    "host_id": "dell-stream-runtime",
+    "namespace": "stream-v3",
+    "container_name": "stream-engine"
+  },
+  "fact_bundle_file": "/var/lib/stream-monitoring-v4/cra-facts/latest.json",
+  "target_snapshot_file": "/var/lib/stream-monitoring-v4/cra-target-inbox/latest.json",
+  "fact_bundle_schema_file": "/opt/stream-recovery-control/contracts/monitoring_v4/cra_fact_bundle.v1.schema.json",
+  "target_snapshot_schema_file": "/opt/stream-recovery-control/contracts/cra_dell_recovery/target_snapshot.v1.schema.json",
+  "projection_schema_file": "/opt/stream-recovery-control/contracts/monitoring_v4/evidence_projection.v1.schema.json",
+  "private_key_file": "/etc/stream-recovery-control/monitoring-ed25519-private.pem",
+  "key_id": "replace-with-monitoring-key-id",
+  "output_file": "/var/lib/stream-monitoring-v4/cra-projection/latest.json",
+  "status_file": "/var/lib/stream-monitoring-v4/cra-projection/status.json",
+  "state_database": "/var/lib/stream-monitoring-v4/cra-projection/sequence.sqlite3",
+  "projection_ttl_seconds": 30,
+  "maximum_fact_age_seconds": 60,
+  "maximum_target_age_seconds": 10,
+  "maximum_observation_skew_seconds": 10
+}

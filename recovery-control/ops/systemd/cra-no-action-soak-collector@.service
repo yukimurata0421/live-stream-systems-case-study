@@ -1,0 +1,14 @@
+[Unit]
+Description=Collect one three-host CRA NO_ACTION soak sample for epoch %i
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=yuki
+Group=yuki
+ExecStart=/usr/bin/python3 /opt/cra-no-action-soak/%i/tools/collect_cra_no_action_soak.py --profile /opt/cra-no-action-soak/%i/collector-profile.json --capture /var/lib/cra-no-action-soak/%i/capture-current.json --output /var/lib/cra-no-action-soak/%i/samples.jsonl --gate-output /var/lib/cra-no-action-soak/%i/gate-current.json --terminal-output /var/lib/cra-no-action-soak/%i/terminal-failure.json
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=PYTHONNOUSERSITE=1
+Environment=PYTHONPATH=/opt/cra-no-action-soak/%i/src
+UMask=0077

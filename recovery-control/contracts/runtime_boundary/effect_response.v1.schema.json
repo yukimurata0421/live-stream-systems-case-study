@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://stream-recovery-control.local/runtime.effect_response.v1.schema.json",
+  "title": "Runtime Effect Response v1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "ok",
+    "reason",
+    "state",
+    "request_id",
+    "correlation_id",
+    "replay",
+    "active_authority",
+    "in_flight_count"
+  ],
+  "properties": {
+    "schema_version": {"const": "runtime.effect_response.v1"},
+    "ok": {"type": "boolean"},
+    "reason": {"type": "string", "minLength": 1},
+    "state": {
+      "enum": ["REJECTED", "ACCEPTED", "EXECUTION_STARTED", "EFFECT_OBSERVED", "EFFECT_FAILED", "OUTCOME_UNKNOWN"]
+    },
+    "request_id": {"type": "string"},
+    "correlation_id": {"type": "string"},
+    "intent_type": {"type": "string"},
+    "replay": {"type": "boolean"},
+    "result": {},
+    "active_authority": {"type": "object"},
+    "in_flight_count": {"type": "integer", "minimum": 0},
+    "automatic_retry": {"type": ["boolean", "null"]}
+  }
+}

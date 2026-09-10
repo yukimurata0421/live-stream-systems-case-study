@@ -1,0 +1,34 @@
+name: public-snapshot-check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - name: Install test dependencies
+        run: |
+          python -m venv .venv
+          .venv/bin/pip install -e '.[test]'
+      - name: Build pinned SQLite runtime
+        run: tools/sqlite_runtime/build.sh
+      - name: Compile
+        run: .venv/bin/python -m compileall -q src tests tools
+      - name: Validate public boundary
+        run: python tools/validate_public_snapshot.py
+      - name: Test
+        run: tools/sqlite_runtime/run-fixed.sh .venv/bin/python tools/run_public_test_suite.py

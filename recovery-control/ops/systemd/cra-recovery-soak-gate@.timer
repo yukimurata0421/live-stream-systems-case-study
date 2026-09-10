@@ -1,0 +1,13 @@
+[Unit]
+Description=Schedule replay recovery-aware seven-day soak gate for immutable release %i
+
+[Timer]
+OnBootSec=1min
+OnUnitInactiveSec=1h
+AccuracySec=500ms
+RandomizedDelaySec=0
+Persistent=false
+Unit=cra-recovery-soak-gate@%i.service
+
+[Install]
+WantedBy=timers.target

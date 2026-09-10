@@ -1,0 +1,27 @@
+{
+  "schema": "cra.recovery_observer_config.v1",
+  "effect_history_policy": {"schema": "cra.recovery_effect_history_policy.v1", "frozen_at": null, "retired_unknown": []},
+  "binding": {
+    "role": "dell",
+    "host_id": "dell-stream-runtime",
+    "release_id": "replace-observer-release",
+    "source_commit": "replace-with-40-hex-source-commit",
+    "stream_id": "replace-pinned-stream-id",
+    "key_id": "replace-observer-signing-key-id"
+  },
+  "host_contract_file": "/etc/stream-recovery-control/host-contract.json",
+  "signing_private_key_file": "/run/credentials/replace-service/recovery-observer-signing.pem",
+  "state_file": "/var/lib/stream-recovery-observation/recovery-facts/replace-epoch/state.json",
+  "output_file": "/var/lib/stream-recovery-observation/recovery-facts/replace-epoch/signed.json",
+  "sources": {
+    "network": "/replace-with-verified-local-source/network.json",
+    "target": "/replace-with-verified-local-source/target.json",
+    "transport": "/replace-with-verified-local-source/transport.json",
+    "runtime_evidence": "/replace-with-owner-produced-readonly-export/recovery-evidence.json"
+  },
+  "runtime_binding": {
+    "target_host_id": "dell-yuki",
+    "release_id": "replace-verified-runtime-owner-release",
+    "source_commit": "replace-with-40-hex-runtime-source-commit"
+  }
+}

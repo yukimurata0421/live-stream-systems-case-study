@@ -1,0 +1,37 @@
+{
+  "schema": "cra.runtime.v2",
+  "operating_mode": "NO_ACTION",
+  "runtime_release_id": "replace-with-immutable-release-id",
+  "database": "/var/lib/stream-recovery-control/cra/central.db",
+  "migration": "/opt/stream-recovery-control/releases/replace-with-immutable-release-id/migrations/central/001_initial.sql",
+  "target_id": "stream-target",
+  "lock_file": "/var/lib/stream-recovery-control/cra/cra-runtime.lock",
+  "status_file": "/var/lib/stream-recovery-control/cra/releases/replace-with-immutable-release-id/runtime-status.json",
+  "event_file": "/var/lib/stream-recovery-control/cra/releases/replace-with-immutable-release-id/runtime-events.jsonl",
+  "heartbeat_interval_seconds": 60,
+  "cycle_interval_seconds": 1,
+  "retention": {
+    "archive_database": "/var/lib/stream-recovery-control/cra/archive/no-action-evidence.sqlite3",
+    "archive_signing_private_key": "/etc/stream-recovery-control/cra-archive-signing-private.pem",
+    "archive_key_id": "replace-with-cra-archive-key-id",
+    "retain_decision_count": 4096,
+    "compact_interval_seconds": 60
+  },
+  "monitoring": {
+    "projection_file": "/var/lib/stream-recovery-control/monitoring-inbox/releases/replace-with-immutable-release-id/latest.json",
+    "schema_file": "/opt/stream-recovery-control/releases/replace-with-immutable-release-id/contracts/monitoring_v4/evidence_projection.v1.schema.json",
+    "source_instance_id": "arena-monitoring-v4",
+    "source_release_id": "replace-with-monitoring-release-id",
+    "key_id": "replace-with-monitoring-key-id",
+    "public_key_file": "/etc/stream-recovery-control/monitoring-ed25519-public.pem",
+    "maximum_ttl_seconds": 60,
+    "maximum_check_age_seconds": 180
+  },
+  "policy": {
+    "revision": "replace-with-policy-revision",
+    "authorization_lifetime_seconds": 30,
+    "minimum_action_interval_seconds": 60,
+    "hourly_action_limit": 24,
+    "daily_action_limit": 96
+  }
+}

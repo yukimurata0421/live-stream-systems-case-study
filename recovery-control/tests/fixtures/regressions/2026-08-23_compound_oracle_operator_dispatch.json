@@ -1,0 +1,6 @@
+{
+  "regression_id": "REG-HARNESS-2026-08-23-003",
+  "origin": "first RF-01 compound oracle execution",
+  "problem": "eager construction of an operator result map evaluated incompatible comparisons for operators that were not selected",
+  "expected": "only the selected operator is evaluated"
+}

@@ -1,0 +1,38 @@
+{
+  "schema": "cra.recovery_soak_config.v2",
+  "effect_history_policy": {"schema": "cra.recovery_effect_history_policy.v1", "frozen_at": null, "retired_unknown": []},
+  "epoch_id": "replace-with-new-seven-day-epoch",
+  "minimum_duration_seconds": 604800,
+  "maximum_sample_gap_seconds": 45,
+  "recovery_deadline_seconds": 600,
+  "maximum_evidence_bytes": 2147483648,
+  "evidence_file": "/var/lib/stream-recovery-control/recovery-soak/replace-epoch/samples.jsonl",
+  "state_file": "/var/lib/stream-recovery-control/recovery-soak/replace-epoch/state.json",
+  "gate_file": "/var/lib/stream-recovery-control/recovery-soak/replace-epoch/gate.json",
+  "hosts": {
+    "dell": {
+      "host_id": "dell-stream-runtime", "release_id": "replace-dell-release", "source_commit": "replace-with-40-hex-source-commit",
+      "stream_id": "replace-pinned-stream-id", "key_id": "replace-dell-key-id",
+      "public_key_file": "/etc/stream-recovery-control/recovery-soak/dell-public.pem",
+      "inbox_file": "/var/lib/stream-recovery-control/recovery-soak/inbox/dell.json"
+    },
+    "arena": {
+      "host_id": "arena-monitoring-facts", "release_id": "replace-arena-release", "source_commit": "replace-with-40-hex-source-commit",
+      "stream_id": "replace-pinned-stream-id", "key_id": "replace-arena-key-id",
+      "public_key_file": "/etc/stream-recovery-control/recovery-soak/arena-public.pem",
+      "inbox_file": "/var/lib/stream-recovery-control/recovery-soak/inbox/arena.json"
+    },
+    "cra": {
+      "host_id": "replace-canonical-cra-host-id", "release_id": "replace-cra-release", "source_commit": "replace-with-40-hex-source-commit",
+      "stream_id": "replace-pinned-stream-id", "key_id": "replace-cra-observer-key-id",
+      "public_key_file": "/etc/stream-recovery-control/recovery-soak/cra-observer-public.pem",
+      "inbox_file": "/var/lib/stream-recovery-control/recovery-soak/inbox/cra.json"
+    },
+    "raspi": {
+      "host_id": "raspberry-pi-public-only", "release_id": "replace-publisher-release", "source_commit": "replace-with-40-hex-source-commit",
+      "stream_id": "public-publication-only", "key_id": "replace-pi-observer-key-id",
+      "public_key_file": "/etc/stream-recovery-control/recovery-soak/pi-observer-public.pem",
+      "inbox_file": "/var/lib/stream-recovery-control/recovery-soak/inbox/raspi.json"
+    }
+  }
+}

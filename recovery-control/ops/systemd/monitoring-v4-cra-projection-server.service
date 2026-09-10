@@ -1,0 +1,32 @@
+[Unit]
+Description=Read-only mTLS server for signed Monitoring v4 CRA projection
+After=network-online.target monitoring-v4-cra-projection.service
+Wants=network-online.target
+ConditionPathExists=/var/lib/stream-monitoring-v4/cra-projection/latest.json
+
+[Service]
+Type=simple
+User=stream-monitoring-projection
+Group=stream-monitoring-projection
+ExecStart=/opt/stream-recovery-control/.venv/bin/cra-monitoring-serve --projection-file /var/lib/stream-monitoring-v4/cra-projection/latest.json --tls-certificate /etc/stream-recovery-control/monitoring-server.pem --tls-private-key /etc/stream-recovery-control/monitoring-server-key.pem --client-ca-certificate /etc/stream-recovery-control/cra-client-ca.pem --listen-host 0.0.0.0 --listen-port 9444
+Restart=on-failure
+RestartSec=5s
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+ReadOnlyPaths=/etc/stream-recovery-control /opt/stream-recovery-control /var/lib/stream-monitoring-v4/cra-projection
+InaccessiblePaths=/etc/stream-recovery-control/monitoring-ed25519-private.pem
+
+# GET-only endpoint. The served payload is already signed and contains no control decision.
+
+[Install]
+WantedBy=multi-user.target

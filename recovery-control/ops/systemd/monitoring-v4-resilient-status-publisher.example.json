@@ -1,0 +1,51 @@
+{
+  "schema": "cra.resilient_host_status_relay_publisher.v4",
+  "role": "arena",
+  "host_id": "arena-monitoring-facts",
+  "host_contract_file": "/etc/stream-recovery-control/host-contract.json",
+  "release_id": "replace-with-immutable-arena-projection-release-id",
+  "release_manifest_file": "/opt/stream-monitoring-cra-projection/releases/replace-with-immutable-arena-projection-release-id/release_manifest.json",
+  "runtime_manifest_file": "/opt/stream-monitoring-cra-projection/runtimes/replace-with-immutable-arena-projection-release-id/runtime_manifest.json",
+  "configuration_directory": "/etc/stream-monitoring-cra-projection/releases/replace-with-immutable-arena-projection-release-id",
+  "maintenance_restart_policy_file": "/etc/needrestart/conf.d/stream-recovery-control.conf",
+  "disk_path": "/var/lib/stream-monitoring-v4",
+  "service_units": {
+    "arena_resilient_status_publisher": "monitoring-v4-resilient-status-publisher@replace-with-immutable-arena-projection-release-id.service",
+    "arena_projection_server": "monitoring-v4-cra-projection-server@replace-with-immutable-arena-projection-release-id.service"
+  },
+  "pipeline_status_files": {
+    "arena_live_adapter": "/var/lib/stream-monitoring-v4/cra-facts/releases/replace-with-immutable-arena-projection-release-id/status.json",
+    "arena_projection": "/var/lib/stream-monitoring-v4/cra-projection/releases/replace-with-immutable-arena-projection-release-id/status.json"
+  },
+  "credential_files": {
+    "arena_dell": "/etc/stream-monitoring-cra-projection/credentials/dell-observation-client.pem",
+    "arena_cra": "/etc/stream-monitoring-cra-projection/credentials/monitoring-server.pem"
+  },
+  "signing_private_key_file": "/etc/stream-monitoring-cra-projection/credentials/monitoring-ed25519-private.pem",
+  "key_id": "replace-with-monitoring-projection-key-id",
+  "resilient_host_status_schema_file": "/opt/stream-monitoring-cra-projection/releases/replace-with-immutable-arena-projection-release-id/contracts/cra_no_action_soak/resilient_host_status.v3.schema.json",
+  "output_file": "/var/lib/stream-monitoring-v4/cra-projection/releases/replace-with-immutable-arena-projection-release-id/resilient-host-status.json",
+  "state_file": "/var/lib/stream-monitoring-v4/cra-projection/releases/replace-with-immutable-arena-projection-release-id/resilient-host-status-state.json",
+  "transition_journal_file": "/var/lib/stream-monitoring-v4/cra-projection/releases/replace-with-immutable-arena-projection-release-id/resilient-host-status-transitions.jsonl",
+  "output_owner": "stream-monitoring-projection",
+  "output_group": "stream-monitoring-projection",
+  "reporter_lease_seconds": 45,
+  "last_good_retention_seconds": 300,
+  "component_validity_seconds": 20,
+  "maximum_input_age_seconds": 30,
+  "communication_unreachable_seconds": 45,
+  "minimum_upstream_evidence_seconds": 8,
+  "upstream_refresh_delays_seconds": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
+  "minimum_disk_free_bytes": 1073741824,
+  "minimum_credential_remaining_seconds": 86400,
+  "clock_uncertainty_bound_ms": 1000,
+  "maximum_clock_tracking_age_seconds": 10,
+  "clock_tracking_file": "/var/lib/stream-monitoring-v4/clock-status/releases/replace-with-immutable-arena-projection-release-id/tracking.json",
+  "dell_status_file": "/var/lib/stream-monitoring-v4/cra-dell-observation/releases/replace-with-immutable-arena-projection-release-id/resilient-host-status.json",
+  "dell_pull_status_file": "/var/lib/stream-monitoring-v4/cra-dell-observation/releases/replace-with-immutable-arena-projection-release-id/resilient-host-status-pull-status.json",
+  "dell_key_id": "replace-with-dell-observation-key-id",
+  "dell_public_key_file": "/etc/stream-monitoring-cra-projection/credentials/dell-observation-ed25519-public.pem",
+  "dell_host_id": "dell-stream-runtime",
+  "dell_release_id": "replace-with-immutable-dell-observation-release-id",
+  "server_resource_status_file": "/var/lib/stream-monitoring-v4/cra-projection/releases/replace-with-immutable-arena-projection-release-id/server-resource-status.json"
+}

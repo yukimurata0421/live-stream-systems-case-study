@@ -1,0 +1,54 @@
+[Unit]
+Description=Publish fail-operational signed Dell resilient status for immutable release %i
+Wants=dell-clock-status-probe@%i.service
+After=dell-clock-status-probe@%i.service dell-observation-server@%i.service k3s.service dell-target-snapshot-shadow.service
+ConditionPathExists=/opt/stream-recovery-observation/releases/%i/release_manifest.json
+ConditionPathExists=/opt/stream-recovery-observation/runtimes/%i/runtime_manifest.json
+ConditionPathExists=/etc/stream-recovery-observation/releases/%i/resilient-host-status-publisher.json
+StartLimitIntervalSec=10s
+StartLimitBurst=10
+
+[Service]
+Type=oneshot
+User=root
+Group=stream-recovery
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=PYTHONNOUSERSITE=1
+Environment=PYTHONPATH=/opt/stream-recovery-observation/releases/%i/src
+Environment=CRA_IMMUTABLE_RELEASE_ID=%i
+Environment=CRA_HOST_STATUS_SIGNING_KEY_FILE=%d/dell-host-status-signing-key.pem
+LoadCredential=dell-host-status-signing-key.pem:/etc/stream-recovery-observation/credentials/dell-observation-ed25519-private.pem
+ExecStart=/opt/stream-recovery-observation/runtimes/%i/.venv/bin/python -m cra_no_action_soak.resilient_host_status_publisher --config /etc/stream-recovery-observation/releases/%i/resilient-host-status-publisher.json
+TimeoutStartSec=15s
+TimeoutStopSec=5s
+UMask=0077
+StateDirectory=stream-recovery-observation/host-status/releases/%i
+StateDirectoryMode=0750
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectClock=true
+ProtectHostname=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+RemoveIPC=true
+CapabilityBoundingSet=
+RestrictAddressFamilies=AF_UNIX
+ReadOnlyPaths=/opt/stream-recovery-observation/releases/%i /opt/stream-recovery-observation/runtimes/%i /etc/stream-recovery-observation/releases/%i
+ReadOnlyPaths=/etc/stream-recovery-observation/credentials/dell-observation-server.pem
+ReadOnlyPaths=/etc/stream-recovery-control/host-contract.json /etc/needrestart/conf.d/stream-recovery-control.conf /var/lib/stream-recovery-control /var/lib/rancher/k3s/storage
+ReadOnlyPaths=/var/lib/stream-recovery-observation/clock-status/releases/%i
+ReadWritePaths=/var/lib/stream-recovery-observation/host-status/releases/%i
+InaccessiblePaths=-/run/stream-v3-control/effect.sock -/run/stream-v3-control/runtime-recovery.sock
+InaccessiblePaths=/etc/stream-recovery-observation/credentials/dell-observation-ed25519-private.pem /etc/stream-recovery-observation/credentials/dell-observation-server-key.pem
+
+# Read-only facts and signing only. Source failures become signed degraded state;
+# this unit has no network, signal, restart, Kubernetes write, or effect socket.
