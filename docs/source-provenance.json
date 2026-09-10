@@ -1,7 +1,7 @@
 {
   "schema": "stream_recovery_control.public_source_provenance.v1",
-  "recorded_at_jst": "2026-09-10T21:03:44+09:00",
-  "private_source_commit": "5be689f695b0604184bd01a81ca12ccacf7fa35f",
+  "recorded_at_jst": "2026-09-10T21:22:03+09:00",
+  "private_source_commit": "fb7ffa3d96c4cf23637d72a5cbc6f65fac4d008c",
   "private_history_included": false,
   "private_worktree_changes_included": false,
   "live_deployment_claimed": false,

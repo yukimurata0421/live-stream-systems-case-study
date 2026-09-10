@@ -115,7 +115,7 @@ Start with [`docs/architecture.md`](docs/architecture.md), then read
 ## Public boundary
 
 The snapshot was derived from private source commit
-`5be689f695b0604184bd01a81ca12ccacf7fa35f`. The private Git history,
+`fb7ffa3d96c4cf23637d72a5cbc6f65fac4d008c`. The private Git history,
 operational records, live evidence, generated artifacts, and uncommitted source
 changes were not copied. See [`docs/public-release.md`](docs/public-release.md)
 for the complete boundary.

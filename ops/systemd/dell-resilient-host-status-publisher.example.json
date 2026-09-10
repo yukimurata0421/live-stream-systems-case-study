@@ -34,7 +34,7 @@
   "minimum_disk_free_bytes": 1073741824,
   "minimum_credential_remaining_seconds": 86400,
   "clock_uncertainty_bound_ms": 1000,
-  "maximum_clock_tracking_age_seconds": 10,
+  "maximum_clock_tracking_age_seconds": 20,
   "clock_tracking_file": "/var/lib/stream-recovery-observation/clock-status/releases/replace-with-immutable-dell-observation-release-id/tracking.json",
   "role_inputs": {
     "target_snapshot_file": "/var/lib/stream-recovery-control/dell/target_snapshot.json",

@@ -9,7 +9,7 @@ publication work.
 ## Provenance
 
 The snapshot was exported from private source commit
-`5be689f695b0604184bd01a81ca12ccacf7fa35f` without its Git history. Exported
+`fb7ffa3d96c4cf23637d72a5cbc6f65fac4d008c` without its Git history. Exported
 areas were then reviewed and sanitized in a new repository history.
 
 The private source working tree was clean when this provenance was refreshed.

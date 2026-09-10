@@ -243,7 +243,8 @@ def test_resilient_status_v3_chain_clamps_report_to_evidence_and_keeps_local_onl
     assert dell["schema"] == "cra.resilient_host_status_publisher.v3"
     assert dell["reporter_lease_seconds"] == arena["reporter_lease_seconds"] == 45
     assert dell["component_validity_seconds"] == arena["component_validity_seconds"] == 20
-    assert dell["maximum_clock_tracking_age_seconds"] == arena["maximum_clock_tracking_age_seconds"] == 10
+    assert dell["maximum_clock_tracking_age_seconds"] == 20
+    assert arena["maximum_clock_tracking_age_seconds"] == 10
     assert dell["last_good_retention_seconds"] == arena["last_good_retention_seconds"] == 300
     assert set(dell["service_units"]) >= {"k3s_service", "target_snapshot_producer"}
     assert arena_pull["endpoint_url"].endswith("/v3/no-action-soak-status/latest")
@@ -278,6 +279,12 @@ def test_resilient_status_v3_chain_clamps_report_to_evidence_and_keeps_local_onl
     assert cra_pull["upstream_public_key_file"].endswith("/dell-observation-ed25519-public.pem")
     assert arena_pull["minimum_remaining_lease_seconds"] == 10
     assert cra_pull["minimum_remaining_lease_seconds"] == 5
+    # The Dell report is clamped to the clock evidence deadline.  Preserve one
+    # complete publisher + pull scheduling budget before arena applies its
+    # admission floor; equality made every live report impossible to admit.
+    assert "OnUnitInactiveSec=5s" in _directives("dell-resilient-host-status-publisher@.timer")
+    assert "OnUnitInactiveSec=3s" in _directives("monitoring-v4-dell-resilient-status-pull@.timer")
+    assert dell["maximum_clock_tracking_age_seconds"] >= arena_pull["minimum_remaining_lease_seconds"] + 5 + 3
     assert cra_pull["output_file"] == soak["arena_status_inbox_file"]
     assert cra_pull["status_file"] == soak["cra_pull_status_file"]
     assert cra_pull["recovery_state_file"] == soak["cra_pull_recovery_state_file"]
