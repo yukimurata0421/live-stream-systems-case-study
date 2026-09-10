@@ -28,6 +28,9 @@ contracts, and operational decisions without publishing runtime data or secrets.
   arena-side incident correlation without live host configuration or state.
 - An explicitly disabled-by-default FFmpeg network writer timeout with bounded
   configuration validation and no claim of production activation.
+- Boot-bound, durable network episode classification from the existing
+  credential-free persistent anchor observer; generated episode state remains
+  excluded.
 - OAuth evidence timestamps that distinguish a real API attempt from response
   cache reuse, plus an inert arena-server schedule example.
 - Public review docs for executive summary, operational scorecard, test safety

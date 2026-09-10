@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import ipaddress
 import json
 import os
@@ -15,7 +16,6 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
-
 BASE_DIR = Path(__file__).resolve().parents[2]
 DEFAULT_STATE_DIR = BASE_DIR / ".state" / "wan-observer"
 DEFAULT_ANCHORS = (
@@ -24,6 +24,9 @@ DEFAULT_ANCHORS = (
     "cloudflare_v6|2606:4700:4700::1111|443|cloudflare-dns.com|cloudflare-dns.com|AS13335,"
     "google_v6|2001:4860:4860::8888|443|dns.google|dns.google|AS15169"
 )
+EPISODE_STATE_SCHEMA = "stream_v3_network_episode_state/v1"
+EPISODE_SCHEMA = "stream_v3_network_episode/v1"
+EXPECTED_ANCHORS = frozenset({"cloudflare_v4", "cloudflare_v6", "google_v4", "google_v6"})
 
 
 def env(name: str, default: str = "") -> str:
@@ -58,8 +61,162 @@ def append_jsonl(path: Path, payload: dict[str, Any]) -> None:
 def write_json(path: Path, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.parent / f".{path.name}.{os.getpid()}.tmp"
-    tmp.write_text(json.dumps(payload, ensure_ascii=False, separators=(",", ":")) + "\n", encoding="utf-8")
-    tmp.replace(path)
+    try:
+        with tmp.open("w", encoding="utf-8") as output:
+            output.write(json.dumps(payload, ensure_ascii=False, separators=(",", ":")) + "\n")
+            output.flush()
+            os.fsync(output.fileno())
+        tmp.replace(path)
+        directory = os.open(path.parent, os.O_RDONLY | os.O_DIRECTORY | os.O_CLOEXEC)
+        try:
+            os.fsync(directory)
+        finally:
+            os.close(directory)
+    finally:
+        try:
+            tmp.unlink()
+        except FileNotFoundError:
+            pass
+
+
+def read_boot_id(path: Path) -> str:
+    value = path.read_text(encoding="ascii").strip()
+    if not value or len(value) > 128:
+        raise ValueError("NETWORK_EPISODE_BOOT_ID_INVALID")
+    return value
+
+
+def empty_episode_state(host_boot_id: str) -> dict[str, Any]:
+    return {
+        "schema": EPISODE_STATE_SCHEMA,
+        "host_boot_id": host_boot_id,
+        "sequence": 0,
+        "active": None,
+        "last_completed": None,
+    }
+
+
+def validate_episode(value: object, *, host_boot_id: str, completed: bool | None = None) -> dict[str, Any]:
+    fields = {
+        "schema",
+        "episode_id",
+        "sequence",
+        "host_boot_id",
+        "state",
+        "classification",
+        "started_at",
+        "last_down_at",
+        "recovered_at",
+        "anchor_names",
+        "provider_count",
+        "address_family_count",
+    }
+    if not isinstance(value, dict) or set(value) != fields or value.get("schema") != EPISODE_SCHEMA:
+        raise ValueError("NETWORK_EPISODE_FIELDS_INVALID")
+    if (
+        value.get("host_boot_id") != host_boot_id
+        or not isinstance(value.get("episode_id"), str)
+        or len(value["episode_id"]) != 32
+        or any(ch not in "0123456789abcdef" for ch in value["episode_id"])
+        or isinstance(value.get("sequence"), bool)
+        or not isinstance(value.get("sequence"), int)
+        or value["sequence"] < 1
+        or value.get("classification") != "FULL_WAN"
+        or value.get("anchor_names") != sorted(EXPECTED_ANCHORS)
+        or value.get("provider_count") != 2
+        or value.get("address_family_count") != 2
+    ):
+        raise ValueError("NETWORK_EPISODE_IDENTITY_INVALID")
+    state = value.get("state")
+    recovered_at = value.get("recovered_at")
+    if state not in {"ACTIVE", "RECOVERED"} or (state == "ACTIVE") != (recovered_at is None):
+        raise ValueError("NETWORK_EPISODE_STATE_INVALID")
+    if completed is not None and (state == "RECOVERED") != completed:
+        raise ValueError("NETWORK_EPISODE_COMPLETION_INVALID")
+    try:
+        started = datetime.fromisoformat(str(value["started_at"]).replace("Z", "+00:00"))
+        last_down = datetime.fromisoformat(str(value["last_down_at"]).replace("Z", "+00:00"))
+        recovered = datetime.fromisoformat(str(recovered_at).replace("Z", "+00:00")) if recovered_at is not None else None
+    except (TypeError, ValueError) as exc:
+        raise ValueError("NETWORK_EPISODE_TIME_INVALID") from exc
+    if started.tzinfo is None or last_down.tzinfo is None or started > last_down or (recovered is not None and last_down > recovered):
+        raise ValueError("NETWORK_EPISODE_TIME_INVALID")
+    return dict(value)
+
+
+def load_episode_state(path: Path, *, host_boot_id: str) -> dict[str, Any]:
+    if not path.exists():
+        return empty_episode_state(host_boot_id)
+    raw = json.loads(path.read_text(encoding="utf-8"))
+    if (
+        not isinstance(raw, dict)
+        or set(raw) != {"schema", "host_boot_id", "sequence", "active", "last_completed"}
+        or raw.get("schema") != EPISODE_STATE_SCHEMA
+        or raw.get("host_boot_id") != host_boot_id
+        or isinstance(raw.get("sequence"), bool)
+        or not isinstance(raw.get("sequence"), int)
+        or raw["sequence"] < 0
+        or (raw["active"] is not None and raw["last_completed"] is not None)
+    ):
+        raise ValueError("NETWORK_EPISODE_STATE_INVALID")
+    active = validate_episode(raw["active"], host_boot_id=host_boot_id, completed=False) if raw["active"] is not None else None
+    completed = (
+        validate_episode(raw["last_completed"], host_boot_id=host_boot_id, completed=True)
+        if raw["last_completed"] is not None
+        else None
+    )
+    highest = max([0] + [item["sequence"] for item in (active, completed) if item is not None])
+    if highest != raw["sequence"]:
+        raise ValueError("NETWORK_EPISODE_SEQUENCE_INVALID")
+    return {**raw, "active": active, "last_completed": completed}
+
+
+def probe_health(payload: dict[str, Any]) -> str:
+    probes = payload.get("probes")
+    if not isinstance(probes, list) or len(probes) != 4 or any(not isinstance(item, dict) for item in probes):
+        return "UNKNOWN"
+    if {item.get("name") for item in probes} != EXPECTED_ANCHORS or any(type(item.get("ok")) is not bool for item in probes):
+        return "UNKNOWN"
+    good = {
+        str(item["name"]).split("_", 1)[0]
+        for item in probes
+        if item["ok"] or item.get("reconnect_after_failure_ok") is True
+    }
+    return "UP" if good == {"cloudflare", "google"} else "DOWN" if not good else "UNKNOWN"
+
+
+def update_episode_state(state: dict[str, Any], payload: dict[str, Any]) -> dict[str, Any] | None:
+    health = probe_health(payload)
+    observed_at = str(payload.get("ts_utc") or "")
+    if health == "DOWN":
+        if state["active"] is None:
+            sequence = int(state["sequence"]) + 1
+            identity = hashlib.sha256(f"{state['host_boot_id']}:{sequence}:{observed_at}".encode()).hexdigest()[:32]
+            state.update(
+                sequence=sequence,
+                active={
+                    "schema": EPISODE_SCHEMA,
+                    "episode_id": identity,
+                    "sequence": sequence,
+                    "host_boot_id": state["host_boot_id"],
+                    "state": "ACTIVE",
+                    "classification": "FULL_WAN",
+                    "started_at": observed_at,
+                    "last_down_at": observed_at,
+                    "recovered_at": None,
+                    "anchor_names": sorted(EXPECTED_ANCHORS),
+                    "provider_count": 2,
+                    "address_family_count": 2,
+                },
+                last_completed=None,
+            )
+        else:
+            state["active"]["last_down_at"] = observed_at
+    elif health == "UP" and state["active"] is not None:
+        completed = {**state["active"], "state": "RECOVERED", "recovered_at": observed_at}
+        validate_episode(completed, host_boot_id=state["host_boot_id"], completed=True)
+        state.update(active=None, last_completed=completed)
+    return state["active"] or state["last_completed"]
 
 
 def split_csv(value: str) -> list[str]:
@@ -323,7 +480,7 @@ def build_payload(flows: list[PersistentAnchor], args: argparse.Namespace) -> di
     ts_utc = iso_utc_now()
     probes = [flow.send_probe() for flow in flows]
     return {
-        "schema": "stream_v3_persistent_tcp_anchor_observer/v1",
+        "schema": "stream_v3_persistent_tcp_anchor_observer/v2",
         "ts_utc": ts_utc,
         "ts_jst": iso_jst(ts_utc),
         "interval_sec": args.interval_sec,
@@ -479,6 +636,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--cycles", type=int, default=int(env("WAO_PERSISTENT_CYCLES", "0") or "0"))
     parser.add_argument("--latest-file", type=Path, default=Path(env("WAO_PERSISTENT_LATEST_FILE", str(state_dir / "persistent_tcp_anchor_observer_latest.json"))))
     parser.add_argument("--output-jsonl", type=Path, default=Path(env("WAO_PERSISTENT_OUTPUT_JSONL", str(state_dir / "logs" / "persistent_tcp_anchor_observer.jsonl"))))
+    parser.add_argument("--episode-state-file", type=Path, default=Path(env("WAO_PERSISTENT_EPISODE_STATE_FILE", str(state_dir / "persistent_tcp_anchor_episode_state.json"))))
+    parser.add_argument("--boot-id-file", type=Path, default=Path(env("WAO_BOOT_ID_FILE", "/proc/sys/kernel/random/boot_id")))
     parser.add_argument("--trigger-wan-snapshot", action="store_true", default=bool_env("WAO_PERSISTENT_TRIGGER_WAN_SNAPSHOT", False))
     parser.add_argument("--no-trigger-wan-snapshot", dest="trigger_wan_snapshot", action="store_false")
     parser.add_argument("--wan-snapshot-python", default=env("WAO_PERSISTENT_WAN_SNAPSHOT_PYTHON", sys.executable or "/usr/bin/python3"))
@@ -508,6 +667,8 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
+    host_boot_id = read_boot_id(args.boot_id_file)
+    episode_state = load_episode_state(args.episode_state_file, host_boot_id=host_boot_id)
     anchors = [parse_anchor(spec) for spec in args.anchor]
     flows = [
         PersistentAnchor(
@@ -529,6 +690,10 @@ def main() -> int:
         while True:
             loop_started = time.monotonic()
             payload = build_payload(flows, args)
+            payload["network_episode"] = update_episode_state(episode_state, payload)
+            # Commit the edge before publishing it. A service restart can then
+            # replay the same credential-free episode until the next outage.
+            write_json(args.episode_state_file, episode_state)
             last_wan_snapshot_trigger, payload["wan_snapshot_trigger"] = maybe_trigger_wan_snapshot(
                 payload,
                 args,

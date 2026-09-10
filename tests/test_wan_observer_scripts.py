@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import argparse
+import json
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -79,6 +81,18 @@ class WanAddressObserverTests(unittest.TestCase):
 
 
 class PersistentTcpAnchorObserverTests(unittest.TestCase):
+    @staticmethod
+    def full_payload(ts: str, *, state: str) -> dict:
+        probes = []
+        for name in sorted(persistent_tcp_anchor_observer.EXPECTED_ANCHORS):
+            if state == "UP":
+                probes.append(probe(name, ok=True))
+            elif state == "DOWN":
+                probes.append(probe(name, ok=False, reconnect_after_failure_ok=False))
+            else:
+                probes.append(probe(name, ok=name != "cloudflare_v4", reconnect_after_failure_ok=False))
+        return {"ts_utc": ts, "probes": probes}
+
     def test_parse_anchor_keeps_as_and_family_metadata(self) -> None:
         anchor = persistent_tcp_anchor_observer.parse_anchor(
             "cloudflare_v6|2606:4700:4700::1111|443|cloudflare-dns.com|cloudflare-dns.com|AS13335"
@@ -112,7 +126,7 @@ class PersistentTcpAnchorObserverTests(unittest.TestCase):
             args,
         )
 
-        self.assertEqual(payload["schema"], "stream_v3_persistent_tcp_anchor_observer/v1")
+        self.assertEqual(payload["schema"], "stream_v3_persistent_tcp_anchor_observer/v2")
         self.assertEqual(payload["ok_count"], 1)
         self.assertEqual(payload["failed"], ["google_v4"])
 
@@ -202,6 +216,48 @@ class PersistentTcpAnchorObserverTests(unittest.TestCase):
         self.assertIn("--duration-sec", command)
         self.assertIn("300", command)
         self.assertIn("persistent_anchor_failure:reconnect_after_failure_failed:cloudflare_v4:cloudflare_v4", command)
+
+    def test_full_wan_episode_survives_recovery_and_process_restart(self) -> None:
+        boot_id = "boot-fixture"
+        with tempfile.TemporaryDirectory() as directory:
+            state_path = Path(directory) / "episode.json"
+            state = persistent_tcp_anchor_observer.empty_episode_state(boot_id)
+            active = persistent_tcp_anchor_observer.update_episode_state(
+                state, self.full_payload("2026-09-09T00:00:00Z", state="DOWN")
+            )
+            self.assertEqual(active["state"], "ACTIVE")
+            self.assertEqual(active["anchor_names"], sorted(persistent_tcp_anchor_observer.EXPECTED_ANCHORS))
+            persistent_tcp_anchor_observer.write_json(state_path, state)
+
+            restored = persistent_tcp_anchor_observer.load_episode_state(state_path, host_boot_id=boot_id)
+            completed = persistent_tcp_anchor_observer.update_episode_state(
+                restored, self.full_payload("2026-09-09T00:00:15Z", state="UP")
+            )
+            self.assertEqual(completed["state"], "RECOVERED")
+            self.assertEqual(completed["started_at"], "2026-09-09T00:00:00Z")
+            self.assertEqual(completed["recovered_at"], "2026-09-09T00:00:15Z")
+            persistent_tcp_anchor_observer.write_json(state_path, restored)
+
+            after_restart = persistent_tcp_anchor_observer.load_episode_state(state_path, host_boot_id=boot_id)
+            repeated = persistent_tcp_anchor_observer.update_episode_state(
+                after_restart, self.full_payload("2026-09-09T00:00:30Z", state="UP")
+            )
+            self.assertEqual(repeated, completed)
+
+    def test_partial_provider_failure_does_not_create_full_wan_episode(self) -> None:
+        state = persistent_tcp_anchor_observer.empty_episode_state("boot-fixture")
+        result = persistent_tcp_anchor_observer.update_episode_state(
+            state, self.full_payload("2026-09-09T00:00:00Z", state="PARTIAL")
+        )
+        self.assertIsNone(result)
+        self.assertEqual(state["sequence"], 0)
+
+    def test_corrupt_or_cross_boot_episode_state_fails_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            state_path = Path(directory) / "episode.json"
+            state_path.write_text(json.dumps(persistent_tcp_anchor_observer.empty_episode_state("old-boot")))
+            with self.assertRaisesRegex(ValueError, "STATE_INVALID"):
+                persistent_tcp_anchor_observer.load_episode_state(state_path, host_boot_id="new-boot")
 
 
 class RtmpsTcpBurstObserverTests(unittest.TestCase):

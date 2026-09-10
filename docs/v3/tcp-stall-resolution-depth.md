@@ -46,6 +46,14 @@ granularity:
 The bounded packet metadata layer is intentionally metadata-only; it is not a
 payload publication path.
 
+The persistent anchor observer also writes a boot-bound, monotonic network
+episode record. A new `FULL_WAN` episode requires all four expected
+Cloudflare/Google IPv4/IPv6 anchors to fail, survives observer process restart,
+and closes only when both providers recover. Partial or malformed evidence
+does not create or close an episode. The record contains no packet payload or
+credential and is still runtime state, so generated instances remain outside
+the public repository.
+
 The public-retained code is therefore enough to review the main hypothesis
 split and the higher-resolution attribution model. The raw outputs remain
 private because they can contain public IPs, CPE details, socket peers, or
