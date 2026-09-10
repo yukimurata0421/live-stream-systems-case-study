@@ -34,8 +34,11 @@ Use the rest of this page as a reference catalog.
 - `v2/README.md`
 - `v3/current-runtime-contract.md`
 - `v3/public-status-snapshot.md`
+- `v3/public-publisher-boundary.md`
 - `v3/runtime-state-and-evidence.md`
 - `v3/map-rendering-and-monitoring.md`
+- `v3/map-mobile-legibility-review.md`
+- `v3/three-host-source-consolidation.md`
 - `v3/program-map.md`
 
 ## Reliability Evidence
@@ -44,6 +47,7 @@ Use the rest of this page as a reference catalog.
 - `28-day-same-url-sli-case-study.md`
 - `v3/sli-and-dashboard.md`
 - `v3/rolling-sli-error-budget-feedback.md`
+- `v3/operational-reliability-and-external-evidence.md`
 - `v3/observability-plane-self-check.md`
 - `v3/notification-diagnostic-boundary.md`
 - `v3/tcp-stall-case-study.md`
@@ -53,6 +57,7 @@ Use the rest of this page as a reference catalog.
 - `v3/encoder-upload-case-study.md`
 - `v3/encoder-fps-tuning-2026-05-31.md`
 - `v3/map-production-cutover-case-study.md`
+- `v3/map-mobile-legibility-review.md`
 
 ## Recovery And Safety
 

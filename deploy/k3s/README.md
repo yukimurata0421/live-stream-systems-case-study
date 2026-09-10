@@ -26,7 +26,7 @@ observer/report helpers, and cutover gates separate:
 This validation does not need a live k3s cluster:
 
 ```bash
-cd /home/yuki/projects/stream_v3
+cd stream_v3
 python3 ops/scripts/validate_k3s_manifests.py
 ```
 
@@ -68,7 +68,7 @@ The k3s node needs the NVIDIA driver plus a container runtime/device-plugin path
 ## Build image
 
 ```bash
-cd /home/yuki/projects/stream_v3
+cd stream_v3
 sudo nerdctl -n k8s.io build -f deploy/k3s/Containerfile -t stream-v3:local .
 ```
 
@@ -77,7 +77,7 @@ directly.
 
 ## Prepare music
 
-Local v3 uses `/home/yuki/projects/stream_v3/ncs_music/time_tags`.
+Local v3 uses the repository-local `ncs_music/time_tags` tree.
 The k3s runtime mounts the same asset shape at `/music/time_tags` through `stream-v3-music`.
 Keep the audio files out of Git and provision the PVC from the copied `ncs_music/` tree before enabling AutoDJ in a real Pod.
 

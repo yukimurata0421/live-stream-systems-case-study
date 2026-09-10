@@ -36,6 +36,10 @@ Start with the top-level `README.md`. Most reviewers should then read only:
 - `v3/scoped-recovery-authority.md`
 - `v3/map-rendering-and-monitoring.md`
 - `v3/map-production-cutover-case-study.md`
+- `v3/map-mobile-legibility-review.md`
+- `v3/operational-reliability-and-external-evidence.md`
+- `v3/public-publisher-boundary.md`
+- `v3/three-host-source-consolidation.md`
 - `v3/single-node-dr-case-study.md`
 
 ### Deep Design Review

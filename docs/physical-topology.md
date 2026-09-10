@@ -9,9 +9,9 @@ status snapshot, and GCS + Cloudflare form the public static edge.
 
 | Host or edge | Runtime role | Responsibility |
 | --- | --- | --- |
-| HP ProDesk `192.168.0.60` | ADS-B source and k3s observability | Airspy USB receiver, `airspy_adsb`, ProDesk-side readsb, k3s `stream-v3-control`, k3s `stream-v3-observer`, YouTube resolver/watchdog, stream watchdog, subsystem SLI, notifications, Prometheus exporter on `:9108`, Prometheus `:9090`, Loki `:3100`, Alloy `:12345`, private Grafana `:3000`, recovery orchestration, and staged recovery requests |
-| Dell workstation `192.168.0.35` | Delivery and local ADS-B mirror | Dell-side readsb and modified tar1090 ADS-B endpoint, k3s `stream-v3-runtime`, custom MapLibre rendering, precipitation fetcher, PulseAudio, AutoDJ, FFmpeg, NVIDIA NVENC, and local fast recovery |
-| Raspberry Pi `192.168.0.50` | Public snapshot publisher and gateway | nginx `:8088` `/grafana/` proxy to HP ProDesk Grafana, public-safe snapshot collector, static site source tree, and scheduled GCS push |
+| HP ProDesk `monitoring-host` | ADS-B source and k3s observability | Airspy USB receiver, `airspy_adsb`, ProDesk-side readsb, k3s `stream-v3-control`, k3s `stream-v3-observer`, YouTube resolver/watchdog, stream watchdog, subsystem SLI, notifications, Prometheus exporter on `:9108`, Prometheus `:9090`, Loki `:3100`, Alloy `:12345`, private Grafana `:3000`, recovery orchestration, and staged recovery requests |
+| Dell workstation `delivery-host` | Delivery and local ADS-B mirror | Dell-side readsb and modified tar1090 ADS-B endpoint, k3s `stream-v3-runtime`, custom MapLibre rendering, precipitation fetcher, PulseAudio, AutoDJ, FFmpeg, NVIDIA NVENC, and local fast recovery |
+| Raspberry Pi `publisher-host` | Public snapshot publisher and gateway | nginx `:8088` `/grafana/` proxy to HP ProDesk Grafana, public-safe snapshot collector, static site source tree, and scheduled GCS push |
 | GCS + Cloudflare | Public static edge | Receives sanitized JSON/static assets by outbound upload and serves <https://yukimurata0421.dev/> without spending home uplink bandwidth on public status reads or exposing Grafana, Prometheus, Loki, raw logs, credentials, or home-network ingress |
 
 ## ADS-B Data Flow
@@ -22,7 +22,7 @@ The production ADS-B path is:
 Airspy USB on HP ProDesk
   -> airspy_adsb
   -> readsb on HP ProDesk
-  -> Beast feed to Dell 192.168.0.35:30104
+  -> Beast feed to Dell delivery-host:30104
   -> readsb on Dell workstation
   -> Dell modified tar1090 HTTP endpoint
   -> sanitized ADS-B JSON proxy
@@ -63,7 +63,7 @@ private on HP ProDesk. Raspberry Pi nginx exposes `/grafana/` as a proxy to HP
 ProDesk Grafana; the public snapshot collector uses the Pi-local
 `http://127.0.0.1:8088/grafana` path to query public-safe datasource endpoints.
 This is a Pi-initiated pull: Pi nginx forwards collector requests to
-`192.168.0.60:3000/grafana`, and the Grafana datasource JSON response returns
+`monitoring-host:3000/grafana`, and the Grafana datasource JSON response returns
 to the Pi collector before the static snapshot is built.
 The `yukimurata0421.dev` status path is then one-way: the Pi reduces evidence
 to allowlisted static assets, pushes them outbound to GCS, and Cloudflare serves

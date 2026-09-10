@@ -21,7 +21,7 @@ The current production split is:
   directly.
 
 The ADS-B source chain is therefore Airspy on HP ProDesk -> `airspy_adsb` ->
-ProDesk readsb -> Beast feed to Dell `192.168.0.35:30104` -> Dell readsb ->
+ProDesk readsb -> Beast feed to Dell `delivery-host:30104` -> Dell readsb ->
 Dell modified tar1090 ADS-B JSON -> sanitized proxy -> `stream_v3` MapLibre
 browser rendering.
 

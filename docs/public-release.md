@@ -18,12 +18,18 @@ contracts, and operational decisions without publishing runtime data or secrets.
   manifest validation.
 - Read-only map-runtime and public-viewer synthetic probes, Prometheus mappings
   and rules, and Discord/Slack routing policy.
+- Durable operational reliability rollups, external public-video evidence,
+  and the single-writer notification policy.
+- Public-safe Raspberry Pi publisher source, static assets, GCS command
+  construction, and Cloudflare Worker source under `ops/public-publisher/`.
 - Host-maintenance decision logic and inert unit examples for GPU startup,
   postboot readiness, and read-only NVIDIA package observation.
 - Public review docs for executive summary, operational scorecard, test safety
   boundary, incident review, and migration cutover reasoning.
 - A sanitized renderer-cutover case study with failure, rollback, repair, and
   accepted-window aggregates while raw operational artifacts remain excluded.
+- A mobile-legibility source proposal and measured aggregate luma values; raw
+  captures and live deployment claims remain excluded.
 - Sanitized prodesk monitoring extracts in `ops/prodesk-monitoring/`.
 
 ## What Was Excluded

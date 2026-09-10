@@ -44,18 +44,18 @@ public status publication
 The running system is intentionally split across three home hosts plus a public
 static edge:
 
-- HP ProDesk `192.168.0.60` source role: Airspy USB receiver, `airspy_adsb`,
+- HP ProDesk `monitoring-host` source role: Airspy USB receiver, `airspy_adsb`,
   and ProDesk-side readsb.
-- HP ProDesk `192.168.0.60` k3s observability role: `stream-v3-control`,
+- HP ProDesk `monitoring-host` k3s observability role: `stream-v3-control`,
   `stream-v3-observer`, YouTube monitoring, watchdogs, SLI, notifications,
   Prometheus exporter, staged recovery requests, and the
   Prometheus/Loki/Alloy/Grafana evidence stack.
-- Dell workstation `192.168.0.35` local ADS-B mirror role: Dell-side readsb and
+- Dell workstation `delivery-host` local ADS-B mirror role: Dell-side readsb and
   modified tar1090 ADS-B HTTP endpoint.
-- Dell workstation `192.168.0.35` delivery role: k3s `stream-v3-runtime`,
+- Dell workstation `delivery-host` delivery role: k3s `stream-v3-runtime`,
   custom MapLibre rendering, analysis-only precipitation, PulseAudio, AutoDJ,
   FFmpeg, NVENC, and local fast recovery.
-- Raspberry Pi `192.168.0.50` public publisher role: nginx `:8088`
+- Raspberry Pi `publisher-host` public publisher role: nginx `:8088`
   `/grafana/` proxy to HP ProDesk Grafana, public-safe snapshot collection,
   static site build, and outbound GCS push.
 - GCS + Cloudflare public edge role: serve sanitized static status snapshots
@@ -93,7 +93,7 @@ observability workloads. Raspberry Pi uses the Pi-local
 `/grafana/` proxy to collect allowlisted evidence from the ProDesk Grafana
 datasource proxy. The data transfer is pull-based: the Pi collector initiates
 HTTP GETs to `127.0.0.1:8088/grafana`, Pi nginx proxies those requests to
-`192.168.0.60:3000/grafana`, and the datasource JSON response returns to the Pi
+`monitoring-host:3000/grafana`, and the datasource JSON response returns to the Pi
 collector. The Pi then pushes a reduced static snapshot to GCS for Cloudflare to
 serve at `yukimurata0421.dev`. That static edge is used to avoid spending home
 uplink bandwidth on public status reads. Non-static operational access is
@@ -109,7 +109,7 @@ sanitizing local proxy. The viewer-facing page is the repository-owned
 MapLibre renderer, not the upstream tar1090 page.
 
 The production ADS-B handoff is ProDesk readsb Beast output to Dell
-`192.168.0.35:30104`, where Dell readsb expands it into the local map endpoint
+`delivery-host:30104`, where Dell readsb expands it into the local map endpoint
 used by the k3s delivery runtime.
 
 `src/stream_core/overlay_server.py` proxies ADS-B JSON, map/terrain tiles,

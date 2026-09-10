@@ -2,11 +2,15 @@
 
 Public site: <https://yukimurata0421.dev/>
 
-This page is the public evidence surface for `stream_v3`. It is intentionally
-not a source-code release of the site implementation. The point is to show the
-operational boundary: production observability stays private, while a reduced
-static snapshot gives outside readers enough current context to evaluate the
-stream without exposing internal dashboards or logs.
+This page is the public evidence surface for `stream_v3`. The public-safe
+publisher source is now reviewable under `ops/public-publisher/`, while
+generated snapshots and private monitoring remain excluded. The point is to
+show the operational boundary: production observability stays private, while a
+reduced static snapshot gives outside readers enough current context to
+evaluate the stream without exposing internal dashboards or logs.
+
+The implementation and ownership details are in
+[`public-publisher-boundary.md`](public-publisher-boundary.md).
 
 ![Public status snapshot, captured 2026-06-06](../assets/public-status-snapshot-2026-06-06.png)
 
@@ -53,7 +57,7 @@ snapshot pipeline:
 2. The Raspberry Pi-side collector initiates HTTP GETs to the Pi-local
    `http://127.0.0.1:8088/grafana` path.
 3. Pi nginx proxies those requests to HP ProDesk Grafana at
-   `192.168.0.60:3000/grafana`.
+   `monitoring-host:3000/grafana`.
 4. HP ProDesk Grafana serves datasource proxy JSON from private Prometheus/Loki
    evidence, and the JSON response returns over the same Pi nginx path.
 5. A Raspberry Pi-side collector emits allowlisted JSON fields for public

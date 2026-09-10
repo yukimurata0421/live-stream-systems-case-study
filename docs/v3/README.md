@@ -11,10 +11,13 @@
   - `sli-and-dashboard.md`
   - `rolling-sli-error-budget-feedback.md`
   - `public-status-snapshot.md`
+  - `public-publisher-boundary.md`
+  - `operational-reliability-and-external-evidence.md`
   - `observability-plane-self-check.md`
   - `notification-diagnostic-boundary.md`
   - `map-rendering-and-monitoring.md`
   - `map-production-cutover-case-study.md`
+  - `map-mobile-legibility-review.md`
   - `fast-recovery-classifier-replay.md`
   - `youtube-lifecycle-safety.md`
   - `encoder-upload-case-study.md`
@@ -33,6 +36,7 @@
   - `notification-and-auto-recovery.md`
   - `single-node-dr-case-study.md`
   - `program-map.md`
+  - `three-host-source-consolidation.md`
   - `open-followups.md`
 - `../sli-methodology.md`
 - `../compliance-and-licensing-boundary.md`
@@ -88,6 +92,13 @@ For a focused reliability review:
 - `map-production-cutover-case-study.md` records the failed renderer and
   production windows, rollback thresholds, root repairs, isolated 24-hour and
   NVENC soaks, and the accepted one-hour production cutover.
+- `map-mobile-legibility-review.md` records the later brightness and mobile
+  scaling proposal while keeping it explicitly separate from live rollout.
+- `operational-reliability-and-external-evidence.md` explains durable SLI
+  rollups, external-check uncertainty, the oEmbed correction, notification
+  timing, and the no-restart/no-SLO authority boundary.
+- `public-publisher-boundary.md` maps the Raspberry Pi source, redaction,
+  last-good, cache, and static-edge ownership contract.
 - `../compliance-and-licensing-boundary.md` documents how ADS-B publication,
   receiver privacy, and NCS attribution were treated as design constraints
   rather than informal operator memory.

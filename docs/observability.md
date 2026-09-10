@@ -101,7 +101,7 @@ allowlisted Prometheus/Loki evidence through the Pi-local
 JSON/assets outbound to GCS, and Cloudflare serves `yukimurata0421.dev`. The
 GCS/Cloudflare edge is used to keep public status reads off the home uplink.
 ProDesk does not push this evidence to the Pi. The collector initiates HTTP
-GETs, Pi nginx proxies them to `192.168.0.60:3000/grafana`, and Grafana returns
+GETs, Pi nginx proxies them to `monitoring-host:3000/grafana`, and Grafana returns
 datasource JSON over that same proxy path.
 Non-static operational access is outside the static `yukimurata0421.dev` status
 path and is not named as a public endpoint here.

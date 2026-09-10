@@ -28,6 +28,8 @@ classification, bounded recovery authority, and public-safe status publication.
 The detailed renderer, weather, GPU-readiness, and read-only probe boundaries
 are in the [map rendering and monitoring contract](docs/v3/map-rendering-and-monitoring.md).
 
+The repository also contains a reviewed but not live-deployed [mobile map legibility proposal](docs/v3/map-mobile-legibility-review.md).
+
 The system runs across three home hosts:
 
 - an HP ProDesk owns the Airspy/readsb source and private k3s observability
@@ -125,22 +127,15 @@ contracts are in [physical topology](docs/physical-topology.md) and
 
 ## Key Design Decisions
 
-- `SV3-SAME-URL`: preserve the current YouTube watch URL when a fault is
-  recoverable; replacement is never inferred from transport noise alone.
-- `SV3-RECOVERY-GUARD`: monitors collect evidence and request staged recovery,
-  while the delivery tier retains FFmpeg ownership.
-- `SV3-PUBLIC-BOUNDARY`: publish only an allowlisted static snapshot through
-  GCS and Cloudflare.
-- `SV3-EVIDENCE-STRENGTH`: keep restart observation separate from confirmed TCP
-  send recovery; stale, missing, or ambiguous evidence cannot claim recovery.
-- Treat API quota exhaustion and public-probe failures as degraded evidence,
-  not immediate proof of stream failure.
-- Keep ADS-B source freshness, visual correctness, audio correctness, upload
-  pressure, and YouTube lifecycle state as separate fault domains.
-- Keep the map runtime probe, public-viewer frame probe, and precipitation
-  health read-only; repeated visual evidence must be correlated before recovery.
-- Route broad operational warnings to Discord, while delivery, GPU, and RTMPS
-  critical incidents escalate to Slack with bounded outbox retry.
+- `SV3-SAME-URL`: preserve the current YouTube watch URL when a fault is recoverable; replacement is never inferred from transport noise alone.
+- `SV3-RECOVERY-GUARD`: monitors collect evidence and request staged recovery, while the delivery tier retains FFmpeg ownership.
+- `SV3-PUBLIC-BOUNDARY`: publish only an allowlisted static snapshot through GCS and Cloudflare.
+- `SV3-EVIDENCE-STRENGTH`: keep restart observation separate from confirmed TCP send recovery; stale, missing, or ambiguous evidence cannot claim recovery.
+- Treat API quota exhaustion and public-probe failures as degraded evidence, not immediate proof of stream failure.
+- Keep ADS-B source freshness, visual correctness, audio correctness, upload pressure, and YouTube lifecycle state as separate fault domains.
+- Keep map, viewer, and precipitation probes read-only; repeated visual evidence must be correlated before recovery.
+- Keep independent public checks as supporting evidence: disagreement is `unknown`, and external evidence alone cannot burn an SLO or authorize restart.
+- Route broad warnings to Discord; delivery, GPU, and RTMPS critical incidents escalate to Slack with bounded retry.
 
 ## Claims And Limits
 
@@ -154,6 +149,8 @@ contracts are in [physical topology](docs/physical-topology.md) and
 Production state, logs, media, packet captures, credentials, and host-specific
 configuration are intentionally excluded. The full publication boundary is
 documented in [public release notes](docs/public-release.md).
+
+The latest [three-host source consolidation](docs/v3/three-host-source-consolidation.md) is repository-only; its [external evidence contract](docs/v3/operational-reliability-and-external-evidence.md) does not claim a live rollout.
 
 ## Review Paths
 

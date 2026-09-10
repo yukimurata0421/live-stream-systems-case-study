@@ -7,6 +7,9 @@ contracts in this public snapshot; it is not a current-production health report.
 The dated failure, rollback, repair, soak, and live-cutover evidence for this
 renderer is retained separately in
 [`map-production-cutover-case-study.md`](map-production-cutover-case-study.md).
+The later brightness and phone-scaling proposal is intentionally separate in
+[`map-mobile-legibility-review.md`](map-mobile-legibility-review.md); it has not
+been deployed to the live stream.
 
 ## Rendering Path
 
@@ -30,6 +33,10 @@ The base-map palette is calculated locally from UTC, latitude, and longitude.
 It transitions between night, twilight, golden hour, and day without an
 external sunrise API. The calculation updates once per minute and the paint
 transition takes two minutes, while operational data layers keep fixed colors.
+
+The current repository proposal uses bounded brightness lifts and larger
+primary labels for mobile scaling. These values are source-level acceptance
+criteria, not proof that the live renderer has changed.
 
 Map assets and third-party data credits are listed in
 `ui/overlay/adsb-map/ATTRIBUTION.md`. MapLibre is vendored with its BSD

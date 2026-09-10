@@ -78,6 +78,10 @@ class PublicDocsStructureTests(unittest.TestCase):
             DOCS / "v3" / "notification-diagnostic-boundary.md",
             DOCS / "v3" / "map-rendering-and-monitoring.md",
             DOCS / "v3" / "map-production-cutover-case-study.md",
+            DOCS / "v3" / "map-mobile-legibility-review.md",
+            DOCS / "v3" / "operational-reliability-and-external-evidence.md",
+            DOCS / "v3" / "public-publisher-boundary.md",
+            DOCS / "v3" / "three-host-source-consolidation.md",
             DOCS / "v3" / "scoped-recovery-authority.md",
         )
 
@@ -299,6 +303,25 @@ class PublicDocsStructureTests(unittest.TestCase):
         for path in markdown_files():
             with self.subTest(path=path.relative_to(ROOT)):
                 self.assertNotRegex(read(path), r"[ぁ-んァ-ヶ一-龠]")
+
+    def test_new_source_consolidation_docs_keep_public_and_live_boundaries(self) -> None:
+        mobile = read(DOCS / "v3" / "map-mobile-legibility-review.md")
+        external = read(DOCS / "v3" / "operational-reliability-and-external-evidence.md")
+        publisher = read(DOCS / "v3" / "public-publisher-boundary.md")
+        consolidation = read(DOCS / "v3" / "three-host-source-consolidation.md")
+
+        self.assertRegex(mobile, r"has not been\s+deployed")
+        self.assertIn("390x219", mobile)
+        self.assertIn("844x475", mobile)
+        self.assertIn("youtube_public_video", external)
+        self.assertIn("two consecutive five-minute", external)
+        self.assertIn("cannot create formal SLO burn", external)
+        self.assertIn("last-good", publisher)
+        self.assertIn("No live service", consolidation)
+
+        combined = "\n".join(read(path) for path in markdown_files())
+        self.assertNotIn("/home/yuki", combined)
+        self.assertNotRegex(combined, r"\b192\.168\.\d{1,3}\.\d{1,3}\b")
 
     def test_project_metadata_matches_case_study_scope(self) -> None:
         self.assertEqual(
