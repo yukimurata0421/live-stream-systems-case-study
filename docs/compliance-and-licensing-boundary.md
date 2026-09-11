@@ -1,9 +1,9 @@
 # Compliance And Licensing Boundary
 
 This is not legal advice. It records the pre-build engineering boundary used by the
-operator when publishing a receive-only ADS-B visualization with NCS background
-music. The purpose is to show how non-code constraints were turned into product
-and operational design choices. Last reviewed: 2026-06-07.
+operator when publishing a receive-only ADS-B visualization with credited
+third-party music. The purpose is to show how non-code constraints were turned
+into product and operational design choices. Last reviewed: 2026-09-11.
 
 ## Scope
 
@@ -14,7 +14,8 @@ This document covers the public stream and the public repository snapshot:
   `stream_v3` browser/FFmpeg delivery path;
 - viewer-facing YouTube video, overlay panels, public-safe status snapshots,
   and public documentation;
-- NCS music attribution for a YouTube livestream.
+- NCS usage-policy attribution and a separately reviewed Floracore credit
+  contract for a YouTube livestream.
 
 It does not certify that the setup is reusable in another jurisdiction, on
 another platform, with another music catalog, or with a public raw ADS-B API. It
@@ -79,29 +80,38 @@ path is changed to surface persistent aircraft identifiers more prominently, the
 change should be reviewed as a privacy and compliance change, not as a cosmetic
 UI tweak.
 
-## NCS Music Boundary
+## Music Licensing And Credit Boundary
 
 The music catalog is handled as a licensing constraint, not as a generic
 "royalty-free" assumption. NCS states that independent creators may use NCS
-music on YouTube or Twitch when the artist and song credits are placed in the
-video or livestream description, and its FAQ also discusses monetized videos
-under the same usage-policy condition:
-<https://ncs.io/usage-policy/1/faqs-us...>.
+music on YouTube or Twitch when the required credits are placed in the video or
+livestream description:
+<https://ncs.io/usage-policy>.
+
+Floracore is a different provider boundary. The private operator record
+documents permission for this YouTube Live use with credit required; it does
+not generalize that permission to redistribution, resale, rights registration,
+another platform, or another channel. The source correspondence is not part of
+this public repository, so the repository records the engineering contract but
+does not independently prove the permission.
 
 The design rule is:
 
 - The YouTube livestream description is the canonical attribution location.
-- Credits should use the track-specific credit block from the NCS track page or
-  the official NCS YouTube upload description when available.
+- NCS credits follow the current NCS usage policy and track-specific credit
+  block where available.
+- Floracore playback requires `@Floracore_EDM` and the official channel link in
+  the description. The overlay identifies the active provider separately.
 - The overlay panel is supplemental viewer-facing disclosure. It is not treated
   as a replacement for description credits.
 - Live chat or comment messages are not used as the compliance anchor because
   they are ephemeral, can scroll away, and are easy for replay viewers to miss.
 - Local music files are excluded from the public repository snapshot.
 
-This is why the public overlay can show "Music provided by NoCopyrightSounds"
+This is why the public overlay can switch between provider-specific credits
 while the durable licensing obligation remains outside the video frame in the
-stream description.
+stream description. The runtime and loudness boundary is documented in
+`docs/v3/music-provider-and-loudness-contract.md`.
 
 ## Re-Review Triggers
 
@@ -117,8 +127,9 @@ Re-review this boundary before any of the following changes:
   operation;
 - moving the stream to a platform whose music-credit or live-description model
   differs from YouTube;
-- using non-NCS music, NCS tracks without track-specific attribution, sponsored
-  brand content, or another commercial licensing model;
+- adding a provider beyond the reviewed NCS and Floracore boundaries, changing
+  the approved Floracore use, omitting required credit, or adopting another
+  commercial licensing model;
 - publishing private operational evidence that was previously kept out of Git.
 
 The useful reviewer signal is not that this file proves compliance. The signal

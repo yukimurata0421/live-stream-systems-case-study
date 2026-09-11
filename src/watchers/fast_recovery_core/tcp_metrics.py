@@ -14,6 +14,13 @@ def extract_int(text: str, key: str) -> int:
         return 0
 
 
+def parse_queue_bytes(value: str) -> int:
+    try:
+        return max(0, int(value))
+    except ValueError:
+        return 0
+
+
 def parse_ss_tcp_metrics(stdout: str, *, ffmpeg_pid: int, ports: list[int]) -> dict[str, int | str]:
     if ffmpeg_pid <= 1:
         return {}
@@ -29,10 +36,13 @@ def parse_ss_tcp_metrics(stdout: str, *, ffmpeg_pid: int, ports: list[int]) -> d
         details = lines[idx + 1] if idx + 1 < len(lines) else ""
         return {
             "conn": line.strip(),
+            "send_q": parse_queue_bytes(parts[2]) if len(parts) >= 3 else 0,
             "bytes_sent": extract_int(details, "bytes_sent"),
+            "bytes_acked": extract_int(details, "bytes_acked"),
             "notsent": extract_int(details, "notsent"),
             "unacked": extract_int(details, "unacked"),
             "lastsnd_ms": extract_int(details, "lastsnd"),
+            "rto_ms": extract_int(details, "rto"),
         }
     return {}
 

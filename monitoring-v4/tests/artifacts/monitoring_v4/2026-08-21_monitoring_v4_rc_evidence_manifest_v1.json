@@ -1,0 +1,80 @@
+{
+  "schema": "monitoring_v4.release_evidence_manifest.v1",
+  "candidate_id": "monitoring-v4-rc-20260821",
+  "base_git_head": "1a76a8857db521282a2536391c2963a34aa9c199",
+  "candidate_git_revision_binding": "external_post_commit_attestation",
+  "candidate_source_identity": "5f4374254c1855930b77b0cd3e7e898949ecd139",
+  "production_files": [
+    {"path": "src/stream_contracts/monitoring_v4/runtime_evidence.py", "sha256": "37afe8e1f2dbeaecd4b22ab9090e29f8a5251da9c6424c94f691747ee0f389a3", "purpose": "strict rollout evidence identity"},
+    {"path": "src/stream_monitoring_v4/compatibility/legacy_current.py", "sha256": "1d64a8592cb40117e43b46cda142a0e3c019f0ed7eba4baa8b35e25e1b5392cf", "purpose": "source-aware legacy current normalization"},
+    {"path": "src/stream_monitoring_v4/compatibility/live_parity.py", "sha256": "3ae578bf3d88fbe5022b1a5d7a00a37cf949839ee362c9000531be8d4b23cbdc", "purpose": "single-cycle semantic parity classification"},
+    {"path": "src/stream_monitoring_v4/compatibility/parity_convergence.py", "sha256": "6c89db16653d2113b2958c1a91d9f796367735b28a41deef4326869c6d39454e", "purpose": "bounded source-pair convergence proof"},
+    {"path": "src/stream_monitoring_v4/reporting/builder.py", "sha256": "3b524e96874d7e6f19d9af4c45cabe68c8c09669e36ad5f3dc3c26f2bfd049dc", "purpose": "report evidence conflict propagation"},
+    {"path": "src/stream_monitoring_v4/reporting/parity.py", "sha256": "cf8994d5c30e548281e1369bb4c02dc52c5f1e6e36e6b95e790cd4a0cbfe51ed", "purpose": "windowed convergence and rollout validation"},
+    {"path": "src/stream_monitoring_v4/reporting/parity_contract.py", "sha256": "ac409281588a99a81557908ead31e6c377e1f5218486675520383cf8bfb9cc1e", "purpose": "strict immutable parity payload contract"},
+    {"path": "src/stream_monitoring_v4/reporting/policy.py", "sha256": "b63b7b413f7116739d17049631e2f4d7303d9d9cf09ee225804405e99568e665", "purpose": "parity report policy alignment"},
+    {"path": "src/stream_monitoring_v4/runtime/shadow_cycle.py", "sha256": "572bc6f170891e1e21ff7ddbba10430373cf4e0e4e6f3521057d9e9bf54ce9f5", "purpose": "cycle parity classification wiring"},
+    {"path": "src/stream_monitoring_v4/sentinel/evidence.py", "sha256": "46be1617f9525df822f7f395b5b0910278240da41f8c6206cf4f1ebf3cd7b18b", "purpose": "fail-closed rollout evidence assessment"},
+    {"path": "src/stream_monitoring_v4/storage/current_store.py", "sha256": "994c993e373a8f69ab8c05274a1fdc6ce2442cf0988ab7f5732e14ef378d7229", "purpose": "semantic same-time and expired-current replacement"}
+  ],
+  "schema_identity": {
+    "revision": 6,
+    "sqlite_sha256": "a939a398d0ff37128e7c0c55c47e23b2348a4d0f43b2cc073d64845969ddd0ef",
+    "postgres_sha256": "606408fe9c75f3437c0f9d43a498a485f7720a9ae92ce875f969cb99d0833f85"
+  },
+  "policy_identity": {
+    "source_policy_revision": "monitoring-v4-source-policy-r5.1",
+    "source_policy_sha256": "483222251be00d88460e07f71bea3a5ebce5669c36dc155fb8907b34bf74ae87",
+    "reducer_revision": "monitoring-v4-current-reducer-r3.3",
+    "reducer_sha256": "9d91b73ddecad95f7c5f274de6018abfbdc5ce290c6368e0a82ca1a91e5d4803",
+    "incident_policy_revision": "monitoring-v4-incident-policy-r5.1",
+    "incident_policy_sha256": "c1863b1ef98c31143909aed0a2d5737df883caae353b28b7e33b73318610bd66"
+  },
+  "commits": {
+    "parity": "eaefcd90a670820bb1456e24985427ca2ef29274",
+    "current_store": "33880a45b6db6995a0eec4b00f717f3e510cffca",
+    "harness": "261d026b60da5583b36715c3e6f02f3213247a1b",
+    "historical_replay": "be9e1d787c666aafc2198b7d5f8fa37b51f9d447",
+    "evidence_docs": "containing_commit"
+  },
+  "evidence": {
+    "historical_replay_v1": {"path": "tests/artifacts/monitoring_v4/2026-08-13_runtime_rollout_historical_replay_v1_freeze.json", "sha256": "b54eca5a106c4a63e8792a07ae8b94038800d79802d02d265dfbcd26cc256ed1", "compatibility": "lineage_only_pending_exact_rc_attestation"},
+    "retry_probe": {"path": "tests/fixtures/monitoring_v4/2026-08-12_time_boundary_replay.json", "sha256": "c693dd58849b11162140a514ab5c19f186f3219ca79177155ef5d7270d748aaa", "compatibility": "pending_exact_revision"},
+    "delivery_stateful_v2": {"path": "tests/artifacts/monitoring_v4/2026-08-21_delivery_stateful_freeze_v2.json", "sha256": "07328e54d21a1cb8f979d861d70b5c337ce44a0501f36984bac85e70ddc6b791", "compatibility": "pending_exact_revision"},
+    "audio_stateful_v2": {"path": "tests/artifacts/monitoring_v4/2026-08-21_audio_stateful_freeze_v2.json", "sha256": "242286222b549374eb6d9005bcf36d68cefd84d230f71321d5e8c0dabe0e29cc", "compatibility": "pending_exact_revision"},
+    "youtube_lifecycle_v2": {"path": "tests/artifacts/monitoring_v4/2026-08-21_youtube_lifecycle_stateful_freeze_v2.json", "sha256": "f6c28cd2e699a6215caa3637d4bc5fb629a683177d4c6e330c8553f7f6f17dfe", "compatibility": "pending_exact_revision"},
+    "viewer_external_v1": {"path": "tests/artifacts/monitoring_v4/2026-08-21_viewer_external_stateful_freeze_v1.json", "sha256": "bb015dd0d0960b7169086eb69d56c63401f1b23ad2ca324b17338d1175c312c0", "compatibility": "pending_exact_revision"},
+    "common_runtime_v2": {"path": "tests/artifacts/monitoring_v4/2026-08-21_common_runtime_v2_frozen_domains_revalidation_v2.json", "sha256": "cccfc4f4c4fc6a027ff7e1d34d4896cdf03f49b0a900ac6db90b993338b91708", "compatibility": "pending_exact_revision"},
+    "campaign_controller": {"path": "tests/artifacts/monitoring_v4/2026-08-21_campaign_controller_design_and_shadow_v1.json", "sha256": "e76a40af7ab5a411c1e46474c5c62b1988c8f4c999af44c8b8577df1c9859262", "execution_authorized": false},
+    "full_suite_closeout": {"path": "tests/artifacts/monitoring_v4/2026-08-21_common_runtime_v2_viewer_external_controller_closeout_v1.json", "sha256": "875f4e0d24f5496eb88ffda478abf29eccd728915c1a4845a897c4e28146197d", "compatibility": "dirty_state_lineage_only"}
+  },
+  "known_repairs": [
+    {"failure_id": "current-store-equal-timestamp-semantic-replacement", "changed_file": "src/stream_monitoring_v4/storage/current_store.py", "regression": "tests/test_contracts_storage.py::StorageTests::test_equal_timestamp_semantic_replacement_becomes_domain_current"},
+    {"failure_id": "current-store-expired-current-fallback", "changed_file": "src/stream_monitoring_v4/storage/current_store.py", "regression": "tests/test_contracts_storage.py::StorageTests::test_expired_current_is_replaced_by_older_fresh_fallback"}
+  ],
+  "external_evidence_bundle": {
+    "manifest_sha256": "3e053984f6679d7aba85c1bf93511732515e21fe8008399700422d4b13424762",
+    "bundle_sha256": "e52f8be6ac5ef12a231f73501cc69477c2664a1769c7c56471d15ab1ffd147da",
+    "source_bytes": 333689351,
+    "bundle_bytes": 334192640,
+    "file_count": 332,
+    "retention": "repo_external_private_archive"
+  },
+  "verification": {
+    "exact_git_revision": "pending_post_commit",
+    "postgres_equal_timestamp": "pending",
+    "postgres_expired_fallback": "pending",
+    "targeted": "pending",
+    "historical_replay_rc_attestation": "pending",
+    "structured_full_suite": "pending",
+    "repository_hygiene": "pending"
+  },
+  "known_limitations": [
+    "historical replay v1 remains lineage-only until exact-RC attestation",
+    "bulk raw evidence is referenced by hash and intentionally excluded from application Git",
+    "excluded pre-existing failure-harness work remains outside this candidate",
+    "production runtime, real source cadence, real network, notification and recovery integration, and long soak are not verified"
+  ],
+  "deployment_status": "not_deployed",
+  "soak_status": "not_started"
+}

@@ -348,12 +348,14 @@ class FastRecoveryMainBehaviorTests(unittest.TestCase):
         self._events_path = Path(self._tmpdir.name) / "fast_recovery_events.jsonl"
         self._stats_path = Path(self._tmpdir.name) / "youtube_watchdog_stats.json"
         self._restart_reason_path = Path(self._tmpdir.name) / "restart_reason.json"
+        self._transport_snapshot_path = Path(self._tmpdir.name) / "runtime" / "ffmpeg_transport_latest.json"
 
         self._orig_values = {
             "STATE_FILE": fast_recovery.STATE_FILE,
             "EVENT_LOG_FILE": fast_recovery.EVENT_LOG_FILE,
             "YTW_STATS_FILE": fast_recovery.YTW_STATS_FILE,
             "RESTART_REASON_FILE": fast_recovery.RESTART_REASON_FILE,
+            "TRANSPORT_SNAPSHOT_FILE": fast_recovery.TRANSPORT_SNAPSHOT_FILE,
             "URL_PRESERVATION_MODE": fast_recovery.URL_PRESERVATION_MODE,
             "YTW_STATUS_MAX_AGE_SEC": fast_recovery.YTW_STATUS_MAX_AGE_SEC,
             "NET_FAIL_CONFIRM": fast_recovery.NET_FAIL_CONFIRM,
@@ -391,12 +393,15 @@ class FastRecoveryMainBehaviorTests(unittest.TestCase):
             "GPU_PREFLIGHT_CONTAINER": fast_recovery.GPU_PREFLIGHT_CONTAINER,
             "FFMPEG_MISSING_REQUIRE_CURRENT_POD_ESTABLISHED": fast_recovery.FFMPEG_MISSING_REQUIRE_CURRENT_POD_ESTABLISHED,
             "BOOT_ESTABLISHED_FILE": fast_recovery.BOOT_ESTABLISHED_FILE,
+            "EFFECT_EXECUTOR_SOCKET": fast_recovery.EFFECT_EXECUTOR_SOCKET,
+            "RUNTIME_OBSERVATION_FILE": fast_recovery.RUNTIME_OBSERVATION_FILE,
         }
 
         fast_recovery.STATE_FILE = self._state_path
         fast_recovery.EVENT_LOG_FILE = self._events_path
         fast_recovery.YTW_STATS_FILE = self._stats_path
         fast_recovery.RESTART_REASON_FILE = self._restart_reason_path
+        fast_recovery.TRANSPORT_SNAPSHOT_FILE = self._transport_snapshot_path
 
         fast_recovery.URL_PRESERVATION_MODE = True
         fast_recovery.YTW_STATUS_MAX_AGE_SEC = 180
@@ -435,6 +440,8 @@ class FastRecoveryMainBehaviorTests(unittest.TestCase):
         fast_recovery.GPU_PREFLIGHT_CONTAINER = "stream-engine"
         fast_recovery.FFMPEG_MISSING_REQUIRE_CURRENT_POD_ESTABLISHED = True
         fast_recovery.BOOT_ESTABLISHED_FILE = Path(self._tmpdir.name) / "stream_boot_established.json"
+        fast_recovery.EFFECT_EXECUTOR_SOCKET = ""
+        fast_recovery.RUNTIME_OBSERVATION_FILE = Path(self._tmpdir.name) / "runtime-observation.json"
 
     def tearDown(self) -> None:
         for name, value in self._orig_values.items():
@@ -639,9 +646,270 @@ class FastRecoveryMainBehaviorTests(unittest.TestCase):
         self.assertEqual(state.get("last_restart_ts"), 2_000)
 
         events = self._read_events()
-        self.assertEqual(len(events), 1)
-        self.assertEqual(events[0].get("kind"), "restart")
-        self.assertEqual(events[0].get("trigger"), "remote_warning")
+        self.assertEqual(
+            [event.get("kind") for event in events],
+            ["recovery_requested", "recovery_action_dispatched", "restart"],
+        )
+        self.assertEqual(events[-1].get("trigger"), "remote_warning")
+        self.assertEqual(
+            events[0].get("recovery_action_id"),
+            events[-1].get("recovery_action_id"),
+        )
+        context = self._read_restart_reason()
+        self.assertEqual(context.get("controller_id"), "dell_fast_recovery")
+        self.assertEqual(context.get("execution_mode"), "execute")
+        self.assertTrue(context.get("execute"))
+        self.assertEqual(context.get("recovery_action_id"), events[-1].get("recovery_action_id"))
+        self.assertTrue(context.get("idempotency_key"))
+
+    def test_same_pid_and_trigger_have_stable_idempotency_key(self) -> None:
+        first = fast_recovery.new_recovery_action(
+            now_ts=2_000,
+            reason_kind="tcp_stall",
+            reason_first_ts=1_990,
+            ffmpeg_pid=222,
+            recovery_scope="ffmpeg_child",
+        )
+        retry = fast_recovery.new_recovery_action(
+            now_ts=2_030,
+            reason_kind="tcp_stall",
+            reason_first_ts=2_020,
+            ffmpeg_pid=222,
+            recovery_scope="ffmpeg_child",
+        )
+
+        self.assertNotEqual(first["recovery_action_id"], retry["recovery_action_id"])
+        self.assertEqual(first["idempotency_key"], retry["idempotency_key"])
+
+    def test_new_sending_ffmpeg_completes_pending_recovery_action(self) -> None:
+        self._write_state(last_restart_ts=1_000)
+        rc1, _restart_mock = self._invoke_main(
+            now_ts=2_000,
+            dns_ok_value=True,
+            tcp_ok_value=True,
+            ping_results=True,
+            restart_return=(True, ""),
+            youtube_warning=(True, "streamStatus=inactive", {}),
+            ffmpeg_pid=222,
+            tcp_metrics={
+                "bytes_sent": 500,
+                "bytes_acked": 400,
+                "send_q": 100,
+                "notsent": 0,
+                "unacked": 1,
+                "lastsnd_ms": 10,
+                "rto_ms": 204,
+            },
+        )
+        self.assertEqual(rc1, 0)
+        action_id = str(self._read_state()["pending_recovery_actions"][0]["recovery_action_id"])
+
+        rc2, _restart_mock2 = self._invoke_main(
+            now_ts=2_025,
+            dns_ok_value=True,
+            tcp_ok_value=True,
+            ping_results=True,
+            restart_return=(True, ""),
+            youtube_warning=(False, "youtube ok", {}),
+            ffmpeg_pid=333,
+            tcp_metrics={
+                "bytes_sent": 8_000_000,
+                "bytes_acked": 7_900_000,
+                "send_q": 0,
+                "notsent": 0,
+                "unacked": 0,
+                "lastsnd_ms": 5,
+                "rto_ms": 204,
+            },
+        )
+
+        self.assertEqual(rc2, 0)
+        self.assertEqual(self._read_state().get("pending_recovery_actions"), [])
+        completed = [event for event in self._read_events() if event.get("kind") == "recovery_completed"]
+        self.assertEqual(len(completed), 1)
+        self.assertEqual(completed[0].get("recovery_action_id"), action_id)
+        self.assertEqual(completed[0].get("requested_ffmpeg_pid"), 222)
+        self.assertEqual(completed[0].get("ffmpeg_pid"), 333)
+        metrics = completed[0]["transport_snapshot"]["metrics"]
+        self.assertEqual(metrics["bytes_acked"], 7_900_000)
+        self.assertEqual(metrics["rto_ms"], 204)
+
+    def test_same_ffmpeg_generation_cannot_retry_while_outcome_is_unresolved(self) -> None:
+        self._write_state(
+            last_restart_ts=1_000,
+            pending_recovery_actions=[
+                {
+                    "recovery_action_id": "request-unknown",
+                    "idempotency_key": "dell_fast_recovery:ffmpeg_child:222:tcp_stall",
+                    "recovery_scope": "ffmpeg_child",
+                    "requested_at_ts": 1_990,
+                    "requested_ffmpeg_pid": 222,
+                    "trigger": "tcp_stall",
+                    "reason": "fixture",
+                }
+            ],
+        )
+
+        rc, restart_mock = self._invoke_main(
+            now_ts=2_000,
+            dns_ok_value=True,
+            tcp_ok_value=True,
+            ping_results=True,
+            restart_return=(True, "must not run"),
+            youtube_warning=(True, "streamStatus=inactive", {}),
+            ffmpeg_pid=222,
+            tcp_metrics={
+                "bytes_sent": 500,
+                "bytes_acked": 400,
+                "send_q": 100,
+                "notsent": 0,
+                "unacked": 1,
+                "lastsnd_ms": 10,
+                "rto_ms": 204,
+            },
+        )
+
+        self.assertEqual(rc, 0)
+        restart_mock.assert_not_called()
+        state = self._read_state()
+        self.assertEqual(len(state.get("pending_recovery_actions", [])), 1)
+        self.assertIn("automatic retry suppressed", str(state.get("last_reason")))
+
+    def test_executor_unresolved_scope_reconstructs_missing_controller_state_and_suppresses_action(self) -> None:
+        self._write_state(last_restart_ts=1_000, pending_recovery_actions=[])
+        fast_recovery.EFFECT_EXECUTOR_SOCKET = str(Path(self._tmpdir.name) / "effect.sock")
+        scope = {
+            "effect_scope_id": "scope-1",
+            "owner_request_id": "request-ledger-owned",
+            "owner_request_digest": "a" * 64,
+            "state": "OUTCOME_UNKNOWN",
+            "identity": {"ffmpeg_pid": 222, "ffmpeg_generation": "generation-a"},
+        }
+        response = {
+            "schema_version": "runtime.effect_unresolved_response.v1",
+            "ok": True,
+            "unresolved_count": 1,
+            "unresolved_scopes": [scope],
+        }
+        with patch.object(fast_recovery.effect_contract, "unresolved_effect_scopes", return_value=response):
+            rc, restart_mock = self._invoke_main(
+                now_ts=2_000,
+                dns_ok_value=True,
+                tcp_ok_value=True,
+                ping_results=True,
+                restart_return=(True, "must not run"),
+                youtube_warning=(True, "streamStatus=inactive", {}),
+                ffmpeg_pid=222,
+            )
+
+        self.assertEqual(rc, 0)
+        restart_mock.assert_not_called()
+        pending = self._read_state()["pending_recovery_actions"]
+        self.assertEqual(len(pending), 1)
+        self.assertEqual(pending[0]["recovery_action_id"], "request-ledger-owned")
+
+    def test_executor_query_failure_suppresses_candidate_creation(self) -> None:
+        self._write_state(last_restart_ts=1_000)
+        fast_recovery.EFFECT_EXECUTOR_SOCKET = str(Path(self._tmpdir.name) / "effect.sock")
+        with patch.object(
+            fast_recovery.effect_contract,
+            "unresolved_effect_scopes",
+            side_effect=TimeoutError("ledger query timeout"),
+        ):
+            rc, restart_mock = self._invoke_main(
+                now_ts=2_000,
+                dns_ok_value=True,
+                tcp_ok_value=True,
+                ping_results=True,
+                restart_return=(True, "must not run"),
+                youtube_warning=(True, "streamStatus=inactive", {}),
+            )
+
+        self.assertEqual(rc, 0)
+        restart_mock.assert_not_called()
+        self.assertIn("ledger unavailable", str(self._read_state()["last_reason"]))
+
+    def test_delayed_successor_appends_reconciliation_before_pending_scope_is_released(self) -> None:
+        self._write_state(last_restart_ts=1_000, pending_recovery_actions=[])
+        fast_recovery.EFFECT_EXECUTOR_SOCKET = str(Path(self._tmpdir.name) / "effect.sock")
+        before_target = {
+            "host_id": "dell",
+            "host_boot_id": "boot-a",
+            "namespace": "stream-v3",
+            "pod_uid": "pod-a",
+            "container_name": "stream-engine",
+            "container_id": "containerd://a",
+            "ffmpeg_generation": "generation-a",
+            "ffmpeg_pid": 222,
+        }
+        successor = {**before_target, "ffmpeg_generation": "generation-b", "ffmpeg_pid": 333}
+        scope = {
+            "effect_scope_id": "scope-delayed",
+            "owner_request_id": "request-delayed",
+            "owner_request_digest": "b" * 64,
+            "state": "OUTCOME_UNKNOWN",
+            "created_at": self._iso(1_990),
+            "identity": before_target,
+        }
+        unresolved = {
+            "schema_version": "runtime.effect_unresolved_response.v1",
+            "ok": True,
+            "unresolved_count": 1,
+            "unresolved_scopes": [scope],
+        }
+        resolved = {
+            "schema_version": "runtime.effect_unresolved_response.v1",
+            "ok": True,
+            "unresolved_count": 0,
+            "unresolved_scopes": [],
+        }
+        observation = {
+            "schema_version": "runtime.ffmpeg_observation.v1",
+            "observation_id": "observation-successor",
+            "observed_at": self._iso(2_000),
+            "target_identity": successor,
+        }
+        with (
+            patch.object(fast_recovery.effect_contract, "unresolved_effect_scopes", side_effect=[unresolved, resolved]),
+            patch.object(fast_recovery.effect_contract, "read_runtime_observation", return_value=observation),
+            patch.object(
+                fast_recovery.effect_contract,
+                "reconcile_delayed_effect",
+                return_value={
+                    "ok": True,
+                    "state": "RECONCILED_EFFECT_OBSERVED",
+                    "reconciliation_id": "reconcile-delayed",
+                    "evidence_digest": "c" * 64,
+                },
+            ) as reconcile,
+        ):
+            rc, restart_mock = self._invoke_main(
+                now_ts=2_000,
+                dns_ok_value=True,
+                tcp_ok_value=True,
+                ping_results=True,
+                restart_return=(True, "must not run"),
+                youtube_warning=(True, "streamStatus=inactive", {}),
+                ffmpeg_pid=333,
+                tcp_metrics={
+                    "bytes_sent": 8_000_000,
+                    "bytes_acked": 7_900_000,
+                    "send_q": 0,
+                    "notsent": 0,
+                    "unacked": 0,
+                    "lastsnd_ms": 5,
+                    "rto_ms": 204,
+                },
+            )
+
+        self.assertEqual(rc, 0)
+        restart_mock.assert_not_called()
+        reconcile.assert_called_once()
+        self.assertEqual(self._read_state()["pending_recovery_actions"], [])
+        completed = [event for event in self._read_events() if event.get("kind") == "recovery_completed"]
+        self.assertEqual(len(completed), 1)
+        self.assertTrue(completed[0]["append_only_reconciliation"])
+        self.assertEqual(completed[0]["automatic_retry_count"], 0)
 
     def test_replay_tcp_stall_two_confirmations_restart_stream(self) -> None:
         fast_recovery.STALL_CONFIRM = 2

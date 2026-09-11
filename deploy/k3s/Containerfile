@@ -10,6 +10,8 @@ RUN apt-get update \
         ffmpeg \
         fonts-dejavu-core \
         fonts-noto-cjk \
+        fonts-noto-color-emoji \
+        fonts-noto-core \
         iproute2 \
         iputils-ping \
         kubernetes-client \

@@ -1,0 +1,212 @@
+{
+  "artifact_schema": "monitoring_v4.delivery_stateful_authority.v1",
+  "bounds": {
+    "examples": 1,
+    "max_artifact_bytes": 4194304,
+    "max_rows": 128,
+    "max_steps": 1,
+    "seed": 909100004,
+    "wall_time_sec": 600
+  },
+  "duration_sec": 0.055974,
+  "historical_anchor": {
+    "observed_at": "2026-08-12T16:48:32Z",
+    "provenance": "historical_observed",
+    "source": "runtime_delivery_watchdog",
+    "state": "good",
+    "window_id": "HR-20260813-RUNTIME-ROLLOUT"
+  },
+  "oracle": {
+    "generation_semantics": "out_of_scope",
+    "incident_policy_revision": "monitoring-v4-incident-policy-r5.1",
+    "reducer_revision": "monitoring-v4-current-reducer-r3.3",
+    "revision": "delivery-two-source-authority-oracle-r1",
+    "scope": [
+      "runtime_delivery_watchdog",
+      "rtmps_tcp"
+    ],
+    "source_policy_revision": "monitoring-v4-source-policy-r5.1"
+  },
+  "reproduction_command": "PYTHONPATH=src python3 tests/stateful_delivery_authority_harness.py --reproduce-equal-timestamp --artifact OUTPUT_ARTIFACT.json",
+  "result": {
+    "classification": "pass",
+    "db_state": {
+      "domain_current": {
+        "observed_at": "2026-08-12T16:48:32Z",
+        "reduced_at": "2026-08-12T16:48:32Z",
+        "snapshot_id": "cur:860ac0df39f428febc4f991893161980",
+        "state": "unknown",
+        "valid_until": "2026-08-12T16:49:32Z"
+      },
+      "intents": 0,
+      "observations": [
+        {
+          "observation_id": "obs:d9397bc04b652215d58d0668f71ee150",
+          "observed_at": "2026-08-12T16:48:32Z",
+          "received_at": "2026-08-12T16:48:32Z",
+          "source": "rtmps_tcp",
+          "source_event_id": "ingest-b-909100004-1",
+          "source_generation": "synthetic-generation-b",
+          "status": "bad"
+        },
+        {
+          "observation_id": "obs:6108517c4386a35baeeef41ea35ab0ac",
+          "observed_at": "2026-08-12T16:48:32Z",
+          "received_at": "2026-08-12T16:48:32Z",
+          "source": "runtime_delivery_watchdog",
+          "source_event_id": "historical-delivery-good",
+          "source_generation": "synthetic-generation-a",
+          "status": "good"
+        }
+      ],
+      "transitions": 0
+    },
+    "fixed_regression": "I4_equal_priority_disagreement_fail_closed",
+    "minimized_trace": [
+      {
+        "accepted": true,
+        "action": "historical_anchor",
+        "actual": {
+          "observed_ts": 1786553312,
+          "reason": "current_good_evidence",
+          "selected_sources": [
+            "runtime_delivery_watchdog"
+          ],
+          "state": "good",
+          "valid_until_ts": 1786553492
+        },
+        "evidence": {
+          "observed_at": "2026-08-12T16:48:32Z",
+          "provenance": "historical_observed",
+          "received_at": "2026-08-12T16:48:32Z",
+          "source": "runtime_delivery_watchdog",
+          "state": "good"
+        },
+        "expected": {
+          "reason": "current_good_evidence",
+          "selected_sources": [
+            "runtime_delivery_watchdog"
+          ],
+          "state": "good"
+        },
+        "intents": 0,
+        "logical_now": "2026-08-12T16:48:32Z",
+        "transitions": 0
+      },
+      {
+        "accepted": true,
+        "action": "ingest_source_b",
+        "actual": {
+          "observed_ts": 1786553312,
+          "reason": "source_disagreement",
+          "selected_sources": [
+            "rtmps_tcp",
+            "runtime_delivery_watchdog"
+          ],
+          "state": "unknown",
+          "valid_until_ts": 1786553372
+        },
+        "evidence": {
+          "observed_at": "2026-08-12T16:48:32Z",
+          "provenance": "synthetic",
+          "received_at": "2026-08-12T16:48:32Z",
+          "source": "rtmps_tcp",
+          "state": "bad"
+        },
+        "expected": {
+          "reason": "source_disagreement",
+          "selected_sources": [
+            "rtmps_tcp",
+            "runtime_delivery_watchdog"
+          ],
+          "state": "unknown"
+        },
+        "intents": 0,
+        "logical_now": "2026-08-12T16:48:32Z",
+        "transitions": 0
+      }
+    ]
+  },
+  "runs": [
+    {
+      "example": 0,
+      "steps": 1,
+      "trace": [
+        {
+          "accepted": true,
+          "action": "historical_anchor",
+          "actual": {
+            "observed_ts": 1786553312,
+            "reason": "current_good_evidence",
+            "selected_sources": [
+              "runtime_delivery_watchdog"
+            ],
+            "state": "good",
+            "valid_until_ts": 1786553492
+          },
+          "evidence": {
+            "observed_at": "2026-08-12T16:48:32Z",
+            "provenance": "historical_observed",
+            "received_at": "2026-08-12T16:48:32Z",
+            "source": "runtime_delivery_watchdog",
+            "state": "good"
+          },
+          "expected": {
+            "reason": "current_good_evidence",
+            "selected_sources": [
+              "runtime_delivery_watchdog"
+            ],
+            "state": "good"
+          },
+          "intents": 0,
+          "logical_now": "2026-08-12T16:48:32Z",
+          "transitions": 0
+        },
+        {
+          "accepted": true,
+          "action": "ingest_source_b",
+          "actual": {
+            "observed_ts": 1786553312,
+            "reason": "source_disagreement",
+            "selected_sources": [
+              "rtmps_tcp",
+              "runtime_delivery_watchdog"
+            ],
+            "state": "unknown",
+            "valid_until_ts": 1786553372
+          },
+          "evidence": {
+            "observed_at": "2026-08-12T16:48:32Z",
+            "provenance": "synthetic",
+            "received_at": "2026-08-12T16:48:32Z",
+            "source": "rtmps_tcp",
+            "state": "bad"
+          },
+          "expected": {
+            "reason": "source_disagreement",
+            "selected_sources": [
+              "rtmps_tcp",
+              "runtime_delivery_watchdog"
+            ],
+            "state": "unknown"
+          },
+          "intents": 0,
+          "logical_now": "2026-08-12T16:48:32Z",
+          "transitions": 0
+        }
+      ]
+    }
+  ],
+  "source_identity": {
+    "git_head": "1a76a8857db521282a2536391c2963a34aa9c199",
+    "tracked_dirty_diff_sha256": "dc398a973930c255b4cb3768de5b0f45b560041a6f2455aa8744af816e7232f0"
+  },
+  "totals": {
+    "action_count": 1,
+    "expected_perturbation_effects": 1,
+    "harness_failures": 0,
+    "oracle_gaps": 0,
+    "sut_failures": 0,
+    "unknown": 0
+  }
+}

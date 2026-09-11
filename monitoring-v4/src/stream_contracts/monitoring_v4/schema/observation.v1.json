@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "monitoring_v4.observation.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "observation_id", "domain", "source", "source_event_id", "source_generation", "evidence_role", "status", "reason_code", "observed_at", "received_at", "freshness_limit_sec", "producer_revision", "payload_sha256", "payload"],
+  "properties": {
+    "schema": {"const": "monitoring_v4.observation.v1"},
+    "observation_id": {"type": "string", "pattern": "^[a-z][a-z0-9_.-]{1,47}:[0-9a-f]{24,64}$"},
+    "domain": {"enum": ["youtube_lifecycle", "youtube_input_quality", "delivery", "rendering", "audio", "viewer_external", "monitoring_platform", "network_transport", "runtime_resource", "adsb_source", "api_quota", "recovery_policy", "notification_delivery", "control_loop"]},
+    "source": {"type": "string"},
+    "source_event_id": {"type": "string", "minLength": 1, "maxLength": 300},
+    "source_generation": {"type": "string", "minLength": 1, "maxLength": 200},
+    "evidence_role": {"enum": ["current_authoritative", "current_correlated", "supporting", "diagnostic", "historical", "formal"]},
+    "status": {"enum": ["good", "bad", "unknown", "not_applicable"]},
+    "reason_code": {"type": "string", "pattern": "^[a-z][a-z0-9_.-]{1,95}$"},
+    "observed_at": {"type": "string", "format": "date-time"},
+    "received_at": {"type": "string", "format": "date-time"},
+    "freshness_limit_sec": {"type": "integer", "minimum": 1},
+    "producer_revision": {"type": "string", "minLength": 1, "maxLength": 200},
+    "payload_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "payload": {"type": "object"}
+  }
+}

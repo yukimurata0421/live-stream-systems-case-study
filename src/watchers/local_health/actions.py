@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Callable
 
+from maintenance_audit import audit_maintenance_decision
+
 
 @dataclass(frozen=True)
 class RestartActionContext:
@@ -25,8 +27,30 @@ def restart_service(
         append_event("restart_skipped", component=context.component, reason=context.reason, unit=context.unit)
         return False
     event_id = append_event("restart_trigger", component=context.component, reason=context.reason, unit=context.unit)
+    audit_maintenance_decision(
+        path_id="MP-06",
+        phase="ADMISSION",
+        operation="restart_service",
+        path_role="NORMAL_MUTATOR",
+        process_service="stream-v3-arena-monitor.service",
+        resource_identity=context.unit,
+        correlation_id=event_id,
+        in_flight_evidence={"status": "PROPOSED", "count": 0, "source": "watchdog restart event and call stack"},
+        generation_evidence={"status": "CONFIRMED", "event_id": event_id, "source": "watchdog event ledger"},
+    )
     write_restart_reason(context.component, context.reason, context.unit, event_id)
     log(f"Restarting {context.unit}: {context.reason}")
+    audit_maintenance_decision(
+        path_id="MP-06",
+        phase="EFFECT_BOUNDARY",
+        operation="restart_service",
+        path_role="NORMAL_MUTATOR",
+        process_service="stream-v3-arena-monitor.service",
+        resource_identity=context.unit,
+        correlation_id=event_id,
+        in_flight_evidence={"status": "PROPOSED", "count": 1, "source": "supervisor/systemctl call about to begin"},
+        generation_evidence={"status": "CONFIRMED", "event_id": event_id, "source": "watchdog event ledger"},
+    )
     if supervisor is not None:
         result = supervisor.restart(context.unit, reason=context.reason)
         if result.ok:

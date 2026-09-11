@@ -1,0 +1,127 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: monitoring-v4-reporter
+  namespace: stream-monitoring-v4
+  labels:
+    app.kubernetes.io/name: monitoring-v4-reporter
+    app.kubernetes.io/component: reporter
+    app.kubernetes.io/part-of: stream-monitoring-v4
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: monitoring-v4-reporter
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: monitoring-v4-reporter
+        app.kubernetes.io/component: reporter
+        app.kubernetes.io/part-of: stream-monitoring-v4
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: reporter
+          image: __APP_IMAGE__
+          imagePullPolicy: Never
+          args:
+            - stream_monitoring_v4.commands.wall_clock_loop
+            - --second
+            - "50"
+            - --minute-modulo
+            - "5"
+            - --timeout-sec
+            - "40"
+            - --ready-file
+            - /tmp/reporter-ready
+            - --heartbeat-file
+            - /tmp/reporter-heartbeat
+            - --
+            - python
+            - -m
+            - stream_monitoring_v4.commands.shadow_report
+            - --postgres
+            - --build-revision
+            - __BUILD_REVISION__
+            - --source-revision-file
+            - /source-state/deployed-revision.env
+            - --output
+            - /v4-report/shadow-evidence-report.json
+          startupProbe:
+            exec:
+              command:
+                - sh
+                - -ec
+                - 'test -r /tmp/reporter-heartbeat && now=$(date +%s) && seen=$(sed -n "1p" /tmp/reporter-heartbeat) && test "$seen" -le "$now" && test $((now-seen)) -le 60'
+            periodSeconds: 5
+            timeoutSeconds: 1
+            failureThreshold: 90
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -ec
+                - 'test -r /tmp/reporter-ready && now=$(date +%s) && seen=$(sed -n "1p" /tmp/reporter-ready) && test "$seen" -le "$now" && test $((now-seen)) -le 420'
+            periodSeconds: 15
+            timeoutSeconds: 1
+            failureThreshold: 2
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -ec
+                - 'test -r /tmp/reporter-heartbeat && now=$(date +%s) && seen=$(sed -n "1p" /tmp/reporter-heartbeat) && test "$seen" -le "$now" && test $((now-seen)) -le 90'
+            periodSeconds: 30
+            timeoutSeconds: 1
+            failureThreshold: 3
+          envFrom:
+            - configMapRef:
+                name: database-connection
+          env:
+            - name: PGUSER
+              value: v4_reporter_ro
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: database-roles
+                  key: reporter-password
+          resources:
+            requests:
+              cpu: 25m
+              memory: 96Mi
+            limits:
+              cpu: 250m
+              memory: 192Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: source-state
+              mountPath: /source-state
+              readOnly: true
+            - name: v4-report
+              mountPath: /v4-report
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: source-state
+          hostPath:
+            path: /var/lib/stream-monitoring-v4/.state/k3s/source-safe
+            type: Directory
+        - name: v4-report
+          hostPath:
+            path: /var/lib/stream-monitoring-v4/.state/k3s/report
+            type: Directory
+        - name: tmp
+          emptyDir: {}

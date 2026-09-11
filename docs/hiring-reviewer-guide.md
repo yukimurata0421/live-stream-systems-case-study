@@ -44,10 +44,11 @@ Read:
 
 1. the [`SLI and dashboard model`](v3/sli-and-dashboard.md);
 2. the [`TCP stall case study`](v3/tcp-stall-case-study.md);
-3. [`why central restart authority exists`](../recovery-control/docs/why-cra.md);
-4. the [`three-host recovery architecture`](../recovery-control/docs/architecture.md);
-5. the [`harness trust boundary`](../recovery-control/docs/harness-trust.md);
-6. the [`operational scorecard`](operational-scorecard.md).
+3. the [`Monitoring v4 arena architecture`](../monitoring-v4/docs/architecture.md);
+4. [`why central restart authority exists`](../recovery-control/docs/why-cra.md);
+5. the [`three-host recovery architecture`](../recovery-control/docs/architecture.md);
+6. the [`harness trust boundary`](../recovery-control/docs/harness-trust.md);
+7. the [`operational scorecard`](operational-scorecard.md).
 
 For the implementation history behind that route, continue with the
 [`rolling SLI feedback rules`](v3/rolling-sli-error-budget-feedback.md),
@@ -62,6 +63,8 @@ Evaluate whether:
   remain separate;
 - observed duplicate restart scopes justify central authority rather than only
   a request-level retry guard;
+- Monitoring v4 emits evidence and notification intents without acquiring
+  recovery command authority;
 - durable intent, exact-target effect fences, and reconciliation keep an
   ambiguous outcome from authorizing another physical attempt;
 - harness results keep SUT failure, harness failure, missing evidence, and

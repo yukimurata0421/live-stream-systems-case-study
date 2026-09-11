@@ -61,7 +61,7 @@ class OverlayPrecipitationStateTests(unittest.TestCase):
             self.skipTest("Chromium is not installed")
 
         source = OVERLAY_HTML.read_text(encoding="utf-8")
-        start = source.index("function responseContentTypeIncludes")
+        start = source.index("const MUSIC_PROVIDERS")
         end = source.index("function setPrecipitationState", start)
         state_functions = source[start:end]
         harness = f"""<!doctype html>
@@ -112,6 +112,20 @@ const fallbackValidated = validatedPrecipitationPayloads(
   {{now: 123, aircraft: []}},
 );
 const results = {{
+  musicProviderNcs: musicProviderFor({{source_filename: "minor_NCS track.mp3"}}, "NCS Track").id,
+  musicProviderFloracoreFilename: musicProviderFor(
+    {{source_filename: "minor_Floracore - Scabiosa Riddle.mp3"}},
+    "Floracore - Scabiosa Riddle",
+  ).id,
+  musicProviderFloracorePath: musicProviderFor(
+    {{source_path: "/music/floracore_evening/tracks/Floracore - Lotus Awakening.mp3"}},
+    "Lotus Awakening",
+  ).id,
+  musicProviderOverride: musicProviderFor({{}}, "Unknown", "floracore").id,
+  floracoreCredit: musicProviderFor({{}}, "Floracore - Test").credit,
+  repairedMojibakeTitle: repairMojibakeTitle("NXGHT - DANÃ‡A DO VERÃƒO | Phonk"),
+  repairedMixedUnicodeTitle: repairMojibakeTitle("DANÃ‡A DO VERÃƒO | デイドリーム"),
+  preservedUnicodeTitle: repairMojibakeTitle("NXGHT - DANÇA DO VERÃO | デイドリーム ♥️ 🔥"),
   validNowPlayingSnapshot: validNowPlayingSnapshot({{now_playing: {{title: "Track"}}}}),
   invalidNowPlayingSnapshot: validNowPlayingSnapshot({{now: 123, aircraft: []}}),
   validNowPlayingText: validNowPlayingText("Now Playing: Track"),
@@ -165,6 +179,14 @@ document.getElementById("result").textContent = JSON.stringify(results);
         self.assertEqual(
             results,
             {
+                "musicProviderNcs": "ncs",
+                "musicProviderFloracoreFilename": "floracore",
+                "musicProviderFloracorePath": "floracore",
+                "musicProviderOverride": "floracore",
+                "floracoreCredit": "Music provided by @Floracore_EDM",
+                "repairedMojibakeTitle": "NXGHT - DANÇA DO VERÃO | Phonk",
+                "repairedMixedUnicodeTitle": "DANÇA DO VERÃO | デイドリーム",
+                "preservedUnicodeTitle": "NXGHT - DANÇA DO VERÃO | デイドリーム ♥️ 🔥",
                 "validNowPlayingSnapshot": True,
                 "invalidNowPlayingSnapshot": False,
                 "validNowPlayingText": True,

@@ -89,6 +89,17 @@ class PublicPublisherBuildTests(unittest.TestCase):
             self.assertEqual((public / "stream-v3-prometheus.html").read_text(), "prom\n")
             self.assertEqual((public / "stream-v3-loki.html").read_text(), "loki\n")
 
+    def test_build_forces_one_reliability_evaluation_per_run(self) -> None:
+        build = load_script("build_public.py")
+        collector = build.SITE_DIR / "scripts" / "collect_reliability.py"
+        with mock.patch.object(build.subprocess, "run") as run:
+            build.run_reliability_collect()
+
+        run.assert_called_once_with(
+            [build.sys.executable, str(collector), "--force"],
+            check=True,
+        )
+
     def test_push_builds_then_syncs_and_sets_cache_control(self) -> None:
         push = load_script("push_to_gcs.py")
         push.DEST = "gs://public-status-test/site"

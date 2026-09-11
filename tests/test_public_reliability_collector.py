@@ -88,12 +88,15 @@ def raw_report() -> dict:
         "assessment_scope": "supporting_only",
         "evidence_units_separated": True,
     }
+    upload_week = summary(96.826, 99.0, observed=10_081, bad=320)
+    upload_week["max_value"] = 5.219
     return {
         "generated_at_utc": "2026-08-10T10:00:00Z",
         "metric_errors": {},
         "windows": {
             "24h": {"upload_ceiling": summary(100.0, 99.0, observed=1441, bad=0)},
             "7d": {
+                "upload_ceiling": upload_week,
                 "youtube_availability": availability_root,
                 "youtube_input_quality": input_quality,
                 "audio_correctness": summary(100.0, 99.5, bad=0),
@@ -109,10 +112,24 @@ class PublicReliabilityCollectorTests(unittest.TestCase):
         collector = load_collector()
         payload = collector.build_public_payload(raw_report())
         self.assertEqual(payload["schema"], "stream-v3-reliability-public.v4")
+        self.assertEqual(collector.DEFAULT_CACHE_SEC, 60)
+        self.assertEqual(payload["cadence_sec"], 60)
         self.assertEqual(len(payload["items"]), 6)
         self.assertNotIn("status", payload)
         self.assertTrue(all("status" not in item and "state" not in item for item in payload["items"]))
         self.assertNotIn("prometheus", str(payload).lower())
+
+    def test_upload_card_uses_seven_day_trend(self) -> None:
+        collector = load_collector()
+        payload = collector.build_public_payload(raw_report())
+        item = next(row for row in payload["items"] if row["id"] == "upload_within_ceiling")
+        facts = {row["label"]: row["value"] for row in item["facts"]}
+        self.assertEqual(item["window"], "rolling 7d")
+        self.assertEqual(item["value"], 96.826)
+        self.assertEqual(facts["Observed"], 10_081.0)
+        self.assertEqual(facts["Bad samples"], 320.0)
+        self.assertEqual(facts["Max p95"], 5.219)
+        self.assertIn("formal upload SLO window remains rolling 24h", item["note"])
 
     def test_input_quality_uses_duration_and_keeps_recovery_warnings_separate(self) -> None:
         collector = load_collector()

@@ -114,6 +114,7 @@ def terminate_stale_pids(
     log: Callable[[str], None],
     kill: Callable[[int, int], None] = os.kill,
     sleep: Callable[[float], None] = time.sleep,
+    before_kill: Callable[[str, int, int], None] | None = None,
 ) -> None:
     unique_pids = sorted({pid for pid in pids if pid > 1 and pid != current_pid})
     if not unique_pids:
@@ -122,6 +123,11 @@ def terminate_stale_pids(
         log(f"Terminating stale {label} helper pid={pid}")
         append_event("stale_capture_helper_kill", helper=label, pid=pid, signal="TERM")
         try:
+            if before_kill is not None:
+                try:
+                    before_kill(label, pid, signal.SIGTERM)
+                except BaseException:
+                    pass
             kill(pid, signal.SIGTERM)
         except OSError:
             pass
@@ -132,6 +138,11 @@ def terminate_stale_pids(
         log(f"Force-killing stale {label} helper pid={pid}")
         append_event("stale_capture_helper_kill", helper=label, pid=pid, signal="KILL")
         try:
+            if before_kill is not None:
+                try:
+                    before_kill(label, pid, signal.SIGKILL)
+                except BaseException:
+                    pass
             kill(pid, getattr(signal, "SIGKILL", signal.SIGTERM))
         except OSError:
             pass

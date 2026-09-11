@@ -205,6 +205,55 @@ class OperationalReliabilityTests(unittest.TestCase):
 
         self.assertNotIn("resolver:fast_mode_active_or_runaway", {item["id"] for item in found})
 
+    def test_collect_deduplicates_same_burn_incident_from_rollup_and_fast_status(self) -> None:
+        observe_payload = {
+            "pass": True,
+            "checks": {"current_fail": False, "youtube_current_degraded": False},
+            "api_report_judgment": "ok",
+            "fast_mode_judgment": "ok_none",
+            "encoder_gap_enable_auto_stop_false_judgment": "ok_none",
+            "remote_warning_restart_judgment": "ok_single_or_none",
+            "stream_engine_ffmpeg_exit_224_judgment": "ok_single_or_none",
+            "public_probe_judgment": "ok_none",
+        }
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            rollup_file = root / "operational_reliability_status.json"
+            burn_file = root / "operational_reliability_burn_status.json"
+            common = {
+                "checked_at_utc": "2026-08-10T00:10:00Z",
+                "fast_feedback": {},
+                "formal_gates": {},
+                "multi_window_burn_alerts": [
+                    {
+                        "family": "upload_ceiling",
+                        "severity": "critical",
+                        "rule": "fast_15m_1h",
+                        "burn_rates": {"15m": 1.0},
+                    }
+                ],
+            }
+            rollup_file.write_text(json.dumps(common), encoding="utf-8")
+            burn_payload = json.loads(json.dumps(common))
+            burn_payload["multi_window_burn_alerts"][0]["burn_rates"] = {"15m": 2.0}
+            burn_file.write_text(json.dumps(burn_payload), encoding="utf-8")
+
+            found = incidents.collect_notification_incidents(
+                observe_payload=lambda _hours: (0, observe_payload, ""),
+                stream1090_report_events_file=root / "stream1090.jsonl",
+                upstream_report_events_file=root / "upstream.jsonl",
+                operational_reliability_status_file=rollup_file,
+                operational_reliability_burn_status_file=burn_file,
+                now_ts=1_786_320_600,
+                bootstrap_grace_active=True,
+            )
+
+        matches = [
+            item for item in found if item["id"] == "reliability:upload_ceiling_multi_window_burn"
+        ]
+        self.assertEqual(len(matches), 1)
+        self.assertIn("'15m': 2.0", matches[0]["evidence"])
+
     def test_notification_release_keeps_inline_single_writer_and_arena_state(self) -> None:
         deploy = (ROOT / "ops" / "scripts" / "deploy_stream_v3_monitoring_release.sh").read_text(
             encoding="utf-8"
@@ -499,6 +548,12 @@ class OperationalReliabilityTests(unittest.TestCase):
         self.assertEqual(
             next(item for item in found if item["id"].endswith("multi_window_burn"))["severity"],
             "critical",
+        )
+        self.assertEqual(
+            next(item for item in found if item["id"].endswith("coverage_or_freshness"))[
+                "repeat_sec"
+            ],
+            3600,
         )
 
     def test_historical_formal_disagreement_does_not_repeat_as_current_incident(self) -> None:

@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "monitoring_v4.notification_intent.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "intent_id", "transition_id", "episode_id", "route", "phase", "severity", "created_at", "not_before", "subject", "content", "dedupe_key", "route_policy_revision", "template_revision"],
+  "properties": {
+    "schema": {"const": "monitoring_v4.notification_intent.v1"},
+    "intent_id": {"type": "string", "pattern": "^[a-z][a-z0-9_.-]{1,47}:[0-9a-f]{24,64}$"},
+    "transition_id": {"type": "string", "pattern": "^[a-z][a-z0-9_.-]{1,47}:[0-9a-f]{24,64}$"},
+    "episode_id": {"type": "string", "pattern": "^[a-z][a-z0-9_.-]{1,47}:[0-9a-f]{24,64}$"},
+    "route": {"type": "string"},
+    "phase": {"enum": ["detected", "repeat", "recovered"]},
+    "severity": {"enum": ["info", "warning", "critical"]},
+    "created_at": {"type": "string", "format": "date-time"},
+    "not_before": {"type": "string", "format": "date-time"},
+    "subject": {"type": "string", "minLength": 1, "maxLength": 200},
+    "content": {"type": "string", "minLength": 1, "maxLength": 4000},
+    "dedupe_key": {"type": "string", "minLength": 1, "maxLength": 300},
+    "route_policy_revision": {"type": "string", "minLength": 1, "maxLength": 200},
+    "template_revision": {"type": "string", "minLength": 1, "maxLength": 200}
+  }
+}

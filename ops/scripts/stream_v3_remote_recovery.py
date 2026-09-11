@@ -23,6 +23,7 @@ SRC_DIR = Path(__file__).resolve().parents[2] / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
+from maintenance_audit import audit_maintenance_decision
 from stream_core.k8s_gpu_guard import (
     runtime_node_name,
     summarize_runtime_gpu,
@@ -233,11 +234,22 @@ def runtime_startup_restart_blocked(workload: str) -> tuple[bool, str]:
     )
 
 
-def restart_workload(workload: str, reason: str) -> bool:
+def restart_workload(workload: str, reason: str, *, correlation_id: str = "") -> bool:
     command = [KUBECTL, "-n", NAMESPACE, "rollout", "restart", workload]
     if not APPLY:
         log(f"plan restart {workload}: {reason}: {' '.join(command)}")
         return True
+    audit_maintenance_decision(
+        path_id="MP-04",
+        phase="EFFECT_BOUNDARY",
+        operation="restart_deployment",
+        path_role="NORMAL_MUTATOR",
+        process_service="stream-v3-remote-recovery.service",
+        resource_identity=f"{NAMESPACE}/{workload}",
+        correlation_id=correlation_id,
+        in_flight_evidence={"status": "PROPOSED", "count": 1, "source": "oneshot process around kubectl call"},
+        generation_evidence={"status": "PROPOSED", "source": "remote recovery state/event identity"},
+    )
     cp = run(command)
     ok = cp.returncode == 0
     detail = (cp.stdout or cp.stderr).strip()
@@ -296,7 +308,19 @@ def maybe_restart(workload: str, reason: str, state: dict[str, Any], now: int) -
         state[f"last_gpu_restart_block_reason:{workload}"] = gpu_detail
         save_state(state)
         return True
-    ok = restart_workload(workload, reason)
+    correlation_id = f"remote-workload-{workload}-{now}"
+    audit_maintenance_decision(
+        path_id="MP-04",
+        phase="ADMISSION",
+        operation="restart_deployment",
+        path_role="NORMAL_MUTATOR",
+        process_service="stream-v3-remote-recovery.service",
+        resource_identity=f"{NAMESPACE}/{workload}",
+        correlation_id=correlation_id,
+        in_flight_evidence={"status": "PROPOSED", "count": 0, "source": "oneshot process after policy/cooldown/preflight"},
+        generation_evidence={"status": "PROPOSED", "source": "remote recovery state/event identity"},
+    )
+    ok = restart_workload(workload, reason, correlation_id=correlation_id)
     if ok and APPLY:
         state[key] = now
         save_state(state)
@@ -341,14 +365,26 @@ def action_plan_blocker(plan: dict[str, Any], state: dict[str, Any], now: int) -
 
 
 def execute_action_plan(plan: dict[str, Any], state: dict[str, Any], now: int) -> bool:
-    blocker = action_plan_blocker(plan, state, now)
     action = str(plan.get("action") or "")
+    event_id = str(plan.get("event_id") or "")
+    correlation_id = f"arena-{event_id or now}-{action or 'none'}"
+    audit_maintenance_decision(
+        path_id="MP-04",
+        phase="ACTION_PLAN_CREATED",
+        operation=action or "none",
+        path_role="NORMAL_MUTATOR",
+        process_service="stream-v3-remote-recovery.service",
+        resource_identity=f"{NAMESPACE}/{RUNTIME_DEPLOYMENT}",
+        correlation_id=correlation_id,
+        in_flight_evidence={"status": "PROPOSED", "count": 0, "source": "recovery_action_plan.json"},
+        generation_evidence={"status": "CONFIRMED" if event_id else "MISSING", "event_id": event_id},
+    )
+    blocker = action_plan_blocker(plan, state, now)
     if blocker:
         if blocker != "no_action":
             log(f"skip action-plan action={action or '-'}: {blocker}")
         return True
     helper_action = ACTION_TO_SCOPED_HELPER[action]
-    event_id = str(plan.get("event_id") or "")
     reason = f"action_plan:{event_id or 'no_event'}:{action}"
     command = [
         sys.executable,
@@ -358,9 +394,38 @@ def execute_action_plan(plan: dict[str, Any], state: dict[str, Any], now: int) -
         reason,
         "--timeout-sec",
         str(max(5.0, ACTION_TIMEOUT_SEC)),
+        "--action-id",
+        f"arena-{event_id or now}-{action}",
+        "--controller-id",
+        "arena_remote_recovery",
+        "--execution-mode",
+        "execute" if APPLY else "dry_run",
     ]
     if not APPLY:
         command.append("--dry-run")
+    audit_maintenance_decision(
+        path_id="MP-04",
+        phase="ADMISSION",
+        operation=action,
+        path_role="NORMAL_MUTATOR",
+        process_service="stream-v3-remote-recovery.service",
+        resource_identity=f"{NAMESPACE}/{RUNTIME_DEPLOYMENT}",
+        correlation_id=correlation_id,
+        in_flight_evidence={"status": "PROPOSED", "count": 0, "source": "validated action plan before helper spawn"},
+        generation_evidence={"status": "CONFIRMED" if event_id else "MISSING", "event_id": event_id},
+    )
+    if APPLY:
+        audit_maintenance_decision(
+            path_id="MP-04",
+            phase="EFFECT_BOUNDARY",
+            operation=action,
+            path_role="NORMAL_MUTATOR",
+            process_service="stream-v3-remote-recovery.service",
+            resource_identity=f"{NAMESPACE}/{RUNTIME_DEPLOYMENT}",
+            correlation_id=correlation_id,
+            in_flight_evidence={"status": "PROPOSED", "count": 1, "source": "scoped recovery subprocess about to spawn"},
+            generation_evidence={"status": "CONFIRMED" if event_id else "MISSING", "event_id": event_id},
+        )
     cp = run(command)
     detail = (cp.stdout or cp.stderr or "").strip()
     ok = cp.returncode == 0

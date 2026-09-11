@@ -28,6 +28,13 @@ def build_fast_recovery_restart_context(
     emergency_low_upload_video_maxrate: str,
     emergency_low_upload_video_bufsize: str,
     emergency_low_upload_audio_bitrate: str,
+    recovery_action_id: str = "",
+    controller_id: str = "",
+    execution_mode: str = "",
+    execute: bool | None = None,
+    idempotency_key: str = "",
+    requested_signal: str = "",
+    recovery_scope: str = "",
 ) -> dict[str, Any]:
     profile = low_upload_profile_from_trigger(
         reason_kind=reason_kind,
@@ -51,9 +58,15 @@ def build_fast_recovery_restart_context(
         ffmpeg_uptime_sec=ffmpeg_uptime_sec,
         metrics=metrics,
         emergency_low_upload_profile=profile,
+        recovery_action_id=recovery_action_id,
+        controller_id=controller_id,
+        execution_mode=execution_mode,
+        execute=execute,
+        idempotency_key=idempotency_key,
+        requested_signal=requested_signal,
+        recovery_scope=recovery_scope,
     )
 
 
 def write_fast_recovery_restart_context(path: Path, payload: dict[str, Any]) -> None:
     write_context(path, payload)
-

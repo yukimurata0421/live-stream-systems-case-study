@@ -349,6 +349,94 @@ class YouTubeApiQuotaResetTests(unittest.TestCase):
         self.assertTrue(active)
         self.assertTrue(bool(state.get("quota_exhausted", False)))
 
+    def test_probe_with_oauth_retries_one_transient_live_streams_503(self) -> None:
+        transient = HTTPError(
+            url="https://www.googleapis.com/youtube/v3/liveStreams",
+            code=503,
+            msg="Service Unavailable",
+            hdrs=None,
+            fp=io.BytesIO(b'{"error":{"code":503,"status":"UNAVAILABLE"}}'),
+        )
+        self.addCleanup(transient.close)
+        broadcasts = {
+            "items": [
+                {
+                    "id": "BROADCAST",
+                    "snippet": {"resourceId": {"videoId": "VIDEO"}},
+                    "contentDetails": {"boundStreamId": "STREAM"},
+                    "status": {"lifeCycleStatus": "live"},
+                }
+            ]
+        }
+        streams = {
+            "items": [
+                {
+                    "id": "STREAM",
+                    "status": {
+                        "streamStatus": "active",
+                        "healthStatus": {"status": "good", "configurationIssues": []},
+                    },
+                }
+            ]
+        }
+        with mock.patch.object(youtube_api, "OAUTH_ENABLE", True):
+            with mock.patch.object(youtube_api, "oauth_is_configured", return_value=True):
+                with mock.patch.object(
+                    youtube_api,
+                    "get_oauth_access_token",
+                    return_value=("token", 2_000_000_000, "ok"),
+                ):
+                    with mock.patch.object(
+                        youtube_api,
+                        "youtube_live_api_get",
+                        side_effect=[broadcasts, transient, streams],
+                    ) as api_get:
+                        with mock.patch.object(youtube_api.time, "sleep") as sleep:
+                            result = youtube_api.probe_with_oauth()
+        self.assertTrue(result.probe_ok)
+        self.assertTrue(result.healthy)
+        self.assertIn("liveStreamsTransientRetries=1", result.reason)
+        self.assertEqual(api_get.call_count, 3)
+        sleep.assert_called_once_with(youtube_api.OAUTH_LIVE_STREAMS_RETRY_DELAY_SEC)
+
+    def test_probe_with_oauth_does_not_retry_non_transient_live_streams_error(self) -> None:
+        forbidden = HTTPError(
+            url="https://www.googleapis.com/youtube/v3/liveStreams",
+            code=403,
+            msg="Forbidden",
+            hdrs=None,
+            fp=io.BytesIO(b'{"error":{"code":403,"status":"PERMISSION_DENIED"}}'),
+        )
+        self.addCleanup(forbidden.close)
+        broadcasts = {
+            "items": [
+                {
+                    "id": "BROADCAST",
+                    "snippet": {"resourceId": {"videoId": "VIDEO"}},
+                    "contentDetails": {"boundStreamId": "STREAM"},
+                    "status": {"lifeCycleStatus": "live"},
+                }
+            ]
+        }
+        with mock.patch.object(youtube_api, "OAUTH_ENABLE", True):
+            with mock.patch.object(youtube_api, "oauth_is_configured", return_value=True):
+                with mock.patch.object(
+                    youtube_api,
+                    "get_oauth_access_token",
+                    return_value=("token", 2_000_000_000, "ok"),
+                ):
+                    with mock.patch.object(
+                        youtube_api,
+                        "youtube_live_api_get",
+                        side_effect=[broadcasts, forbidden],
+                    ) as api_get:
+                        with mock.patch.object(youtube_api.time, "sleep") as sleep:
+                            result = youtube_api.probe_with_oauth()
+        self.assertFalse(result.probe_ok)
+        self.assertIn("http 403", result.reason)
+        self.assertEqual(api_get.call_count, 2)
+        sleep.assert_not_called()
+
     def test_youtube_live_api_post_logs_and_latches_quota_exceeded_on_http_403(self) -> None:
         body = json.dumps(
             {

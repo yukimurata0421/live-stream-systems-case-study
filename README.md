@@ -19,7 +19,7 @@ a supported streaming product or general-purpose starter.
 ## 30-Second Summary
 
 `stream_v3` is a self-built 24/7 YouTube Live pipeline for ADS-B visualization
-and NCS music. Its current renderer combines a track-free custom MapLibre map,
+and credited provider-aware music. Its current renderer combines a track-free custom MapLibre map,
 analysis-only JMA precipitation with bounded last-known-good handling, locally
 calculated time-of-day base-map transitions, and explicit render readiness. The
 engineering focus is same-watch-URL continuity, SLI-based monitoring, fault
@@ -39,13 +39,13 @@ The public data path historically spans three home hosts:
 - a Raspberry Pi pulls allowlisted evidence through its local Grafana proxy and
   publishes a static snapshot to GCS, which Cloudflare serves publicly.
 
-The integrated [recovery-control subproject](recovery-control/README.md) adds
-two named logical roles: `arena-server` owns Monitoring facts and `cra-01` owns
-recovery policy, authorization, command lifecycle, and final verification.
-Dell owns only the exact fenced FFmpeg-child effect. Its
-[design rationale](recovery-control/docs/why-cra.md) traces that split to
-observed duplicate restart scopes. This repository does not claim that the CRA
-path is deployed or production-enabled.
+The integrated [Monitoring v4 subsystem](monitoring-v4/README.md) gives
+`arena-server` typed current state, incident evidence, notification intents,
+and a facts-only projection. The sibling [recovery-control subproject](recovery-control/README.md) gives `cra-01`
+recovery policy and command lifecycle while Dell keeps only the exact fenced
+FFmpeg-child effect. The [design rationale](recovery-control/docs/why-cra.md)
+traces this split to observed duplicate restart scopes; neither subtree claims
+that public source is deployed or production-authorized.
 
 This is a single-operator system with a small blast radius. Its value is the
 explicit evidence and safety boundaries, not enterprise scale.

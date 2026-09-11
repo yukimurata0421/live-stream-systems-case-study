@@ -1,0 +1,118 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: monitoring-v4-youtube-api-collector
+  namespace: stream-monitoring-v4
+  labels:
+    app.kubernetes.io/name: monitoring-v4-youtube-api-collector
+    app.kubernetes.io/component: youtube-api-collector
+    app.kubernetes.io/part-of: stream-monitoring-v4
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: monitoring-v4-youtube-api-collector
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: monitoring-v4-youtube-api-collector
+        app.kubernetes.io/component: youtube-api-collector
+        app.kubernetes.io/part-of: stream-monitoring-v4
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      terminationGracePeriodSeconds: 20
+      containers:
+        - name: youtube-api-collector
+          image: __APP_IMAGE__
+          imagePullPolicy: Never
+          args:
+            - stream_monitoring_v4.commands.youtube_api_collector
+            - --credentials-dir
+            - /var/run/secrets/youtube-api-oauth
+            - --output
+            - /api-output/youtube_api_evidence.json
+            - --interval-sec
+            - "120"
+            - --maximum-backoff-sec
+            - "900"
+            - --timeout-sec
+            - "10"
+            - --ready-file
+            - /tmp/youtube-api-ready
+            - --heartbeat-file
+            - /tmp/youtube-api-heartbeat
+          startupProbe:
+            exec:
+              command:
+                - sh
+                - -ec
+                - 'test -r /tmp/youtube-api-heartbeat && now=$(date +%s) && seen=$(sed -n "1p" /tmp/youtube-api-heartbeat) && test "$seen" -le "$now" && test $((now-seen)) -le 90'
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 36
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -ec
+                - 'test -r /tmp/youtube-api-ready && now=$(date +%s) && seen=$(sed -n "1p" /tmp/youtube-api-ready) && test "$seen" -le "$now" && test $((now-seen)) -le 960'
+            periodSeconds: 15
+            timeoutSeconds: 2
+            failureThreshold: 2
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -ec
+                - 'test -r /tmp/youtube-api-heartbeat && now=$(date +%s) && seen=$(sed -n "1p" /tmp/youtube-api-heartbeat) && test "$seen" -le "$now" && test $((now-seen)) -le 1020'
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 2
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 25m
+              memory: 48Mi
+            limits:
+              cpu: 250m
+              memory: 160Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: oauth
+              mountPath: /var/run/secrets/youtube-api-oauth
+              readOnly: true
+            - name: api-output
+              mountPath: /api-output
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: oauth
+          secret:
+            secretName: youtube-api-oauth
+            defaultMode: 0440
+            items:
+              - key: client-id
+                path: client-id
+              - key: client-secret
+                path: client-secret
+              - key: refresh-token
+                path: refresh-token
+        - name: api-output
+          hostPath:
+            path: /var/lib/stream-monitoring-v4/.state/k3s/youtube-api-source
+            type: Directory
+        - name: tmp
+          emptyDir: {}

@@ -2,7 +2,7 @@
 
 `stream_v3` is a public reliability engineering case study for a self-built
 24/7 YouTube Live pipeline. The workload is custom MapLibre ADS-B visualization,
-analysis-only precipitation, and NCS music, but the engineering focus is the
+analysis-only precipitation, and credited provider-aware music, but the engineering focus is the
 delivery system around it: browser rendering, PulseAudio, AutoDJ, FFmpeg/NVENC,
 YouTube evidence, API quota, observability, guarded recovery, k3s runtime
 boundaries, and public-release safety.
@@ -62,7 +62,7 @@ bookmarks, embeds, and external links.
 | TCP stall diagnosis was split by evidence layer. | `docs/v3/tcp-stall-case-study.md`, `docs/v3/tcp-stall-resolution-depth.md`, `ops/scripts/wan_address_observer.py`, `ops/scripts/persistent_tcp_anchor_observer.py` |
 | Encoder/upload tuning uses measured YouTube health, not nominal bitrate alone. | `docs/v3/encoder-upload-case-study.md`, `docs/v3/encoder-fps-tuning-2026-05-31.md` |
 | Public operational evidence is reduced before publication. | `docs/v3/public-status-snapshot.md`, <https://yukimurata0421.dev/> |
-| ADS-B publication and NCS attribution are documented as constraints. | `docs/compliance-and-licensing-boundary.md` |
+| ADS-B publication and provider-specific music attribution are documented as constraints. | `docs/compliance-and-licensing-boundary.md`, `docs/v3/music-provider-and-loudness-contract.md` |
 | Public validation is non-mutating. | `.github/workflows/public-snapshot-check.yml`, `docs/test-strategy-and-safety-boundary.md` |
 | Claims can be mapped to code and tests. | `docs/implementation-review-map.md` |
 

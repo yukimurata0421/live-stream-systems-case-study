@@ -18,6 +18,12 @@ BOOT_ANNOTATION = "stream-v3.io/gpu-gate-boot-id"
 ESTABLISHED_ANNOTATION = "stream-v3.io/stream-established-boot-id"
 GATE_STATUS_FILE = Path("/var/lib/stream-v3/gpu-startup-gate.json")
 REPORT_FILE = Path("/var/lib/stream-v3/postboot-verification.json")
+EXPECTED_RUNTIME_CONTAINERS = (
+    "auto-dj",
+    "fast-recovery-loop",
+    "precipitation-fetcher",
+    "stream-engine",
+)
 
 
 def utc_now() -> str:
@@ -209,6 +215,33 @@ def container_summary(pod: dict[str, Any]) -> list[dict[str, Any]]:
     ]
 
 
+def runtime_container_contract_failure(containers: list[dict[str, Any]]) -> str:
+    expected = set(EXPECTED_RUNTIME_CONTAINERS)
+    names = [str(item.get("name") or "") for item in containers]
+    actual = set(names)
+    missing = sorted(expected - actual)
+    unexpected = sorted(actual - expected)
+    duplicate = sorted(name for name in actual if names.count(name) > 1)
+    not_ready = sorted(
+        str(item.get("name") or "") for item in containers if not item.get("ready")
+    )
+    details: list[str] = []
+    if missing:
+        details.append(f"missing={','.join(missing)}")
+    if unexpected:
+        details.append(f"unexpected={','.join(unexpected)}")
+    if duplicate:
+        details.append(f"duplicate={','.join(duplicate)}")
+    if not_ready:
+        details.append(f"not_ready={','.join(not_ready)}")
+    if len(containers) != len(EXPECTED_RUNTIME_CONTAINERS) and not details:
+        details.append(f"count={len(containers)}")
+    if not details:
+        return ""
+    expected_text = ",".join(EXPECTED_RUNTIME_CONTAINERS)
+    return f"runtime container contract failed: expected={expected_text}; {'; '.join(details)}"
+
+
 def evaluate_once(*, boot_id: str, since_epoch: int) -> dict[str, Any]:
     gate = gate_status()
     pod = runtime_pod()
@@ -261,8 +294,9 @@ def evaluate_once(*, boot_id: str, since_epoch: int) -> dict[str, Any]:
         failures.append("runtime Pod was not marked established for the current boot")
     if gates:
         failures.append("runtime Pod still has a scheduling gate")
-    if len(containers) != 3 or not all(item["ready"] for item in containers):
-        failures.append("not all three runtime containers are ready")
+    container_contract_failure = runtime_container_contract_failure(containers)
+    if container_contract_failure:
+        failures.append(container_contract_failure)
     if any(item["restart_count"] != 0 for item in containers):
         failures.append("a runtime container restarted after boot")
     if not readiness.get("ready"):
@@ -290,6 +324,7 @@ def evaluate_once(*, boot_id: str, since_epoch: int) -> dict[str, Any]:
             "uid": metadata.get("uid"),
             "phase": pod.get("status", {}).get("phase"),
             "containers": containers,
+            "expected_container_names": list(EXPECTED_RUNTIME_CONTAINERS),
             "gate_release_boot_id": annotations.get(BOOT_ANNOTATION),
             "established_boot_id": annotations.get(ESTABLISHED_ANNOTATION),
         },

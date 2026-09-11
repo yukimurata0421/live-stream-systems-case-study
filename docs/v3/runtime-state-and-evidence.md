@@ -8,8 +8,10 @@ Important state paths:
 /state/now_playing.txt
 /state/overlay/now_playing.json
 /state/logs/fast_recovery_events.jsonl
+/state/logs/ffmpeg_stderr.jsonl
 /state/subsystems_status.json
 /state/recovery_action_plan.json
+/state/restart_reason.json
 /state/objective_sli.json
 ```
 
@@ -51,3 +53,21 @@ The public observer contract keeps two granularities separate:
 the recurring morning validation burst, or a persistent-anchor failure
 follow-up. This lets reviewers distinguish normal background evidence from
 incident-window attribution evidence without publishing raw private logs.
+
+## FFmpeg Exit And Recovery Evidence
+
+`src/stream_core/engine/ffmpeg_stderr.py` captures FFmpeg stderr as bounded,
+rotated JSONL while redacting RTMP stream keys. On exit, the stream engine binds
+the process generation, exit code or signal, uptime, stderr summary, latest
+matching transport sample, and any matching `recovery_action_id` into one
+event. The subsequent start records which PID and exit event it replaces.
+
+This separates an engine-requested stop, a recovery-requested stop, an
+uncorrelated signal, and an ordinary process error. It also lets the runtime
+boundary reconcile an exact request without treating a missing response as
+permission to repeat the effect.
+
+The public repository retains the implementation and test-owned fixtures, not
+generated stderr, restart-reason files, or production event JSONL. Code and
+tests prove the evidence shape and redaction behavior; they do not prove that a
+particular production exit or recovery occurred.

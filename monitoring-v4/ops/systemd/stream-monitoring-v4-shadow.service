@@ -1,0 +1,43 @@
+[Unit]
+Description=Monitoring v4 credential-free isolated shadow cycle
+After=local-fs.target
+ConditionPathIsDirectory=/opt/stream-v4/releases/current/src
+ConditionPathIsDirectory=/srv/stream-v3/.state/arena-monitor
+
+[Service]
+Type=oneshot
+User=streamv4
+Group=streamv4
+WorkingDirectory=/opt/stream-v4/releases/current
+Environment=PYTHONPATH=/opt/stream-v4/releases/current/src
+Environment=STREAM_V4_BUILD_REVISION=unversioned
+EnvironmentFile=-/var/lib/stream-monitoring-v4/.state/deployed-revision.env
+ExecStart=/usr/bin/python3 -m stream_monitoring_v4.commands.shadow_once --db /var/lib/stream-monitoring-v4/.state/monitoring-v4-shadow.sqlite3 --state-root /srv/stream-v3/.state/arena-monitor --source-repo /srv/stream-v3 --source-revision-file /srv/stream-v3/.state/arena-monitor/deployed-revision.env --public-shadow-output /var/lib/stream-monitoring-v4/.state/public-safe-shadow.json --build-revision=${STREAM_V4_BUILD_REVISION} --summary-only
+TimeoutStartSec=45
+UMask=0077
+Nice=10
+NoNewPrivileges=true
+CapabilityBoundingSet=
+AmbientCapabilities=
+PrivateDevices=true
+PrivateTmp=true
+ProtectClock=true
+ProtectControlGroups=true
+ProtectHome=read-only
+ProtectHostname=true
+ProtectKernelLogs=true
+ProtectKernelModules=true
+ProtectKernelTunables=true
+ProtectProc=invisible
+ProtectSystem=strict
+ProcSubset=pid
+ReadOnlyPaths=/srv/stream-v3 /opt/stream-v4/releases
+ReadWritePaths=/var/lib/stream-monitoring-v4/.state
+RemoveIPC=true
+RestrictAddressFamilies=AF_UNIX
+RestrictNamespaces=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+SystemCallArchitectures=native
+LockPersonality=true
+MemoryDenyWriteExecute=true

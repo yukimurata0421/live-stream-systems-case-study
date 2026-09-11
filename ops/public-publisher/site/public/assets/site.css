@@ -414,6 +414,201 @@ h2 {
   box-shadow: inset 0 3px 0 var(--bad);
 }
 
+.recovery-activity-card {
+  grid-column: span 2;
+  padding: 18px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 100% 0, rgba(76, 196, 121, .12), transparent 42%),
+    var(--surface-2);
+}
+
+.recovery-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.recovery-card-head > span:first-child {
+  color: var(--muted);
+}
+
+.recovery-coverage {
+  width: fit-content;
+  padding: 4px 7px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 9px !important;
+  letter-spacing: .08em;
+  white-space: nowrap;
+}
+
+.recovery-coverage.complete {
+  border-color: rgba(76, 196, 121, .34);
+  background: rgba(76, 196, 121, .08);
+  color: var(--ok);
+}
+
+.recovery-coverage.partial {
+  border-color: rgba(230, 184, 74, .38);
+  background: rgba(230, 184, 74, .08);
+  color: var(--warn);
+}
+
+.recovery-summary {
+  display: grid;
+  grid-template-columns: minmax(150px, .9fr) minmax(210px, 1.4fr);
+  align-items: stretch;
+  gap: 18px;
+  margin-top: 18px;
+}
+
+.recovery-total {
+  padding-right: 18px;
+  border-right: 1px solid var(--border);
+}
+
+.recovery-total strong {
+  margin: 0;
+  color: var(--text) !important;
+  font-size: 54px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -.055em;
+  line-height: .9;
+}
+
+.recovery-total span {
+  margin-top: 8px;
+  color: var(--ok);
+  font-size: 11px;
+  letter-spacing: .06em;
+}
+
+.recovery-total small {
+  margin-top: 4px;
+  color: var(--subtle);
+  font-size: 11px;
+}
+
+.recovery-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.recovery-stats div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  justify-content: center;
+  padding: 12px;
+  border: 1px solid rgba(184, 178, 163, .15);
+  border-radius: 7px;
+  background: rgba(16, 17, 15, .32);
+}
+
+.recovery-stats dt {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.recovery-stats dd {
+  margin: 7px 0 0;
+  color: var(--text);
+  font-size: 24px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.recovery-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 18px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.recovery-action-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.recovery-action-head span {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: .04em;
+}
+
+.recovery-action-head b {
+  color: var(--text);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.recovery-action-track {
+  height: 4px;
+  margin-top: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(184, 178, 163, .12);
+}
+
+.recovery-action-track i {
+  display: block;
+  width: var(--recovery-share);
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--ok), #84dba3);
+}
+
+.evidence-card .recovery-footnote {
+  margin-top: 14px;
+  color: var(--subtle);
+  font-size: 10px;
+}
+
+.recovery-ownership-card strong {
+  font-size: 23px;
+}
+
+.recovery-boundary-facts {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 7px 12px;
+  margin: 14px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+}
+
+.recovery-boundary-facts dt {
+  color: var(--muted);
+}
+
+.recovery-boundary-facts dd {
+  margin: 0;
+  color: var(--text);
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.recovery-ownership-card small {
+  color: var(--subtle);
+  font-size: 10px;
+  line-height: 1.5;
+}
+
 .sparkline {
   width: 100%;
   height: 42px;
@@ -503,6 +698,10 @@ h2 {
     grid-template-columns: 1fr;
   }
 
+  .recovery-activity-card {
+    grid-column: auto;
+  }
+
   .event-row {
     grid-template-columns: 1fr;
   }
@@ -521,5 +720,20 @@ h2 {
   .decision strong,
   .guard strong {
     font-size: 24px;
+  }
+
+  .recovery-summary {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .recovery-total {
+    padding: 0 0 14px;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .recovery-actions {
+    grid-template-columns: 1fr;
   }
 }

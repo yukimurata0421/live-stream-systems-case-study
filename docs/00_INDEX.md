@@ -74,6 +74,7 @@ Use the rest of this page as a reference catalog.
 - `v3/migration-cutover-case-study.md`
 - `v3/failure-taxonomy.md`
 - `v3/visual-audio-health-model.md`
+- `v3/music-provider-and-loudness-contract.md`
 - `v3/memory-guard-case-study.md`
 - `v3/notification-and-auto-recovery.md`
 - `v3/notification-diagnostic-boundary.md`
@@ -81,6 +82,16 @@ Use the rest of this page as a reference catalog.
 - `v3/runbooks.md`
 - `v3/open-followups.md`
 - `v3/failure-injection-and-chaos-draft.md`
+
+## Monitoring v4 / arena-server
+
+- `../monitoring-v4/README.md`
+- `../monitoring-v4/docs/architecture.md`
+- `../monitoring-v4/docs/hardening.md`
+- `../monitoring-v4/docs/harness-engineering-draft.md`
+- `../monitoring-v4/docs/soak-checkpoints.md`
+- `../monitoring-v4/docs/status.md`
+- `../monitoring-v4/docs/public-release.md`
 
 ## Design Review
 

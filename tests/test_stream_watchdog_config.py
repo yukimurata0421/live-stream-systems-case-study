@@ -509,6 +509,65 @@ class StreamWatchdogConfigTests(unittest.TestCase):
         self.assertEqual(append_event.call_args.args[0], "restart_blocked_startup")
         self.assertEqual(record_stats.call_args.args[0], "warmup_grace")
 
+    def test_remote_only_watchdog_defers_restart_during_transient_unready(self) -> None:
+        stream_status = mock.Mock(active=False, detail="desired=1 ready=0 available=0")
+        dj_status = mock.Mock(active=False, detail="desired=1 ready=0 available=0")
+        supervisor = mock.Mock()
+        supervisor.status.side_effect = [stream_status, dj_status]
+
+        with (
+            mock.patch.object(stream_watchdog, "runtime_supervisor_or_none", return_value=supervisor),
+            mock.patch.object(
+                stream_watchdog,
+                "runtime_startup_restart_blocked",
+                return_value=(False, "runtime previously established"),
+            ),
+            mock.patch.object(
+                stream_watchdog,
+                "runtime_unavailable_restart_deferred",
+                return_value=(True, "runtime unavailable convergence elapsed=0s grace=180s observations=1"),
+            ),
+            mock.patch.object(stream_watchdog, "append_event") as append_event,
+            mock.patch.object(stream_watchdog, "record_watchdog_stats") as record_stats,
+            mock.patch.object(stream_watchdog, "restart_service") as restart_service,
+            mock.patch.object(stream_watchdog, "log"),
+        ):
+            rc = stream_watchdog.remote_only_watchdog()
+
+        self.assertEqual(rc, 0)
+        restart_service.assert_not_called()
+        self.assertEqual(append_event.call_args.args[0], "restart_deferred_convergence")
+        self.assertEqual(record_stats.call_args.args[0], "warmup_grace")
+
+    def test_runtime_unavailable_restart_grace_requires_continuous_window(self) -> None:
+        with tempfile.TemporaryDirectory() as td, mock.patch.object(
+            stream_watchdog,
+            "K8S_RUNTIME_UNAVAILABLE_STATE_FILE",
+            Path(td) / "runtime_unavailable.json",
+        ), mock.patch.object(
+            stream_watchdog,
+            "K8S_RUNTIME_UNAVAILABLE_RESTART_GRACE_SEC",
+            180,
+        ), mock.patch.object(
+            stream_watchdog,
+            "K8S_RUNTIME_UNAVAILABLE_EPISODE_RESET_SEC",
+            300,
+        ):
+            first, _ = stream_watchdog.runtime_unavailable_restart_deferred("ready=0", now_ts=1000)
+            second, _ = stream_watchdog.runtime_unavailable_restart_deferred("ready=0", now_ts=1179)
+            elapsed, detail = stream_watchdog.runtime_unavailable_restart_deferred("ready=0", now_ts=1180)
+            stream_watchdog.clear_runtime_unavailable_restart_state(now_ts=1181)
+            state = json.loads(
+                stream_watchdog.K8S_RUNTIME_UNAVAILABLE_STATE_FILE.read_text(encoding="utf-8")
+            )
+
+        self.assertTrue(first)
+        self.assertTrue(second)
+        self.assertFalse(elapsed)
+        self.assertIn("elapsed=180s", detail)
+        self.assertFalse(state["active"])
+        self.assertEqual(state["recovered_at_ts"], 1181)
+
     def test_runtime_startup_preflight_fails_closed_when_api_is_unavailable(self) -> None:
         cp = subprocess.CompletedProcess(
             args=[],

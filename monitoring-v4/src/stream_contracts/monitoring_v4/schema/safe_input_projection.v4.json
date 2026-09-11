@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "monitoring_v4.safe_input_projection.v4",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "projected",
+    "unchanged",
+    "rejected",
+    "source_revision",
+    "generation_id",
+    "ready",
+    "credential_fields_projected",
+    "raw_state_available_to_core"
+  ],
+  "$defs": {
+    "memberName": {
+      "type": "string",
+      "enum": [
+        "youtube_watchdog_stats.json",
+        "youtube_video_id_resolver_state.json",
+        "map_runtime_status.json",
+        "subsystems_status.json",
+        "viewer_synthetic_status.json",
+        "external_blackbox_status.json",
+        "monitoring_watchdog_state.json",
+        "operational_reliability_burn_status.json",
+        "operational_reliability_status.json",
+        "network_observer.json",
+        "resource_memory.json",
+        "memory_status.json",
+        "recovery_action_plan.json",
+        "notification_state.json",
+        "adsb_freshness_state.json",
+        "youtube_api_quota_state.json",
+        "control_loop_state.json",
+        "notification_outbox_status.json",
+        "runtime_lifecycle_events.json",
+        "runtime_rollout_evidence.json",
+        "deployed-revision.env"
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "required": ["ready"],
+        "properties": {"ready": {"const": true}}
+      },
+      "then": {
+        "properties": {
+          "generation_id": {"minLength": 1},
+          "rejected": {"maxProperties": 0}
+        }
+      }
+    }
+  ],
+  "properties": {
+    "schema": {"const": "monitoring_v4.safe_input_projection.v4"},
+    "projected": {
+      "type": "array",
+      "maxItems": 21,
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/memberName"}
+    },
+    "unchanged": {
+      "type": "array",
+      "maxItems": 21,
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/memberName"}
+    },
+    "rejected": {
+      "type": "object",
+      "maxProperties": 22,
+      "propertyNames": {
+        "enum": [
+          "youtube_watchdog_stats.json",
+          "youtube_video_id_resolver_state.json",
+          "map_runtime_status.json",
+          "subsystems_status.json",
+          "viewer_synthetic_status.json",
+          "external_blackbox_status.json",
+          "monitoring_watchdog_state.json",
+          "operational_reliability_burn_status.json",
+          "operational_reliability_status.json",
+          "network_observer.json",
+          "resource_memory.json",
+          "memory_status.json",
+          "recovery_action_plan.json",
+          "notification_state.json",
+          "adsb_freshness_state.json",
+          "youtube_api_quota_state.json",
+          "control_loop_state.json",
+          "notification_outbox_status.json",
+          "runtime_lifecycle_events.json",
+          "runtime_rollout_evidence.json",
+          "deployed-revision.env",
+          ".projection-generation.json"
+        ]
+      },
+      "additionalProperties": {"type": "string", "minLength": 1, "maxLength": 100}
+    },
+    "source_revision": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 240,
+      "pattern": "^[A-Za-z0-9._@-]+$"
+    },
+    "generation_id": {"type": "string", "maxLength": 200},
+    "ready": {"type": "boolean"},
+    "credential_fields_projected": {"const": false},
+    "raw_state_available_to_core": {"const": false}
+  }
+}

@@ -114,18 +114,40 @@ class OverlayCornerContractTests(unittest.TestCase):
         self.assertIn("const jsonTitle = cleanNowPlayingTitle(np.title || np.title_line);", html)
         self.assertIn("validNowPlayingSnapshot(payload)", html)
         self.assertIn("validNowPlayingText(text)", html)
-        self.assertIn('const title = mockTitle || textTitle || jsonTitle || currentNowPlayingTitle || "Unknown title";', html)
+        self.assertIn("const title = mockTitle", html)
+        self.assertIn("? cleanNowPlayingTitle(mockTitle)", html)
+        self.assertIn(': textTitle || jsonTitle || currentNowPlayingTitle || "Unknown title";', html)
         self.assertIn("titleEl.textContent = title;", html)
+        self.assertIn("repairMojibakeTitle(String(value || \"\"))", html)
 
-    def test_overlay_parent_refresh_cadence_is_calm_by_default(self) -> None:
+    def test_overlay_uses_installed_unicode_font_family_names(self) -> None:
+        html = overlay_html()
+
+        self.assertIn('"Noto Sans CJK JP"', html)
+        self.assertIn('"Noto Color Emoji"', html)
+        self.assertNotIn('"Noto Sans JP"', html)
+
+    def test_right_panel_credit_tracks_music_provider(self) -> None:
+        html = overlay_html()
+
+        self.assertIn('id="musicProviderBadge"', html)
+        self.assertIn('id="musicCredit"', html)
+        self.assertIn('badge: "FLORACORE · EVENING"', html)
+        self.assertIn('credit: "Music provided by @Floracore_EDM"', html)
+        self.assertIn('credit: "Music provided by NoCopyrightSounds"', html)
+        self.assertIn("function musicProviderFor(nowPlaying, title, override = \"\")", html)
+        self.assertIn('const mockMusicSource = params.get("mockMusicSource");', html)
+        self.assertIn("applyMusicProvider(musicProvider);", html)
+        self.assertIn('panel.dataset.musicProvider = provider.id;', html)
+
+    def test_overlay_parent_refresh_cadence_keeps_now_playing_fast(self) -> None:
         html = overlay_html()
         self.assertIn('const ADSB_REFRESH_MS = intervalParam("adsbRefreshMs", 5_000, 1_000);', html)
-        self.assertIn('const NOW_PLAYING_REFRESH_MS = intervalParam("nowPlayingRefreshMs", 10_000, 2_000);', html)
+        self.assertIn('const NOW_PLAYING_REFRESH_MS = intervalParam("nowPlayingRefreshMs", 1_000, 1_000);', html)
         self.assertIn('const MAP_RELOAD_MIN_MS = intervalParam("mapReloadMinMs", 120_000, 30_000);', html)
         self.assertIn("setInterval(refreshAdsb, ADSB_REFRESH_MS);", html)
         self.assertIn("setInterval(refresh, NOW_PLAYING_REFRESH_MS);", html)
         self.assertNotIn("setInterval(refreshAdsb, 1000);", html)
-        self.assertNotIn("setInterval(refresh, 1000);", html)
 
     def test_overlay_avoids_rewriting_unchanged_text(self) -> None:
         html = overlay_html()

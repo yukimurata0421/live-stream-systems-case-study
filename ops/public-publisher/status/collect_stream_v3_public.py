@@ -13,10 +13,13 @@ from __future__ import annotations
 import json
 import os
 import re
+import shlex
+import subprocess
 import time
 import urllib.error
 import urllib.parse
 import urllib.request
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -34,6 +37,16 @@ PROM_TREND_WINDOW_SEC = int(os.environ.get("STREAM_V3_PROM_TREND_WINDOW_SEC", st
 PROM_TREND_STEP_SEC = int(os.environ.get("STREAM_V3_PROM_TREND_STEP_SEC", "900"))
 FRESHNESS_WARN_SEC = int(os.environ.get("STREAM_V3_PUBLIC_FRESHNESS_WARN_SEC", "180"))
 FRESHNESS_BAD_SEC = int(os.environ.get("STREAM_V3_PUBLIC_FRESHNESS_BAD_SEC", "300"))
+RECOVERY_BOUNDARY_WARN_SEC = int(os.environ.get("STREAM_V3_RECOVERY_BOUNDARY_WARN_SEC", "7200"))
+RECOVERY_ACTIVITY_DAYS = 7
+RECOVERY_ACTIVITY_QUERY_LIMIT = int(os.environ.get("STREAM_V3_RECOVERY_ACTIVITY_QUERY_LIMIT", "5000"))
+RECOVERY_ACTIVITY_TZ = timezone(timedelta(hours=9), name="JST")
+REMOTE_RECOVERY_UNIT = "stream-v3-remote-recovery.service"
+SHADOW_SLI_UNIT = "stream-v3-shadow-sli.service"
+RECOVERY_SSH_TARGET = os.environ.get(
+    "STREAM_V3_RECOVERY_SSH_TARGET",
+    os.environ.get("STREAM_V3_RELIABILITY_SSH_TARGET", ""),
+).strip()
 
 
 PROM_QUERIES: list[dict[str, Any]] = [
@@ -184,7 +197,7 @@ PROM_QUERIES: list[dict[str, Any]] = [
     {
         "id": "map_runtime_restarts",
         "group": "Map Runtime",
-        "label": "Runtime container restarts",
+        "label": "Kubernetes container restarts (current Pod)",
         "unit": "count",
         "kind": "zero_warn",
         "query": 'max(stream_v3_map_container_restart_count{job="stream_v3_arena_monitor"})',
@@ -200,7 +213,7 @@ PROM_QUERIES: list[dict[str, Any]] = [
     {
         "id": "restarts_1h",
         "group": "Recovery",
-        "label": "Recovery restarts 1h",
+        "label": "Fast Recovery dispatches 1h",
         "unit": "count",
         "kind": "zero_ok",
         "query": 'max(stream_v3_fast_recovery_restart_count{job="stream_v3_arena_monitor",window_hours="1"})',
@@ -208,7 +221,7 @@ PROM_QUERIES: list[dict[str, Any]] = [
     {
         "id": "ffmpeg_clusters_1h",
         "group": "Recovery",
-        "label": "FFmpeg restart clusters 1h",
+        "label": "FFmpeg incident clusters 1h",
         "unit": "count",
         "kind": "zero_ok",
         "query": 'max(stream_v3_ffmpeg_restart_incident_clusters{job="stream_v3_arena_monitor",window_hours="1"})',
@@ -261,6 +274,25 @@ PROM_TRENDS: list[dict[str, Any]] = [
 
 
 OBJECTIVE_SLI_QUERY = '{app="stream_v3",filename="/stream_v3/.state/arena-monitor/logs/objective_sli.jsonl"}'
+
+RECOVERY_ACTIVITY_QUERIES = (
+    {
+        "source": "fast_recovery",
+        "query": r'{app="stream_v3",filename="/stream_v3/.state/arena-monitor/logs/fast_recovery_events.jsonl"} | json | kind="restart"',
+    },
+    {
+        "source": "stream_engine",
+        "query": r'{app="stream_v3",filename="/stream_v3/.state/arena-monitor/logs/stream_engine_events.jsonl"} | json | event_type=~"ffmpeg_restart_scheduled|ffmpeg_restarted|self_recovery|render_browser_self_recovery_completed"',
+    },
+    {
+        "source": "stream_watchdog",
+        "query": r'{app="stream_v3",filename="/stream_v3/.state/arena-monitor/logs/stream_watchdog_events.jsonl"} | json | event_type=~"dj_restart|restart_dj|stream_restart|restart_stream|youtube_watchdog_restart"',
+    },
+    {
+        "source": "stream_notify_runtime",
+        "query": r'{app="stream_v3",filename="/stream_v3/.state/arena-monitor/logs/stream_notify_events.jsonl"} | json | phase="auto_recovered" |~ "runtime:lifecycle:"',
+    },
+)
 
 
 LOKI_QUERIES: list[dict[str, Any]] = [
@@ -659,6 +691,337 @@ def float_value(value: Any) -> float | None:
         return None
 
 
+def parse_utc_datetime(value: Any) -> datetime | None:
+    text = str(value or "").strip()
+    if not text:
+        return None
+    try:
+        parsed = datetime.fromisoformat(text.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
+
+
+def iso_utc(value: datetime) -> str:
+    return value.astimezone(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
+
+
+def journal_json_records(
+    unit: str,
+    *,
+    since_epoch: int,
+    grep_pattern: str = "",
+    lines: int | None = None,
+) -> list[dict[str, Any]]:
+    command = [
+        "journalctl",
+        "--unit",
+        unit,
+        "--since",
+        f"@{max(0, int(since_epoch))}",
+        "--no-pager",
+        "--output=json",
+    ]
+    if grep_pattern:
+        command.extend(["--grep", grep_pattern])
+    if lines is not None:
+        command.extend(["--lines", str(max(1, int(lines)))])
+    completed = run_systemd_unit_command(unit, command)
+    if completed.returncode not in (0, 1):
+        raise RuntimeError("journal query failed")
+    records: list[dict[str, Any]] = []
+    for line in completed.stdout.splitlines():
+        try:
+            record = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(record, dict):
+            records.append(record)
+    return records
+
+
+def command_for_system_host(command: list[str], target: str) -> list[str]:
+    if not target:
+        return command
+    return [
+        "ssh",
+        "-o", "BatchMode=yes",
+        "-o", "ConnectTimeout=8",
+        "-o", "ServerAliveInterval=10",
+        "-o", "ServerAliveCountMax=2",
+        target,
+        shlex.join(command),
+    ]
+
+
+def run_systemd_unit_command(unit: str, command: list[str]) -> subprocess.CompletedProcess[str]:
+    targets = [""]
+    if RECOVERY_SSH_TARGET:
+        targets.append(RECOVERY_SSH_TARGET)
+    errors: list[str] = []
+    for target in targets:
+        try:
+            loaded = subprocess.run(
+                command_for_system_host(
+                    ["systemctl", "show", unit, "--property=LoadState", "--value"],
+                    target,
+                ),
+                check=False,
+                capture_output=True,
+                text=True,
+                timeout=max(10.0, HTTP_TIMEOUT_SEC),
+            )
+            if loaded.returncode != 0 or loaded.stdout.strip() != "loaded":
+                errors.append("unit unavailable")
+                continue
+            return subprocess.run(
+                command_for_system_host(command, target),
+                check=False,
+                capture_output=True,
+                text=True,
+                timeout=max(15.0, HTTP_TIMEOUT_SEC),
+            )
+        except (OSError, subprocess.SubprocessError):
+            errors.append("command unavailable")
+    raise RuntimeError(f"systemd unit source unavailable: {unit} ({', '.join(errors)})")
+
+
+def journal_record_datetime(record: dict[str, Any]) -> datetime | None:
+    raw = record.get("__REALTIME_TIMESTAMP") or record.get("_SOURCE_REALTIME_TIMESTAMP")
+    try:
+        return datetime.fromtimestamp(int(str(raw)) / 1_000_000, tz=timezone.utc)
+    except Exception:
+        return None
+
+
+def latest_shadow_sli_from_journal(now: datetime) -> tuple[dict[str, Any], str] | None:
+    try:
+        completed = run_systemd_unit_command(
+            SHADOW_SLI_UNIT,
+            [
+                "journalctl",
+                "--unit",
+                SHADOW_SLI_UNIT,
+                "--since",
+                f"@{int((now - timedelta(hours=3)).timestamp())}",
+                "--no-pager",
+                "--output=cat",
+            ],
+        )
+    except Exception:
+        return None
+    if completed.returncode != 0:
+        return None
+    candidates: list[tuple[datetime, dict[str, Any]]] = []
+    for message in completed.stdout.splitlines():
+        message = message.strip()
+        if not message.startswith("{"):
+            continue
+        try:
+            payload = json.loads(message)
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(payload, dict) or not isinstance(payload.get("windows"), dict):
+            continue
+        ts = parse_utc_datetime(payload.get("ts_utc"))
+        if ts is not None:
+            candidates.append((ts, payload))
+    if not candidates:
+        return None
+    candidates.sort(key=lambda item: item[0])
+    ts, payload = candidates[-1]
+    return payload, str(int(ts.timestamp() * 1_000_000_000))
+
+
+def recovery_action_for_event(source: str, event: dict[str, Any]) -> str:
+    event_type = str(event.get("event_type") or event.get("kind") or "")
+    if source == "fast_recovery":
+        if event_type != "restart":
+            return ""
+        if event.get("recovery_scope") == "ffmpeg_child":
+            # Fast Recovery can emit more than one dispatch attempt for the same
+            # child. Count the resulting stream-engine restart evidence instead
+            # of treating each request as a runtime/stream restart.
+            return ""
+        return "restart_stream"
+    if source == "stream_engine":
+        if event_type == "render_browser_self_recovery_completed":
+            return "restart_browser"
+        if event_type in {"ffmpeg_restart_scheduled", "ffmpeg_restarted", "self_recovery"}:
+            return "restart_ffmpeg"
+        return ""
+    if source == "stream_watchdog":
+        if event_type in {"dj_restart", "restart_dj"}:
+            return "restart_dj"
+        if event_type in {"stream_restart", "restart_stream", "youtube_watchdog_restart"}:
+            return "restart_stream"
+    if source == "stream_notify_runtime":
+        incident_ids = event.get("incident_ids")
+        if event.get("phase") == "auto_recovered" and isinstance(incident_ids, list):
+            if any(str(incident_id).startswith("runtime:lifecycle:") for incident_id in incident_ids):
+                return "restart_stream"
+    return ""
+
+
+def recovery_event_datetime(source: str, event: dict[str, Any], ts_ns: str) -> datetime | None:
+    if source == "stream_notify_runtime":
+        incident_ids = event.get("incident_ids")
+        if isinstance(incident_ids, list):
+            for incident_id in incident_ids:
+                match = re.match(r"^runtime:lifecycle:[^:]+:(\d{9,})$", str(incident_id))
+                if match:
+                    try:
+                        return datetime.fromtimestamp(int(match.group(1)), tz=timezone.utc)
+                    except (OverflowError, OSError, ValueError):
+                        pass
+
+    parsed = parse_utc_datetime(event.get("ts_utc"))
+    if parsed is not None:
+        return parsed
+    try:
+        return datetime.fromtimestamp(int(ts_ns) / 1_000_000_000, tz=timezone.utc)
+    except Exception:
+        return None
+
+
+def recovery_activity_loki_events(now: datetime) -> tuple[list[dict[str, Any]], list[str]]:
+    events: list[dict[str, Any]] = []
+    errors: list[str] = []
+    for query_def in RECOVERY_ACTIVITY_QUERIES:
+        source = str(query_def["source"])
+        try:
+            streams = loki_query(
+                str(query_def["query"]),
+                RECOVERY_ACTIVITY_QUERY_LIMIT,
+                window_sec=(RECOVERY_ACTIVITY_DAYS + 1) * 24 * 3600,
+            )
+        except Exception:
+            errors.append(source)
+            continue
+        for stream in streams:
+            for ts_ns, raw in stream.get("values", []):
+                try:
+                    event = json.loads(raw)
+                except (TypeError, json.JSONDecodeError):
+                    continue
+                if not isinstance(event, dict):
+                    continue
+                action = recovery_action_for_event(source, event)
+                ts = recovery_event_datetime(source, event, ts_ns)
+                if action and ts is not None and ts <= now:
+                    events.append({"ts": ts, "action": action, "source": source})
+    return events, errors
+
+
+def recovery_activity_journal_events(now: datetime) -> tuple[list[dict[str, Any]], bool]:
+    pattern = r"ok (action-plan restart_dj|restart deployment/stream-v3-runtime)"
+    try:
+        records = journal_json_records(
+            REMOTE_RECOVERY_UNIT,
+            since_epoch=int((now - timedelta(days=RECOVERY_ACTIVITY_DAYS + 1)).timestamp()),
+            grep_pattern=pattern,
+        )
+    except Exception:
+        return [], False
+    events: list[dict[str, Any]] = []
+    for record in records:
+        message = str(record.get("MESSAGE") or "")
+        ts = journal_record_datetime(record)
+        if ts is None or ts > now:
+            continue
+        if "ok action-plan restart_dj:" in message:
+            action = "restart_dj"
+        elif "ok restart deployment/stream-v3-runtime:" in message:
+            action = "restart_stream"
+        else:
+            continue
+        events.append({"ts": ts, "action": action, "source": "remote_recovery"})
+    return events, True
+
+
+def dedupe_recovery_events(events: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    exact_seen: set[tuple[int, str, str]] = set()
+    exact: list[dict[str, Any]] = []
+    for event in sorted(events, key=lambda item: item["ts"]):
+        key = (int(event["ts"].timestamp()), str(event["action"]), str(event["source"]))
+        if key in exact_seen:
+            continue
+        exact_seen.add(key)
+        exact.append(event)
+
+    deduped: list[dict[str, Any]] = []
+    for event in exact:
+        duplicate = next(
+            (
+                prior
+                for prior in reversed(deduped)
+                if event["action"] == prior["action"]
+                and event["source"] != prior["source"]
+                and (event["ts"] - prior["ts"]).total_seconds() <= 30
+            ),
+            None,
+        )
+        if duplicate is None:
+            deduped.append(event)
+    return deduped
+
+
+def collect_recovery_activity(now: datetime | None = None) -> dict[str, Any]:
+    now = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
+    local_today = now.astimezone(RECOVERY_ACTIVITY_TZ).date()
+    start_date = local_today - timedelta(days=RECOVERY_ACTIVITY_DAYS - 1)
+    loki_events, source_errors = recovery_activity_loki_events(now)
+    journal_events, journal_ok = recovery_activity_journal_events(now)
+    if not journal_ok:
+        source_errors.append("remote_recovery")
+
+    events = []
+    for event in dedupe_recovery_events([*loki_events, *journal_events]):
+        local_date = event["ts"].astimezone(RECOVERY_ACTIVITY_TZ).date()
+        if start_date <= local_date <= local_today:
+            events.append({**event, "local_date": local_date.isoformat()})
+
+    action_order = ("restart_stream", "restart_ffmpeg", "restart_dj", "restart_browser")
+    counts = {action: 0 for action in action_order}
+    daily_counts = {
+        (start_date + timedelta(days=offset)).isoformat(): 0
+        for offset in range(RECOVERY_ACTIVITY_DAYS)
+    }
+    for event in events:
+        action = str(event["action"])
+        counts[action] = counts.get(action, 0) + 1
+        daily_counts[event["local_date"]] += 1
+
+    total = sum(counts.values())
+    active_days = sum(1 for count in daily_counts.values() if count > 0)
+    latest = max((event["ts"] for event in events), default=None)
+    status = "ok" if not source_errors else "partial" if events else "error"
+    return {
+        "schema": "stream-v3-recovery-activity-public.v1",
+        "status": status,
+        "generated_at_utc": iso_utc(now),
+        "period": {
+            "days": RECOVERY_ACTIVITY_DAYS,
+            "start_date": start_date.isoformat(),
+            "end_date": local_today.isoformat(),
+            "timezone": "Asia/Tokyo",
+            "includes_current_day": True,
+        },
+        "total_executed": total,
+        "active_day_count": active_days,
+        "average_per_day": round(total / RECOVERY_ACTIVITY_DAYS, 1),
+        "action_counts": counts,
+        "daily_counts": daily_counts,
+        "latest_action_at_utc": iso_utc(latest) if latest else "",
+        "source_complete": not source_errors,
+        "missing_sources": sorted(set(source_errors)),
+        "count_basis": "executed actions plus observed unplanned runtime lifecycle changes; FFmpeg child dispatch attempts are excluded and cross-source duplicates within 30 seconds are counted once",
+        "scope_note": "runtime/stream, Kubernetes container, FFmpeg child, and browser helper are separate failure domains",
+    }
+
+
 def safe_count_map(value: Any) -> dict[str, int]:
     if not isinstance(value, dict):
         return {}
@@ -693,22 +1056,35 @@ def collect_recovery_boundary() -> dict[str, Any]:
         "windows": {},
     }
     try:
-        streams = loki_query(OBJECTIVE_SLI_QUERY, 1, window_sec=30 * 24 * 3600)
-        values: list[tuple[str, str]] = []
-        for stream in streams:
-            values.extend(stream.get("values", []))
-        values.sort(key=lambda row: row[0], reverse=True)
-        if not values:
-            boundary.update({"status": "empty", "error": "objective_sli snapshot not found"})
-            return boundary
+        now = datetime.now(timezone.utc)
+        journal_snapshot = latest_shadow_sli_from_journal(now)
+        if journal_snapshot is not None:
+            parsed, ts_ns = journal_snapshot
+            source = SHADOW_SLI_UNIT
+        else:
+            streams = loki_query(OBJECTIVE_SLI_QUERY, 1, window_sec=30 * 24 * 3600)
+            values: list[tuple[str, str]] = []
+            for stream in streams:
+                values.extend(stream.get("values", []))
+            values.sort(key=lambda row: row[0], reverse=True)
+            if not values:
+                boundary.update({"status": "empty", "error": "objective_sli snapshot not found"})
+                return boundary
+            ts_ns, raw = values[0]
+            parsed = json.loads(raw)
+            source = "objective_sli.jsonl"
 
-        ts_ns, raw = values[0]
-        parsed = json.loads(raw)
+        snapshot_ts = parse_utc_datetime(parsed.get("ts_utc"))
+        age_sec = None if snapshot_ts is None else max(0, int((now - snapshot_ts).total_seconds()))
+        fresh = age_sec is not None and age_sec <= RECOVERY_BOUNDARY_WARN_SEC
         boundary.update({
-            "status": "ok",
+            "status": "ok" if fresh else "stale",
             "ts_ns": ts_ns,
             "ts_utc": safe_text(str(parsed.get("ts_utc") or ns_to_iso(ts_ns))),
-            "source": "objective_sli.jsonl",
+            "source": source,
+            "age_sec": age_sec,
+            "fresh": fresh,
+            "warn_after_sec": RECOVERY_BOUNDARY_WARN_SEC,
         })
         for window in ("last_24h", "last_7d", "last_30d"):
             window_data = parsed.get("windows", {}).get(window, {})
@@ -789,6 +1165,9 @@ def collect_loki() -> dict[str, Any]:
             "total_events": total_events,
             "severity": "warn" if error_sections else "ok",
         },
+        "recovery_activity": collect_recovery_activity(
+            datetime.fromtimestamp(generated_at, tz=timezone.utc)
+        ),
         "recovery_boundary": collect_recovery_boundary(),
         "sections": sections,
     }

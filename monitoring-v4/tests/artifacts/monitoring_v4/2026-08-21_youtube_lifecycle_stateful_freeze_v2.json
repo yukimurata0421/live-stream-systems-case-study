@@ -1,0 +1,52 @@
+{
+  "artifact_schema": "monitoring_v4.youtube_lifecycle_stateful_freeze.v2",
+  "created_at": "2026-08-21T13:04:11Z",
+  "previous_freeze": {
+    "path": "tests/artifacts/monitoring_v4/2026-08-21_youtube_lifecycle_stateful_freeze_v1.json",
+    "sha256": "37a9bc6cf1b39f478c7f379d2b94eadc646bbd869c1b318205bc03a32b1abfa9"
+  },
+  "identity": {
+    "git_head": "1a76a8857db521282a2536391c2963a34aa9c199",
+    "common_runtime_sha256": "0ed92c51456f7fbaa5692c7e3d152aed75841ad6269270f7f2d14cf5a0db2238",
+    "harness_and_oracle_sha256": "1df31bb1fceaaabe14ee7f3a07c9d95a4516867879bf3d955f041f067af783e6",
+    "oracle_revision": "youtube-lifecycle-role-boundary-oracle-r1",
+    "source_policy_revision": "monitoring-v4-source-policy-r5.1",
+    "reducer_revision": "monitoring-v4-current-reducer-r3.3",
+    "incident_policy_revision": "monitoring-v4-incident-policy-r5.1"
+  },
+  "bounds": {"slices": ["authoritative", "diagnostic", "supporting"], "seeds": [1, 2, 3], "examples_per_run": 200, "max_steps": 8},
+  "totals": {
+    "examples": 1800,
+    "generated_actions": 8101,
+    "expected_effects": 1169,
+    "started_actions": 9901,
+    "completed_actions": 9901,
+    "failed_actions": 0,
+    "terminal_actions": 9901,
+    "orphan_started_actions": 0,
+    "double_terminal_actions": 0,
+    "terminal_integrity_failures": 0,
+    "terminal_evidence_persistence_failures": 0,
+    "cleanup_verified": 1800,
+    "cleanup_failures": 0,
+    "sut_failures": 0,
+    "harness_failures": 0,
+    "attribution_gaps": 0,
+    "oracle_gaps": 0,
+    "unknown": 0
+  },
+  "runs": [
+    {"slice": "authoritative", "seed": 1, "actions": 869, "expected_effects": 115, "artifact": "tests/artifacts/monitoring_v4/2026-08-21_common_runtime_v2_revalidate_youtube_lifecycle_authoritative_full_seed_1_v2.json", "artifact_sha256": "9f1c04b426b814b483ca7a59af3300d377bd22d365d64a020391b9f737e9354e", "sidecar_sha256": "e3b6b786470b351fc43e6a64b9191aa8ac4a55ab8e9d76a674c5e128ca9df2f7"},
+    {"slice": "authoritative", "seed": 2, "actions": 907, "expected_effects": 168, "artifact": "tests/artifacts/monitoring_v4/2026-08-21_common_runtime_v2_revalidate_youtube_lifecycle_authoritative_full_seed_2_v2.json", "artifact_sha256": "18d61c1de7232ea664ad3dbc0066613194490a40ad41152e4a6e1b773eae4eb3", "sidecar_sha256": "b9146bfcdb9c03c28696ba19db4629e35f628cb443188ad443b501d56c918ade"},
+    {"slice": "authoritative", "seed": 3, "actions": 903, "expected_effects": 149, "artifact": "tests/artifacts/monitoring_v4/2026-08-21_common_runtime_v2_revalidate_youtube_lifecycle_authoritative_full_seed_3_v2.json", "artifact_sha256": "87599b6fb18cc66eecc53fa2b019822e7ca5069328b99f48d04afd7661812060", "sidecar_sha256": "8dd16f2bc1206303f6ab614c6d499dc2181619744cb330a148542e7269078ed3"},
+    {"slice": "diagnostic", "seed": 1, "actions": 897, "expected_effects": 120, "artifact": "tests/artifacts/monitoring_v4/2026-08-21_common_runtime_v2_revalidate_youtube_lifecycle_diagnostic_full_seed_1_v2.json", "artifact_sha256": "d4d8dd1d04e436b849a07e36166eec1c5a65d676bcb51570982b3997fbe9eaa0", "sidecar_sha256": "f2c915d4256fcc8c5f568ea6bfca1ea51d1417679535686e0078d35e983cf3be"},
+    {"slice": "diagnostic", "seed": 2, "actions": 929, "expected_effects": 144, "artifact": "tests/artifacts/monitoring_v4/2026-08-21_common_runtime_v2_revalidate_youtube_lifecycle_diagnostic_full_seed_2_v2.json", "artifact_sha256": "e8f32134702a41bf9b7153467beed050ee14e4a250ba3c34a5e123ed72dbe410", "sidecar_sha256": "a493fd0c3b39e4bf85d06449f1a4467216bb36f9411840c2d506222188ac39e5"},
+    {"slice": "diagnostic", "seed": 3, "actions": 883, "expected_effects": 122, "artifact": "tests/artifacts/monitoring_v4/2026-08-21_common_runtime_v2_revalidate_youtube_lifecycle_diagnostic_full_seed_3_v2.json", "artifact_sha256": "ac617f95ed5e22d7e325caf0ea96ba743f82440649854c7f8496dd05b39897a8", "sidecar_sha256": "89c9b4f433d5f99561a55ce6f240e0e5ff6b95cda2e3f6602850bfc10884be92"},
+    {"slice": "supporting", "seed": 1, "actions": 864, "expected_effects": 113, "artifact": "tests/artifacts/monitoring_v4/2026-08-21_common_runtime_v2_revalidate_youtube_lifecycle_supporting_full_seed_1_v2.json", "artifact_sha256": "ec3e2cc2fc0ca34257f490528b2da7a808fd0d0fb3714f4044145b78ad2778a0", "sidecar_sha256": "4076a7911d9d203add5cf927dd8e316ce5b9b8c377e6d00ff8afbe5372080ae0"},
+    {"slice": "supporting", "seed": 2, "actions": 936, "expected_effects": 134, "artifact": "tests/artifacts/monitoring_v4/2026-08-21_common_runtime_v2_revalidate_youtube_lifecycle_supporting_full_seed_2_v2.json", "artifact_sha256": "858db865ee557efb2b984e1b5d79fbb0d2e6bfe22122f6d63aa9533e897b7767", "sidecar_sha256": "dc78c77960eb2662cb01552fb3d071e5bcc353594f1789b244829a4765344c10"},
+    {"slice": "supporting", "seed": 3, "actions": 913, "expected_effects": 104, "artifact": "tests/artifacts/monitoring_v4/2026-08-21_common_runtime_v2_revalidate_youtube_lifecycle_supporting_full_seed_3_v2.json", "artifact_sha256": "bd47bdcea481e413e9d4b54a007d84460ea1a9eb73149ba4e4cf4490382810e7", "sidecar_sha256": "14f524da6db8fa68a7728b97f8d824540ed7278ac415488840ffda7d960e9ada"}
+  ],
+  "semantic_comparison": {"previous_action_semantics_difference": 0, "previous_oracle_result_difference": 0, "previous_sut_result_difference": 0, "previous_expected_effects_difference": 0, "sidecars_byte_identical": true},
+  "full_suite": {"discovered": 442, "passed": 434, "skipped": 8, "failed": 0, "errors": 0, "exit_code": 0, "duration_sec": 78.422915},
+  "result": "frozen_v2"
+}

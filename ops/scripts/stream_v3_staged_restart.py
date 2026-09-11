@@ -16,6 +16,7 @@ if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
 from stream_core.k8s_gpu_guard import summarize_runtime_gpu
+from maintenance_audit import audit_maintenance_decision
 
 
 NAMESPACE = os.environ.get("STREAM_K8S_NAMESPACE", "stream-v3")
@@ -102,18 +103,87 @@ def wait_available(timeout_sec: int, poll_sec: int = 5) -> StepResult:
 
 
 def rollout_restart(reason: str) -> StepResult:
+    correlation_id = f"manual-rollout-{time.time_ns()}"
+    audit_maintenance_decision(
+        path_id="MP-02",
+        phase="ADMISSION",
+        operation="restart_deployment",
+        path_role="MANUAL_PLANNED_EXECUTOR",
+        process_service="stream_v3_staged_restart.py",
+        resource_identity=f"{NAMESPACE}/{RUNTIME}",
+        correlation_id=correlation_id,
+        in_flight_evidence={"status": "PROPOSED", "count": 0, "source": "manual script step state"},
+        generation_evidence={"status": "MISSING", "source": "no maintenance generation CLI binding"},
+    )
+    audit_maintenance_decision(
+        path_id="MP-02",
+        phase="EFFECT_BOUNDARY",
+        operation="restart_deployment",
+        path_role="MANUAL_PLANNED_EXECUTOR",
+        process_service="stream_v3_staged_restart.py",
+        resource_identity=f"{NAMESPACE}/{RUNTIME}",
+        correlation_id=correlation_id,
+        in_flight_evidence={"status": "PROPOSED", "count": 1, "source": "kubectl rollout restart about to begin"},
+        generation_evidence={"status": "MISSING", "source": "no maintenance generation CLI binding"},
+    )
     cp = kubectl("rollout", "restart", RUNTIME)
     detail = (cp.stdout or cp.stderr).strip()
     return StepResult("rollout_restart", cp.returncode == 0, f"{reason}: {detail}")
 
 
 def delete_runtime_pods(reason: str) -> StepResult:
+    correlation_id = f"manual-delete-{time.time_ns()}"
+    audit_maintenance_decision(
+        path_id="MP-02",
+        phase="ADMISSION",
+        operation="delete_runtime_pods",
+        path_role="MANUAL_PLANNED_EXECUTOR",
+        process_service="stream_v3_staged_restart.py",
+        resource_identity=f"pods/{NAMESPACE}/{RUNTIME_SELECTOR}",
+        correlation_id=correlation_id,
+        in_flight_evidence={"status": "PROPOSED", "count": 0, "source": "manual script step state"},
+        generation_evidence={"status": "MISSING", "source": "no maintenance generation CLI binding"},
+    )
+    audit_maintenance_decision(
+        path_id="MP-02",
+        phase="EFFECT_BOUNDARY",
+        operation="delete_runtime_pods",
+        path_role="MANUAL_PLANNED_EXECUTOR",
+        process_service="stream_v3_staged_restart.py",
+        resource_identity=f"pods/{NAMESPACE}/{RUNTIME_SELECTOR}",
+        correlation_id=correlation_id,
+        in_flight_evidence={"status": "PROPOSED", "count": 1, "source": "kubectl delete about to begin"},
+        generation_evidence={"status": "MISSING", "source": "no maintenance generation CLI binding"},
+    )
     cp = kubectl("delete", "pod", "-l", RUNTIME_SELECTOR)
     detail = (cp.stdout or cp.stderr).strip()
     return StepResult("delete_runtime_pods", cp.returncode == 0, f"{reason}: {detail}")
 
 
 def scale_runtime(replicas: int, reason: str) -> StepResult:
+    correlation_id = f"manual-scale-{replicas}-{time.time_ns()}"
+    audit_maintenance_decision(
+        path_id="MP-02",
+        phase="ADMISSION",
+        operation="scale_runtime",
+        path_role="MANUAL_PLANNED_EXECUTOR",
+        process_service="stream_v3_staged_restart.py",
+        resource_identity=f"{NAMESPACE}/{RUNTIME}",
+        correlation_id=correlation_id,
+        in_flight_evidence={"status": "PROPOSED", "count": 0, "source": "manual script step state"},
+        generation_evidence={"status": "MISSING", "source": "no maintenance generation CLI binding"},
+    )
+    audit_maintenance_decision(
+        path_id="MP-02",
+        phase="EFFECT_BOUNDARY",
+        operation="scale_runtime",
+        path_role="MANUAL_PLANNED_EXECUTOR",
+        process_service="stream_v3_staged_restart.py",
+        resource_identity=f"{NAMESPACE}/{RUNTIME}",
+        correlation_id=correlation_id,
+        in_flight_evidence={"status": "PROPOSED", "count": 1, "source": "kubectl scale about to begin"},
+        generation_evidence={"status": "MISSING", "source": "no maintenance generation CLI binding"},
+    )
     cp = kubectl("scale", RUNTIME, f"--replicas={replicas}")
     detail = (cp.stdout or cp.stderr).strip()
     return StepResult(f"scale_{replicas}", cp.returncode == 0, f"{reason}: {detail}")

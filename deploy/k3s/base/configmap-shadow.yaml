@@ -46,6 +46,7 @@ data:
   VIDEO_BUFSIZE: 6800k
   AUDIO_BITRATE: 192k
   AUDIO_SAMPLE_RATE: "48000"
+  AUDIO_FILTER: "aresample=async=1:min_hard_comp=0.030000:first_pts=0,volume=0.540680"
   STREAM1090_URL: http://stream1090.lan/stream1090/
   BROWSER_URL: http://stream1090.lan/stream1090/
   USE_OVERLAY_WRAPPER: "1"
@@ -76,6 +77,8 @@ data:
   STREAM_V3_START_PULSE: "1"
   STREAM_V3_PULSE_SOCKET: /run/stream-pulse/native
   AUTO_DJ_KEEP_PULSE_SERVER: "1"
+  AUTO_DJ_NCS_GAIN_DB: "-6.7"
+  AUTO_DJ_FLORACORE_GAIN_DB: "0"
   MUSIC_ROOT: /music/time_tags
   STREAM_LOCK_DIR: /state/locks
   TAKEOVER_ENABLED: "0"

@@ -1,0 +1,256 @@
+{
+  "artifact_schema": "monitoring_v4.delivery_equal_timestamp_rc_b_diagnosis.v1",
+  "broken_invariant": "I4_equal_priority_disagreement_fail_closed",
+  "classification": "confirmed_rc_b_persistence_current_store_defect",
+  "conclusion": "The reducer generated the expected unknown/source_disagreement candidate, but save_current rejected it because observed_at and reduced_at tied and its snapshot_id sorted lower than the existing good snapshot_id.",
+  "created_at": "2026-08-21T09:20:24Z",
+  "current_snapshots": [
+    {
+      "observed_at": "2026-08-12T16:48:32Z",
+      "reason_codes_json": "[\"source_disagreement\"]",
+      "reduced_at": "2026-08-12T16:48:32Z",
+      "snapshot_id": "cur:860ac0df39f428febc4f991893161980",
+      "state": "unknown"
+    },
+    {
+      "observed_at": "2026-08-12T16:48:32Z",
+      "reason_codes_json": "[\"current_good_evidence\"]",
+      "reduced_at": "2026-08-12T16:48:32Z",
+      "snapshot_id": "cur:88d6fb5eadc77415b66105d8e52561bc",
+      "state": "good"
+    }
+  ],
+  "independent_oracle": {
+    "expected_reason": "source_disagreement",
+    "expected_selected_sources": [
+      "rtmps_tcp",
+      "runtime_delivery_watchdog"
+    ],
+    "expected_state": "unknown"
+  },
+  "input": {
+    "a": {
+      "observed_at": "2026-08-12T16:48:32Z",
+      "received_at": "2026-08-12T16:48:32Z",
+      "source": "runtime_delivery_watchdog",
+      "source_event_id": "historical-delivery-good",
+      "state": "good"
+    },
+    "b": {
+      "observed_at": "2026-08-12T16:48:32Z",
+      "received_at": "2026-08-12T16:48:32Z",
+      "source": "rtmps_tcp",
+      "source_event_id": "ingest-b-909100004-1",
+      "state": "bad"
+    }
+  },
+  "observations": [
+    {
+      "observation_id": "obs:d9397bc04b652215d58d0668f71ee150",
+      "observed_at": "2026-08-12T16:48:32Z",
+      "received_at": "2026-08-12T16:48:32Z",
+      "source": "rtmps_tcp",
+      "source_event_id": "ingest-b-909100004-1",
+      "status": "bad"
+    },
+    {
+      "observation_id": "obs:6108517c4386a35baeeef41ea35ab0ac",
+      "observed_at": "2026-08-12T16:48:32Z",
+      "received_at": "2026-08-12T16:48:32Z",
+      "source": "runtime_delivery_watchdog",
+      "source_event_id": "historical-delivery-good",
+      "status": "good"
+    }
+  ],
+  "persistence_predicate": "observed_ts, then reduced_ts, then lexical snapshot_id",
+  "reproduction_command": "PYTHONPATH=src python3 tests/stateful_delivery_authority_harness.py --reproduce-equal-timestamp --artifact OUTPUT_ARTIFACT.json",
+  "source_identity": {
+    "git_head": "1a76a8857db521282a2536391c2963a34aa9c199",
+    "tracked_dirty_diff_sha256": "f65c89f75b319e31022fff6e7246a45661d70fa2096f9bd4adc81e4eba88f7a0"
+  },
+  "temporary_resource": {
+    "kind": "isolated_sqlite",
+    "removed": true
+  },
+  "timeline": [
+    {
+      "accepted": true,
+      "candidate": {
+        "observed_at": "2026-08-12T16:48:32Z",
+        "payload": {
+          "diagnostics": [],
+          "ignored": [],
+          "priority": 100,
+          "same_producer_api_disagreement": false,
+          "same_producer_projection_disagreement": false,
+          "selected": [
+            {
+              "evidence_role": "current_authoritative",
+              "observed_at": "2026-08-12T16:48:32Z",
+              "payload": {
+                "synthetic": false
+              },
+              "source": "runtime_delivery_watchdog",
+              "status": "good"
+            }
+          ]
+        },
+        "reason_codes": [
+          "current_good_evidence"
+        ],
+        "reduced_at": "2026-08-12T16:48:32Z",
+        "snapshot_id": "cur:88d6fb5eadc77415b66105d8e52561bc",
+        "source_observation_ids": [
+          "obs:6108517c4386a35baeeef41ea35ab0ac"
+        ],
+        "state": "good",
+        "valid_until": "2026-08-12T16:51:32Z"
+      },
+      "event": "append_a_reduce_a_save_a",
+      "persisted_current": {
+        "observed_at": "2026-08-12T16:48:32Z",
+        "payload": {
+          "diagnostics": [],
+          "ignored": [],
+          "priority": 100,
+          "same_producer_api_disagreement": false,
+          "same_producer_projection_disagreement": false,
+          "selected": [
+            {
+              "evidence_role": "current_authoritative",
+              "observed_at": "2026-08-12T16:48:32Z",
+              "payload": {
+                "synthetic": false
+              },
+              "source": "runtime_delivery_watchdog",
+              "status": "good"
+            }
+          ]
+        },
+        "reason_codes": [
+          "current_good_evidence"
+        ],
+        "reduced_at": "2026-08-12T16:48:32Z",
+        "snapshot_id": "cur:88d6fb5eadc77415b66105d8e52561bc",
+        "source_observation_ids": [
+          "obs:6108517c4386a35baeeef41ea35ab0ac"
+        ],
+        "state": "good",
+        "valid_until": "2026-08-12T16:51:32Z"
+      },
+      "save_current_returned": true
+    },
+    {
+      "accepted": true,
+      "candidate": {
+        "observed_at": "2026-08-12T16:48:32Z",
+        "payload": {
+          "diagnostics": [],
+          "ignored": [],
+          "priority": 100,
+          "same_producer_api_disagreement": false,
+          "same_producer_projection_disagreement": false,
+          "selected": [
+            {
+              "evidence_role": "current_authoritative",
+              "observed_at": "2026-08-12T16:48:32Z",
+              "payload": {
+                "synthetic": true
+              },
+              "source": "rtmps_tcp",
+              "status": "bad"
+            },
+            {
+              "evidence_role": "current_authoritative",
+              "observed_at": "2026-08-12T16:48:32Z",
+              "payload": {
+                "synthetic": false
+              },
+              "source": "runtime_delivery_watchdog",
+              "status": "good"
+            }
+          ]
+        },
+        "reason_codes": [
+          "source_disagreement"
+        ],
+        "reduced_at": "2026-08-12T16:48:32Z",
+        "snapshot_id": "cur:860ac0df39f428febc4f991893161980",
+        "source_observation_ids": [
+          "obs:6108517c4386a35baeeef41ea35ab0ac",
+          "obs:d9397bc04b652215d58d0668f71ee150"
+        ],
+        "state": "unknown",
+        "valid_until": "2026-08-12T16:49:32Z"
+      },
+      "candidate_snapshot_lexically_greater": false,
+      "candidate_snapshot_lexically_lower": true,
+      "current_before_save": {
+        "observed_at": "2026-08-12T16:48:32Z",
+        "payload": {
+          "diagnostics": [],
+          "ignored": [],
+          "priority": 100,
+          "same_producer_api_disagreement": false,
+          "same_producer_projection_disagreement": false,
+          "selected": [
+            {
+              "evidence_role": "current_authoritative",
+              "observed_at": "2026-08-12T16:48:32Z",
+              "payload": {
+                "synthetic": false
+              },
+              "source": "runtime_delivery_watchdog",
+              "status": "good"
+            }
+          ]
+        },
+        "reason_codes": [
+          "current_good_evidence"
+        ],
+        "reduced_at": "2026-08-12T16:48:32Z",
+        "snapshot_id": "cur:88d6fb5eadc77415b66105d8e52561bc",
+        "source_observation_ids": [
+          "obs:6108517c4386a35baeeef41ea35ab0ac"
+        ],
+        "state": "good",
+        "valid_until": "2026-08-12T16:51:32Z"
+      },
+      "event": "append_b_reduce_a_plus_b_save_candidate",
+      "persisted_current": {
+        "observed_at": "2026-08-12T16:48:32Z",
+        "payload": {
+          "diagnostics": [],
+          "ignored": [],
+          "priority": 100,
+          "same_producer_api_disagreement": false,
+          "same_producer_projection_disagreement": false,
+          "selected": [
+            {
+              "evidence_role": "current_authoritative",
+              "observed_at": "2026-08-12T16:48:32Z",
+              "payload": {
+                "synthetic": false
+              },
+              "source": "runtime_delivery_watchdog",
+              "status": "good"
+            }
+          ]
+        },
+        "reason_codes": [
+          "current_good_evidence"
+        ],
+        "reduced_at": "2026-08-12T16:48:32Z",
+        "snapshot_id": "cur:88d6fb5eadc77415b66105d8e52561bc",
+        "source_observation_ids": [
+          "obs:6108517c4386a35baeeef41ea35ab0ac"
+        ],
+        "state": "good",
+        "valid_until": "2026-08-12T16:51:32Z"
+      },
+      "same_observed_ts": true,
+      "same_reduced_ts": true,
+      "save_current_returned": false
+    }
+  ]
+}

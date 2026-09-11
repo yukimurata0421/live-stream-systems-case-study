@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "stream-v4-monitoring"
+version = "0.1.0"
+description = "Isolated Monitoring v4 arena observation and evidence subsystem"
+requires-python = ">=3.10"
+
+[project.optional-dependencies]
+postgres = ["psycopg[binary]==3.3.4", "psycopg_pool==3.3.1"]
+test = ["hypothesis==6.165.10"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"stream_contracts.monitoring_v4" = ["schema/*.json"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

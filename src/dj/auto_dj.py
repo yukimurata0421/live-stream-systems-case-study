@@ -64,6 +64,8 @@ class AutoDJ:
         max_track_sec: int,
         pulse_buffer_duration_ms: int,
         duration_cache_file: Optional[Path] = None,
+        ncs_gain_db: float = 0.0,
+        floracore_gain_db: float = 0.0,
     ) -> None:
         self.library_root = library_root
         self.now_playing_file = now_playing_file
@@ -76,6 +78,8 @@ class AutoDJ:
         self.snapshot_heartbeat_sec = max(snapshot_heartbeat_sec, 1)
         self.max_track_sec = max_track_sec
         self.pulse_buffer_duration_ms = max(pulse_buffer_duration_ms, 0)
+        self.ncs_gain_db = float(ncs_gain_db)
+        self.floracore_gain_db = float(floracore_gain_db)
         self.stop_requested = False
         self.current_process: Optional[subprocess.Popen] = None
         self.state_by_folder: dict[str, FolderState] = {}
@@ -210,6 +214,11 @@ class AutoDJ:
         )
 
     def _player_command(self, track: Path, track_duration_sec: float) -> list[str]:
+        volume_gain_db = player_runtime.track_volume_gain_db(
+            track,
+            ncs_gain_db=self.ncs_gain_db,
+            floracore_gain_db=self.floracore_gain_db,
+        )
         return player_runtime.player_command(
             player=self.player,
             track=track,
@@ -217,6 +226,7 @@ class AutoDJ:
             force_pulse_ao=self.force_pulse_ao,
             pulse_sink=self.pulse_sink,
             pulse_buffer_duration_ms=self.pulse_buffer_duration_ms,
+            volume_gain_db=volume_gain_db,
         )
 
     def _player_env(self) -> dict[str, str]:
@@ -524,6 +534,8 @@ def main() -> int:
         max_track_sec=args.max_track_sec,
         pulse_buffer_duration_ms=max(args.pulse_buffer_duration_ms, 0),
         duration_cache_file=args.duration_cache_file,
+        ncs_gain_db=args.ncs_gain_db,
+        floracore_gain_db=args.floracore_gain_db,
     )
     dj.run()
     return 0

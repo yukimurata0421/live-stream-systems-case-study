@@ -1,0 +1,89 @@
+{
+  "artifact_schema": "monitoring_v4.viewer_external_stateful_freeze.v1",
+  "created_at": "2026-08-21T13:18:11Z",
+  "audit": {
+    "path": "tests/artifacts/monitoring_v4/2026-08-21_viewer_external_read_only_oracle_audit_v1.json",
+    "sha256": "f412fd3cdf0a7755403a79b0257f5fb37825d4076c25d59fa91ea07e19699377",
+    "recommendation": "GO WITH REDUCED SCOPE"
+  },
+  "identity": {
+    "git_head": "1a76a8857db521282a2536391c2963a34aa9c199",
+    "common_runtime_sha256": "0ed92c51456f7fbaa5692c7e3d152aed75841ad6269270f7f2d14cf5a0db2238",
+    "harness_and_oracle_sha256": "064c45e41b105cfcff067dc1725e604f937a5e1b5ec41bd3e023342d6307bb83",
+    "oracle_test_sha256": "6b322c9d9f5711be372800a94b31e16030873b2e14c0d95492cdfffe673cf914",
+    "oracle_revision": "viewer-external-supporting-current-oracle-r1",
+    "source_policy_revision": "monitoring-v4-source-policy-r5.1",
+    "reducer_revision": "monitoring-v4-current-reducer-r3.3",
+    "incident_policy_revision": "monitoring-v4-incident-policy-r5.1"
+  },
+  "topology": {
+    "classification": "unequal_priority_supporting_current_domain_exception",
+    "allowed_roles": ["supporting"],
+    "sources": [
+      {"source": "viewer_synthetic", "priority": 100, "ttl_sec": 900, "current_authority": true},
+      {"source": "external_blackbox", "priority": 80, "ttl_sec": 900, "current_authority": true}
+    ]
+  },
+  "bounds": {
+    "smoke": {"seed": 11, "examples": 10, "max_steps": 5},
+    "small": {"seed": 1, "examples": 50, "max_steps": 8},
+    "full": {"seeds": [1, 2, 3], "examples_per_seed": 200, "max_steps": 8},
+    "max_rows_per_repository": 128,
+    "max_artifact_bytes": 4194304
+  },
+  "unit_and_targeted": {
+    "viewer_oracle_unit": {"run": 10, "passed": 10, "failed": 0, "errors": 0},
+    "viewer_runtime_adapter_incident_targeted": {"run": 80, "passed": 80, "failed": 0, "errors": 0, "duration_sec": 2.204}
+  },
+  "exploration": {
+    "smoke": {"actions": 31, "expected_effects": 12, "started_actions": 41, "cleanup_verified": 10, "result": "pass"},
+    "small": {"actions": 197, "expected_effects": 69, "started_actions": 247, "cleanup_verified": 50, "result": "pass"},
+    "full_totals": {
+      "examples": 600,
+      "generated_actions": 2688,
+      "expected_effects": 855,
+      "started_actions": 3288,
+      "completed_actions": 3288,
+      "failed_actions": 0,
+      "terminal_actions": 3288,
+      "orphan_started_actions": 0,
+      "double_terminal_actions": 0,
+      "terminal_integrity_failures": 0,
+      "terminal_evidence_persistence_failures": 0,
+      "cleanup_verified": 600,
+      "cleanup_failures": 0,
+      "sut_failures": 0,
+      "harness_failures": 0,
+      "attribution_gaps": 0,
+      "oracle_gaps": 0,
+      "unknown": 0
+    },
+    "coverage": {
+      "viewer_synthetic_selected": true,
+      "external_blackbox_fallback_selected_all_seeds": true,
+      "external_blackbox_bad_detected": true,
+      "external_blackbox_good_recovery": true,
+      "old_replay_non_regression": true,
+      "restart_reopen_neutrality": true,
+      "ttl_900_fresh_901_stale": true,
+      "lower_newer_does_not_override_fresh_higher_priority": true
+    }
+  },
+  "runs": [
+    {"kind": "smoke", "seed": 11, "artifact": "tests/artifacts/monitoring_v4/2026-08-21_viewer_external_stateful_bounded_smoke_v1.json", "artifact_sha256": "d3ea8cb68e63286920fc8fd42f6d171dfe570de4849f370a3a214e4d9438b607", "sidecar_sha256": "ad568c651a95005caaedfa66374c8881af0fbaf6830182bcb70ffc78822f27e8"},
+    {"kind": "small", "seed": 1, "artifact": "tests/artifacts/monitoring_v4/2026-08-21_viewer_external_stateful_bounded_small_seed_1_v1.json", "artifact_sha256": "6fb87f5ec2440d405021431dd0edeeaa9f5fd84b8aaf7c999260d36056f9e720", "sidecar_sha256": "804766c9c154a42104490f9c2da08f17966422c8d4f75838095fcee2ea3cb5bd"},
+    {"kind": "full", "seed": 1, "actions": 878, "expected_effects": 275, "artifact": "tests/artifacts/monitoring_v4/2026-08-21_viewer_external_stateful_bounded_full_seed_1_v1.json", "artifact_sha256": "a0b690637ba8e248a87c3f3e7e817d729b884875bc7ce34e0a025b4d6a25a833", "sidecar_sha256": "d75920e6c3b1a222941662579b7e0b2adf9d43751d5a2122fc8b533d619660c6"},
+    {"kind": "full", "seed": 2, "actions": 917, "expected_effects": 289, "artifact": "tests/artifacts/monitoring_v4/2026-08-21_viewer_external_stateful_bounded_full_seed_2_v1.json", "artifact_sha256": "12af8feae12c58de9697eaf3acea4b5f62c9269d980d47699f5f0b65c089d693", "sidecar_sha256": "90860fd93c432245cc01e67c887abbf5292c0dc5582e23a1414907a4c1d7eab3"},
+    {"kind": "full", "seed": 3, "actions": 893, "expected_effects": 291, "artifact": "tests/artifacts/monitoring_v4/2026-08-21_viewer_external_stateful_bounded_full_seed_3_v1.json", "artifact_sha256": "097ae95b3cb4da50eb1617caedebd368528f4279fdcacc0610010125949b7116", "sidecar_sha256": "c7834e0a72d4a95917e2bd7209b35fb5259258eae9bd11156a662f7302172538"}
+  ],
+  "known_limitations": [
+    "VE1 through VE4 authoritative-role combinations are INVALID_STATE under the current policy and were not generated",
+    "explicit source status unknown is outside this reduced exploration scope",
+    "missing-current-evidence caused by freshness expiry remains included",
+    "policy, role, priority, TTL, schema, API, notification delivery, and recovery semantics were not changed",
+    "row-bound review completed before the bounded smoke/small/full artifacts; earlier diagnostic files are not freeze evidence"
+  ],
+  "autonomous_repair": {"cycles": 0, "production_sut_changed": false},
+  "full_suite": {"discovered": 452, "passed": 444, "skipped": 8, "failed": 0, "errors": 0, "exit_code": 0, "event_count": 453, "duration_sec": 80.816187},
+  "result": "frozen"
+}

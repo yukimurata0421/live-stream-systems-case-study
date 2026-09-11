@@ -1,0 +1,117 @@
+{
+  "artifact_type": "monitoring_v4_campaign_controller_design_and_shadow",
+  "created_at": "2026-08-21T13:22:31Z",
+  "controller": {
+    "revision": "monitoring-v4-campaign-controller-design-r1",
+    "implementation_path": "tests/campaign_controller.py",
+    "implementation_sha256": "b5c6b9ed7d049acad5a38f0563fed331a29a02e1130be280d6c557d78722b0bb",
+    "test_sha256": "559d6dd56df9f2a6ed65a85f589d31bea30a01bdc86c0dbe62cbd04c5516fb83",
+    "plane": "test-only plan generation",
+    "campaign_execution_capability": false
+  },
+  "input_schema": {
+    "required": [
+      "domain",
+      "source_policy_revision",
+      "allowed_roles",
+      "sources",
+      "oracle_attestation",
+      "freeze_identity",
+      "common_runtime_sha256"
+    ],
+    "source_fields": [
+      "source",
+      "roles",
+      "priority",
+      "ttl_sec",
+      "current_authority",
+      "producer_id"
+    ],
+    "oracle_attestation_fields": [
+      "classification",
+      "recommendation",
+      "source_policy_revision",
+      "slices",
+      "actions",
+      "invariants",
+      "known_limitations"
+    ],
+    "freeze_identity_fields": ["path", "sha256", "common_runtime_sha256"]
+  },
+  "architecture": {
+    "source_policy_inventory": "serialize every current rule and calculate effective current eligibility from current_authority plus allowed role intersection",
+    "topology_classifier": [
+      "equal_priority_authority",
+      "unequal_priority_failover",
+      "mixed_role_isolation",
+      "supporting_current_exception"
+    ],
+    "oracle_completeness_classifier": "accept only explicit DETERMINISTIC or PARTIALLY_DETERMINISTIC attestations with GO-family recommendation",
+    "eligible_domain_selector": "require domain-attestation match, source policy revision match, project-root freeze file existence and SHA-256 match, and common runtime identity match",
+    "campaign_bounds_selector": {
+      "smoke": {"examples": 10, "max_steps": 5},
+      "small": {"examples": 50, "max_steps": 8},
+      "full": {"examples": 200, "max_steps": 8, "seeds": [1, 2, 3]},
+      "max_repair_cycles": 2
+    },
+    "human_gate_classifier": [
+      "unknown_domain",
+      "missing_or_mismatched_freeze",
+      "common_runtime_identity_mismatch",
+      "source_policy_revision_change",
+      "source_role_priority_or_ttl_change",
+      "schema_or_api_change",
+      "oracle_gap",
+      "cross_domain_semantics",
+      "harness_or_terminal_evidence_failure",
+      "cleanup_verification_failure",
+      "production_namespace_secret_notification_or_recovery_access"
+    ],
+    "shadow_validation_protocol": "compare sources, topology, slices, actions, invariants, oracle classification, bounds, and human gates with an independently literal manual frozen plan",
+    "negative_controls": [
+      "source priority drift is detected as source-role misclassification",
+      "campaign bound drift is detected as a shadow difference",
+      "removed human gate is detected as missing human gate"
+    ]
+  },
+  "frozen_topology": [
+    {"reference": "T1", "domain": "delivery", "topology": "equal_priority_authority", "freeze_sha256": "07328e54d21a1cb8f979d861d70b5c337ce44a0501f36984bac85e70ddc6b791"},
+    {"reference": "T2", "domain": "audio", "topology": "unequal_priority_failover", "freeze_sha256": "242286222b549374eb6d9005bcf36d68cefd84d230f71321d5e8c0dabe0e29cc"},
+    {"reference": "T3", "domain": "youtube_lifecycle", "topology": "mixed_role_isolation", "freeze_sha256": "f6c28cd2e699a6215caa3637d4bc5fb629a683177d4c6e330c8553f7f6f17dfe"},
+    {"reference": "T4", "domain": "viewer_external", "topology": "supporting_current_exception", "freeze_sha256": "bb015dd0d0960b7169086eb69d56c63401f1b23ad2ca324b17338d1175c312c0"}
+  ],
+  "shadow_validation": {
+    "tests": {"run": 10, "passed": 10, "failed": 0, "errors": 0, "exit_code": 0},
+    "domains": [
+      {"domain": "delivery", "equivalent": true, "topology_misclassification": 0, "source_role_misclassification": 0, "oracle_invention": 0, "unsafe_scope_expansion": 0, "missing_human_gate": 0},
+      {"domain": "audio", "equivalent": true, "topology_misclassification": 0, "source_role_misclassification": 0, "oracle_invention": 0, "unsafe_scope_expansion": 0, "missing_human_gate": 0},
+      {"domain": "youtube_lifecycle", "equivalent": true, "topology_misclassification": 0, "source_role_misclassification": 0, "oracle_invention": 0, "unsafe_scope_expansion": 0, "missing_human_gate": 0},
+      {"domain": "viewer_external", "equivalent": true, "topology_misclassification": 0, "source_role_misclassification": 0, "oracle_invention": 0, "unsafe_scope_expansion": 0, "missing_human_gate": 0}
+    ],
+    "totals": {
+      "domains": 4,
+      "topology_misclassification": 0,
+      "source_role_misclassification": 0,
+      "oracle_invention": 0,
+      "unsafe_scope_expansion": 0,
+      "missing_human_gate": 0
+    }
+  },
+  "final_full_suite": {
+    "discovered": 462,
+    "passed": 454,
+    "skipped": 8,
+    "failed": 0,
+    "errors": 0,
+    "exit_code": 0,
+    "duration_sec": 80.469166,
+    "event_count": 463
+  },
+  "safety": {
+    "unknown_domain_campaign_executed": false,
+    "any_campaign_executed_by_controller": false,
+    "execution_authorized_in_generated_plans": false,
+    "production_changed": false
+  },
+  "result": "CONTROLLER DESIGN READY FOR SHADOW-ONLY USE"
+}

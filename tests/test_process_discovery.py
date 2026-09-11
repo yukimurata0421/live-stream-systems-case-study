@@ -98,6 +98,36 @@ class ProcessDiscoveryTests(unittest.TestCase):
         self.assertEqual(events[1][1]["signal"], "KILL")
         self.assertEqual([pid for pid, _sig in kills], [200, 200])
 
+    def test_stale_pid_audit_precedes_effect_and_failure_is_isolated(self) -> None:
+        order: list[str] = []
+
+        def before_kill(_label: str, _pid: int, sig: int) -> None:
+            order.append(f"audit:{sig}")
+            if len(order) == 1:
+                raise RuntimeError("audit failure")
+
+        process_discovery.terminate_stale_pids(
+            "browser",
+            [200],
+            current_pid=999,
+            pid_alive=lambda _pid: True,
+            append_event=lambda *_args, **_kwargs: "event",
+            log=lambda _msg: None,
+            kill=lambda _pid, sig: order.append(f"effect:{sig}"),
+            sleep=lambda _sec: None,
+            before_kill=before_kill,
+        )
+
+        self.assertEqual(
+            order,
+            [
+                f"audit:{process_discovery.signal.SIGTERM}",
+                f"effect:{process_discovery.signal.SIGTERM}",
+                f"audit:{process_discovery.signal.SIGKILL}",
+                f"effect:{process_discovery.signal.SIGKILL}",
+            ],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

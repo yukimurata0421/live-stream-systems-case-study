@@ -5,6 +5,8 @@ import argparse
 import sys
 import time
 
+from maintenance_audit import audit_maintenance_decision
+
 try:
     from .systemctl_control import run_systemctl
     from .youtube_lifecycle import actions as lifecycle_actions
@@ -261,7 +263,18 @@ except ImportError:
     from youtube_watchdog_core.status import build_status_payload
 
 
-def restart_stream(reason: str) -> tuple[bool, str]:
+def restart_stream(reason: str, *, correlation_id: str = "") -> tuple[bool, str]:
+    audit_maintenance_decision(
+        path_id="MP-05",
+        phase="EFFECT_BOUNDARY",
+        operation="restart_runtime",
+        path_role="NORMAL_MUTATOR",
+        process_service="stream-v3-arena-monitor.service",
+        resource_identity=STREAM_SERVICE,
+        correlation_id=correlation_id,
+        in_flight_evidence={"status": "PROPOSED", "count": 1, "source": "watchdog call stack and restart ledger"},
+        generation_evidence={"status": "CONFIRMED", "correlation_id": correlation_id, "source": "watchdog restart epoch"},
+    )
     return lifecycle_actions.restart_stream(
         reason=reason,
         stream_service=STREAM_SERVICE,
@@ -917,7 +930,23 @@ def main(force_live_once: bool = False) -> int:
         log(f"Restart deferred: {restart_decision.action}")
         return 0
     if restart_decision.should_restart:
-        restart_ok, restart_detail = restart_stream(reason)
+        correlation_id = f"youtube-watchdog-{now_ts}-{ledger.current_restart_epoch + 1}"
+        audit_maintenance_decision(
+            path_id="MP-05",
+            phase="ADMISSION",
+            operation="restart_runtime",
+            path_role="NORMAL_MUTATOR",
+            process_service="stream-v3-arena-monitor.service",
+            resource_identity=STREAM_SERVICE,
+            correlation_id=correlation_id,
+            in_flight_evidence={"status": "PROPOSED", "count": 0, "source": "restart decision after budget/cooldown"},
+            generation_evidence={
+                "status": "CONFIRMED",
+                "restart_epoch": ledger.current_restart_epoch,
+                "source": "watchdog evidence ledger",
+            },
+        )
+        restart_ok, restart_detail = restart_stream(reason, correlation_id=correlation_id)
         if restart_ok:
             ledger.bump_restart_epoch(now_ts=now_ts)
             restart_history_ts = trim_restart_history([*restart_history_ts, now_ts], now_ts)

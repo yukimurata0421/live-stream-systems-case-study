@@ -1,0 +1,109 @@
+{
+  "schema": "monitoring_v4.phase_gates.v1",
+  "assessed_at_jst": "2026-08-14 16:05 JST",
+  "workspace": ".",
+  "migration_source": "<external-read-only-stream-v3-repository>",
+  "scope": "R0-R6 isolated implementation and credential-free arena k3s shadow only",
+  "current_public_milestone": {
+    "public_source_commit": "139ca84f84de6df73f1a13ba584abebc36dadabd",
+    "private_behavioral_identity": "73aae2f9eb4db9e9ddbab79823fa5ea2d52fb3f9",
+    "private_source_kind": "reviewed dirty-worktree content identity, not a private Git commit",
+    "schema_version": 6,
+    "public_self_contained_test_record": "242 collected, 236 passed, 6 explicit disposable PostgreSQL integration skips",
+    "disposable_postgresql_record": "6 passed against isolated PostgreSQL 17 after schema versions 1 through 6 were applied",
+    "elapsed_gate_status": "R2 seven-day and R3 fourteen-day gates were still running at the recorded private checkpoint",
+    "public_commit_deployed": false
+  },
+  "migration_source_reference": {
+    "as_of_jst": "2026-08-11 23:04 JST",
+    "release": "stream-v3-input-quality-raw-authority-v1.19-20260811",
+    "deployed_plane": "arena-server monitoring only",
+    "semantics_ported_to_v4": true,
+    "v4_production_changed": false,
+    "v4_production_changed_meaning": "no production judgment, notification, public, or runtime authority cutover; credential-free shadow host deployment is recorded separately",
+    "v4_shadow_pilot_executed": true,
+    "v4_shadow_service_deployed": true,
+    "v4_shadow_revision": "73aae2f9eb4db9e9ddbab79823fa5ea2d52fb3f9",
+    "v4_shadow_source_revision": "stream-v3-input-quality-raw-authority-v1.19-20260811@392d4af3970303ed394b6eaa067c22e897886ab5",
+    "v4_shadow_backend": "postgresql_17_k3s",
+    "v4_shadow_namespace": "stream-monitoring-v4",
+    "v4_shadow_final_revision_first_cycle_at": "2026-08-14 15:59:20 JST",
+    "v4_shadow_first_scheduled_report_at": "2026-08-14 16:00:52 JST",
+    "v4_shadow_input_boundary": "network-and-database-isolated safe-input projector; core mounts a fixed 12-file projection plus a versioned generation manifest",
+    "v4_shadow_core_runner": "persistent process with PostgreSQL connection pool and last-success freshness probes",
+    "v4_shadow_wall_clock_cadence": true,
+    "v4_shadow_sqlite_timer_enabled": false,
+    "v4_shadow_k3s_workloads_ready": true,
+    "private_source_monitoring_test_record": "921 passed / 9 skipped",
+    "public_source_monitoring_test_record": "906 passed / 9 skipped"
+  },
+  "authority_grants": {
+    "isolated_shadow_pilot_state_created": true,
+    "isolated_shadow_service_installed": true,
+    "isolated_shadow_timer_enabled": false,
+    "isolated_shadow_k3s_subsystem_deployed": true,
+    "isolated_shadow_postgresql_statefulset_deployed": true,
+    "credential_free_safe_input_projector_deployed": true,
+    "host_detection_only_sentinel_installed": true,
+    "v4_shadow_host_changed": true,
+    "production_service_installed": false,
+    "production_service_installed_meaning": "no authority-bearing v4 production service; only the credential-free isolated shadow service is installed",
+    "production_state_write": false,
+    "production_state_write_meaning": "no write to stream_v3 or authority-owned production state; isolated stream_v4 shadow state is written",
+    "real_notification_credential": false,
+    "real_notification_writer": false,
+    "dell_runtime_mutation": false,
+    "raspberry_pi_internal_v4_dependency": false
+  },
+  "phases": [
+    {
+      "phase": "R0",
+      "code_status": "implemented_local_verified",
+      "evidence_complete": true,
+      "verified": ["machine-readable ownership inventory", "separate workspace check", "forbidden import checks", "source entrypoint existence", "read-only live enabled-unit snapshot on arena-server, Dell runtime, and Raspberry Pi", "central/live unit content parity or classified deployment-local difference"],
+      "pending": []
+    },
+    {
+      "phase": "R1",
+      "code_status": "implemented_local_verified",
+      "evidence_complete": true,
+      "verified": ["versioned contracts", "strict UTC timestamps", "stable IDs and payload hashes", "isolated SQLite WAL", "lock/schema failure propagation", "atomic non-overwriting backup and restore", "schema v6 durable artifact publication ledger", "SQLite and PostgreSQL schema-surface parity", "backend-neutral repository composition"],
+      "pending": []
+    },
+    {
+      "phase": "R2",
+      "code_status": "implemented_official_shadow_running",
+      "evidence_complete": false,
+      "verified": ["YouTube lifecycle, delivery, rendering, legacy audio bridge, viewer, external black-box, monitoring-self read-only adapters", "raw OAuth current input-quality classification including diagnostic noData", "Prometheus and rolling projection adapters without current authority", "allowlisted payload and bounded identifiers", "per-source deadline and partial-batch rejection", "per-snapshot live receipt clock with strict fixed-replay future rejection", "network-and-database-isolated safe-input projector with fixed 12-file output and a versioned exact-file digest manifest", "sanitized completed runtime lifecycle edge projection", "build-and-source-revision-pinned collector availability and source fresh-coverage report", "wall-clock anchored persistent credential-free arena k3s shadow", "unknown source revision and non-immutable deployment identity fail closed", "deployment identity covers source, image inputs, k3s manifests, database secret bootstrap, and host sentinel behavior", "PostgreSQL pool, table-scoped roles, transaction-safe final SQLite merge and immutable row verification", "bounded database startup and database-independent process liveness"],
+      "pending": ["seven-day received-cycle availability and fresh-coverage capture at 99 percent or higher", "seven-day production cadence diagnostic and resource evidence"]
+    },
+    {
+      "phase": "R3",
+      "code_status": "implemented_official_shadow_running",
+      "evidence_complete": false,
+      "verified": ["seven-domain source policies including separate YouTube input quality", "same-producer identity and raw OAuth current authority", "Prometheus and rolling projection diagnostic-only behavior", "pure deterministic reducer", "history/supporting exclusion", "stale/future/out-of-order behavior", "build-and-source-revision-pinned live semantic parity ledger", "versioned planned-rollout evidence with bounded window and matching Pod start", "delayed rollout proof reconciliation limited to delivery and rendering", "safe-input candidate seven-domain parity equivalent with zero unclassified difference"],
+      "pending": ["fourteen-day v3/v4 shadow comparison at 99 percent cycle coverage", "classification of every live difference"]
+    },
+    {
+      "phase": "R4",
+      "code_status": "implemented_local_and_private_shadow_verified",
+      "evidence_complete": true,
+      "verified": ["episode and transition engine", "unknown debounce", "input-quality noData and same-producer disagreement suppression", "explicit coverage and freshness unknown preservation", "ten-minute explicit input-quality warning repeat", "family repeat cadence", "anchored next notification time", "single recovery", "completed runtime edge creates one recovery-only closed episode after post-recovery good", "event-scoped recovery identity and legacy duplicate suppression", "six sanitized 2026-08-11 replay fixtures"],
+      "pending": []
+    },
+    {
+      "phase": "R5",
+      "code_status": "implemented_isolated_only",
+      "evidence_complete": false,
+      "verified": ["atomic transition and intent enqueue", "SQLite and PostgreSQL lease", "recording and scripted providers", "429/5xx/timeout/permanent failure tests", "dangling-attempt recovery", "delivery epoch", "fenced attempt ownership", "bounded provider deadline", "terminal uncertain handling", "v3 converter and reverse dry-run", "no notifier Pod in the isolated subsystem"],
+      "pending": ["real provider implementation", "credential handoff", "production single-writer cutover", "24-hour initial soak", "seven-day extended soak", "provider-specific idempotency and receipt-reconciliation validation"]
+    },
+    {
+      "phase": "R6",
+      "code_status": "implemented_official_shadow_running",
+      "evidence_complete": false,
+      "verified": ["versioned SLIProjection contract and analytical tables", "SQLite source-revision pin preserved through PostgreSQL migration", "formal five-objective and fast input-quality scope separation", "non-formal projection cannot assert compliance", "no_automatic_recovery enforced by contract and source boundary", "read-only metric registry and thin HTTP server", "27 explicitly declared legacy metric compatibility projections", "fixed-field non-public public-safe shadow artifact without internal IDs or compliance status", "schema v6 cycle-plus-publication-intent transaction and crash-reconcilable exact-byte file publication", "build-and-source-revision-pinned seven-day coverage and fourteen-day parity report", "credential-free read-only HTTP exporter deployment; notifier and runtime executor remain absent"],
+      "pending": ["fixed end-time SLI parity against raw report", "complete existing metric name label meaning and unknown-behavior parity", "existing public reliability schema and redaction parity", "Pi publisher read-only last-good and stale behavior check", "R6 exporter and public-source production cutover decision"]
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "schema": "monitoring_v4.replay_fixture.v1",
+  "source_case": "2026-08-11 YouTube input quality rolling value remained low after current recovery",
+  "domain": "youtube_input_quality",
+  "steps": [
+    {"offset_sec": 0, "state": "good", "reason": "current_good_evidence", "marker": "current-good", "payload": {"historical_sli_pct": 89.387}},
+    {"offset_sec": 600, "state": "good", "reason": "current_good_evidence", "marker": "still-good", "payload": {"historical_sli_pct": 89.387}}
+  ],
+  "expected_phases": []
+}

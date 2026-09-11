@@ -44,6 +44,8 @@ def default_state_root(repo_root: Path) -> Path:
 
 DEFAULT_REPO_ROOT = default_repo_root()
 DEFAULT_STATE_ROOT = default_state_root(DEFAULT_REPO_ROOT)
+TCP_SEND_SAMPLE_FRESH_MAX_AGE_SEC = 5 * 60
+TCP_SEND_SAMPLE_MISSING_AGE_SEC = TCP_SEND_SAMPLE_FRESH_MAX_AGE_SEC + 1
 HEALTH_SUMMARY_SNAPSHOT = "health_summary_snapshot.json"
 OBJECTIVE_SLI_SNAPSHOT = "objective_sli_snapshot.json"
 MAP_EXPECTED_CONTAINERS = (
@@ -504,12 +506,22 @@ def upload_fallback_by_window(state_root: Path, *, now: float) -> dict[str, dict
     return result
 
 
-def latest_tcp_send_sample(state_root: Path, *, now: float) -> dict[str, Any]:
+def latest_tcp_send_observation(state_root: Path, *, now: float) -> dict[str, Any]:
     rows = tcp_send_rows(state_root, now=now)
     if not rows:
         return {}
-    latest = rows[-1]
-    return latest if now - as_float(latest.get("_ts")) <= 5 * 60 else {}
+    return rows[-1]
+
+
+def latest_tcp_send_sample(state_root: Path, *, now: float) -> dict[str, Any]:
+    latest = latest_tcp_send_observation(state_root, now=now)
+    if not latest:
+        return {}
+    return (
+        latest
+        if now - as_float(latest.get("_ts")) <= TCP_SEND_SAMPLE_FRESH_MAX_AGE_SEC
+        else {}
+    )
 
 
 def age_seconds(value: Any, *, now: float) -> float:
@@ -1029,7 +1041,14 @@ def build_metrics(
     runtime_memory = runtime_memory_snapshot(timeout_sec=timeout_sec, now=now)
     runtime_gpu = runtime_gpu_snapshot(timeout_sec=timeout_sec, now=now)
     upload_fallback = upload_fallback_by_window(state_root, now=now)
-    latest_tcp_sample = latest_tcp_send_sample(state_root, now=now)
+    latest_tcp_observation = latest_tcp_send_observation(state_root, now=now)
+    latest_tcp_sample = (
+        latest_tcp_observation
+        if latest_tcp_observation
+        and now - as_float(latest_tcp_observation.get("_ts"))
+        <= TCP_SEND_SAMPLE_FRESH_MAX_AGE_SEC
+        else {}
+    )
 
     writer = MetricWriter()
     writer.metric("stream_v3_exporter_up", 1, help_text="Exporter scrape success.")
@@ -1385,8 +1404,27 @@ def build_metrics(
     writer.metric("stream_v3_network_ffmpeg_socket_notsent_bytes", socket_source.get("notsent"), help_text="FFmpeg socket unsent bytes.")
     writer.metric("stream_v3_network_ffmpeg_socket_unacked", socket_source.get("unacked"), help_text="FFmpeg socket unacked packet count.")
     writer.metric("stream_v3_network_ffmpeg_socket_lastsnd_ms", socket_source.get("lastsnd_ms"), help_text="FFmpeg socket last send age milliseconds.")
-    writer.metric("stream_v3_upload_latest_mbps", latest_tcp_sample.get("mbps", latest_tcp_sample.get("send_mbps")), help_text="Latest FFmpeg TCP send Mbps.")
-    writer.metric("stream_v3_upload_latest_age_seconds", age_seconds(latest_tcp_sample.get("ts_utc") or latest_tcp_sample.get("generated_at_utc"), now=now) if latest_tcp_sample else 0, help_text="Age of latest FFmpeg TCP send sample.")
+    writer.metric(
+        "stream_v3_upload_latest_sample_available",
+        1 if latest_tcp_observation else 0,
+        help_text="A historical FFmpeg TCP send sample is available for upload freshness measurement.",
+    )
+    writer.metric(
+        "stream_v3_upload_latest_mbps",
+        latest_tcp_observation.get("mbps", latest_tcp_observation.get("send_mbps")),
+        help_text="Latest observed FFmpeg TCP send Mbps; use the age and availability metrics to qualify freshness.",
+    )
+    writer.metric(
+        "stream_v3_upload_latest_age_seconds",
+        age_seconds(
+            latest_tcp_observation.get("ts_utc")
+            or latest_tcp_observation.get("generated_at_utc"),
+            now=now,
+        )
+        if latest_tcp_observation
+        else TCP_SEND_SAMPLE_MISSING_AGE_SEC,
+        help_text="Age of the latest observed FFmpeg TCP send sample; missing history is exported above the fresh limit.",
+    )
     writer.metric("stream_v3_network_observer_age_seconds", age_seconds(network.get("ts_utc"), now=now), help_text="Age of network observer sample.")
 
     host_mem = resource_memory.get("host_memory") if isinstance(resource_memory.get("host_memory"), dict) else {}

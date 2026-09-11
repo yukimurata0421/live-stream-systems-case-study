@@ -1,0 +1,100 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: postgres-migrate
+  namespace: stream-monitoring-v4
+  labels:
+    app.kubernetes.io/name: monitoring-v4-migration
+    app.kubernetes.io/component: migration
+    app.kubernetes.io/part-of: stream-monitoring-v4
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 900
+  ttlSecondsAfterFinished: 86400
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: monitoring-v4-migration
+        app.kubernetes.io/component: migration
+        app.kubernetes.io/part-of: stream-monitoring-v4
+    spec:
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: migrate
+          image: __APP_IMAGE__
+          imagePullPolicy: Never
+          args: ["stream_monitoring_v4.commands.postgres_migrate"]
+          envFrom:
+            - configMapRef:
+                name: database-connection
+          env:
+            - name: PGUSER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-admin
+                  key: username
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-admin
+                  key: password
+            - name: STREAM_V4_MIGRATOR_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: database-roles
+                  key: migrator-password
+            - name: STREAM_V4_CORE_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: database-roles
+                  key: core-password
+            - name: STREAM_V4_EXPORTER_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: database-roles
+                  key: exporter-password
+            - name: STREAM_V4_REPORTER_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: database-roles
+                  key: reporter-password
+            - name: STREAM_V4_BACKUP_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: database-roles
+                  key: backup-password
+            - name: STREAM_V4_NOTIFIER_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: database-roles
+                  key: notifier-password
+            - name: STREAM_V4_MAINTENANCE_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: database-roles
+                  key: maintenance-password
+          resources:
+            requests:
+              cpu: 50m
+              memory: 96Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}

@@ -84,6 +84,21 @@ const guardRows = [
     metric: "memory_guard_issue",
     detail: "0 is healthy",
   },
+  {
+    title: "Kubernetes container restarts (current Pod)",
+    metric: "map_runtime_restarts",
+    detail: "Kubernetes restartCount; resets when the Pod is replaced",
+  },
+  {
+    title: "Fast Recovery dispatches (last 1h)",
+    metric: "restarts_1h",
+    detail: "controller restart-kind dispatches; may target an FFmpeg child",
+  },
+  {
+    title: "FFmpeg incident clusters (last 1h)",
+    metric: "ffmpeg_clusters_1h",
+    detail: "restart attempts grouped within 10m; not the 7-day child total",
+  },
 ];
 
 const eventKeys = [
@@ -255,29 +270,48 @@ function renderChecks(map) {
   }
 }
 
-function renderGuards(map) {
+function appendGuardCard(target, { title, value, detail, state }) {
+  const card = document.createElement("article");
+  card.className = `guard ${cssState(state || "unknown")}`;
+
+  const label = document.createElement("span");
+  label.textContent = title;
+  const strong = document.createElement("strong");
+  strong.textContent = value;
+  const small = document.createElement("small");
+  small.textContent = detail;
+
+  card.append(label, strong, small);
+  target.appendChild(card);
+}
+
+function renderGuards(map, autonomy) {
   const target = byId("guardGrid");
   clearNode(target);
 
   for (const row of guardRows) {
     const item = map.get(row.metric);
-    const state = item?.state || "unknown";
-    const card = document.createElement("article");
-    card.className = `guard ${cssState(state)}`;
-
-    const label = document.createElement("span");
-    label.textContent = row.title;
-    const value = document.createElement("strong");
-    value.textContent = formatValue(item);
-    const detail = document.createElement("small");
-    detail.textContent = row.detail;
-
-    card.append(label, value, detail);
-    target.appendChild(card);
+    appendGuardCard(target, {
+      title: row.title,
+      value: formatValue(item),
+      detail: row.detail,
+      state: item?.state || "unknown",
+    });
   }
+
+  const activity = autonomy?.activity;
+  appendGuardCard(target, {
+    title: "Recovery activity",
+    value: autonomy?.activityAvailable ? `${activity.total} / ${activity.days}d` : "n/a",
+    detail: autonomy?.activityAvailable
+      ? `stream/runtime ${activity.counts.restart_stream} · FFmpeg child ${activity.counts.restart_ffmpeg} · browser ${activity.counts.restart_browser} · JST`
+      : "7-day action/outcome evidence unavailable",
+    state: autonomy?.state || "unknown",
+  });
 }
 
 function formatReliabilityValue(value, unit) {
+  if (value === null || value === undefined) return "n/a";
   const num = Number(value);
   if (!Number.isFinite(num)) return "n/a";
   if (unit === "%") return `${num.toFixed(3)}%`;
@@ -448,10 +482,34 @@ function boundaryClassifierReplay(loki, windowName) {
   return boundaryWindow(loki, windowName)?.current_classifier_replay || {};
 }
 
-function boundaryInterpretation(loki) {
-  return boundaryWindow(loki, "last_30d")?.interpretation
-    || boundaryWindow(loki, "last_7d")?.interpretation
-    || "";
+function recoveryActivity(loki) {
+  const activity = loki?.recovery_activity || {};
+  const period = activity.period || {};
+  const counts = activity.action_counts || {};
+  const days = Number(period.days || 7);
+  const total = Number(activity.total_executed || 0);
+  const activeDays = Number(activity.active_day_count || 0);
+  const averagePerDay = Number(activity.average_per_day || 0);
+  return {
+    status: activity.status || "unknown",
+    days,
+    total,
+    activeDays,
+    averagePerDay,
+    counts: {
+      restart_stream: Number(counts.restart_stream || 0),
+      restart_ffmpeg: Number(counts.restart_ffmpeg || 0),
+      restart_dj: Number(counts.restart_dj || 0),
+      restart_browser: Number(counts.restart_browser || 0),
+    },
+    startDate: period.start_date || "",
+    endDate: period.end_date || "",
+    timezone: period.timezone || "Asia/Tokyo",
+    latestActionAt: activity.latest_action_at_utc || "",
+    sourceComplete: activity.source_complete === true,
+    countBasis: activity.count_basis || "",
+    scopeNote: activity.scope_note || "",
+  };
 }
 
 function autonomySummary(loki) {
@@ -467,112 +525,40 @@ function autonomySummary(loki) {
   const shadow = orchestrator.filter(isShadowEvent);
   const gated = plans.filter(isGatedEvent);
   const latest = orchestrator[0] || plans[0] || null;
-  const productionRestart30d = productionActionCount(loki, "last_30d", "restart_stream");
-  const productionRestart7d = productionActionCount(loki, "last_7d", "restart_stream");
-  const recoveryIntent30d = boundaryScalar(loki, "last_30d", "shadow_recovery_intent_action_count");
+  const activity = recoveryActivity(loki);
+  const boundaryFresh = loki?.recovery_boundary?.fresh === true;
   const recoveryIntent7d = boundaryScalar(loki, "last_7d", "shadow_recovery_intent_action_count");
-  const recoveryFalsePositive30d = boundaryReasonCount(loki, "last_30d", "false_positive_shadow");
   const recoveryFalsePositive7d = boundaryReasonCount(loki, "last_7d", "false_positive_shadow");
   const hasRecoveryIntentSli = boundaryHasField(loki, "last_7d", "shadow_recovery_intent_action_count");
-  const classifierReplay30d = boundaryClassifierReplay(loki, "last_30d");
   const classifierReplay7d = boundaryClassifierReplay(loki, "last_7d");
-  const classifierEligible30d = Number(classifierReplay30d.eligible_count || 0);
-  const classifierCovered30d = Number(classifierReplay30d.covered_count || 0);
-  const classifierUncovered30d = Number(classifierReplay30d.uncovered_count || 0);
   const classifierEligible7d = Number(classifierReplay7d.eligible_count || 0);
   const classifierCovered7d = Number(classifierReplay7d.covered_count || 0);
   const classifierUncovered7d = Number(classifierReplay7d.uncovered_count || 0);
-  const hasClassifierReplay = boundaryHasField(loki, "last_7d", "current_classifier_replay");
-  const recoveryIntentText = hasRecoveryIntentSli
-    ? `executor recovery intent ${recoveryIntent30d} in 30d (${recoveryIntent7d} in 7d), false-positive intent ${recoveryFalsePositive30d} in 30d (${recoveryFalsePositive7d} in 7d)`
-    : "executor recovery intent SLI pending";
-  const classifierReplayText = hasClassifierReplay
-    ? `current classifier replay ${classifierCovered30d}/${classifierEligible30d} in 30d (${classifierCovered7d}/${classifierEligible7d} in 7d), uncovered ${classifierUncovered30d} in 30d (${classifierUncovered7d} in 7d)`
-    : "current classifier replay pending";
-  const ownerText = productionRestart30d
-    ? `production restart_stream ${productionRestart30d} in 30d (${productionRestart7d} in 7d); ${classifierReplayText}; ${recoveryIntentText}; executor has 0 executed events`
-    : "production restart ownership not proven in public boundary snapshot";
-
-  if (executed.length) {
-    return {
-      state: "ok",
-      label: "executed seen",
-      meta: `${executed.length} executed evidence item(s), latest ${eventTimestamp(executed[0]) || "n/a"}`,
-      executed,
-      shadow,
-      gated,
-      latest,
-      productionRestart30d,
-      productionRestart7d,
-      recoveryIntent30d,
-      recoveryIntent7d,
-      recoveryFalsePositive30d,
-      recoveryFalsePositive7d,
-      classifierReplay30d,
-      classifierReplay7d,
-      classifierEligible30d,
-      classifierCovered30d,
-      classifierUncovered30d,
-      classifierEligible7d,
-      classifierCovered7d,
-      classifierUncovered7d,
-      hasClassifierReplay,
-      ownerText,
-    };
-  }
-
-  if (shadow.length) {
-    return {
-      state: "ok",
-      label: productionRestart30d ? "runtime-owned" : "shadow gated",
-      meta: `${ownerText} / latest executor sample ${eventTimestamp(shadow[0]) || "n/a"}`,
-      executed,
-      shadow,
-      gated,
-      latest,
-      productionRestart30d,
-      productionRestart7d,
-      recoveryIntent30d,
-      recoveryIntent7d,
-      recoveryFalsePositive30d,
-      recoveryFalsePositive7d,
-      classifierReplay30d,
-      classifierReplay7d,
-      classifierEligible30d,
-      classifierCovered30d,
-      classifierUncovered30d,
-      classifierEligible7d,
-      classifierCovered7d,
-      classifierUncovered7d,
-      hasClassifierReplay,
-      ownerText,
-    };
-  }
-
+  const hasClassifierReplay = boundaryFresh
+    && boundaryHasField(loki, "last_7d", "current_classifier_replay");
+  const activityAvailable = ["ok", "partial"].includes(activity.status);
+  const activityState = activity.status === "ok" ? "ok" : activity.status === "partial" ? "warn" : "unknown";
+  const activityMeta = activityAvailable
+    ? `${activity.activeDays}/${activity.days} active days · avg ${activity.averagePerDay.toFixed(1)}/day · last ${activity.days} JST days`
+    : "current production recovery activity unavailable";
   return {
-    state: "unknown",
-    label: "unknown",
-    meta: "no recovery orchestrator evidence in public snapshot",
+    state: activityState,
+    label: activityAvailable ? `${activity.total} recoveries` : "unknown",
+    meta: activityMeta,
     executed,
     shadow,
     gated,
     latest,
-    productionRestart30d,
-    productionRestart7d,
-    recoveryIntent30d,
+    activity,
+    activityAvailable,
+    boundaryFresh,
     recoveryIntent7d,
-    recoveryFalsePositive30d,
     recoveryFalsePositive7d,
-    classifierReplay30d,
     classifierReplay7d,
-    classifierEligible30d,
-    classifierCovered30d,
-    classifierUncovered30d,
     classifierEligible7d,
     classifierCovered7d,
     classifierUncovered7d,
     hasClassifierReplay,
-    ownerText,
   };
 }
 
@@ -645,6 +631,121 @@ function makeEvidenceCard(title, state, label, meta) {
   return card;
 }
 
+function makeRecoveryActivityCard(autonomy) {
+  const activity = autonomy.activity;
+  const card = document.createElement("article");
+  card.className = `evidence-card recovery-activity-card ${cssState(autonomy.state)}`;
+
+  const head = document.createElement("div");
+  head.className = "recovery-card-head";
+  const name = document.createElement("span");
+  name.textContent = "Recovery activity";
+  const coverage = document.createElement("span");
+  coverage.className = `recovery-coverage ${activity.sourceComplete ? "complete" : "partial"}`;
+  coverage.textContent = activity.sourceComplete ? "complete log" : "partial log";
+  head.append(name, coverage);
+
+  const summary = document.createElement("div");
+  summary.className = "recovery-summary";
+
+  const total = document.createElement("div");
+  total.className = "recovery-total";
+  const totalValue = document.createElement("strong");
+  totalValue.textContent = autonomy.activityAvailable ? String(activity.total) : "—";
+  const totalLabel = document.createElement("span");
+  totalLabel.textContent = "recoveries";
+  const totalWindow = document.createElement("small");
+  totalWindow.textContent = `Last ${activity.days} JST days`;
+  total.append(totalValue, totalLabel, totalWindow);
+
+  const stats = document.createElement("dl");
+  stats.className = "recovery-stats";
+  const statItems = [
+    ["Active days", autonomy.activityAvailable ? `${activity.activeDays}/${activity.days}` : "—"],
+    ["Daily average", autonomy.activityAvailable ? activity.averagePerDay.toFixed(1) : "—"],
+  ];
+  for (const [label, value] of statItems) {
+    const stat = document.createElement("div");
+    const term = document.createElement("dt");
+    term.textContent = label;
+    const detail = document.createElement("dd");
+    detail.textContent = value;
+    stat.append(term, detail);
+    stats.appendChild(stat);
+  }
+  summary.append(total, stats);
+
+  const actions = document.createElement("div");
+  actions.className = "recovery-actions";
+  const items = [
+    ["Stream / runtime", activity.counts.restart_stream],
+    ["FFmpeg child", activity.counts.restart_ffmpeg],
+    ["Auto DJ", activity.counts.restart_dj],
+    ["Browser helper", activity.counts.restart_browser],
+  ];
+  for (const [label, count] of items) {
+    const action = document.createElement("div");
+    action.className = "recovery-action";
+    const actionHead = document.createElement("div");
+    actionHead.className = "recovery-action-head";
+    const actionLabel = document.createElement("span");
+    actionLabel.textContent = label;
+    const actionValue = document.createElement("b");
+    actionValue.textContent = String(count);
+    actionHead.append(actionLabel, actionValue);
+    const track = document.createElement("div");
+    track.className = "recovery-action-track";
+    const fill = document.createElement("i");
+    fill.style.setProperty(
+      "--recovery-share",
+      `${activity.total > 0 ? Math.min(100, (count / activity.total) * 100) : 0}%`,
+    );
+    track.appendChild(fill);
+    action.append(actionHead, track);
+    actions.appendChild(action);
+  }
+
+  const detail = document.createElement("small");
+  detail.className = "recovery-footnote";
+  detail.textContent = autonomy.activityAvailable
+    ? `Production action/outcome evidence · ${activity.scopeNote || "failure domains are counted separately"} · JST ${activity.startDate}–${activity.endDate}`
+    : autonomy.meta;
+  card.append(head, summary, actions, detail);
+  return card;
+}
+
+function makeRecoveryOwnershipCard(autonomy) {
+  const state = autonomy.boundaryFresh && autonomy.hasClassifierReplay ? "ok" : "warn";
+  const card = document.createElement("article");
+  card.className = `evidence-card recovery-ownership-card ${cssState(state)}`;
+
+  const name = document.createElement("span");
+  name.textContent = "Recovery ownership";
+  const value = document.createElement("strong");
+  value.textContent = autonomy.boundaryFresh ? "Runtime-owned" : "Boundary stale";
+
+  const facts = document.createElement("dl");
+  facts.className = "recovery-boundary-facts";
+  const items = [
+    ["Classifier replay", autonomy.hasClassifierReplay ? `${autonomy.classifierCovered7d}/${autonomy.classifierEligible7d}` : "n/a"],
+    ["Uncovered", autonomy.hasClassifierReplay ? autonomy.classifierUncovered7d : "n/a"],
+    ["Shadow intent", autonomy.boundaryFresh ? autonomy.recoveryIntent7d : "n/a"],
+    ["False positive", autonomy.boundaryFresh ? autonomy.recoveryFalsePositive7d : "n/a"],
+  ];
+  for (const [label, factValue] of items) {
+    const term = document.createElement("dt");
+    term.textContent = label;
+    const detail = document.createElement("dd");
+    detail.textContent = String(factValue);
+    facts.append(term, detail);
+  }
+
+  const note = document.createElement("small");
+  note.textContent = `Shadow observes only · orchestrator executed ${autonomy.executed.length} · watchdog, fast-recovery and stream-engine execute production actions`;
+  card.append(name, value, facts, note);
+  return card;
+}
+
 function renderEvidence(loki, freshness, autonomy) {
   const priority7d = sectionById(loki, "priority_7d");
   const priorityCount = priority7d?.event_count ?? 0;
@@ -653,10 +754,9 @@ function renderEvidence(loki, freshness, autonomy) {
   const gateCount = autonomy.gated.length;
   const target = byId("evidenceGrid");
   clearNode(target);
-  byId("evidenceCount").textContent = `${priorityCount} priority / ${gateCount} gated / ${autonomy.productionRestart30d || 0} production restarts`;
-  const ownershipState = autonomy.productionRestart30d
-    ? (autonomy.hasClassifierReplay ? "ok" : "warn")
-    : "warn";
+  byId("evidenceCount").textContent = autonomy.activityAvailable
+    ? `${autonomy.activity.total} recoveries / ${autonomy.activity.activeDays} active days / ${autonomy.activity.days}d JST`
+    : `${priorityCount} priority / ${gateCount} gated`;
 
   target.appendChild(makeEvidenceCard(
     "Mirror freshness",
@@ -683,25 +783,9 @@ function renderEvidence(loki, freshness, autonomy) {
       : "no priority incident in the 7d public Loki retention",
   ));
 
-  target.appendChild(makeEvidenceCard(
-    "Recovery ownership",
-    ownershipState,
-    autonomy.classifierEligible30d ? `${autonomy.classifierCovered30d}/${autonomy.classifierEligible30d} replay` : autonomy.productionRestart30d ? "runtime-owned" : "unproven",
-    autonomy.productionRestart30d
-      ? `${autonomy.ownerText}; ${boundaryInterpretation(loki)}`
-      : autonomy.ownerText,
-  ));
+  target.appendChild(makeRecoveryActivityCard(autonomy));
 
-  target.appendChild(makeEvidenceCard(
-    "Recovery execution",
-    autonomy.executed.length || autonomy.productionRestart30d || autonomy.shadow.length ? "ok" : "unknown",
-    autonomy.executed.length
-      ? "executed"
-      : autonomy.productionRestart30d
-        ? "runtime-owned"
-        : autonomy.shadow.length ? "shadow gated" : "unknown",
-    autonomy.meta,
-  ));
+  target.appendChild(makeRecoveryOwnershipCard(autonomy));
 
   target.appendChild(makeEvidenceCard(
     "Gate behavior",
@@ -825,7 +909,7 @@ async function refresh() {
 
   renderChecks(map);
   renderReliability(reliability);
-  renderGuards(map);
+  renderGuards(map, autonomy);
   renderTrends(prom);
   renderEvidence(loki, freshness, autonomy);
   renderEvents(loki);

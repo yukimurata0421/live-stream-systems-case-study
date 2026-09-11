@@ -135,6 +135,10 @@ class Config:
     fifo_drop_pkts_on_overflow: bool
     fifo_restart_with_keyframe: bool
     event_log_file: Path
+    ffmpeg_stderr_log_file: Path
+    ffmpeg_stderr_max_bytes: int
+    ffmpeg_stderr_backup_count: int
+    transport_snapshot_file: Path
     restart_reason_file: Path
     pre_ffmpeg_min_wait_sec: float
     pre_ffmpeg_min_wait_sec_restart: float
@@ -274,7 +278,33 @@ def load_config() -> Config:
         fifo_drop_pkts_on_overflow=to_bool(e("RTMP_FIFO_DROP_PKTS_ON_OVERFLOW", "0")),
         fifo_restart_with_keyframe=to_bool(e("RTMP_FIFO_RESTART_WITH_KEYFRAME", "1"), True),
         event_log_file=Path(e("EVENT_LOG_FILE", str(runtime_log_dir / "stream_engine_events.jsonl"))),
-        restart_reason_file=Path(e("RESTART_REASON_FILE", str(base_dir / "state" / "runtime" / "restart_reason.json"))),
+        ffmpeg_stderr_log_file=Path(
+            e("FFMPEG_STDERR_LOG_FILE", str(runtime_log_dir / "ffmpeg_stderr.jsonl"))
+        ),
+        ffmpeg_stderr_max_bytes=max(
+            4096,
+            to_int(e("FFMPEG_STDERR_MAX_BYTES", str(16 * 1024 * 1024)), 16 * 1024 * 1024),
+        ),
+        ffmpeg_stderr_backup_count=max(0, to_int(e("FFMPEG_STDERR_BACKUP_COUNT", "4"), 4)),
+        transport_snapshot_file=Path(
+            e(
+                "FR_TRANSPORT_SNAPSHOT_FILE",
+                str(
+                    Path(e("FR_STATE_FILE", str(base_dir / "fast_recovery_state.json"))).parent
+                    / "runtime"
+                    / "ffmpeg_transport_latest.json"
+                ),
+            )
+        ),
+        restart_reason_file=Path(
+            e(
+                "RESTART_REASON_FILE",
+                e(
+                    "FR_RESTART_REASON_FILE",
+                    str(base_dir / "state" / "runtime" / "restart_reason.json"),
+                ),
+            )
+        ),
         pre_ffmpeg_min_wait_sec=max(0.0, to_float(e("PRE_FFMPEG_MIN_WAIT_SEC", "0"), 0.0)),
         pre_ffmpeg_min_wait_sec_restart=max(0.0, to_float(e("PRE_FFMPEG_MIN_WAIT_SEC_RESTART", "0"), 0.0)),
         pre_ffmpeg_min_wait_sec_test=max(0.0, to_float(e("PRE_FFMPEG_MIN_WAIT_SEC_TEST", "0"), 0.0)),

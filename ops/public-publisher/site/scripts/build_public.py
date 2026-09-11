@@ -28,7 +28,7 @@ def run_reliability_collect() -> None:
     if not collector.exists():
         raise FileNotFoundError(f"reliability collector not found: {collector}")
 
-    subprocess.run([sys.executable, str(collector)], check=True)
+    subprocess.run([sys.executable, str(collector), "--force"], check=True)
 
 
 def copy_required(name: str) -> None:

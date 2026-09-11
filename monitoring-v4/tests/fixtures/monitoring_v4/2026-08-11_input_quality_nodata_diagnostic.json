@@ -1,0 +1,10 @@
+{
+  "schema": "monitoring_v4.replay_fixture.v1",
+  "source_case": "2026-08-11 YouTube health noData is diagnostic-only current evidence",
+  "domain": "youtube_input_quality",
+  "steps": [
+    {"offset_sec": 0, "state": "unknown", "reason": "input_quality_health_nodata", "marker": "nodata-first"},
+    {"offset_sec": 300, "state": "unknown", "reason": "input_quality_health_nodata", "marker": "nodata-second"}
+  ],
+  "expected_phases": []
+}

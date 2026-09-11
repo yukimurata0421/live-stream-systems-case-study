@@ -1,0 +1,138 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "monitoring_v4.youtube_api_evidence.v1",
+  "title": "Monitoring v4 sanitized YouTube API evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "collector_revision",
+    "request_started_at",
+    "collected_at",
+    "probe_status",
+    "result_kind",
+    "http_status",
+    "error_reason",
+    "lifecycle_status",
+    "stream_status",
+    "stream_health_status",
+    "configuration_issues",
+    "broadcast_id_sha256",
+    "bound_stream_id_sha256",
+    "active_broadcast_count",
+    "api_request_count",
+    "oauth_refresh_performed",
+    "oauth_scope_class",
+    "oauth_scope_count"
+  ],
+  "properties": {
+    "schema": {"const": "monitoring_v4.youtube_api_evidence.v1"},
+    "collector_revision": {"type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,79}$"},
+    "request_started_at": {"type": "string", "format": "date-time"},
+    "collected_at": {"type": "string", "format": "date-time"},
+    "probe_status": {"enum": ["ok", "unknown"]},
+    "result_kind": {
+      "enum": [
+        "observed",
+        "active_broadcast_missing",
+        "active_broadcast_ambiguous",
+        "bound_stream_missing",
+        "stream_missing",
+        "oauth_auth",
+        "oauth_http",
+        "oauth_network",
+        "oauth_timeout",
+        "oauth_response_invalid",
+        "oauth_response_too_large",
+        "oauth_redirect_rejected",
+        "api_auth",
+        "api_quota",
+        "api_rate_limited",
+        "api_http",
+        "api_upstream",
+        "api_network",
+        "api_timeout",
+        "api_response_invalid",
+        "api_response_too_large",
+        "api_redirect_rejected",
+        "api_pagination_limit",
+        "collector_error"
+      ]
+    },
+    "http_status": {"type": "integer", "minimum": 0, "maximum": 599},
+    "error_reason": {
+      "type": "string",
+      "pattern": "^$|^[A-Za-z][A-Za-z0-9_.-]{0,79}$"
+    },
+    "lifecycle_status": {
+      "enum": ["", "complete", "created", "live", "liveStarting", "ready", "revoked", "testStarting", "testing", "unrecognized"]
+    },
+    "stream_status": {
+      "enum": ["", "active", "created", "error", "inactive", "ready", "unrecognized"]
+    },
+    "stream_health_status": {
+      "enum": ["", "good", "ok", "bad", "noData", "unrecognized"]
+    },
+    "configuration_issues": {
+      "type": "array",
+      "maxItems": 32,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type", "severity"],
+        "properties": {
+          "type": {"type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,79}$"},
+          "severity": {"enum": ["info", "warning", "error", "unrecognized"]}
+        }
+      }
+    },
+    "broadcast_id_sha256": {"type": "string", "pattern": "^$|^[0-9a-f]{64}$"},
+    "bound_stream_id_sha256": {"type": "string", "pattern": "^$|^[0-9a-f]{64}$"},
+    "active_broadcast_count": {"type": "integer", "minimum": 0, "maximum": 150},
+    "api_request_count": {"type": "integer", "minimum": 0, "maximum": 4},
+    "oauth_refresh_performed": {"type": "boolean"},
+    "oauth_scope_class": {
+      "enum": [
+        "unavailable",
+        "unreported",
+        "youtube_readonly_only",
+        "youtube_broader",
+        "mixed_or_other"
+      ]
+    },
+    "oauth_scope_count": {"type": "integer", "minimum": 0, "maximum": 32}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"probe_status": {"const": "ok"}}},
+      "then": {
+        "properties": {
+          "result_kind": {
+            "enum": [
+              "observed",
+              "active_broadcast_missing",
+              "active_broadcast_ambiguous",
+              "bound_stream_missing",
+              "stream_missing"
+            ]
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "result_kind": {
+            "not": {
+              "enum": [
+                "observed",
+                "active_broadcast_missing",
+                "active_broadcast_ambiguous",
+                "bound_stream_missing",
+                "stream_missing"
+              ]
+            }
+          }
+        }
+      }
+    }
+  ]
+}

@@ -562,6 +562,21 @@ def correlate_connectivity_incidents(
     )
 
 
+def deduplicate_incidents_by_id(items: list[dict]) -> list[dict]:
+    """Collapse duplicate producers while keeping the freshest later payload."""
+    deduplicated: list[dict] = []
+    positions: dict[str, int] = {}
+    for item in items:
+        ident = str(item.get("id") or "")
+        if ident and ident in positions:
+            deduplicated[positions[ident]] = item
+            continue
+        if ident:
+            positions[ident] = len(deduplicated)
+        deduplicated.append(item)
+    return deduplicated
+
+
 def _current_input_quality_observation(input_feedback: dict) -> tuple[str, dict]:
     for source, key in (
         ("raw_oauth", "raw_current"),
@@ -712,6 +727,7 @@ def operational_reliability_incidents(*, status_file: Path | None, now_ts: int) 
                     recovery_type="measurement_source_recovery",
                     follow_up="source probe と retention gap を直し、SLO値自体は変更しない",
                     observed_ts=observed_ts,
+                    repeat_sec=3600,
                 )
             )
         # YouTube input-quality raw/Prometheus differences retain
@@ -1120,10 +1136,12 @@ def collect_notification_incidents(
                 )
             )
 
-    return correlate_connectivity_incidents(
-        incidents,
-        state_file=fast_recovery_state_file,
-        now_ts=now,
+    return deduplicate_incidents_by_id(
+        correlate_connectivity_incidents(
+            incidents,
+            state_file=fast_recovery_state_file,
+            now_ts=now,
+        )
     )
 
 

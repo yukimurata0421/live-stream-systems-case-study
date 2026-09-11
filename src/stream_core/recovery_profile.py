@@ -88,6 +88,13 @@ def build_restart_context(
     ffmpeg_uptime_sec: int = 0,
     metrics: dict[str, Any] | None = None,
     emergency_low_upload_profile: dict[str, Any] | None = None,
+    recovery_action_id: str = "",
+    controller_id: str = "",
+    execution_mode: str = "",
+    execute: bool | None = None,
+    idempotency_key: str = "",
+    requested_signal: str = "",
+    recovery_scope: str = "",
 ) -> dict[str, Any]:
     payload: dict[str, Any] = {
         "ts_utc": utc_text(now_ts),
@@ -99,6 +106,20 @@ def build_restart_context(
         "ffmpeg_pid": ffmpeg_pid,
         "ffmpeg_uptime_sec": ffmpeg_uptime_sec,
     }
+    if recovery_action_id:
+        payload["recovery_action_id"] = recovery_action_id
+    if controller_id:
+        payload["controller_id"] = controller_id
+    if execution_mode:
+        payload["execution_mode"] = execution_mode
+    if execute is not None:
+        payload["execute"] = bool(execute)
+    if idempotency_key:
+        payload["idempotency_key"] = idempotency_key
+    if requested_signal:
+        payload["requested_signal"] = requested_signal
+    if recovery_scope:
+        payload["recovery_scope"] = recovery_scope
     if metrics:
         payload["metrics"] = metrics
     if emergency_low_upload_profile:

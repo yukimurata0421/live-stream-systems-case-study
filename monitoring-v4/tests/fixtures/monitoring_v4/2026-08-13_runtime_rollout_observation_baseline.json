@@ -1,0 +1,229 @@
+{
+  "fixture_id": "2026-08-13_runtime_rollout_observation_baseline",
+  "historical_expected": {
+    "episodes": 2,
+    "external_delivery_attempts": 0,
+    "external_delivery_results": 0,
+    "logical_intents": 6,
+    "persisted_parity": {
+      "16:50:20Z": {
+        "delivery_classification": "unclassified_contract_difference",
+        "equivalent": false,
+        "skew_sec": -19
+      },
+      "16:51:20Z": {
+        "equivalent": true
+      }
+    },
+    "provenance": "historical_observed",
+    "transitions": [
+      {
+        "domain": "delivery",
+        "occurred_at": "2026-08-12T16:50:20Z",
+        "phase": "detected",
+        "severity": "critical"
+      },
+      {
+        "domain": "rendering",
+        "occurred_at": "2026-08-12T16:50:20Z",
+        "phase": "detected",
+        "severity": "warning"
+      },
+      {
+        "domain": "delivery",
+        "occurred_at": "2026-08-12T16:51:20Z",
+        "phase": "recovered",
+        "severity": "info"
+      },
+      {
+        "domain": "rendering",
+        "occurred_at": "2026-08-12T16:51:20Z",
+        "phase": "recovered",
+        "severity": "info"
+      }
+    ]
+  },
+  "observations": [
+    {
+      "alias": "obs-delivery-runtime-delivery-watchdog-2026-08-12t16-48-32z-good",
+      "domain": "delivery",
+      "evidence_role": "current_authoritative",
+      "freshness_limit_sec": 180,
+      "observed_at": "2026-08-12T16:48:32Z",
+      "payload": {
+        "ingest_connected": true,
+        "local_ok": true,
+        "stream_active": true
+      },
+      "producer_revision": "stream-monitoring-v4-r2.2",
+      "provenance": "historical_observed",
+      "reason_code": "runtime_delivery_good",
+      "received_at": "2026-08-12T16:49:20Z",
+      "source": "runtime_delivery_watchdog",
+      "source_event_alias": "event-delivery-runtime-delivery-watchdog-2026-08-12t16-48-32z-good",
+      "source_generation_alias": "generation-delivery-runtime_delivery_watchdog",
+      "state": "good"
+    },
+    {
+      "alias": "obs-rendering-map-runtime-2026-08-12t16-48-32z-good",
+      "domain": "rendering",
+      "evidence_role": "current_authoritative",
+      "freshness_limit_sec": 180,
+      "observed_at": "2026-08-12T16:48:32Z",
+      "payload": {
+        "conditions": {
+          "browser_contract": true,
+          "deployment_ready": true,
+          "pod_topology_ready": true,
+          "precipitation_fetcher_health": true,
+          "precipitation_status": true,
+          "render_heartbeat": true,
+          "runtime_readiness": true
+        },
+        "critical_reasons": [],
+        "delivery_critical_ok": true,
+        "probe_error_count": 0,
+        "weather_ok": true,
+        "weather_reasons": []
+      },
+      "producer_revision": "stream-monitoring-v4-r2.3",
+      "provenance": "historical_observed",
+      "reason_code": "map_runtime_good",
+      "received_at": "2026-08-12T16:49:20Z",
+      "source": "map_runtime",
+      "source_event_alias": "event-rendering-map-runtime-2026-08-12t16-48-32z-good",
+      "source_generation_alias": "generation-rendering-map_runtime",
+      "state": "good"
+    },
+    {
+      "alias": "obs-rendering-map-runtime-2026-08-12t16-49-51z-bad",
+      "domain": "rendering",
+      "evidence_role": "current_authoritative",
+      "freshness_limit_sec": 180,
+      "observed_at": "2026-08-12T16:49:51Z",
+      "payload": {
+        "conditions": {
+          "browser_contract": true,
+          "deployment_ready": false,
+          "pod_topology_ready": false,
+          "precipitation_fetcher_health": true,
+          "precipitation_status": true,
+          "render_heartbeat": true,
+          "runtime_readiness": false
+        },
+        "critical_reasons": [],
+        "delivery_critical_ok": false,
+        "probe_error_count": 0,
+        "weather_ok": true,
+        "weather_reasons": []
+      },
+      "producer_revision": "stream-monitoring-v4-r2.3",
+      "provenance": "historical_observed",
+      "reason_code": "map_runtime_bad",
+      "received_at": "2026-08-12T16:50:20Z",
+      "source": "map_runtime",
+      "source_event_alias": "event-rendering-map-runtime-2026-08-12t16-49-51z-bad",
+      "source_generation_alias": "generation-rendering-map_runtime",
+      "state": "bad"
+    },
+    {
+      "alias": "obs-delivery-runtime-delivery-watchdog-2026-08-12t16-50-12z-bad",
+      "domain": "delivery",
+      "evidence_role": "current_authoritative",
+      "freshness_limit_sec": 180,
+      "observed_at": "2026-08-12T16:50:12Z",
+      "payload": {
+        "ingest_connected": false,
+        "local_ok": false,
+        "stream_active": false
+      },
+      "producer_revision": "stream-monitoring-v4-r2.2",
+      "provenance": "historical_observed",
+      "reason_code": "runtime_delivery_bad",
+      "received_at": "2026-08-12T16:50:20Z",
+      "source": "runtime_delivery_watchdog",
+      "source_event_alias": "event-delivery-runtime-delivery-watchdog-2026-08-12t16-50-12z-bad",
+      "source_generation_alias": "generation-delivery-runtime_delivery_watchdog",
+      "state": "bad"
+    },
+    {
+      "alias": "obs-delivery-runtime-delivery-watchdog-2026-08-12t16-50-58z-good",
+      "domain": "delivery",
+      "evidence_role": "current_authoritative",
+      "freshness_limit_sec": 180,
+      "observed_at": "2026-08-12T16:50:58Z",
+      "payload": {
+        "ingest_connected": true,
+        "local_ok": true,
+        "stream_active": true
+      },
+      "producer_revision": "stream-monitoring-v4-r2.2",
+      "provenance": "historical_observed",
+      "reason_code": "runtime_delivery_good",
+      "received_at": "2026-08-12T16:51:20Z",
+      "source": "runtime_delivery_watchdog",
+      "source_event_alias": "event-delivery-runtime-delivery-watchdog-2026-08-12t16-50-58z-good",
+      "source_generation_alias": "generation-delivery-runtime_delivery_watchdog",
+      "state": "good"
+    },
+    {
+      "alias": "obs-rendering-map-runtime-2026-08-12t16-50-58z-good",
+      "domain": "rendering",
+      "evidence_role": "current_authoritative",
+      "freshness_limit_sec": 180,
+      "observed_at": "2026-08-12T16:50:58Z",
+      "payload": {
+        "conditions": {
+          "browser_contract": true,
+          "deployment_ready": true,
+          "pod_topology_ready": true,
+          "precipitation_fetcher_health": true,
+          "precipitation_status": true,
+          "render_heartbeat": true,
+          "runtime_readiness": true
+        },
+        "critical_reasons": [],
+        "delivery_critical_ok": true,
+        "probe_error_count": 0,
+        "weather_ok": true,
+        "weather_reasons": []
+      },
+      "producer_revision": "stream-monitoring-v4-r2.3",
+      "provenance": "historical_observed",
+      "reason_code": "map_runtime_good",
+      "received_at": "2026-08-12T16:51:20Z",
+      "source": "map_runtime",
+      "source_event_alias": "event-rendering-map-runtime-2026-08-12t16-50-58z-good",
+      "source_generation_alias": "generation-rendering-map_runtime",
+      "state": "good"
+    }
+  ],
+  "provenance": {
+    "dump_sha256": "0771dfe5c573d562d9a2bbbcb92a4edcca8d9271408e1a76dd4525f0cbc38ff4",
+    "historical_end": "2026-08-12T16:51:20Z",
+    "historical_revision": {
+      "build": "ef2f0b0d5ed9e0f5fefac6d4ef1f72d508ae2afa",
+      "incident": "monitoring-v4-incident-policy-r4.2",
+      "reducer": "monitoring-v4-current-reducer-r3.2",
+      "route": "monitoring-v4-route-policy-r5.1",
+      "schema_revision": 3,
+      "source": "stream-v3-input-quality-raw-authority-v1.19-20260811@392d4af3970303ed394b6eaa067c22e897886ab5",
+      "source_policy": "monitoring-v4-source-policy-r3.3",
+      "template": "monitoring-v4-ja-r5.1"
+    },
+    "historical_start": "2026-08-12T16:48:32Z",
+    "historical_window_id": "HR-20260813-RUNTIME-ROLLOUT",
+    "sanitization_revision": "monitoring-v4-historical-sanitization-r1"
+  },
+  "replay_boundary": "persisted_observation",
+  "schema": "monitoring_v4.historical_replay_window.v1",
+  "synthetic_actions": [],
+  "unknown": [
+    "raw_source_body",
+    "exact_pod_uid",
+    "ffmpeg_exit_direct_cause",
+    "rollout_initiator",
+    "historical_cri_digest",
+    "exact_pod_process_lifecycle"
+  ]
+}

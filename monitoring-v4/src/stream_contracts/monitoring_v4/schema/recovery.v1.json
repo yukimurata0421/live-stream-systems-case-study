@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "monitoring_v4.recovery_contracts.v1",
+  "oneOf": [
+    {"type": "object", "required": ["schema", "authorization_id", "episode_id", "action", "target", "authorized_at", "expires_at", "policy_revision", "blockers"]},
+    {"type": "object", "required": ["schema", "command_id", "authorization_id", "action", "target", "issued_at", "expires_at", "idempotency_key", "target_generation"]},
+    {"type": "object", "required": ["schema", "result_id", "command_id", "status", "observed_at", "reason_code", "target_generation"]}
+  ]
+}

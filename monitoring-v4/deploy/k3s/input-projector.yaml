@@ -1,0 +1,107 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: monitoring-v4-input-projector
+  namespace: stream-monitoring-v4
+  labels:
+    app.kubernetes.io/name: monitoring-v4-input-projector
+    app.kubernetes.io/component: input-projector
+    app.kubernetes.io/part-of: stream-monitoring-v4
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: monitoring-v4-input-projector
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: monitoring-v4-input-projector
+        app.kubernetes.io/component: input-projector
+        app.kubernetes.io/part-of: stream-monitoring-v4
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      terminationGracePeriodSeconds: 15
+      containers:
+        - name: input-projector
+          image: __APP_IMAGE__
+          imagePullPolicy: Never
+          args:
+            - stream_monitoring_v4.commands.input_projector
+            - --source-root
+            - /raw-source
+            - --target-root
+            - /safe-source
+            - --interval-sec
+            - "2"
+            - --ready-file
+            - /tmp/projector-ready
+            - --heartbeat-file
+            - /tmp/projector-heartbeat
+          startupProbe:
+            exec:
+              command:
+                - sh
+                - -ec
+                - 'test -r /tmp/projector-heartbeat && now=$(date +%s) && seen=$(sed -n "1p" /tmp/projector-heartbeat) && test "$seen" -le "$now" && test $((now-seen)) -le 15'
+            periodSeconds: 2
+            timeoutSeconds: 1
+            failureThreshold: 30
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -ec
+                - 'test -r /tmp/projector-ready && now=$(date +%s) && seen=$(sed -n "1p" /tmp/projector-ready) && test "$seen" -le "$now" && test $((now-seen)) -le 15'
+            periodSeconds: 5
+            timeoutSeconds: 1
+            failureThreshold: 2
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -ec
+                - 'test -r /tmp/projector-heartbeat && now=$(date +%s) && seen=$(sed -n "1p" /tmp/projector-heartbeat) && test "$seen" -le "$now" && test $((now-seen)) -le 30'
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 1
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 192Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: raw-source
+              mountPath: /raw-source
+              readOnly: true
+            - name: safe-source
+              mountPath: /safe-source
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: raw-source
+          hostPath:
+            path: /srv/stream-v3/.state/arena-monitor
+            type: Directory
+        - name: safe-source
+          hostPath:
+            path: /var/lib/stream-monitoring-v4/.state/k3s/source-safe
+            type: Directory
+        - name: tmp
+          emptyDir: {}

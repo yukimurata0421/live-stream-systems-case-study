@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "monitoring_v4.safe_input_projection.v3",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "projected",
+    "unchanged",
+    "rejected",
+    "source_revision",
+    "generation_id",
+    "ready",
+    "credential_fields_projected",
+    "raw_state_available_to_core"
+  ],
+  "properties": {
+    "schema": {"const": "monitoring_v4.safe_input_projection.v3"},
+    "projected": {
+      "type": "array",
+      "maxItems": 12,
+      "items": {"type": "string", "minLength": 1, "maxLength": 100}
+    },
+    "unchanged": {
+      "type": "array",
+      "maxItems": 12,
+      "items": {"type": "string", "minLength": 1, "maxLength": 100}
+    },
+    "rejected": {
+      "type": "object",
+      "maxProperties": 13,
+      "additionalProperties": {"type": "string", "minLength": 1, "maxLength": 100}
+    },
+    "source_revision": {"type": "string", "minLength": 1, "maxLength": 200},
+    "generation_id": {"type": "string", "maxLength": 200},
+    "ready": {"type": "boolean"},
+    "credential_fields_projected": {"const": false},
+    "raw_state_available_to_core": {"const": false}
+  }
+}

@@ -11,8 +11,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
+from maintenance_audit import audit_maintenance_decision
+
 try:
-    from stream_core.engine import audio_boot, browser_diagnostics, connectivity, ffmpeg_lifecycle, ingest, locks as engine_locks, preflight, process_discovery, rendering_boot, restart_context, runtime_recovery, runtime_state, target_runtime
+    from stream_core.engine import audio_boot, browser_diagnostics, connectivity, ffmpeg_lifecycle, ffmpeg_stderr, ingest, locks as engine_locks, preflight, process_discovery, rendering_boot, restart_context, runtime_recovery, runtime_state, target_runtime
     from stream_core.engine.config import Config, load_config, to_bool, to_float, to_int
     from stream_core.engine.encoder_profile import (
         effective_encoder_profile as choose_effective_encoder_profile,
@@ -22,7 +24,7 @@ try:
     from stream_core.engine.events import StreamEventWriter
     from stream_core.engine.ffmpeg_args import build_ffmpeg_args, build_filter as build_video_filter, build_output_args as build_ffmpeg_output_args
 except ModuleNotFoundError:
-    from engine import audio_boot, browser_diagnostics, connectivity, ffmpeg_lifecycle, ingest, locks as engine_locks, preflight, process_discovery, rendering_boot, restart_context, runtime_recovery, runtime_state, target_runtime
+    from engine import audio_boot, browser_diagnostics, connectivity, ffmpeg_lifecycle, ffmpeg_stderr, ingest, locks as engine_locks, preflight, process_discovery, rendering_boot, restart_context, runtime_recovery, runtime_state, target_runtime
     from engine.config import Config, load_config, to_bool, to_float, to_int
     from engine.encoder_profile import (
         effective_encoder_profile as choose_effective_encoder_profile,
@@ -48,6 +50,10 @@ class StreamEngine:
         self.takeover_coord_file = Path()
         self.capture_lock_file = Path()
         self.ffmpeg_proc: Optional[subprocess.Popen] = None
+        self.ffmpeg_lifecycle_state = "INITIALIZING"
+        self.ffmpeg_stderr_capture: ffmpeg_stderr.FFmpegStderrCapture | None = None
+        self.ffmpeg_stop_context: dict[str, object] = {}
+        self.pending_ffmpeg_restart_context: dict[str, object] = {}
         self.xvfb_proc: Optional[subprocess.Popen] = None
         self.overlay_proc: Optional[subprocess.Popen] = None
         self.browser_proc: Optional[subprocess.Popen] = None
@@ -66,6 +72,26 @@ class StreamEngine:
 
     def log(self, msg: str) -> None:
         print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] {msg}", flush=True)
+
+    def audit_self_recovery(self, *, phase: str, operation: str, resource: str, correlation_id: str, count: int) -> None:
+        audit_maintenance_decision(
+            path_id="MP-10",
+            phase=phase,
+            operation=operation,
+            path_role="NORMAL_MUTATOR",
+            process_service="stream-engine",
+            resource_identity=resource,
+            correlation_id=correlation_id,
+            in_flight_evidence={"status": "PROPOSED", "count": count, "source": "stream-engine process reference/event ledger"},
+            generation_evidence={"status": "PROPOSED", "run_id": self.run_id, "restart_count": self.restart_count},
+            bind_source_target=True,
+            p2_disabled_evaluation=True,
+            native_operation_id=correlation_id,
+            native_operation_generation=f"{self.run_id}:{self.restart_count}",
+            actual_production_decision=(
+                "LEGACY_EFFECT_CALL_PROCEEDS" if phase == "EFFECT_BOUNDARY" else "LEGACY_OPERATION_ADMITTED"
+            ),
+        )
 
     def next_event_id(self) -> str:
         event_id = self.event_writer.next_event_id()
@@ -109,6 +135,19 @@ class StreamEngine:
         proc = self.ffmpeg_proc
         if not proc or proc.poll() is not None:
             return True
+        self.ffmpeg_stop_context = {
+            "termination_initiator": "stream_engine",
+            "stop_reason": reason,
+            "requested_signal": signal.Signals(signum).name if signum else "SIGTERM",
+        }
+        correlation_id = f"{self.run_id}-stop-ffmpeg-{int(proc.pid)}-{self.restart_count}"
+        self.audit_self_recovery(
+            phase="ADMISSION",
+            operation="terminate_ffmpeg",
+            resource=f"ffmpeg/pid/{int(proc.pid)}",
+            correlation_id=correlation_id,
+            count=0,
+        )
         return ffmpeg_lifecycle.stop_for_shutdown(
             proc,
             reason=reason,
@@ -116,11 +155,133 @@ class StreamEngine:
             grace_sec=float(self.cfg.stop_ffmpeg_term_grace_sec),
             append_event=self.append_event,
             log=self.log,
+            before_terminate=lambda: self.audit_self_recovery(
+                phase="EFFECT_BOUNDARY",
+                operation="terminate_ffmpeg",
+                resource=f"ffmpeg/pid/{int(proc.pid)}",
+                correlation_id=correlation_id,
+                count=1,
+            ),
+            before_kill=lambda: self.audit_self_recovery(
+                phase="EFFECT_BOUNDARY",
+                operation="kill_ffmpeg",
+                resource=f"ffmpeg/pid/{int(proc.pid)}",
+                correlation_id=correlation_id,
+                count=1,
+            ),
         )
+
+    def ffmpeg_generation(self, ffmpeg_pid: int) -> str:
+        return f"{self.run_id}:{self.restart_count}:{ffmpeg_pid}"
+
+    def start_ffmpeg_stderr_capture(self, ffmpeg_pid: int) -> ffmpeg_stderr.FFmpegStderrCapture:
+        capture = ffmpeg_stderr.FFmpegStderrCapture(
+            path=self.cfg.ffmpeg_stderr_log_file,
+            max_bytes=self.cfg.ffmpeg_stderr_max_bytes,
+            backup_count=self.cfg.ffmpeg_stderr_backup_count,
+            run_id=self.run_id,
+            ffmpeg_pid=ffmpeg_pid,
+            stream_generation=self.ffmpeg_generation(ffmpeg_pid),
+        )
+        stream = self.ffmpeg_proc.stderr if self.ffmpeg_proc is not None else None
+        capture.start(stream)
+        self.ffmpeg_stderr_capture = capture
+        return capture
+
+    def ffmpeg_exit_evidence(
+        self,
+        *,
+        ffmpeg_pid: int,
+        exit_code: int,
+        ffmpeg_uptime_sec: int,
+        stderr_summary: dict[str, object],
+    ) -> dict[str, object]:
+        action_context = restart_context.matching_context(
+            self.cfg.restart_reason_file,
+            ffmpeg_pid=ffmpeg_pid,
+            max_age_sec=float(self.cfg.pre_ffmpeg_restart_context_max_age_sec),
+        )
+        transport_snapshot = restart_context.matching_transport_snapshot(
+            self.cfg.transport_snapshot_file,
+            ffmpeg_pid=ffmpeg_pid,
+        )
+        local_context = dict(self.ffmpeg_stop_context)
+        expected_exit = bool(action_context or local_context)
+        requested_signal = str(
+            action_context.get("requested_signal")
+            or local_context.get("requested_signal")
+            or ""
+        )
+        observed_signal = ""
+        if exit_code < 0:
+            try:
+                observed_signal = signal.Signals(-exit_code).name
+            except ValueError:
+                observed_signal = f"signal_{-exit_code}"
+        if action_context:
+            exit_class = "recovery_requested"
+        elif local_context:
+            exit_class = "engine_requested"
+        elif observed_signal:
+            exit_class = "uncorrelated_signal"
+        elif exit_code == 0:
+            exit_class = "uncorrelated_clean_exit"
+        else:
+            exit_class = "uncorrelated_process_error"
+        return {
+            "ffmpeg_pid": ffmpeg_pid,
+            "ffmpeg_generation": self.ffmpeg_generation(ffmpeg_pid),
+            "ffmpeg_uptime_sec": ffmpeg_uptime_sec,
+            "exit_code": exit_code,
+            "exit_class": exit_class,
+            "expected_exit": expected_exit,
+            "requested_signal": requested_signal,
+            "observed_signal": observed_signal,
+            "termination_initiator": str(
+                action_context.get("controller_id")
+                or action_context.get("source")
+                or local_context.get("termination_initiator")
+                or "unknown"
+            ),
+            "stop_reason": str(
+                action_context.get("reason") or local_context.get("stop_reason") or ""
+            ),
+            "recovery_action_id": str(action_context.get("recovery_action_id") or ""),
+            "idempotency_key": str(action_context.get("idempotency_key") or ""),
+            "recovery_scope": str(action_context.get("recovery_scope") or ""),
+            "recovery_context": action_context,
+            "last_transport_snapshot": transport_snapshot,
+            "stderr": stderr_summary,
+        }
 
     def stop_ffmpeg(self) -> None:
         if self.ffmpeg_proc and self.ffmpeg_proc.poll() is None:
-            ffmpeg_lifecycle.stop_quietly(self.ffmpeg_proc)
+            proc = self.ffmpeg_proc
+            correlation_id = f"{self.run_id}-quiet-stop-ffmpeg-{int(proc.pid)}-{self.restart_count}"
+            self.audit_self_recovery(
+                phase="ADMISSION",
+                operation="terminate_ffmpeg_quietly",
+                resource=f"ffmpeg/pid/{int(proc.pid)}",
+                correlation_id=correlation_id,
+                count=0,
+            )
+            ffmpeg_lifecycle.stop_quietly(
+                proc,
+                before_terminate=lambda: self.audit_self_recovery(
+                    phase="EFFECT_BOUNDARY",
+                    operation="terminate_ffmpeg_quietly",
+                    resource=f"ffmpeg/pid/{int(proc.pid)}",
+                    correlation_id=correlation_id,
+                    count=1,
+                ),
+                before_kill=lambda: self.audit_self_recovery(
+                    phase="EFFECT_BOUNDARY",
+                    operation="kill_ffmpeg_quietly",
+                    resource=f"ffmpeg/pid/{int(proc.pid)}",
+                    correlation_id=correlation_id,
+                    count=1,
+                ),
+            )
 
     def ensure_commands(self) -> None:
         preflight.ensure_commands()
@@ -197,6 +358,13 @@ class StreamEngine:
             self.append_event("takeover_request", incumbent_pid=incumbent or 0, phase="request-stop")
             if incumbent and self.pid_alive(incumbent):
                 self.log(f"Takeover requested. Signaling incumbent pid={incumbent}")
+                correlation_id = f"{self.run_id}-takeover-{incumbent}"
+                self.audit_self_recovery(
+                    phase="ADMISSION", operation="terminate_incumbent", resource=f"pid/{incumbent}", correlation_id=correlation_id, count=0
+                )
+                self.audit_self_recovery(
+                    phase="EFFECT_BOUNDARY", operation="terminate_incumbent", resource=f"pid/{incumbent}", correlation_id=correlation_id, count=1
+                )
                 os.kill(incumbent, signal.SIGTERM)
             deadline = time.monotonic() + self.cfg.takeover_grace_sec
             while time.monotonic() < deadline and not self.stop_requested:
@@ -211,6 +379,13 @@ class StreamEngine:
                 self.write_runtime_snapshot("takeover", "", f"force-kill incumbent={incumbent}")
                 self.append_event("takeover_force_kill", incumbent_pid=incumbent, phase="force-kill")
                 self.log(f"Takeover grace expired. Force-killing incumbent pid={incumbent}")
+                correlation_id = f"{self.run_id}-takeover-force-{incumbent}"
+                self.audit_self_recovery(
+                    phase="ADMISSION", operation="kill_incumbent", resource=f"pid/{incumbent}", correlation_id=correlation_id, count=0
+                )
+                self.audit_self_recovery(
+                    phase="EFFECT_BOUNDARY", operation="kill_incumbent", resource=f"pid/{incumbent}", correlation_id=correlation_id, count=1
+                )
                 os.kill(incumbent, signal.SIGKILL)
                 time.sleep(1.0)
                 self.lock_fp = self.try_acquire_lock(self.stream_lock_file)
@@ -247,6 +422,13 @@ class StreamEngine:
             self.log(f"Killing stale ffmpeg publisher pid={pid}")
             self.append_event("stale_ffmpeg_kill", pid=pid, signal="TERM")
             try:
+                correlation_id = f"{self.run_id}-stale-ffmpeg-term-{pid}"
+                self.audit_self_recovery(
+                    phase="ADMISSION", operation="terminate_stale_ffmpeg", resource=f"pid/{pid}", correlation_id=correlation_id, count=0
+                )
+                self.audit_self_recovery(
+                    phase="EFFECT_BOUNDARY", operation="terminate_stale_ffmpeg", resource=f"pid/{pid}", correlation_id=correlation_id, count=1
+                )
                 os.kill(pid, signal.SIGTERM)
             except OSError:
                 pass
@@ -255,6 +437,13 @@ class StreamEngine:
             self.log(f"Force-killing stale ffmpeg publisher pid={pid}")
             self.append_event("stale_ffmpeg_kill", pid=pid, signal="KILL")
             try:
+                correlation_id = f"{self.run_id}-stale-ffmpeg-kill-{pid}"
+                self.audit_self_recovery(
+                    phase="ADMISSION", operation="kill_stale_ffmpeg", resource=f"pid/{pid}", correlation_id=correlation_id, count=0
+                )
+                self.audit_self_recovery(
+                    phase="EFFECT_BOUNDARY", operation="kill_stale_ffmpeg", resource=f"pid/{pid}", correlation_id=correlation_id, count=1
+                )
                 os.kill(pid, signal.SIGKILL)
             except OSError:
                 pass
@@ -287,6 +476,13 @@ class StreamEngine:
             log=self.log,
             kill=os.kill,
             sleep=time.sleep,
+            before_kill=lambda helper, pid, sig: self.audit_self_recovery(
+                phase="EFFECT_BOUNDARY",
+                operation=("terminate_stale_capture_helper" if sig == signal.SIGTERM else "kill_stale_capture_helper"),
+                resource=f"{helper}/pid/{pid}",
+                correlation_id=f"{self.run_id}-stale-helper-{helper}-{pid}",
+                count=1,
+            ),
         )
 
     def cleanup_stale_capture_helpers(self) -> None:
@@ -363,6 +559,11 @@ class StreamEngine:
             sleep=time.sleep,
         )
 
+    def wait_for_ffmpeg_restart_delay(self, delay_sec: float) -> None:
+        """Behavior-preserving hook used by the fenced runtime-boundary subclass."""
+
+        time.sleep(delay_sec)
+
     def start_overlay_server(self) -> None:
         if not self.cfg.use_overlay_wrapper:
             return
@@ -438,6 +639,13 @@ class StreamEngine:
         pid = int(proc.pid)
         self.append_event("capture_helper_stop_requested", helper=label, pid=pid, reason=reason)
         try:
+            correlation_id = f"{self.run_id}-helper-term-{label}-{pid}"
+            self.audit_self_recovery(
+                phase="ADMISSION", operation="terminate_capture_helper", resource=f"{label}/pid/{pid}", correlation_id=correlation_id, count=0
+            )
+            self.audit_self_recovery(
+                phase="EFFECT_BOUNDARY", operation="terminate_capture_helper", resource=f"{label}/pid/{pid}", correlation_id=correlation_id, count=1
+            )
             proc.terminate()
         except Exception as e:
             self.append_event("capture_helper_stop_error", helper=label, pid=pid, reason=reason, error=str(e))
@@ -448,6 +656,10 @@ class StreamEngine:
         except subprocess.TimeoutExpired:
             self.append_event("capture_helper_stop_timeout_kill", helper=label, pid=pid, reason=reason)
             try:
+                correlation_id = f"{self.run_id}-helper-kill-{label}-{pid}"
+                self.audit_self_recovery(
+                    phase="EFFECT_BOUNDARY", operation="kill_capture_helper", resource=f"{label}/pid/{pid}", correlation_id=correlation_id, count=1
+                )
                 proc.kill()
             except Exception as e:
                 self.append_event("capture_helper_kill_error", helper=label, pid=pid, reason=reason, error=str(e))
@@ -505,10 +717,33 @@ class StreamEngine:
             return False
         if self.process_alive(self.browser_proc):
             self.log(f"Browser renderer will be restarted after {reason}.")
+            browser_pid = int(self.browser_proc.pid)
+            correlation_id = f"{self.run_id}-browser-restart-{browser_pid}"
+            self.audit_self_recovery(
+                phase="ADMISSION",
+                operation="terminate_browser",
+                resource=f"browser/pid/{browser_pid}",
+                correlation_id=correlation_id,
+                count=0,
+            )
+            self.audit_self_recovery(
+                phase="EFFECT_BOUNDARY",
+                operation="terminate_browser",
+                resource=f"browser/pid/{browser_pid}",
+                correlation_id=correlation_id,
+                count=1,
+            )
             self.browser_proc.terminate()
             try:
                 self.browser_proc.wait(timeout=2.0)
             except subprocess.TimeoutExpired:
+                self.audit_self_recovery(
+                    phase="EFFECT_BOUNDARY",
+                    operation="kill_browser",
+                    resource=f"browser/pid/{browser_pid}",
+                    correlation_id=correlation_id,
+                    count=1,
+                )
                 self.browser_proc.kill()
         else:
             self.log("Browser renderer disappeared; restarting browser.")
@@ -739,10 +974,33 @@ class StreamEngine:
             run(["pactl", "unload-module", self.loopback_module_id], check=False)
         for proc in (self.ffmpeg_proc, self.browser_proc, self.overlay_proc, self.xvfb_proc):
             if proc and proc.poll() is None:
+                pid = int(proc.pid)
+                correlation_id = f"{self.run_id}-cleanup-{pid}"
+                self.audit_self_recovery(
+                    phase="ADMISSION",
+                    operation="terminate_owned_process",
+                    resource=f"process/pid/{pid}",
+                    correlation_id=correlation_id,
+                    count=0,
+                )
+                self.audit_self_recovery(
+                    phase="EFFECT_BOUNDARY",
+                    operation="terminate_owned_process",
+                    resource=f"process/pid/{pid}",
+                    correlation_id=correlation_id,
+                    count=1,
+                )
                 proc.terminate()
                 try:
                     proc.wait(timeout=2.0)
                 except subprocess.TimeoutExpired:
+                    self.audit_self_recovery(
+                        phase="EFFECT_BOUNDARY",
+                        operation="kill_owned_process",
+                        resource=f"process/pid/{pid}",
+                        correlation_id=correlation_id,
+                        count=1,
+                    )
                     proc.kill()
         for fp in (self.capture_lock_fp, self.lock_fp):
             try:
@@ -825,20 +1083,59 @@ class StreamEngine:
                 f"audio={encoder_profile.get('audio_bitrate')}"
             )
             self.log("Starting ffmpeg stream process...")
+            self.ffmpeg_lifecycle_state = "STARTING_FFMPEG"
             self.append_event("ffmpeg_starting", encoder_profile=encoder_profile)
             args = self.ffmpeg_args(x11_input, pulse_source, encoder_profile=encoder_profile)
-            self.ffmpeg_proc = subprocess.Popen(args)
+            self.ffmpeg_stop_context = {}
+            started_monotonic = time.monotonic()
+            correlation_id = str(self.pending_ffmpeg_restart_context.get("recovery_action_id") or f"{self.run_id}-ffmpeg-{self.restart_count}")
+            self.audit_self_recovery(
+                phase="ADMISSION", operation="start_ffmpeg", resource="stream-engine/ffmpeg", correlation_id=correlation_id, count=0
+            )
+            self.audit_self_recovery(
+                phase="EFFECT_BOUNDARY", operation="start_ffmpeg", resource="stream-engine/ffmpeg", correlation_id=correlation_id, count=1
+            )
+            self.ffmpeg_proc = subprocess.Popen(args, stderr=subprocess.PIPE)
+            self.ffmpeg_lifecycle_state = "FFMPEG_RUNNING"
+            ffmpeg_pid = int(self.ffmpeg_proc.pid)
+            capture = self.start_ffmpeg_stderr_capture(ffmpeg_pid)
             self.write_runtime_snapshot("running", str(self.ffmpeg_proc.pid), "ffmpeg started")
-            self.append_event("ffmpeg_started", ffmpeg_pid=self.ffmpeg_proc.pid, encoder_profile=encoder_profile)
+            self.append_event(
+                "ffmpeg_started",
+                ffmpeg_pid=ffmpeg_pid,
+                ffmpeg_generation=self.ffmpeg_generation(ffmpeg_pid),
+                encoder_profile=encoder_profile,
+                stderr_log_file=str(self.cfg.ffmpeg_stderr_log_file),
+                recovery_action_id=str(
+                    self.pending_ffmpeg_restart_context.get("recovery_action_id") or ""
+                ),
+                replaces_ffmpeg_pid=int(
+                    self.pending_ffmpeg_restart_context.get("ffmpeg_pid", 0) or 0
+                ),
+                prior_exit_event_id=str(
+                    self.pending_ffmpeg_restart_context.get("exit_event_id") or ""
+                ),
+            )
+            self.pending_ffmpeg_restart_context = {}
             rc = ffmpeg_lifecycle.wait_until_exit_or_action(
                 self.ffmpeg_proc,
                 heartbeat_sec=self.cfg.runtime_heartbeat_sec,
                 heartbeat_action=lambda: self.ffmpeg_heartbeat_action(encoder_profile),
                 stop_process=self.stop_ffmpeg_for_shutdown,
             )
+            stderr_summary = capture.stop()
+            ffmpeg_uptime_sec = max(0, int(time.monotonic() - started_monotonic))
+            exit_evidence = self.ffmpeg_exit_evidence(
+                ffmpeg_pid=ffmpeg_pid,
+                exit_code=rc,
+                ffmpeg_uptime_sec=ffmpeg_uptime_sec,
+                stderr_summary=stderr_summary,
+            )
             self.ffmpeg_proc = None
+            self.ffmpeg_lifecycle_state = "FFMPEG_EXITED"
+            self.ffmpeg_stderr_capture = None
             self.write_runtime_snapshot("running", "", "ffmpeg exited")
-            self.append_event("ffmpeg_exited", exit_code=rc)
+            exit_event_id = self.append_event("ffmpeg_exited", **exit_evidence)
             if self.stop_requested:
                 self.write_runtime_snapshot("stopping", "", "stop requested")
                 self.append_event("engine_stopping", note="stop requested")
@@ -847,13 +1144,28 @@ class StreamEngine:
             self.last_health_ok = False
             self.write_runtime_snapshot("restarting", "", f"ffmpeg exited code={rc}")
             self.log(f"ffmpeg exited with code {rc}. Restarting in {self.cfg.restart_delay_sec}s...")
-            self.append_event("ffmpeg_restart_scheduled", exit_code=rc, delay_sec=self.cfg.restart_delay_sec)
-            time.sleep(self.cfg.restart_delay_sec)
+            self.pending_ffmpeg_restart_context = {
+                "recovery_action_id": exit_evidence.get("recovery_action_id", ""),
+                "ffmpeg_pid": ffmpeg_pid,
+                "exit_event_id": exit_event_id,
+            }
+            self.append_event(
+                "ffmpeg_restart_scheduled",
+                ffmpeg_pid=ffmpeg_pid,
+                exit_code=rc,
+                exit_class=exit_evidence.get("exit_class", ""),
+                recovery_action_id=exit_evidence.get("recovery_action_id", ""),
+                delay_sec=self.cfg.restart_delay_sec,
+            )
+            self.ffmpeg_lifecycle_state = "RESTART_DELAY"
+            self.wait_for_ffmpeg_restart_delay(self.cfg.restart_delay_sec)
+            self.ffmpeg_lifecycle_state = "CONNECTIVITY_WAIT"
             if not self.wait_for_ingest_connectivity():
                 self.write_runtime_snapshot("stopping", "", "stop requested during connectivity wait")
                 self.append_event("engine_stopping", note="stop requested during connectivity wait")
                 break
 
+        self.ffmpeg_lifecycle_state = "STOPPING"
         self.log("stream engine stopped.")
         return 0
 

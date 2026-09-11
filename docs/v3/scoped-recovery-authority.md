@@ -26,12 +26,17 @@ production behavior disabled. The reason for applying local transaction
 boundaries, effect fencing, and cross-host reconciliation is documented in
 [`why-cra.md`](../../recovery-control/docs/why-cra.md).
 
-The stream delivery tree contains the runtime and legacy recovery surfaces,
-but it does not yet publish a self-contained runtime-boundary entrypoint that
-can be enabled against that CRA package. The private integration candidate also
-depends on uncommitted V3 lifecycle/evidence changes. Copying only the adapter
-would import successfully in some test layouts while misrepresenting runtime
-lifecycle state, so it is intentionally not included here.
+The stream delivery tree now publishes the matching
+`src/stream_core/runtime_boundary_entrypoint.py`, typed effect adapter, local
+maintenance audit, and lifecycle/evidence integration. The runtime boundary
+admits only an exact FFmpeg-child target, writes the fence before the effect,
+and reconciles an uncertain result instead of converting uncertainty into a
+second restart. `tests/test_fast_recovery_runtime_boundary.py` exercises this
+integration against test-owned child processes and files.
+
+This source integration does not enable the path. Public configuration retains
+the production-disabled policy, and no checkout, unit test, or successful
+Harness run is evidence of a live CRA deployment or mutation authority.
 
 ## Legacy migration surfaces
 
@@ -54,6 +59,7 @@ surfaces requires a separate host-verified deployment and rollback task.
 ## What the public repository proves
 
 The repository supports code review and local tests of message integrity,
-freshness, exact-target fencing, idempotency, reconciliation, and bounded
-test-owned child effects. It does not prove a live CRA deployment, a completed
-soak, production mutation authorization, or an external recovery outcome.
+freshness, exact-target fencing, idempotency, reconciliation, bounded test-owned
+child effects, and correlated FFmpeg exit evidence. It does not prove a live
+CRA deployment, a completed soak, production mutation authorization, or an
+external recovery outcome.

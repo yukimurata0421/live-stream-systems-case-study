@@ -1,0 +1,169 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: postgres-restore-smoke
+  namespace: stream-monitoring-v4
+  labels:
+    app.kubernetes.io/name: monitoring-v4-restore-smoke
+    app.kubernetes.io/component: verification
+    app.kubernetes.io/part-of: stream-monitoring-v4
+spec:
+  schedule: "37 18 * * *"
+  timeZone: Etc/UTC
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 21600
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      activeDeadlineSeconds: 1800
+      ttlSecondsAfterFinished: 86400
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: monitoring-v4-restore-smoke
+            app.kubernetes.io/component: verification
+            app.kubernetes.io/part-of: stream-monitoring-v4
+        spec:
+          restartPolicy: Never
+          automountServiceAccountToken: false
+          securityContext:
+            runAsNonRoot: true
+            fsGroup: 1000
+            seccompProfile:
+              type: RuntimeDefault
+          initContainers:
+            - name: select-verified-backup
+              image: __APP_IMAGE__
+              imagePullPolicy: Never
+              args:
+                - stream_monitoring_v4.commands.restore_select
+                - --backup-dir
+                - /backup
+                - --independent-backup-dir
+                - /independent-backup
+                - --work-dir
+                - /work
+                - --backup-max-age-sec
+                - "97200"
+              resources:
+                requests:
+                  cpu: 25m
+                  memory: 64Mi
+                limits:
+                  cpu: 500m
+                  memory: 192Mi
+              securityContext:
+                runAsUser: 1000
+                runAsGroup: 1000
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop: ["ALL"]
+              volumeMounts:
+                - name: backup
+                  mountPath: /backup
+                  readOnly: true
+                - name: independent-backup
+                  mountPath: /independent-backup
+                  readOnly: true
+                - name: work
+                  mountPath: /work
+          containers:
+            - name: restore
+              image: postgres@sha256:742f40ea20b9ff2ff31db5458d127452988a2164df9e17441e191f3b72252193
+              imagePullPolicy: IfNotPresent
+              command: ["sh", "-ec"]
+              args:
+                - |
+                  umask 077
+                  export HOME=/work
+                  export PGDATA=/work/pgdata
+                  export PGHOST=/work/socket
+                  export PGPORT=55432
+                  restore_database=stream_monitoring_v4_restore_smoke
+                  cleanup() {
+                    if test -s "${PGDATA}/postmaster.pid"; then
+                      pg_ctl -D "${PGDATA}" -m fast -w stop >/dev/null 2>&1 || true
+                    fi
+                  }
+                  trap cleanup EXIT HUP INT TERM
+                  rm -rf "${PGDATA}" "${PGHOST}"
+                  mkdir -p "${PGHOST}"
+                  chmod 0700 "${PGHOST}"
+                  initdb --pgdata="${PGDATA}" --username=postgres \
+                    --auth-local=trust --auth-host=reject --no-locale --encoding=UTF8 \
+                    >/dev/null
+                  pg_ctl -D "${PGDATA}" \
+                    -o "-k ${PGHOST} -p ${PGPORT} -c listen_addresses='' -c unix_socket_permissions=0700" \
+                    -w start >/dev/null
+                  createdb "${restore_database}"
+                  pg_restore --no-owner --no-acl --exit-on-error \
+                    --dbname="${restore_database}" /work/selected.dump
+                  schema_versions="$(psql --dbname="${restore_database}" --no-align \
+                    --tuples-only --command="SELECT string_agg(version::text, ',' ORDER BY version) FROM schema_migrations;")"
+                  test "${schema_versions}" = "1,2,3,4,5,6"
+                  observations="$(psql --dbname="${restore_database}" --no-align \
+                    --tuples-only --command="SELECT COUNT(*) FROM observations;")"
+                  shadow_cycles="$(psql --dbname="${restore_database}" --no-align \
+                    --tuples-only --command="SELECT COUNT(*) FROM shadow_cycles;")"
+                  publications="$(psql --dbname="${restore_database}" --no-align \
+                    --tuples-only --command="SELECT COUNT(*) FROM public_artifact_publications;")"
+                  for count in "${observations}" "${shadow_cycles}" "${publications}"; do
+                    case "${count}" in ''|*[!0-9]*) exit 1;; esac
+                  done
+                  backup_name="$(sed -n '1p' /work/backup-name)"
+                  backup_sha256="$(sed -n '1p' /work/backup-sha256)"
+                  verified_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+                  temporary="/verification/.${backup_name}.restore-verified.json.$$"
+                  final="/verification/${backup_name}.restore-verified.json"
+                  printf '{"backup_name":"%s","backup_sha256":"%s","observations":%s,"public_artifact_publications":%s,"schema":"monitoring_v4.postgresql_restore_verification.v1","schema_versions":[1,2,3,4,5,6],"shadow_cycles":%s,"verified_at":"%s"}\n' \
+                    "${backup_name}" "${backup_sha256}" "${observations}" \
+                    "${publications}" "${shadow_cycles}" "${verified_at}" \
+                    >"${temporary}"
+                  chmod 0640 "${temporary}"
+                  sync -f "${temporary}"
+                  mv -f "${temporary}" "${final}"
+                  sync -f /verification
+                  trap - EXIT HUP INT TERM
+                  cleanup
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 256Mi
+                  ephemeral-storage: 256Mi
+                limits:
+                  cpu: "1"
+                  memory: 768Mi
+                  ephemeral-storage: 8Gi
+              securityContext:
+                runAsUser: 70
+                # Attestations must remain readable by the capability-free
+                # host sentinel running with group streamv4 (GID 1000).
+                runAsGroup: 1000
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop: ["ALL"]
+              volumeMounts:
+                - name: work
+                  mountPath: /work
+                - name: verification
+                  mountPath: /verification
+          volumes:
+            - name: backup
+              hostPath:
+                path: /var/lib/stream-monitoring-v4/.state/postgres-backups
+                type: Directory
+            - name: independent-backup
+              hostPath:
+                path: /var/backups/stream-monitoring-v4/stream-v4-postgres
+                type: Directory
+            - name: verification
+              hostPath:
+                path: /var/lib/stream-monitoring-v4/.state/restore-verifications
+                type: Directory
+            - name: work
+              emptyDir:
+                sizeLimit: 8Gi

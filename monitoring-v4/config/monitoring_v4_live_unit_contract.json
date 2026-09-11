@@ -1,0 +1,403 @@
+{
+  "schema": "monitoring_v4.live_unit_contract.v1",
+  "purpose": "Fail-closed bidirectional inventory for every installed stream monitoring unit selected by the host patterns. New, removed, failed, or ownership-unclassified units make R0 evidence incomplete.",
+  "hosts": [
+    {
+      "host_role": "arena-server",
+      "required_for_r0": true,
+      "patterns": ["adsb-streamnew-*", "stream-v3-*", "stream-monitoring-v4-*"],
+      "groups": [
+        {
+          "id": "arena-v3-continuous-monitoring",
+          "units": [
+            "adsb-streamnew-network-observer.service",
+            "adsb-streamnew-prometheus-exporter.service",
+            "stream-v3-observability-monitor.service",
+            "stream-v3-persistent-anchor-observer.service"
+          ],
+          "expected": {
+            "load_state": ["loaded"],
+            "active_state": ["active"],
+            "sub_state": ["running"],
+            "unit_file_state": ["enabled"]
+          },
+          "disposition": "retained_v3",
+          "owner": "arena-server V3 observation and notification plane until each target passes the explicit V4 cutover gate",
+          "source": {"repository": "stream_v3", "directories": ["ops/systemd"]}
+        },
+        {
+          "id": "arena-v3-enabled-schedule",
+          "units": [
+            "adsb-streamnew-adsb-source-probe.timer",
+            "adsb-streamnew-memory-status.timer",
+            "adsb-streamnew-resource-memory.timer",
+            "adsb-streamnew-stream1090-report.timer",
+            "adsb-streamnew-upstream-report.timer",
+            "adsb-streamnew-youtube-api-cost-open-day-report.timer",
+            "adsb-streamnew-youtube-api-cost-report.timer",
+            "stream-v3-external-blackbox-import.timer",
+            "stream-v3-health-snapshot.timer",
+            "stream-v3-monitoring-watchdog.timer",
+            "stream-v3-operational-reliability-rollup.timer",
+            "stream-v3-reliability-burn-evaluator.timer",
+            "stream-v3-remote-recovery.timer",
+            "stream-v3-shadow-sli.timer",
+            "stream-v3-wan-address-observer.timer"
+          ],
+          "expected": {
+            "load_state": ["loaded"],
+            "active_state": ["active"],
+            "sub_state": ["waiting", "running"],
+            "unit_file_state": ["enabled"]
+          },
+          "disposition": "retained_v3",
+          "owner": "arena-server V3 scheduled evidence producers; runtime mutation remains limited to the separately classified remote-recovery timer",
+          "source": {"repository": "stream_v3", "directories": ["ops/systemd"]}
+        },
+        {
+          "id": "arena-v3-scheduled-oneshot-services",
+          "units": [
+            "adsb-streamnew-adsb-source-probe.service",
+            "adsb-streamnew-memory-status.service",
+            "adsb-streamnew-resource-memory.service",
+            "adsb-streamnew-stream1090-report.service",
+            "adsb-streamnew-upstream-report.service",
+            "adsb-streamnew-youtube-api-cost-open-day-report.service",
+            "adsb-streamnew-youtube-api-cost-report.service",
+            "stream-v3-external-blackbox-import.service",
+            "stream-v3-health-snapshot.service",
+            "stream-v3-monitoring-watchdog.service",
+            "stream-v3-operational-reliability-rollup.service",
+            "stream-v3-reliability-burn-evaluator.service",
+            "stream-v3-remote-recovery.service",
+            "stream-v3-shadow-sli.service",
+            "stream-v3-wan-address-observer.service"
+          ],
+          "expected": {
+            "load_state": ["loaded"],
+            "active_state": ["inactive", "activating", "active"],
+            "sub_state": ["dead", "start", "exited", "running"],
+            "unit_file_state": ["static", "disabled"]
+          },
+          "disposition": "retained_v3",
+          "owner": "arena-server V3 timer-triggered evidence tasks",
+          "source": {"repository": "stream_v3", "directories": ["ops/systemd"]}
+        },
+        {
+          "id": "arena-disabled-legacy-timers",
+          "units": [
+            "adsb-streamnew-fast-recovery.timer",
+            "adsb-streamnew-notify.timer",
+            "adsb-streamnew-recovery-orchestrator.timer",
+            "adsb-streamnew-subsystems-status.timer",
+            "adsb-streamnew-watchdog.timer",
+            "adsb-streamnew-youtube-monitor.timer",
+            "adsb-streamnew-youtube-video-resolver.timer"
+          ],
+          "expected": {
+            "load_state": ["loaded"],
+            "active_state": ["inactive"],
+            "sub_state": ["dead"],
+            "unit_file_state": ["disabled"]
+          },
+          "disposition": "disabled_legacy",
+          "owner": "installed rollback surface only; arena monitor loop or k3s owns the live equivalent",
+          "source": {"repository": "stream_v3", "directories": ["ops/systemd"]}
+        },
+        {
+          "id": "arena-disabled-legacy-long-running-services",
+          "units": ["adsb-streamnew-auto-dj.service", "adsb-streamnew-youtube-stream.service"],
+          "expected": {
+            "load_state": ["loaded"],
+            "active_state": ["inactive"],
+            "sub_state": ["dead"],
+            "unit_file_state": ["disabled"]
+          },
+          "disposition": "disabled_legacy",
+          "owner": "not an arena-server runtime owner",
+          "source": {"repository": "stream_v3", "directories": ["ops/systemd"]}
+        },
+        {
+          "id": "arena-disabled-legacy-static-services",
+          "units": [
+            "adsb-streamnew-fast-recovery.service",
+            "adsb-streamnew-notify.service",
+            "adsb-streamnew-recovery-orchestrator.service",
+            "adsb-streamnew-subsystems-status.service",
+            "adsb-streamnew-watchdog.service",
+            "adsb-streamnew-youtube-monitor.service",
+            "adsb-streamnew-youtube-video-resolver.service"
+          ],
+          "expected": {
+            "load_state": ["loaded"],
+            "active_state": ["inactive"],
+            "sub_state": ["dead"],
+            "unit_file_state": ["static"]
+          },
+          "disposition": "disabled_legacy",
+          "owner": "installed rollback surface only",
+          "source": {"repository": "stream_v3", "directories": ["ops/systemd"]}
+        },
+        {
+          "id": "arena-v4-detection-only-sentinel-timer",
+          "units": ["stream-monitoring-v4-k3s-sentinel.timer"],
+          "expected": {
+            "load_state": ["loaded"],
+            "active_state": ["active"],
+            "sub_state": ["waiting", "running"],
+            "unit_file_state": ["enabled"]
+          },
+          "disposition": "ported_v4_shadow",
+          "owner": "arena-server detection-only observer outside the monitored k3s failure domain",
+          "source": {"repository": "stream_v4", "directories": ["ops/systemd"]}
+        },
+        {
+          "id": "arena-v4-detection-only-sentinel-service",
+          "units": ["stream-monitoring-v4-k3s-sentinel.service"],
+          "expected": {
+            "load_state": ["loaded"],
+            "active_state": ["inactive", "activating", "active"],
+            "sub_state": ["dead", "start", "exited", "running"],
+            "unit_file_state": ["static"]
+          },
+          "disposition": "ported_v4_shadow",
+          "owner": "arena-server detection-only sentinel; no notification or restart authority",
+          "source": {"repository": "stream_v4", "directories": ["ops/systemd"]}
+        },
+        {
+          "id": "arena-v4-disabled-host-shadow-timers",
+          "units": ["stream-monitoring-v4-shadow.timer", "stream-monitoring-v4-shadow-report.timer"],
+          "expected": {
+            "load_state": ["loaded"],
+            "active_state": ["inactive"],
+            "sub_state": ["dead"],
+            "unit_file_state": ["disabled"]
+          },
+          "disposition": "disabled_legacy",
+          "owner": "superseded by isolated k3s workloads",
+          "source": {"repository": "stream_v4", "directories": ["ops/systemd"]}
+        },
+        {
+          "id": "arena-v4-disabled-host-shadow-services",
+          "units": ["stream-monitoring-v4-shadow.service", "stream-monitoring-v4-shadow-report.service"],
+          "expected": {
+            "load_state": ["loaded"],
+            "active_state": ["inactive"],
+            "sub_state": ["dead"],
+            "unit_file_state": ["static"]
+          },
+          "disposition": "disabled_legacy",
+          "owner": "superseded by isolated k3s workloads",
+          "source": {"repository": "stream_v4", "directories": ["ops/systemd"]}
+        }
+      ]
+    },
+    {
+      "host_role": "Dell-runtime",
+      "required_for_r0": true,
+      "patterns": ["adsb-streamnew-*", "stream-v3-*", "k3s.service"],
+      "groups": [
+        {
+          "id": "dell-k3s-runtime-platform",
+          "units": ["k3s.service"],
+          "expected": {
+            "load_state": ["loaded"],
+            "active_state": ["active"],
+            "sub_state": ["running"],
+            "unit_file_state": ["enabled"]
+          },
+          "disposition": "platform_dependency",
+          "owner": "Dell runtime orchestration only; arena-server retains monitoring decisions",
+          "source": {"repository": "platform", "directories": []}
+        },
+        {
+          "id": "dell-continuous-runtime-observers",
+          "units": [
+            "stream-v3-cpe-event-ingest.service",
+            "stream-v3-gpu-startup-gate.service",
+            "stream-v3-netlink-wan-event-observer.service",
+            "stream-v3-persistent-anchor-observer.service"
+          ],
+          "expected": {
+            "load_state": ["loaded"],
+            "active_state": ["active"],
+            "sub_state": ["running"],
+            "unit_file_state": ["enabled"]
+          },
+          "disposition": "runtime_observer_outside_v4",
+          "owner": "Dell evidence production and runtime readiness only; no incident or route decisions",
+          "source": {"repository": "stream_v3", "directories": ["ops/systemd", "ops/host-maintenance/systemd"]}
+        },
+        {
+          "id": "dell-postboot-verification",
+          "units": ["stream-v3-postboot-verification.service"],
+          "expected": {
+            "load_state": ["loaded"],
+            "active_state": ["inactive", "activating", "active"],
+            "sub_state": ["dead", "start", "exited", "running"],
+            "unit_file_state": ["enabled"]
+          },
+          "disposition": "runtime_observer_outside_v4",
+          "owner": "Dell boot-time actual-frame/runtime verification; failure must remain visible to arena inventory",
+          "source": {"repository": "stream_v3", "directories": ["ops/host-maintenance/systemd"]}
+        },
+        {
+          "id": "dell-enabled-observer-timers",
+          "units": [
+            "stream-v3-nvidia-driver-check.timer",
+            "stream-v3-rtmps-tcp-burst.timer",
+            "stream-v3-tcpdump-ring.timer",
+            "stream-v3-wan-address-observer-burst.timer",
+            "stream-v3-wan-address-observer.timer"
+          ],
+          "expected": {
+            "load_state": ["loaded"],
+            "active_state": ["active"],
+            "sub_state": ["waiting", "running"],
+            "unit_file_state": ["enabled"]
+          },
+          "disposition": "runtime_observer_outside_v4",
+          "owner": "Dell evidence collection only",
+          "source": {"repository": "stream_v3", "directories": ["ops/systemd", "ops/host-maintenance/systemd"]}
+        },
+        {
+          "id": "dell-observer-oneshot-services",
+          "units": [
+            "stream-v3-nvidia-driver-check.service",
+            "stream-v3-rtmps-tcp-burst.service",
+            "stream-v3-tcpdump-ring.service",
+            "stream-v3-wan-address-observer-burst.service",
+            "stream-v3-wan-address-observer.service"
+          ],
+          "expected": {
+            "load_state": ["loaded"],
+            "active_state": ["inactive", "activating", "active"],
+            "sub_state": ["dead", "start", "exited", "running"],
+            "unit_file_state": ["static"]
+          },
+          "disposition": "runtime_observer_outside_v4",
+          "owner": "Dell timer-triggered evidence collection only",
+          "source": {"repository": "stream_v3", "directories": ["ops/systemd", "ops/host-maintenance/systemd"]}
+        },
+        {
+          "id": "dell-disabled-legacy-services",
+          "units": [
+            "adsb-streamnew-auto-dj.service",
+            "adsb-streamnew-network-observer.service",
+            "adsb-streamnew-prometheus-exporter.service",
+            "adsb-streamnew-youtube-stream.service"
+          ],
+          "expected": {
+            "load_state": ["loaded"],
+            "active_state": ["inactive"],
+            "sub_state": ["dead"],
+            "unit_file_state": ["disabled"]
+          },
+          "disposition": "disabled_legacy",
+          "owner": "disabled after runtime/k3s and arena responsibility split",
+          "source": {"repository": "stream_v3", "directories": ["ops/systemd"]}
+        },
+        {
+          "id": "dell-disabled-legacy-timers",
+          "units": [
+            "adsb-streamnew-fast-recovery.timer",
+            "adsb-streamnew-memory-status.timer",
+            "adsb-streamnew-notify.timer",
+            "adsb-streamnew-recovery-orchestrator.timer",
+            "adsb-streamnew-resource-memory.timer",
+            "adsb-streamnew-stream1090-report.timer",
+            "adsb-streamnew-subsystems-status.timer",
+            "adsb-streamnew-upstream-report.timer",
+            "adsb-streamnew-watchdog.timer",
+            "adsb-streamnew-youtube-api-cost-open-day-report.timer",
+            "adsb-streamnew-youtube-api-cost-report.timer",
+            "adsb-streamnew-youtube-monitor.timer",
+            "adsb-streamnew-youtube-video-resolver.timer"
+          ],
+          "expected": {
+            "load_state": ["loaded"],
+            "active_state": ["inactive"],
+            "sub_state": ["dead"],
+            "unit_file_state": ["disabled"]
+          },
+          "disposition": "disabled_legacy",
+          "owner": "disabled after arena-server assumed monitoring ownership",
+          "source": {"repository": "stream_v3", "directories": ["ops/systemd"]}
+        },
+        {
+          "id": "dell-disabled-legacy-static-services",
+          "units": [
+            "adsb-streamnew-fast-recovery.service",
+            "adsb-streamnew-memory-status.service",
+            "adsb-streamnew-notify.service",
+            "adsb-streamnew-recovery-orchestrator.service",
+            "adsb-streamnew-resource-memory.service",
+            "adsb-streamnew-stream1090-report.service",
+            "adsb-streamnew-subsystems-status.service",
+            "adsb-streamnew-upstream-report.service",
+            "adsb-streamnew-watchdog.service",
+            "adsb-streamnew-youtube-api-cost-open-day-report.service",
+            "adsb-streamnew-youtube-api-cost-report.service",
+            "adsb-streamnew-youtube-monitor.service",
+            "adsb-streamnew-youtube-video-resolver.service"
+          ],
+          "expected": {
+            "load_state": ["loaded"],
+            "active_state": ["inactive"],
+            "sub_state": ["dead"],
+            "unit_file_state": ["static"]
+          },
+          "disposition": "disabled_legacy",
+          "owner": "installed rollback surface only",
+          "source": {"repository": "stream_v3", "directories": ["ops/systemd"]}
+        }
+      ]
+    },
+    {
+      "host_role": "Raspberry-Pi-public-only",
+      "required_for_r0": true,
+      "patterns": ["yukimurata-public-push.*", "nginx.service", "cloudflared.service"],
+      "groups": [
+        {
+          "id": "pi-public-serving-platform",
+          "units": ["nginx.service", "cloudflared.service"],
+          "expected": {
+            "load_state": ["loaded"],
+            "active_state": ["active"],
+            "sub_state": ["running"],
+            "unit_file_state": ["enabled"]
+          },
+          "disposition": "platform_dependency",
+          "owner": "Raspberry Pi public serving only; outside Monitoring v4 decisions and control",
+          "source": {"repository": "platform", "directories": []}
+        },
+        {
+          "id": "pi-public-publisher-timer",
+          "units": ["yukimurata-public-push.timer"],
+          "expected": {
+            "load_state": ["loaded"],
+            "active_state": ["active"],
+            "sub_state": ["waiting", "running"],
+            "unit_file_state": ["enabled"]
+          },
+          "disposition": "publisher_outside_v4",
+          "owner": "Raspberry Pi publish-only last-good snapshot writer",
+          "source": {"repository": "stream_v3", "directories": ["ops/public-publisher/site/systemd"]}
+        },
+        {
+          "id": "pi-public-publisher-service",
+          "units": ["yukimurata-public-push.service"],
+          "expected": {
+            "load_state": ["loaded"],
+            "active_state": ["inactive", "activating", "active"],
+            "sub_state": ["dead", "start", "exited", "running"],
+            "unit_file_state": ["static"]
+          },
+          "disposition": "publisher_outside_v4",
+          "owner": "Raspberry Pi publish-only transfer; no monitoring decisions or control feedback",
+          "source": {"repository": "stream_v3", "directories": ["ops/public-publisher/site/systemd"]}
+        }
+      ]
+    }
+  ]
+}

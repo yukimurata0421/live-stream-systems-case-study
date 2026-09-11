@@ -1,0 +1,46 @@
+{
+  "artifact_schema": "monitoring_v4.audio_stateful_freeze.v2",
+  "created_at": "2026-08-21T13:04:11Z",
+  "previous_freeze": {
+    "path": "tests/artifacts/monitoring_v4/2026-08-21_audio_stateful_authority_freeze_v1.json",
+    "sha256": "7088b177596833296f7601aec1d989d966eb3c90f9998df9232fb45ac76378f8"
+  },
+  "identity": {
+    "git_head": "1a76a8857db521282a2536391c2963a34aa9c199",
+    "common_runtime_sha256": "0ed92c51456f7fbaa5692c7e3d152aed75841ad6269270f7f2d14cf5a0db2238",
+    "harness_and_oracle_sha256": "9f98d3b0c7dfe7c202d52927cf401c7e9af5f5938f063ae0e391bf8056d76efb",
+    "oracle_revision": "audio-two-source-authority-oracle-r1",
+    "source_policy_revision": "monitoring-v4-source-policy-r5.1",
+    "reducer_revision": "monitoring-v4-current-reducer-r3.3",
+    "incident_policy_revision": "monitoring-v4-incident-policy-r5.1"
+  },
+  "bounds": {"seeds": [1, 2, 3], "examples_per_seed": 200, "max_steps": 8},
+  "totals": {
+    "examples": 600,
+    "generated_actions": 2694,
+    "expected_effects": 493,
+    "started_actions": 3294,
+    "completed_actions": 3294,
+    "failed_actions": 0,
+    "terminal_actions": 3294,
+    "orphan_started_actions": 0,
+    "double_terminal_actions": 0,
+    "terminal_integrity_failures": 0,
+    "terminal_evidence_persistence_failures": 0,
+    "cleanup_verified": 600,
+    "cleanup_failures": 0,
+    "sut_failures": 0,
+    "harness_failures": 0,
+    "attribution_gaps": 0,
+    "oracle_gaps": 0,
+    "unknown": 0
+  },
+  "runs": [
+    {"seed": 1, "actions": 861, "expected_effects": 137, "artifact": "tests/artifacts/monitoring_v4/2026-08-21_common_runtime_v2_revalidate_audio_full_seed_1_v2.json", "artifact_sha256": "0650ff512de940825a915731f6fa7cc11df54eaf18fa61d9d54074114ce2ec4b", "sidecar_sha256": "20f99735c279d74c5f7f14b9ae03a804adadb09fdb7eee9ce393c06ab5586496"},
+    {"seed": 2, "actions": 923, "expected_effects": 178, "artifact": "tests/artifacts/monitoring_v4/2026-08-21_common_runtime_v2_revalidate_audio_full_seed_2_v2.json", "artifact_sha256": "1b33ac99f6a7a9eaf162bd8fb81277d80baeb7965b20fd1f5f9829839f1ce2dc", "sidecar_sha256": "5d411b7bd967a3c10e35b58776b043948a087924d596dda0d34c88ef0dd4e36a"},
+    {"seed": 3, "actions": 910, "expected_effects": 178, "artifact": "tests/artifacts/monitoring_v4/2026-08-21_common_runtime_v2_revalidate_audio_full_seed_3_v2.json", "artifact_sha256": "5c71bbe31eefc930170bbcd1f56e8e0fdb9c39c0129d6fe4db913d2645de22a5", "sidecar_sha256": "5e316ab67e5ffe18b4fd0c51f5b3f38de71b314ab888a13ac730d19709971791"}
+  ],
+  "semantic_comparison": {"previous_action_semantics_difference": 0, "previous_oracle_result_difference": 0, "previous_sut_result_difference": 0, "previous_expected_effects_difference": 0, "sidecars_byte_identical": true},
+  "full_suite": {"discovered": 442, "passed": 434, "skipped": 8, "failed": 0, "errors": 0, "exit_code": 0, "duration_sec": 78.422915},
+  "result": "frozen_v2"
+}

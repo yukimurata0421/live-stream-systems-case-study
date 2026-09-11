@@ -256,6 +256,26 @@ class FastRecoveryScopeTests(unittest.TestCase):
         self.assertIn("stream engine owns", detail)
         self.assertEqual(sent, [(222, executor.signal.SIGTERM)])
 
+    def test_effect_boundary_callback_runs_immediately_before_signal(self) -> None:
+        order: list[tuple[str, int, int]] = []
+        ok, _detail = executor.restart_ffmpeg_child(
+            ffmpeg_pid=222,
+            reason="test",
+            log=lambda _message: None,
+            before_signal=lambda pid, sig: order.append(("audit", pid, sig)),
+            send_signal=lambda pid, sig: order.append(("signal", pid, sig)),
+            process_exists=lambda _pid: False,
+        )
+
+        self.assertTrue(ok)
+        self.assertEqual(
+            order,
+            [
+                ("audit", 222, executor.signal.SIGTERM),
+                ("signal", 222, executor.signal.SIGTERM),
+            ],
+        )
+
 
 class ConnectivityIncidentCorrelationTests(unittest.TestCase):
     def test_root_network_incident_suppresses_only_derivative_current_alerts(self) -> None:

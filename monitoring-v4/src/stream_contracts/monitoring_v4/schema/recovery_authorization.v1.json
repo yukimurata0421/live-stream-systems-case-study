@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "monitoring_v4.recovery_authorization.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "authorization_id", "episode_id", "action", "target", "authorized_at", "expires_at", "policy_revision", "blockers"],
+  "properties": {
+    "schema": {"const": "monitoring_v4.recovery_authorization.v1"},
+    "authorization_id": {"type": "string"},
+    "episode_id": {"type": "string"},
+    "action": {"enum": ["restart_dj", "restart_ffmpeg", "restart_workload"]},
+    "target": {"type": "string", "pattern": "^[a-z][a-z0-9_.-]{1,95}/[a-z][a-z0-9_.-]{1,95}$"},
+    "authorized_at": {"type": "string", "format": "date-time"},
+    "expires_at": {"type": "string", "format": "date-time"},
+    "policy_revision": {"type": "string", "minLength": 1},
+    "blockers": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+  }
+}

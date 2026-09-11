@@ -121,6 +121,38 @@ class FfmpegLifecycleTests(unittest.TestCase):
         self.assertEqual(events[0][1]["signal"], 15)
         self.assertEqual(events[1][1]["grace_sec"], 1)
 
+    def test_effect_boundary_callbacks_precede_term_and_kill_and_cannot_interfere(self) -> None:
+        order: list[str] = []
+        proc = mock.Mock()
+        proc.pid = 123
+        proc.poll.return_value = None
+        proc.wait.side_effect = [
+            subprocess.TimeoutExpired(cmd=["ffmpeg"], timeout=1),
+            -9,
+        ]
+        proc.terminate.side_effect = lambda: order.append("terminate")
+        proc.kill.side_effect = lambda: order.append("kill")
+
+        def broken_term_audit() -> None:
+            order.append("audit-term")
+            raise RuntimeError("audit failure")
+
+        def kill_audit() -> None:
+            order.append("audit-kill")
+
+        stopped = ffmpeg_lifecycle.stop_for_shutdown(
+            proc,
+            reason="test",
+            grace_sec=1,
+            append_event=lambda *_args, **_kwargs: "event",
+            log=lambda _msg: None,
+            before_terminate=broken_term_audit,
+            before_kill=kill_audit,
+        )
+
+        self.assertTrue(stopped)
+        self.assertEqual(order, ["audit-term", "terminate", "audit-kill", "kill"])
+
     def test_stop_for_shutdown_reports_false_when_kill_wait_times_out(self) -> None:
         proc = mock.Mock()
         proc.pid = 123

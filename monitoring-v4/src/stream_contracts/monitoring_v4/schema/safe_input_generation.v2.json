@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "monitoring_v4.safe_input_generation.v2",
+  "type": "object",
+  "additionalProperties": false,
+  "$defs": {
+    "member": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sha256", "size_bytes"],
+      "properties": {
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "size_bytes": {"type": "integer", "minimum": 0, "maximum": 20971520}
+      }
+    },
+    "standardMember": {
+      "$ref": "#/$defs/member",
+      "properties": {
+        "size_bytes": {"maximum": 4194304}
+      }
+    },
+    "revisionMember": {
+      "$ref": "#/$defs/member",
+      "properties": {
+        "size_bytes": {"maximum": 4096}
+      }
+    }
+  },
+  "required": ["schema", "generation_id", "source_revision", "files"],
+  "properties": {
+    "schema": {"const": "monitoring_v4.safe_input_generation.v2"},
+    "generation_id": {"type": "string", "minLength": 1, "maxLength": 200},
+    "source_revision": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 240,
+      "pattern": "^[A-Za-z0-9._@-]+$"
+    },
+    "files": {
+      "type": "object",
+      "minProperties": 21,
+      "maxProperties": 21,
+      "additionalProperties": false,
+      "required": [
+        "youtube_watchdog_stats.json",
+        "youtube_video_id_resolver_state.json",
+        "map_runtime_status.json",
+        "subsystems_status.json",
+        "viewer_synthetic_status.json",
+        "external_blackbox_status.json",
+        "monitoring_watchdog_state.json",
+        "operational_reliability_burn_status.json",
+        "operational_reliability_status.json",
+        "network_observer.json",
+        "resource_memory.json",
+        "memory_status.json",
+        "recovery_action_plan.json",
+        "notification_state.json",
+        "adsb_freshness_state.json",
+        "youtube_api_quota_state.json",
+        "control_loop_state.json",
+        "notification_outbox_status.json",
+        "runtime_lifecycle_events.json",
+        "runtime_rollout_evidence.json",
+        "deployed-revision.env"
+      ],
+      "properties": {
+        "youtube_watchdog_stats.json": {"$ref": "#/$defs/standardMember"},
+        "youtube_video_id_resolver_state.json": {"$ref": "#/$defs/standardMember"},
+        "map_runtime_status.json": {"$ref": "#/$defs/standardMember"},
+        "subsystems_status.json": {"$ref": "#/$defs/standardMember"},
+        "viewer_synthetic_status.json": {"$ref": "#/$defs/standardMember"},
+        "external_blackbox_status.json": {"$ref": "#/$defs/standardMember"},
+        "monitoring_watchdog_state.json": {"$ref": "#/$defs/standardMember"},
+        "operational_reliability_burn_status.json": {"$ref": "#/$defs/standardMember"},
+        "operational_reliability_status.json": {"$ref": "#/$defs/standardMember"},
+        "network_observer.json": {"$ref": "#/$defs/standardMember"},
+        "resource_memory.json": {"$ref": "#/$defs/standardMember"},
+        "memory_status.json": {"$ref": "#/$defs/standardMember"},
+        "recovery_action_plan.json": {"$ref": "#/$defs/standardMember"},
+        "notification_state.json": {"$ref": "#/$defs/standardMember"},
+        "adsb_freshness_state.json": {"$ref": "#/$defs/standardMember"},
+        "youtube_api_quota_state.json": {"$ref": "#/$defs/standardMember"},
+        "control_loop_state.json": {"$ref": "#/$defs/standardMember"},
+        "notification_outbox_status.json": {"$ref": "#/$defs/standardMember"},
+        "runtime_lifecycle_events.json": {"$ref": "#/$defs/member"},
+        "runtime_rollout_evidence.json": {"$ref": "#/$defs/standardMember"},
+        "deployed-revision.env": {"$ref": "#/$defs/revisionMember"}
+      }
+    }
+  }
+}

@@ -134,6 +134,14 @@ PULSE_CAPTURE_BUFFER_LATENCY_CRIT_USEC = max(
 RESTART_WINDOW_SEC = max(60, env_int("RESTART_WINDOW_SEC", 600))
 RESTART_MAX_ATTEMPTS = max(1, env_int("RESTART_MAX_ATTEMPTS", 3))
 RESTART_COOLDOWN_SEC = max(30, env_int("RESTART_COOLDOWN_SEC", 300))
+K8S_RUNTIME_UNAVAILABLE_RESTART_GRACE_SEC = max(
+    60,
+    env_int("K8S_RUNTIME_UNAVAILABLE_RESTART_GRACE_SEC", 180),
+)
+K8S_RUNTIME_UNAVAILABLE_EPISODE_RESET_SEC = max(
+    K8S_RUNTIME_UNAVAILABLE_RESTART_GRACE_SEC,
+    env_int("K8S_RUNTIME_UNAVAILABLE_EPISODE_RESET_SEC", 300),
+)
 SLO_PULSE_UNAVAILABLE_24H_MAX = max(1, env_int("SLO_PULSE_UNAVAILABLE_24H_MAX", 1))
 SLO_FILE = Path(env("SLO_FILE", str(STATE_ROOT / "slo_snapshot.json"))).expanduser()
 YTW_STATE_FILE = Path(env("YTW_STATE_FILE", str(STATE_ROOT / "youtube_watchdog_state.json"))).expanduser()
@@ -170,6 +178,12 @@ PULSE_SOURCE_MISSING_COUNT_FILE = WORK_DIR / "pulse_source_missing_count"
 RESTART_STATE_FILE = WORK_DIR / "restart_events.log"
 RESTART_COOLDOWN_FILE = WORK_DIR / "restart_cooldown_until"
 RECOVERY_STAGE_FILE = WORK_DIR / "recovery_stage_state.json"
+K8S_RUNTIME_UNAVAILABLE_STATE_FILE = Path(
+    env(
+        "K8S_RUNTIME_UNAVAILABLE_STATE_FILE",
+        str(WORK_DIR / "k8s_runtime_unavailable_state.json"),
+    )
+).expanduser()
 PULSE_HEALTH_STATE_FILE = WORK_DIR / "pulse_health_state.json"
 K8S_RESTART_COUNTS_FILE = Path(
     env("WATCHDOG_K8S_RESTART_COUNTS_FILE", str(WORK_DIR / "k8s_container_restart_counts.json"))
@@ -371,6 +385,73 @@ def bump_stage(state: dict[str, int], stage_key: str, ts_key: str, window_sec: i
 
 def reset_stage(state: dict[str, int], stage_key: str, ts_key: str) -> None:
     recovery_stage.reset(state, stage_key=stage_key, ts_key=ts_key)
+
+
+def runtime_unavailable_restart_deferred(
+    reason: str,
+    *,
+    now_ts: int | None = None,
+) -> tuple[bool, str]:
+    """Require a continuous unavailable window before replacing the runtime Pod.
+
+    A scoped FFmpeg child recovery temporarily makes the Deployment unready.  The
+    arena watchdog must let that owner converge instead of immediately escalating
+    the same episode to a full Deployment rollout restart.
+    """
+    current = now_epoch() if now_ts is None else int(now_ts)
+    state = read_json_file(K8S_RUNTIME_UNAVAILABLE_STATE_FILE, {})
+    first_seen = int(state.get("first_seen_ts", 0) or 0)
+    last_seen = int(state.get("last_seen_ts", 0) or 0)
+    observations = int(state.get("observations", 0) or 0)
+    same_episode = bool(
+        state.get("active") is True
+        and first_seen > 0
+        and last_seen >= first_seen
+        and 0 <= current - last_seen <= K8S_RUNTIME_UNAVAILABLE_EPISODE_RESET_SEC
+    )
+    if not same_episode:
+        first_seen = current
+        observations = 0
+    observations += 1
+    elapsed_sec = max(0, current - first_seen)
+    deferred = elapsed_sec < K8S_RUNTIME_UNAVAILABLE_RESTART_GRACE_SEC
+    write_json_file(
+        K8S_RUNTIME_UNAVAILABLE_STATE_FILE,
+        {
+            "active": True,
+            "first_seen_ts": first_seen,
+            "last_seen_ts": current,
+            "observations": observations,
+            "elapsed_sec": elapsed_sec,
+            "grace_sec": K8S_RUNTIME_UNAVAILABLE_RESTART_GRACE_SEC,
+            "restart_deferred": deferred,
+            "reason": reason,
+        },
+    )
+    return (
+        deferred,
+        (
+            f"runtime unavailable convergence elapsed={elapsed_sec}s "
+            f"grace={K8S_RUNTIME_UNAVAILABLE_RESTART_GRACE_SEC}s "
+            f"observations={observations}"
+        ),
+    )
+
+
+def clear_runtime_unavailable_restart_state(*, now_ts: int | None = None) -> None:
+    state = read_json_file(K8S_RUNTIME_UNAVAILABLE_STATE_FILE, {})
+    if state.get("active") is not True:
+        return
+    current = now_epoch() if now_ts is None else int(now_ts)
+    write_json_file(
+        K8S_RUNTIME_UNAVAILABLE_STATE_FILE,
+        {
+            **state,
+            "active": False,
+            "restart_deferred": False,
+            "recovered_at_ts": current,
+        },
+    )
 
 
 def prune_restart_events() -> None:
@@ -832,10 +913,28 @@ def remote_only_watchdog() -> int:
             )
             log(f"Startup restart blocked: {startup_detail}")
             return 0
+        restart_deferred, convergence_detail = runtime_unavailable_restart_deferred(reason)
+        if restart_deferred:
+            append_event(
+                "restart_deferred_convergence",
+                service=STREAM_V3_RUNTIME_WORKLOAD,
+                substate=reason,
+                convergence_detail=convergence_detail,
+            )
+            record_watchdog_stats(
+                "warmup_grace",
+                reason=convergence_detail,
+                stream_status=stream_status.detail,
+                dj_status=dj_status.detail,
+            )
+            log(f"Runtime convergence grace active: {convergence_detail}")
+            return 0
         append_event("service_unstable", service=STREAM_V3_RUNTIME_WORKLOAD, substate=reason)
         record_watchdog_stats("anomaly", reason=reason, stream_status=stream_status.detail, dj_status=dj_status.detail)
         restart_service(STREAM_SERVICE, "stream", reason)
         return 0
+
+    clear_runtime_unavailable_restart_state()
 
     probe = kubectl_exec_stream_engine(
         r'''

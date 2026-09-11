@@ -15,6 +15,16 @@ class HeartbeatAction:
         return bool(self.stop_reason)
 
 
+def _notify_effect_boundary(callback: Callable[[], None] | None) -> None:
+    if callback is None:
+        return
+    try:
+        callback()
+    except BaseException:
+        # Audit-only callbacks must never alter process lifecycle behavior.
+        pass
+
+
 def stop_for_shutdown(
     proc: subprocess.Popen,
     *,
@@ -23,6 +33,8 @@ def stop_for_shutdown(
     grace_sec: float,
     append_event: Callable[..., str],
     log: Callable[[str], None],
+    before_terminate: Callable[[], None] | None = None,
+    before_kill: Callable[[], None] | None = None,
 ) -> bool:
     if proc.poll() is not None:
         return True
@@ -35,6 +47,7 @@ def stop_for_shutdown(
         grace_sec=grace_sec,
     )
     try:
+        _notify_effect_boundary(before_terminate)
         proc.terminate()
     except Exception as e:
         append_event("ffmpeg_stop_terminate_error", ffmpeg_pid=pid, reason=reason, error=str(e))
@@ -47,6 +60,7 @@ def stop_for_shutdown(
         log(f"FFmpeg did not stop within {grace_sec:.1f}s after {reason}; killing pid={pid}.")
         append_event("ffmpeg_stop_timeout_kill", ffmpeg_pid=pid, reason=reason, grace_sec=grace_sec)
         try:
+            _notify_effect_boundary(before_kill)
             proc.kill()
         except Exception as e:
             append_event("ffmpeg_stop_kill_error", ffmpeg_pid=pid, reason=reason, error=str(e))
@@ -60,10 +74,17 @@ def stop_for_shutdown(
         return False
 
 
-def stop_quietly(proc: subprocess.Popen, *, wait_timeout: float = 1.0) -> None:
+def stop_quietly(
+    proc: subprocess.Popen,
+    *,
+    wait_timeout: float = 1.0,
+    before_terminate: Callable[[], None] | None = None,
+    before_kill: Callable[[], None] | None = None,
+) -> None:
     if proc.poll() is not None:
         return
     try:
+        _notify_effect_boundary(before_terminate)
         proc.terminate()
     except Exception:
         pass
@@ -71,6 +92,7 @@ def stop_quietly(proc: subprocess.Popen, *, wait_timeout: float = 1.0) -> None:
         proc.wait(timeout=wait_timeout)
     except Exception:
         try:
+            _notify_effect_boundary(before_kill)
             proc.kill()
         except Exception:
             pass

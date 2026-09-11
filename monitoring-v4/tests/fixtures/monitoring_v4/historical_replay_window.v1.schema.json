@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "monitoring_v4.historical_replay_window.v1",
+  "title": "Monitoring v4 sanitized historical observation replay window",
+  "type": "object",
+  "required": ["schema", "fixture_id", "replay_boundary", "provenance", "observations", "historical_expected", "synthetic_actions", "unknown"],
+  "properties": {
+    "schema": {"const": "monitoring_v4.historical_replay_window.v1"},
+    "fixture_id": {"type": "string", "minLength": 1},
+    "replay_boundary": {"const": "persisted_observation"},
+    "provenance": {
+      "type": "object",
+      "required": ["historical_window_id", "historical_start", "historical_end", "dump_sha256", "historical_revision", "sanitization_revision"]
+    },
+    "observations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["provenance", "alias", "domain", "source", "evidence_role", "state", "reason_code", "observed_at", "received_at", "freshness_limit_sec", "producer_revision", "payload"],
+        "properties": {
+          "provenance": {"const": "historical_observed"},
+          "alias": {"type": "string", "pattern": "^obs-[a-z0-9-]+$"},
+          "domain": {"enum": ["delivery", "rendering"]},
+          "state": {"enum": ["good", "bad", "unknown"]},
+          "payload": {"type": "object"}
+        }
+      }
+    },
+    "historical_expected": {"type": "object"},
+    "synthetic_actions": {"type": "array"},
+    "unknown": {"type": "array"}
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "monitoring_v4.postgresql_restore_verification.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "backup_name",
+    "backup_sha256",
+    "verified_at",
+    "schema_versions",
+    "observations",
+    "shadow_cycles",
+    "public_artifact_publications"
+  ],
+  "properties": {
+    "schema": {"const": "monitoring_v4.postgresql_restore_verification.v1"},
+    "backup_name": {"type": "string", "pattern": "^stream-v4-[0-9]{8}T[0-9]{6}Z\\.dump$"},
+    "backup_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "verified_at": {"type": "string", "format": "date-time"},
+    "schema_versions": {
+      "type": "array",
+      "prefixItems": [
+        {"const": 1}, {"const": 2}, {"const": 3},
+        {"const": 4}, {"const": 5}, {"const": 6}
+      ],
+      "items": false,
+      "minItems": 6,
+      "maxItems": 6
+    },
+    "observations": {"type": "integer", "minimum": 0},
+    "shadow_cycles": {"type": "integer", "minimum": 0},
+    "public_artifact_publications": {"type": "integer", "minimum": 0}
+  }
+}

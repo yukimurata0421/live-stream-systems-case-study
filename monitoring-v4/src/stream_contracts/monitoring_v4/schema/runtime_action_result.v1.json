@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "monitoring_v4.runtime_action_result.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "result_id", "command_id", "status", "observed_at", "reason_code", "target_generation"],
+  "properties": {
+    "schema": {"const": "monitoring_v4.runtime_action_result.v1"},
+    "result_id": {"type": "string"},
+    "command_id": {"type": "string"},
+    "status": {"enum": ["accepted", "rejected", "started", "completed", "failed"]},
+    "observed_at": {"type": "string", "format": "date-time"},
+    "reason_code": {"type": "string"},
+    "target_generation": {"type": "string", "minLength": 1, "maxLength": 200}
+  }
+}

@@ -1,0 +1,193 @@
+{
+  "schema": "monitoring_v4.time_boundary_replay.v1",
+  "fixture_id": "2026-08-12-retry-probe-ttl-periodic-boundaries",
+  "classification": {
+    "historical_events": "observed production-monitoring rollout evidence",
+    "boundary_cases": "counterfactual transformations of recorded timelines and current contracts",
+    "scope": "test-only; no production, deployment, or soak mutation"
+  },
+  "evidence_sources": [
+    {
+      "path": "docs/50_ops_logs/2026-08-12_03_runtime_refactor_audit_and_stabilization.md",
+      "sections": [
+        "Defect 5: PostgreSQL probe churnとDB startup coupling",
+        "Revision ledger"
+      ]
+    },
+    {
+      "path": "docs/50_ops_logs/2026-08-14_04_youtube_api_collector_deployment_and_gate_reset.md",
+      "sections": [
+        "23:43 JST continuity再確認"
+      ]
+    },
+    {
+      "path": "docs/50_ops_logs/2026-08-13_02_private_final_revision_soak_checkpoint.md",
+      "sections": [
+        "daily backup CronJob"
+      ]
+    },
+    {
+      "path": "deploy/k3s/core.yaml",
+      "sections": [
+        "startup-db-timeout-sec",
+        "startupProbe"
+      ]
+    }
+  ],
+  "historical_timelines": {
+    "startup_recovery": {
+      "events": [
+        {
+          "at": "2026-08-12T07:22:56Z",
+          "kind": "probe_churn_candidate_applied"
+        },
+        {
+          "at": "2026-08-12T07:22:59Z",
+          "kind": "postgres_pod_started"
+        },
+        {
+          "at": "2026-08-12T07:24:20Z",
+          "kind": "core_first_cycle_succeeded"
+        },
+        {
+          "at": "2026-08-12T07:24:24Z",
+          "kind": "all_workloads_ready"
+        },
+        {
+          "at": "2026-08-12T07:27:48Z",
+          "kind": "bounded_retry_candidate_applied"
+        },
+        {
+          "at": "2026-08-12T07:27:50Z",
+          "kind": "postgres_recreated"
+        },
+        {
+          "at": "2026-08-12T07:29:20Z",
+          "kind": "core_first_cycle_succeeded"
+        },
+        {
+          "at": "2026-08-12T07:29:21Z",
+          "kind": "all_workloads_ready"
+        }
+      ],
+      "observed_outcomes": {
+        "probe_churn_candidate": {
+          "core_restarts": 2,
+          "exporter_restarts_per_pod": 1,
+          "postgres_restarts": 0,
+          "termination_evidence": [
+            "PoolTimeout",
+            "database service hostname unresolved"
+          ]
+        },
+        "bounded_retry_candidate": {
+          "core_restarts": 0,
+          "exporter_restarts": 0,
+          "postgres_restarts": 0
+        }
+      }
+    },
+    "producer_cadence": {
+      "window_start": "2026-08-14T14:10:20Z",
+      "window_end": "2026-08-14T14:40:20Z",
+      "source": "youtube_video_resolver",
+      "declared_cadence_sec": 60,
+      "maximum_observed_gap_sec": 85,
+      "freshness_limit_sec": 90,
+      "cycles_expected": 31,
+      "cycles_received": 31,
+      "cycles_fresh": 31,
+      "stale_cycles": 0,
+      "contract": "producer gaps remain diagnostic and do not replace cycle receipt/freshness gates"
+    },
+    "periodic_backup": {
+      "scheduled_at": "2026-08-12T18:17:00Z",
+      "completed_at": "2026-08-12T18:17:05Z",
+      "outcome": "succeeded",
+      "schedule": "17 18 * * *",
+      "time_zone": "Etc/UTC"
+    }
+  },
+  "startup_budget_revisions": [
+    {
+      "revision": "5df05d4a542946f54ef633a9595ae9520ca68496",
+      "component": "core",
+      "retry_timeout_sec": 120,
+      "post_retry_wait_bound_sec": 0,
+      "nominal_startup_probe_budget_sec": 120,
+      "documented_disposition": "rejected_retry_probe_equal_boundary"
+    },
+    {
+      "revision": "b300936b8091571a5d44eb1ad1e5ae68272010cd",
+      "component": "core",
+      "retry_timeout_sec": 180,
+      "post_retry_wait_bound_sec": 60,
+      "nominal_startup_probe_budget_sec": 240,
+      "documented_disposition": "rejected_core_schedule_equal_boundary"
+    },
+    {
+      "revision": "ef2f0b0d5ed9e0f5fefac6d4ef1f72d508ae2afa",
+      "component": "core",
+      "retry_timeout_sec": 180,
+      "post_retry_wait_bound_sec": 60,
+      "nominal_startup_probe_budget_sec": 300,
+      "documented_disposition": "accepted_with_nominal_margin"
+    },
+    {
+      "revision": "ef2f0b0d5ed9e0f5fefac6d4ef1f72d508ae2afa",
+      "component": "exporter",
+      "retry_timeout_sec": 180,
+      "post_retry_wait_bound_sec": 0,
+      "nominal_startup_probe_budget_sec": 240,
+      "documented_disposition": "accepted_with_nominal_margin"
+    }
+  ],
+  "periodic_contracts": [
+    {
+      "name": "core_cycle",
+      "kind": "minute_modulo",
+      "second": 20,
+      "minute_modulo": 1
+    },
+    {
+      "name": "postgres_backup",
+      "kind": "daily_cron",
+      "manifest": "deploy/k3s/backup.yaml",
+      "schedule": "17 18 * * *"
+    },
+    {
+      "name": "postgres_restore_smoke",
+      "kind": "daily_cron",
+      "manifest": "deploy/k3s/restore-smoke-job.yaml",
+      "schedule": "37 18 * * *"
+    },
+    {
+      "name": "postgres_retention",
+      "kind": "daily_cron",
+      "manifest": "deploy/k3s/maintenance.yaml",
+      "schedule": "17 19 * * *"
+    },
+    {
+      "name": "postgres_backup_retention",
+      "kind": "daily_cron",
+      "manifest": "deploy/k3s/backup-retention.yaml",
+      "schedule": "27 19 * * *"
+    }
+  ],
+  "boundary_transform": {
+    "epsilon_sec": [
+      -1,
+      0,
+      1
+    ],
+    "compression_factors": [
+      1,
+      10,
+      60,
+      3600
+    ],
+    "startup_invariant": "application ready time must be strictly earlier than the nominal startup probe deadline",
+    "ttl_invariant": "evidence is eligible through TTL equality and becomes stale immediately after it",
+    "periodic_invariant": "the next scheduled timestamp is strictly in the future and remains wall-clock anchored"
+  }
+}

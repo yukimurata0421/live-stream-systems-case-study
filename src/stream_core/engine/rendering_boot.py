@@ -13,8 +13,40 @@ from pathlib import Path
 from typing import Callable, Optional
 from urllib.parse import quote
 
+from maintenance_audit import audit_maintenance_decision
+
 
 RunCommand = Callable[[list[str]], subprocess.CompletedProcess[str]]
+
+
+def _audit_start(*, phase: str, operation: str, resource_identity: str, correlation_id: str, count: int) -> None:
+    try:
+        audit_maintenance_decision(
+            path_id="MP-10",
+            phase=phase,
+            operation=operation,
+            path_role="NORMAL_MUTATOR",
+            process_service="stream-engine",
+            resource_identity=resource_identity,
+            correlation_id=correlation_id,
+            in_flight_evidence={
+                "status": "PROPOSED",
+                "count": count,
+                "source": "stream-engine helper process reference",
+            },
+            generation_evidence={"status": "PROPOSED", "correlation_id": correlation_id},
+            bind_source_target=True,
+            p2_disabled_evaluation=True,
+            native_operation_id=correlation_id,
+            native_operation_generation=correlation_id,
+            actual_production_decision=(
+                "LEGACY_EFFECT_CALL_PROCEEDS" if phase == "EFFECT_BOUNDARY" else "LEGACY_OPERATION_ADMITTED"
+            ),
+        )
+    except BaseException:
+        # A local audit wrapper is an additional containment boundary around
+        # the already fail-isolated public hook.
+        pass
 
 
 def display_ready(display_name: str, *, run_cmd: RunCommand) -> bool:
@@ -29,7 +61,22 @@ def start_x_display(cfg, *, run_cmd: RunCommand) -> subprocess.Popen | None:
     if shutil.which("Xvfb") is None:
         raise RuntimeError("Xvfb not found.")
     cfg.xvfb_log_file.parent.mkdir(parents=True, exist_ok=True)
+    correlation_id = f"stream-engine-xvfb-{time.time_ns()}"
+    _audit_start(
+        phase="ADMISSION",
+        operation="start_xvfb",
+        resource_identity=f"display/{cfg.display_name}",
+        correlation_id=correlation_id,
+        count=0,
+    )
     with cfg.xvfb_log_file.open("a", encoding="utf-8") as lf:
+        _audit_start(
+            phase="EFFECT_BOUNDARY",
+            operation="start_xvfb",
+            resource_identity=f"display/{cfg.display_name}",
+            correlation_id=correlation_id,
+            count=1,
+        )
         proc = subprocess.Popen(
             ["Xvfb", cfg.display_name, "-screen", "0", f"{cfg.video_size}x{cfg.xvfb_depth}", "-ac", "-nolisten", "tcp"],
             stdout=lf,
@@ -145,7 +192,22 @@ def start_overlay_server(cfg) -> subprocess.Popen | None:
     if is_port_listening("127.0.0.1", cfg.overlay_port):
         return None
     cfg.overlay_server_log_file.parent.mkdir(parents=True, exist_ok=True)
+    correlation_id = f"stream-engine-overlay-{time.time_ns()}"
+    _audit_start(
+        phase="ADMISSION",
+        operation="start_overlay",
+        resource_identity=f"overlay/port/{cfg.overlay_port}",
+        correlation_id=correlation_id,
+        count=0,
+    )
     with cfg.overlay_server_log_file.open("a", encoding="utf-8") as lf:
+        _audit_start(
+            phase="EFFECT_BOUNDARY",
+            operation="start_overlay",
+            resource_identity=f"overlay/port/{cfg.overlay_port}",
+            correlation_id=correlation_id,
+            count=1,
+        )
         proc = subprocess.Popen(
             [
                 sys.executable,
@@ -201,6 +263,14 @@ def start_browser(cfg, *, settle_sec: float, url: str) -> subprocess.Popen | Non
     env = os.environ.copy()
     env["DISPLAY"] = cfg.display_name
     cfg.browser_log_file.parent.mkdir(parents=True, exist_ok=True)
+    correlation_id = f"stream-engine-browser-{time.time_ns()}"
+    _audit_start(
+        phase="ADMISSION",
+        operation="start_browser",
+        resource_identity=f"browser/profile/{cfg.browser_profile_dir.name}",
+        correlation_id=correlation_id,
+        count=0,
+    )
     with cfg.browser_log_file.open("a", encoding="utf-8") as lf:
         if browser == "firefox":
             args = [browser, "--kiosk", url]
@@ -231,6 +301,13 @@ def start_browser(cfg, *, settle_sec: float, url: str) -> subprocess.Popen | Non
                 f"--window-size={window_size}",
                 f"--window-position={cfg.browser_window_pos}",
             ]
+        _audit_start(
+            phase="EFFECT_BOUNDARY",
+            operation="start_browser",
+            resource_identity=f"browser/profile/{cfg.browser_profile_dir.name}",
+            correlation_id=correlation_id,
+            count=1,
+        )
         proc = subprocess.Popen(args, stdout=lf, stderr=lf, env=env)
     if settle_sec > 0:
         time.sleep(settle_sec)

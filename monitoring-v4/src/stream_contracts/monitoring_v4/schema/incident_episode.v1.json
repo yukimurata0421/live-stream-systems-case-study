@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "monitoring_v4.incident_episode.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "episode_id", "domain", "status", "severity", "opened_at", "last_bad_at", "closed_at", "bad_samples", "unknown_samples", "last_transition_at", "next_notification_at", "policy_revision", "summary", "reason_codes"],
+  "properties": {
+    "schema": {"const": "monitoring_v4.incident_episode.v1"},
+    "episode_id": {"type": "string", "pattern": "^[a-z][a-z0-9_.-]{1,47}:[0-9a-f]{24,64}$"},
+    "domain": {"type": "string"},
+    "status": {"enum": ["active", "closed"]},
+    "severity": {"enum": ["info", "warning", "critical"]},
+    "opened_at": {"type": "string", "format": "date-time"},
+    "last_bad_at": {"type": "string", "format": "date-time"},
+    "closed_at": {"type": "string"},
+    "bad_samples": {"type": "integer", "minimum": 0},
+    "unknown_samples": {"type": "integer", "minimum": 0},
+    "last_transition_at": {"type": "string", "format": "date-time"},
+    "next_notification_at": {"type": "string"},
+    "policy_revision": {"type": "string", "minLength": 1, "maxLength": 200},
+    "summary": {"type": "string", "minLength": 1, "maxLength": 300},
+    "reason_codes": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+  }
+}

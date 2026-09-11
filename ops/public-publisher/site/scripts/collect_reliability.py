@@ -19,7 +19,7 @@ SITE_DIR = Path(__file__).resolve().parents[1]
 DEFAULT_OUTPUT = SITE_DIR / "public" / "reliability-indicators.json"
 DEFAULT_SOURCE_DIR = "/opt/stream_v3"
 DEFAULT_STATE_DIR = "/var/lib/stream-v3/observability-monitor"
-DEFAULT_CACHE_SEC = 3600
+DEFAULT_CACHE_SEC = 60
 
 
 def as_number(value: Any) -> float | None:
@@ -127,7 +127,6 @@ def visual_support_item(visual: dict[str, Any]) -> dict[str, Any]:
 
 def build_public_payload(raw: dict[str, Any], *, now: float | None = None) -> dict[str, Any]:
     windows = raw.get("windows") or {}
-    day = windows.get("24h") or {}
     week = windows.get("7d") or {}
     month = windows.get("30d") or {}
 
@@ -136,7 +135,7 @@ def build_public_payload(raw: dict[str, Any], *, now: float | None = None) -> di
     same_url = month.get("same_url_preservation") or {}
     same_url_raw = same_url.get("raw_metric") or {}
     same_url_actual = same_url.get("actual_url_evidence") or {}
-    upload = day.get("upload_ceiling") or {}
+    upload = week.get("upload_ceiling") or {}
     input_quality = week.get("youtube_input_quality") or {}
     input_raw = input_quality.get("raw_warning_evidence") or {}
     audio = week.get("audio_correctness") or {}
@@ -180,7 +179,7 @@ def build_public_payload(raw: dict[str, Any], *, now: float | None = None) -> di
         metric_item(
             item_id="upload_within_ceiling",
             label="Upload within ceiling",
-            window="rolling 24h",
+            window="rolling 7d",
             value=upload.get("sli_pct"),
             unit="%",
             reference=upload.get("target_pct"),
@@ -189,7 +188,10 @@ def build_public_payload(raw: dict[str, Any], *, now: float | None = None) -> di
                 fact("Ceiling", 5.0, "Mbps"),
                 fact("Max p95", upload.get("max_value"), "Mbps"),
             ],
-            note="One-minute observations of the rolling 1h upload p95 against the 5.0 Mbps engineering ceiling.",
+            note=(
+                "Seven-day trend of one-minute observations of the rolling 1h upload p95 against "
+                "the 5.0 Mbps engineering ceiling. The formal upload SLO window remains rolling 24h."
+            ),
         ),
         {
             "id": "youtube_input_quality",
@@ -328,7 +330,7 @@ def unavailable_payload(*, now: float, reason: str) -> dict[str, Any]:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Collect public-safe Stream v3 reliability indicators")
-    parser.add_argument("--force", action="store_true", help="ignore the hourly cache")
+    parser.add_argument("--force", action="store_true", help="ignore the 60-second cache")
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
     parser.add_argument("--cache-sec", type=int, default=DEFAULT_CACHE_SEC)
     parser.add_argument("--timeout", type=float, default=60.0)

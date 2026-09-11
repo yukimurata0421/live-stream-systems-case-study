@@ -1,0 +1,17 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - namespace.yaml
+  - storageclass.yaml
+  - config.yaml
+  - postgres.yaml
+  - input-projector.yaml
+  - youtube-api-collector.yaml
+  - core.yaml
+  - reporter.yaml
+  - exporter.yaml
+  - backup.yaml
+  - restore-smoke-job.yaml
+  - backup-retention.yaml
+  - maintenance.yaml
+  - network-policy.yaml

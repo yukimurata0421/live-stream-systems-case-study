@@ -232,7 +232,66 @@ class StreamV3PrometheusExporterTests(unittest.TestCase):
         self.assertEqual(metric_value(payload, "stream_v3_network_ffmpeg_socket_notsent_bytes"), 42.0)
         self.assertEqual(metric_value(payload, "stream_v3_network_ffmpeg_socket_unacked"), 7.0)
         self.assertEqual(metric_value(payload, "stream_v3_network_ffmpeg_socket_lastsnd_ms"), 11.0)
+        self.assertEqual(metric_value(payload, "stream_v3_upload_latest_sample_available"), 1.0)
         self.assertEqual(metric_value(payload, "stream_v3_upload_latest_mbps"), 3.05)
+
+    def test_stale_tcp_sample_retains_age_without_claiming_current_socket(self) -> None:
+        exporter = load_exporter()
+        with tempfile.TemporaryDirectory() as td:
+            state_root = Path(td)
+            logs = state_root / "logs"
+            logs.mkdir(parents=True)
+            (logs / "fast_recovery_events.jsonl").write_text(
+                json.dumps(
+                    {
+                        "ts_utc": "2099-01-01T00:00:00Z",
+                        "kind": "tcp_send_sample",
+                        "sample_interval_sec": 60,
+                        "mbps": 3.05,
+                        "notsent": 42,
+                        "unacked": 7,
+                        "lastsnd_ms": 11,
+                    }
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            with (
+                mock.patch.object(exporter, "run_json", side_effect=[{"windows": []}, {"metrics": {}}]),
+                mock.patch.object(exporter, "time") as time_mock,
+                mock.patch.object(exporter, "host_memory_snapshot", return_value={}),
+                mock.patch.object(exporter, "runtime_gpu_snapshot", return_value={}),
+            ):
+                time_mock.time.return_value = 4070909400.0
+                payload = exporter.build_metrics(repo_root=Path(td), state_root=state_root, timeout_sec=1)
+
+        self.assertEqual(metric_value(payload, "stream_v3_network_ffmpeg_socket_connected"), 0.0)
+        self.assertEqual(metric_value(payload, "stream_v3_upload_latest_sample_available"), 1.0)
+        self.assertEqual(metric_value(payload, "stream_v3_upload_latest_age_seconds"), 600.0)
+        self.assertEqual(metric_value(payload, "stream_v3_upload_latest_mbps"), 3.05)
+
+    def test_missing_tcp_sample_is_unavailable_and_not_zero_age(self) -> None:
+        exporter = load_exporter()
+        with tempfile.TemporaryDirectory() as td:
+            state_root = Path(td)
+            (state_root / "logs").mkdir(parents=True)
+
+            with (
+                mock.patch.object(exporter, "run_json", side_effect=[{"windows": []}, {"metrics": {}}]),
+                mock.patch.object(exporter, "time") as time_mock,
+                mock.patch.object(exporter, "host_memory_snapshot", return_value={}),
+                mock.patch.object(exporter, "runtime_gpu_snapshot", return_value={}),
+            ):
+                time_mock.time.return_value = 4070909400.0
+                payload = exporter.build_metrics(repo_root=Path(td), state_root=state_root, timeout_sec=1)
+
+        self.assertEqual(metric_value(payload, "stream_v3_network_ffmpeg_socket_connected"), 0.0)
+        self.assertEqual(metric_value(payload, "stream_v3_upload_latest_sample_available"), 0.0)
+        self.assertEqual(
+            metric_value(payload, "stream_v3_upload_latest_age_seconds"),
+            float(exporter.TCP_SEND_SAMPLE_MISSING_AGE_SEC),
+        )
 
     def test_upload_windows_prefer_windowed_tcp_samples_over_24h_health_fields(self) -> None:
         exporter = load_exporter()

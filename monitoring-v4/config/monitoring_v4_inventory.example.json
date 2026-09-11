@@ -1,0 +1,85 @@
+{
+  "schema": "monitoring_v4.current_surface_inventory.v1",
+  "captured_at_jst": "2026-08-11 23:04 JST",
+  "inventory_scope": "example stream_v3 migration-source ownership; live enabled state requires a separate read-only host snapshot",
+  "live_enabled_state_verified": false,
+  "known_source_monitoring_release": {
+    "release": "stream-v3-input-quality-raw-authority-v1.19-20260811",
+    "scope": "arena-server monitoring plane only",
+    "youtube_input_quality_authority": "raw OAuth explicit warning/error",
+    "same_producer_projections": ["Prometheus", "rolling input quality"],
+    "v4_production_changed": false
+  },
+  "entries": [
+    {
+      "id": "arena-monitor-loop",
+      "host_role": "arena-server",
+      "entrypoint": "ops/systemd/stream-v3-observability-monitor.service",
+      "reads": ["runtime and monitoring JSON state", "YouTube API/OAuth/public evidence"],
+      "writes": ["arena monitor state", "monitor event JSONL", "legacy derived state"],
+      "credentials": ["read-only source credentials", "legacy notification environment may be loaded"],
+      "mutations": ["legacy notify-status child", "legacy recovery-orchestrator child"],
+      "target_owner": "arena observation/decision processes; notification and control split"
+    },
+    {
+      "id": "legacy-notification-writer",
+      "host_role": "arena-server",
+      "entrypoint": "ops/systemd/adsb-streamnew-notify.service",
+      "reads": ["current source state", "legacy incident state", "legacy outbox"],
+      "writes": ["legacy notify state", "legacy outbox", "notify event JSONL"],
+      "credentials": ["Discord webhook", "optional Slack webhook"],
+      "mutations": ["Discord/Slack delivery"],
+      "target_owner": "R5 notifier after explicit single-writer credential cutover"
+    },
+    {
+      "id": "historical-shadow-sli",
+      "host_role": "arena-server",
+      "entrypoint": "ops/systemd/stream-v3-shadow-sli.service",
+      "reads": ["rotated historical JSONL", "objective SLI state"],
+      "writes": ["historical shadow SLI projection"],
+      "credentials": [],
+      "mutations": [],
+      "target_owner": "post-R5 batch projector; outside current incident path"
+    },
+    {
+      "id": "prometheus-exporter",
+      "host_role": "arena-server",
+      "entrypoint": "ops/systemd/adsb-streamnew-prometheus-exporter.service",
+      "reads": ["legacy current JSON state"],
+      "writes": ["Prometheus HTTP response"],
+      "credentials": [],
+      "mutations": [],
+      "target_owner": "R6 compatibility exporter"
+    },
+    {
+      "id": "arena-remote-recovery",
+      "host_role": "arena-server",
+      "entrypoint": "ops/systemd/stream-v3-remote-recovery.service",
+      "reads": ["Prometheus", "legacy recovery action plan"],
+      "writes": ["remote recovery state"],
+      "credentials": ["current k3s mutation access"],
+      "mutations": ["Dell k3s workload restart"],
+      "target_owner": "R7 arena control command issuer; direct apply retired later"
+    },
+    {
+      "id": "dell-fast-recovery",
+      "host_role": "Dell-runtime",
+      "entrypoint": "ops/systemd/adsb-streamnew-fast-recovery.timer",
+      "reads": ["local TCP/runtime/YouTube evidence"],
+      "writes": ["fast recovery state and events"],
+      "credentials": ["local runtime mutation"],
+      "mutations": ["legacy local FFmpeg/stream recovery"],
+      "target_owner": "R7 Dell telemetry plus command executor; decision moves to arena"
+    },
+    {
+      "id": "raspberry-pi-public-publisher",
+      "host_role": "Raspberry-Pi-public-only",
+      "entrypoint": "ops/public-publisher/site/systemd/yukimurata-public-push.service",
+      "reads": ["arena-generated public-safe artifact"],
+      "writes": ["public object/site"],
+      "credentials": ["public upload only"],
+      "mutations": [],
+      "target_owner": "outside Monitoring v4; publish-only and no control feedback"
+    }
+  ]
+}

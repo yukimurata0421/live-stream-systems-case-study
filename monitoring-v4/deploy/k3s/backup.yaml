@@ -1,0 +1,138 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: postgres-backup
+  namespace: stream-monitoring-v4
+  labels:
+    app.kubernetes.io/name: monitoring-v4-backup
+    app.kubernetes.io/component: backup
+    app.kubernetes.io/part-of: stream-monitoring-v4
+spec:
+  schedule: "17 18 * * *"
+  timeZone: Etc/UTC
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 21600
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      activeDeadlineSeconds: 1800
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: monitoring-v4-backup
+            app.kubernetes.io/component: backup
+            app.kubernetes.io/part-of: stream-monitoring-v4
+        spec:
+          restartPolicy: Never
+          automountServiceAccountToken: false
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            fsGroup: 1000
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: pg-dump
+              image: postgres@sha256:742f40ea20b9ff2ff31db5458d127452988a2164df9e17441e191f3b72252193
+              imagePullPolicy: IfNotPresent
+              command: ["sh", "-ec"]
+              args:
+                - |
+                  umask 077
+                  stamp="$(date -u +%Y%m%dT%H%M%SZ)"
+                  temporary="/backup/.stream-v4-${stamp}.dump.tmp"
+                  final="/backup/stream-v4-${stamp}.dump"
+                  checksum_temporary="${final}.sha256.tmp"
+                  independent_root="/independent-backup/stream-v4-postgres"
+                  independent_temporary="${independent_root}/.stream-v4-${stamp}.dump.tmp"
+                  independent_final="${independent_root}/stream-v4-${stamp}.dump"
+                  independent_checksum_temporary="${independent_final}.sha256.tmp"
+                  cleanup() {
+                    rm -f "${temporary}" "${checksum_temporary}" \
+                      "${independent_temporary}" "${independent_checksum_temporary}"
+                  }
+                  trap cleanup EXIT HUP INT TERM
+                  test "$(stat -c %d /backup)" != "$(stat -c %d /independent-backup)"
+                  mkdir -p "${independent_root}"
+                  chmod 0750 /backup "${independent_root}"
+                  ready=0
+                  for attempt in $(seq 1 30); do
+                    if pg_isready --timeout=2 >/dev/null 2>&1; then
+                      ready=1
+                      break
+                    fi
+                    sleep 2
+                  done
+                  test "${ready}" = 1
+                  pg_dump --no-owner --no-acl --format=custom --file="${temporary}"
+                  pg_restore --list "${temporary}" >/dev/null
+                  digest="$(sha256sum "${temporary}" | awk '{print $1}')"
+                  test "${#digest}" = 64
+                  cp "${temporary}" "${independent_temporary}"
+                  test "$(sha256sum "${independent_temporary}" | awk '{print $1}')" = "${digest}"
+                  chmod 0640 "${temporary}" "${independent_temporary}"
+                  printf '%s  %s\n' "${digest}" "$(basename "${final}")" >"${checksum_temporary}"
+                  chmod 0640 "${checksum_temporary}"
+                  printf '%s  %s\n' "${digest}" "$(basename "${independent_final}")" \
+                    >"${independent_checksum_temporary}"
+                  chmod 0640 "${independent_checksum_temporary}"
+                  sync -f "${temporary}"
+                  sync -f "${checksum_temporary}"
+                  sync -f "${independent_temporary}"
+                  sync -f "${independent_checksum_temporary}"
+                  # Hard-link publication is atomic and refuses to replace a
+                  # same-second/manual-job collision.  Publish checksum first;
+                  # readers only discover the copy when the dump link exists.
+                  ln "${independent_checksum_temporary}" "${independent_final}.sha256"
+                  ln "${independent_temporary}" "${independent_final}"
+                  rm "${independent_checksum_temporary}" "${independent_temporary}"
+                  sync -f "${independent_root}"
+                  ln "${checksum_temporary}" "${final}.sha256"
+                  ln "${temporary}" "${final}"
+                  rm "${checksum_temporary}" "${temporary}"
+                  sync -f /backup
+                  trap - EXIT HUP INT TERM
+              envFrom:
+                - configMapRef:
+                    name: database-connection
+              env:
+                - name: PGUSER
+                  value: v4_backup_ro
+                - name: PGPASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: database-roles
+                      key: backup-password
+              resources:
+                requests:
+                  cpu: 25m
+                  memory: 64Mi
+                limits:
+                  cpu: 500m
+                  memory: 256Mi
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop: ["ALL"]
+              volumeMounts:
+                - name: backup
+                  mountPath: /backup
+                - name: independent-backup
+                  mountPath: /independent-backup
+                - name: tmp
+                  mountPath: /tmp
+          volumes:
+            - name: backup
+              hostPath:
+                path: /var/lib/stream-monitoring-v4/.state/postgres-backups
+                type: DirectoryOrCreate
+            - name: independent-backup
+              hostPath:
+                path: /var/backups/stream-monitoring-v4
+                type: Directory
+            - name: tmp
+              emptyDir: {}

@@ -1,0 +1,11 @@
+{
+  "schema": "monitoring_v4.replay_fixture.v1",
+  "source_case": "2026-08-11 current good closes once and historical low does not reopen",
+  "domain": "youtube_input_quality",
+  "steps": [
+    {"offset_sec": 0, "state": "bad", "reason": "current_bad_evidence", "marker": "current-bad"},
+    {"offset_sec": 60, "state": "good", "reason": "current_good_evidence", "marker": "current-good"},
+    {"offset_sec": 120, "state": "good", "reason": "current_good_evidence", "marker": "rolling-still-low", "payload": {"historical_sli_pct": 89.387}}
+  ],
+  "expected_phases": ["detected", "recovered"]
+}

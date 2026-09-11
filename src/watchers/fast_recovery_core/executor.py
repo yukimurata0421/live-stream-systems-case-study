@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import signal
 import time
-from typing import Callable
+from collections.abc import Callable
 
 
 def restart_stream(
@@ -37,6 +37,7 @@ def restart_ffmpeg_child(
     log: Callable[[str], None],
     send_signal: Callable[[int, int], None] = os.kill,
     process_exists: Callable[[int], bool] | None = None,
+    before_signal: Callable[[int, int], None] | None = None,
     wait_timeout_sec: float = 2.0,
     poll_sec: float = 0.1,
 ) -> tuple[bool, str]:
@@ -47,6 +48,11 @@ def restart_ffmpeg_child(
 
     log(f"FAST_RECOVERY ffmpeg child SIGTERM pid={ffmpeg_pid}: {reason}")
     try:
+        if before_signal is not None:
+            try:
+                before_signal(ffmpeg_pid, signal.SIGTERM)
+            except BaseException as exc:  # noqa: BLE001 - audit callback cannot alter legacy recovery
+                log(f"WARN effect-boundary audit callback failed: {type(exc).__name__}")
         send_signal(ffmpeg_pid, signal.SIGTERM)
     except ProcessLookupError:
         return True, "ffmpeg child already exited"

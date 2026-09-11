@@ -29,7 +29,7 @@
       height: 100%;
       background: #000;
       overflow: hidden;
-      font-family: "Segoe UI", "Noto Sans JP", sans-serif;
+      font-family: "Noto Sans", "Noto Sans CJK JP", "Noto Color Emoji", "DejaVu Sans", sans-serif;
       cursor: none;
     }
     #map {
@@ -258,6 +258,27 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
+    #np .kicker {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    #np .source-badge {
+      display: inline-flex;
+      flex: 0 0 auto;
+      align-items: center;
+      padding: 2px 8px;
+      border: 1px solid currentColor;
+      border-radius: 999px;
+      color: rgba(182, 199, 214, 0.92);
+      font-size: 10px;
+      line-height: 1.2;
+      letter-spacing: 0.08em;
+    }
+    #np[data-music-provider="floracore"] .source-badge {
+      color: #f0b8dc;
+    }
     #np .title {
       font-size: 26px;
       line-height: 1.26;
@@ -461,9 +482,12 @@
     </section>
   </aside>
   <aside id="np" class="panel" aria-live="polite">
-    <div class="kicker">Background Music</div>
+    <div class="kicker">
+      <span>Background Music</span>
+      <span id="musicProviderBadge" class="source-badge">NCS</span>
+    </div>
     <div class="title">Initializing...</div>
-    <div class="credit">Music provided by NoCopyrightSounds</div>
+    <div id="musicCredit" class="credit">Music provided by NoCopyrightSounds</div>
   </aside>
   <aside id="info" class="panel">
     <div class="time-row">
@@ -491,7 +515,10 @@
       const mapUrl = buildMapUrl();
       const panel = document.getElementById("np");
       const titleEl = panel.querySelector(".title");
+      const creditEl = document.getElementById("musicCredit");
+      const providerBadgeEl = document.getElementById("musicProviderBadge");
       const mockTitle = params.get("mockTitle");
+      const mockMusicSource = params.get("mockMusicSource");
       const site = { lat: null, lon: null };
       let messageHistory = [];
       let lastAdsbOkMs = 0;
@@ -499,6 +526,7 @@
       let lastMapLoadMs = 0;
       let currentNowPlayingTitle = "";
       let currentNowPlayingStale = null;
+      let currentMusicProvider = "";
       let lastGoodPrecipitationStatus = null;
       let lastGoodPrecipitationHealth = null;
       let overlayResponseValidationFailures = 0;
@@ -512,7 +540,7 @@
       const CLOCK_REFRESH_MS = 1_000;
       const RECEIVER_REFRESH_MS = intervalParam("receiverRefreshMs", 60_000, 10_000);
       const ADSB_REFRESH_MS = intervalParam("adsbRefreshMs", 5_000, 1_000);
-      const NOW_PLAYING_REFRESH_MS = intervalParam("nowPlayingRefreshMs", 10_000, 2_000);
+      const NOW_PLAYING_REFRESH_MS = intervalParam("nowPlayingRefreshMs", 1_000, 1_000);
       const PRECIPITATION_REFRESH_MS = intervalParam("precipitationRefreshMs", 60_000, 10_000);
       const PRECIPITATION_WARMUP_MS = intervalParam("precipitationWarmupMs", 20_000, 5_000);
       const PRECIPITATION_UNAVAILABLE_MS = intervalParam("precipitationUnavailableMs", 30 * 60_000, 15 * 60_000);
@@ -646,10 +674,107 @@
       }
 
       function cleanNowPlayingTitle(value) {
-        return String(value || "")
+        return repairMojibakeTitle(String(value || ""))
           .replace(/^\s*[▶>.-]*\s*/u, "")
           .replace(/^now\s*playing\s*:\s*/iu, "")
           .trim();
+      }
+
+      const MUSIC_PROVIDERS = Object.freeze({
+        ncs: Object.freeze({
+          id: "ncs",
+          badge: "NCS",
+          credit: "Music provided by NoCopyrightSounds",
+        }),
+        floracore: Object.freeze({
+          id: "floracore",
+          badge: "FLORACORE · EVENING",
+          credit: "Music provided by @Floracore_EDM",
+        }),
+      });
+
+      const WINDOWS_1252_BYTES = Object.freeze({
+        "€": 0x80, "‚": 0x82, "ƒ": 0x83, "„": 0x84, "…": 0x85,
+        "†": 0x86, "‡": 0x87, "ˆ": 0x88, "‰": 0x89, "Š": 0x8a,
+        "‹": 0x8b, "Œ": 0x8c, "Ž": 0x8e, "‘": 0x91, "’": 0x92,
+        "“": 0x93, "”": 0x94, "•": 0x95, "–": 0x96, "—": 0x97,
+        "˜": 0x98, "™": 0x99, "š": 0x9a, "›": 0x9b, "œ": 0x9c,
+        "ž": 0x9e, "Ÿ": 0x9f,
+      });
+
+      function mojibakeSignalCount(value) {
+        return (String(value || "").match(/[\uFFFDÃÂâðï]/gu) || []).length;
+      }
+
+      function windows1252Bytes(value) {
+        const bytes = [];
+        for (const character of value) {
+          const codePoint = character.codePointAt(0);
+          if (codePoint <= 0xff) {
+            bytes.push(codePoint);
+          } else if (Object.hasOwn(WINDOWS_1252_BYTES, character)) {
+            bytes.push(WINDOWS_1252_BYTES[character]);
+          } else {
+            return null;
+          }
+        }
+        return new Uint8Array(bytes);
+      }
+
+      function repairMojibakeRun(value) {
+        let repaired = value;
+        for (let attempt = 0; attempt < 2; attempt += 1) {
+          const currentScore = mojibakeSignalCount(repaired);
+          if (!currentScore) break;
+          const bytes = windows1252Bytes(repaired);
+          if (!bytes) break;
+          let candidate = "";
+          try {
+            candidate = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+          } catch (_error) {
+            break;
+          }
+          if (mojibakeSignalCount(candidate) >= currentScore) break;
+          repaired = candidate;
+        }
+        return repaired;
+      }
+
+      function repairMojibakeTitle(value) {
+        const parts = [];
+        let run = "";
+        for (const character of String(value || "")) {
+          if (windows1252Bytes(character)) {
+            run += character;
+          } else {
+            if (run) parts.push(repairMojibakeRun(run));
+            parts.push(character);
+            run = "";
+          }
+        }
+        if (run) parts.push(repairMojibakeRun(run));
+        return parts.join("");
+      }
+
+      function musicProviderFor(nowPlaying, title, override = "") {
+        const requested = String(override || "").trim().toLowerCase();
+        if (Object.hasOwn(MUSIC_PROVIDERS, requested)) return MUSIC_PROVIDERS[requested];
+        const identity = [
+          nowPlaying && nowPlaying.source_filename,
+          nowPlaying && nowPlaying.source_path,
+          title,
+        ].map((value) => String(value || "").toLowerCase()).join(" ");
+        return identity.includes("floracore")
+          ? MUSIC_PROVIDERS.floracore
+          : MUSIC_PROVIDERS.ncs;
+      }
+
+      function applyMusicProvider(provider) {
+        if (!provider || provider.id === currentMusicProvider) return;
+        panel.dataset.musicProvider = provider.id;
+        providerBadgeEl.textContent = provider.badge;
+        creditEl.textContent = provider.credit;
+        currentMusicProvider = provider.id;
       }
 
       function responseContentTypeIncludes(response, expected) {
@@ -890,7 +1015,10 @@
         if (jsonResult.status !== "fulfilled" || textResult.status !== "fulfilled") {
           overlayResponseValidationFailures += 1;
         }
-        const title = mockTitle || textTitle || jsonTitle || currentNowPlayingTitle || "Unknown title";
+        const title = mockTitle
+          ? cleanNowPlayingTitle(mockTitle)
+          : textTitle || jsonTitle || currentNowPlayingTitle || "Unknown title";
+        const musicProvider = musicProviderFor(np, title, mockMusicSource);
         const updatedAt = data && data.updated_at_utc ? data.updated_at_utc : "";
         const stale = !textTitle && (!updatedAt || Date.now() - toEpochMs(updatedAt) > STALE_MS);
 
@@ -900,6 +1028,7 @@
           fitNowPlayingTitle();
           currentNowPlayingTitle = title;
         }
+        applyMusicProvider(musicProvider);
         if (stale !== currentNowPlayingStale) {
           panel.classList.toggle("stale", stale);
           currentNowPlayingStale = stale;
@@ -919,6 +1048,8 @@
           receiverTitleAlignment: getComputedStyle(receiverTitle).textAlign,
           precipitationState: document.getElementById("precipitationState").textContent,
           precipitationNotice: document.getElementById("precipitationNotice").textContent,
+          musicProvider: panel.dataset.musicProvider || "",
+          musicCredit: creditEl.textContent,
           responseValidationFailures: overlayResponseValidationFailures,
           mapEmbedded: new URL(frame.src).searchParams.get("embedded") === "1",
         };

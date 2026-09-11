@@ -588,6 +588,7 @@ def collect_notification_incidents(
         operational_reliability_status_file=STATE_BASE_DIR / "operational_reliability_status.json",
         operational_reliability_burn_status_file=STATE_BASE_DIR / "operational_reliability_burn_status.json",
         external_blackbox_status_file=STATE_BASE_DIR / "external_blackbox_status.json",
+        fast_recovery_state_file=STATE_BASE_DIR / "fast_recovery_state.json",
         now_ts=now,
         report_stale_sec=report_stale_sec,
         bootstrap_grace_active=notify_bootstrap_grace_active(now, startup_grace_sec),

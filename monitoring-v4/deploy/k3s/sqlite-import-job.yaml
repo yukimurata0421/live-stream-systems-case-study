@@ -1,0 +1,83 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: sqlite-import
+  namespace: stream-monitoring-v4
+  labels:
+    app.kubernetes.io/name: monitoring-v4-sqlite-import
+    app.kubernetes.io/component: migration
+    app.kubernetes.io/part-of: stream-monitoring-v4
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 1800
+  ttlSecondsAfterFinished: 86400
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: monitoring-v4-sqlite-import
+        app.kubernetes.io/component: migration
+        app.kubernetes.io/part-of: stream-monitoring-v4
+    spec:
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: import
+          image: __APP_IMAGE__
+          imagePullPolicy: Never
+          args:
+            - stream_monitoring_v4.commands.sqlite_to_postgres
+            - --sqlite
+            - /source-v4-state/k3s/sqlite-import-source.sqlite3
+            - --output
+            - /v4-state/sqlite-import-report.json
+          envFrom:
+            - configMapRef:
+                name: database-connection
+          env:
+            - name: TMPDIR
+              value: /v4-state
+            - name: PGUSER
+              value: v4_migrator
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: database-roles
+                  key: migrator-password
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 750m
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: source-v4-state
+              mountPath: /source-v4-state
+              readOnly: true
+            - name: v4-state
+              mountPath: /v4-state
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: source-v4-state
+          hostPath:
+            path: /var/lib/stream-monitoring-v4/.state
+            type: Directory
+        - name: v4-state
+          hostPath:
+            path: /var/lib/stream-monitoring-v4/.state/k3s
+            type: DirectoryOrCreate
+        - name: tmp
+          emptyDir: {}

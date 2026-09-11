@@ -12,6 +12,43 @@ sys.path.insert(0, str(ROOT / "src" / "dj"))
 import auto_dj  # type: ignore
 from auto_dj import AutoDJ, FolderState, parse_args  # type: ignore
 from auto_dj_lib import player as player_runtime  # type: ignore
+from auto_dj_lib import text as title_text  # type: ignore
+
+
+class AutoDJTitleTextTests(unittest.TestCase):
+    def test_repairs_utf8_decoded_as_windows_1252(self) -> None:
+        self.assertEqual(
+            title_text.beautify_title("minor_NXGHT - DANÃ‡A DO VERÃƒO ｜ Phonk.mp3"),
+            "NXGHT - DANÇA DO VERÃO | Phonk",
+        )
+
+    def test_preserves_valid_unicode_in_existing_titles(self) -> None:
+        self.assertEqual(
+            title_text.beautify_title("minor_NXGHT - DANÇA DO VERÃO ｜ Phonk.mp3"),
+            "NXGHT - DANÇA DO VERÃO | Phonk",
+        )
+        self.assertEqual(
+            title_text.beautify_title("minor_RINZO - デイドリーム ｜ J Pop.mp3"),
+            "RINZO - デイドリーム | J Pop",
+        )
+
+    def test_repairs_mojibake_without_changing_adjacent_japanese(self) -> None:
+        self.assertEqual(
+            title_text.beautify_title("minor_DANÃ‡A DO VERÃƒO ｜ デイドリーム.mp3"),
+            "DANÇA DO VERÃO | デイドリーム",
+        )
+
+    def test_removes_repeated_extension_without_changing_symbols(self) -> None:
+        self.assertEqual(
+            title_text.beautify_title("minor_THANK YOU! ♥️.mp3.mp3"),
+            "THANK YOU! ♥️",
+        )
+
+    def test_preserves_floracore_mix_name(self) -> None:
+        self.assertEqual(
+            title_text.beautify_title("minor_Floracore - Celosia Evermore [Data Mix].mp3"),
+            "Floracore - Celosia Evermore [Data Mix]",
+        )
 
 
 class AutoDJMajorRotationResetTests(unittest.TestCase):
@@ -175,6 +212,18 @@ class AutoDJMajorRotationResetTests(unittest.TestCase):
 
 
 class AutoDJCliDefaultsTests(unittest.TestCase):
+    def test_provider_gain_defaults_can_be_set_by_environment(self) -> None:
+        env = {
+            "AUTO_DJ_NCS_GAIN_DB": "-6.7",
+            "AUTO_DJ_FLORACORE_GAIN_DB": "0",
+        }
+        with mock.patch.dict("os.environ", env, clear=True):
+            with mock.patch.object(sys, "argv", ["auto_dj.py"]):
+                args = parse_args()
+
+        self.assertEqual(args.ncs_gain_db, -6.7)
+        self.assertEqual(args.floracore_gain_db, 0.0)
+
     def test_history_default_uses_stream_runtime_state_dir(self) -> None:
         with tempfile.TemporaryDirectory() as td:
             runtime_root = Path(td) / "runtime-state"
@@ -231,6 +280,58 @@ class AutoDJFFmpegCommandTests(unittest.TestCase):
             self.assertIn("-buffer_duration", cmd)
             bid = cmd.index("-buffer_duration")
             self.assertEqual(cmd[bid + 1], "250")
+
+    def test_ffmpeg_player_uses_provider_gain_before_existing_fade(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            ncs_track = root / "minor_NCS Track.mp3"
+            floracore_track = root / "minor_Floracore - Lotus Awakening.mp3"
+            with mock.patch.object(AutoDJ, "_resolve_player", return_value="ffmpeg"):
+                dj = AutoDJ(
+                    library_root=root,
+                    now_playing_file=root / "now_playing.txt",
+                    snapshot_file=root / "snapshot.json",
+                    history_jsonl_file=root / "history.jsonl",
+                    player="ffmpeg",
+                    retry_sleep_sec=1,
+                    pulse_sink="stream_sink",
+                    player_fail_sleep_sec=1,
+                    force_pulse_ao=False,
+                    snapshot_heartbeat_sec=10,
+                    max_track_sec=0,
+                    pulse_buffer_duration_ms=250,
+                    ncs_gain_db=-6.7,
+                    floracore_gain_db=0.0,
+                )
+
+            ncs_cmd = dj._player_command(ncs_track, track_duration_sec=120.0)
+            floracore_cmd = dj._player_command(floracore_track, track_duration_sec=120.0)
+            self.assertEqual(
+                ncs_cmd[ncs_cmd.index("-af") + 1],
+                "volume=-6.700dB,afade=t=out:st=115.000:d=4.000",
+            )
+            self.assertEqual(
+                floracore_cmd[floracore_cmd.index("-af") + 1],
+                "afade=t=out:st=115.000:d=4.000",
+            )
+
+    def test_provider_gain_uses_path_identity(self) -> None:
+        self.assertEqual(
+            player_runtime.track_volume_gain_db(
+                Path("/music/time_tags/evening/minor_Floracore - Test.mp3"),
+                ncs_gain_db=-6.7,
+                floracore_gain_db=0.0,
+            ),
+            0.0,
+        )
+        self.assertEqual(
+            player_runtime.track_volume_gain_db(
+                Path("/music/time_tags/evening/minor_NCS Test.mp3"),
+                ncs_gain_db=-6.7,
+                floracore_gain_db=0.0,
+            ),
+            -6.7,
+        )
 
     def test_player_env_drops_pulse_server_by_default(self) -> None:
         with mock.patch.dict("os.environ", {"PULSE_SERVER": "unix:/stale/native"}, clear=True):

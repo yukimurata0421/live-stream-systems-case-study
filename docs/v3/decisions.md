@@ -60,16 +60,17 @@ pretend that the executor had already produced those historical intents.
 
 Status: accepted
 
-ADS-B radio publication, receiver privacy, and NCS music attribution are treated
-as design constraints. The public record documents the operator's risk posture,
-the viewer-facing minimization choices, and the re-review triggers; it does not
-try to certify legal compliance or make the stream reusable in every
-jurisdiction.
+ADS-B radio publication, receiver privacy, and provider-specific music
+attribution are treated as design constraints. NCS usage-policy handling and
+the narrower Floracore YouTube Live credit contract are not interchangeable.
+The public record documents the operator's risk posture, the viewer-facing
+minimization choices, and the re-review triggers; it does not try to certify
+legal compliance or make the stream reusable in every jurisdiction.
 
-Consequence: receiver coordinates, raw operational state, music files, and
-licensing assumptions stay out of the public repository. Description-based NCS
-credit remains the canonical music-attribution path, while overlay credit is
-only supplemental viewer disclosure.
+Consequence: receiver coordinates, raw operational state, music files,
+permission correspondence, and licensing assumptions stay out of the public
+repository. Description-based provider credit remains canonical, while overlay
+credit is only supplemental viewer disclosure.
 
 ## Migration Smoke Test
 

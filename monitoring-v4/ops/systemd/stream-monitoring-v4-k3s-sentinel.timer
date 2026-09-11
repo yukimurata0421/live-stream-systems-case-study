@@ -1,0 +1,11 @@
+[Unit]
+Description=Run Monitoring v4 k3s host sentinel every two minutes
+
+[Timer]
+OnCalendar=*-*-* *:0/2:35
+AccuracySec=1s
+Persistent=true
+Unit=stream-monitoring-v4-k3s-sentinel.service
+
+[Install]
+WantedBy=timers.target

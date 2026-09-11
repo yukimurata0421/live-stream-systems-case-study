@@ -9,6 +9,7 @@ from urllib.parse import unquote
 ROOT = Path(__file__).resolve().parents[1]
 DOCS = ROOT / "docs"
 RECOVERY_CONTROL = ROOT / "recovery-control"
+MONITORING_V4 = ROOT / "monitoring-v4"
 README = ROOT / "README.md"
 MARKDOWN_LINK_RE = re.compile(r"!?\[[^\]]*\]\(([^)]+)\)")
 MERMAID_BLOCK_RE = re.compile(r"^```mermaid\s*$\n(.*?)^```\s*$", re.MULTILINE | re.DOTALL)
@@ -90,6 +91,12 @@ class PublicDocsStructureTests(unittest.TestCase):
             RECOVERY_CONTROL / "docs" / "architecture.md",
             RECOVERY_CONTROL / "docs" / "safety-model.md",
             RECOVERY_CONTROL / "docs" / "harness-trust.md",
+            MONITORING_V4 / "README.md",
+            MONITORING_V4 / "docs" / "architecture.md",
+            MONITORING_V4 / "docs" / "hardening.md",
+            MONITORING_V4 / "docs" / "harness-engineering-draft.md",
+            MONITORING_V4 / "docs" / "status.md",
+            MONITORING_V4 / "docs" / "public-release.md",
         )
 
         for path in required:
@@ -251,6 +258,7 @@ class PublicDocsStructureTests(unittest.TestCase):
             "../recovery-control/docs/why-cra.md",
             "../recovery-control/docs/architecture.md",
             "../recovery-control/docs/harness-trust.md",
+            "../monitoring-v4/docs/architecture.md",
             "operational-scorecard.md",
         ):
             with self.subTest(target=target):
@@ -263,6 +271,15 @@ class PublicDocsStructureTests(unittest.TestCase):
         )
         self.assertIn("No production authority is enabled", scorecard)
         self.assertIn("no live effect or completed production-soak claim", scorecard)
+        self.assertIn("Monitoring v4 arena evidence plane | Tested / documented", scorecard)
+
+        music_contract = read(DOCS / "v3" / "music-provider-and-loudness-contract.md")
+        self.assertIn("Public Evidence Boundary", music_contract)
+        self.assertIn("does not independently prove permission", music_contract)
+
+        recovery_contract = read(DOCS / "v3" / "scoped-recovery-authority.md")
+        self.assertIn("runtime_boundary_entrypoint.py", recovery_contract)
+        self.assertNotIn("does not yet publish a self-contained", recovery_contract)
 
     def test_mermaid_blocks_have_supported_declarations_and_balanced_fences(self) -> None:
         supported = (

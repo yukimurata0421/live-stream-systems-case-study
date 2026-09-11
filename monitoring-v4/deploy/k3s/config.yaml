@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: database-connection
+  namespace: stream-monitoring-v4
+  labels:
+    app.kubernetes.io/part-of: stream-monitoring-v4
+data:
+  PGHOST: postgres.stream-monitoring-v4.svc.cluster.local
+  PGPORT: "5432"
+  PGDATABASE: stream_monitoring_v4
+  PGSSLMODE: disable
+  PGCONNECT_TIMEOUT: "5"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: monitoring-v4-release
+  namespace: stream-monitoring-v4
+  labels:
+    app.kubernetes.io/part-of: stream-monitoring-v4
+data:
+  build-revision: __BUILD_REVISION__
+  app-image-id: __APP_IMAGE_ID__

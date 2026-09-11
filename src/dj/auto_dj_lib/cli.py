@@ -90,6 +90,18 @@ def build_parser(base_dir: Path) -> argparse.ArgumentParser:
         help="Pulse output buffer duration in milliseconds for ffmpeg player (lower reduces latency/cut perception).",
     )
     parser.add_argument(
+        "--ncs-gain-db",
+        type=float,
+        default=float(os.environ.get("AUTO_DJ_NCS_GAIN_DB", "0")),
+        help="Playback gain for non-Floracore tracks in dB.",
+    )
+    parser.add_argument(
+        "--floracore-gain-db",
+        type=float,
+        default=float(os.environ.get("AUTO_DJ_FLORACORE_GAIN_DB", "0")),
+        help="Playback gain for Floracore tracks in dB.",
+    )
+    parser.add_argument(
         "--log-level",
         default="INFO",
         choices=["DEBUG", "INFO", "WARNING", "ERROR"],

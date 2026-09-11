@@ -1,0 +1,43 @@
+{
+  "artifact_type": "monitoring_v4_common_runtime_v2_frozen_domains_revalidation",
+  "created_at": "2026-08-21T13:04:11Z",
+  "common_runtime_sha256": "0ed92c51456f7fbaa5692c7e3d152aed75841ad6269270f7f2d14cf5a0db2238",
+  "targeted_verification": {"run": 187, "passed": 185, "skipped": 2, "failed": 0, "errors": 0, "exit_code": 0, "duration_sec": 22.302},
+  "stateful_revalidation": {
+    "runs": 15,
+    "examples": 3000,
+    "generated_actions": 13483,
+    "expected_effects": 2394,
+    "started_actions": 16483,
+    "completed_actions": 16483,
+    "failed_actions": 0,
+    "terminal_actions": 16483,
+    "orphan_started_actions": 0,
+    "double_terminal_actions": 0,
+    "terminal_integrity_failures": 0,
+    "terminal_evidence_persistence_failures": 0,
+    "cleanup_verified": 3000,
+    "cleanup_failures": 0,
+    "sut_failures": 0,
+    "harness_failures": 0,
+    "attribution_gaps": 0,
+    "oracle_gaps": 0,
+    "unknown": 0,
+    "duration_sec": 440.692906
+  },
+  "semantic_comparison": {
+    "action_semantics_difference": 0,
+    "oracle_result_difference": 0,
+    "sut_result_difference": 0,
+    "expected_effects_difference": 0,
+    "sidecars_byte_identical": 15,
+    "allowed_variance": ["duration", "artifact_path", "terminal_metadata", "cleanup_metadata"]
+  },
+  "v2_freezes": [
+    "tests/artifacts/monitoring_v4/2026-08-21_delivery_stateful_freeze_v2.json",
+    "tests/artifacts/monitoring_v4/2026-08-21_audio_stateful_freeze_v2.json",
+    "tests/artifacts/monitoring_v4/2026-08-21_youtube_lifecycle_stateful_freeze_v2.json"
+  ],
+  "full_suite": {"discovered": 442, "passed": 434, "skipped": 8, "failed": 0, "errors": 0, "exit_code": 0, "event_count": 443, "duration_sec": 78.422915},
+  "result": "pass"
+}

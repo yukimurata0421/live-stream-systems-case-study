@@ -19,6 +19,9 @@ contracts, and operational decisions without publishing runtime data or secrets.
 - The integrated `recovery-control/` subproject: CRA intent handling,
   arena-server facts projection, Dell admission, exact-target effect fencing,
   schemas, migrations, isolated tests, and public design records.
+- The integrated `monitoring-v4/` subproject: the sanitized arena observation,
+  current, incident, notification-intent, parity, storage, and Harness surfaces
+  from public snapshot `5e61e2b7dbbd09f014746c35e50c406ead755561`.
 - Read-only map-runtime and public-viewer synthetic probes, Prometheus mappings
   and rules, and Discord/Slack routing policy.
 - Durable operational reliability rollups, external public-video evidence,
@@ -29,6 +32,9 @@ contracts, and operational decisions without publishing runtime data or secrets.
   postboot readiness, and read-only NVIDIA package observation.
 - Connectivity-aware FFmpeg launch suppression, browser-only recovery, and
   arena-side incident correlation without live host configuration or state.
+- Exact-target runtime-boundary integration, local effect auditing, redacted
+  rotating FFmpeg stderr capture, and correlated exit/restart evidence, with
+  production authority still disabled in the public policy.
 - An explicitly disabled-by-default FFmpeg network writer timeout with bounded
   configuration validation and no claim of production activation.
 - Boot-bound, durable network episode classification from the existing
@@ -56,6 +62,11 @@ contracts, and operational decisions without publishing runtime data or secrets.
 - Virtual environments, Python caches, and generated runtime directories.
 - Real YouTube stream keys, OAuth tokens, Discord webhooks, SSH keys, and
   environment files from production state.
+
+The `monitoring-v4/` import preserves the standalone public snapshot's
+portable paths and test fixtures. It does not copy private Monitoring v4
+operational records, generated soak artifacts, databases, or live deployment
+identity.
 
 ## Safety Rules
 

@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "monitoring_v4.runtime_rollout_projection.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "observed_at", "evidence"],
+  "properties": {
+    "schema": {"const": "monitoring_v4.runtime_rollout_projection.v1"},
+    "observed_at": {"type": "string", "format": "date-time"},
+    "evidence": {
+      "type": "array",
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["schema", "evidence_id", "rollout_id", "planned_at", "expires_at", "pod_started_at", "pod_uid", "reason", "workload", "verification"],
+        "properties": {
+          "schema": {"const": "monitoring_v4.verified_rollout_evidence.v1"},
+          "evidence_id": {"type": "string", "pattern": "^[a-z][a-z0-9_.-]{1,47}:[0-9a-f]{24,64}$"},
+          "rollout_id": {"type": "string", "minLength": 1, "maxLength": 200},
+          "planned_at": {"type": "string", "format": "date-time"},
+          "expires_at": {"type": "string", "format": "date-time"},
+          "pod_started_at": {"type": "string", "format": "date-time"},
+          "pod_uid": {"type": "string", "minLength": 1, "maxLength": 200},
+          "reason": {"type": "string", "minLength": 1, "maxLength": 120},
+          "workload": {"const": "deployment/stream-v3-runtime"},
+          "verification": {"const": "annotation_window_and_pod_start"}
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "monitoring_v4.runtime_control_command.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "command_id", "authorization_id", "action", "target", "issued_at", "expires_at", "idempotency_key", "target_generation"],
+  "properties": {
+    "schema": {"const": "monitoring_v4.runtime_control_command.v1"},
+    "command_id": {"type": "string"},
+    "authorization_id": {"type": "string"},
+    "action": {"enum": ["restart_dj", "restart_ffmpeg", "restart_workload"]},
+    "target": {"type": "string", "pattern": "^[a-z][a-z0-9_.-]{1,95}/[a-z][a-z0-9_.-]{1,95}$"},
+    "issued_at": {"type": "string", "format": "date-time"},
+    "expires_at": {"type": "string", "format": "date-time"},
+    "idempotency_key": {"type": "string", "minLength": 1, "maxLength": 200},
+    "target_generation": {"type": "string", "minLength": 1, "maxLength": 200}
+  }
+}

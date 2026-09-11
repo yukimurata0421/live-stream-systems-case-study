@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "monitoring_v4.runtime_lifecycle_projection.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "events"],
+  "properties": {
+    "schema": {"const": "monitoring_v4.runtime_lifecycle_projection.v1"},
+    "events": {
+      "type": "array",
+      "maxItems": 32,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["schema", "event_id", "event_type", "opened_at", "recovered_at", "run_id", "restart_count", "exit_code", "delay_sec", "scheduled_event_id", "recovered_event_id"],
+        "properties": {
+          "schema": {"const": "monitoring_v4.runtime_lifecycle_event.v1"},
+          "event_id": {"type": "string", "minLength": 1, "maxLength": 200},
+          "event_type": {"const": "ffmpeg_auto_recovered"},
+          "opened_at": {"type": "string", "format": "date-time"},
+          "recovered_at": {"type": "string", "format": "date-time"},
+          "run_id": {"type": "string", "minLength": 1, "maxLength": 200},
+          "restart_count": {"type": "integer", "minimum": 1},
+          "exit_code": {"type": "integer", "minimum": -999, "maximum": 999},
+          "delay_sec": {"type": "integer", "minimum": 0, "maximum": 3600},
+          "scheduled_event_id": {"type": "string", "minLength": 1, "maxLength": 200},
+          "recovered_event_id": {"type": "string", "minLength": 1, "maxLength": 200}
+        }
+      }
+    }
+  }
+}

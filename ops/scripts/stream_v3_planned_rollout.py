@@ -3,10 +3,19 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
+import sys
 import time
 import uuid
 from datetime import datetime, timezone
+from pathlib import Path
+
+SRC_DIR = Path(__file__).resolve().parents[2] / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
+
+from maintenance_audit import audit_maintenance_decision
 
 
 ANNOTATION_PREFIX = "stream-v3.yukimurata.dev"
@@ -63,6 +72,12 @@ def parser() -> argparse.ArgumentParser:
     value.add_argument("--no-wait", action="store_true")
     value.add_argument("--dry-run", action="store_true")
     value.add_argument("--rollout-id", default="")
+    value.add_argument("--maintenance-generation", type=int, default=0, help="audit-only maintenance generation")
+    value.add_argument(
+        "--maintenance-authorization-id",
+        default=os.environ.get("MAINTENANCE_AUDIT_AUTHORIZATION_ID", ""),
+        help="audit-only authorization correlation; never changes rollout behavior",
+    )
     return value
 
 
@@ -115,6 +130,32 @@ def main() -> int:
         "-p",
         json.dumps(patch, ensure_ascii=False, separators=(",", ":")),
     ]
+    audit_maintenance_decision(
+        path_id="MP-01",
+        phase="ADMISSION",
+        operation="restart_deployment",
+        path_role="PLANNED_EXECUTOR",
+        process_service="stream_v3_planned_rollout.py",
+        resource_identity=f"deployment/{args.namespace}/{args.deployment}",
+        correlation_id=rollout_id,
+        operation_generation=int(args.maintenance_generation) or None,
+        authorization_id=str(args.maintenance_authorization_id or ""),
+        in_flight_evidence={"status": "PROPOSED", "count": 0, "source": "operator process before kubectl PATCH"},
+        generation_evidence={"status": "CONFIRMED", "rollout_id": rollout_id, "source": "planned rollout annotation"},
+    )
+    audit_maintenance_decision(
+        path_id="MP-01",
+        phase="EFFECT_BOUNDARY",
+        operation="restart_deployment",
+        path_role="PLANNED_EXECUTOR",
+        process_service="stream_v3_planned_rollout.py",
+        resource_identity=f"deployment/{args.namespace}/{args.deployment}",
+        correlation_id=rollout_id,
+        operation_generation=int(args.maintenance_generation) or None,
+        authorization_id=str(args.maintenance_authorization_id or ""),
+        in_flight_evidence={"status": "PROPOSED", "count": 1, "source": "kubectl PATCH call about to begin"},
+        generation_evidence={"status": "CONFIRMED", "rollout_id": rollout_id, "source": "planned rollout annotation"},
+    )
     completed = run_command(command)
     if completed.returncode != 0:
         detail = (completed.stderr or completed.stdout or "kubectl patch failed").strip()

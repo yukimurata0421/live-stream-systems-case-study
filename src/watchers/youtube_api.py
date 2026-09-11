@@ -165,6 +165,11 @@ _parse_probe_bool = public_probe_runtime._parse_probe_bool
 parse_public_live_probe_output = public_probe_runtime.parse_public_live_probe_output
 
 
+OAUTH_LIVE_STREAMS_TRANSIENT_HTTP_CODES = frozenset({500, 502, 503, 504})
+OAUTH_LIVE_STREAMS_MAX_ATTEMPTS = 2
+OAUTH_LIVE_STREAMS_RETRY_DELAY_SEC = 2.0
+
+
 def _with_facade_quota_bindings(fn, *args, **kwargs):
     bindings = {
         "API_CALL_LOG_FILE": API_CALL_LOG_FILE,
@@ -285,6 +290,31 @@ def youtube_live_api_get(endpoint: str, access_token: str, params: dict[str, str
         is_quota_exceeded_error=_is_quota_exceeded_error,
         extract_google_error_reason=_extract_google_error_reason,
     )
+
+
+def _list_bound_streams_with_transient_retry(
+    access_token: str,
+    *,
+    bound_stream_id: str,
+) -> tuple[dict, int]:
+    retry_count = 0
+    for attempt in range(OAUTH_LIVE_STREAMS_MAX_ATTEMPTS):
+        try:
+            return (
+                youtube_live_api_get(
+                    "liveStreams",
+                    access_token,
+                    {"part": "id,status", "id": bound_stream_id},
+                ),
+                retry_count,
+            )
+        except urllib.error.HTTPError as exc:
+            final_attempt = attempt + 1 >= OAUTH_LIVE_STREAMS_MAX_ATTEMPTS
+            if final_attempt or int(exc.code) not in OAUTH_LIVE_STREAMS_TRANSIENT_HTTP_CODES:
+                raise
+            retry_count += 1
+            time.sleep(OAUTH_LIVE_STREAMS_RETRY_DELAY_SEC)
+    raise RuntimeError("liveStreams retry loop exhausted without a result")
 
 
 def youtube_live_api_post(endpoint: str, access_token: str, params: dict[str, str]) -> dict:
@@ -986,12 +1016,12 @@ def probe_with_oauth() -> OAuthProbeResult:
     stream_health_status = ""
     stream_health_issues = 0
     stream_health_issue_details: tuple[dict[str, str], ...] = ()
+    live_stream_retry_count = 0
     if bound_stream_id:
         try:
-            streams = youtube_live_api_get(
-                "liveStreams",
+            streams, live_stream_retry_count = _list_bound_streams_with_transient_retry(
                 access_token,
-                {"part": "id,status", "id": bound_stream_id},
+                bound_stream_id=bound_stream_id,
             )
             s_items = streams.get("items", [])
             if s_items:
@@ -1061,6 +1091,7 @@ def probe_with_oauth() -> OAuthProbeResult:
         f" autoStart={enable_auto_start if enable_auto_start is not None else '-'}"
         f" autoStop={enable_auto_stop if enable_auto_stop is not None else '-'}"
         f" monitorStream={monitor_stream_enabled if monitor_stream_enabled is not None else '-'}"
+        f" liveStreamsTransientRetries={live_stream_retry_count}"
     )
     return OAuthProbeResult(
         True,

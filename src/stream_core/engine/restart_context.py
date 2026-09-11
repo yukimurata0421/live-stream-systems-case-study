@@ -45,6 +45,38 @@ def has_recent_restart_context(cfg) -> bool:
     return 0 <= age_sec <= deadline
 
 
+def matching_context(path, *, ffmpeg_pid: int, max_age_sec: float) -> dict:
+    payload = restart_reason_payload(path)
+    if payload is None:
+        return {}
+    try:
+        requested_pid = int(payload.get("ffmpeg_pid", 0) or 0)
+    except (TypeError, ValueError):
+        return {}
+    if ffmpeg_pid <= 1 or requested_pid != ffmpeg_pid:
+        return {}
+    age_sec = restart_reason_age_sec(payload)
+    if age_sec is None or age_sec < 0 or age_sec > max(0.0, max_age_sec):
+        return {}
+    return {**payload, "context_age_sec": round(age_sec, 3)}
+
+
+def matching_transport_snapshot(path, *, ffmpeg_pid: int, max_age_sec: float = 120.0) -> dict:
+    payload = restart_reason_payload(path)
+    if payload is None:
+        return {}
+    try:
+        snapshot_pid = int(payload.get("ffmpeg_pid", 0) or 0)
+    except (TypeError, ValueError):
+        return {}
+    if ffmpeg_pid <= 1 or snapshot_pid != ffmpeg_pid:
+        return {}
+    age_sec = restart_reason_age_sec(payload)
+    if age_sec is None or age_sec < 0 or age_sec > max(0.0, max_age_sec):
+        return {}
+    return {**payload, "snapshot_age_sec": round(age_sec, 3)}
+
+
 def emit_startup_restart_context(cfg, *, run_id: str, stream_pid: int, append_event) -> None:
     if not cfg.restart_reason_file.exists():
         return

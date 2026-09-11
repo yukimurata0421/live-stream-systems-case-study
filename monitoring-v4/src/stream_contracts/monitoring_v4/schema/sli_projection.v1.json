@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "monitoring_v4.sli_projection.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "projection_id", "objective_id", "window", "assessment_scope", "is_official_window", "observed", "eligible", "bad", "missing", "coverage_pct", "source_freshness_pct", "source_disagreement", "compliance_status", "measurement_unknown_reasons", "window_start", "window_end", "evaluated_at", "policy_revision", "evidence_ids", "no_automatic_recovery", "payload_sha256", "payload"],
+  "properties": {
+    "schema": {"const": "monitoring_v4.sli_projection.v1"},
+    "projection_id": {"type": "string", "pattern": "^[a-z][a-z0-9_.-]{1,47}:[0-9a-f]{24,64}$"},
+    "objective_id": {"type": "string", "pattern": "^[a-z][a-z0-9_.-]{1,95}$"},
+    "window": {"type": "string", "pattern": "^[a-z][a-z0-9_.-]{1,95}$"},
+    "assessment_scope": {"enum": ["formal", "fast", "trend", "supporting"]},
+    "is_official_window": {"type": "boolean"},
+    "observed": {"type": ["number", "null"], "minimum": 0},
+    "eligible": {"type": ["number", "null"], "minimum": 0},
+    "bad": {"type": ["number", "null"], "minimum": 0},
+    "missing": {"type": ["number", "null"], "minimum": 0},
+    "coverage_pct": {"type": ["number", "null"], "minimum": 0, "maximum": 100},
+    "source_freshness_pct": {"type": ["number", "null"], "minimum": 0, "maximum": 100},
+    "source_disagreement": {"type": "boolean"},
+    "compliance_status": {"enum": ["met", "breached", "unknown"]},
+    "measurement_unknown_reasons": {"type": "array", "items": {"type": "string"}},
+    "window_start": {"type": "string", "format": "date-time"},
+    "window_end": {"type": "string", "format": "date-time"},
+    "evaluated_at": {"type": "string", "format": "date-time"},
+    "policy_revision": {"type": "string", "minLength": 1, "maxLength": 200},
+    "evidence_ids": {"type": "array", "items": {"type": "string", "pattern": "^[a-z][a-z0-9_.-]{1,47}:[0-9a-f]{24,64}$"}},
+    "no_automatic_recovery": {"const": true},
+    "payload_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "payload": {"type": "object"}
+  }
+}

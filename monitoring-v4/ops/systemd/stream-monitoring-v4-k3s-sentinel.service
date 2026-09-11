@@ -1,0 +1,20 @@
+[Unit]
+Description=Monitoring v4 k3s host sentinel (detection only)
+After=k3s.service
+
+[Service]
+Type=oneshot
+User=root
+Group=streamv4
+Environment=PYTHONPATH=/opt/stream-v4/releases/current/src
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/usr/bin/python3 /opt/stream-v4/releases/current/ops/scripts/monitoring_v4_k3s_sentinel.py --output /var/lib/stream-monitoring-v4/.state/sentinel/k3s-status.json --report /var/lib/stream-monitoring-v4/.state/k3s/report/shadow-evidence-report.json --youtube-api-evidence /var/lib/stream-monitoring-v4/.state/k3s/youtube-api-source/youtube_api_evidence.json --backup-dir /var/lib/stream-monitoring-v4/.state/postgres-backups --independent-backup-dir /var/backups/stream-monitoring-v4/stream-v4-postgres --restore-verification-dir /var/lib/stream-monitoring-v4/.state/restore-verifications --database-storage-dir /var/lib/rancher/k3s/storage
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=read-only
+ReadOnlyPaths=/opt/stream-v4/releases /var/lib/stream-monitoring-v4/.state/k3s /var/lib/stream-monitoring-v4/.state/postgres-backups -/var/lib/stream-monitoring-v4/.state/restore-verifications -/var/backups/stream-monitoring-v4/stream-v4-postgres -/var/lib/rancher/k3s/storage
+ReadWritePaths=/var/lib/stream-monitoring-v4/.state/sentinel
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+CapabilityBoundingSet=
+AmbientCapabilities=

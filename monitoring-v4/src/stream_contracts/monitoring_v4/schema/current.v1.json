@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "monitoring_v4.current.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "snapshot_id", "domain", "state", "reason_codes", "source_observation_ids", "observed_at", "reduced_at", "valid_until", "policy_revision", "reducer_revision", "payload"],
+  "properties": {
+    "schema": {"const": "monitoring_v4.current.v1"},
+    "snapshot_id": {"type": "string", "pattern": "^[a-z][a-z0-9_.-]{1,47}:[0-9a-f]{24,64}$"},
+    "domain": {"type": "string"},
+    "state": {"enum": ["good", "bad", "unknown"]},
+    "reason_codes": {"type": "array", "items": {"type": "string"}},
+    "source_observation_ids": {"type": "array", "items": {"type": "string"}},
+    "observed_at": {"type": "string", "format": "date-time"},
+    "reduced_at": {"type": "string", "format": "date-time"},
+    "valid_until": {"type": "string", "format": "date-time"},
+    "policy_revision": {"type": "string", "minLength": 1, "maxLength": 200},
+    "reducer_revision": {"type": "string", "minLength": 1, "maxLength": 200},
+    "payload": {"type": "object"}
+  }
+}

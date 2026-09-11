@@ -105,6 +105,9 @@ class StreamV3ScopedRecoveryTests(unittest.TestCase):
         script = kill_call.args[2]
         self.assertIn("pgrep -a ffmpeg", script)
         self.assertIn("rtmp://|rtmps://", script)
+        self.assertIn("recovery_action_id", script)
+        self.assertIn("arena_remote_recovery", script)
+        self.assertLess(script.index("restart_reason.json"), script.index("kill -TERM"))
         self.assertIn("kill -TERM", script)
 
     def test_restart_ffmpeg_falls_back_to_stream_engine_container_when_child_is_missing(self) -> None:

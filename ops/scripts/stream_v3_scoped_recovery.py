@@ -12,12 +12,21 @@ import argparse
 import json
 import os
 import re
+import shlex
 import subprocess
 import sys
 import time
+import uuid
 from dataclasses import dataclass
+from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any, Sequence
 
+SRC_DIR = Path(__file__).resolve().parents[2] / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
+
+from maintenance_audit import audit_maintenance_decision
 
 KUBECTL = os.environ.get("STREAM_KUBECTL_BIN", "kubectl")
 NAMESPACE = os.environ.get("STREAM_K8S_NAMESPACE", "stream-v3")
@@ -27,6 +36,10 @@ RUNTIME_SELECTOR = os.environ.get(
 )
 STREAM_ENGINE_CONTAINER = os.environ.get("STREAM_V3_STREAM_ENGINE_CONTAINER", "stream-engine")
 AUTO_DJ_CONTAINER = os.environ.get("STREAM_V3_AUTO_DJ_CONTAINER", "auto-dj")
+RUNTIME_RESTART_REASON_FILE = os.environ.get(
+    "STREAM_V3_RUNTIME_RESTART_REASON_FILE",
+    "/state/restart_reason.json",
+)
 LOW_UPLOAD_REASON_TERMS = (
     "low_upload",
     "low upload",
@@ -193,6 +206,50 @@ def first_int(text: str) -> str:
     return match.group(1) if match else ""
 
 
+def recovery_action_id(value: str = "") -> str:
+    return value.strip() or f"arena-{int(time.time())}-{uuid.uuid4().hex[:12]}"
+
+
+def restart_context_script(
+    *,
+    reason: str,
+    action_id: str,
+    controller_id: str,
+    execution_mode: str,
+    ffmpeg_pid: int,
+    recovery_scope: str,
+) -> str:
+    now = int(time.time())
+    payload = {
+        "ts_utc": datetime.fromtimestamp(now, tz=timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z"),
+        "source": "arena_remote_recovery",
+        "controller_id": controller_id,
+        "execution_mode": execution_mode,
+        "execute": True,
+        "component": "stream",
+        "reason": reason,
+        "trigger": "remote_scoped_recovery",
+        "target_unit": "adsb-streamnew-youtube-stream.service",
+        "ffmpeg_pid": ffmpeg_pid,
+        "ffmpeg_uptime_sec": 0,
+        "recovery_action_id": action_id,
+        "idempotency_key": f"{controller_id}:{recovery_scope}:{ffmpeg_pid}:{action_id}",
+        "requested_signal": "SIGTERM",
+        "recovery_scope": recovery_scope,
+    }
+    encoded = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
+    path = shlex.quote(RUNTIME_RESTART_REASON_FILE)
+    value = shlex.quote(encoded)
+    return (
+        "set -eu\n"
+        f"reason_file={path}\n"
+        'reason_tmp="${reason_file}.tmp"\n'
+        "umask 077\n"
+        f"printf '%s' {value} > \"$reason_tmp\"\n"
+        'mv "$reason_tmp" "$reason_file"\n'
+    )
+
+
 def exec_in_container(pod: str, container: str, script: str, *, timeout_sec: float = 15.0) -> subprocess.CompletedProcess[str]:
     return kubectl("exec", pod, "-c", container, "--", "sh", "-lc", script, timeout_sec=timeout_sec)
 
@@ -207,10 +264,43 @@ def restart_dj(*, reason: str, dry_run: bool, timeout_sec: float) -> int:
     name = pod_name(pod)
     before = container_status(pod, AUTO_DJ_CONTAINER)
     peer_before = container_status(pod, STREAM_ENGINE_CONTAINER)
+    correlation_id = recovery_action_id()
+    audit_maintenance_decision(
+        path_id="MP-04",
+        phase="ADMISSION",
+        operation="restart_dj_container",
+        path_role="NORMAL_MUTATOR",
+        process_service="stream_v3_scoped_recovery.py",
+        resource_identity=f"pod/{NAMESPACE}/{name}/container/{AUTO_DJ_CONTAINER}",
+        correlation_id=correlation_id,
+        in_flight_evidence={"status": "PROPOSED", "count": 0, "source": "scoped helper process"},
+        generation_evidence={
+            "status": "CONFIRMED",
+            "pod": name,
+            "container_id": before.container_id,
+            "restart_count": before.restart_count,
+        },
+    )
     command = [KUBECTL, "-n", NAMESPACE, "exec", name, "-c", AUTO_DJ_CONTAINER, "--", "sh", "-lc", "kill -TERM 1"]
     if dry_run:
         log("plan restart-dj: " + " ".join(command))
         return 0
+    audit_maintenance_decision(
+        path_id="MP-04",
+        phase="EFFECT_BOUNDARY",
+        operation="restart_dj_container",
+        path_role="NORMAL_MUTATOR",
+        process_service="stream_v3_scoped_recovery.py",
+        resource_identity=f"pod/{NAMESPACE}/{name}/container/{AUTO_DJ_CONTAINER}",
+        correlation_id=correlation_id,
+        in_flight_evidence={"status": "PROPOSED", "count": 1, "source": "kubectl exec about to send kill TERM 1"},
+        generation_evidence={
+            "status": "CONFIRMED",
+            "pod": name,
+            "container_id": before.container_id,
+            "restart_count": before.restart_count,
+        },
+    )
     cp = exec_in_container(name, AUTO_DJ_CONTAINER, "kill -TERM 1", timeout_sec=timeout_sec)
     detail = (cp.stdout or cp.stderr or "").strip()
     log(f"requested restart-dj pod={name} rc={cp.returncode} detail={detail}")
@@ -225,7 +315,15 @@ def restart_dj(*, reason: str, dry_run: bool, timeout_sec: float) -> int:
     return 0
 
 
-def restart_ffmpeg(*, reason: str, dry_run: bool, timeout_sec: float) -> int:
+def restart_ffmpeg(
+    *,
+    reason: str,
+    dry_run: bool,
+    timeout_sec: float,
+    action_id: str = "",
+    controller_id: str = "arena_remote_recovery",
+    execution_mode: str = "execute",
+) -> int:
     blocker = guard_reason(reason)
     if blocker:
         log(f"block restart-ffmpeg: {blocker}: {reason}")
@@ -236,12 +334,59 @@ def restart_ffmpeg(*, reason: str, dry_run: bool, timeout_sec: float) -> int:
     before = container_status(pod, STREAM_ENGINE_CONTAINER)
     peer_before = container_status(pod, AUTO_DJ_CONTAINER)
     current_pid, current_count, current_detail = rtmps_ffmpeg_pid_info(name)
+    resolved_action_id = recovery_action_id(action_id)
+    audit_maintenance_decision(
+        path_id="MP-04",
+        phase="ADMISSION",
+        operation="restart_ffmpeg",
+        path_role="NORMAL_MUTATOR",
+        process_service="stream_v3_scoped_recovery.py",
+        resource_identity=f"pod/{NAMESPACE}/{name}/container/{STREAM_ENGINE_CONTAINER}/ffmpeg",
+        correlation_id=resolved_action_id,
+        in_flight_evidence={"status": "PROPOSED", "count": 0, "source": "scoped helper process"},
+        generation_evidence={
+            "status": "CONFIRMED",
+            "pod": name,
+            "container_id": before.container_id,
+            "restart_count": before.restart_count,
+            "ffmpeg_pid": current_pid or "",
+        },
+    )
     if current_count == 0:
         command = [KUBECTL, "-n", NAMESPACE, "exec", name, "-c", STREAM_ENGINE_CONTAINER, "--", "sh", "-lc", "kill -TERM 1"]
         if dry_run:
             log("plan restart-ffmpeg-fallback: " + " ".join(command))
             return 0
-        cp = exec_in_container(name, STREAM_ENGINE_CONTAINER, "kill -TERM 1", timeout_sec=timeout_sec)
+        context_script = restart_context_script(
+            reason=reason,
+            action_id=resolved_action_id,
+            controller_id=controller_id,
+            execution_mode=execution_mode,
+            ffmpeg_pid=0,
+            recovery_scope="stream_engine_container",
+        )
+        audit_maintenance_decision(
+            path_id="MP-04",
+            phase="EFFECT_BOUNDARY",
+            operation="restart_stream_engine_container",
+            path_role="NORMAL_MUTATOR",
+            process_service="stream_v3_scoped_recovery.py",
+            resource_identity=f"pod/{NAMESPACE}/{name}/container/{STREAM_ENGINE_CONTAINER}",
+            correlation_id=resolved_action_id,
+            in_flight_evidence={"status": "PROPOSED", "count": 1, "source": "kubectl exec about to send kill TERM 1"},
+            generation_evidence={
+                "status": "CONFIRMED",
+                "pod": name,
+                "container_id": before.container_id,
+                "restart_count": before.restart_count,
+            },
+        )
+        cp = exec_in_container(
+            name,
+            STREAM_ENGINE_CONTAINER,
+            context_script + "kill -TERM 1",
+            timeout_sec=timeout_sec,
+        )
         detail = (cp.stdout or cp.stderr or "").strip()
         log(f"requested restart-ffmpeg-fallback pod={name} rc={cp.returncode} detail={detail}")
         after = wait_for_container_restart(
@@ -259,7 +404,15 @@ def restart_ffmpeg(*, reason: str, dry_run: bool, timeout_sec: float) -> int:
     if not current_pid:
         log(f"error restart-ffmpeg: could not inspect RTMPS ffmpeg child: {current_detail}")
         return 1
-    script = r'''
+    context_script = restart_context_script(
+        reason=reason,
+        action_id=resolved_action_id,
+        controller_id=controller_id,
+        execution_mode=execution_mode,
+        ffmpeg_pid=int(current_pid),
+        recovery_scope="ffmpeg_child",
+    )
+    script = context_script + r'''
         set -eu
         rows="$(pgrep -a ffmpeg | grep -E 'rtmp://|rtmps://' || true)"
         count="$(printf '%s\n' "$rows" | sed '/^$/d' | wc -l | tr -d ' ')"
@@ -271,6 +424,23 @@ def restart_ffmpeg(*, reason: str, dry_run: bool, timeout_sec: float) -> int:
     if dry_run:
         log(f"plan restart-ffmpeg: kubectl -n {NAMESPACE} exec {name} -c {STREAM_ENGINE_CONTAINER} -- sh -lc <rtmps-ffmpeg-terminate>")
         return 0
+    audit_maintenance_decision(
+        path_id="MP-04",
+        phase="EFFECT_BOUNDARY",
+        operation="restart_ffmpeg",
+        path_role="NORMAL_MUTATOR",
+        process_service="stream_v3_scoped_recovery.py",
+        resource_identity=f"pod/{NAMESPACE}/{name}/container/{STREAM_ENGINE_CONTAINER}/ffmpeg",
+        correlation_id=resolved_action_id,
+        in_flight_evidence={"status": "PROPOSED", "count": 1, "source": "kubectl exec about to send FFmpeg SIGTERM"},
+        generation_evidence={
+            "status": "CONFIRMED",
+            "pod": name,
+            "container_id": before.container_id,
+            "restart_count": before.restart_count,
+            "ffmpeg_pid": current_pid,
+        },
+    )
     cp = exec_in_container(name, STREAM_ENGINE_CONTAINER, script, timeout_sec=timeout_sec)
     detail = (cp.stdout or cp.stderr or "").strip()
     if cp.returncode != 0:
@@ -291,6 +461,15 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--reason", default="")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--timeout-sec", type=float, default=30.0)
+    parser.add_argument("--action-id", default="")
+    parser.add_argument(
+        "--controller-id",
+        default=os.environ.get("STREAM_V3_RECOVERY_CONTROLLER_ID", "arena_remote_recovery"),
+    )
+    parser.add_argument(
+        "--execution-mode",
+        default=os.environ.get("STREAM_V3_RECOVERY_EXECUTION_MODE", "execute"),
+    )
     return parser.parse_args(argv)
 
 
@@ -300,7 +479,14 @@ def main(argv: list[str] | None = None) -> int:
         if args.action == "restart-dj":
             return restart_dj(reason=args.reason, dry_run=args.dry_run, timeout_sec=max(5.0, float(args.timeout_sec)))
         if args.action == "restart-ffmpeg":
-            return restart_ffmpeg(reason=args.reason, dry_run=args.dry_run, timeout_sec=max(5.0, float(args.timeout_sec)))
+            return restart_ffmpeg(
+                reason=args.reason,
+                dry_run=args.dry_run,
+                timeout_sec=max(5.0, float(args.timeout_sec)),
+                action_id=args.action_id,
+                controller_id=args.controller_id,
+                execution_mode=args.execution_mode,
+            )
     except Exception as exc:  # pragma: no cover - kept narrow by unit tests around helpers.
         log(f"error {args.action}: {exc}")
         return 1

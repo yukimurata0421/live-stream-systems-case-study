@@ -30,6 +30,7 @@ def player_command(
     force_pulse_ao: bool,
     pulse_sink: str | None,
     pulse_buffer_duration_ms: int,
+    volume_gain_db: float = 0.0,
 ) -> list[str]:
     if player == "mpv":
         cmd = [
@@ -53,15 +54,15 @@ def player_command(
             str(track),
             "-vn",
         ]
+        audio_filters: list[str] = []
+        if abs(volume_gain_db) >= 0.001:
+            audio_filters.append(f"volume={volume_gain_db:.3f}dB")
         if track_duration_sec >= 20.0:
             fade_duration = 4.0
             fade_start = max(track_duration_sec - 5.0, 0.0)
-            ff_cmd.extend(
-                [
-                    "-af",
-                    f"afade=t=out:st={fade_start:.3f}:d={fade_duration:.3f}",
-                ]
-            )
+            audio_filters.append(f"afade=t=out:st={fade_start:.3f}:d={fade_duration:.3f}")
+        if audio_filters:
+            ff_cmd.extend(["-af", ",".join(audio_filters)])
         ff_cmd.extend(
             [
                 "-f",
@@ -82,6 +83,16 @@ def player_command(
         "error",
         str(track),
     ]
+
+
+def track_volume_gain_db(
+    track: Path,
+    *,
+    ncs_gain_db: float,
+    floracore_gain_db: float,
+) -> float:
+    identity = str(track).lower()
+    return floracore_gain_db if "floracore" in identity else ncs_gain_db
 
 
 def player_env(*, pulse_sink: str | None) -> dict[str, str]:

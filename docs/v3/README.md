@@ -35,6 +35,7 @@
   - `failure-taxonomy.md`
   - `failure-injection-and-chaos-draft.md`
   - `visual-audio-health-model.md`
+  - `music-provider-and-loudness-contract.md`
   - `notification-and-auto-recovery.md`
   - `single-node-dr-case-study.md`
   - `program-map.md`
@@ -104,9 +105,10 @@ For a focused reliability review:
   timing, and the no-restart/no-SLO authority boundary.
 - `public-publisher-boundary.md` maps the Raspberry Pi source, redaction,
   last-good, cache, and static-edge ownership contract.
-- `../compliance-and-licensing-boundary.md` documents how ADS-B publication,
-  receiver privacy, and NCS attribution were treated as design constraints
-  rather than informal operator memory.
+- `../compliance-and-licensing-boundary.md` and
+  `music-provider-and-loudness-contract.md` document how ADS-B publication,
+  receiver privacy, provider-specific credit, and playback loudness were
+  treated as design constraints rather than informal operator memory.
 - `fast-recovery-classifier-replay.md` documents how historical
   fast-recovery restarts are replayed by the current classifier without
   backfilling old shadow logs.

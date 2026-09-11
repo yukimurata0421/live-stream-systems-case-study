@@ -1,0 +1,12 @@
+[Unit]
+Description=Run Monitoring v4 credential-free shadow every minute
+
+[Timer]
+OnCalendar=*-*-* *:*:20
+AccuracySec=1s
+RandomizedDelaySec=0
+Persistent=false
+Unit=stream-monitoring-v4-shadow.service
+
+[Install]
+WantedBy=timers.target

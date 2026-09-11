@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "monitoring_v4.backup_file_retention.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "completed_at",
+    "restore_anchor_backup",
+    "restore_anchor_sha256",
+    "minimum_preserved_sets",
+    "primary_retention_days",
+    "independent_retention_days",
+    "primary_deleted",
+    "independent_deleted",
+    "notification_delivery_enabled",
+    "runtime_mutation_enabled"
+  ],
+  "properties": {
+    "schema": {"const": "monitoring_v4.backup_file_retention.v1"},
+    "completed_at": {"type": "string", "format": "date-time"},
+    "restore_anchor_backup": {
+      "type": "string",
+      "pattern": "^stream-v4-[0-9]{8}T[0-9]{6}Z\\.dump$"
+    },
+    "restore_anchor_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "minimum_preserved_sets": {"type": "integer", "minimum": 2},
+    "primary_retention_days": {"type": "integer", "minimum": 1},
+    "independent_retention_days": {"type": "integer", "minimum": 1},
+    "primary_deleted": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "^stream-v4-[0-9]{8}T[0-9]{6}Z\\.dump$"}
+    },
+    "independent_deleted": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "^stream-v4-[0-9]{8}T[0-9]{6}Z\\.dump$"}
+    },
+    "notification_delivery_enabled": {"const": false},
+    "runtime_mutation_enabled": {"const": false}
+  }
+}

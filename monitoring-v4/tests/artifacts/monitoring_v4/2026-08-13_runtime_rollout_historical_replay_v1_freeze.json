@@ -1,0 +1,58 @@
+{
+  "artifact_schema": "monitoring_v4.historical_replay_freeze.v1",
+  "baseline_artifact_sha256": "14b021884df87c3542a06b45e109625252e867370e433df03ef4810a9128d75f",
+  "dump_sha256": "0771dfe5c573d562d9a2bbbcb92a4edcca8d9271408e1a76dd4525f0cbc38ff4",
+  "duplicate_old_bad_artifact_sha256": "59577cf1a2a8de0b29156ef03c9e30a1258c4f1cdaa0760fd8b7aba87498cd10",
+  "fixture_sha256": "e1c7176100d6f9e37bb58dfc2aebc787f9823247933f35f574bd37c6e223000a",
+  "freeze": "Historical Replay v1",
+  "historical_revision": {
+    "build": "ef2f0b0d5ed9e0f5fefac6d4ef1f72d508ae2afa",
+    "incident": "monitoring-v4-incident-policy-r4.2",
+    "reducer": "monitoring-v4-current-reducer-r3.2",
+    "route": "monitoring-v4-route-policy-r5.1",
+    "schema_revision": 3,
+    "source": "stream-v3-input-quality-raw-authority-v1.19-20260811@392d4af3970303ed394b6eaa067c22e897886ab5",
+    "source_policy": "monitoring-v4-source-policy-r3.3",
+    "template": "monitoring-v4-ja-r5.1"
+  },
+  "historical_window_id": "HR-20260813-RUNTIME-ROLLOUT",
+  "known_limitations": [
+    "new identity delayed old-bad and recovery drop are later derived perturbations, not part of frozen v1 duplicate proof",
+    "no raw-source normalization replay",
+    "no stateful or randomized exploration"
+  ],
+  "phase_a": {
+    "baseline": "exact_match",
+    "duplicate_old_bad": "pass",
+    "full_suite": {
+      "duration_sec": 27.6,
+      "errors": 0,
+      "failures": 0,
+      "passed": 376,
+      "skipped": 8,
+      "tests_run": 384
+    },
+    "targeted_and_existing_regression": {
+      "duration_sec": 17.449,
+      "errors": 0,
+      "failures": 0,
+      "passed": 92,
+      "skipped": 0,
+      "tests_run": 92
+    }
+  },
+  "replay_boundary": "persisted_observation",
+  "safety": {
+    "commit": false,
+    "deploy_changed": false,
+    "production_changed": false,
+    "push": false,
+    "soak_changed": false
+  },
+  "schema_sha256": "b161d685b7ac2fe242d8201b5e1ce0c95c23fc5d1e61bc09e89040ed548724a3",
+  "source_identity": {
+    "git_head": "1a76a8857db521282a2536391c2963a34aa9c199",
+    "tracked_dirty_diff_sha256": "f09d3ab0f294f8d12bf3d463aedd224938edba19ed5e0d8dee1790a97c463b8b"
+  },
+  "v1_harness_sha256": "ce0740364dc5debacce8e3dc71cb2ddbd774bd047c5510d4d20f6b9d1e220a42"
+}

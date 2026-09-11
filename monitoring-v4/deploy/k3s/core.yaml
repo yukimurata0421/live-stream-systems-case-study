@@ -1,0 +1,142 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: monitoring-v4-core
+  namespace: stream-monitoring-v4
+  labels:
+    app.kubernetes.io/name: monitoring-v4-core
+    app.kubernetes.io/component: core
+    app.kubernetes.io/part-of: stream-monitoring-v4
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: monitoring-v4-core
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: monitoring-v4-core
+        app.kubernetes.io/component: core
+        app.kubernetes.io/part-of: stream-monitoring-v4
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      terminationGracePeriodSeconds: 20
+      containers:
+        - name: core
+          image: __APP_IMAGE__
+          imagePullPolicy: Never
+          args:
+            - stream_monitoring_v4.commands.core_runner
+            - --runner-second
+            - "20"
+            - --postgres
+            - --state-root
+            - /source-state
+            - --source-repo
+            - /v3-source-not-mounted
+            - --source-revision-file
+            - /source-state/deployed-revision.env
+            - --input-projection-lock
+            - /source-state/.projection.lock
+            - --youtube-api-state-file
+            - /api-source/youtube_api_evidence.json
+            - --public-shadow-output
+            - /v4-output/public-safe-shadow.json
+            - --build-revision
+            - __BUILD_REVISION__
+            - --lease-name
+            - monitoring-v4-core
+            - --lease-ttl-sec
+            - "180"
+            - --summary-only
+            - --ready-file
+            - /tmp/core-ready
+            - --heartbeat-file
+            - /tmp/core-heartbeat
+            - --startup-db-timeout-sec
+            - "180"
+          envFrom:
+            - configMapRef:
+                name: database-connection
+          env:
+            - name: PGUSER
+              value: v4_core_rw
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: database-roles
+                  key: core-password
+          startupProbe:
+            exec:
+              command:
+                - sh
+                - -ec
+                - 'test -r /tmp/core-ready && now=$(date +%s) && seen=$(sed -n "1p" /tmp/core-ready) && test "$seen" -le "$now" && test $((now-seen)) -le 120'
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 60
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -ec
+                - 'test -r /tmp/core-ready && now=$(date +%s) && seen=$(sed -n "1p" /tmp/core-ready) && test "$seen" -le "$now" && test $((now-seen)) -le 120'
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -ec
+                - 'test -r /tmp/core-heartbeat && now=$(date +%s) && seen=$(sed -n "1p" /tmp/core-heartbeat) && test "$seen" -le "$now" && test $((now-seen)) -le 180'
+            periodSeconds: 30
+            timeoutSeconds: 2
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 100m
+              memory: 160Mi
+            limits:
+              cpu: "1"
+              memory: 384Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: source-state
+              mountPath: /source-state
+              readOnly: true
+            - name: api-source
+              mountPath: /api-source
+              readOnly: true
+            - name: v4-output
+              mountPath: /v4-output
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: source-state
+          hostPath:
+            path: /var/lib/stream-monitoring-v4/.state/k3s/source-safe
+            type: Directory
+        - name: api-source
+          hostPath:
+            path: /var/lib/stream-monitoring-v4/.state/k3s/youtube-api-source
+            type: Directory
+        - name: v4-output
+          hostPath:
+            path: /var/lib/stream-monitoring-v4/.state/k3s/core-output
+            type: Directory
+        - name: tmp
+          emptyDir: {}
