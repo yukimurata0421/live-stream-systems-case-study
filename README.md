@@ -74,8 +74,8 @@ action was observed in the retained review windows.
 This establishes URL identity preservation, not uninterrupted frame delivery.
 The exact production-authority handoff was not logged as a standalone event,
 and the retained V2-stop to V3-send evidence gap is `11 minutes, 48 seconds`.
-See the [same-URL SLI case study](docs/28-day-same-url-sli-case-study.md) for the
-evidence chain and counting boundaries.
+See the [historical 28-day SLI and current continuity checkpoint](docs/28-day-same-url-sli-case-study.md)
+for the evidence chain and counting boundaries.
 
 | Signal | Measured result | Boundary |
 | --- | --- | --- |
@@ -84,8 +84,8 @@ evidence chain and counting boundaries.
 | Transport MTTR baseline | Historical `tcp_stall` clusters: 90.0s median, 1190.8s p95, 1474.0s max local transport MTTR. | Local transport MTTR is not direct viewer MTTR. |
 | 28-day same-URL review | Replacement actions `0`; strict v3 same-URL samples `6558 / 6568`, `99.848%`. | This is a retained historical window, not a current uptime promise. |
 
-The measured, tested, documented, and unknown status of each claim is kept in
-the [operational scorecard](docs/operational-scorecard.md).
+The measured, tested, documented, and unknown status is kept in the
+[operational scorecard](docs/operational-scorecard.md); measurements carry explicit cutoffs, while current contracts describe source behavior.
 
 ## System Architecture
 

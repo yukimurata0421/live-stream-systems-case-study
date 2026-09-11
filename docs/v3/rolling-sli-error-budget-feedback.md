@@ -52,23 +52,24 @@ Point-in-time review: `2026-07-24 JST`.
 
 | Signal | Feedback window | Result | Reading |
 | --- | --- | ---: | --- |
-| Same URL preservation | rolling 24h / 7d / 30d feedback | `100.0000%` / `99.8016%` / `99.6898%` | No current same-URL burn. Short historical gaps remain feedback evidence, not broadcast-replacement authority. |
-| YouTube watchdog health | rolling 24h / 7d / 30d feedback | `100.0000%` / `99.8611%` / `99.9676%` | Current watchdog state was healthy; public probe noise was cross-checked against authoritative live evidence before classification. |
-| Visual correctness | rolling 24h / 7d / 30d feedback | `100.0000%` / `99.8413%` / `99.4676%` | ADS-B rendering remained healthy in the current window; freshness is read from successful evidence, not only from raw source-change age. |
+| Same URL preservation | rolling 24h / 7d / 30d feedback | `100.0000%` / `99.8016%` / `99.6898%` | No same-URL burn at this checkpoint. Short historical gaps remain feedback evidence, not broadcast-replacement authority. |
+| YouTube watchdog health | rolling 24h / 7d / 30d feedback | `100.0000%` / `99.8611%` / `99.9676%` | Watchdog state was healthy at this checkpoint; public probe noise was cross-checked against authoritative live evidence before classification. |
+| Visual correctness | rolling 24h / 7d / 30d feedback | `100.0000%` / `99.8413%` / `99.4676%` | ADS-B rendering remained healthy in the reviewed window; freshness is read from successful evidence, not only from raw source-change age. |
 | Audio correctness | rolling 24h / 7d / 30d feedback | `100.0000%` / `99.9206%` / `99.9167%` | Audio stayed inside the feedback budget. |
 | Upload ceiling | rolling 24h feedback | p95 `4.85 Mbps`, max `4.87 Mbps`, over-budget `0 sec` | Upload stayed below the 5.0 Mbps guardrail; no encoder-quality reduction was justified. |
-| Recovery budget | rolling 24h feedback | restart count `0` | No current fast-recovery burn. |
+| Recovery budget | rolling 24h feedback | restart count `0` | No fast-recovery burn at this checkpoint. |
 
-The current host memory guard carried a watch-level swap warning, but not a
-current stream incident. The public decision remains unchanged: memory guard
+At the July 24 checkpoint, the host memory guard carried a watch-level swap
+warning, but not a stream incident. The public decision remains unchanged: memory guard
 warnings should be separated from user-facing delivery faults unless current
 runtime evidence shows impact.
 
 The same review also found that the recurring TCP stall / WAN-session evidence
 had moved from the earlier 08 JST morning family to an 11 JST family after
-2026-06-29. The latest runbook guidance therefore treats `10:55-11:15 JST` as
-the current primary validation window, while retaining `08:00-08:20 JST` for
-historical comparison.
+2026-06-29. The guidance at that checkpoint therefore treated
+`10:55-11:15 JST` as the primary validation window, while retaining
+`08:00-08:20 JST` for historical comparison. This is retained chronology, not
+a current incident schedule.
 
 ## Decision Rules
 
@@ -80,9 +81,15 @@ Same URL budget burn requires actual URL identity evidence:
 expected/current video identity agreement
 candidate-new-URL evidence
 replacement action selection
-replacement action allowance
+historical replacement-action allowance
 public/API/OAuth live evidence
 ```
+
+The allowance field belongs to the earlier decision path. In the current
+cross-host contract it is not restart authority: Monitoring publishes facts,
+CRA owns authorization and one durable command lifecycle, and Dell admits only
+an exact fenced FFmpeg-child target. `OUTCOME_UNKNOWN` requires reconciliation
+instead of a new request identifier.
 
 If only the dashboard metric is zero while the identity evidence still agrees,
 the correct first classification is stale or unknown observability evidence.

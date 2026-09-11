@@ -46,6 +46,27 @@ The probe derives only the host and port from the RTMPS URL. It does not write
 the stream key to events or state. DNS resolution and bounded TCP connection
 checks are recorded separately.
 
+## Gateway Observation Boundary
+
+Route discovery and gateway reachability are observation steps, not equivalent
+facts. On a systemd-sandboxed service, `ip route` needs `AF_NETLINK` to read the
+kernel route table even when the service has no capability to change routes. A
+missing address-family allowance can therefore make route discovery fail while
+external probes, DNS, TCP, and the active RTMPS send path remain healthy.
+
+The operating rule is to classify that combination as an observation problem,
+not `network_down`. `gateway_ok=false` alone cannot authorize recovery when the
+route command failed or its result is unknown. The preferred evidence model is
+`OK` / `FAILED` / `ERROR_OR_UNOBSERVED`, with sanitized command status kept
+separately from the gateway result. The current public observer schema does not
+fully preserve that distinction, so an ambiguous gateway sample must fail
+closed for action rather than being promoted to a physical-outage claim.
+
+The retained September correction allowed `AF_NETLINK` for route observation
+without adding route-mutation capabilities. It changed neither the recovery
+policy nor the streaming process. This public source contract records the
+lesson; it does not prove that a particular host drop-in is currently installed.
+
 ## Browser and map behavior
 
 Map-render heartbeat is evaluated independently from the streaming socket.
@@ -78,6 +99,7 @@ exists.
 ## Invariants
 
 - Do not restart from the presence or absence of one TCP state alone.
+- Do not turn a route-observer execution error into a gateway-outage fact.
 - Do not recreate a Pod during a physical network outage.
 - Do not restart FFmpeg because only a browser heartbeat failed.
 - Keep Discord and Slack credentials out of the delivery runtime.

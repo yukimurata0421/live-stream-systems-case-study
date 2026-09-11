@@ -1,15 +1,17 @@
 # Runtime Contract
 
 `stream_v3` treats streaming as a delivery-plane workload and monitoring as a
-separate observability-plane workload.
+separate observability-plane workload. This page distinguishes the retained v3
+deployment topology from the newer cross-host recovery authority contract.
 
-The active home deployment has three hosts and five logical roles: HP ProDesk
-`monitoring-host` owns the Airspy/`airspy_adsb`/readsb source role and the k3s
-observability/control role; the Dell workstation `delivery-host` owns Dell-side
-readsb, a modified tar1090 ADS-B endpoint, and the k3s delivery role; Raspberry Pi
-`publisher-host` owns the public snapshot publisher role. Public presentation is a
-reduced static snapshot pushed outbound from Raspberry Pi to GCS and served
-through Cloudflare so public reads do not consume home uplink bandwidth.
+The retained production deployment evidence has three home hosts and five
+logical roles: HP ProDesk `monitoring-host` owns the
+Airspy/`airspy_adsb`/readsb source role and the k3s observability/control role;
+the Dell workstation `delivery-host` owns Dell-side readsb, a modified tar1090
+ADS-B endpoint, and the k3s delivery role; Raspberry Pi `publisher-host` owns
+the public snapshot publisher role. Public presentation is a reduced static
+snapshot pushed outbound from Raspberry Pi to GCS and served through Cloudflare
+so public reads do not consume home uplink bandwidth.
 
 The production ADS-B data path is:
 
@@ -37,7 +39,7 @@ The delivery plane runs the live output path:
 - AutoDJ playback and now-playing metadata
 - FFmpeg RTMPS ingest
 - NVIDIA NVENC H.264 encoding
-- local fast recovery loop
+- local fast-recovery observation and connectivity-protection loop
 
 The delivery runtime consumes ADS-B aircraft/source data through the modified
 tar1090 upstream contract. It does not manage the Airspy device directly. The
@@ -65,9 +67,10 @@ from 5fps/3500k/audio192k to 4fps/3400k/audio192k, then adopted
 
 CPU encoding is retained only as a fallback and local debug path.
 
-## Observability Plane
+## Retained V3 Observability Plane
 
-The observability plane owns health classification and recovery requests:
+The earlier v3 observability plane owns health classification and retains the
+legacy request path:
 
 - `stream-v3-control` k3s deployment for the monitor loop
 - `stream-v3-observer` k3s deployment and service for the exporter
@@ -77,17 +80,17 @@ The observability plane owns health classification and recovery requests:
 - stream watchdog
 - k3s runtime, state-file, and log evidence collection
 - subsystem status summary
-- recovery orchestrator
+- legacy recovery orchestrator migration surface
 - notification status loop
 - Prometheus exporter
 - read-only 60-second map runtime probe
 - read-only 300-second public viewer frame probe
 - `ops/monitoring` Prometheus, Loki, Grafana, and Alloy configuration for
   evidence presentation
-- staged remote recovery request tooling
+- staged remote recovery request tooling retained for migration review
 
-The observability plane may request recovery, but it does not directly own the
-FFmpeg process.
+These components do not define the current cross-host authority contract.
+Monitoring evidence cannot directly own or signal the FFmpeg process.
 
 The map probe correlates Pod/container state, render heartbeat, browser/WebGL,
 weather, GPU, NVENC, and RTMP evidence. The viewer probe independently captures
@@ -100,10 +103,25 @@ critical and delivery/GPU/RTMPS incident families immediately, and other
 sustained incidents after the configured minimum active period. Probe failures
 alone do not mutate the runtime.
 
+## Current Cross-Host Recovery Contract
+
+| Role | Current public source responsibility | Explicit limit |
+| --- | --- | --- |
+| `arena-server` Monitoring v4 | Observation, current state, incident/parity evidence, notification intents, and signed facts-only projection. | No policy, command, final verdict, or process signaling. |
+| `cra-01` CRA | Policy, budget, cooldown, authorization, command lifecycle, reconciliation, and final verification. | No raw-source ownership or direct process signaling. |
+| Dell delivery | Signed local facts and one exact, target-wide fenced FFmpeg-child effect. | No action selection or escalation to container, Pod, Deployment, or host restart. |
+| Raspberry Pi | Allowlisted static publication. | No internal database, incident judgment, credential, or control feedback. |
+
+Host, boot, Pod, container, FFmpeg generation, and PID identity must agree
+before an effect is admitted. An ambiguous response becomes
+`OUTCOME_UNKNOWN`; it is reconciled and is not retried automatically under a
+new request ID. The public policy remains production-disabled, so source and
+Harness tests do not establish a live deployment or effect.
+
 ## Public Status Publication
 
 Prometheus, Loki, Alloy, Grafana, and the v3 exporter remain private on HP
-ProDesk in the current production shape. The ProDesk-side observability/control
+ProDesk in the retained production topology. The ProDesk-side observability/control
 workloads run under k3s; Raspberry Pi runs an nginx `/grafana/`
 proxy to HP ProDesk Grafana for collector access and existing operator
 shortcuts. The Pi-side collector reads public-safe Prometheus/Loki evidence via
@@ -117,9 +135,10 @@ response returns to the Pi collector over the same HTTP proxy path.
 Non-static operational access is outside the `yukimurata0421.dev` static
 snapshot path and is not named as a public endpoint here.
 
-## Safety Gates
+## Legacy And Public Safety Gates
 
-Production mutation is guarded by explicit flags and supervisor mode:
+The retained v3 mutation surfaces are guarded by explicit flags and supervisor
+mode:
 
 ```text
 STREAM_V3_MODE=streaming
@@ -134,8 +153,8 @@ Shadow mode keeps `TEST_MODE=1`, `STREAM_K8S_DRY_RUN=1`, and
 `src/stream_v2/recovery_orchestrator/gate.py` intentionally reports
 `shadow_budget_not_enforced` and `shadow_cooldown_not_enforced` in shadow
 plans. Shadow mode must explain what would happen without mutating restart
-history, consuming budget, or extending cooldown. Production enforcement lives
-in the mutating recovery paths:
+history, consuming budget, or extending cooldown. Legacy production
+enforcement lives in the mutating recovery paths:
 
 - `src/watchers/fast_recovery.py` enforces restart-induced downtime budgets,
   block events, and sustained-emergency overrides for local delivery recovery.
@@ -145,6 +164,10 @@ in the mutating recovery paths:
 - Production mutation also requires the explicit mode and dry-run flags above.
 - GPU preflight, the host boot ID, Pod UID, and current-boot establishment
   marker must agree before rollout-style recovery is allowed.
+
+Those gates remain useful migration defenses, but they do not grant current
+CRA authority. The current contract is narrower: one centrally authorized,
+exact fenced FFmpeg-child effect with no automatic escalation.
 
 ## State Boundary
 

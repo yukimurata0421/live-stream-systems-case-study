@@ -2,10 +2,13 @@
 
 ## Purpose
 
-`stream_v3` runs the live streaming delivery path on Dell k3s and the
-observability/control path on HP ProDesk k3s.
+This contract separates retained deployment evidence from the current public
+source boundary. The retained v3 topology runs delivery on Dell k3s and the
+earlier observability/control path on HP ProDesk k3s. The current recovery
+contract adds facts-only Monitoring on `arena-server` and central authorization
+on `cra-01`; public source integration is not proof of live deployment.
 
-The current production split is:
+The retained production split is:
 
 - HP ProDesk: Airspy USB, `airspy_adsb`, ProDesk-side readsb, k3s
   `stream-v3-control` / `stream-v3-observer`, and the private observability
@@ -37,7 +40,7 @@ browser rendering.
 - FFmpeg RTMPS ingest
 - NVIDIA NVENC
 
-## Monitoring Owner
+## Retained Monitoring Owner
 
 - `stream-v3-control` deployment
 - `stream-v3-observer` deployment and service
@@ -48,12 +51,26 @@ browser rendering.
 - k3s runtime, state-file, and log evidence
 - notification loop
 - subsystem status
-- recovery orchestrator
+- legacy recovery orchestrator migration surface
 - shadow SLI
 - Prometheus exporter
 - 60-second map runtime probe
 - 300-second public viewer synthetic probe
 - `ops/monitoring` Prometheus, Loki, Grafana, and Alloy evidence presentation
+
+## Current Recovery Authority
+
+- `arena-server`: observations, current state, incidents, parity,
+  notifications, and a signed facts-only projection; no command authority.
+- `cra-01`: policy, budget, cooldown, authorization, durable command lifecycle,
+  reconciliation, and final verification.
+- Dell: signed local facts and one exact fenced FFmpeg-child effect; no
+  automatic container, Pod, Deployment, or host escalation.
+- Raspberry Pi: allowlisted static publication only.
+
+Target identity includes host, boot, namespace, Pod UID, container identity,
+FFmpeg generation, and PID. Unknown or drifted identity fails closed, and
+`OUTCOME_UNKNOWN` requires reconciliation instead of an automatic retry.
 
 ## Encoder Baseline
 

@@ -120,11 +120,13 @@ classified objectives, with denominators, windows, and explicit unknowns."
 
 The public follow-up is in
 [`28-day-same-url-sli-case-study.md`](28-day-same-url-sli-case-study.md). It
-shows how the same method was applied to a 28-day same-watch-URL review after
-the v2-to-v3 transition. The important result was not a single uptime number:
-the public URL identity survived without a selected or allowed replacement
-broadcast, while upload headroom and notification delivery remained explicit
-follow-up items.
+preserves the fixed 28-day same-watch-URL review and separately records a later
+127-day exact-identity ledger endpoint. The important result was not a single
+uptime number: the public URL identity survived without a selected replacement
+broadcast, while upload headroom, notification delivery, evidence freshness,
+and authority limits remained explicit follow-up items. The current Monitoring
+v4 and CRA contracts are mapped there without rewriting these historical
+denominators.
 
 ## How v3 Uses This
 

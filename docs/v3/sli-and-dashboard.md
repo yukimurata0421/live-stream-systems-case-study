@@ -52,10 +52,15 @@ The measured v2 baseline that established this classification is summarized in
 [`../sli-methodology.md`](../sli-methodology.md). That page is historical
 evidence for the method, not a current v3 uptime statement.
 
+The
+[`historical 28-day review and 127-day continuity checkpoint`](../28-day-same-url-sli-case-study.md)
+keeps its original regime-bounded ratios separate from the later exact-identity
+ledger. Neither artifact is retroactively reinterpreted through a newer schema.
+
 `rolling-sli-error-budget-feedback.md` documents the current feedback reading
 rule: rolling 24h, 7d, and available 30d windows are used for operator
-feedback, while the public reliability claims remain tied to explicitly
-documented 14-day and 28-day review windows. It also records why same-URL
+feedback, while public reliability claims remain tied to explicitly documented
+historical windows or a named exact-identity ledger endpoint. It also records why same-URL
 metric-zero samples are not budget burn unless URL identity evidence or
 replacement evidence also fails.
 

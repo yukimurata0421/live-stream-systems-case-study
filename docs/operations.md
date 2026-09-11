@@ -54,6 +54,32 @@ behavior. The rationale is documented in
 `v3/migration-cutover-case-study.md`: v2 supplied the stable behavior baseline,
 while v3 must still prove the migrated ownership model across one daily cycle.
 
+That 24-hour rule is the retained v3 migration gate, not CRA authorization.
+Monitoring v4 and CRA require their own immutable source identity, isolated
+Harness evidence, revision-bound soak criteria, target/rollback checks, and an
+explicit production change. Public validation does not satisfy those gates.
+
+## Release Provenance Gate
+
+A release switch must bind the candidate to the reviewed source identity and
+to the commands that installed consumers actually execute. Do not build a
+release from whichever mutable host checkout happens to be nearby. Before an
+immutable release or shared `current` pointer moves:
+
+1. compare the candidate files or tree to the intended source identity;
+2. inventory every consumer of the release path, including report-only units;
+3. execute no-effect compatibility checks against the installed argv, env, and
+   working-directory contract;
+4. require both the forward candidate and rollback target to satisfy those
+   consumer contracts; and
+5. treat a shared-pointer switch as a change to every consumer in that graph.
+
+`ops/scripts/verify_report_release_contract.py` is the public no-effect example
+for the scheduled report CLIs. It checks explicit `--record` parsing, target
+requirements, and installed unit arguments without performing a physical
+report probe. Passing it proves that narrow interface only; it does not prove
+the whole release, deployment, or live service state.
+
 ## Rollback Thinking
 
 The v3 design keeps the v2 single-host runtime as a conceptual rollback

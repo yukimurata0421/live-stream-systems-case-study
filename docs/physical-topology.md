@@ -1,15 +1,17 @@
 # Physical Topology
 
-`stream_v3` is the current production shape. The live delivery workload runs on
-the Dell workstation k3s node, the HP ProDesk is both the ADS-B RF/source host
-and the k3s observability/control host, Raspberry Pi publishes the public-safe
-status snapshot, and GCS + Cloudflare form the public static edge.
+This page preserves the three-home-host production topology supported by the
+retained v3 evidence: Dell runs delivery, HP ProDesk owns the ADS-B RF/source
+and earlier observability/control path, Raspberry Pi publishes the public-safe
+snapshot, and GCS + Cloudflare form the public static edge. The newer
+Monitoring v4/CRA source contract is listed separately and is not inferred to
+be live from this topology record.
 
 ## Physical Hosts
 
 | Host or edge | Runtime role | Responsibility |
 | --- | --- | --- |
-| HP ProDesk `monitoring-host` | ADS-B source and k3s observability | Airspy USB receiver, `airspy_adsb`, ProDesk-side readsb, k3s `stream-v3-control`, k3s `stream-v3-observer`, YouTube resolver/watchdog, stream watchdog, subsystem SLI, notifications, Prometheus exporter on `:9108`, Prometheus `:9090`, Loki `:3100`, Alloy `:12345`, private Grafana `:3000`, recovery orchestration, and staged recovery requests |
+| HP ProDesk `monitoring-host` | ADS-B source and retained k3s observability | Airspy USB receiver, `airspy_adsb`, ProDesk-side readsb, k3s `stream-v3-control`, k3s `stream-v3-observer`, YouTube resolver/watchdog, stream watchdog, subsystem SLI, notifications, private evidence stack, and legacy staged recovery surfaces |
 | Dell workstation `delivery-host` | Delivery and local ADS-B mirror | Dell-side readsb and modified tar1090 ADS-B endpoint, k3s `stream-v3-runtime`, custom MapLibre rendering, precipitation fetcher, PulseAudio, AutoDJ, FFmpeg, NVIDIA NVENC, and local fast recovery |
 | Raspberry Pi `publisher-host` | Public snapshot publisher and gateway | nginx `:8088` `/grafana/` proxy to HP ProDesk Grafana, public-safe snapshot collector, static site source tree, and scheduled GCS push |
 | GCS + Cloudflare | Public static edge | Receives sanitized JSON/static assets by outbound upload and serves <https://yukimurata0421.dev/> without spending home uplink bandwidth on public status reads or exposing Grafana, Prometheus, Loki, raw logs, credentials, or home-network ingress |
@@ -51,6 +53,15 @@ The physical split makes the delivery/observability split real:
 - ADS-B source freshness, map availability, media delivery, and recovery
   decision quality can be classified as separate failure domains.
 
+## Current Authority Overlay
+
+The current public source adds `arena-server` as a facts-only Monitoring owner
+and `cra-01` as Central Restart Authority. Dell retains only signed local facts
+and one exact fenced FFmpeg-child effect; Raspberry Pi remains publish-only.
+This overlay is a source contract, not proof that those hosts or the CRA path
+are deployed or production-authorized. See
+[`v3/scoped-recovery-authority.md`](v3/scoped-recovery-authority.md).
+
 ## Visualization Boundary
 
 `ops/monitoring/docker-compose.yml` defines Prometheus, Loki, Grafana, and Alloy
@@ -73,10 +84,10 @@ and is not named as a public endpoint here.
 
 ## k3s Boundary
 
-k3s is used for the `stream_v3` delivery workload on the Dell workstation and
-for the observability/control workloads on HP ProDesk.
-The observability plane may request staged recovery, but it does not directly
-own the FFmpeg process.
+k3s is used for the retained `stream_v3` delivery workload on Dell and the
+earlier observability/control workloads on HP ProDesk. Those legacy request
+paths do not supersede the current authority overlay: Monitoring cannot
+authorize recovery or directly own the FFmpeg process.
 
 ## Code Boundary
 

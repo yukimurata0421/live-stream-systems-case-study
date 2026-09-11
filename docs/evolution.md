@@ -81,6 +81,27 @@ Observability plane:
   reads offloaded away from the home uplink and Prometheus, Loki, Grafana, and
   raw logs still private on HP ProDesk
 
-The split reduces recovery blast radius: delivery can focus on producing video
-and audio, while the monitoring layer can retain state, classify faults, and
-request staged recovery without owning the FFmpeg process directly.
+The retained split reduced recovery blast radius: delivery could focus on
+producing video and audio, while the monitoring layer retained state,
+classified faults, and staged requests without owning the FFmpeg process
+directly.
+
+## Monitoring v4 And Central Restart Authority
+
+Later operation exposed a harder boundary: independent judgment paths could
+form duplicate restart scopes, and an ambiguous response could be interpreted
+as permission to try again. Request-level deduplication alone could not prove
+that only one physical effect occurred.
+
+The current public source therefore separates the next control path:
+
+- Monitoring v4 on `arena-server` reduces typed observations into current,
+  incident, parity, and facts-only evidence;
+- CRA on `cra-01` commits policy, budget, cooldown, authorization, command
+  lifecycle, reconciliation, and final verification;
+- Dell admits one exact target-wide fenced FFmpeg-child effect; and
+- `OUTCOME_UNKNOWN` blocks automatic retry until durable reconciliation.
+
+This applies transaction ideas locally to intent, outbox, admission, and effect
+fences; it is not distributed ACID. The public implementation and Harness are
+reviewable, but production authority and a completed live soak are not claimed.

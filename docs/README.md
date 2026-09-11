@@ -22,6 +22,8 @@ Start with the top-level `README.md`. Most reviewers should then read only:
 - `architecture.md`
 - `physical-topology.md`
 - `runtime-contract.md`
+- `../monitoring-v4/docs/architecture.md`
+- `../recovery-control/docs/architecture.md`
 - `v3/map-rendering-and-monitoring.md`
 - `v3/public-status-snapshot.md`
 

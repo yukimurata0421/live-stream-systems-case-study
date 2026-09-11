@@ -16,11 +16,12 @@ before recovery.
 
 | Failure | Primary detection | Owner | Allowed response | Evidence |
 | --- | --- | --- | --- | --- |
-| `runtime_pod_not_ready` | Pod not `3/3 Running` or deployment unavailable | delivery plane | inspect Pod events/logs; rollout restart if justified | `kubectl`, container logs, runtime state |
+| `runtime_pod_not_ready` | Four-container Pod not `4/4 Running` or deployment unavailable | delivery plane | inspect Pod events/logs and target identity; do not infer a rollout restart from readiness alone | `kubectl`, container logs, runtime state |
 | `stream_engine_missing_or_crashed` | stream-engine restart count, missing Xvfb/Chromium/FFmpeg | delivery plane | recover browser/audio/FFmpeg stack | stream-engine events, Pod status |
 | `xvfb_shmem_runaway_oom` | Xvfb RSS/RssShmem guard, kernel OOM, cgroup events | delivery plane | ordered capture-stack restart | process status, cgroup events, memory guard |
-| `ffmpeg_ingest_disconnected` | missing RTMPS socket or stale send samples | delivery plane | fast recovery or FFmpeg child restart | fast-recovery events, TCP samples |
-| `tcp_stall` | queued bytes, growing `lastsnd_ms`, low send Mbps | delivery + observability | local recovery; cause observers stay report-only | TCP samples, WAN anchors, same URL state |
+| `ffmpeg_ingest_disconnected` | missing RTMPS socket or stale send samples | delivery plane | collect exact-target evidence; the current CRA path permits only one authorized fenced FFmpeg-child effect | fast-recovery lifecycle, stderr/exit evidence, TCP samples |
+| `tcp_stall` | queued bytes, growing `lastsnd_ms`, low send Mbps | delivery + observability | publish facts; suppress action during connectivity loss; admit only an authorized exact-child effect | TCP samples, WAN anchors, same URL state, command/effect ledger |
+| `network_down` | corroborated route, DNS, gateway, or bounded upstream connectivity failure | delivery + observability | record a connectivity episode and wait; do not repeatedly launch FFmpeg or escalate to Pod/host restart | source-time network facts, probe errors, transport identity; observer execution errors remain unknown rather than becoming outage facts |
 | `low_upload_pressure` | low upload plus queue pressure | delivery plane | temporary recovery profile only after strong evidence | upload latest/p95, queue metrics |
 | `youtube_low_bitrate_warning` | YouTube warning while local delivery continues | observability plane | compare encoder, upload, public/live state | watchdog stats, Studio/API evidence |
 | `dashboard_false_fail` | dashboard red but raw evidence healthy | observability plane | fix query/exporter/source labels | raw Prometheus, exporter output |
@@ -40,9 +41,11 @@ before recovery.
 
 ## Escalation Rules
 
-Immediate delivery-plane recovery is appropriate only when fresh evidence shows
-the delivery path is actually broken: Pod unavailable, FFmpeg missing, RTMPS
-send stopped, Pulse unavailable, GPU unavailable, or capture stack failure.
+Fresh evidence can establish that a delivery component is broken, but it does
+not grant arbitrary mutation authority. The current cross-host contract allows
+only a centrally authorized, exact fenced FFmpeg-child effect. Container, Pod,
+Deployment, host, audio, browser, and YouTube lifecycle actions remain separate
+failure domains and require their own explicit authority.
 
 Observability-plane problems are handled in the observability plane first:
 stale metrics, report-missing events, false dashboard failures, resolver cache
@@ -50,6 +53,10 @@ mismatch, and notification noise.
 
 YouTube lifecycle mutation is the highest-risk class. It requires explicit
 identity, ownership, freshness, and action-gate evidence.
+
+An unknown command result is not failure-to-execute evidence.
+`OUTCOME_UNKNOWN` blocks automatic retry until append-only reconciliation
+resolves the effect scope.
 
 ## Required Evidence
 

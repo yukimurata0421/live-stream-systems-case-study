@@ -9,7 +9,9 @@ names aligned with the evidence they actually carry.
 Some faults recover automatically:
 
 - FFmpeg exits and the stream engine starts a new child process;
-- fast recovery restarts delivery after `tcp_stall` or `network_down`;
+- a confirmed `tcp_stall` may produce an exact FFmpeg-child recovery effect;
+- `network_down` suppresses repeated child launches and broader restart
+  escalation until connectivity returns;
 - a k3s Pod/container restart count increases and then returns healthy;
 - runtime `run_id` changes after a controlled or automatic restart.
 
@@ -26,13 +28,29 @@ restart observed, confirmation window expired -> recovery_unconfirmed
 restart observed, recovered TCP send sample present -> auto_recovered
 historical degradation -> routine-check evidence, not active page
 stale report/dashboard state -> observability follow-up, not delivery restart
+ambiguous command result -> OUTCOME_UNKNOWN, reconcile without automatic retry
 ```
 
-For fast-recovery events, a completed restart is not enough to claim delivery
-recovery. The default confirmation requires a post-restart TCP send sample at
-or above 4.5 Mbps. Before the 180-second confirmation window expires, the event
-is `restart_observed`; after that it becomes `recovery_unconfirmed`. A later
-qualifying sample can still promote the same event to `auto_recovered`.
+For retained legacy fast-recovery notification events, a completed restart is
+not enough to claim delivery recovery. The default confirmation requires a
+post-restart TCP send sample at or above 4.5 Mbps. Before the 180-second
+confirmation window expires, the event is `restart_observed`; after that it
+becomes `recovery_unconfirmed`. A later qualifying sample can still promote the
+same event to `auto_recovered`.
+
+A separate retained watchdog guard also waits for an established runtime to be
+continuously unavailable for 180 seconds before admitting its legacy full-Pod
+rollout path. It was added after a local FFmpeg-child recovery and an arena
+watchdog decision overlapped, causing an unnecessary second restart. The delay
+gives child recovery time to converge; it does not make the legacy watchdog the
+current recovery authority and does not expand CRA beyond the exact-child
+effect.
+
+The current cross-host authority contract is narrower. Monitoring v4 emits
+facts and notification intents, CRA owns one durable command lifecycle and
+final verification, and Dell admits only an exact fenced FFmpeg child. Host,
+boot, Pod, container, generation, and PID must agree. Signal delivery, process
+exit, new-child start, and confirmed send recovery remain distinct evidence.
 
 This is the `SV3-EVIDENCE-STRENGTH` contract. The implementation returns
 explicit evidence fields rather than inferring recovery from diagnostic text:
@@ -57,10 +75,11 @@ rewriting historical shadow logs.
 | Event | Notification class | Evidence |
 | --- | --- | --- |
 | current delivery fail | active incident | current fail signal, YouTube/public/ingest/capture/audio context |
-| fast recovery restart, confirmation pending | `restart_observed` info | trigger, timestamp, restart result, available TCP context |
-| fast recovery restart, timeout without qualifying sample | `recovery_unconfirmed` warning | restart result, first low-speed sample or missing-sample context |
-| fast recovery restart with qualifying sample | `auto_recovered` info | pre/post TCP samples and measured recovery lag |
+| retained fast-recovery restart, confirmation pending | `restart_observed` info | trigger, timestamp, restart result, available TCP context |
+| retained fast-recovery restart, timeout without qualifying sample | `recovery_unconfirmed` warning | restart result, first low-speed sample or missing-sample context |
+| retained fast-recovery restart with qualifying sample | `auto_recovered` info | pre/post TCP samples and measured recovery lag |
 | FFmpeg child restart | auto-recovered info | scheduled restart and later `ffmpeg_started` in same run/restart count |
+| CRA command with ambiguous effect | no recovered verdict | durable command/effect scope remains `OUTCOME_UNKNOWN` until reconciliation |
 | k3s Pod/container restart count change | auto-recovered info | Pod UID, container, restart count delta, last state |
 | runtime lifecycle change | auto-recovered info after baseline | run_id change and runtime evidence |
 | report missing | observability warning/follow-up | timer/output path and stale threshold |
@@ -88,7 +107,10 @@ The notification layer uses:
   recovery observations.
 - `src/stream_core/notifications/outbox.py` deduplicates and bounds delivery.
 - `src/watchers/stream_watchdog.py` records k3s Pod/container restart deltas and
-  syncs runtime event evidence.
+  syncs runtime event evidence; its retained rollout path applies the
+  established-runtime convergence guard.
+- `tests/test_stream_watchdog_config.py` checks the 180-second convergence
+  boundary without restarting a production workload.
 - `src/stream_v2/sli.py` exposes `current_classifier_replay` for retained
   fast-recovery restart events.
 - `tests/test_operational_replay_contracts.py` verifies replay behavior.
@@ -100,6 +122,10 @@ The notification layer uses:
 The system treats notification delivery as a secondary SLI. It matters for
 operations, but notification failure is not proof of stream failure, and
 restart information is not automatically proof of delivery recovery.
+
+This document describes source contracts and retained event semantics. Public
+tests do not prove that CRA is deployed, authorized, or has produced a live
+effect.
 
 The diagnostic boundary for those messages is documented in
 [`notification-diagnostic-boundary.md`](notification-diagnostic-boundary.md).

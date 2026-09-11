@@ -70,6 +70,42 @@ better production setting. VBR/CQ reduced upload, but YouTube classified the
 input as worse. The accepted contract spends more upload headroom to preserve
 YouTube input quality.
 
+## July 28 Temporary-Profile Correction
+
+A later incident reinforced the difference between an emergency profile and a
+normal contract. During a restart-loop response, the normal video profile was
+temporarily changed from `3400k/3400k/6800k` to the emergency
+`2500k/2500k/5000k` values and remained active for about 36 hours. Public upload
+evidence fell to about 3.7 Mbps. The direct cause was configuration, not proof
+that the physical uplink had slowed.
+
+The normal profile was restored to 5fps/3400k with a 6800k buffer. The separate
+input-queue correction, `VIDEO_QUEUE_SIZE=32`, was retained to bound raw-frame
+memory during blocked writes. This historical correction does not change the
+May 31 trial results; it establishes a durable rule: emergency values need an
+expiry and cannot become the normal profile without their own measurement and
+YouTube-health decision.
+
+## Measurement Timestamp Boundary
+
+The current typed-observation path binds each TCP counter to its producer
+`observed_at`, producer identity, FFmpeg generation, PID, and sequence. When a
+source provides connection identity, it becomes an additional fence. Mbps uses
+the source-time interval, including fractional seconds. Missing, invalid,
+reordered, or identity-drifted source metadata does not fall back to a consumer
+wall-clock denominator or become a zero sample. This makes new typed samples
+recomputable; it does not retroactively repair older upload logs or the
+retained direct-sampling path that lacked this source metadata.
+
+The first production candidate for this change was rejected and rolled back:
+its test fixture required a `tcp_metrics.conn` field that the real typed
+producer did not emit, so it produced no source-time samples. The corrected
+public path requires producer identity, FFmpeg generation, and PID; connection
+identity is only an additional fence when the source actually provides it.
+Tests and source inspection prove that corrected candidate contract, not a
+production rollout. At the retained September checkpoint, the corrected
+candidate had passed local and passive-shadow checks but had not been deployed.
+
 ## Why Upload Increased
 
 The nominal bitrate in an FFmpeg command is not the full wire-rate promise. The
@@ -125,6 +161,9 @@ The rejected options remain useful historical evidence:
 - `src/stream_core/engine/ffmpeg_args.py` builds the FFmpeg arguments.
 - `tests/test_docs_structure.py` checks that the documented encoder contract
   matches public config examples.
+- `src/watchers/fast_recovery_core/tcp_send_sample.py` and
+  `tests/test_tcp_send_sample.py` preserve the tested source-time upload
+  measurement candidate.
 
 The public repository keeps summarized measurements and contract tests, not raw
 RTMPS logs or private runtime state.

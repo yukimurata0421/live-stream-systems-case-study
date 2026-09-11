@@ -1,13 +1,13 @@
 # Decisions
 
-## Delivery / Observability Split
+## Retained Delivery / Observability Split
 
 Status: accepted
 
-The Dell delivery host owns video, audio, FFmpeg, AutoDJ, k3s runtime, and local
-recovery. The HP ProDesk observability side also runs k3s for
+The retained v3 deployment puts video, audio, FFmpeg, AutoDJ, k3s runtime, and
+local protection on Dell. The HP ProDesk observability side also runs k3s for
 `stream-v3-control` and `stream-v3-observer`, and owns monitoring, SLI,
-notification, and staged recovery requests.
+notification, and legacy staged recovery surfaces.
 
 The HP ProDesk also hosts the physical ADS-B RF ingest chain: Airspy USB,
 `airspy_adsb`, and ProDesk-side readsb. The Dell workstation receives that feed
@@ -16,6 +16,26 @@ sanitizes that data into its own MapLibre renderer before publishing video.
 
 Consequence: the monitoring layer needs remote runtime evidence instead of
 directly inspecting every in-Pod socket.
+
+## Current Central Recovery Authority
+
+Status: accepted as a public source contract; production-disabled in the
+published policy
+
+Monitoring v4 on `arena-server` owns observations, current state, incidents,
+parity, notification intents, and a facts-only projection. CRA on `cra-01` owns
+policy, budget, cooldown, authorization, one durable command lifecycle,
+reconciliation, and final verification. Dell owns signed local facts and one
+exact fenced FFmpeg-child effect. Raspberry Pi remains publish-only.
+
+This design applies transaction concepts to local intent/outbox, admission,
+and effect boundaries; it does not claim distributed ACID. An ambiguous
+response becomes `OUTCOME_UNKNOWN` and cannot be retried automatically under a
+new request ID.
+
+Consequence: observed duplicate restart scopes are addressed at the physical
+effect boundary, while public tests still make no live-deployment, production
+authorization, or completed-soak claim.
 
 ## Production Authority Transfer
 
@@ -38,8 +58,8 @@ Status: accepted
 `shadow_budget_not_enforced` and `shadow_cooldown_not_enforced` are deliberate
 shadow-plan markers, not production policy. Shadow evaluation must stay
 non-mutating: it cannot consume restart budget, write cooldown state, or perform
-live recovery. Production budget and cooldown enforcement is owned by the
-mutating recovery paths documented in `docs/runtime-contract.md`.
+live recovery. The retained mutating paths keep their existing gates; the
+current cross-host contract assigns budget and cooldown to CRA.
 
 Consequence: a green shadow action plan proves evidence classification and
 destructive-action blocking, not that production restart budgets were bypassed.
@@ -165,10 +185,10 @@ quality and upload efficiency are tuned inside that boundary.
 Status: accepted
 
 Broadcast replacement, stream binding, and candidate video promotion require
-fresh identity, public/live, API, OAuth, quota, and action-gate evidence.
-Delivery recovery can restart local runtime components, but destructive YouTube
-lifecycle mutation is intentionally harder because it can break the public
-watch URL.
+fresh identity, public/live, API, OAuth, quota, and action-gate evidence. The
+current CRA path is limited to an exact FFmpeg-child effect and does not inherit
+YouTube lifecycle authority. Destructive lifecycle mutation remains a separate
+operator-controlled domain because it can break the public watch URL.
 
 ## Visual / Audio / Memory Boundaries
 
@@ -178,9 +198,9 @@ RTMPS connected is not enough to prove correct output. Visual capture, ADS-B
 freshness, now-playing metadata, PulseAudio route, monitor energy, Xvfb shared
 memory, and cgroup events remain separate evidence classes.
 
-Consequence: visual, audio, and memory faults can drive scoped subsystem
-recovery, but they do not authorize YouTube broadcast replacement by
-themselves.
+Consequence: visual, audio, and memory faults can justify a separately reviewed
+scoped response, but they do not inherit the CRA FFmpeg effect or authorize
+YouTube broadcast replacement by themselves.
 
 ## Host Freeze Recovery
 

@@ -14,6 +14,8 @@ it does not pretend to operate the real production stream.
 | Manifest validation | Check k3s objects and public example configuration. | `ops/scripts/validate_k3s_manifests.py` |
 | Shadow acceptance | Prove command mapping, state writes, action plans, and blockers without live mutation. | `ops/scripts/v3_shadow_acceptance.py` |
 | Observer script tests | Keep diagnostic tools parseable and safe to run as report-only helpers. | `tests/test_wan_observer_scripts.py` |
+| Monitoring v4 tests | Validate typed observation, current/incident reduction, parity, storage, and notification-intent boundaries. | `monitoring-v4/tests/` |
+| CRA Harness and protocol tests | Validate central intent, exact-target admission, effect fences, unknown outcomes, and reconciliation with test-owned resources. | `recovery-control/tests/`, `recovery-control/harness/` |
 | Live smoke test | Confirm production-like behavior across a bounded time window. | Manual 24-hour gate after high-impact v3 runtime changes. |
 
 ## Public CI Boundary
@@ -60,6 +62,13 @@ The rationale is specific:
 
 The 24-hour smoke test is not a replacement for 14-day or 28-day SLI review. It
 is a cutover confidence gate.
+
+It is also not the Monitoring v4 or CRA production gate. Those paths require
+their own immutable build/source identity, failure-domain-specific Harness
+evidence, revision-bound soak epoch, target and rollback verification, and
+explicit deployment authorization. A local Harness pass, an elapsed test
+window, and a public checkout do not establish a live effect or production
+authority.
 
 ## Smoke-Test Pass Criteria
 

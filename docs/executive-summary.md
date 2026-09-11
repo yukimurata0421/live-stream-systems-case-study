@@ -9,14 +9,24 @@ boundaries, and public-release safety.
 
 ## What Was Built
 
-The current public architecture separates the system into two main planes:
+The retained v3 deployment and the current public source contract are related
+but not identical. The retained three-home-host evidence places delivery on
+Dell, observability on HP ProDesk, and static publication on Raspberry Pi. The
+newer control contract separates four duties:
 
-- Dell delivery node: browser rendering, audio, AutoDJ, FFmpeg, NVENC, RTMPS,
-  fast local recovery, and k3s runtime ownership.
-- HP ProDesk k3s observability host: `stream-v3-control`,
-  `stream-v3-observer`, YouTube resolver/watchdog, stream watchdog, SLI
-  summaries, notifications, Prometheus/Loki/Grafana, and staged recovery
-  requests.
+- `arena-server`: observations, current state, incidents, parity, notification
+  intents, and a facts-only projection;
+- `cra-01`: recovery policy, budget, cooldown, authorization, durable command
+  lifecycle, reconciliation, and final verification;
+- Dell delivery: browser/audio/FFmpeg/NVENC plus signed local facts and one
+  exact fenced FFmpeg-child effect; and
+- Raspberry Pi: allowlisted static publication without incident or control
+  authority.
+
+The Monitoring v4 and CRA subprojects are integrated for review and testing,
+but the public source does not claim that either is live-deployed or
+production-authorized. Older ProDesk control and remote-recovery code remains
+visible as migration history, not as the current cross-host authority model.
 
 The ADS-B source chain is also explicit: Airspy on HP ProDesk, `airspy_adsb`,
 ProDesk readsb, Dell readsb, Dell modified tar1090 ADS-B JSON, a sanitizing
@@ -52,10 +62,17 @@ recovery is acceptable when it protects the public URL. Destructive YouTube
 lifecycle mutation is intentionally harder because it can break viewers,
 bookmarks, embeds, and external links.
 
+Observed duplicate restart scopes also made request-level deduplication
+insufficient. The current design records central intent and outbox state,
+admits one target-wide fenced effect, and reconciles `OUTCOME_UNKNOWN` instead
+of treating uncertainty as permission to try again.
+
 ## Highest-Signal Evidence
 
 | Claim | Public evidence |
 | --- | --- |
+| Monitoring cannot acquire recovery authority. | `monitoring-v4/docs/architecture.md`, `recovery-control/docs/architecture.md`, authority tests |
+| Duplicate restart scopes are contained by one durable intent and exact effect fence. | `recovery-control/docs/why-cra.md`, `recovery-control/docs/harness-trust.md`, CRA integration tests |
 | Recovery is guarded before destructive action. | `src/stream_v2/recovery_orchestrator/gate.py`, `ops/scripts/v3_shadow_acceptance.py`, `tests/test_v3_shadow_acceptance.py` |
 | Same-URL continuity is a production invariant. | `docs/28-day-same-url-sli-case-study.md`, `docs/v3/youtube-lifecycle-safety.md` |
 | Rolling SLI feedback is read without overclaiming. | `docs/v3/rolling-sli-error-budget-feedback.md`, `docs/v3/sli-and-dashboard.md` |

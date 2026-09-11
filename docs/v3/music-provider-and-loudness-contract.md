@@ -40,6 +40,28 @@ separate permission for Floracore music in this YouTube Live stream, conditional
 on credit. That permission is not generalized to redistribution, resale,
 rights registration, another platform, or another channel.
 
+## Permission-To-Operation Workflow
+
+The Floracore addition was handled as a four-stage engineering and operational
+workflow:
+
+1. The operator asked the rights holder whether the music could be used in this
+   YouTube Live stream. The resulting permission record remains operator-held,
+   not published as repository evidence.
+2. The permitted use and credit condition were made explicit. The scope was
+   not generalized to redistribution, resale, rights registration, another
+   platform, or another channel.
+3. The credit requirement became an activation gate and a durable description
+   requirement, with provider-specific overlay disclosure as a supplement.
+4. Differences between providers became implementation and operations
+   contracts: exclusive schedule buckets, provider detection, credit text,
+   playback gain, source-file handling, and re-review triggers.
+
+This is the point of recording the permission in an engineering case study:
+the non-technical condition is traceable to code, tests, rollout gates, and an
+ongoing operator obligation. The public repository proves those mechanisms,
+not the private correspondence itself.
+
 ## Relative Loudness Boundary
 
 The source MP3 files remain unmodified. Provider differences are compensated in

@@ -32,7 +32,8 @@ Read:
 
 Evaluate whether:
 
-- k3s ownership is explicit for delivery and observability workloads;
+- retained k3s ownership is explicit, while current Monitoring/CRA authority is
+  presented separately;
 - the Airspy/readsb/modified-tar1090 source chain is separated from rendering;
 - private Prometheus, Loki, and Grafana stay outside the public path;
 - monitoring cannot directly take ownership of FFmpeg;

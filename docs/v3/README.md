@@ -1,6 +1,10 @@
 # stream_v3 Documentation
 
-`stream_v3` is the current architecture described by this public repository.
+`stream_v3` contains both retained v3 deployment evidence and the current
+public source contract. A dated observation describes the former; an
+unqualified current contract describes repository behavior. Monitoring v4 and
+CRA source integration does not itself prove live deployment or production
+authorization.
 
 ## Documents
 
@@ -46,15 +50,16 @@
 
 ## Core Claim
 
-The system is easier to operate when delivery and observation are split:
-delivery keeps video and audio moving; observation keeps evidence, SLI, and
-recovery decisions coherent.
+The system is easier to operate when delivery, observation, authorization, and
+publication are split: Dell keeps video and audio moving, arena keeps facts and
+incidents coherent, CRA owns one durable recovery decision lifecycle, and
+Raspberry Pi publishes only an allowlisted static view.
 
-The public topology also names the production data flow: Airspy on HP ProDesk
+The retained topology also names the production data flow: Airspy on HP ProDesk
 feeds `airspy_adsb`, ProDesk readsb, Dell readsb, Dell modified tar1090, and
-then the `stream_v3` k3s delivery workload. The HP ProDesk is also the
-observability host, with `stream-v3-control` and `stream-v3-observer` running
-as the ProDesk-side k3s observability/control workloads.
+then the `stream_v3` k3s delivery workload. In that retained deployment record,
+HP ProDesk is also the observability host, with `stream-v3-control` and
+`stream-v3-observer` as k3s observability/control workloads.
 
 For a focused reliability review:
 
@@ -69,16 +74,19 @@ For a focused reliability review:
 - `connectivity-aware-delivery-recovery.md` explains why a physical outage
   suppresses repeated FFmpeg launches and Pod recreation while preserving the
   short retry path for an ordinary child-only exit.
-- `rolling-sli-error-budget-feedback.md` shows how the current dashboard
-  feedback windows are read without replacing the historical 14-day and 28-day
-  SLI reviews.
+- `rolling-sli-error-budget-feedback.md` shows how dated dashboard feedback
+  windows are read without replacing the historical 14-day and 28-day SLI
+  reviews or the later exact-identity ledger endpoint.
 - `encoder-upload-case-study.md` explains why the move to NVENC CBR increased
-  measured upload while preserving YouTube input health.
+  measured upload while preserving YouTube input health, why a temporary 2500k
+  normal-profile override was corrected, and why new Mbps samples use producer
+  source time.
 - `migration-cutover-case-study.md` explains why a healthy Pod was not treated
   as production authority, and why the v3 smoke-test gate is 24 hours.
-- `scoped-recovery-authority.md` documents why `restart_dj` and
-  `restart_ffmpeg` are scoped to a container/process instead of becoming a
-  full runtime rollout, and why upload pressure does not authorize restart.
+- `scoped-recovery-authority.md` documents why legacy broad recovery surfaces
+  are not the current authority contract. The current CRA path admits only an
+  exact fenced FFmpeg-child effect, and upload pressure does not authorize
+  restart.
 - `visual-audio-health-model.md` and `memory-guard-case-study.md` keep viewer
   correctness and capture-stack memory pressure separate from generic stream
   availability.

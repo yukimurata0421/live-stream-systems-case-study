@@ -9,9 +9,9 @@ contracts, and operational decisions without publishing runtime data or secrets.
 - stream_v3 delivery-plane code: custom MapLibre rendering, processed
   analysis-only precipitation, PulseAudio, AutoDJ, FFmpeg/NVENC, runtime/GPU
   guards, and k3s entrypoints.
-- observability-plane code: YouTube resolver, watchdogs, recovery orchestrator,
-  SLI summaries, Prometheus exporter, `ops/monitoring` Prometheus/Loki/Grafana
-  config, and observability monitor systemd units.
+- retained observability-plane code: YouTube resolver, watchdogs, legacy
+  recovery orchestrator, SLI summaries, Prometheus exporter, `ops/monitoring`
+  Prometheus/Loki/Grafana config, and observability monitor systemd units.
 - v2 historical context and runbooks that explain why v3 exists.
 - k3s manifests for shadow, streaming, observer, reports, and cutover gates.
 - Tests for config contracts, recovery policy, watchdog behavior, and k3s

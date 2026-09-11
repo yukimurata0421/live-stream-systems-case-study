@@ -18,7 +18,7 @@ Airspy USB on HP ProDesk
   -> FFmpeg / NVIDIA NVENC
   -> YouTube RTMPS
 
-runtime evidence
+retained v3 runtime evidence
   -> HP ProDesk observability services
   -> YouTube Data API / OAuth / public watch-page probes
   -> k3s runtime, state, and log evidence
@@ -26,7 +26,7 @@ runtime evidence
   -> subsystem classification
   -> SLI summaries
   -> ops/monitoring evidence presentation
-  -> staged recovery request
+  -> legacy staged recovery request
 
 public status publication
   -> Raspberry Pi collector initiates HTTP GET
@@ -80,9 +80,10 @@ The retained HP ProDesk observability implementation runs
 `stream_v3.control_loop --mode monitor`
 as the k3s `stream-v3-control` workload. That monitor mode runs the YouTube
 video resolver, YouTube watchdog, stream watchdog, notification status loop,
-subsystem status summary, recovery orchestrator, and shadow SLI tasks. It pulls
-read-only YouTube Data API, OAuth, public watch-page, k3s runtime, state-file,
-and log evidence before recovery is planned.
+subsystem status summary, legacy recovery orchestrator, and shadow SLI tasks.
+It pulls read-only YouTube Data API, OAuth, public watch-page, k3s runtime,
+state-file, and log evidence. These retained components explain the migration
+surface; they do not override the current CRA authority contract below.
 
 The current contract routes Monitoring facts through arena-server to cra-01.
 CRA owns policy, budget, cooldown, authorization, command lifecycle, and final
@@ -92,8 +93,8 @@ one-way publisher with no control feedback.
 
 `ops/monitoring/` defines Prometheus, Loki, Grafana, and Alloy as a
 host-local evidence and presentation stack. It is not a third delivery plane and
-does not own FFmpeg or k3s recovery directly. In the current production shape,
-that monitoring backend runs on HP ProDesk alongside the ProDesk k3s
+does not own FFmpeg or k3s recovery directly. In the retained production
+topology, that monitoring backend runs on HP ProDesk alongside the ProDesk k3s
 observability workloads. Raspberry Pi uses the Pi-local
 `/grafana/` proxy to collect allowlisted evidence from the ProDesk Grafana
 datasource proxy. The data transfer is pull-based: the Pi collector initiates

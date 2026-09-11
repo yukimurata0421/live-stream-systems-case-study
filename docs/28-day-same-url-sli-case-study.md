@@ -1,10 +1,14 @@
-# 28-Day Same-URL SLI Case Study
+# Historical 28-Day Same-URL SLI And Current Continuity Checkpoint
 
-This page is the public English version of a private June 2026 SLI review. It is
-included because it shows the operating method behind `stream_v3`: define the
+This page has two deliberately separate evidence layers. The fixed June 2026
+review preserves the original 28-day SLI windows and denominators. The later
+checkpoint extends only the exact-video-identity claim through a retained
+September ledger endpoint. It does not recompute the historical ratios or turn
+them into a moving uptime number.
+
+Together they show the operating method behind `stream_v3`: define the
 objective, measure the denominator, separate invariants from availability, and
-publish the unresolved risks instead of hiding them behind a single uptime
-number.
+publish unresolved risks instead of hiding them behind one percentage.
 
 ## At-Least-127-Day Continuity Checkpoint
 
@@ -41,6 +45,33 @@ endpoint, its selected ID hash and expected ID hash both equal the SHA-256 of
 read-only `2026-09-11 JST` evidence query. The endpoint remains a retained
 evidence cutoff, not an automatically moving current-state claim.
 
+## Current Specification Mapping
+
+The system contract evolved after the June review. The historical values above
+remain unchanged; the current public source interprets them through these
+boundaries:
+
+| Concern | Current contract | Effect on this report |
+| --- | --- | --- |
+| Same-watch-URL identity | A production invariant, evaluated separately from availability and input quality. | The zero-transition identity ledger is the deciding continuity evidence; degraded samples are not silently converted into URL loss. |
+| Rolling feedback | Rolling 24h, 7d, and available-30d windows require explicit coverage, freshness, and source identity. | Rolling values are operational feedback, not replacements for the fixed 14-day, 28-day, or 127-day evidence windows. |
+| YouTube lifecycle evidence | Raw OAuth/Data API, local delivery, and public retrieval evidence keep distinct freshness and authority. | A cached wrapper timestamp, public-page result, or metric-zero sample cannot establish current identity loss by itself. |
+| Monitoring v4 | `arena-server` owns observations, current state, incidents, parity, notification intents, and a facts-only projection. | Monitoring can explain a mismatch but cannot authorize a restart or replacement broadcast. |
+| Central Restart Authority | `cra-01` owns policy, budget, cooldown, authorization, command lifecycle, and final verification. | Historical `replacement allowed` fields are evidence from the earlier decision path, not current CRA authority. |
+| Dell effect boundary | Dell may execute one exact, fenced FFmpeg-child effect only after target identity agrees. | Missing or ambiguous results become `OUTCOME_UNKNOWN` and require reconciliation; they do not authorize a second attempt. |
+| Connectivity loss | Physical connectivity failure suppresses repeated child launches and broader restart escalation. | A network outage is not treated as evidence that the YouTube identity should change. |
+| Upload pressure | The 5.0 Mbps ceiling remains a guardrail; 5fps/3400k is the normal encoder contract and 2500k is bounded emergency behavior. | Upload values remain separate from URL identity and cannot authorize restart or bitrate changes alone. |
+| Public and external evidence | Public snapshots and external probes are supporting, read-only evidence. | They cannot independently burn the formal SLO or grant recovery authority. |
+
+The current contracts are
+[`v3/sli-and-dashboard.md`](v3/sli-and-dashboard.md),
+[`v3/operational-reliability-and-external-evidence.md`](v3/operational-reliability-and-external-evidence.md),
+[`v3/scoped-recovery-authority.md`](v3/scoped-recovery-authority.md),
+[`Monitoring v4 architecture`](../monitoring-v4/docs/architecture.md), and
+[`why CRA exists`](../recovery-control/docs/why-cra.md). The public CRA policy
+remains production-disabled; source and Harness tests are not deployment or
+live-effect evidence.
+
 ## What Was Ported
 
 The public version intentionally selects only the material that helps a technical
@@ -50,7 +81,7 @@ reviewer evaluate the system:
 | --- | --- |
 | 14-day v2 SLI observation | Kept as the historical baseline in [`sli-methodology.md`](sli-methodology.md). |
 | 28-day same-URL observation | Translated and summarized on this page. |
-| v3 SLI and dashboard contract | Linked through [`v3/sli-and-dashboard.md`](v3/sli-and-dashboard.md). |
+| Current SLI, Monitoring v4, and CRA contracts | Mapped to the historical evidence without retroactively rewriting it. |
 | v3 routine checks around network and encoder behavior | Condensed into the comparison, risk, and follow-up sections. |
 | Raw operational logs and environment-specific paths | Not published. Only sanitized windows, denominators, and conclusions are kept. |
 
@@ -104,7 +135,7 @@ Replacement broadcasts:
   initial 14-day candidate-new-URL samples: 2 transient samples, not selected
   later v2/v3 raw extraction: 0 candidate-new-URL samples
 
-Current state at the review time:
+State at the historical review endpoint:
   expected video id matched the resolver-selected video id
   YouTube public watch evidence was live
   Data API evidence was live
@@ -180,7 +211,10 @@ v3 window:
 ```
 
 The v3 encoder remained inside the guardrail most of the time, but it ran closer
-to the 5 Mbps ceiling. This is an operational follow-up, not a same-URL failure.
+to the 5 Mbps ceiling. This was an operational follow-up, not a same-URL
+failure. A later July correction restored the normal 5fps/3400k profile after a
+temporary 2500k value had been left active; that later incident does not alter
+the May-June measurements on this page.
 
 ### Notification Delivery
 
@@ -213,11 +247,14 @@ The review deliberately kept the following unknowns visible:
 - Viewer-visible interruption seconds were still not measured directly through
   YouTube player behavior.
 - Full YouTube broadcast inventory audit was not included in this review.
-- The v3 upload guardrail had less headroom and needed continued 30-day
-  monitoring.
-- The next SLO view should use rolling 30 days and keep replacement count,
-  candidate-new-URL evidence, and current video-id agreement as the primary URL
-  identity checks.
+- The May-June v3 upload window had less headroom. Later encoder corrections do
+  not retroactively change that measured window.
+- Current operator feedback uses rolling 24h, 7d, and available-30d windows
+  with coverage, freshness, and revision gates. Those windows do not replace
+  the fixed historical review or exact-identity ledger endpoint.
+- The public source does not prove that Monitoring v4 or CRA is the deployed
+  production authority, that a CRA soak completed, or that a live effect
+  occurred.
 
 ## Engineering Takeaway
 

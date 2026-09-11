@@ -4,7 +4,8 @@ The observability layer exists to answer three questions:
 
 1. Is the stream currently delivering video and audio?
 2. Is YouTube receiving and serving the expected live URL?
-3. Is a recovery action safe, necessary, and scoped to the right subsystem?
+3. What fresh facts can a separate recovery authority use without Monitoring
+   deciding or executing the action itself?
 
 The measured SLI baseline and classification rules are summarized in
 [`sli-methodology.md`](sli-methodology.md). That page uses v2 production evidence
@@ -89,10 +90,11 @@ YouTube actions are allowed.
 
 `ops/monitoring/` contains the Prometheus, Loki, Grafana, and Alloy
 configuration used to present this evidence. It is an observability display and
-retention stack; recovery ownership still flows through the ProDesk-side k3s
-monitor guard and staged request path.
+retention stack. The retained ProDesk guard/request path remains visible for
+migration review; the current contract routes facts-only evidence through
+Monitoring v4 to CRA and does not grant the display stack recovery authority.
 
-In the current production topology this monitoring backend remains on HP
+In the retained production topology this monitoring backend remains on HP
 ProDesk, alongside the k3s `stream-v3-control` and `stream-v3-observer`
 observability workloads. Raspberry Pi has an nginx `/grafana/` proxy to HP
 ProDesk Grafana. The public snapshot collector runs on Raspberry Pi, queries

@@ -7,6 +7,11 @@ code and tests without reading the entire repository.
 
 If you only have time for a short code review, start with these files:
 
+- `monitoring-v4/src/stream_monitoring_v4/`
+- `recovery-control/src/recovery_control/`
+- `recovery-control/src/monitoring_projection/`
+- `src/stream_core/runtime_boundary_entrypoint.py`
+- `src/watchers/fast_recovery_core/effect_contract.py`
 - `src/watchers/decision/evaluator.py`
 - `src/watchers/decision/action_gate.py`
 - `src/watchers/evidence/ledger.py`
@@ -27,10 +32,13 @@ If you only have time for a short code review, start with these files:
 - `tests/test_stream_v3_health_snapshot.py`
 - `tests/test_stream_v3_monitoring_watchdog.py`
 
+The `stream_v2` orchestrator and direct remote-recovery helpers remain useful
+for legacy-surface review. They are not the current cross-host authority path.
+
 | Review question | Code | Tests | Docs |
 | --- | --- | --- | --- |
 | How does arena-server reduce observations without acquiring recovery authority? | `monitoring-v4/src/stream_monitoring_v4/`, `monitoring-v4/src/stream_contracts/monitoring_v4/`, `recovery-control/src/monitoring_projection/` | `monitoring-v4/tests/`, `recovery-control/tests/authority/` | `monitoring-v4/docs/architecture.md`, `monitoring-v4/docs/hardening.md`, `recovery-control/docs/architecture.md` |
-| What prevents unsafe staged recovery? | `src/stream_v2/recovery_orchestrator/gate.py`, `src/watchers/decision/*` | `tests/test_v3_shadow_acceptance.py`, `tests/test_action_plan.py`, `tests/test_youtube_evidence_decision.py` | `docs/v3/youtube-lifecycle-safety.md`, `docs/design-decisions-for-review.md` |
+| How are legacy staged recovery surfaces kept fail-closed? | `src/stream_v2/recovery_orchestrator/gate.py`, `src/watchers/decision/*` | `tests/test_v3_shadow_acceptance.py`, `tests/test_action_plan.py`, `tests/test_youtube_evidence_decision.py` | `docs/v3/youtube-lifecycle-safety.md`, `docs/design-decisions-for-review.md` |
 | How is recovery authority limited after cutover? | `src/stream_core/runtime_boundary_entrypoint.py`, `src/watchers/fast_recovery_core/effect_contract.py`, `ops/scripts/stream_v3_scoped_recovery.py` | `tests/test_fast_recovery_runtime_boundary.py`, `tests/test_stream_v3_scoped_recovery.py`, `tests/test_maintenance_audit.py` | `docs/v3/scoped-recovery-authority.md`, `recovery-control/docs/why-cra.md` |
 | How is an FFmpeg exit correlated without publishing raw runtime logs? | `src/stream_core/engine/ffmpeg_stderr.py`, `src/stream_core/stream_engine.py`, `src/stream_core/engine/restart_context.py` | `tests/test_ffmpeg_stderr_capture.py`, `tests/test_stream_engine_exit_evidence.py` | `docs/v3/runtime-state-and-evidence.md`, `docs/public-release.md` |
 | How is same-URL preservation protected? | `src/watchers/youtube_video_id_resolver.py`, `src/watchers/video_resolver/*`, `src/watchers/youtube_api.py` | `tests/test_youtube_broadcast_selection.py`, `tests/test_youtube_video_id_resolver.py`, `tests/test_youtube_monitor_e2e.py` | `docs/28-day-same-url-sli-case-study.md`, `docs/v3/youtube-lifecycle-safety.md` |
@@ -42,7 +50,7 @@ If you only have time for a short code review, start with these files:
 | How are durable rollups and independent external evidence kept separate from restart authority? | `ops/scripts/stream_v3_operational_reliability_rollup.py`, `ops/scripts/stream_v3_external_blackbox_import.py`, `src/stream_core/operational_reliability/*`, `src/stream_core/notifications/incidents.py` | `tests/test_operational_reliability.py`, `tests/test_external_blackbox_evidence.py`, `tests/test_sli_report.py` | `docs/v3/operational-reliability-and-external-evidence.md` |
 | How does the system keep dashboard `No data` out of delivery recovery? | `ops/scripts/stream_v3_health_snapshot.py`, `ops/scripts/stream_v3_monitoring_watchdog.py`, `ops/scripts/stream_v3_prometheus_exporter.py` | `tests/test_stream_v3_health_snapshot.py`, `tests/test_stream_v3_monitoring_watchdog.py`, `tests/test_stream_v3_prometheus_exporter.py` | `docs/v3/observability-plane-self-check.md`, `docs/v3/failure-taxonomy.md` |
 | How are historical fast-recovery stream restarts replayed? | `src/stream_v2/source_reader.py`, `src/stream_v2/subsystems/local_delivery/*`, `src/stream_v2/recovery_orchestrator/proposer.py`, `src/stream_v2/sli.py` | `tests/test_subsystems.py`, `tests/test_orchestrator.py`, `tests/test_sli_pipeline_rotation.py` | `docs/v3/fast-recovery-classifier-replay.md` |
-| How is upload tuning decided? | `src/stream_core/engine/ffmpeg_args.py`, `src/stream_core/recovery_profile.py`, `ops/scripts/stream_v3_prometheus_exporter.py` | `tests/test_runtime_contract.py`, `tests/test_stream_v3_prometheus_exporter.py`, `tests/test_docs_structure.py` | `docs/v3/encoder-upload-case-study.md`, `docs/v3/encoder-fps-tuning-2026-05-31.md` |
+| How is upload tuning and sample timing decided? | `src/stream_core/engine/ffmpeg_args.py`, `src/stream_core/recovery_profile.py`, `src/watchers/fast_recovery_core/tcp_send_sample.py`, `ops/scripts/stream_v3_prometheus_exporter.py` | `tests/test_runtime_contract.py`, `tests/test_tcp_send_sample.py`, `tests/test_stream_v3_prometheus_exporter.py`, `tests/test_docs_structure.py` | `docs/v3/encoder-upload-case-study.md`, `docs/v3/encoder-fps-tuning-2026-05-31.md` |
 | How are visual and audio faults kept local? | `src/watchers/stream_watchdog.py`, `src/watchers/stream_watchdog_core/*`, `src/watchers/local_health/*` | `tests/test_stream_watchdog_config.py`, `tests/test_subsystems.py`, `tests/test_runtime_bootstrap_contracts.py` | `docs/v3/visual-audio-health-model.md`, `docs/v3/failure-taxonomy.md` |
 | How does the custom map prove render readiness? | `ui/overlay/adsb-map/*`, `src/stream_core/overlay_server.py`, `src/stream_core/engine/rendering_boot.py`, `src/stream_core/precipitation_fetcher.py` | `tests/test_adsb_map_contract.py`, `tests/test_overlay_precipitation_state.py`, `tests/test_precipitation_fetcher.py`, `tests/test_stream_engine_wait_modes.py` | `docs/v3/map-rendering-and-monitoring.md`, `docs/v3/map-production-cutover-case-study.md`, `ui/overlay/adsb-map/ATTRIBUTION.md` |
 | How was the track-free renderer cut over and rolled back safely? | `ui/overlay/index.html`, `ui/overlay/adsb-map/map.js`, `src/stream_core/engine/rendering_boot.py`, `src/stream_core/runtime_readiness.py` | `tests/test_adsb_map_contract.py`, `tests/test_runtime_bootstrap_contracts.py`, `tests/test_stream_engine_wait_modes.py`, `tests/test_runtime_readiness.py` | `docs/v3/map-production-cutover-case-study.md`, `docs/v3/map-rendering-and-monitoring.md` |

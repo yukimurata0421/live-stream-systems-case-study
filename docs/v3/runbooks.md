@@ -68,15 +68,20 @@ Check:
 - recovery actions attributable and inside budget
 - notifications classify current incidents separately from auto-recovered events
 
+This is the retained v3 migration gate. It does not authorize the current CRA
+path. CRA requires its own exact release identity, source-bound Harness and
+soak evidence, target/rollback checks, and explicit production authorization.
+
 ## TCP Stall Validation
 
 For recurring RTMPS transport stalls, compare delivery TCP state with
 non-YouTube WAN evidence before changing YouTube lifecycle or encoder policy.
 The retained public model is in `tcp-stall-case-study.md`.
 
-As of the 2026-07 public-safe review, the current primary recurrence window is
+At the 2026-07 public-safe review, the primary recurrence window was
 `10:55-11:15 JST`. The earlier `08:00-08:20 JST` window is retained for
-historical comparison.
+historical comparison. Neither window is asserted as a current incident
+schedule.
 
 Check:
 

@@ -95,6 +95,13 @@ another platform, or another channel. The source correspondence is not part of
 this public repository, so the repository records the engineering contract but
 does not independently prove the permission.
 
+The operational chain is explicit: ask the rights holder whether the intended
+use is permitted, agree the scope and credit condition, turn that condition
+into description and activation gates, then encode provider differences in
+schedule, detection, credit, gain, source handling, and re-review rules. This
+keeps permission and attribution as managed non-technical requirements rather
+than informal operator memory.
+
 The design rule is:
 
 - The YouTube livestream description is the canonical attribution location.
