@@ -43,20 +43,34 @@ Evaluate whether:
 Read:
 
 1. the [`SLI and dashboard model`](v3/sli-and-dashboard.md);
-2. the [`rolling SLI feedback rules`](v3/rolling-sli-error-budget-feedback.md);
-3. the [`TCP stall case study`](v3/tcp-stall-case-study.md);
-4. the [`diagnostic resolution boundary`](v3/tcp-stall-resolution-depth.md);
-5. the [`scoped recovery authority`](v3/scoped-recovery-authority.md);
-6. the [`notification evidence model`](v3/notification-and-auto-recovery.md).
+2. the [`TCP stall case study`](v3/tcp-stall-case-study.md);
+3. [`why central restart authority exists`](../recovery-control/docs/why-cra.md);
+4. the [`three-host recovery architecture`](../recovery-control/docs/architecture.md);
+5. the [`harness trust boundary`](../recovery-control/docs/harness-trust.md);
+6. the [`operational scorecard`](operational-scorecard.md).
+
+For the implementation history behind that route, continue with the
+[`rolling SLI feedback rules`](v3/rolling-sli-error-budget-feedback.md),
+[`diagnostic resolution boundary`](v3/tcp-stall-resolution-depth.md),
+[`scoped recovery authority`](v3/scoped-recovery-authority.md), and
+[`notification evidence model`](v3/notification-and-auto-recovery.md).
 
 Evaluate whether:
 
 - same-watch-URL continuity remains distinct from availability ratios;
 - transport, WAN/session, YouTube, upload, source, visual, and audio evidence
   remain separate;
+- observed duplicate restart scopes justify central authority rather than only
+  a request-level retry guard;
+- durable intent, exact-target effect fences, and reconciliation keep an
+  ambiguous outcome from authorizing another physical attempt;
+- harness results keep SUT failure, harness failure, missing evidence, and
+  production behavior distinct;
 - recovery authority is blocked by stale or ambiguous evidence;
 - restart observation is not mislabeled as confirmed send recovery;
 - MTTR, dashboard sampling, and viewer-visible impact are not conflated;
+- the public CRA implementation is not presented as deployed authority or a
+  live effect claim;
 - unresolved ownership remains explicit when public evidence is insufficient.
 
 ## Evaluation Rubric

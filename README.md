@@ -52,7 +52,7 @@ explicit evidence and safety boundaries, not enterprise scale.
 
 ## Evidence Snapshot
 
-**At least 109 days on one public YouTube Live URL.** The same public Live
+**At least 127 days on one public YouTube Live URL.** The same public Live
 identity was selected at the initial measurement checkpoint, across the v2-to-v3
 production cutover, and again at the evidence endpoint. No selected replacement
 action was observed in the retained review windows.
@@ -60,9 +60,11 @@ action was observed in the retained review windows.
 | Continuity evidence | Measured value |
 | --- | --- |
 | Measurement start | `2026-05-06 10:36:17 JST` |
-| Measurement endpoint | `2026-08-23 14:31:53 JST` (`109 days, 3 hours, 55 minutes, 36 seconds`) |
+| Measurement endpoint | `2026-09-11 00:04:12 JST` (`127 days, 13 hours, 27 minutes, 55 seconds`) |
 | Expected video ID | `OpMzOBFwM7M` |
-| Selected video ID at endpoint | `OpMzOBFwM7M` |
+| Selected video ID at endpoint | `OpMzOBFwM7M` (SHA-256 match in the retained ledger) |
+| Daily ledger checkpoints | `107 / 107` JST days from `2026-05-28` through `2026-09-11` |
+| Ledger URL transitions / candidate-new-URL / force-live | `0 / 0 / 0` |
 | Observed replacement actions | `0` across the retained review windows |
 | Candidate-new-URL samples | `2` transient samples in the initial 14-day window; neither was selected |
 | V2 stopped | `2026-05-28 22:29:43 JST` |
@@ -72,10 +74,8 @@ action was observed in the retained review windows.
 This establishes URL identity preservation, not uninterrupted frame delivery.
 The exact production-authority handoff was not logged as a standalone event,
 and the retained V2-stop to V3-send evidence gap is `11 minutes, 48 seconds`.
-Later platform-health records are not counted because they do not re-bind the
-exact video ID; this endpoint is an evidence cutoff, not a current-state claim.
-The detailed evidence and counting boundaries are in the
-[same-URL SLI case study](docs/28-day-same-url-sli-case-study.md).
+See the [same-URL SLI case study](docs/28-day-same-url-sli-case-study.md) for the
+evidence chain and counting boundaries.
 
 | Signal | Measured result | Boundary |
 | --- | --- | --- |

@@ -166,12 +166,16 @@ class PublicDocsStructureTests(unittest.TestCase):
             "V2 stopped",
             "First retained V3 production-send evidence",
             "Cutover video ID check",
+            "Daily ledger checkpoints",
+            "Ledger URL transitions / candidate-new-URL / force-live",
         ):
             self.assertIn(label, evidence_snapshot)
 
         for checkpoint in (
             "2026-05-06 10:36:17 JST",
-            "2026-08-23 14:31:53 JST",
+            "2026-09-11 00:04:12 JST",
+            "127 days, 13 hours, 27 minutes, 55 seconds",
+            "107 / 107",
             "2026-05-28 22:29:43 JST",
             "2026-05-28 22:41:31 JST",
             "OpMzOBFwM7M",
@@ -179,6 +183,13 @@ class PublicDocsStructureTests(unittest.TestCase):
             self.assertIn(checkpoint, evidence_snapshot)
 
         self.assertIn("uninterrupted frame delivery", evidence_snapshot)
+        self.assertIn("At least 127 days", evidence_snapshot)
+        self.assertNotIn("At least 109 days", evidence_snapshot)
+
+        case_study = read(DOCS / "28-day-same-url-sli-case-study.md")
+        self.assertIn("At-Least-127-Day Continuity Checkpoint", case_study)
+        self.assertIn("One baseline plus 106 daily checkpoints", case_study)
+        self.assertIn("Database integrity was `ok`", case_study)
 
     def test_core_claim_ids_are_stable(self) -> None:
         readme = read(README)
@@ -232,6 +243,26 @@ class PublicDocsStructureTests(unittest.TestCase):
             },
         )
         self.assertNotIn("Suggested Review Paths", text)
+
+        sre_path = text.split("### SRE Or Platform Reviewer", 1)[1].split(
+            "## Evaluation Rubric", 1
+        )[0]
+        for target in (
+            "../recovery-control/docs/why-cra.md",
+            "../recovery-control/docs/architecture.md",
+            "../recovery-control/docs/harness-trust.md",
+            "operational-scorecard.md",
+        ):
+            with self.subTest(target=target):
+                self.assertIn(target, sre_path)
+
+        scorecard = read(DOCS / "operational-scorecard.md")
+        self.assertIn(
+            "Central Restart Authority | Tested / documented / not deployed",
+            scorecard,
+        )
+        self.assertIn("No production authority is enabled", scorecard)
+        self.assertIn("no live effect or completed production-soak claim", scorecard)
 
     def test_mermaid_blocks_have_supported_declarations_and_balanced_fences(self) -> None:
         supported = (

@@ -6,10 +6,10 @@ objective, measure the denominator, separate invariants from availability, and
 publish the unresolved risks instead of hiding them behind a single uptime
 number.
 
-## At-Least-109-Day Continuity Checkpoint
+## At-Least-127-Day Continuity Checkpoint
 
 Retained evidence from `2026-05-06 10:36:17 JST` through
-`2026-08-23 14:31:53 JST` covers `109 days, 3 hours, 55 minutes, 36 seconds`.
+`2026-09-11 00:04:12 JST` covers `127 days, 13 hours, 27 minutes, 55 seconds`.
 The same public YouTube Live identity was selected at the start, across the
 production cutover from the v2 single-host runtime to the v3 k3s split-plane
 architecture, and at the endpoint.
@@ -17,9 +17,11 @@ architecture, and at the endpoint.
 | Evidence item | Observed value | Interpretation boundary |
 | --- | --- | --- |
 | Measurement start | `2026-05-06 10:36:17 JST` | Start of the retained 14-day same-URL observation. |
-| Measurement endpoint | `2026-08-23 14:31:53 JST` | Resolver, watchdog, and OAuth evidence selected the same ID at this checkpoint; this is not a continuously sampled 109-day denominator. |
+| Measurement endpoint | `2026-09-11 00:04:12 JST` | Latest retained arena-server daily ledger checkpoint reviewed for this publication; this is not an uninterrupted-frame denominator. |
 | Expected video ID | `OpMzOBFwM7M` | The configured identity contract. |
-| Selected video ID at endpoint | `OpMzOBFwM7M` | The explicit identity selection at the evidence endpoint. |
+| Selected video ID at endpoint | `OpMzOBFwM7M` | The ledger's selected and expected ID hashes both match the SHA-256 of this public ID. |
+| Daily ledger coverage | `107 / 107` JST days from `2026-05-28` through `2026-09-11` | One baseline plus 106 daily checkpoints; this daily ledger begins at the V3 handoff evidence, not the May 6 measurement start. |
+| Ledger URL transitions / candidate-new-URL / force-live | `0 / 0 / 0` | All 107 rows retain one selected ID hash, one expected ID hash, and one live URL hash. |
 | Selected replacement actions | `0` observed across retained review windows | This is not a full YouTube broadcast inventory audit. |
 | Candidate-new-URL samples | `2` transient samples in the initial 14-day window | Both samples came from one short resolver mismatch interval and recovered without selection. |
 | V2 stopped | `2026-05-28 22:29:43 JST` | Final V2 runtime state was `stopped`; its resolver selected `OpMzOBFwM7M`. |
@@ -32,10 +34,12 @@ broadcast. It is not a zero-downtime or frame-continuity claim. The retained
 V2-stop to first V3-send evidence gap is `11 minutes, 48 seconds`, so exact
 viewer-visible interruption during the handoff remains unknown.
 
-Sanitized records after the endpoint contain later platform-health observations,
-but they do not explicitly bind those observations to the exact video ID. They
-are therefore excluded from this duration rather than being promoted to current
-same-URL evidence.
+The arena-server ledger retains hashes rather than the plain watch URL. At the
+endpoint, its selected ID hash and expected ID hash both equal the SHA-256 of
+`OpMzOBFwM7M`, and its URL hash equals the SHA-256 of
+`https://youtube.com/watch?v=OpMzOBFwM7M`. Database integrity was `ok` in the
+read-only `2026-09-11 JST` evidence query. The endpoint remains a retained
+evidence cutoff, not an automatically moving current-state claim.
 
 ## What Was Ported
 
