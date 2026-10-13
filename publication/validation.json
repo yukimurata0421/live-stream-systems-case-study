@@ -2,8 +2,8 @@
   "schema": "stream.public_port_validation.v1",
   "status": "LOCAL_SOURCE_CHECKS_PASS",
   "validated_at_jst": "2026-10-14T01:36:53.466204+09:00",
-  "source_map_sha256": "c1ddf20a1b615038975b608f3664bd7f33ec669b53a72e7b173463201881fea1",
-  "selected_public_files": 223,
+  "source_map_sha256": "e13f4d9bf740568b6f37c10fda7400c8377e14092df0c529073b48baa0ced403",
+  "selected_public_files": 224,
   "runtime": {
     "python": "3.14.4",
     "sqlite": "3.51.3",
@@ -327,5 +327,20 @@
     "validation": "PASS",
     "focused_tests_passed": 25,
     "checked_links": 18
+  },
+  "ci_runner_correction": {
+    "initial_commit": "6bd43d9fcbe35a7b08a6e8cde6077f2a098a1f65",
+    "initial_run_url": "https://github.com/yukimurata0421/live-stream-systems-case-study/actions/runs/38445669512",
+    "initial_monitoring_outcome": "FAIL: pytest was not declared in test dependencies",
+    "previous_runner_limit": "unittest does not collect pytest function tests",
+    "correction": "declare pytest in the test extra and run the mixed suite using pytest",
+    "formal_qualification": "NOT_ESTABLISHED",
+    "local_test_status": "PASS",
+    "recorded_at_jst": "2026-10-14T03:21:26.495867+09:00",
+    "local_passed": 445,
+    "local_skipped": 6,
+    "skip_reason": "Disposable PostgreSQL DSNs were not supplied",
+    "elapsed_sec": 24.158,
+    "source_parity": "monitoring sources match; entrypoints and workflow layouts differ by repository"
   }
 }

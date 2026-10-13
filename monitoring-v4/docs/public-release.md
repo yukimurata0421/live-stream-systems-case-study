@@ -86,7 +86,7 @@ the deployment contract; no corresponding values are present.
 
 The assembled history is accepted only after all of the following succeed:
 
-- `PYTHONPATH=src python3 -m unittest discover -s tests -v`;
+- `python3 -m pytest -q tests` with the declared `.[test]` dependencies;
 - `python3 ops/scripts/validate_public_snapshot.py`;
 - `python3 -m compileall -q src tests ops/scripts`;
 - `git diff --check` and `git fsck --strict`;

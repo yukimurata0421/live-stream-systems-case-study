@@ -82,7 +82,8 @@ single-node k3s cluster highly available.
 ## Run the tests
 
 ```bash
-PYTHONPATH=src python3 -m unittest discover -s tests -v
+python3 -m pip install -e '.[test]'
+python3 -m pytest -q tests
 ```
 
 The public tests are self-contained. A real migration-source repository is

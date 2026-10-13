@@ -10,7 +10,7 @@ requires-python = ">=3.10"
 
 [project.optional-dependencies]
 postgres = ["psycopg[binary]==3.3.4", "psycopg_pool==3.3.1"]
-test = ["hypothesis==6.165.10"]
+test = ["hypothesis==6.165.10", "pytest==8.4.2"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
