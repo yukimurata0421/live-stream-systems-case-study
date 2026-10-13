@@ -27,6 +27,7 @@ from cra_dell_recovery.canonical import Signer
 from cra_dell_recovery.json_input import load_object
 from cra_dell_recovery.reloading_tls_server import ReloadingTLSHTTPServer
 from cra_no_action_soak import recovery_soak, recovery_transport, resilient_soak
+from cra_no_action_soak.append_only_jsonl import _serialized_line
 from cra_no_action_soak.recovery_facts import strict_json_object
 from cra_no_action_soak.recovery_soak import Config
 from tests.harness.unit.test_recovery_soak import START, packet
@@ -41,6 +42,47 @@ BAD_JSON = {
     "surrogate": b'{"x":"\\ud800"}',
     "encoding": '{"x":1}'.encode("utf-16"),
 }
+
+
+@pytest.mark.parametrize("conflict", [False, True])
+def test_history_pull_completes_only_matching_partial_packet(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, conflict: bool
+) -> None:
+    archive = tmp_path / "history.jsonl"
+    previous = {"role": "dell", "sequence": 1, "signature": "prior"}
+    next_packet = {"role": "dell", "sequence": 2, "signature": "next"}
+    prefix = _serialized_line(previous) + (_serialized_line(next_packet)[:13] if not conflict else b'{"bad":')
+    archive.write_bytes(prefix)
+    seen: list[str] = []
+
+    def fetch(request: urllib.request.Request, **_kwargs: Any) -> tuple[bytes, int]:
+        seen.append(request.full_url)
+        if "?after=" in request.full_url:
+            after = int(request.full_url.rsplit("?after=", 1)[1])
+            assert after in (1, 2)
+            value = {"schema": "cra.recovery_history_page.v1", "role": "dell", "after": after,
+                     "packets": [next_packet] if after == 1 else [], "more": False}
+        else:
+            value = {"role": "dell", "sequence": 2}
+        return json.dumps(value).encode(), 1
+
+    monkeypatch.setattr(recovery_transport, "fetch_bounded_json", fetch)
+    config = {"schema": recovery_transport.HISTORY_SCHEMA, "sources": {"dell": {
+        "url": "https://127.0.0.1/v1/recovery-facts/dell",
+        "output_file": str(tmp_path / "inbox.json"),
+        "history_url": "https://127.0.0.1/v1/recovery-history/dell",
+        "history_output_file": str(archive),
+    }}, "status_file": str(tmp_path / "status.json")}
+    result = recovery_transport.pull(config, object())
+    assert len(seen) == 2
+    if conflict:
+        assert result["history_roles"]["dell"] == "UNAVAILABLE"
+        assert archive.read_bytes() == prefix
+    else:
+        assert result["history_roles"]["dell"] == "CURRENT"
+        assert archive.read_bytes() == _serialized_line(previous) + _serialized_line(next_packet)
+        assert recovery_transport.pull(config, object())["history_roles"]["dell"] == "CURRENT"
+        assert archive.read_bytes() == _serialized_line(previous) + _serialized_line(next_packet)
 
 
 @pytest.mark.parametrize("fault", BAD_JSON)
@@ -471,12 +513,19 @@ def test_incomplete_append_never_advances_committed_state(
         with pytest.raises(OSError):
             recovery_soak.collect(config, now=START + timedelta(seconds=15))
     assert len(triggered) == 2
-    assert state.read_bytes() == before_state
+    reserved = json.loads(state.read_bytes())
+    committed = json.loads(before_state)
+    assert reserved["sample_count"] == committed["sample_count"]
+    assert reserved["verified_bytes"] == committed["verified_bytes"]
+    assert reserved["last_sample_hash"] == committed["last_sample_hash"]
+    assert reserved["pending_sample"]["sample_sequence"] == committed["sample_count"] + 1
     assert evidence.read_bytes().startswith(before_bytes)
     partial = evidence.read_bytes()
-    with pytest.raises(ValueError, match="PARTIAL"):
-        recovery_soak.collect(config, now=START + timedelta(seconds=30))
-    assert evidence.read_bytes() == partial  # Never truncate or silently bless loss.
+    recovered = recovery_soak.collect(config, now=START + timedelta(seconds=30))
+    assert recovered["sample_sequence"] == 3
+    assert evidence.read_bytes().startswith(partial)
+    assert [json.loads(line)["sample_sequence"] for line in evidence.read_bytes().splitlines()] == [1, 2, 3]
+    assert json.loads(state.read_bytes())["pending_sample"] is None
 
 
 @pytest.mark.parametrize("failed_fsync", ["file", "directory"])
@@ -495,7 +544,12 @@ def test_complete_append_fsync_failure_recovers_one_frame_without_sequence_reuse
 
     def fail_at_boundary(descriptor: int) -> None:
         calls.append(descriptor)
-        if len(calls) == (1 if failed_fsync == "file" else 2):
+        target = os.readlink(f"/proc/self/fd/{descriptor}")
+        at_append = len(evidence.read_bytes().splitlines()) == 2
+        if at_append and (
+            failed_fsync == "file" and target == str(evidence)
+            or failed_fsync == "directory" and target == str(evidence.parent)
+        ):
             raise OSError(errno.EIO, f"injected {failed_fsync} fsync failure")
         original_fsync(descriptor)
 
@@ -503,7 +557,9 @@ def test_complete_append_fsync_failure_recovers_one_frame_without_sequence_reuse
         patch.setattr(resilient_soak.os, "fsync", fail_at_boundary)
         with pytest.raises(OSError, match="fsync failure"):
             recovery_soak.collect(config, now=START + timedelta(seconds=15))
-    assert state.read_bytes() == committed_state
+    reserved = json.loads(state.read_bytes())
+    assert reserved["sample_count"] == json.loads(committed_state)["sample_count"]
+    assert reserved["pending_sample"]["sample_sequence"] == 2
     appended = evidence.read_bytes()
     assert len(appended.splitlines()) == 2
 
@@ -590,7 +646,9 @@ def test_negative_control_detects_missing_initial_committed_head(
 
 
 def test_negative_control_detects_single_short_write(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(resilient_soak, "_write_all", lambda handle, raw: handle.write(raw))
+    from cra_no_action_soak import append_only_jsonl
+
+    monkeypatch.setattr(append_only_jsonl, "_write_all", lambda handle, raw: handle.write(raw))
     with pytest.raises(AssertionError):
         test_append_retries_short_regular_file_writes(tmp_path, monkeypatch)
 

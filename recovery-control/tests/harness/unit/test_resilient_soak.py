@@ -6,6 +6,7 @@ import json
 import sys
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any, cast
 
 import pytest
@@ -32,7 +33,7 @@ from cra_no_action_soak.resilient_soak import (
 )
 
 ROOT = Path(__file__).resolve().parents[3]
-SCHEMA = ROOT / "contracts/cra_no_action_soak/resilient_host_status.v3.schema.json"
+SCHEMA = ROOT / "contracts/cra_no_action_soak/resilient_host_status.v4.schema.json"
 CURRENT = datetime(2026, 9, 3, 0, 0, tzinfo=UTC)
 IDENTITY = {
     "release_manifest_sha256": "1" * 64,
@@ -126,6 +127,8 @@ def _status_pair(
     arena_resource_fresh: bool = True,
     dell_boot_id: str = "dell-boot",
     arena_boot_id: str = "arena-boot",
+    target_identity_sha256: str = "6" * 64,
+    physical_effect_count: int = 0,
 ) -> tuple[dict[str, object], dict[str, object]]:
     component = (
         ComponentStatus(
@@ -153,10 +156,10 @@ def _status_pair(
         components=[component],
         source_observed_at=now,
         source_valid_until=now + timedelta(seconds=120),
-        target_identity_sha256="6" * 64,
+        target_identity_sha256=target_identity_sha256,
         source_payload_sha256="7" * 64,
         origin_host_id="dell-stream-runtime",
-        physical_effect_count=0,
+        physical_effect_count=physical_effect_count,
         clock_uncertainty_ms=1000,
         reporter_lease_seconds=120,
         now=now,
@@ -187,10 +190,10 @@ def _status_pair(
         components=arena_components,
         source_observed_at=now,
         source_valid_until=now + timedelta(seconds=120),
-        target_identity_sha256="6" * 64,
+        target_identity_sha256=target_identity_sha256,
         source_payload_sha256="7" * 64,
         origin_host_id="dell-stream-runtime",
-        physical_effect_count=0,
+        physical_effect_count=physical_effect_count,
         upstream_status=dell,
         track_target_transitions=False,
         explicit_state="DEGRADED_SOURCE" if not dell_ready else None,
@@ -275,6 +278,52 @@ def test_resilient_soak_gate_accepts_complete_signed_two_hop_chain(tmp_path: Pat
         "over_30_seconds": 0,
         "over_maximum_seconds": 0,
     }
+    assert result["physical_effect_count_delta"] == 0
+    assert result["blockers"] == []
+
+
+def test_resilient_soak_counts_no_authority_effect_transition_without_requiring_exact_binding(tmp_path: Path) -> None:
+    dell_key = Ed25519PrivateKey.from_private_bytes(bytes(range(1, 33)))
+    arena_key = Ed25519PrivateKey.from_private_bytes(bytes(range(33, 65)))
+    config = _config(tmp_path, dell_key, arena_key)
+    samples: list[dict[str, object]] = []
+    previous_hash: str | None = None
+    for index, (offset, target) in enumerate(((0, "6" * 64), (30, "8" * 64), (60, "8" * 64)), start=1):
+        now = CURRENT + timedelta(seconds=offset)
+        dell, arena = _status_pair(
+            tmp_path,
+            dell_key,
+            arena_key,
+            now=now,
+            target_identity_sha256=target,
+            physical_effect_count=0,
+        )
+        sample: dict[str, object] = {
+            "schema": SAMPLE_SCHEMA,
+            "sample_sequence": index,
+            "observed_at": now.isoformat().replace("+00:00", "Z"),
+            "previous_sample_hash": previous_hash,
+            "cra_release_id": "cra-no-action-0123456789ab",
+            "arena_status": arena,
+            "dell_status_payload_sha256": dell["payload_sha256"],
+            "cra_pull_status": {
+                "status": "READY",
+                "source_producer_instance_id": arena["producer_instance_id"],
+                "source_producer_sequence": arena["producer_sequence"],
+            },
+            "cra_pull_recovery_state": _recovery_state(now),
+        }
+        sample["sample_hash"] = _sample_hash(sample)
+        previous_hash = str(sample["sample_hash"])
+        samples.append(sample)
+
+    result = evaluate_samples(samples, config=config)
+
+    assert result["eligible"] is True
+    assert result["transition_event_count"] == 1
+    assert result["exact_transition_event_count"] == 0
+    assert result["no_authority_effect_transition_event_count"] == 1
+    assert result["target_identity_change_count"] == 1
     assert result["physical_effect_count_delta"] == 0
     assert result["blockers"] == []
 
@@ -783,7 +832,10 @@ def test_formal_gate_rejects_a_stale_final_sample(tmp_path: Path) -> None:
     assert result["eligible"] is False
 
 
-def test_watchdog_separates_formal_duration_from_live_freshness(tmp_path: Path) -> None:
+def test_watchdog_separates_formal_duration_from_live_freshness(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     dell_key = Ed25519PrivateKey.from_private_bytes(bytes(range(1, 33)))
     arena_key = Ed25519PrivateKey.from_private_bytes(bytes(range(33, 65)))
     config = _config(tmp_path, dell_key, arena_key)
@@ -816,6 +868,16 @@ def test_watchdog_separates_formal_duration_from_live_freshness(tmp_path: Path) 
         _recovery_state(CURRENT),
     )
 
+    monkeypatch.setattr(
+        soak_module.os,
+        "statvfs",
+        lambda _path: SimpleNamespace(
+            f_bavail=6 * 1024 * 1024 * 1024,
+            f_frsize=1,
+            f_favail=100_000,
+        ),
+    )
+
     ready = soak_module.evaluate_watchdog(config, now=CURRENT + timedelta(seconds=10))
     stale = soak_module.evaluate_watchdog(config, now=CURRENT + timedelta(seconds=46))
 
@@ -825,6 +887,20 @@ def test_watchdog_separates_formal_duration_from_live_freshness(tmp_path: Path) 
     assert ready["blockers"] == []
     assert stale["status"] == "AT_RISK"
     assert "COLLECTOR_STATE_STALE" in stale["blockers"]
+
+    monkeypatch.setattr(
+        soak_module.os,
+        "statvfs",
+        lambda _path: SimpleNamespace(
+            f_bavail=4 * 1024 * 1024 * 1024,
+            f_frsize=1,
+            f_favail=100_000,
+        ),
+    )
+    low_headroom = soak_module.evaluate_watchdog(config, now=CURRENT + timedelta(seconds=10))
+
+    assert low_headroom["status"] == "AT_RISK"
+    assert "FILESYSTEM_HEADROOM_LOW" in low_headroom["blockers"]
 
 
 def test_watchdog_rejects_a_terminal_pull_episode_even_after_ready_is_restored(

@@ -1,91 +1,66 @@
 # Hiring Reviewer Guide
 
-Use this page only to choose a review path. The top-level
-[`README.md`](../README.md) already contains the short summary, evidence
-snapshot, architecture, decisions, and claim limits.
+This project is a small, personally operated streaming system. Review it for
+engineering judgment: investigating failures, limiting recovery, preserving
+useful evidence, and correcting mistakes. It does not demonstrate enterprise
+traffic volume or a commercial service's availability guarantee.
 
 ## Choose One Path
 
 ### Non-Technical Interviewer
 
-Read:
+Spend two minutes on the summary and results in the [README](../README.md), then choose one story from
+[operational case studies](operational-case-studies.md).
+The architecture and code paths can wait for a technical follow-up.
 
-1. the top-level [`README.md`](../README.md);
-2. the [`operational scorecard`](operational-scorecard.md);
-3. the [`executive summary`](executive-summary.md).
+The key questions are straightforward:
 
-Evaluate whether the case study:
+- What was the service meant to keep working?
+- What went wrong, and how was the cause identified?
+- What changed, and what evidence showed it helped?
+- What did the operator avoid claiming without enough evidence?
 
-- attaches limits to its measured results;
-- separates a real production invariant from a broad uptime claim;
-- shows automated recovery without hiding operator responsibility;
-- calibrates its single-operator, three-home-host scale honestly.
+The 160-day headline measures the same YouTube URL at reviewed checkpoints.
+It does not say that every frame was delivered without interruption.
 
 ### Backend Or Infrastructure Reviewer
 
-Read:
+Read the [five-minute executive summary](executive-summary.md), then the
+[watchdog or stale-cache incident](operational-case-studies.md). Use the
+[implementation review map](implementation-review-map.md) to inspect one
+relevant code path and its tests.
 
-1. the [`implementation review map`](implementation-review-map.md);
-2. the [`runtime contract`](runtime-contract.md);
-3. the [`physical topology`](physical-topology.md);
-4. the [`public status boundary`](v3/public-status-snapshot.md).
-
-Evaluate whether:
-
-- retained k3s ownership is explicit, while current Monitoring/CRA authority is
-  presented separately;
-- the Airspy/readsb/modified-tar1090 source chain is separated from rendering;
-- private Prometheus, Loki, and Grafana stay outside the public path;
-- monitoring cannot directly take ownership of FFmpeg;
-- public tests map to the claimed safety contracts.
+Look for clear component ownership, durable state, handling of partial failure,
+and protection against stale data. You do not need to read every collector,
+recovery rule, or deployment file before discussing the design.
 
 ### SRE Or Platform Reviewer
 
-Read:
+Start with two [incident stories](operational-case-studies.md) and the
+[operational scorecard](operational-scorecard.md). Then follow the question that
+matters for the interview:
 
-1. the [`SLI and dashboard model`](v3/sli-and-dashboard.md);
-2. the [`TCP stall case study`](v3/tcp-stall-case-study.md);
-3. the [`Monitoring v4 arena architecture`](../monitoring-v4/docs/architecture.md);
-4. [`why central restart authority exists`](../recovery-control/docs/why-cra.md);
-5. the [`three-host recovery architecture`](../recovery-control/docs/architecture.md);
-6. the [`harness trust boundary`](../recovery-control/docs/harness-trust.md);
-7. the [`operational scorecard`](operational-scorecard.md).
+| Question | Focused reading |
+| --- | --- |
+| How was network failure distinguished from provider failure? | [TCP stall case study](v3/tcp-stall-case-study.md). |
+| Why split observation from recovery authorization? | [CRA rationale](../recovery-control/docs/why-cra.md) and [CRA architecture](../recovery-control/docs/architecture.md). |
+| What prevents uncertain actions from being retried? | [Harness and effect evidence](../recovery-control/docs/harness-trust.md). |
+| Who owns incident and measurement state? | [Monitoring architecture](../monitoring-v4/docs/architecture.md). |
+| Why are the uptime and URL-continuity claims different? | [Dated continuity evidence](28-day-same-url-sli-case-study.md). |
 
-For the implementation history behind that route, continue with the
-[`rolling SLI feedback rules`](v3/rolling-sli-error-budget-feedback.md),
-[`diagnostic resolution boundary`](v3/tcp-stall-resolution-depth.md),
-[`scoped recovery authority`](v3/scoped-recovery-authority.md), and
-[`notification evidence model`](v3/notification-and-auto-recovery.md).
-
-Evaluate whether:
-
-- same-watch-URL continuity remains distinct from availability ratios;
-- transport, WAN/session, YouTube, upload, source, visual, and audio evidence
-  remain separate;
-- observed duplicate restart scopes justify central authority rather than only
-  a request-level retry guard;
-- Monitoring v4 emits evidence and notification intents without acquiring
-  recovery command authority;
-- durable intent, exact-target effect fences, and reconciliation keep an
-  ambiguous outcome from authorizing another physical attempt;
-- harness results keep SUT failure, harness failure, missing evidence, and
-  production behavior distinct;
-- recovery authority is blocked by stale or ambiguous evidence;
-- restart observation is not mislabeled as confirmed send recovery;
-- MTTR, dashboard sampling, and viewer-visible impact are not conflated;
-- the public CRA implementation is not presented as deployed authority or a
-  live effect claim;
-- unresolved ownership remains explicit when public evidence is insufficient.
+Choose one failure to explore in depth. The record includes operational failures,
+a failed test harness, and corrected observations; these have different meanings.
 
 ## Evaluation Rubric
 
-| Area | Strong signal | Warning sign |
-| --- | --- | --- |
-| Evidence | Measurement window, denominator, freshness, and limitation are stated. | A dashboard label is treated as root cause. |
-| Recovery | Authority, guard, and non-actions are explicit. | A monitor can mutate YouTube lifecycle or FFmpeg from one weak signal. |
-| Architecture | Delivery, observation, source, and public publication have named owners. | Public status reads traverse private monitoring or home ingress. |
-| Reliability | Historical SLI, rolling feedback, and current incident state stay separate. | A short drill is generalized into a broad uptime promise. |
-| Operations | Known unknowns and required deeper evidence are recorded. | Missing evidence is silently converted into success. |
+| Area | Evidence to assess |
+| --- | --- |
+| Diagnosis | Independent observations are used before assigning a cause. |
+| Recovery | The action targets the failing component and has a stop condition. |
+| Measurement | Dates, denominators, and missing observations are explicit. |
+| Testing | A test-tool failure or missing result is not turned into a pass. |
+| Communication | A short result has a traceable technical explanation behind it. |
 
-The complete reference catalog is in [`docs/00_INDEX.md`](00_INDEX.md). Most
-reviewers should not need to read every document.
+For source validation, run the local commands in the
+[documentation guide](README.md). The [full catalog](00_INDEX.md) is a reference,
+not an interview reading assignment.

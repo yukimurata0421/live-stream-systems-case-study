@@ -20,7 +20,7 @@ from cra_no_action_soak.resilient_host_status import ComponentStatus, ResilientH
 from cra_no_action_soak.resilient_host_status_relay import RelayConfig, _pipeline_status_component, _upstream_components
 
 ROOT = Path(__file__).resolve().parents[3]
-SCHEMA = ROOT / "contracts/cra_no_action_soak/resilient_host_status.v3.schema.json"
+SCHEMA = ROOT / "contracts/cra_no_action_soak/resilient_host_status.v4.schema.json"
 CURRENT = datetime(2026, 9, 3, 0, 0, tzinfo=UTC)
 IDENTITY = {
     "release_manifest_sha256": "1" * 64,
@@ -443,7 +443,7 @@ def test_relay_bounded_refresh_waits_for_upstream_evidence_headroom(
     def build(**kwargs: object) -> dict[str, object]:
         captured.update(kwargs)
         return {
-            "schema": "cra.resilient_host_status.v3",
+            "schema": "cra.resilient_host_status.v4",
             "state": "READY",
             "producer_sequence": 1,
             "observed_at": "2026-09-03T00:00:00Z",
@@ -486,7 +486,7 @@ def test_relay_main_covers_config_check_success_and_safe_block(
     assert json.loads(capsys.readouterr().out)["config"] == "VALID"
 
     result = {
-        "schema": "cra.resilient_host_status.v3",
+        "schema": "cra.resilient_host_status.v4",
         "state": "READY",
         "producer_sequence": 8,
         "observed_at": "2026-09-03T00:00:00Z",

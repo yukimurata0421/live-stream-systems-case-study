@@ -33,8 +33,22 @@ ALLOWED_FILES = (
     "stream-v3-prometheus.json",
     "stream-v3-loki.json",
     "reliability-indicators.json",
+    "twitch-observation.json",
+    "relay-observation.json",
+    "twitch-sli.json",
     "assets/site.css",
     "assets/site.js",
+    "assets/twitch-20261013.js",
+    "assets/operations-20261013.css",
+    "assets/operations-20261013.js",
+    "assets/sli-20261013.css",
+    "assets/sli-20261013.js",
+    "assets/dashboard-20261013.css",
+    "assets/dashboard-20261013.js",
+    "assets/reliability-card-20261013.js",
+    "assets/reliability-unified-20261013.css",
+    "assets/site-20261013-unified.js",
+    "assets/sli-20261013-unified.js",
 )
 REQUIRED_JSON = ("stream-v3-prometheus.json", "stream-v3-loki.json", "reliability-indicators.json")
 MAXIMUM_FILE_BYTES = 8 * 1024 * 1024

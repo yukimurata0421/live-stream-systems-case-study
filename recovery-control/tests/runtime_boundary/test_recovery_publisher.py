@@ -22,7 +22,7 @@ def publisher(tmp_path: Path) -> Any:
     ledger = EffectLedger(tmp_path / "ledger.sqlite3", initial_producer_id="owner", initial_producer_generation=1)
     now = datetime.now(UTC)
     target = {
-        "host_id": "dell-yuki",
+        "host_id": "delivery-host",
         "host_boot_id": "boot-id",
         "namespace": "stream-v3",
         "pod_uid": "pod-id",
@@ -67,7 +67,7 @@ def publisher(tmp_path: Path) -> Any:
     config = {
         "schema": module.CONFIG_SCHEMA,
         "host_id": "dell-stream-runtime",
-        "target_host_id": "dell-yuki",
+        "target_host_id": "delivery-host",
         "release_id": "candidate-owner",
         "source_commit": "a" * 40,
         "stream_id": "stream-test",

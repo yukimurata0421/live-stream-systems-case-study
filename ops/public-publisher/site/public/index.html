@@ -1,75 +1,129 @@
 <!doctype html>
-<html lang="ja">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>stream_v3 Operations | Yuki Murata</title>
+    <title>Tokyo Flight Tracker · Live Operations | Yuki Murata</title>
+    <meta name="description" content="Live operations for the Tokyo ADS-B flight tracker. Observe YouTube, Twitch, the OCI relay, receiver health and broadcast reliability." />
     <link rel="stylesheet" href="./assets/site.css" />
+    <link rel="stylesheet" href="./assets/operations-20261013.css" />
+    <link rel="stylesheet" href="./assets/sli-20261013.css" />
+    <link rel="stylesheet" href="./assets/dashboard-20261013.css" />
+    <link rel="stylesheet" href="./assets/reliability-unified-20261013.css" />
   </head>
   <body>
     <main class="page">
+      <div class="brandbar">
+        <a class="brand" href="./" aria-label="Tokyo Flight Tracker home"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M3 16l7-5 1-7 2-1 1 8 7 5v2l-8-3v5l2 2-3-1-3 1 2-2v-5l-8 3z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg></span>Tokyo Flight Tracker</a>
+        <span class="minor">ADS-B / Tokyo, Japan</span>
+      </div>
       <header class="topbar">
         <div>
-          <p class="eyebrow">24/7 ADS-B Live Operations</p>
-          <h1>stream_v3 Operations</h1>
-          <p class="lede" id="snapshotLine">snapshot loading</p>
+          <p class="eyebrow">24/7 flight tracking · live operations</p>
+          <h1>Live skies. <span>Clear signals.</span></h1>
+          <p class="intro">Your view of the Tokyo skies, with YouTube and Twitch status, reliability history and relay health in one place.</p>
+          <p class="lede" id="snapshotLine">Loading the latest observations…</p>
         </div>
-        <nav class="actions" aria-label="Primary links">
-          <button id="refresh" type="button">Refresh</button>
-          <a href="./stream-v3-prometheus.html">Prometheus raw</a>
-          <a href="./stream-v3-loki.html">Loki raw</a>
+        <nav class="actions" aria-label="Refresh observations">
+          <button id="refresh" type="button">↻ Refresh</button>
         </nav>
       </header>
-
-      <section class="decision-grid" aria-label="Decision summary">
-        <article class="decision">
-          <span>Overall</span>
-          <strong id="overallState">Loading</strong>
-          <small id="overallMeta">Prometheus and Loki</small>
-        </article>
-        <article class="decision">
-          <span>Snapshot age</span>
-          <strong id="snapshotState">Loading</strong>
-          <small id="snapshotMeta">freshness gate</small>
-        </article>
-        <article class="decision">
-          <span>YouTube</span>
-          <strong id="youtubeState">Loading</strong>
-          <small id="youtubeMeta">watchdog / ingest / same URL</small>
-        </article>
-        <article class="decision">
-          <span>Map delivery</span>
-          <strong id="mapState">Loading</strong>
-          <small id="mapMeta">render / browser / NVENC / RTMP / precipitation</small>
-        </article>
-        <article class="decision">
-          <span>Auto-recovery</span>
-          <strong id="autonomyState">Loading</strong>
-          <small id="autonomyMeta">executor boundary</small>
-        </article>
+      <nav class="section-nav" aria-label="Page sections"><a href="#liveOverview">Live overview</a><a href="#reliabilityWorkspace">Reliability</a><a href="#broadcast">Delivery &amp; infrastructure</a><a href="#detailedChecks">Detailed checks</a></nav>
+      <section id="liveOverview" class="live-overview" aria-labelledby="liveOverviewTitle">
+        <div class="dashboard-section-heading"><div><p class="panel-overline">Right now</p><h2 id="liveOverviewTitle">Two destinations. One live feed.</h2></div><span class="dashboard-section-note">Provider state and transport are observed separately</span></div>
+        <div class="channel-grid">
+          <article class="channel-card youtube-channel" aria-labelledby="youtubeChannelTitle">
+            <div class="channel-heading"><div class="channel-brand"><span class="channel-icon" aria-hidden="true"><svg viewBox="0 0 28 28"><rect x="2" y="5" width="24" height="18" rx="5" fill="currentColor"/><path d="M12 10l7 4-7 4z" fill="white"/></svg></span><div><h3 id="youtubeChannelTitle">YouTube</h3><p>Continuous broadcast</p></div></div><strong id="youtubeState" class="unknown">Loading</strong></div>
+            <p id="youtubeMeta" class="channel-observation">Watchdog, ingest and same URL observation loading</p>
+            <div class="channel-bottom"><p><span>Relay output</span><strong data-rate="youtube">Measuring</strong></p><a href="https://www.youtube.com/watch?v=OpMzOBFwM7M" target="_blank" rel="noopener noreferrer">Watch YouTube ↗</a></div>
+          </article>
+          <article class="channel-card twitch-channel" aria-labelledby="twitchTitle">
+            <div class="channel-heading"><div class="channel-brand"><span class="channel-icon" aria-hidden="true"><svg viewBox="0 0 28 28"><path d="M4 3h21v16l-6 6h-6l-4 3v-3H4z" fill="currentColor"/><path d="M11 9v7m7-7v7" stroke="white" stroke-width="2.5"/></svg></span><div><h3 id="twitchTitle">Twitch</h3><p>Daily session renewal</p></div></div><strong id="twitchState" class="unknown">Unknown</strong></div>
+            <p id="twitchStatus" class="channel-observation">Provider observation loading</p>
+            <div class="channel-bottom"><p><span>Relay output</span><strong data-rate="twitch">Measuring</strong></p><a href="https://www.twitch.tv/tokyoflighttracker" target="_blank" rel="noopener noreferrer">Watch Twitch ↗</a></div>
+          </article>
+        </div>
+        <div class="decision-grid shared-summary" aria-label="Shared monitoring summary">
+          <article class="decision"><span>Shared monitoring</span><strong id="overallState">Loading</strong><small id="overallMeta">Prometheus and Loki</small></article>
+          <article class="decision"><span>Snapshot freshness</span><strong id="snapshotState">Loading</strong><small id="snapshotMeta">freshness gate</small></article>
+          <article class="decision"><span>Map delivery</span><strong id="mapState">Loading</strong><small id="mapMeta">render / browser / NVENC / RTMP / precipitation</small></article>
+          <article class="decision"><span>Auto-recovery</span><strong id="autonomyState">Loading</strong><small id="autonomyMeta">executor boundary</small></article>
+        </div>
       </section>
 
+      <section id="reliabilityWorkspace" class="platform-workspace" aria-labelledby="workspaceTitle">
+        <div class="workspace-heading"><div><p class="panel-overline">History &amp; engineering objectives</p><h2 id="workspaceTitle">Broadcast reliability</h2></div><div class="provider-tabs" role="tablist" aria-label="Reliability provider"><button id="youtubeTab" type="button" role="tab" aria-controls="youtubePanel" aria-selected="true" tabindex="0" data-provider="youtube"><span class="provider-dot youtube-dot"></span>YouTube &amp; shared</button><button id="twitchTab" type="button" role="tab" aria-controls="twitchPanel" aria-selected="false" tabindex="-1" data-provider="twitch"><span class="provider-dot twitch-dot"></span>Twitch</button></div></div>
+        <div id="youtubePanel" class="provider-panel" role="tabpanel" aria-labelledby="youtubeTab" tabindex="0">
+<section class="ops-band reliability-band" aria-labelledby="reliabilityTitle">
+        <div class="measurement-heading">
+          <div>
+            <h2 id="reliabilityTitle">Operational reliability</h2>
+            <p class="section-copy">
+              Windowed observations, engineering references and measurement coverage. Each indicator retains its own definition.
+            </p>
+          </div>
+          <p id="reliabilityStamp" class="snapshot-line">measurement loading</p>
+        </div>
+        <div class="measurement-controls"><p class="window-label"><span>Window</span><strong>Source windows · per indicator</strong></p><a href="./reliability-indicators.json">Measurement data ↗</a></div>
+        <div id="reliabilityContext" class="reliability-context"></div>
+        <div class="reliability-grid" id="reliabilityGrid"></div>
+      </section>
+        </div>
+        <div id="twitchPanel" class="provider-panel" role="tabpanel" aria-labelledby="twitchTab" tabindex="0" hidden>
+<section id="twitchSli" class="sli-section" aria-labelledby="sliTitle">
+        <div class="measurement-heading"><div><h2 id="sliTitle">Operational reliability</h2><p class="section-copy">Windowed observations, engineering references and measurement coverage. Each indicator retains its own definition.</p></div><p id="sliStamp" class="snapshot-line">measurement loading</p></div>
+        <div class="measurement-controls"><div class="window-label"><span>Window</span><div class="sli-controls" role="group" aria-label="SLI time window"><button type="button" data-sli-window="24h" aria-pressed="false">24 hours</button><button type="button" data-sli-window="7d" aria-pressed="true">7 days</button></div><span id="sliWindowNote">7 days · primary assessment window</span></div><a href="./twitch-sli.json">Measurement data ↗</a></div>
+        <div class="reliability-context"><article class="reliability-context-card"><div class="reliability-head"><h3>Measurement history</h3><span>current</span></div><strong id="sliCollection" role="status" aria-live="polite">Loading</strong><p id="sliCollectionMeta" class="reliability-note">Measurement history loading</p></article></div>
+        <div id="sliGrid" class="reliability-grid"></div>
+        <details class="supporting-history"><summary>Provider LIVE history · last 24 hours</summary>
+        <div class="sli-history"><div class="sli-history-heading"><h3>Provider LIVE · last 24 hours</h3><span>Each bar = one hour</span></div><div id="sliTimeline" class="sli-timeline" aria-label="24 hour provider status history"></div><div class="sli-legend"><span><i class="sli-good"></i>LIVE</span><span><i class="sli-bad"></i>OFFLINE</span><span><i class="sli-unknown"></i>Unknown / missing</span><span class="sli-history-end">Older → latest</span></div></div>
+        </details>
+        <details class="sli-method"><summary>How these indicators are measured</summary><p>One source observation is assigned to its original minute. Cached responses never add successful minutes. Missing or failed observations stay visible. Daily planned reconnects count as downtime in the availability and relay indicators.</p><p>7 days is the primary SLO window; 24 hours provides early feedback. An assessment needs a complete window and at least 99% known observations. Conservative availability counts only confirmed good minutes over all expected minutes. A high observed value alone does not establish that the objective was met.</p><p>The daily renewal objective is 100%: the API must observe OFFLINE followed by LIVE with a different stream ID and a new start time, within 600 seconds of 00:00 JST. Unobserved earlier renewals remain unknown.</p><p>The APIs report provider state and relay counter progress. Playback, audio quality and visual correctness require separate receiver checks. YouTube retains its existing measurement definitions and history in its reliability tab.</p><a href="./twitch-sli.json">Download the public measurement data ↗</a></details>
+      </section>
+          <details class="session-details"><summary>Current Twitch session &amp; last playback check</summary><div class="guard-grid"><article class="guard"><span>Current session</span><strong id="twitchSession">Not observed</strong><small id="twitchSessionMeta">Start time unavailable</small></article><article class="guard"><span>Last playback check</span><strong id="twitchPlayback">Not loaded</strong><small id="twitchPlaybackMeta">This records a sample, not continuous reception.</small></article></div><a href="./twitch-observation.json">Twitch observation data ↗</a></details>
+        </div>
+      </section>
+
+      <div class="dashboard-section-heading infrastructure-heading"><div><p class="panel-overline">Delivery &amp; infrastructure</p><h2>One feed through the relay</h2></div><p class="dashboard-section-note">Measured transport · OCI resources · session schedule</p></div>
+<section id="broadcast" aria-labelledby="broadcastTitle">
+        <div class="route-layout">
+          <article class="route-panel">
+            <div class="section-title"><div><h2 id="broadcastTitle">The broadcast path</h2><p class="section-copy">Dell sends one feed to OCI. The relay forwards it to YouTube and Twitch. Each link below shows its own measured throughput.</p></div><span class="route-badge">SINGLE INPUT</span></div>
+            <svg class="route-svg" viewBox="0 0 800 290" role="img" aria-labelledby="routeDiagramTitle routeDiagramDesc">
+              <title id="routeDiagramTitle">Dell to OCI relay, then YouTube and Twitch</title><desc id="routeDiagramDesc">The normal path sends approximately 5 megabits per second per link. A dashed route indicates the direct Dell to YouTube failure path. Measured throughput is displayed separately.</desc>
+              <defs><marker id="arrowNormal" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#b7d994"/></marker><marker id="arrowFallback" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#91b2a1"/></marker></defs>
+              <path class="edge" d="M183 128H290" marker-end="url(#arrowNormal)"/><path class="edge" d="M443 128H481Q498 128 498 111V64Q498 57 510 57H545" marker-end="url(#arrowNormal)"/><path class="edge" d="M443 128H481Q498 128 498 146V190Q498 197 510 197H545" marker-end="url(#arrowNormal)"/>
+              <path class="edge fallback" d="M104 162V261H768V57H738" marker-end="url(#arrowFallback)"/>
+              <g data-flow-status="input"><rect class="node" x="28" y="93" width="155" height="70" rx="12"/><text class="node-title" x="47" y="121">Dell</text><text class="node-note" x="47" y="145">Encoder + sender</text></g>
+              <g><rect class="node" x="290" y="93" width="153" height="70" rx="12"/><text class="node-title" x="310" y="121">OCI VM</text><text class="node-note" x="310" y="145" id="relayProcess">Observing relay</text></g>
+              <g data-flow-status="youtube"><rect class="node" x="545" y="22" width="193" height="70" rx="12"/><text class="node-title" x="565" y="50">YouTube</text><text class="node-note" x="565" y="74">Continuous session</text></g>
+              <g data-flow-status="twitch"><rect class="node" x="545" y="162" width="193" height="70" rx="12"/><text class="node-title" x="565" y="190">Twitch</text><text class="node-note" x="565" y="214">Daily session renewal</text></g>
+              <text class="edge-label" x="210" y="114" data-rate="input">Measuring</text><text class="edge-label" x="411" y="38" data-rate="youtube">Measuring</text><text class="edge-label" x="407" y="228" data-rate="twitch">Measuring</text><text class="standby-label" x="221" y="251">Dell → YouTube · direct path on failure · design ~5 Mbps</text>
+            </svg>
+            <div class="flow-mobile" aria-label="Broadcast route on small screens"><div class="mobile-node" data-flow-status="input"><b>Dell</b><span>Encoder + sender</span></div><p class="mobile-arrow">↓ <span data-rate="input">Measuring</span></p><div class="mobile-node"><b>OCI VM</b><span>Single input relay</span></div><p class="mobile-arrow">↓ Forwarded independently</p><div class="mobile-destinations"><div class="mobile-node" data-flow-status="youtube"><b>YouTube</b><span data-rate="youtube">Measuring</span></div><div class="mobile-node" data-flow-status="twitch"><b>Twitch</b><span data-rate="twitch">Measuring</span></div></div><p class="mobile-fallback">┄ Dell → YouTube directly on failure · design ~5 Mbps</p></div>
+            <div class="route-legend"><span><i class="legend-line"></i>Normal route · design ~5 Mbps per link</span><span><i class="legend-dash"></i>Failure path</span><span class="legend-meta">Measured rates · 60 s windows</span></div>
+          </article>
+          <article class="vm-panel" aria-labelledby="vmTitle"><p class="panel-overline">Relay infrastructure</p><div class="vm-heading"><h2 id="vmTitle">OCI VM</h2><span id="relayState" class="status-pill">Unknown</span></div>
+            <div class="resource-row"><div class="resource-label"><span>CPU usage</span><strong id="relayCpu">—</strong></div><div class="meter"><i id="relayCpuMeter"></i></div></div>
+            <div class="resource-row"><div class="resource-label"><span>Memory usage</span><strong id="relayMemory">—</strong></div><div class="meter"><i id="relayMemoryMeter"></i></div></div>
+            <div class="resource-row"><div class="resource-label"><span>Disk free</span><strong id="relayDisk">—</strong></div><div class="meter"><i id="relayDiskMeter"></i></div></div>
+            <div class="vm-footer"><span>Uptime</span><strong id="relayUptime">Unknown</strong></div>
+            <div class="vm-observations"><p><span>Relay process</span><strong id="vmRelayProcess">Unknown</strong></p><p><span>Outputs progressing</span><strong id="vmOutputs">— / 2</strong></p><p><span>Relay service restarts</span><strong id="vmRelayRestarts">—</strong></p></div>
+          </article>
+        </div>
+        <div class="delivery-strip"><article class="delivery-stat"><span class="stat-label">Dell → OCI input</span><span class="stat-icon" aria-hidden="true">↗</span><strong data-rate="input">Measuring</strong><small id="relayInputMeta">Observation loading</small></article><article class="delivery-stat"><span class="stat-label">OCI → YouTube</span><span class="stat-icon" aria-hidden="true">↗</span><strong data-rate="youtube">Measuring</strong><small id="relayYoutubeMeta">Observation loading</small></article><article class="delivery-stat"><span class="stat-label">OCI → Twitch</span><span class="stat-icon" aria-hidden="true">↗</span><strong data-rate="twitch">Measuring</strong><small id="relayTwitchMeta">Observation loading</small></article></div>
+        <div class="daily-bar"><div><span class="daily-title">Next Twitch session refresh</span><p id="relayDailyMeta">Twitch reconnects at 00:00 JST. YouTube continues through the relay.</p></div><strong id="relayDaily">Schedule loading</strong></div>
+        <div id="relayIssues" class="signal-list" role="status" aria-live="polite"></div>
+        <p id="relayObserved" class="snapshot-line" style="margin-top:10px">Relay observation loading</p>
+      </section>
+
+      <details class="details-section" id="detailedChecks"><summary>Detailed operations &amp; evidence</summary>
       <section class="ops-band" aria-label="Operational checks">
         <div class="section-title">
           <h2>Decision checks</h2>
           <p id="metricCount">-</p>
         </div>
         <div class="check-list" id="checkList"></div>
-      </section>
-
-      <section class="ops-band reliability-band" aria-labelledby="reliabilityTitle">
-        <div class="section-title">
-          <div>
-            <h2 id="reliabilityTitle">Operational reliability</h2>
-            <p class="section-copy">
-              Rolling observations from the delivery and monitoring path. References are internal
-              engineering lines, not availability guarantees. Current health is shown above; these
-              cards describe past windows.
-            </p>
-          </div>
-          <p id="reliabilityStamp">measurement loading</p>
-        </div>
-        <div class="reliability-grid" id="reliabilityGrid"></div>
       </section>
 
       <section class="ops-band" aria-label="Guardrails">
@@ -103,7 +157,14 @@
         </div>
         <div class="event-list" id="eventList"></div>
       </section>
+      </details>
+      <footer class="page-footer"><p>Tokyo Flight Tracker · ARENA receiver evaluation project<br />Local ADS-B reception in Tsuchiura, Ibaraki. Not for navigation.</p><p>Observations: arena-server → Raspberry Pi → GCS → public site<br /><a href="./relay-observation.json">Relay data</a> · <a href="./twitch-observation.json">Twitch data</a> · <a href="./stream-v3-prometheus.html">Metrics</a> · <a href="https://github.com/yukimurata0421/arena-eval-engine" target="_blank" rel="noopener noreferrer">Project ↗</a></p></footer>
     </main>
-    <script src="./assets/site.js" defer></script>
+    <script src="./assets/reliability-card-20261013.js" defer></script>
+    <script src="./assets/site-20261013-unified.js" defer></script>
+    <script src="./assets/twitch-20261013.js" defer></script>
+    <script src="./assets/operations-20261013.js" defer></script>
+    <script src="./assets/sli-20261013-unified.js" defer></script>
+    <script src="./assets/dashboard-20261013.js" defer></script>
   </body>
 </html>

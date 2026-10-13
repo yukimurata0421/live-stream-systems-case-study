@@ -4,6 +4,17 @@ This repository is a sanitized public snapshot of a personal 24/7 ADS-B
 streaming system. The goal is to show the architecture, code, tests, deployment
 contracts, and operational decisions without publishing runtime data or secrets.
 
+## OCI And Twitch Source Update
+
+The [2026-10-13 port record](v3/public-source-port-2026-10-13.md) and
+[hashed source map](../publication/source-map.json) describe the incremental
+update. Core delivery/relay/lease/session code, configured read-only provider
+observations, causal route baselines, portable tests, and static site source
+are included. Private installers, account-administration helpers, raw live
+fixtures, credentials, runtime databases, and generated public snapshots are
+excluded. This operation writes public checkouts; it does not deploy or upload
+these files or grant recovery authority.
+
 ## What Was Kept
 
 - stream_v3 delivery-plane code: custom MapLibre rendering, processed

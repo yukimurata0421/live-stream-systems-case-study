@@ -1,0 +1,331 @@
+{
+  "schema": "stream.public_port_validation.v1",
+  "status": "LOCAL_SOURCE_CHECKS_PASS",
+  "validated_at_jst": "2026-10-14T01:36:53.466204+09:00",
+  "source_map_sha256": "c1ddf20a1b615038975b608f3664bd7f33ec669b53a72e7b173463201881fea1",
+  "selected_public_files": 223,
+  "runtime": {
+    "python": "3.14.4",
+    "sqlite": "3.51.3",
+    "dependencies": {
+      "pytest": "8.4.2",
+      "cryptography": "46.0.7",
+      "rfc8785": "0.1.4",
+      "tree-sitter": "0.26.0",
+      "tree-sitter-javascript": "0.25.0"
+    }
+  },
+  "execution_boundary": {
+    "source": "public checkouts only",
+    "maximum_command_wall_sec": 120,
+    "cpu_affinity_cores": 1,
+    "nice": 10,
+    "live_failure_injection": false,
+    "production_mutation": false,
+    "external_publication": false,
+    "commit_or_push": false
+  },
+  "checks": [
+    {
+      "check": "stream-and-publisher-public-suite",
+      "status": "PASS",
+      "passed": 1214,
+      "skipped": 9,
+      "skip_reason": "Chromium browser is not installed",
+      "elapsed_sec": 27.646,
+      "recorded_at_jst": "2026-10-14T00:42:43.439666+09:00",
+      "validation_scope": "preceding source port"
+    },
+    {
+      "check": "monitoring-public-suite",
+      "status": "PASS",
+      "run": 412,
+      "passed": 406,
+      "skipped": 6,
+      "skip_reason": "Disposable PostgreSQL DSNs were not supplied",
+      "elapsed_sec": 23.146,
+      "recorded_at_jst": "2026-10-14T00:42:43.439666+09:00",
+      "validation_scope": "preceding source port"
+    },
+    {
+      "check": "recovery-selected-core-suite",
+      "status": "PASS",
+      "passed": 422,
+      "skipped": 0,
+      "elapsed_sec": 23.533,
+      "recorded_at_jst": "2026-10-14T00:42:43.439666+09:00",
+      "validation_scope": "preceding source port"
+    },
+    {
+      "check": "recovery-changed-transport-config",
+      "status": "PASS",
+      "passed": 51,
+      "recorded_at_jst": "2026-10-14T00:42:43.439666+09:00",
+      "validation_scope": "preceding source port"
+    },
+    {
+      "check": "recovery-public-suite-collection",
+      "status": "PASS",
+      "collected": 3224,
+      "execution_performed": false,
+      "recorded_at_jst": "2026-10-14T00:42:43.439666+09:00",
+      "validation_scope": "preceding source port"
+    },
+    {
+      "check": "standalone-monitoring-focused-tests",
+      "status": "PASS",
+      "passed": 60,
+      "recorded_at_jst": "2026-10-14T00:42:43.439666+09:00",
+      "validation_scope": "preceding source port"
+    },
+    {
+      "check": "standalone-recovery-focused-tests",
+      "status": "PASS_AFTER_PROTOCOL_TEST_ALIGNMENT",
+      "initial_passed": 168,
+      "initial_failed": 1,
+      "corrected_protocol_file_passed": 49,
+      "source_parity_verified": true,
+      "recorded_at_jst": "2026-10-14T00:42:43.439666+09:00",
+      "validation_scope": "preceding source port"
+    },
+    {
+      "check": "manifests",
+      "status": "PASS",
+      "recorded_at_jst": "2026-10-14T00:42:43.439666+09:00",
+      "validation_scope": "preceding source port"
+    },
+    {
+      "check": "shadow",
+      "status": "PASS",
+      "recorded_at_jst": "2026-10-14T00:42:43.439666+09:00",
+      "validation_scope": "preceding source port"
+    },
+    {
+      "check": "offline-replay",
+      "status": "PASS",
+      "recorded_at_jst": "2026-10-14T00:42:43.439666+09:00",
+      "validation_scope": "preceding source port"
+    },
+    {
+      "check": "public-port",
+      "status": "PASS",
+      "recorded_at_jst": "2026-10-14T00:42:43.439666+09:00",
+      "validation_scope": "preceding source port"
+    },
+    {
+      "check": "monitoring-boundary",
+      "status": "PASS",
+      "recorded_at_jst": "2026-10-14T00:42:43.439666+09:00",
+      "validation_scope": "preceding source port"
+    },
+    {
+      "check": "recovery-boundary",
+      "status": "PASS",
+      "recorded_at_jst": "2026-10-14T00:42:43.439666+09:00",
+      "validation_scope": "preceding source port"
+    },
+    {
+      "check": "javascript-syntax-parser",
+      "files": 8,
+      "errors": [],
+      "parser": "tree-sitter 0.26.0 / tree-sitter-javascript 0.25.0",
+      "browser_execution": false,
+      "status": "PASS",
+      "recorded_at_jst": "2026-10-14T00:42:43.439666+09:00",
+      "validation_scope": "preceding source port"
+    },
+    {
+      "check": "static-asset-links-final",
+      "references": 11,
+      "missing": [],
+      "status": "PASS",
+      "recorded_at_jst": "2026-10-14T00:42:43.439666+09:00",
+      "validation_scope": "preceding source port"
+    },
+    {
+      "check": "observer-cli-missing-mode",
+      "observed_cli_exit_code": 2,
+      "status": "PASS",
+      "recorded_at_jst": "2026-10-14T00:42:43.439666+09:00",
+      "validation_scope": "preceding source port"
+    },
+    {
+      "check": "observer-cli-missing-live-binding",
+      "observed_cli_exit_code": 2,
+      "status": "PASS",
+      "recorded_at_jst": "2026-10-14T00:42:43.439666+09:00",
+      "validation_scope": "preceding source port"
+    },
+    {
+      "check": "monitoring-v4-standalone-source-parity",
+      "selected_files": 20,
+      "different_entrypoint": "README.md",
+      "drift": [],
+      "status": "PASS",
+      "recorded_at_jst": "2026-10-14T00:42:43.439666+09:00",
+      "validation_scope": "preceding source port",
+      "later_document_adaptation": "integrated public-release.md resolves the parent source map; standalone retains its own publication directory"
+    },
+    {
+      "check": "recovery-control-standalone-source-parity",
+      "selected_files": 130,
+      "different_entrypoint": "README.md",
+      "drift": [],
+      "status": "PASS",
+      "recorded_at_jst": "2026-10-14T00:42:43.439666+09:00",
+      "validation_scope": "preceding source port",
+      "later_document_adaptation": "integrated public-release.md resolves the parent source map; standalone retains its own publication directory"
+    },
+    {
+      "check": "owned-public-secret-scan",
+      "status": "PASS",
+      "tool": "gitleaks detect --no-git --redact",
+      "findings": 0,
+      "recorded_at_jst": "2026-10-14T00:42:43.439666+09:00",
+      "validation_scope": "preceding source port"
+    },
+    {
+      "check": "owned-source-python-syntax",
+      "status": "PASS",
+      "files": 162,
+      "recorded_at_jst": "2026-10-14T00:42:43.439666+09:00",
+      "validation_scope": "preceding source port"
+    },
+    {
+      "check": "git-diff-whitespace",
+      "status": "PASS",
+      "scope": "three public checkouts",
+      "recorded_at_jst": "2026-10-14T00:42:43.439666+09:00",
+      "validation_scope": "preceding source port"
+    }
+  ],
+  "observations_during_validation": {
+    "production_pod_identity_unchanged": true,
+    "production_image_unchanged": true,
+    "production_ready_containers": 4,
+    "production_restart_count": 0,
+    "boundary": "Pod identity and readiness are preservation evidence, not end-to-end delivery proof"
+  },
+  "corrected_validation_attempts": [
+    {
+      "check": "reconciliation_negative_control",
+      "initial": "rejected with current ledger state reason rather than stale expected protocol reason",
+      "change": "aligned rejection expectation; added positive awaiting-verification retirement case"
+    },
+    {
+      "check": "public_test_collection",
+      "initial": "private workflow tools or incompatible private runner dependencies",
+      "change": "retained public runner tests and omitted private source-bound gate tests"
+    },
+    {
+      "check": "public_documentation",
+      "initial": "new documents needed catalog entries; README exceeded length/ownership wording constraints",
+      "change": "updated catalog and compact current topology; all documentation tests passed"
+    },
+    {
+      "check": "publisher_build_test",
+      "initial": "new read-only collectors were not mocked and produced local JSON",
+      "change": "mocked all three calls; preserved generated JSON privately and removed it from public source"
+    },
+    {
+      "check": "secret_scan",
+      "initial": "private workflow document digests matched generic key rule",
+      "change": "replaced private owner review proof with explicitly unbound public placeholder; scan passed without new suppression"
+    }
+  ],
+  "unperformed_gates": [
+    "full recovery public test execution",
+    "native qualification campaigns",
+    "browser DOM/media validation",
+    "live deployment or publisher upload",
+    "scheduled-midnight renewal exercise by this port",
+    "new 24/48-hour reception soak",
+    "automatic failover qualification",
+    "remote CI"
+  ],
+  "formal_qualification": "NOT_ESTABLISHED_BY_PUBLIC_PORT",
+  "running_manifest_qualification": "UNVERIFIED_USER_CANCELLED_HARNESS",
+  "readme_refinement": {
+    "recorded_at_jst": "2026-10-14T01:05:20.454517+09:00",
+    "status": "LOCAL_FOCUSED_CHECKS_PASS",
+    "checks": [
+      {
+        "check": "README-and-publisher-focused-suite",
+        "status": "PASS",
+        "passed": 25,
+        "live_network_or_upload": false
+      },
+      {
+        "check": "current-Mermaid-parse-and-browser-render",
+        "status": "PASS",
+        "mermaid": "11.12.0",
+        "diagrams": 2,
+        "measured_viewports": [
+          760,
+          500
+        ],
+        "svg_viewboxes": [
+          "0 0 483.28125 912",
+          "0 0 573.875 758"
+        ],
+        "github_remote_render": "NOT_CHECKED_UNPUSHED"
+      },
+      {
+        "check": "current-HTML-assets-and-provider-artifacts-frozen-upload",
+        "status": "PASS",
+        "upload_performed": false
+      },
+      {
+        "check": "current-public-source-hashes-and-boundaries",
+        "status": "PASS"
+      }
+    ],
+    "changes": [
+      "media and static-publication diagrams separated from disabled recovery contract",
+      "Grafana proxy restored beside arena artifact input",
+      "original and later source lineage distinguished",
+      "missing current uploader fixed allowlist ported"
+    ],
+    "production_mutation": false,
+    "external_publication": false,
+    "commit_or_push": false
+  },
+  "hiring_documentation": {
+    "validated_at_jst": "2026-10-14T01:36:53.466204+09:00",
+    "status": "LOCAL_FOCUSED_CHECKS_PASS",
+    "audience": "hiring readers; technical details by linked follow-up",
+    "entrypoint_lines": 123,
+    "recent_case_studies": 6,
+    "focused_tests_passed": 25,
+    "checks": [
+      "all public documentation links and catalog coverage",
+      "README agrees with the aggregate continuity checkpoint",
+      "measurement span and ledger-calendar span remain separate",
+      "old September and fixed May/June SLI records retained",
+      "Mermaid parsed and rendered with version 11.12.0 in Chromium at measured 760px and 500px viewports"
+    ],
+    "continuity_acquisition": "read-only SQL transaction on process-bound operational ledger",
+    "continuity_checkpoint_jst": "2026-10-14T00:04:57+09:00",
+    "continuity_observation_days": 160,
+    "ledger_checkpoint_dates": 140,
+    "production_mutation": false,
+    "external_publication": false,
+    "commit_or_push": false,
+    "native_qualification": "UNVERIFIED",
+    "full_component_suites_rerun": false,
+    "reason": "this follow-up changes documentation, aggregate evidence, and documentation checks; runtime code is unchanged"
+  },
+  "prepublication_link_fix": {
+    "recorded_at_jst": "2026-10-14T03:17:23.573117+09:00",
+    "scope": "integrated component provenance links",
+    "changed_documents": [
+      "monitoring-v4/docs/public-release.md",
+      "recovery-control/README.md",
+      "recovery-control/docs/public-release.md"
+    ],
+    "standalone_documents": "retain standalone-relative paths",
+    "validation": "PASS",
+    "focused_tests_passed": 25,
+    "checked_links": 18
+  }
+}

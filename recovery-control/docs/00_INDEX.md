@@ -9,3 +9,4 @@
 - [`chaos-testing-draft.md`](chaos-testing-draft.md): deterministic campaign, coverage, and interpretation draft.
 - [`public-release.md`](public-release.md): provenance, exclusions, and claim limits.
 - [`source-provenance.json`](source-provenance.json): machine-readable source identity.
+- [`current-evidence-and-route-source.md`](current-evidence-and-route-source.md): current evidence, reconciliation, route-fence source, and qualification boundaries.

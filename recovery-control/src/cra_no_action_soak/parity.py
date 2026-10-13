@@ -265,8 +265,15 @@ def _converged(candidate: _Candidate, proof: _Proof) -> bool:
         or proof.actual_sources != candidate.policy.actual_sources
     ):
         return False
-    caught_up = proof.actual_timestamp if candidate.lagging_side == "actual" else proof.expected_timestamp
-    return candidate.ahead_timestamp < caught_up <= candidate.ahead_timestamp + candidate.policy.convergence_timeout_seconds
+    caught_up = (
+        proof.actual_timestamp
+        if candidate.lagging_side == "actual"
+        else proof.expected_timestamp
+    )
+    return (
+        candidate.ahead_timestamp < caught_up
+        <= candidate.ahead_timestamp + candidate.policy.convergence_timeout_seconds
+    )
 
 
 def evaluate_monitoring_parity(
@@ -318,7 +325,9 @@ def evaluate_monitoring_parity(
             pending += 1
         else:
             timed_out += 1
-            blockers.add(f"SOAK_MONITORING_PARITY_CONVERGENCE_TIMEOUT:{candidate.domain}:{candidate.sample_index}")
+            blockers.add(
+                f"SOAK_MONITORING_PARITY_CONVERGENCE_TIMEOUT:{candidate.domain}:{candidate.sample_index}"
+            )
     if pending:
         blockers.add("SOAK_MONITORING_PARITY_CONVERGENCE_PENDING")
     return blockers, {
@@ -329,5 +338,7 @@ def evaluate_monitoring_parity(
         "accepted_difference_count": accepted,
         "pending_difference_count": pending,
         "timed_out_difference_count": timed_out,
-        "invalid_or_unclassified_count": len([item for item in blockers if item != "SOAK_MONITORING_PARITY_CONVERGENCE_PENDING"]),
+        "invalid_or_unclassified_count": len(
+            [item for item in blockers if item != "SOAK_MONITORING_PARITY_CONVERGENCE_PENDING"]
+        ),
     }

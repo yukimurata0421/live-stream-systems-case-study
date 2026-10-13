@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any, cast
 
 from .ledger import EffectLedger
-from .model import RESTART_FFMPEG, EffectRequest, ProtocolError, parse_utc, validate_target
+from .model import DELIVERY_TARGET_INTENTS, RESTART_FFMPEG, SWITCH_STREAM_ROUTE, EffectRequest, ProtocolError, parse_utc, validate_target
 
 
 class OutcomeUnknown(RuntimeError):
@@ -43,6 +43,8 @@ class EffectExecutorServer:
         socket_mode: int = 0o660,
         socket_gid: int | None = None,
         worker_shutdown_timeout_seconds: float = 25.0,
+        route_authorizer: Callable[[EffectRequest, int], str] | None = None,
+        operator_handoff: Callable[[Mapping[str, Any], int], Mapping[str, Any]] | None = None,
     ) -> None:
         if not 0.001 <= worker_shutdown_timeout_seconds <= 60.0:
             raise ValueError("WORKER_SHUTDOWN_TIMEOUT_OUT_OF_RANGE")
@@ -58,6 +60,8 @@ class EffectExecutorServer:
         self.socket_mode = socket_mode
         self.socket_gid = socket_gid
         self.worker_shutdown_timeout_seconds = float(worker_shutdown_timeout_seconds)
+        self.route_authorizer = route_authorizer
+        self.operator_handoff = operator_handoff
         self._stop = threading.Event()
         self._listener: socket.socket | None = None
         self._thread: threading.Thread | None = None
@@ -174,6 +178,10 @@ class EffectExecutorServer:
             if not isinstance(value, Mapping):
                 raise ProtocolError("REQUEST_NOT_OBJECT")
             schema_version = str(value.get("schema_version") or "")
+            if schema_version == "runtime.operator_authority_handoff.v1":
+                if uid != 0 or self.operator_handoff is None:
+                    return self._response(False, "OPERATOR_HANDOFF_UNAUTHORIZED", "REJECTED")
+                return dict(self.operator_handoff(value, uid))
             if schema_version == "runtime.effect_unresolved_query.v1":
                 if set(value) != {"schema_version"}:
                     raise ProtocolError("UNRESOLVED_QUERY_FIELDS_NOT_EXACT")
@@ -259,6 +267,10 @@ class EffectExecutorServer:
             request = EffectRequest.from_mapping(value)
             if request.intent_type not in self.allowed_intents:
                 return self._response(False, "INTENT_NOT_OWNED_BY_EXECUTOR", "REJECTED", request=request)
+            if request.intent_type == SWITCH_STREAM_ROUTE:
+                grant_error = self.route_authorizer(request, uid) if self.route_authorizer else "OPERATOR_ROUTE_GRANT_REQUIRED"
+                if grant_error:
+                    return self._response(False, grant_error, "REJECTED", request=request)
             if parse_utc(request.issued_at) > datetime.now(UTC):
                 return self._response(False, "REQUEST_ISSUED_IN_FUTURE", "REJECTED", request=request)
             if parse_utc(request.expires_at) <= datetime.now(UTC):
@@ -302,6 +314,12 @@ class EffectExecutorServer:
                     result=result,
                 )
             audit_hook_failure = False
+            if request.intent_type == SWITCH_STREAM_ROUTE:
+                grant_error = self.route_authorizer(request, uid) if self.route_authorizer else "OPERATOR_ROUTE_GRANT_REQUIRED"
+                if grant_error:
+                    self._safe_transition(request.request_id, expected="EXECUTION_STARTED", state="EFFECT_FAILED",
+                                          result={"reason": grant_error, "physical_effect_count": 0})
+                    return self._response(False, grant_error, "EFFECT_FAILED", request=request)
             if self.before_effect is not None:
                 try:
                     self.before_effect(request)
@@ -338,7 +356,7 @@ class EffectExecutorServer:
                 result=result,
                 scope_state=(
                     "EFFECT_OBSERVED_AWAITING_VERIFICATION"
-                    if self.require_transport_verification and request.intent_type == RESTART_FFMPEG
+                    if self.require_transport_verification and request.intent_type in DELIVERY_TARGET_INTENTS
                     else "EFFECT_OBSERVED"
                 ),
             )
@@ -435,7 +453,7 @@ class EffectExecutorServer:
                 result=result,
                 scope_state=(
                     "EFFECT_OBSERVED_AWAITING_VERIFICATION"
-                    if self.require_transport_verification and request.intent_type == RESTART_FFMPEG
+                    if self.require_transport_verification and request.intent_type in DELIVERY_TARGET_INTENTS
                     else "EFFECT_OBSERVED"
                 ),
             )
@@ -520,7 +538,7 @@ class EffectExecutorServer:
                 raise ProtocolError("RECONCILIATION_EVIDENCE_SCHEMA_INVALID")
             if evidence.get("oracle") != "EXACT_TARGET_RETIRED_AND_HEALTHY_REPLACEMENT":
                 raise ProtocolError("RECONCILIATION_ORACLE_INVALID")
-            if evidence.get("physical_attempt_count") != 1 or evidence.get("physical_effect_outcome") != "UNKNOWN":
+            if evidence.get("physical_attempt_count") != 1 or evidence.get("physical_effect_outcome") not in {"UNKNOWN", "EFFECT_OBSERVED"}:
                 raise ProtocolError("RECONCILIATION_ATTEMPT_COUNT_INVALID")
         observed_at = parse_utc(evidence.get("observed_at"))
         age = (datetime.now(UTC) - observed_at).total_seconds()
@@ -661,12 +679,17 @@ class EffectExecutorServer:
 
     @staticmethod
     def _identity_mismatch(request: EffectRequest, current: Mapping[str, Any]) -> str:
-        if request.intent_type == RESTART_FFMPEG:
+        if request.intent_type in DELIVERY_TARGET_INTENTS:
             current_target = current.get("ffmpeg_target_identity", current.get("target_identity"))
             if current_target != request.ffmpeg_target_identity:
                 return "TARGET_IDENTITY_DRIFT"
             if str(current.get("ffmpeg_generation") or "") != request.expected_ffmpeg_generation:
                 return "FFMPEG_GENERATION_DRIFT"
+            if request.intent_type == SWITCH_STREAM_ROUTE:
+                route = request.route_transition or {}
+                if (current.get("route") != route.get("from_route")
+                    or current.get("route_generation") != route.get("expected_route_generation")):
+                    return "STREAM_ROUTE_GENERATION_DRIFT"
         elif current.get("runtime_identity") != request.runtime_identity:
             return "RUNTIME_IDENTITY_DRIFT"
         if str(current.get("executor_instance_id") or "") != request.expected_executor_instance_id:

@@ -120,7 +120,8 @@ def _read_config(path: Path) -> dict[str, Any]:
         if not isinstance(value["server_resource_status_file"], str) or not str(value["server_resource_status_file"]).startswith("/"):
             raise ValueError("PROJECTION_SERVER_RESOURCE_STATUS_FILE_INVALID")
     if value["schema"] == CONFIG_SCHEMA and (
-        not isinstance(value["resilient_host_status_file"], str) or not str(value["resilient_host_status_file"]).startswith("/")
+        not isinstance(value["resilient_host_status_file"], str)
+        or not str(value["resilient_host_status_file"]).startswith("/")
     ):
         raise ValueError("PROJECTION_SERVER_RESILIENT_HOST_STATUS_FILE_INVALID")
     return dict(value)
@@ -167,7 +168,6 @@ class ProjectionHTTPSServer:
 
         resource_writer: Callable[[], None] | None = None
         if resource_ref is not None:
-
             def write_resources() -> None:
                 write_server_resource_status(
                     resource_ref,

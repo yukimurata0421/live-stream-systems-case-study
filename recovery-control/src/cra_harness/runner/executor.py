@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import sqlite3
 from collections.abc import Iterator
-from contextlib import contextmanager, suppress
+from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -18,7 +18,7 @@ from cra_dell_recovery.time import isoformat_utc, utc_now
 from cra_harness.controls.environment import HarnessEnvironment
 from cra_harness.controls.isolation import verify_production_isolation
 from cra_harness.controls.mutations import BrokenMutationAdapter
-from cra_harness.injectors.faults import FaultController
+from cra_harness.injectors.faults import FaultController, FaultKind
 from cra_harness.observers.evidence import EvidenceBundle, EvidenceCollector
 from cra_harness.observers.sut import SutObserver
 from cra_harness.scenarios.model import ScenarioSpec
@@ -71,8 +71,7 @@ class ScenarioExecutor:
         )
         try:
             faults.arm_all()
-            faults.trigger_all()
-            result = self._exercise(scenario, environment, protocols)
+            result = self._exercise(scenario, environment, protocols, faults)
             collector.append("scenario_result", "observer.scenario", result)
             faults.complete_all()
         except Exception as error:  # Harness containment: never relabel plumbing exceptions as SUT failure.
@@ -81,6 +80,8 @@ class ScenarioExecutor:
             collector.append("scenario_result", "observer.scenario", {"executor_completed": False})
         for record in faults.history:
             collector.append("fault_events", "injector.lifecycle", record.to_dict())
+        for fault_id, hook in faults.receipts.items():
+            collector.append("fault_application", "injector.hook", {"fault_id": fault_id, "hook": hook})
         if not faults.history:
             collector.append("fault_events", "injector.lifecycle", {"fault_count": 0, "lifecycle": "not_requested"})
         isolation = verify_production_isolation(environment)
@@ -109,10 +110,11 @@ class ScenarioExecutor:
         scenario: ScenarioSpec,
         environment: HarnessEnvironment,
         protocols: list[dict[str, Any]],
+        faults: FaultController,
     ) -> dict[str, Any]:
         scenario_id = scenario.scenario_id
         if scenario.negative_control:
-            return BrokenMutationAdapter().inject(scenario_id)
+            return BrokenMutationAdapter().inject(scenario_id, receipt=faults.receipt)
         if scenario_id == "D-01-normal":
             candidate = LocalRecoveryCandidate(
                 "local-central-active",
@@ -146,18 +148,21 @@ class ScenarioExecutor:
             service = environment.service(environment.target, environment.target)
             first = service.handle_command(command)
             duplicate = service.handle_command(command)
+            faults.receipt(FaultKind.DUPLICATE_DELIVERY, "AgentService.handle_command.duplicate")
             protocols.extend([command, first, duplicate])
             return {"duplicate_disposition": duplicate["disposition"]}
         if scenario_id == "D-03-ack-loss":
             command = environment.command()
             service = environment.service(environment.target, environment.target)
-            with suppress(InjectedCrash):
+            try:
                 environment.central.deliver_command(
                     str(command["command_id"]),
                     service.handle_command,
                     verifier=environment.central_codec,
                     crash=crash_at(CrashPoint.CENTRAL_AFTER_SEND_BEFORE_RECEIPT),
                 )
+            except InjectedCrash:
+                faults.receipt(FaultKind.DROP_COMMAND_RESPONSE, "CentralStore.deliver_command.after_send_crash")
             duplicate = environment.central.deliver_command(
                 str(command["command_id"]),
                 service.handle_command,
@@ -168,13 +173,15 @@ class ScenarioExecutor:
         if scenario_id == "D-04-central-commit-crash":
             authorization = environment.authorization()
             environment.central.add_authorization(authorization)
-            with suppress(InjectedCrash):
+            try:
                 environment.central.create_command(
                     authorization.authorization_id,
                     environment.central_codec,
                     command_id="command-crash",
                     crash=crash_at(CrashPoint.CENTRAL_BEFORE_COMMIT),
                 )
+            except InjectedCrash:
+                faults.receipt(FaultKind.CENTRAL_BEFORE_COMMIT, "CentralStore.create_command.before_commit")
             return {"rollback_observed": environment.central.command_count() == 0}
         if scenario_id in {"D-05-dell-accepted-crash", "D-06-dell-started-crash"}:
             command = environment.command()
@@ -184,8 +191,18 @@ class ScenarioExecutor:
                 if scenario_id == "D-05-dell-accepted-crash"
                 else CrashPoint.DELL_AFTER_EXECUTION_STARTED_COMMIT
             )
-            with suppress(InjectedCrash):
+            try:
                 service.handle_command(command, crash=crash_at(point))
+            except InjectedCrash:
+                kind = (
+                    FaultKind.DELL_AFTER_ACCEPT_COMMIT
+                    if scenario_id == "D-05-dell-accepted-crash"
+                    else FaultKind.DELL_AFTER_EXECUTION_STARTED_COMMIT
+                )
+                faults.receipt(
+                    kind,
+                    "AgentService.handle_command.crash_point",
+                )
             environment.dell.startup_recover("stream-target")
             state = environment.dell.connection.execute(
                 "SELECT state FROM agent_commands WHERE command_id=?", (command["command_id"],)
@@ -206,6 +223,11 @@ class ScenarioExecutor:
             else:
                 changes = {"command_seq": 2, "idempotency_key": "1:2:auth-1"}
             mutated = environment.central_codec.signer.sign({**command, **changes})
+            faults.receipt(
+                {"D-07-stale-epoch": FaultKind.STALE_AUTHORITY_EPOCH, "D-08-stale-sequence": FaultKind.STALE_SEQUENCE,
+                 "D-09-sequence-gap": FaultKind.SEQUENCE_GAP}[scenario_id],
+                "ScenarioExecutor.signed_command_mutation",
+            )
             receipt = environment.service().handle_command(mutated)
             protocols.extend([mutated, receipt])
             return {"reason_code": receipt["reason_code"]}
@@ -213,6 +235,7 @@ class ScenarioExecutor:
             command = environment.command()
             changed = TargetIdentity(**{**environment.target.to_dict(), "ffmpeg_generation": "run-b:0:4200", "ffmpeg_pid": 4200})
             receipt = environment.service(environment.target, changed).handle_command(command)
+            faults.receipt(FaultKind.STALE_TARGET_MUTATION, "TargetObserver.changed_generation")
             protocols.extend([command, receipt])
             return {"reason_code": receipt["reason_code"]}
         if scenario_id == "D-11-ledger-failure":
@@ -220,6 +243,7 @@ class ScenarioExecutor:
 
             @contextmanager
             def unavailable() -> Iterator[sqlite3.Connection]:
+                faults.receipt(FaultKind.SQLITE_WRITE_FAILURE, "DellStore.write.injected_sqlite_ioerr")
                 raise sqlite3.OperationalError("simulated SQLITE_IOERR")
                 yield environment.dell.connection  # pragma: no cover
 
@@ -238,6 +262,10 @@ class ScenarioExecutor:
                 raise RuntimeError("heartbeat fixture not created")
             lease.receive(heartbeat)
             clock.advance(5 if scenario_id == "D-12-heartbeat-late" else 16)
+            faults.receipt(
+                FaultKind.DELAY_HEARTBEAT if scenario_id == "D-12-heartbeat-late" else FaultKind.DROP_HEARTBEAT,
+                "AgentAuthorityLease.tick.controlled_clock",
+            )
             interim = lease.tick("stream-target")
             if scenario_id == "D-12-heartbeat-late":
                 next_heartbeat = publisher.build("stream-target", self._readiness())
@@ -277,6 +305,7 @@ class ScenarioExecutor:
                 FakeTargetObserver(environment.target),
             )
             new_epoch = CentralReconciler(environment.central, environment.central_codec, peer).reconcile("stream-target")
+            faults.receipt(FaultKind.RECONCILIATION_EPOCH_TRANSITION, "CentralReconciler.reconcile")
             return {"new_epoch": new_epoch, "dell_state": environment.dell.fence("stream-target")["authority_state"]}
         if scenario_id == "D-16-backup-restore":
             environment.command()
@@ -284,8 +313,10 @@ class ScenarioExecutor:
             environment.central.backup_to(backup)
             restored = CentralStore(backup, self.project_root / "migrations/central/001_initial.sql")
             try:
-                with suppress(InjectedCrash):
+                try:
                     restored.mark_restored("harness-backup", crash=crash_at(CrashPoint.CRA_AFTER_RESTORE))
+                except InjectedCrash:
+                    faults.receipt(FaultKind.CRA_AFTER_RESTORE, "CentralStore.mark_restored.crash_point")
                 pending = len(restored.pending_envelopes())
                 restore_state = restored.connection.execute("SELECT restore_state FROM control_plane_identity").fetchone()[0]
                 publisher = AuthorityHeartbeatPublisher(
@@ -310,7 +341,7 @@ class ScenarioExecutor:
                 "unknown_count": sum(item.outcome == "UNKNOWN" for item in decisions),
             }
         if scenario_id.startswith("R-"):
-            return self._random_case(scenario, environment, protocols)
+            return self._random_case(scenario, environment, protocols, faults)
         raise ValueError(f"scenario has no executor: {scenario_id}")
 
     @staticmethod
@@ -342,6 +373,7 @@ class ScenarioExecutor:
         scenario: ScenarioSpec,
         environment: HarnessEnvironment,
         protocols: list[dict[str, Any]],
+        faults: FaultController,
     ) -> dict[str, Any]:
         command = environment.command()
         mutation = str(scenario.inputs["mutation"])
@@ -353,12 +385,14 @@ class ScenarioExecutor:
             command = environment.central_codec.signer.sign(
                 {**command, "command_seq": command_sequence + delta, "idempotency_key": f"1:{1 + delta}:auth-1"}
             )
+            faults.receipt(FaultKind.SEQUENCE_GAP, "ScenarioExecutor.random_case.sequence_mutation")
         elif mutation == "target":
             expected_target = command["expected_target"]
             if not isinstance(expected_target, dict) or not isinstance(expected_target.get("ffmpeg_pid"), int):
                 raise TypeError("expected_target is malformed")
             changed = {**expected_target, "ffmpeg_pid": expected_target["ffmpeg_pid"] + delta}
             command = environment.central_codec.signer.sign({**command, "expected_target": changed})
+            faults.receipt(FaultKind.STALE_TARGET_MUTATION, "ScenarioExecutor.random_case.target_mutation")
         receipt = environment.service(environment.target, environment.target).handle_command(command)
         protocols.extend([command, receipt])
         return {"reason_code": receipt["reason_code"], "mutation": mutation, "delta": delta}

@@ -42,6 +42,14 @@ ledger review found seven duplicate restart scopes against the same managed
 FFmpeg generations. The design rationale and the limits of that evidence are
 recorded in [`docs/why-cra.md`](docs/why-cra.md).
 
+## Evidence And Route Source Update
+
+The 2026-10-13 public port adds current evidence/reconciliation checks,
+authorization-revision binding, TCP analysis, and the typed route fence.
+See [current evidence and route source](docs/current-evidence-and-route-source.md).
+The port does not enable production delivery, automatic failover, or broader
+runtime recovery; qualification remains a separate evidence gate.
+
 ## Current source posture
 
 The included policy declares:
@@ -125,11 +133,12 @@ design record is split into [harness engineering](docs/harness-engineering-draft
 
 ## Public boundary
 
-The snapshot was derived from private source commit
-`fb7ffa3d96c4cf23637d72a5cbc6f65fac4d008c`. The private Git history,
-operational records, live evidence, generated artifacts, and uncommitted source
-changes were not copied. See [`docs/public-release.md`](docs/public-release.md)
-for the complete boundary.
+The original sanitized snapshot used private source commit
+`fb7ffa3d96c4cf23637d72a5cbc6f65fac4d008c`. The 2026-10-13 port adds selected
+later source, including uncommitted development changes, with public adaptations
+recorded in [the source map](../publication/source-map.json). Private Git history,
+credentials, operational records, raw live evidence, and generated runtime
+artifacts remain excluded. See [public release notes](docs/public-release.md).
 
 ## License
 

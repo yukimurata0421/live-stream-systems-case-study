@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import sqlite3
 from copy import deepcopy
 from datetime import timedelta
 from pathlib import Path
@@ -281,6 +282,169 @@ def test_projection_allows_bounded_clock_skew_but_rejects_larger_future_issue(en
 
     with pytest.raises(ValueError, match="MONITORING_EVIDENCE_ISSUED_IN_FUTURE"):
         contract.decode(signer.sign(value), now=current)
+
+
+def test_newer_projection_supersedes_authorization_before_command_materialization(environment: object) -> None:
+    signer, contract = _signer_and_contract()
+    first = contract.decode(_projection(signer, environment.target, sequence=1))  # type: ignore[attr-defined]
+    decision = CraAuthorizer(environment.central, RecoveryPolicy("shadow-policy-v1")).evaluate(first)  # type: ignore[attr-defined]
+    second = contract.decode(_projection(signer, environment.target, sequence=2))  # type: ignore[attr-defined]
+    environment.central.ingest_monitoring_projection(second.value)  # type: ignore[attr-defined]
+
+    with pytest.raises(CommandBlocked, match="AUTHORIZATION_BASE_REVISION_STALE"):
+        environment.central.create_command(  # type: ignore[attr-defined]
+            decision.authorization_id,
+            environment.central_codec,  # type: ignore[attr-defined]
+            command_id="stale-before-materialization",
+        )
+
+    assert environment.central.read_one("SELECT count(*) FROM commands")[0] == 0  # type: ignore[attr-defined]
+    assert environment.central.read_one("SELECT count(*) FROM outbox_messages")[0] == 0  # type: ignore[attr-defined]
+    assert environment.central.read_one("SELECT count(*) FROM effect_scope_ledger")[0] == 0  # type: ignore[attr-defined]
+
+
+def test_newer_projection_supersedes_materialized_command_before_delivery(environment: object) -> None:
+    signer, contract = _signer_and_contract()
+    first = contract.decode(_projection(signer, environment.target, sequence=1))  # type: ignore[attr-defined]
+    decision = CraAuthorizer(environment.central, RecoveryPolicy("shadow-policy-v1")).evaluate(first)  # type: ignore[attr-defined]
+    command = environment.central.create_command(  # type: ignore[attr-defined]
+        decision.authorization_id,
+        environment.central_codec,  # type: ignore[attr-defined]
+        command_id="stale-before-delivery",
+    )
+    second = contract.decode(_projection(signer, environment.target, sequence=2))  # type: ignore[attr-defined]
+    environment.central.ingest_monitoring_projection(second.value)  # type: ignore[attr-defined]
+    sent = False
+
+    def send(_: dict[str, object]) -> dict[str, object]:
+        nonlocal sent
+        sent = True
+        raise AssertionError("stale command must not cross the delivery boundary")
+
+    with pytest.raises(CommandBlocked, match="AUTHORIZATION_BASE_REVISION_STALE"):
+        environment.central.deliver_command(  # type: ignore[attr-defined]
+            command["command_id"],
+            send,
+            verifier=environment.central_codec,  # type: ignore[attr-defined]
+        )
+
+    assert sent is False
+    assert environment.central.read_one(  # type: ignore[attr-defined]
+        "SELECT status FROM commands WHERE command_id='stale-before-delivery'"
+    )[0] == "SUPERSEDED"
+    assert environment.central.read_one(  # type: ignore[attr-defined]
+        "SELECT state FROM outbox_messages WHERE command_id='stale-before-delivery'"
+    )[0] == "TERMINAL"
+    assert environment.central.read_one(  # type: ignore[attr-defined]
+        "SELECT status FROM recovery_authorizations WHERE authorization_id=?",
+        (decision.authorization_id,),
+    )[0] == "REVOKED"
+    assert environment.central.read_one("SELECT count(*) FROM delivery_attempts")[0] == 0  # type: ignore[attr-defined]
+
+
+def test_duplicate_projection_does_not_advance_required_revision(environment: object) -> None:
+    signer, contract = _signer_and_contract()
+    projection = contract.decode(_projection(signer, environment.target, sequence=1))  # type: ignore[attr-defined]
+    decision = CraAuthorizer(environment.central, RecoveryPolicy("shadow-policy-v1")).evaluate(projection)  # type: ignore[attr-defined]
+
+    assert environment.central.ingest_monitoring_projection(projection.value) == "DUPLICATE"  # type: ignore[attr-defined]
+    command = environment.central.create_command(  # type: ignore[attr-defined]
+        decision.authorization_id,
+        environment.central_codec,  # type: ignore[attr-defined]
+        command_id="duplicate-base-revision",
+    )
+
+    assert command["command_id"] == "duplicate-base-revision"
+    binding = environment.central.read_one(  # type: ignore[attr-defined]
+        "SELECT * FROM authorization_revision_bindings WHERE authorization_id=?",
+        (decision.authorization_id,),
+    )
+    assert binding is not None
+    assert binding["projection_id"] == projection.projection_id
+    assert binding["observation_sequence"] == projection.sequence
+    assert binding["state_revision"] == 1
+    assert binding["projection_sha256"] == projection.value["payload_sha256"]
+    head = environment.central.read_one(  # type: ignore[attr-defined]
+        "SELECT projection_id,state_revision FROM monitoring_projection_heads WHERE target_id=?",
+        (projection.target_id,),
+    )
+    assert head is not None
+    assert head["projection_id"] == projection.projection_id
+    assert head["state_revision"] == 1
+
+
+def test_target_revision_advances_across_monitoring_source_replacement(environment: object) -> None:
+    signer, _ = _signer_and_contract()
+    contract = MonitoringEvidenceContract(
+        ROOT / "contracts/monitoring_v4/evidence_projection.v1.schema.json",
+        KeyRing({signer.key_id: signer.private_key.public_key()}),
+        allowed_sources={
+            "arena-monitoring-v4": "monitoring-release-a",
+            "arena-monitoring-v4-replacement": "monitoring-release-b",
+        },
+    )
+    first = contract.decode(_projection(signer, environment.target, sequence=1))  # type: ignore[attr-defined]
+    decision = CraAuthorizer(environment.central, RecoveryPolicy("shadow-policy-v1")).evaluate(first)  # type: ignore[attr-defined]
+    replacement_value = _projection(signer, environment.target, sequence=1)  # type: ignore[attr-defined]
+    replacement_value.update(
+        {
+            "projection_id": "projection-replacement-1",
+            "source_instance_id": "arena-monitoring-v4-replacement",
+            "source_release_id": "monitoring-release-b",
+            "monitoring_cycle_id": "replacement-cycle-1",
+            "observation_revision": "replacement-revision-1",
+        }
+    )
+    replacement = contract.decode(signer.sign(replacement_value))
+
+    assert environment.central.ingest_monitoring_projection(replacement.value) == "ACCEPTED"  # type: ignore[attr-defined]
+    head = environment.central.read_one(  # type: ignore[attr-defined]
+        "SELECT source_instance_id,observation_sequence,state_revision FROM monitoring_projection_heads WHERE target_id=?",
+        (replacement.target_id,),
+    )
+    assert head is not None
+    assert head["source_instance_id"] == "arena-monitoring-v4-replacement"
+    assert head["observation_sequence"] == 1
+    assert head["state_revision"] == 2
+    with pytest.raises(CommandBlocked, match="AUTHORIZATION_BASE_REVISION_STALE"):
+        environment.central.create_command(  # type: ignore[attr-defined]
+            decision.authorization_id,
+            environment.central_codec,  # type: ignore[attr-defined]
+            command_id="stale-after-source-replacement",
+        )
+
+
+def test_authorization_revision_binding_is_append_only(environment: object) -> None:
+    signer, contract = _signer_and_contract()
+    projection = contract.decode(_projection(signer, environment.target, sequence=1))  # type: ignore[attr-defined]
+    decision = CraAuthorizer(environment.central, RecoveryPolicy("shadow-policy-v1")).evaluate(projection)  # type: ignore[attr-defined]
+
+    with pytest.raises(sqlite3.IntegrityError, match="AUTHORIZATION_REVISION_BINDING_APPEND_ONLY"):
+        environment.central.connection.execute(  # type: ignore[attr-defined]
+            "UPDATE authorization_revision_bindings SET state_revision=2 WHERE authorization_id=?",
+            (decision.authorization_id,),
+        )
+    with pytest.raises(sqlite3.IntegrityError, match="AUTHORIZATION_REVISION_BINDING_APPEND_ONLY"):
+        environment.central.connection.execute(  # type: ignore[attr-defined]
+            "DELETE FROM authorization_revision_bindings WHERE authorization_id=?",
+            (decision.authorization_id,),
+        )
+
+
+def test_unbound_authorization_requires_explicit_nonproduction_adapter_marker(environment: object) -> None:
+    authorization = environment.authorization("unbound-without-marker")  # type: ignore[attr-defined]
+    environment.central.add_authorization(authorization)  # type: ignore[attr-defined]
+    environment.central.connection.execute(  # type: ignore[attr-defined]
+        "UPDATE incident_transitions SET reason_code='UNMARKED_ADAPTER' WHERE incident_id=?",
+        (authorization.incident_id,),
+    )
+
+    with pytest.raises(CommandBlocked, match="AUTHORIZATION_BASE_REVISION_MISSING"):
+        environment.central.create_command(  # type: ignore[attr-defined]
+            authorization.authorization_id,
+            environment.central_codec,  # type: ignore[attr-defined]
+            command_id="unbound-without-marker",
+        )
 
 
 def test_cra_verifier_owns_final_verdict_and_has_no_command_capability(environment: object) -> None:

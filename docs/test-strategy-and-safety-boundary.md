@@ -4,6 +4,15 @@ The public test strategy is intentionally non-mutating. It proves that the
 snapshot is structurally coherent and that safety gates behave as expected, but
 it does not pretend to operate the real production stream.
 
+## Validation Of The OCI/Twitch Port
+
+The current [validation record](../publication/validation.json) reports bounded
+local pure/mocked tests, public-source collection, syntax, redaction, and replay
+checks separately. Native campaigns and production recovery are not run by
+this publication operation. `--replay` needs no network; effectful relay and
+session adapters require separately reviewed local configuration and authority.
+Cloud CI is not inferred from these local checks.
+
 ## Test Layers
 
 | Layer | Purpose | Examples |

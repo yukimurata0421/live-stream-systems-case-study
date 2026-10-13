@@ -18,6 +18,7 @@ def raw_result(**changes: Any) -> dict[str, Any]:
         "soak_status": "NOT_YET_ELIGIBLE",
         "formal_status": "NOT_YET_ELIGIBLE",
         "harness_classification": "PASS",
+        "formal_evaluation_performed": True,
         "oracle_errors": [],
         "blockers": [],
         "unknown_reasons": [],
@@ -66,6 +67,54 @@ def test_required_evidence_gap_does_not_become_a_sut_failure() -> None:
     assert status["soak_impact"] == "CERTIFICATION_PAUSED"
     assert status["findings"][0]["code"] == "DELL_OWNER_LIFECYCLE_UNVERIFIED_OUTSIDE_RECOVERY"
     assert_operator_vocabulary(status)
+
+
+@pytest.mark.parametrize("watchdog", [False, True])
+def test_unverified_deadline_does_not_claim_a_sut_failure(watchdog: bool) -> None:
+    status = classify_gate(
+        raw_result(
+            status="AT_RISK" if watchdog else "UNKNOWN",
+            soak_status=None,
+            formal_evaluation_performed=False,
+            harness_classification=None if watchdog else "MISSING_EVIDENCE",
+            blockers=["RECOVERY_DEADLINE_EXCEEDED"],
+            unknown_reasons=["HISTORICAL_EVIDENCE_UNAVAILABLE"],
+        )
+    )
+    deadline = next(item for item in status["findings"] if item["code"] == "RECOVERY_DEADLINE_EXCEEDED")
+    assert deadline["failure_domain"] == "OBSERVATION_SOURCE"
+    assert deadline["soak_impact"] == "CERTIFICATION_PAUSED"
+    assert status["current_sut_state"] == "NOT_OBSERVABLE"
+    assert status["soak_impact"] == "CERTIFICATION_PAUSED"
+
+
+def test_confirmed_safety_failure_survives_an_unverified_deadline() -> None:
+    status = classify_gate(raw_result(
+        status="FAIL", soak_status="FAIL", formal_evaluation_performed=True,
+        harness_classification="SUT_FAILURE",
+        blockers=["CRA_NO_ACTION_SAFETY_VIOLATED", "RECOVERY_DEADLINE_EXCEEDED"],
+        unknown_reasons=["HISTORICAL_EVIDENCE_UNAVAILABLE"],
+    ))
+    assert status["current_sut_state"] == "CONFIRMED_FAILURE"
+    assert status["soak_impact"] == "FAIL"
+    deadline = next(item for item in status["findings"] if item["code"] == "RECOVERY_DEADLINE_EXCEEDED")
+    assert deadline["failure_domain"] == "OBSERVATION_SOURCE"
+
+
+def test_unhealthy_formal_gate_and_ack_evidence_do_not_claim_sut_failure() -> None:
+    status = classify_gate(
+        raw_result(
+            status="AT_RISK",
+            soak_status=None,
+            formal_evaluation_performed=False,
+            harness_classification=None,
+            blockers=["ACK_COUNTER_REGRESSION_WITHIN_TARGET", "FORMAL_GATE_NOT_HEALTHY"],
+        )
+    )
+    assert status["current_sut_state"] == "NOT_OBSERVABLE"
+    assert status["failure_domain"] == "MULTIPLE"
+    assert status["soak_impact"] == "CERTIFICATION_PAUSED"
+    assert {item["failure_domain"] for item in status["findings"]} == {"HARNESS", "OBSERVATION_SOURCE"}
 
 
 def test_owner_permission_failure_is_classified_as_access_denied() -> None:

@@ -84,6 +84,23 @@ def test_freeze_rejects_a_prefix_before_the_requested_duration(
     assert not output.exists()
 
 
+def test_freeze_refuses_pending_sample_without_changing_source(
+    setup: tuple[Config, dict[str, Signer]], tmp_path: Path
+) -> None:
+    config, signers = setup
+    config_path, config = _build_prefix(config, signers, final_seconds=105)
+    state_path = Path(config.value["state_file"])
+    state = json.loads(state_path.read_bytes())
+    state["pending_sample"] = {"sample_sequence": state["sample_count"] + 1}
+    recovery_soak.atomic_write_json(state_path, state)
+    before = {name: Path(config.value[name]).read_bytes() for name in ("state_file", "evidence_file")}
+    output = tmp_path / "artifacts/pending-checkpoint"
+    with pytest.raises(ValueError, match="CHECKPOINT_STATE_INVALID"):
+        freeze_checkpoint(config_path, output, {"identity": config_path}, minimum_observation_seconds=60)
+    assert not output.exists()
+    assert all(Path(config.value[name]).read_bytes() == before[name] for name in before)
+
+
 def test_freeze_never_overwrites_an_existing_artifact(
     setup: tuple[Config, dict[str, Signer]],
     tmp_path: Path,

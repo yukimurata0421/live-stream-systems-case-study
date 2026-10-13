@@ -193,15 +193,9 @@ def select_restart_reason(
                 f"notsent={tcp.notsent} unacked={tcp.unacked}"
             ),
         )
-    if int(state.get("low_upload_pressure_streak", 0)) >= low_upload_confirm:
-        return (
-            "low_upload_pressure",
-            (
-                f"low upload pressure: send_mbps={tcp.send_mbps}<={low_upload_max_mbps} "
-                f"bytes_delta={tcp.bytes_delta} elapsed_sec={tcp.bytes_elapsed_sec} "
-                f"lastsnd_ms={tcp.lastsnd_ms} notsent={tcp.notsent} unacked={tcp.unacked}"
-            ),
-        )
+    # Low upload pressure remains observable in samples/state, but upload speed
+    # is not a restart cause. Home-line throughput is too noisy to own recovery.
+    del low_upload_confirm, low_upload_max_mbps
     return "", ""
 
 

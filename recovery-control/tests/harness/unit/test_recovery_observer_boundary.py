@@ -24,7 +24,7 @@ from runtime_boundary.recovery_evidence import effect_safety, owner_evidence
 NOW = datetime(2026, 9, 4, tzinfo=UTC)
 AT = isoformat_utc(NOW)
 TARGET = {
-    "host_id": "dell-yuki",
+    "host_id": "delivery-host",
     "host_boot_id": "boot",
     "namespace": "stream-v3",
     "pod_uid": "pod",
@@ -187,6 +187,45 @@ def test_dell_builder_has_no_database_or_process_fallback(tmp_path: Path, monkey
     assert hashes["read_errors"] != source_hash({"names": []})
 
 
+def test_cra_database_read_failure_emits_typed_unavailable_fact(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    runtime = tmp_path / "runtime.json"
+    runtime.write_text("{}", encoding="utf-8")
+    value = {
+        "binding": {"role": "cra"},
+        "sources": {"runtime": str(runtime)},
+        "database_file": str(tmp_path / "central.db"),
+    }
+
+    def fail(*args: Any, **kwargs: Any) -> dict[str, Any]:
+        raise ValueError("CENTRAL_SAFETY_READ_FAILED")
+
+    monkeypatch.setattr("cra_authority.recovery_safety.central_safety", fail)
+    facts, hashes = observer.build_facts(value, now=NOW)
+
+    assert facts["safety"] == {
+        "observed_at": AT,
+        "evidence_status": "UNAVAILABLE",
+        "reason_code": "CENTRAL_SAFETY_READ_FAILED",
+        "integrity": "UNKNOWN",
+    }
+    assert hashes["read_errors"] != source_hash({"names": []})
+
+
+def test_dell_rtmps_episode_source_requires_exact_collector_binding(tmp_path: Path) -> None:
+    value = config(tmp_path)
+    value["sources"]["transport_episode"] = str(tmp_path / "rtmps.json")
+    with pytest.raises(ValueError, match="RTMPS_EPISODE_BINDING_REQUIRED"):
+        observer.validate_config(value)
+    value["transport_episode_binding"] = {
+        "collector_id": "collector-1",
+        "release_id": "observer-release",
+        "epoch_id": "observer-release",
+    }
+    assert observer.validate_config(value) == BINDING
+
+
 def test_runtime_owner_export_cannot_be_read_from_an_observer_owned_file(tmp_path: Path) -> None:
     path = tmp_path / "owner.json"
     path.write_text("{}")
@@ -251,3 +290,44 @@ def test_stale_unresolved_zero_cannot_complete_live_recovery() -> None:
     }
     assert observation(copy.deepcopy(facts), stream_id="stream", now=NOW).unresolved_effect_count == 0
     assert observation(facts, stream_id="stream", now=NOW + timedelta(seconds=46)).unresolved_effect_count is None
+
+
+def test_cra_safe_block_does_not_relabel_independent_control_path() -> None:
+    control_observed_at = isoformat_utc(NOW - timedelta(seconds=5))
+    runtime_observed_at = isoformat_utc(NOW)
+    facts = {
+        "arena": {"control_path": {"state": "UP", "observed_at": control_observed_at}},
+        "cra": {
+            "safety": {
+                "runtime_readiness": "SAFE_BLOCKED",
+                "runtime_observed_at": runtime_observed_at,
+            }
+        },
+    }
+
+    result = observation(facts, stream_id="stream", now=NOW)
+
+    assert result.control_path == "UP"
+    assert result.control_path_observed_at == NOW - timedelta(seconds=5)
+    assert result.cra_readiness == "DOWN"
+    assert result.cra_readiness_observed_at == NOW
+
+
+def test_stale_cra_runtime_does_not_erase_fresh_control_path() -> None:
+    control_observed_at = isoformat_utc(NOW)
+    facts = {
+        "arena": {"control_path": {"state": "UP", "observed_at": control_observed_at}},
+        "cra": {
+            "safety": {
+                "runtime_readiness": "NO_ACTION_READY",
+                "runtime_observed_at": isoformat_utc(NOW - timedelta(seconds=46)),
+            }
+        },
+    }
+
+    result = observation(facts, stream_id="stream", now=NOW)
+
+    assert result.control_path == "UP"
+    assert result.control_path_observed_at == NOW
+    assert result.cra_readiness == "UNKNOWN"
+    assert result.cra_readiness_observed_at == NOW - timedelta(seconds=46)

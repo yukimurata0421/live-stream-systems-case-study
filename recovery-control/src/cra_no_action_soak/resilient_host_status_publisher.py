@@ -33,6 +33,7 @@ from .host_status_publisher import (
     _systemctl,
 )
 from .resilient_host_status import (
+    LEGACY_STATE_SCHEMAS,
     STATE_SCHEMA,
     ComponentStatus,
     ExactTransitionBinding,
@@ -555,7 +556,7 @@ def _transition_context(state_file: Path) -> tuple[str | None, list[tuple[str | 
     if not state_file.exists():
         return None, []
     state = read_object(state_file, maximum_bytes=512 * 1024)
-    if state.get("schema") != STATE_SCHEMA:
+    if state.get("schema") not in {STATE_SCHEMA, *LEGACY_STATE_SCHEMAS}:
         raise ValueError("RESILIENT_STATUS_STATE_SCHEMA_INVALID")
     value = state.get("last_target_identity_sha256")
     episodes = state.get("open_episodes")
@@ -780,7 +781,7 @@ def publish(config: PublisherConfig, *, now: datetime | None = None) -> dict[str
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Publish fail-operational signed Dell host status v3")
+    parser = argparse.ArgumentParser(description="Publish fail-operational signed Dell host status v4")
     parser.add_argument("--config", type=Path, required=True)
     parser.add_argument("--check-config", action="store_true")
     args = parser.parse_args()

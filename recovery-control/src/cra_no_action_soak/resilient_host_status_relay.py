@@ -524,7 +524,7 @@ def publish(config: RelayConfig, *, now: datetime | None = None) -> dict[str, An
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Publish fail-operational signed arena relay status v3")
+    parser = argparse.ArgumentParser(description="Publish fail-operational signed arena relay status v4")
     parser.add_argument("--config", type=Path, required=True)
     parser.add_argument("--check-config", action="store_true")
     args = parser.parse_args()

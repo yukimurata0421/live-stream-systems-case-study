@@ -123,7 +123,7 @@ def typed_request(
 
 
 class Runtime:
-    def __init__(self, root: Path, *, effect=None, before_effect=None) -> None:
+    def __init__(self, root: Path, *, effect=None, before_effect=None, require_transport_verification=False) -> None:
         self.current = {
             "target_identity": target(),
             "ffmpeg_generation": "native-1",
@@ -139,6 +139,7 @@ class Runtime:
             current_target=lambda: self.current,
             perform_effect=effect or self.perform,
             before_effect=before_effect,
+            require_transport_verification=require_transport_verification,
         )
         self.server.start()
         self.client = EffectClient(root / "effect.sock")
@@ -463,6 +464,44 @@ def test_retired_exact_target_ends_global_block_without_claiming_effect_outcome(
         runtime.close()
 
 
+def test_observed_effect_can_retire_only_while_transport_verification_is_pending(tmp_path: Path) -> None:
+    runtime = Runtime(
+        tmp_path,
+        effect=lambda _request: {"physical_effect_count": 1},
+        require_transport_verification=True,
+    )
+    value = request(request_id="retire-observed-awaiting-verification")
+    first = EffectRequest.from_mapping(value)
+    try:
+        assert runtime.client.execute(value)["state"] == "EFFECT_OBSERVED"
+        unresolved = runtime.client.unresolved()["unresolved_scopes"][0]
+        replacement = {
+            **target(6262),
+            "pod_uid": "pod-2",
+            "container_id": "containerd://container-2",
+            "ffmpeg_generation": "protocol-generation-replacement",
+        }
+        runtime.current["target_identity"] = replacement
+        evidence = _retired_target_evidence(target(), replacement)
+        evidence["physical_effect_outcome"] = "EFFECT_OBSERVED"
+        response = runtime.client.reconcile({
+            "schema_version": "runtime.effect_reconciliation_request.v1",
+            "reconciliation_id": "retire-observed-once",
+            "effect_scope_id": first.effect_scope_id,
+            "owner_request_id": unresolved["owner_request_id"],
+            "owner_request_digest": unresolved["owner_request_digest"],
+            "resolution": "TARGET_RETIRED",
+            "evidence": evidence,
+        })
+        assert response["ok"] is True
+        assert response["state"] == "RETIRED_TARGET_OUTCOME_UNKNOWN"
+        assert runtime.ledger.request(first.request_id)["state"] == "EFFECT_OBSERVED"
+        assert runtime.ledger.unresolved_count() == 0
+        assert runtime.ledger.connection.execute("SELECT count(*) FROM effect_reconciliations").fetchone()[0] == 0
+    finally:
+        runtime.close()
+
+
 def test_target_retirement_is_concurrent_replay_safe_and_durable_across_reopen(tmp_path: Path) -> None:
     path = tmp_path / "ledger.sqlite3"
     runtime = Runtime(tmp_path, effect=lambda _request: (_ for _ in ()).throw(OutcomeUnknown("delayed exit")))
@@ -528,7 +567,7 @@ def test_target_retirement_is_concurrent_replay_safe_and_durable_across_reopen(t
         ),
         (
             lambda value: value["evidence"].update(physical_effect_outcome="EFFECT_OBSERVED"),
-            "RECONCILIATION_ATTEMPT_COUNT_INVALID",
+            "RECONCILIATION_SCOPE_ALREADY_RESOLVED",
         ),
     ],
 )

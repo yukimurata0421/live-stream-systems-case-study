@@ -1,17 +1,41 @@
 # Operational Scorecard
 
-This scorecard separates measured behavior, tested contracts, documented
-procedures, and remaining unknowns. It is intentionally conservative: a public
-case study is stronger when it says what has not been proven.
+For a hiring review, read this summary first. The detailed reference table below
+is available when a specific claim needs investigation. Dates describe retained
+evidence windows, not current service-health guarantees.
+
+## Results At A Glance
+
+| Result | Evidence | Limit |
+| --- | --- | --- |
+| 160-day same-URL observation | October 14 checkpoint; `140 / 140` ledger dates and zero recorded transitions. | Identity checks do not prove uninterrupted frames or all intraday states. |
+| Diagnosed network and watchdog faults | Independent network checks and correlated restart logs. | Router/carrier ownership and the entire reception history remain unproven. |
+| Corrected one Twitch renewal exercise | New Twitch session, sampled video/audio, preserved YouTube handler after the correction. | The first exercise failed; later scheduled renewals and long reception soak are separate. |
+| Repaired current warnings and public freshness | Recent raw/monitoring agreement and fresh public snapshots after cache expiry. | Historical gaps and formal UNKNOWN results were preserved. |
+| Public source checks | Focused and component checks in [validation](../publication/validation.json). | Source tests do not establish production activation or native qualification. |
+| Native qualification remains unverified | Harness result artifacts were not recovered. | Missing results are not treated as either a product failure or a pass. |
+
+Read [the incident stories](operational-case-studies.md) for symptoms, actions,
+verification, and limits. Read [the continuity note](28-day-same-url-sli-case-study.md)
+for exact dates and counting periods.
 
 ## Scope Calibration
 
-This is a single-operator, three-home-host personal 24/7 stream. It has real
-live operation, real recovery decisions, retained measurements, and a public
-GCS/Cloudflare static edge that offloads public status reads away from the home
-uplink, but it is not a commercial multi-tenant service and does not claim a
-contractual user SLO. The right reading is reliability discipline at small blast
-radius.
+This is a small, single-operator home streaming system with an OCI relay and a
+public static status site. Its evidence concerns operating discipline and
+bounded recovery. It does not establish a commercial service's SLO, multi-tenant
+scale, or recovery from disk loss and power failure.
+
+No production authority is enabled by the public source. Monitoring, CRA, and
+Dell effect ownership remain distinct; there is no live effect or completed
+production-soak claim from the publication checks. Native qualification and
+automatic failover remain unestablished.
+
+## Detailed Reference
+
+The following table includes retained measurements, source tests, and documented
+procedures from different dates. Follow each evidence link before applying a
+historical result to the current OCI route.
 
 ## Status Legend
 
@@ -38,7 +62,7 @@ without freezing their prose or section layout.
 
 | Area | Status | Public evidence | Residual risk |
 | --- | --- | --- | --- |
-| Same-watch-URL preservation | Measured / tested | `docs/28-day-same-url-sli-case-study.md`, `docs/v3/youtube-lifecycle-safety.md`, resolver freshness tests | The at-least-127-day checkpoint preserves one video ID; its post-handoff ledger has `107 / 107` daily checkpoints and zero URL transitions, but it does not prove uninterrupted frames or current state, and the exact V2-to-V3 authority handoff was not logged separately. |
+| Same-watch-URL preservation | Measured / tested | `docs/28-day-same-url-sli-case-study.md`, `docs/v3/youtube-lifecycle-safety.md`, resolver freshness tests | The October 14 checkpoint spans at least 160 days of URL observation and has `140 / 140` later-ledger checkpoint dates. The September `127-day / 107-date` record is retained as history. Neither establishes uninterrupted frames; the exact V2-to-V3 authority handoff was not logged separately. |
 | Legacy guarded recovery surfaces | Tested / migration evidence | `ops/scripts/v3_shadow_acceptance.py`, `tests/test_v3_shadow_acceptance.py`, `src/stream_v2/recovery_orchestrator/gate.py` | These guards remain valuable, but they are not the current CRA authority path and public tests do not perform live mutation. |
 | Scoped recovery authority | Tested / documented | `docs/v3/scoped-recovery-authority.md`, `src/stream_core/runtime_boundary_entrypoint.py`, `tests/test_fast_recovery_runtime_boundary.py` | Public tests use test-owned child processes; they do not enable authority or restart a live FFmpeg process. |
 | Central Restart Authority | Tested / documented / not deployed | `recovery-control/docs/why-cra.md`, `recovery-control/docs/architecture.md`, `recovery-control/docs/harness-trust.md`, `recovery-control/tests/` | No production authority is enabled in the public snapshot; it makes no live effect or completed production-soak claim. |

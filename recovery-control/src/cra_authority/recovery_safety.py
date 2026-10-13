@@ -38,6 +38,8 @@ def central_safety(path: Path, runtime: dict[str, Any], *, now: datetime) -> dic
         raise ValueError("CENTRAL_SAFETY_READ_FAILED") from error
     return {
         "observed_at": isoformat_utc(now),
+        "evidence_status": "OBSERVED",
+        "reason_code": "CENTRAL_SAFETY_OBSERVED",
         "integrity": integrity,
         "action_table_counts": counts,
         "command_delivery_enabled": runtime.get("command_delivery_enabled"),

@@ -12,9 +12,11 @@ from cra_dell_recovery.effect_scope import effect_scope_id, logical_generation_s
 MAX_EFFECT_REQUEST_LIFETIME_SECONDS = 5.0
 
 RESTART_FFMPEG = "RESTART_FFMPEG"
+SWITCH_STREAM_ROUTE = "SWITCH_STREAM_ROUTE"
+DELIVERY_TARGET_INTENTS = frozenset({RESTART_FFMPEG, SWITCH_STREAM_ROUTE})
 RECONCILE_FFMPEG = "RECONCILE_FFMPEG"
 ESCALATE_RUNTIME_RECOVERY = "ESCALATE_RUNTIME_RECOVERY"
-EXECUTOR_OWNED_INTENTS = frozenset({RESTART_FFMPEG, RECONCILE_FFMPEG})
+EXECUTOR_OWNED_INTENTS = frozenset({*DELIVERY_TARGET_INTENTS, RECONCILE_FFMPEG})
 ALL_EFFECT_INTENTS = frozenset({*EXECUTOR_OWNED_INTENTS, ESCALATE_RUNTIME_RECOVERY})
 
 EXACT_TARGET_FIELDS = (
@@ -120,11 +122,13 @@ class EffectRequest:
     maintenance_evidence_status: str
     projection_id: str
     projection_sequence: int
+    route_transition: dict[str, Any] | None = None
 
     @property
     def operation(self) -> str:
         return {
             RESTART_FFMPEG: "restart_ffmpeg",
+            SWITCH_STREAM_ROUTE: "switch_stream_route",
             RECONCILE_FFMPEG: "reconcile_ffmpeg",
             ESCALATE_RUNTIME_RECOVERY: "escalate_runtime_recovery",
         }[self.intent_type]
@@ -137,30 +141,31 @@ class EffectRequest:
 
     @property
     def identity_type(self) -> str:
-        return "FFMPEG_TARGET" if self.intent_type == RESTART_FFMPEG else "RUNTIME"
+        return "FFMPEG_TARGET" if self.intent_type in DELIVERY_TARGET_INTENTS else "RUNTIME"
 
     @property
     def fence_identity(self) -> Mapping[str, Any]:
-        if self.intent_type == RESTART_FFMPEG:
+        if self.intent_type in DELIVERY_TARGET_INTENTS:
             return self.ffmpeg_target_identity or {}
         return self.runtime_identity or {}
 
     @property
     def effect_scope_id(self) -> str:
-        if self.intent_type != RESTART_FFMPEG or self.ffmpeg_target_identity is None:
+        if self.intent_type not in DELIVERY_TARGET_INTENTS or self.ffmpeg_target_identity is None:
             encoded = json.dumps(
                 {"intent_type": self.intent_type, "identity": self.fence_identity},
                 sort_keys=True,
                 separators=(",", ":"),
             ).encode()
             return hashlib.sha256(encoded).hexdigest()
+        # route変更も同じdelivery childの物理効果。既存のnamespaceを維持する。
         return effect_scope_id("restart_ffmpeg", self.ffmpeg_target_identity)
 
     @property
     def logical_generation_scope_id(self) -> str | None:
         """PID-independent physical fence for restart requests only."""
 
-        if self.intent_type != RESTART_FFMPEG or self.ffmpeg_target_identity is None:
+        if self.intent_type not in DELIVERY_TARGET_INTENTS or self.ffmpeg_target_identity is None:
             return None
         return logical_generation_scope_id("restart_ffmpeg", self.ffmpeg_target_identity)
 
@@ -169,7 +174,7 @@ class EffectRequest:
         schema_version = str(value.get("schema_version") or "")
         if schema_version == "runtime.effect_request.v1":
             return cls._from_v1(value)
-        if schema_version != "runtime.typed_effect_request.v2":
+        if schema_version not in {"runtime.typed_effect_request.v2", "runtime.typed_effect_request.v3"}:
             raise ProtocolError("SCHEMA_VERSION_UNSUPPORTED")
         return cls._from_v2(value)
 
@@ -240,6 +245,25 @@ class EffectRequest:
         intent = str(value.get("intent_type") or "").strip()
         if intent not in ALL_EFFECT_INTENTS:
             raise ProtocolError("INTENT_NOT_ALLOWED")
+        if value.get("schema_version") == "runtime.typed_effect_request.v3" and intent != SWITCH_STREAM_ROUTE:
+            raise ProtocolError("V3_ROUTE_INTENT_REQUIRED")
+        route_transition = None
+        if intent == SWITCH_STREAM_ROUTE:
+            if value.get("schema_version") != "runtime.typed_effect_request.v3":
+                raise ProtocolError("ROUTE_REQUIRES_PROTOCOL_V3")
+            route = value.get("route_transition")
+            if not isinstance(route, Mapping) or set(route) != {"from_route", "to_route", "expected_route_generation", "operator_grant_id"}:
+                raise ProtocolError("ROUTE_TRANSITION_NOT_EXACT")
+            if (not isinstance(route["from_route"], str) or not isinstance(route["to_route"], str)
+                or {route["from_route"], route["to_route"]} != {"PRIMARY", "FALLBACK"}):
+                raise ProtocolError("ROUTE_TRANSITION_INVALID")
+            if type(route["expected_route_generation"]) is not int or route["expected_route_generation"] <= 0:
+                raise ProtocolError("ROUTE_GENERATION_INVALID")
+            if not isinstance(route["operator_grant_id"], str) or not 1 <= len(route["operator_grant_id"]) <= 128:
+                raise ProtocolError("OPERATOR_GRANT_ID_INVALID")
+            route_transition = dict(route)
+        elif value.get("route_transition") is not None:
+            raise ProtocolError("ROUTE_FIELDS_FORBIDDEN")
         failure_domain = str(value.get("failure_domain") or "").strip()
         if not failure_domain:
             raise ProtocolError("FAILURE_DOMAIN_MISSING")
@@ -249,7 +273,7 @@ class EffectRequest:
         target_snapshot_id = str(value.get("target_snapshot_id") or "").strip()
         runtime_snapshot_id = str(value.get("runtime_snapshot_id") or "").strip()
         runtime_observation_id = str(value.get("runtime_observation_id") or "").strip()
-        if intent == RESTART_FFMPEG:
+        if intent in DELIVERY_TARGET_INTENTS:
             ffmpeg_target = validate_target(value.get("ffmpeg_target_identity"))
             if value.get("runtime_identity") is not None and value.get("runtime_identity") != "":
                 raise ProtocolError("RESTART_RUNTIME_IDENTITY_FORBIDDEN")
@@ -264,7 +288,7 @@ class EffectRequest:
             if intent == RECONCILE_FFMPEG and not runtime_observation_id:
                 raise ProtocolError("RECONCILE_OBSERVATION_ID_MISSING")
         return cls(
-            schema_version="runtime.typed_effect_request.v2",
+            schema_version="runtime.typed_effect_request.v3" if route_transition else "runtime.typed_effect_request.v2",
             intent_type=intent,
             failure_domain=failure_domain,
             ffmpeg_target_identity=ffmpeg_target,
@@ -273,12 +297,13 @@ class EffectRequest:
             target_snapshot_id=target_snapshot_id,
             runtime_snapshot_id=runtime_snapshot_id,
             runtime_observation_id=runtime_observation_id,
+            route_transition=route_transition,
             **common,
         )
 
     def canonical(self) -> dict[str, Any]:
-        return {
-            "schema_version": "runtime.typed_effect_request.v2",
+        value = {
+            "schema_version": "runtime.typed_effect_request.v3" if self.route_transition else "runtime.typed_effect_request.v2",
             "request_id": self.request_id,
             "producer_id": self.producer_id,
             "producer_generation": self.producer_generation,
@@ -300,6 +325,9 @@ class EffectRequest:
             "projection_id": self.projection_id,
             "projection_sequence": self.projection_sequence,
         }
+        if self.route_transition is not None:
+            value["route_transition"] = self.route_transition
+        return value
 
     def digest(self) -> str:
         encoded = json.dumps(self.canonical(), sort_keys=True, separators=(",", ":")).encode()

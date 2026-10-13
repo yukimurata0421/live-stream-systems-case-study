@@ -44,6 +44,20 @@ _REQUIRED_RESTART_DOMAINS = frozenset(
         "restart.gate_watchdog",
         "restart.resilient_status_soak",
         "restart.no_action_breach",
+        "restart.tcp_stall_collector",
+    }
+)
+_REQUIRED_FAILURE_MODES = frozenset(
+    {
+        "failure.owner_child_lifecycle",
+        "failure.rtmps_session_ack_stall",
+        "failure.ffmpeg_session_loss",
+        "failure.full_wan_outage",
+        "failure.upstream_oauth_observation",
+        "failure.observation_source_or_transport",
+        "failure.soak_harness_or_oracle",
+        "failure.cra_control_safety",
+        "failure.cutover_reboot_persistence",
     }
 )
 _REQUIRED_ROUTE_EDGES = {
@@ -113,6 +127,23 @@ def _safe_repo_path(root: Path, relative: object) -> bool:
     return path.resolve().is_relative_to(root.resolve()) and path.is_file() and not path.is_symlink()
 
 
+def _test_symbol_exists(root: Path, reference: object) -> bool:
+    if not isinstance(reference, str):
+        return False
+    relative, separator, symbol = reference.partition("::")
+    if not separator or not symbol or not _safe_repo_path(root, relative):
+        return False
+    match = re.fullmatch(r"([A-Za-z_]\w*)(?:\[[^\r\n]+\])?", symbol)
+    if match is None:
+        return False
+    function_name = match.group(1)
+    try:
+        tree = ast.parse((root / relative).read_text(encoding="utf-8"), filename=relative)
+    except (OSError, SyntaxError, UnicodeError):
+        return False
+    return any(isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == function_name for node in tree.body)
+
+
 def _duplicates(values: Sequence[object]) -> list[str]:
     seen: set[object] = set()
     result: set[str] = set()
@@ -162,12 +193,14 @@ def validate_map(root: Path, value: Mapping[str, Any]) -> list[str]:
     nodes = {item["id"]: item for item in value["nodes"]}
     edges = {item["id"]: item for item in value["edges"]}
     restarts = {item["id"]: item for item in value["restart_domains"]}
+    failure_modes = {item["id"]: item for item in value["failure_modes"]}
     for label, items in (
         ("HOST", value["hosts"]),
         ("LAYER", value["layers"]),
         ("NODE", value["nodes"]),
         ("EDGE", value["edges"]),
         ("RESTART", value["restart_domains"]),
+        ("FAILURE_MODE", value["failure_modes"]),
     ):
         for duplicate in _duplicates([item["id"] for item in items]):
             errors.append(f"{label}_ID_DUPLICATE:{duplicate}")
@@ -263,6 +296,56 @@ def validate_map(root: Path, value: Mapping[str, Any]) -> list[str]:
     for node in value["nodes"]:
         if node["unit_templates"] and node["id"] not in restart_scoped_nodes:
             errors.append(f"UNIT_NODE_RESTART_DOMAIN_MISSING:{node['id']}")
+
+    missing_modes = sorted(_REQUIRED_FAILURE_MODES - set(failure_modes))
+    errors.extend(f"FAILURE_MODE_MISSING:{item}" for item in missing_modes)
+    covered_nodes: set[str] = set()
+    covered_edges: set[str] = set()
+    covered_restarts: set[str] = set()
+    for failure_mode in value["failure_modes"]:
+        mode_id = failure_mode["id"]
+        covered_nodes.update(failure_mode["affected_nodes"])
+        covered_edges.update(failure_mode["evidence_edges"])
+        covered_restarts.update(failure_mode["restart_domains"])
+        for node_id in failure_mode["affected_nodes"]:
+            if node_id not in nodes:
+                errors.append(f"FAILURE_MODE_NODE_UNKNOWN:{mode_id}:{node_id}")
+        for edge_id in failure_mode["evidence_edges"]:
+            if edge_id not in edges:
+                errors.append(f"FAILURE_MODE_EDGE_UNKNOWN:{mode_id}:{edge_id}")
+        for restart_id in failure_mode["restart_domains"]:
+            if restart_id not in restarts:
+                errors.append(f"FAILURE_MODE_RESTART_UNKNOWN:{mode_id}:{restart_id}")
+        for path in failure_mode["source_refs"]:
+            if not _safe_repo_path(root, path):
+                errors.append(f"FAILURE_MODE_SOURCE_MISSING:{mode_id}:{path}")
+        for reference in failure_mode["detector_refs"] + failure_mode["oracle_refs"]:
+            try:
+                exists = _symbol_exists(root, reference)
+            except ValueError:
+                exists = False
+            if not exists:
+                errors.append(f"FAILURE_MODE_SYMBOL_MISSING:{mode_id}:{reference}")
+        for reference in failure_mode["sequence_test_refs"]:
+            if not _test_symbol_exists(root, reference):
+                errors.append(f"FAILURE_MODE_TEST_MISSING:{mode_id}:{reference}")
+    rtmps = failure_modes.get("failure.rtmps_session_ack_stall")
+    if rtmps is not None and set(rtmps["required_qualification"]) != {
+        "ISOLATED_SEQUENCE",
+        "HISTORICAL_REPLAY",
+        "PRODUCTION_READ_ONLY",
+    }:
+        errors.append("RTMPS_FAILURE_MODE_QUALIFICATION_INCOMPLETE")
+    session_loss = failure_modes.get("failure.ffmpeg_session_loss")
+    if session_loss is not None and set(session_loss["required_qualification"]) != {
+        "ISOLATED_SEQUENCE",
+        "HISTORICAL_REPLAY",
+        "PRODUCTION_READ_ONLY",
+    }:
+        errors.append("FFMPEG_SESSION_LOSS_QUALIFICATION_INCOMPLETE")
+    errors.extend(f"FAILURE_MODE_NODE_UNCOVERED:{item}" for item in sorted(set(nodes) - covered_nodes))
+    errors.extend(f"FAILURE_MODE_EDGE_UNCOVERED:{item}" for item in sorted(set(edges) - covered_edges))
+    errors.extend(f"FAILURE_MODE_RESTART_UNCOVERED:{item}" for item in sorted(set(restarts) - covered_restarts))
     return sorted(set(errors))
 
 
@@ -299,6 +382,7 @@ def check_map(root: Path) -> dict[str, Any]:
             "nodes": len(value["nodes"]),
             "edges": len(value["edges"]),
             "restart_domains": len(value["restart_domains"]),
+            "failure_modes": len(value["failure_modes"]),
         },
     }
 
@@ -324,6 +408,7 @@ def build_view(
     selected_nodes = set(nodes_by_id)
     selected_edges = set(edges_by_id)
     selected_restarts = set(restarts_by_id)
+    selected_failure_modes = {item["id"] for item in value["failure_modes"]}
     filtered = any(item is not None for item in (layer, node, restart_domain))
     if filtered:
         selected_nodes = set()
@@ -345,6 +430,13 @@ def build_view(
         selected_restarts.update(item["id"] for item in value["restart_domains"] if selected_nodes.intersection(item["scope_nodes"]))
         if restart_domain is not None and layer is None and node is None:
             selected_restarts = {restart_domain}
+        selected_failure_modes = {
+            item["id"]
+            for item in value["failure_modes"]
+            if selected_nodes.intersection(item["affected_nodes"])
+            or selected_edges.intersection(item["evidence_edges"])
+            or selected_restarts.intersection(item["restart_domains"])
+        }
     return {
         "schema": "cra.evidence_lineage_view.v1",
         "status": "PASS",
@@ -356,6 +448,7 @@ def build_view(
         "nodes": [copy.deepcopy(item) for item in value["nodes"] if item["id"] in selected_nodes],
         "edges": [copy.deepcopy(item) for item in value["edges"] if item["id"] in selected_edges],
         "restart_domains": [copy.deepcopy(item) for item in value["restart_domains"] if item["id"] in selected_restarts],
+        "failure_modes": [copy.deepcopy(item) for item in value["failure_modes"] if item["id"] in selected_failure_modes],
         "owner_verification": copy.deepcopy(value["owner_verification"]),
         "live_overlay_contract": copy.deepcopy(value["live_overlay_contract"]),
     }
@@ -368,6 +461,14 @@ def _parse_jst(value: object) -> datetime | None:
         return datetime.fromisoformat(value)
     except ValueError:
         return None
+
+
+def _source_pointer(value: object) -> bool:
+    if not isinstance(value, str) or value.count("#") != 1:
+        return False
+    relative, pointer = value.split("#", 1)
+    path = Path(relative)
+    return bool(relative) and not path.is_absolute() and ".." not in path.parts and pointer.startswith("/")
 
 
 def validate_live_overlay(root: Path, overlay: Mapping[str, Any]) -> list[str]:
@@ -387,6 +488,8 @@ def validate_live_overlay(root: Path, overlay: Mapping[str, Any]) -> list[str]:
     if overlay.get("mapping_sha256") != mapping_digest(value):
         errors.append("OVERLAY_MAPPING_DRIFT")
     window = overlay.get("window")
+    started: datetime | None = None
+    ended: datetime | None = None
     if not isinstance(window, dict) or set(window) != {"started_at", "ended_at", "timezone"} or window.get("timezone") != "JST":
         errors.append("OVERLAY_WINDOW_INVALID")
     else:
@@ -411,8 +514,8 @@ def validate_live_overlay(root: Path, overlay: Mapping[str, Any]) -> list[str]:
                 continue
             if item["status"] not in statuses:
                 errors.append(f"OVERLAY_COMPONENT_STATUS:{node_id}")
-            if not isinstance(item["source"], str) or not item["source"].strip():
-                errors.append(f"OVERLAY_SOURCE_MISSING:{node_id}")
+            if not _source_pointer(item["source"]):
+                errors.append(f"OVERLAY_SOURCE_POINTER_INVALID:{node_id}")
             if _parse_jst(item["observed_at"]) is None:
                 errors.append(f"OVERLAY_COMPONENT_TIME:{node_id}")
             if item["status"] == "OBSERVED":
@@ -422,6 +525,11 @@ def validate_live_overlay(root: Path, overlay: Mapping[str, Any]) -> list[str]:
                     errors.append(f"OVERLAY_COMPONENT_TIME:{node_id}")
                 elif fresh_until is not None and observed_at is not None and fresh_until < observed_at:
                     errors.append(f"OVERLAY_COMPONENT_TIME_ORDER:{node_id}")
+                if started is not None and ended is not None and observed_at is not None:
+                    if not started <= observed_at <= ended:
+                        errors.append(f"OVERLAY_COMPONENT_OUTSIDE_WINDOW:{node_id}")
+                    if fresh_until is None or fresh_until < ended:
+                        errors.append(f"OVERLAY_COMPONENT_STALE_AT_WINDOW_END:{node_id}")
                 identity = item["identity"]
                 if not isinstance(identity, dict) or set(identity) != set(nodes[node_id]["identity_fields"]):
                     errors.append(f"OVERLAY_IDENTITY_FIELDS:{node_id}")
@@ -456,16 +564,19 @@ def validate_live_overlay(root: Path, overlay: Mapping[str, Any]) -> list[str]:
             if item["status"] == "OBSERVED":
                 if type(item["count"]) is not int or item["count"] < 0:
                     errors.append(f"OVERLAY_RESTART_COUNT:{restart_id}")
-                if item["latest_at"] is not None and _parse_jst(item["latest_at"]) is None:
+                latest_at = None if item["latest_at"] is None else _parse_jst(item["latest_at"])
+                if item["latest_at"] is not None and latest_at is None:
                     errors.append(f"OVERLAY_RESTART_TIME:{restart_id}")
+                elif ended is not None and latest_at is not None and latest_at > ended:
+                    errors.append(f"OVERLAY_RESTART_AFTER_WINDOW:{restart_id}")
                 if item["reason_code"] is not None:
                     errors.append(f"OVERLAY_RESTART_OBSERVED_REASON:{restart_id}")
             elif item["count"] is not None or item["latest_at"] is not None:
                 errors.append(f"OVERLAY_RESTART_UNOBSERVABLE_VALUE:{restart_id}")
             elif not isinstance(item["reason_code"], str) or not item["reason_code"].strip():
                 errors.append(f"OVERLAY_RESTART_REASON_MISSING:{restart_id}")
-            if not isinstance(item["source"], str) or not item["source"].strip():
-                errors.append(f"OVERLAY_RESTART_SOURCE:{restart_id}")
+            if not _source_pointer(item["source"]):
+                errors.append(f"OVERLAY_RESTART_SOURCE_POINTER_INVALID:{restart_id}")
 
     conclusions = overlay.get("conclusions")
     required_axes = set(value["live_overlay_contract"]["required_conclusion_axes"])
@@ -554,6 +665,12 @@ def render_view(view: Mapping[str, Any]) -> str:
         f"| `{item['id']}` | {', '.join(f'`{node}`' for node in item['scope_nodes'])} | {item['event']} | `{item['soak_rule']}` |"
         for item in view["restart_domains"]
     ]
+    lines += ["", "## Failure modes", "", "| ID | evidence absence | formal rule | qualification |", "|---|---|---|---|"]
+    lines += [
+        f"| `{item['id']}` | `{item['evidence_absence_domain']}` | `{item['formal_rule']}` | "
+        f"{', '.join(f'`{value}`' for value in item['required_qualification'])} |"
+        for item in view["failure_modes"]
+    ]
     return "\n".join(lines) + "\n"
 
 
@@ -585,8 +702,8 @@ def render_document(value: Mapping[str, Any]) -> str:
         "  OWNER[owner evidence export]",
         "  MON[Dell mTLS → arena facts/projection → CRA pull]",
         "  STATUS[Dell signed host status → arena signed relay → CRA resilient-status soak]",
-        "  OBS[Dell signed packet → arena byte-preserving relay → CRA inbox]",
-        "  SOAK[samples.jsonl + state → full replay → saved gate/watchdog]",
+        "  OBS[Dell signed packet + history → arena byte-preserving relay → CRA three histories]",
+        "  SOAK[samples.jsonl + state + signed source history → full replay → saved gate/watchdog]",
         "  CORE[CRA NO_ACTION runtime ↔ Central DB]",
         "  STOP[delivery disabled → Dell effect fence]",
         "  SUT --> OWNER --> OBS --> SOAK",
@@ -648,11 +765,35 @@ def render_document(value: Mapping[str, Any]) -> str:
         )
     lines += [
         "",
+        "## Failure-mode closure",
+        "",
+        "構造上の接続だけで完了とはしない。各failure modeをpositive source、detector、oracle、時系列試験、",
+        "evidence欠損時のfailure domain、隔離・履歴replay・本番read-only資格へ明示的に結ぶ。",
+        "",
+        "| failure mode | trigger | detector / oracle | sequence tests | absence / formal rule | qualification |",
+        "|---|---|---|---|---|---|",
+    ]
+    for failure_mode in value["failure_modes"]:
+        lines.append(
+            f"| `{failure_mode['id']}` {failure_mode['label']} | {failure_mode['trigger']} | "
+            f"{', '.join(f'`{item}`' for item in failure_mode['detector_refs'])}<br>"
+            f"{', '.join(f'`{item}`' for item in failure_mode['oracle_refs'])} | "
+            f"{'<br>'.join(f'`{item}`' for item in failure_mode['sequence_test_refs'])} | "
+            f"`{failure_mode['evidence_absence_domain']}` / `{failure_mode['formal_rule']}` | "
+            f"{', '.join(f'`{item}`' for item in failure_mode['required_qualification'])} |"
+        )
+    lines += [
+        "",
         "## Current-state overlay",
         "",
         "現在報告では、正本JSONのsha256に束縛した `cra.evidence_lineage_live_overlay.v1` を別artifactとして作る。",
         "観測窓はJSTの開始・終了を持ち、全nodeを `OBSERVED / NOT_OBSERVABLE / NOT_APPLICABLE` のいずれかで明示し、",
         "exact identity、freshness、raw source pointerを記録する。全restart domainも同じ状態語彙とsourceへ結び、次の結論を分離する。",
+        "`OBSERVED`の時刻は観測窓内で、`fresh_until`は窓の終了時刻以降でなければならない。",
+        "sourceは相対artifact pathとJSON pointer（`path#/pointer`）を要求する。validatorはそのfileの存在・内容・署名を取得しない。",
+        "raw証拠の真正性と配備identityは別途照合し、",
+        "この構造・鮮度検査だけを実環境の観測完了やformal soak判定として引用しない。",
+        "`evidence-map --snapshot`は構造が妥当でも`STRUCTURE_VALID / raw_evidence_status=UNVERIFIED`とHOLDを返す。",
         "",
         "- `current_stream_health`",
         "- `evidence_harness_status`",
@@ -674,6 +815,7 @@ def render_document(value: Mapping[str, Any]) -> str:
         "",
         "validatorはJSON Schema、ID一意性、全source/contract/unit path、Python symbol、graph接続とacyclic性、",
         "owner catalog参照、Dell→arena→CRA host-status経路、systemd unitのrestart-domain完全性、current commit/epoch値の混入、",
-        "live overlayのmapping/window/identity/source/classified conclusionを検査する。",
+        "全node/edge/restart-domainのfailure-mode被覆、detector/oracle/test参照とRTMPS ACK stall・FFmpeg session lossの三環境資格、",
+        "live overlayのmapping/window/identity/期限/source pointer/classified conclusionを検査する。",
     ]
     return "\n".join(lines) + "\n"

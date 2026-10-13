@@ -171,6 +171,11 @@ class RuntimeObservationPublisher:
             "tcp_metrics": _tcp_metrics(local_pid, self.rtmp_ports),
             "production_behavior_modified": False,
         }
+        if "delivery_route" in process:
+            observation.update(delivery_route=str(process["delivery_route"]),
+                               delivery_route_generation=int(process["delivery_route_generation"]),
+                               local_encoder_pid=int(process.get("local_encoder_pid") or 0),
+                               encoder_pipe_identity=process.get("encoder_pipe_identity", {}))
         atomic_write(self.path, observation)
         if self.recovery_evidence_cycle is not None:
             with suppress(Exception):

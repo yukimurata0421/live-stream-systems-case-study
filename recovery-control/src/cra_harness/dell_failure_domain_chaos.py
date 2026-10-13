@@ -78,7 +78,8 @@ class _Environment:
 
 
 class _UnknownAdapter(FakePhysicalAdapter):
-    def restart_ffmpeg(self, expected_target: TargetIdentity) -> Any:
+    def restart_ffmpeg(self, expected_target: TargetIdentity, *, authorization_expires_at: str | None = None) -> Any:
+        del authorization_expires_at
         self.attempt_count += 1
         raise TimeoutError(f"synthetic outcome unknown for {expected_target.ffmpeg_generation}")
 

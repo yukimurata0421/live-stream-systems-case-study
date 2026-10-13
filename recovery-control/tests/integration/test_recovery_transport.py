@@ -12,6 +12,7 @@ import pytest
 
 from cra_dell_recovery.reloading_tls_server import ReloadingTLSHTTPServer
 from cra_no_action_soak import recovery_transport as module
+from cra_no_action_soak.append_only_jsonl import _append_line
 from cra_no_action_soak.host_status import atomic_write_json
 from tests.integration.test_mtls_transport import mtls_contexts
 
@@ -45,6 +46,7 @@ def test_mtls_preserves_original_packet_and_independent_missing_role(transport: 
     status = module.pull(config, client)
     assert status["roles"] == {"dell": "RECEIVED_UNTRUSTED", "arena": "UNAVAILABLE"}
     assert json.loads((tmp_path / "dell-inbox.json").read_bytes()) == original
+    assert (tmp_path / "dell-inbox.json").read_bytes() == source.read_bytes()
     source.unlink()
     assert module.pull(config, client)["roles"]["dell"] == "UNAVAILABLE"
     assert json.loads((tmp_path / "dell-inbox.json").read_bytes()) == original
@@ -92,3 +94,46 @@ def test_redirect_is_never_followed() -> None:
     with pytest.raises(ValueError, match="REDIRECT_FORBIDDEN"):
         module.NoRedirect().redirect_request(None, response, 302, "", {}, "https://127.0.0.1/elsewhere")
     assert response.closed
+
+
+def test_signed_history_is_pulled_in_order_after_link_recovers(tmp_path: Path) -> None:
+    server_context, client, _ = mtls_contexts(tmp_path)
+    source = tmp_path / "latest.json"
+    history = tmp_path / "history.jsonl"
+    packets = [
+        {"role": "dell", "sequence": index, "signature": f"original-{index}", "observed_at": f"2026-09-01T00:00:{index:02d}Z"}
+        for index in range(1, 4)
+    ]
+    atomic_write_json(source, packets[-1])
+    for packet in packets:
+        _append_line(history, packet, maximum_bytes=module.MAXIMUM_HISTORY_BYTES)
+    server = ReloadingTLSHTTPServer(("127.0.0.1", 0), module.handler_for({"dell": str(source)}, {"dell": str(history)}), server_context)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        base = f"https://127.0.0.1:{server.server_address[1]}"
+        config = {
+            "schema": module.HISTORY_SCHEMA,
+            "sources": {
+                "dell": {
+                    "url": base + module.ROUTES["dell"],
+                    "output_file": str(tmp_path / "inbox.json"),
+                    "history_url": base + module.HISTORY_ROUTES["dell"],
+                    "history_output_file": str(tmp_path / "received.jsonl"),
+                }
+            },
+            "status_file": str(tmp_path / "status.json"),
+        }
+        first = module.pull(config, client)
+        assert first["history_roles"] == {"dell": "APPENDED_UNTRUSTED"}
+        assert [json.loads(line) for line in (tmp_path / "received.jsonl").read_text().splitlines()] == packets
+        assert (tmp_path / "received.jsonl").read_bytes() == history.read_bytes()
+        assert module.pull(config, client)["history_roles"] == {"dell": "CURRENT"}
+        with pytest.raises(urllib.error.HTTPError) as error:
+            urllib.request.urlopen(base + module.HISTORY_ROUTES["dell"] + "?after=01", context=client, timeout=2)
+        assert error.value.code == 503
+        error.value.close()
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)

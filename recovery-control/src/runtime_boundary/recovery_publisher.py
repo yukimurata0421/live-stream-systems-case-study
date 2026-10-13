@@ -7,6 +7,7 @@ Failure leaves the previous export untouched, so consumers see expiry.
 
 from __future__ import annotations
 
+import errno
 import hashlib
 import json
 import logging
@@ -20,7 +21,7 @@ from collections.abc import Callable, Iterator, Mapping
 from contextlib import closing, contextmanager, suppress
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, NoReturn
 
 from cra_dell_recovery.json_input import load_object
 from cra_dell_recovery.owner_diagnostics import diagnostic_event, empty_diagnostics
@@ -209,20 +210,29 @@ class RecoveryEvidencePublisher:
             raise ValueError("RECOVERY_OWNER_PROC_STAT_INVALID")
         return fields[0], int(fields[1]), int(fields[19])
 
-    def _record_read_failure(self, error: BaseException) -> None:
+    def _record_read_failure(self, error: BaseException, *, process: dict[str, Any] | None = None) -> None:
         events = self._read_diagnostics["events"]
         if len(events) >= 16:
             raise ValueError("RECOVERY_OWNER_DIAGNOSTIC_LIMIT")
-        process = getattr(error, "process", None)
-        events.append(diagnostic_event(self._read_stage, error, process=process if isinstance(process, dict) else None))
+        recorded_process = process if process is not None else getattr(error, "process", None)
+        events.append(
+            diagnostic_event(
+                self._read_stage,
+                error,
+                process=recorded_process if isinstance(recorded_process, dict) else None,
+            )
+        )
 
     def _owner_state_matches_anchor(self) -> bool:
-        anchor = self._child_anchor
-        if anchor is None:
-            return False
         try:
             process = dict(self.process_supplier())
         except (OSError, ValueError, KeyError, TypeError):
+            return False
+        return self._process_matches_anchor(process)
+
+    def _process_matches_anchor(self, process: Mapping[str, Any]) -> bool:
+        anchor = self._child_anchor
+        if anchor is None:
             return False
         return (
             process.get("local_ffmpeg_pid") == anchor[1][0]
@@ -230,6 +240,7 @@ class RecoveryEvidencePublisher:
             and process.get("managed_child_cardinality") == "1"
             and process.get("managed_child_pids") == [anchor[1][0]]
             and process.get("pod_uid") == anchor[0]["pod_uid"]
+            and process.get("ffmpeg_generation") == anchor[1][1]
         )
 
     def _process_capsule(
@@ -249,7 +260,9 @@ class RecoveryEvidencePublisher:
             "parent_pid": parent,
             "start_ticks": ticks,
             "command_bytes": 0,
-            "anchor_relation": ("UNPROVEN" if anchor is None else "MANAGED" if pid == anchor[1][0] else "AUXILIARY"),
+            "anchor_relation": (
+                "UNPROVEN" if anchor is None else "MANAGED" if pid == anchor[1][0] else "AUXILIARY"
+            ),
             "executable_relation": executable_relation,
             "anchor_target_sha256": source_hash(anchor[0]) if anchor is not None else None,
             "owner_state_relation": owner_state_relation,
@@ -305,20 +318,68 @@ class RecoveryEvidencePublisher:
                 self._read_diagnostics["proc_scan_retry_count"] += 1
         raise AssertionError("unreachable")
 
-    def _strict_registered_children(self, process: Mapping[str, Any]) -> list[int]:
+    def _strict_registered_children(self, process: Mapping[str, Any]) -> tuple[list[int], dict[str, Any]]:
         until = time.monotonic() + PROC_SCAN_SECONDS
+        try:
+            anchor = self._retry_anchor()
+        except (OSError, ValueError):
+            anchor = None
+        current_process = dict(process)
         for attempt in range(PROC_SCAN_ATTEMPTS):
             self._read_diagnostics["proc_scan_attempt_count"] += 1
             try:
-                return self._scan_registered_children(process)
+                return self._scan_registered_children(current_process), current_process
             except _ProcSnapshotRace as error:
                 self._record_read_failure(error)
+                if anchor is None or self._retry_anchor() != anchor:
+                    raise ValueError("RECOVERY_OWNER_RETRY_ANCHOR_CHANGED") from error
                 if attempt + 1 == PROC_SCAN_ATTEMPTS:
                     raise ValueError("RECOVERY_OWNER_PROC_RETRY_EXHAUSTED") from error
                 if time.monotonic() >= until:
                     raise ValueError("RECOVERY_OWNER_PROC_RETRY_DEADLINE") from error
                 self._read_diagnostics["proc_scan_retry_count"] += 1
+                self._read_stage = "process_supplier"
+                current_process = dict(self.process_supplier())
+                if not self._process_matches_anchor(current_process):
+                    raise ValueError("RECOVERY_OWNER_RETRY_ANCHOR_CHANGED") from error
         raise AssertionError("unreachable")
+
+    def _unavailable_auxiliary_executable(
+        self,
+        *,
+        pid: int,
+        parent: int,
+        ticks: int,
+        error: BaseException,
+        capsule: dict[str, Any],
+    ) -> NoReturn:
+        """Retry only an errno-backed exit of this exact registered helper."""
+        stage = self._read_stage
+        if isinstance(error, OSError):
+            self._record_read_failure(error, process=capsule)
+        if not isinstance(error, OSError) or error.errno not in {errno.ENOENT, errno.ESRCH}:
+            raise _ProcReadUnproven("RECOVERY_OWNER_AUXILIARY_EXECUTABLE_UNAVAILABLE", process=capsule) from error
+        self._read_stage = "child_stat_final"
+        try:
+            final_state, final_parent, final_ticks = self._proc_stat(pid)
+        except (FileNotFoundError, ProcessLookupError):
+            raise _ProcSnapshotRace("RECOVERY_OWNER_REGISTERED_CHILD_DISAPPEARED", process=capsule) from error
+        except (OSError, ValueError):
+            raise _ProcReadUnproven("RECOVERY_OWNER_AUXILIARY_EXECUTABLE_UNAVAILABLE", process=capsule) from error
+        final_capsule = self._process_capsule(
+            pid=pid,
+            state=final_state,
+            parent=final_parent,
+            ticks=final_ticks,
+            executable_relation="UNAVAILABLE",
+            owner_state_relation="MATCHED",
+        )
+        if (final_parent, final_ticks) != (parent, ticks):
+            raise _ProcReadUnproven("RECOVERY_OWNER_CHILD_REGISTRY_IDENTITY_INVALID", process=final_capsule) from error
+        if final_state == "Z":
+            raise _ProcSnapshotRace("RECOVERY_OWNER_AUXILIARY_EXITED", process=final_capsule) from error
+        self._read_stage = stage
+        raise _ProcReadUnproven("RECOVERY_OWNER_AUXILIARY_EXECUTABLE_UNAVAILABLE", process=final_capsule) from error
 
     def _scan_registered_children(self, process: Mapping[str, Any]) -> list[int]:
         """Classify only spawn-registered identities while creation is locked."""
@@ -384,8 +445,17 @@ class RecoveryEvidencePublisher:
             ):
                 raise _ProcReadUnproven("RECOVERY_OWNER_CHILD_REGISTRY_IDENTITY_INVALID", process=capsule)
             role = entry.get("role")
-            if role not in {"AUXILIARY", "DELIVERY_CANDIDATE"}:
+            if role not in {"AUXILIARY", "DELIVERY_CANDIDATE", "ENCODER_PIPE"}:
                 raise _ProcReadUnproven("RECOVERY_OWNER_CHILD_REGISTRY_IDENTITY_INVALID", process=capsule)
+            if role == "ENCODER_PIPE":
+                if state == "Z":
+                    continue
+                self._read_stage = "child_identity"
+                if not self.child_registry.pipe_encoder_proven(pid, entry):
+                    raise _ProcReadUnproven("RECOVERY_OWNER_ENCODER_PIPE_UNPROVEN", process=capsule)
+                if pid != process.get("local_encoder_pid"):
+                    raise _ProcReadUnproven("RECOVERY_OWNER_ENCODER_PIPE_UNBOUND", process=capsule)
+                continue
             if role == "DELIVERY_CANDIDATE":
                 managed.append(pid)
                 if pid != managed_pid and process.get("runtime_lifecycle_state") != "STARTING_FFMPEG":
@@ -393,15 +463,37 @@ class RecoveryEvidencePublisher:
                 continue
             if state == "Z":
                 continue
+            self._read_stage = "child_identity"
             try:
                 executable = self._executable_identity(pid)
             except (OSError, ValueError) as error:
-                raise _ProcReadUnproven("RECOVERY_OWNER_AUXILIARY_EXECUTABLE_UNAVAILABLE", process=capsule) from error
+                self._unavailable_auxiliary_executable(
+                    pid=pid,
+                    parent=parent,
+                    ticks=ticks,
+                    error=error,
+                    capsule=capsule,
+                )
+            self._read_stage = "child_stat_final"
             try:
                 stable_state, stable_parent, stable_ticks = self._proc_stat(pid)
+            except (FileNotFoundError, ProcessLookupError) as error:
+                self._record_read_failure(error, process=capsule)
+                raise _ProcSnapshotRace("RECOVERY_OWNER_REGISTERED_CHILD_DISAPPEARED", process=capsule) from error
+            except (OSError, ValueError) as error:
+                self._record_read_failure(error, process=capsule)
+                raise _ProcReadUnproven("RECOVERY_OWNER_AUXILIARY_EXECUTABLE_UNAVAILABLE", process=capsule) from error
+            self._read_stage = "child_identity"
+            try:
                 stable_executable = self._executable_identity(pid)
             except (OSError, ValueError) as error:
-                raise _ProcSnapshotRace("RECOVERY_OWNER_AUXILIARY_EXECUTABLE_CHANGED") from error
+                self._unavailable_auxiliary_executable(
+                    pid=pid,
+                    parent=stable_parent,
+                    ticks=stable_ticks,
+                    error=error,
+                    capsule=capsule,
+                )
             if (stable_parent, stable_ticks) != (parent, ticks):
                 raise _ProcReadUnproven(
                     "RECOVERY_OWNER_CHILD_REGISTRY_IDENTITY_INVALID",
@@ -636,7 +728,7 @@ class RecoveryEvidencePublisher:
             else:
                 with self.child_registry.guard():
                     process = dict(self.process_supplier())
-                    children = self._strict_registered_children(process)
+                    children, process = self._strict_registered_children(process)
             self._read_stage = "anchor_runtime"
             anchor = self._child_anchor
             if anchor is not None and (

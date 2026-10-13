@@ -1,14 +1,12 @@
 from __future__ import annotations
 
 import argparse
-import errno
 import fcntl
 import hashlib
 import json
 import math
 import os
 import re
-import stat
 import time
 from collections.abc import Iterable, Iterator, Mapping
 from dataclasses import dataclass
@@ -17,10 +15,11 @@ from pathlib import Path
 from typing import Any
 
 from cra_dell_recovery.canonical import KeyRing, canonical_json
-from cra_dell_recovery.json_input import load_object
 from cra_dell_recovery.release_identity import require_runtime_release
 from cra_dell_recovery.time import isoformat_utc, parse_utc
 
+from .append_only_jsonl import _append_line, _last_line
+from .append_only_jsonl import _serialized_line as _serialized_line
 from .host_status import atomic_write_json, read_object
 from .host_status_pull import _public_key
 from .resilient_host_status import ResilientHostStatusContract
@@ -236,78 +235,6 @@ def _gate_status(blockers: set[str]) -> str:
     if blockers <= PENDING_ELIGIBILITY_BLOCKERS:
         return "NOT_YET_ELIGIBLE"
     return "FAIL"
-
-
-def _serialized_line(value: Mapping[str, Any]) -> bytes:
-    raw = (json.dumps(dict(value), separators=(",", ":"), sort_keys=True) + "\n").encode()
-    if len(raw) > MAXIMUM_SAMPLE_BYTES:
-        raise ValueError("RESILIENT_SOAK_SAMPLE_TOO_LARGE")
-    return raw
-
-
-def _write_all(handle: Any, raw: bytes) -> None:
-    """Write one complete frame or fail without claiming progress."""
-
-    remaining = memoryview(raw)
-    while remaining:
-        written = handle.write(remaining)
-        if written is None or written <= 0:
-            raise OSError(errno.EIO, "RESILIENT_SOAK_EVIDENCE_WRITE_NO_PROGRESS")
-        remaining = remaining[written:]
-
-
-def _append_line(path: Path, value: Mapping[str, Any], *, maximum_bytes: int) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
-    raw = _serialized_line(value)
-    descriptor = os.open(path, os.O_WRONLY | os.O_APPEND | os.O_CREAT | os.O_NOFOLLOW | os.O_NONBLOCK, 0o600)
-    try:
-        metadata = os.fstat(descriptor)
-        if not stat.S_ISREG(metadata.st_mode):
-            raise ValueError("RESILIENT_SOAK_EVIDENCE_NOT_REGULAR_FILE")
-        if metadata.st_size + len(raw) > maximum_bytes:
-            raise ValueError("RESILIENT_SOAK_EVIDENCE_CAPACITY_EXHAUSTED")
-        with os.fdopen(descriptor, "ab", buffering=0) as handle:
-            descriptor = -1
-            _write_all(handle, raw)
-            os.fsync(handle.fileno())
-    finally:
-        if descriptor >= 0:
-            os.close(descriptor)
-    directory = os.open(path.parent, os.O_RDONLY | os.O_DIRECTORY)
-    try:
-        os.fsync(directory)
-    finally:
-        os.close(directory)
-
-
-def _last_line(path: Path, *, maximum_bytes: int) -> dict[str, Any] | None:
-    if not path.exists():
-        return None
-    descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
-    try:
-        metadata = os.fstat(descriptor)
-        if not stat.S_ISREG(metadata.st_mode):
-            raise ValueError("RESILIENT_SOAK_EVIDENCE_NOT_REGULAR_FILE")
-        if metadata.st_size > maximum_bytes:
-            raise ValueError("RESILIENT_SOAK_EVIDENCE_TOO_LARGE")
-        if metadata.st_size == 0:
-            return None
-        read_size = min(metadata.st_size, 4 * 1024 * 1024)
-        os.lseek(descriptor, metadata.st_size - read_size, os.SEEK_SET)
-        raw = os.read(descriptor, read_size)
-    finally:
-        os.close(descriptor)
-    if not raw.endswith(b"\n"):
-        raise ValueError("RESILIENT_SOAK_EVIDENCE_PARTIAL_TAIL")
-    lines = raw.rstrip(b"\n").splitlines()
-    if not lines:
-        return None
-    try:
-        return load_object(lines[-1], maximum_bytes=read_size)
-    except ValueError as error:
-        if str(error) == "JSON_INPUT_NOT_OBJECT":
-            raise ValueError("RESILIENT_SOAK_SAMPLE_NOT_OBJECT") from error
-        raise
 
 
 def _state(path: Path, evidence: Path, *, maximum_bytes: int) -> dict[str, Any]:
@@ -601,6 +528,7 @@ def evaluate_samples(
     gaps_over_limit_seconds = 0
     new_event_count = 0
     exact_event_count = 0
+    no_authority_effect_event_count = 0
     dell_available_final = False
     sample_count = 0
     first_time: datetime | None = None
@@ -751,6 +679,7 @@ def evaluate_samples(
                 health_events = []
             new_event_count += len(events)
             exact_event_count += sum(event["causal_state"] == "EXACT" for event in events)
+            no_authority_effect_event_count += sum(event["causal_state"] == "NO_AUTHORITY_EFFECT" for event in events)
             failure_scan = health_events if prior is not None else list(status["health_transition"]["event_tail"])
             publisher_failure_event_count[name] += sum("PUBLISHER_INVOCATION_FAILED" in event["reason_codes"] for event in failure_scan)
             if publisher_failure_event_count[name] > 0:
@@ -878,6 +807,7 @@ def evaluate_samples(
         "state_sample_count": state_sample_count,
         "transition_event_count": new_event_count,
         "exact_transition_event_count": exact_event_count,
+        "no_authority_effect_transition_event_count": no_authority_effect_event_count,
         "producer_rotation_count": producer_rotations,
         "health_journal_rotation_count": health_journal_rotations,
         "target_identity_change_count": target_identity_change_count,

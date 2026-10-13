@@ -248,6 +248,14 @@ class CentralStore(SQLiteLedger):
             )
 
     def add_authorization(self, authorization: RecoveryAuthorizationInput) -> None:
+        """Install an explicitly unbound non-production adapter authorization.
+
+        Production authorizations are created only by ``persist_policy_decision``
+        and receive an append-only signed-projection revision binding.  The
+        ``FIXTURE_ADAPTER`` incident transition below is the compatibility marker
+        used by isolated harnesses and the legacy Phase 4 no-effect shadow
+        diagnostic.  An effect-capable production path must not call this API.
+        """
         digest = payload_digest(
             {
                 "authorization_id": authorization.authorization_id,
@@ -347,7 +355,156 @@ class CentralStore(SQLiteLedger):
                     stamp,
                 ),
             )
+            db.execute(
+                """INSERT INTO monitoring_projection_heads(
+                       target_id,projection_id,source_instance_id,observation_revision,
+                       observation_sequence,projection_sha256,state_revision,updated_at
+                   ) VALUES(?,?,?,?,?,?,1,?)
+                   ON CONFLICT(target_id) DO UPDATE SET
+                       projection_id=excluded.projection_id,
+                       source_instance_id=excluded.source_instance_id,
+                       observation_revision=excluded.observation_revision,
+                       observation_sequence=excluded.observation_sequence,
+                       projection_sha256=excluded.projection_sha256,
+                       state_revision=monitoring_projection_heads.state_revision+1,
+                       updated_at=excluded.updated_at""",
+                (
+                    projection["target_id"],
+                    projection["projection_id"],
+                    projection["source_instance_id"],
+                    projection["observation_revision"],
+                    projection["observation_sequence"],
+                    projection["payload_sha256"],
+                    stamp,
+                ),
+            )
         return "ACCEPTED"
+
+    @staticmethod
+    def _bind_authorization_revision(
+        db: sqlite3.Connection,
+        *,
+        projection: dict[str, Any],
+        authorization: RecoveryAuthorizationInput,
+    ) -> None:
+        if (
+            authorization.target_id != projection.get("target_id")
+            or authorization.observation_revision != projection.get("observation_revision")
+            or authorization.incident_id != dict(projection.get("incident") or {}).get("incident_id")
+            or authorization.expected_target.to_dict() != projection.get("observed_target")
+        ):
+            raise CommandBlocked("AUTHORIZATION_BASE_REVISION_CONTEXT_MISMATCH")
+        persisted = db.execute(
+            """SELECT target_id,source_instance_id,observation_revision,observation_sequence,payload_sha256
+               FROM monitoring_evidence_projections WHERE projection_id=?""",
+            (projection["projection_id"],),
+        ).fetchone()
+        if persisted is None:
+            raise CommandBlocked("AUTHORIZATION_BASE_REVISION_MISSING")
+        expected = (
+            str(projection["target_id"]),
+            str(projection["source_instance_id"]),
+            str(projection["observation_revision"]),
+            int(projection["observation_sequence"]),
+            str(projection["payload_sha256"]),
+        )
+        actual = (
+            str(persisted["target_id"]),
+            str(persisted["source_instance_id"]),
+            str(persisted["observation_revision"]),
+            int(persisted["observation_sequence"]),
+            str(persisted["payload_sha256"]),
+        )
+        if actual != expected:
+            raise CommandBlocked("AUTHORIZATION_BASE_REVISION_CONTEXT_MISMATCH")
+        head = db.execute(
+            """SELECT projection_id,state_revision FROM monitoring_projection_heads
+               WHERE target_id=?""",
+            (authorization.target_id,),
+        ).fetchone()
+        if head is None or str(head["projection_id"]) != str(projection["projection_id"]):
+            raise CommandBlocked("AUTHORIZATION_BASE_REVISION_NOT_CURRENT")
+        db.execute(
+            """INSERT INTO authorization_revision_bindings(
+                   authorization_id,projection_id,target_id,source_instance_id,
+                   observation_revision,observation_sequence,state_revision,
+                   projection_sha256,bound_at
+               ) VALUES(?,?,?,?,?,?,?,?,?)""",
+            (
+                authorization.authorization_id,
+                projection["projection_id"],
+                authorization.target_id,
+                projection["source_instance_id"],
+                authorization.observation_revision,
+                projection["observation_sequence"],
+                head["state_revision"],
+                projection["payload_sha256"],
+                authorization.authorized_at,
+            ),
+        )
+
+    @staticmethod
+    def _require_authorization_base_revision_current(db: sqlite3.Connection, auth: sqlite3.Row) -> dict[str, Any]:
+        binding = db.execute(
+            "SELECT * FROM authorization_revision_bindings WHERE authorization_id=?",
+            (auth["authorization_id"],),
+        ).fetchone()
+        if binding is None:
+            fixture = db.execute(
+                """SELECT 1 FROM incident_transitions
+                   WHERE incident_id=? AND reason_code='FIXTURE_ADAPTER' LIMIT 1""",
+                (auth["incident_id"],),
+            ).fetchone()
+            if fixture is not None:
+                return {"kind": "NON_PRODUCTION_ADAPTER"}
+            raise CommandBlocked("AUTHORIZATION_BASE_REVISION_MISSING")
+        base = db.execute(
+            """SELECT target_id,source_instance_id,observation_revision,observation_sequence,
+                      payload_sha256,payload_json
+               FROM monitoring_evidence_projections WHERE projection_id=?""",
+            (binding["projection_id"],),
+        ).fetchone()
+        if base is None:
+            raise CommandBlocked("AUTHORIZATION_BASE_REVISION_MISSING")
+        base_payload = dict(json.loads(str(base["payload_json"])))
+        if (
+            str(binding["target_id"]) != str(auth["target_id"])
+            or str(binding["target_id"]) != str(base["target_id"])
+            or str(binding["source_instance_id"]) != str(base["source_instance_id"])
+            or str(binding["observation_revision"]) != str(auth["observation_revision"])
+            or str(binding["observation_revision"]) != str(base["observation_revision"])
+            or int(binding["observation_sequence"]) != int(base["observation_sequence"])
+            or str(binding["projection_sha256"]) != str(base["payload_sha256"])
+            or str(base_payload.get("target_id")) != str(auth["target_id"])
+            or dict(base_payload.get("incident") or {}).get("incident_id") != auth["incident_id"]
+            or base_payload.get("observed_target") != json.loads(str(auth["expected_target_json"]))
+        ):
+            raise CommandBlocked("AUTHORIZATION_BASE_REVISION_CONTEXT_MISMATCH")
+        head = db.execute(
+            """SELECT projection_id,source_instance_id,observation_revision,
+                      observation_sequence,projection_sha256,state_revision
+               FROM monitoring_projection_heads WHERE target_id=?""",
+            (binding["target_id"],),
+        ).fetchone()
+        if head is None:
+            raise CommandBlocked("AUTHORIZATION_BASE_REVISION_MISSING")
+        if (
+            str(head["projection_id"]) != str(binding["projection_id"])
+            or str(head["source_instance_id"]) != str(binding["source_instance_id"])
+            or str(head["observation_revision"]) != str(binding["observation_revision"])
+            or int(head["observation_sequence"]) != int(binding["observation_sequence"])
+            or str(head["projection_sha256"]) != str(binding["projection_sha256"])
+            or int(head["state_revision"]) != int(binding["state_revision"])
+        ):
+            raise CommandBlocked("AUTHORIZATION_BASE_REVISION_STALE")
+        return {
+            "kind": "SIGNED_PROJECTION",
+            "projection_id": str(binding["projection_id"]),
+            "observation_revision": str(binding["observation_revision"]),
+            "observation_sequence": int(binding["observation_sequence"]),
+            "state_revision": int(binding["state_revision"]),
+            "projection_sha256": str(binding["projection_sha256"]),
+        }
 
     def central_policy_blockers(
         self,
@@ -440,6 +597,13 @@ class CentralStore(SQLiteLedger):
         if not resolved_candidate_reason_code.strip() or not resolved_decision_reason_code.strip():
             raise ValueError("CRA_POLICY_DECISION_REASON_INVALID")
         expected_json = json.dumps(authorization.expected_target.to_dict(), separators=(",", ":"), sort_keys=True)
+        if (
+            authorization.target_id != projection.get("target_id")
+            or authorization.observation_revision != projection.get("observation_revision")
+            or authorization.incident_id != dict(projection.get("incident") or {}).get("incident_id")
+            or authorization.expected_target.to_dict() != projection.get("observed_target")
+        ):
+            raise ValueError("CRA_POLICY_DECISION_CONTEXT_MISMATCH")
         decision_value = {
             "decision_id": decision_id,
             "projection_id": projection["projection_id"],
@@ -569,6 +733,11 @@ class CentralStore(SQLiteLedger):
                     authorization_digest,
                     "AUTHORIZED",
                 ),
+            )
+            self._bind_authorization_revision(
+                db,
+                projection=projection,
+                authorization=authorization,
             )
         return decision
 
@@ -1090,6 +1259,7 @@ class CentralStore(SQLiteLedger):
                     raise CommandBlocked("AUTHORIZATION_NOT_EXECUTABLE")
                 if parse_utc(str(auth["expires_at"])) <= stamp:
                     raise CommandBlocked("AUTHORIZATION_EXPIRED")
+                revision_binding = self._require_authorization_base_revision_current(db, auth)
                 expected = TargetIdentity.from_dict(json.loads(str(auth["expected_target_json"])))
                 scope_id = effect_scope_id("restart_ffmpeg", expected)
                 logical_scope_id = logical_generation_scope_id("restart_ffmpeg", expected)
@@ -1162,6 +1332,7 @@ class CentralStore(SQLiteLedger):
                         "status": "CONFIRMED",
                         "authority_epoch": int(session["authority_epoch"]),
                         "command_seq": seq,
+                        "base_revision": revision_binding,
                         "source": "Central SQLite targets.next_command_seq",
                     },
                 )
@@ -1269,21 +1440,49 @@ class CentralStore(SQLiteLedger):
         if not self.delivery_allowed():
             raise CommandBlocked("DELIVERY_FORBIDDEN")
         stamp = isoformat_utc(utc_now())
+        revision_rejection: str | None = None
         with self.write() as db:
             outbox = db.execute(
-                """SELECT o.outbox_id,o.attempt_count,c.status FROM outbox_messages o
+                """SELECT o.outbox_id,o.attempt_count,c.status,c.authorization_id FROM outbox_messages o
                    JOIN commands c ON c.command_id=o.command_id WHERE o.command_id=?""",
                 (command_id,),
             ).fetchone()
             if outbox is None:
                 raise CommandBlocked("OUTBOX_NOT_FOUND")
-            attempt_no = int(outbox["attempt_count"]) + 1
-            db.execute(
-                "UPDATE outbox_messages SET state='IN_FLIGHT',attempt_count=?,last_attempt_at=?,updated_at=? WHERE command_id=?",
-                (attempt_no, stamp, stamp, command_id),
-            )
-            db.execute("UPDATE commands SET status='SENT',updated_at=? WHERE command_id=?", (stamp, command_id))
-            if outbox["status"] != "SENT":
+            auth = db.execute(
+                "SELECT * FROM recovery_authorizations WHERE authorization_id=?",
+                (outbox["authorization_id"],),
+            ).fetchone()
+            if auth is None:
+                raise CommandBlocked("MISSING_AUTHORIZATION_CONTEXT")
+            try:
+                self._require_authorization_base_revision_current(db, auth)
+            except CommandBlocked as exc:
+                revision_rejection = str(exc)
+                if revision_rejection not in {
+                    "AUTHORIZATION_BASE_REVISION_MISSING",
+                    "AUTHORIZATION_BASE_REVISION_CONTEXT_MISMATCH",
+                    "AUTHORIZATION_BASE_REVISION_STALE",
+                }:
+                    raise
+                db.execute(
+                    "UPDATE commands SET status='SUPERSEDED',updated_at=? WHERE command_id=?",
+                    (stamp, command_id),
+                )
+                db.execute(
+                    "UPDATE outbox_messages SET state='TERMINAL',updated_at=? WHERE command_id=?",
+                    (stamp, command_id),
+                )
+                db.execute(
+                    "UPDATE recovery_authorizations SET status='REVOKED' WHERE authorization_id=?",
+                    (outbox["authorization_id"],),
+                )
+                db.execute(
+                    """UPDATE effect_scope_ledger SET state='PRE_EFFECT_ABORTED',updated_at=?
+                       WHERE origin_kind='CENTRAL_COMMAND' AND origin_id=?
+                         AND physical_attempt_count=0 AND state='RESERVED'""",
+                    (stamp, command_id),
+                )
                 db.execute(
                     "INSERT INTO command_transitions VALUES (?,?,?,?,?,?,?,?)",
                     (
@@ -1291,16 +1490,39 @@ class CentralStore(SQLiteLedger):
                         command_id,
                         "CRA",
                         outbox["status"],
-                        "SENT",
-                        "DELIVERY_STARTED",
+                        "SUPERSEDED",
+                        revision_rejection,
                         None,
                         stamp,
                     ),
                 )
-            db.execute(
-                "INSERT INTO delivery_attempts VALUES (?,?,?,?,NULL,'IN_FLIGHT',NULL,NULL,NULL,'SEND_STARTED')",
-                (f"delivery-{command_id}-{attempt_no}", outbox["outbox_id"], attempt_no, stamp),
-            )
+            if revision_rejection is None:
+                attempt_no = int(outbox["attempt_count"]) + 1
+                db.execute(
+                    "UPDATE outbox_messages SET state='IN_FLIGHT',attempt_count=?,last_attempt_at=?,updated_at=? WHERE command_id=?",
+                    (attempt_no, stamp, stamp, command_id),
+                )
+                db.execute("UPDATE commands SET status='SENT',updated_at=? WHERE command_id=?", (stamp, command_id))
+                if outbox["status"] != "SENT":
+                    db.execute(
+                        "INSERT INTO command_transitions VALUES (?,?,?,?,?,?,?,?)",
+                        (
+                            f"transition-{uuid.uuid4()}",
+                            command_id,
+                            "CRA",
+                            outbox["status"],
+                            "SENT",
+                            "DELIVERY_STARTED",
+                            None,
+                            stamp,
+                        ),
+                    )
+                db.execute(
+                    "INSERT INTO delivery_attempts VALUES (?,?,?,?,NULL,'IN_FLIGHT',NULL,NULL,NULL,'SEND_STARTED')",
+                    (f"delivery-{command_id}-{attempt_no}", outbox["outbox_id"], attempt_no, stamp),
+                )
+        if revision_rejection is not None:
+            raise CommandBlocked(revision_rejection)
 
     def record_receipt(
         self,

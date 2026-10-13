@@ -1,0 +1,38 @@
+{
+  "schema": "stream.public_continuity_checkpoint.v1",
+  "acquired_at_jst": "2026-10-14T01:14:12+09:00",
+  "measurement_start_jst": "2026-05-06T10:36:17+09:00",
+  "measurement_endpoint_jst": "2026-10-14T00:04:57+09:00",
+  "elapsed_days": 160,
+  "elapsed_remainder": "13:28:40",
+  "public_video_id": "OpMzOBFwM7M",
+  "acquisition": "read-only SQL transaction on the running monitor process-bound operational ledger",
+  "table": "same_url_transition_ledger",
+  "ledger_first_checkpoint_jst": "2026-05-28T22:57:22+09:00",
+  "ledger_last_checkpoint_jst": "2026-10-14T00:04:57+09:00",
+  "ledger_rows": 140,
+  "checkpoint_calendar_days": 140,
+  "expected_checkpoint_calendar_days": 140,
+  "missing_checkpoint_dates": [],
+  "event_counts": {
+    "baseline": 1,
+    "daily_checkpoint": 139
+  },
+  "distinct_live_url_hashes": 1,
+  "selected_video_hash_mismatch_count": 0,
+  "expected_video_hash_mismatch_count": 0,
+  "recorded_url_transitions": 0,
+  "ledger_candidate_new_url_count": 0,
+  "ledger_force_live_count": 0,
+  "historical_initial_window_candidate_samples": 2,
+  "historical_initial_window_selected_replacement_actions": 0,
+  "historical_start_identity_source": "retained May 2026 same-URL review",
+  "limitations": [
+    "daily checkpoint coverage is not continuous frame coverage",
+    "no uninterrupted playback or contractual availability claim",
+    "initial measurement start predates the operational ledger",
+    "intraday changes can be missed between checkpoints",
+    "the fixed historical 14-day and 28-day SLI ratios are unchanged"
+  ],
+  "production_mutation": false
+}

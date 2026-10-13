@@ -17,6 +17,7 @@ const ids = {
   checkList: "checkList",
   reliabilityStamp: "reliabilityStamp",
   reliabilityGrid: "reliabilityGrid",
+  reliabilityContext: "reliabilityContext",
   guardGrid: "guardGrid",
   trendCount: "trendCount",
   trendGrid: "trendGrid",
@@ -53,7 +54,7 @@ const checkRows = [
   },
   {
     title: "Recovery loop",
-    subtitle: "fast recovery / ffmpeg restart cluster / notify queue",
+    subtitle: "fast recovery / ffmpeg restart cluster / notification delivery queue",
     metrics: ["restarts_1h", "ffmpeg_clusters_1h", "notify_issues"],
   },
   {
@@ -161,7 +162,7 @@ function metricMap(prom) {
 function formatTime(ts) {
   const num = Number(ts);
   if (!Number.isFinite(num)) return "n/a";
-  return new Date(num * 1000).toLocaleString("ja-JP", { hour12: false });
+  return new Date(num * 1000).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo", hour12: false }) + " JST";
 }
 
 function formatDuration(seconds) {
@@ -324,9 +325,76 @@ function formatReliabilityValue(value, unit) {
   return Number.isInteger(num) ? num.toLocaleString("ja-JP") : num.toFixed(3);
 }
 
+function incidentState(incidents) {
+  const severities = incidents.map((incident) => String(incident?.severity || "unknown").toLowerCase());
+  if (severities.includes("critical")) return "bad";
+  if (severities.includes("warning")) return "warn";
+  if (severities.some((severity) => !["info"].includes(severity))) return "unknown";
+  return "ok";
+}
+
+function recoveryTypeText(value) {
+  const text = String(value || "unknown");
+  if (text === "human_review_no_automatic_restart") return "manual review · no automatic restart";
+  return text.replaceAll("_", " ");
+}
+
+function makeActiveIncidentsCard(payload) {
+  const projection = payload?.active_incidents || {};
+  const available = projection.status === "ok";
+  const incidents = available && Array.isArray(projection.items) ? projection.items : [];
+  const state = available ? incidentState(incidents) : "unknown";
+  const card = document.createElement("article");
+  card.className = `reliability-context-card active-incidents-card ${cssState(state)}`;
+
+  const head = document.createElement("div");
+  head.className = "reliability-head";
+  const title = document.createElement("h3");
+  title.textContent = "Current active incidents";
+  const window = document.createElement("span");
+  window.textContent = "current";
+  head.append(title, window);
+
+  const count = document.createElement("strong");
+  count.textContent = available ? `${incidents.length} active` : "unavailable";
+  card.append(head, count);
+
+  if (incidents.length) {
+    const list = document.createElement("ul");
+    list.className = "active-incident-list";
+    for (const incident of incidents) {
+      const row = document.createElement("li");
+      const badge = document.createElement("span");
+      const severity = String(incident.severity || "unknown").toLowerCase();
+      badge.className = `incident-severity ${severity}`;
+      badge.textContent = severity;
+      const body = document.createElement("div");
+      const label = document.createElement("b");
+      label.textContent = incident.label || incident.id || "unnamed incident";
+      const ident = document.createElement("code");
+      ident.textContent = incident.id || "unknown";
+      const recovery = document.createElement("small");
+      recovery.textContent = recoveryTypeText(incident.recovery_type);
+      body.append(label, ident, recovery);
+      row.append(badge, body);
+      list.appendChild(row);
+    }
+    card.appendChild(list);
+  }
+
+  const note = document.createElement("p");
+  note.className = "reliability-note";
+  note.textContent = projection.interpretation
+    || "Current incidents are separate from notification delivery and recovery execution.";
+  card.appendChild(note);
+  return card;
+}
+
 function renderReliability(payload) {
   const target = byId("reliabilityGrid");
   clearNode(target);
+  const context = byId("reliabilityContext");
+  clearNode(context);
 
   const items = payload?.items || [];
   const generatedAt = Number(payload?.generated_at);
@@ -345,37 +413,17 @@ function renderReliability(payload) {
     return;
   }
 
+  context.appendChild(makeActiveIncidentsCard(payload));
+
   for (const item of items) {
-    const card = document.createElement("article");
-    card.className = "reliability-card";
-
-    const head = document.createElement("div");
-    head.className = "reliability-head";
-    const title = document.createElement("h3");
-    title.textContent = item.label || item.id;
-    const window = document.createElement("span");
-    window.textContent = item.window || "observed";
-    head.append(title, window);
-
-    const value = document.createElement("strong");
-    value.textContent = formatReliabilityValue(item.value, item.unit);
-
-    const facts = document.createElement("dl");
-    facts.className = "reliability-facts";
-    for (const fact of item.facts || []) {
-      const term = document.createElement("dt");
-      term.textContent = fact.label;
-      const detail = document.createElement("dd");
-      detail.textContent = formatReliabilityValue(fact.value, fact.unit);
-      facts.append(term, detail);
-    }
-
-    const note = document.createElement("p");
-    note.className = "reliability-note";
-    note.textContent = item.note || "Measured observation";
-
-    card.append(head, value, facts, note);
-    target.appendChild(card);
+    target.appendChild(TokyoReliability.card({
+      id: item.id,
+      label: item.label || item.id,
+      window: item.window || "observed",
+      value: formatReliabilityValue(item.value, item.unit),
+      facts: (item.facts || []).map(fact => ({label: fact.label, value: formatReliabilityValue(fact.value, fact.unit)})),
+      note: item.note || "Measured observation",
+    }));
   }
 }
 

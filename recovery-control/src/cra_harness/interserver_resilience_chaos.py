@@ -16,6 +16,7 @@ from email.message import Message
 from pathlib import Path
 from typing import Any
 
+from cra_dell_recovery.errors import EvidenceFreshnessError
 from cra_dell_recovery.transport_resilience import FailureClassification, classify_failure
 from cra_harness.covering_array import coverage_report, generate_covering_array
 
@@ -76,6 +77,14 @@ FAULTS = (
     FaultSpec("signed_source_conflict", "identity", "admission", lambda: ValueError("SEQUENCE_CONFLICT"), "SECURITY", False),
     FaultSpec("source_release_overlap", "identity", "admission", lambda: ValueError("SOURCE_OR_RELEASE_NOT_ALLOWED"), "CONTRACT", False),
     FaultSpec("source_identity_oscillation", "identity", "admission", lambda: ValueError("SOURCE_IDENTITY_OSCILLATION"), "CONTRACT", False),
+    FaultSpec(
+        "evidence_freshness",
+        "freshness",
+        "admission",
+        lambda: EvidenceFreshnessError("RESILIENT_STATUS_PULL_INSUFFICIENT_EVIDENCE_VALIDITY"),
+        "OBSERVATION_FRESHNESS",
+        True,
+    ),
     FaultSpec("disk_full_during_commit", "storage", "commit", lambda: OSError(errno.ENOSPC, "x"), "STORAGE", False),
     FaultSpec("read_only_state_store", "storage", "commit", lambda: OSError(errno.EROFS, "x"), "STORAGE", False),
 )
@@ -345,6 +354,9 @@ def run_interserver_resilience_chaos(*, case_count: int = 100_000, seed: int = 2
     )
     return {
         "schema": SCHEMA,
+        "evidence_profile": "MODEL_ONLY_CLASSIFIER_AND_STATE_MACHINE",
+        "real_transport_executed": False,
+        "real_transport_qualification": "SEPARATE_LOOPBACK_MTLS_TEST_REQUIRED",
         "seed": seed,
         "case_count": len(rows),
         "fault_type_count": len(FAULTS),
@@ -369,7 +381,8 @@ def run_interserver_resilience_chaos(*, case_count: int = 100_000, seed: int = 2
         },
         "fidelity": {
             "production_classifier_executed_per_fault": True,
-            "two_hop_state_machine": True,
+            "two_hop_state_machine": "SYNTHETIC_MODEL_ONLY",
+            "real_recovery_transport_called": False,
             "physical_l2_l3_faults": False,
             "physical_pmtu_black_hole": False,
             "formal_soak_replacement": False,

@@ -13,6 +13,14 @@ study. It was imported from sanitized public snapshot
 `5e61e2b7dbbd09f014746c35e50c406ead755561`; it is not the production source
 of truth or a supported monitoring product.
 
+## OCI And Twitch Source Update
+
+The 2026-10-13 source port adds configured read-only relay/API/reception
+collectors and separate public SLI projections. See
+[relay and provider evidence](docs/relay-provider-evidence.md).
+The milestone measurements below predate this update; they are historical
+validation results, not current deployment or elapsed-time qualification.
+
 ## Current public milestone
 
 The repository now contains the R0-R6 credential-free shadow path, including
@@ -48,8 +56,8 @@ The committed private implementation lineage through
 `8f2c1aa03b8d3805d8a4c1d51a3c432b0e59657f` is represented by the sanitized
 public history through `997863c`. The later public soak-checkpoint commit
 `e37fb06` is bound to an explicitly recorded private worktree candidate rather
-than being presented as a private commit. The current portable public test
-suite is `391 tests / 385 passed / 6 skipped`; the six skips require explicitly
+than being presented as a private commit. The portable public test
+suite recorded for that earlier milestone was `391 tests / 385 passed / 6 skipped`; the six skips require explicitly
 supplied disposable PostgreSQL DSNs. These are source validation results, not
 evidence that a public commit was deployed.
 

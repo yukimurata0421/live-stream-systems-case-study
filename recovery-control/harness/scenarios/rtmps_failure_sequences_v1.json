@@ -1,0 +1,168 @@
+{
+  "schema": "cra.rtmps_failure_sequences.v1",
+  "purpose": "RTMPS session障害を一般WAN断、短いACK停止、runtime replacement、証拠欠損から分離する時系列資格試験の正本",
+  "active_episode_matrix": {
+    "schema": "cra.rtmps_active_episode_matrix.v1",
+    "scope": "確定済みACK stall episodeがcandidate相関期限を跨ぎ、source欠測または非適格を経て同一runtime内FFmpeg交代で復旧する際の検出・永続化・再起動",
+    "elapsed_seconds": [44, 45, 46, 160],
+    "intermediate": ["stalled", "not_rate_eligible", "invalid_source", "missing_source"],
+    "restart_before_recovery": [false, true],
+    "required_case_count": 32,
+    "expected_active_before_recovery": true,
+    "expected_classification": "RTMPS_ACK_STALL_FFMPEG_REPLACED",
+    "test_node_prefix": "tests/unit/test_tcp_stall_collector.py::test_confirmed_episode_survives_candidate_deadline_and_collector_restart"
+  },
+  "cases": [
+    {
+      "id": "historical_20260912_sanitized",
+      "qualification": "HISTORICAL_REPLAY",
+      "description": "一般WANはUPのまま、旧targetのACKが止まり、同一Pod/container/runtime内でFFmpeg generationが交代してACKが復旧した履歴を機密値なしで再構成する",
+      "timeline_seconds": {"baseline": 0, "gap": 45, "episode_visible": 60, "end": 180},
+      "episode": {"started": 45, "detected": 45, "recovered": 60, "classification": "RTMPS_ACK_STALL_FFMPEG_REPLACED"},
+      "expected": {"harness_classification": "PASS", "live_health": "READY", "recovered_episode_count": 1, "verified_network_recovered_episode_count": 0, "pending_reason": "RECOVERY_NOT_EXERCISED", "absent_unknown_reason": "RECOVERY_SOURCE_GAP_OUTSIDE_KNOWN_OUTAGE", "absent_owner_unknown_reason": "DELL_OWNER_LIFECYCLE_UNKNOWN_OUTSIDE_RECOVERY"}
+    },
+    {
+      "id": "historical_20260912_eof_without_flat_ack",
+      "qualification": "HISTORICAL_REPLAY",
+      "description": "一般WANとACK進行が直前まで正常なままRTMPS EOFでsource generationが一時不成立となり、同一Pod/container/runtime内でFFmpegだけが交代した履歴を機密値なしで再構成する",
+      "timeline_seconds": {"baseline": 0, "gap": 45, "episode_visible": 60, "end": 180},
+      "episode": {"started": 45, "detected": 45, "recovered": 60, "classification": "FFMPEG_SESSION_LOSS_FFMPEG_REPLACED", "detection_basis": "SESSION_CONTINUITY_LOSS", "trigger_reason_code": "SOURCE_GENERATION_INVALID"},
+      "expected": {"harness_classification": "PASS", "live_health": "READY", "recovered_episode_count": 1, "verified_network_recovered_episode_count": 0, "pending_reason": "RECOVERY_NOT_EXERCISED", "absent_unknown_reason": "RECOVERY_SOURCE_GAP_OUTSIDE_KNOWN_OUTAGE", "absent_owner_unknown_reason": "DELL_OWNER_LIFECYCLE_UNKNOWN_OUTSIDE_RECOVERY"}
+    },
+    {
+      "id": "single_flat_ack_then_progress",
+      "qualification": "ISOLATED_SEQUENCE",
+      "description": "1 intervalだけのACK停止はepisodeに昇格せず、同一targetのACK再開でcandidateを破棄する",
+      "expected": {"episode_state": "NONE", "classification": null}
+    },
+    {
+      "id": "flat_ack_then_same_runtime_ffmpeg_replacement",
+      "qualification": "ISOLATED_SEQUENCE",
+      "description": "送信圧力を伴うACK停止の直後に同一runtime内でFFmpegが交代した場合だけdurable recovered episodeにする",
+      "expected": {"episode_state": "RECOVERED", "classification": "RTMPS_ACK_STALL_FFMPEG_REPLACED"}
+    },
+    {
+      "id": "confirmed_stall_then_same_target_progress",
+      "qualification": "ISOLATED_SEQUENCE",
+      "description": "ACK停止が確認時間を超えた後、同一targetのACKが再開した場合は同一sessionの復旧として記録する",
+      "expected": {"episode_state": "RECOVERED", "classification": "RTMPS_ACK_STALL_RECOVERED_SAME_TARGET"}
+    },
+    {
+      "id": "candidate_does_not_cross_runtime_replacement",
+      "qualification": "ISOLATED_SEQUENCE",
+      "description": "Pod、containerまたはruntime generationが変わった場合は旧candidateを新runtimeのRTMPS episodeへ持ち越さない",
+      "expected": {"episode_state": "NONE", "classification": null}
+    },
+    {
+      "id": "session_loss_same_target_return",
+      "qualification": "ISOLATED_SEQUENCE",
+      "description": "一時的なsource不成立後に同一FFmpeg identityが戻っただけならsession loss episodeへ昇格しない",
+      "expected": {"episode_state": "NONE", "classification": null}
+    },
+    {
+      "id": "session_loss_does_not_cross_runtime_replacement",
+      "qualification": "ISOLATED_SEQUENCE",
+      "description": "source不成立後にPod、containerまたはruntime generationが変わった場合は旧FFmpegと結ばない",
+      "expected": {"episode_state": "NONE", "classification": null}
+    },
+    {
+      "id": "session_loss_correlation_expires",
+      "qualification": "ISOLATED_SEQUENCE",
+      "description": "source不成立から45秒を超えた後のFFmpeg交代は同じsession loss episodeへ結ばない",
+      "expected": {"episode_state": "NONE", "classification": null}
+    },
+    {
+      "id": "observation_source_failure_is_not_session_loss",
+      "qualification": "ISOLATED_SEQUENCE",
+      "description": "missing、任意invalid、stale、futureの観測sourceだけではFFmpeg session loss candidateを開始しない",
+      "expected": {"episode_state": "NONE", "classification": null}
+    },
+    {
+      "id": "session_loss_during_observed_intervention",
+      "qualification": "ISOLATED_SEQUENCE",
+      "description": "effect in-flightまたはproduction behavior変更中の非rate eligible sampleは自然発生session lossへ分類しない",
+      "expected": {"episode_state": "NONE", "classification": null}
+    },
+    {
+      "id": "episode_start_after_gap",
+      "qualification": "ISOLATED_SEQUENCE",
+      "description": "episodeのstarted_atより前のtransport gapは後着episodeで正当化しない",
+      "expected": {"harness_classification": "MISSING_EVIDENCE", "unknown_reason": "RECOVERY_SOURCE_GAP_OUTSIDE_KNOWN_OUTAGE"}
+    },
+    {
+      "id": "episode_start_after_owner_unknown",
+      "qualification": "ISOLATED_SEQUENCE",
+      "description": "episodeのstarted_atより前のowner UNKNOWNは後着episodeで正当化しない",
+      "expected": {"harness_classification": "MISSING_EVIDENCE", "unknown_reason": "DELL_OWNER_LIFECYCLE_UNKNOWN_OUTSIDE_RECOVERY"}
+    },
+    {
+      "id": "historical_20260915_ack_reset_before_session_identity",
+      "qualification": "HISTORICAL_REPLAY",
+      "description": "旧target表示のACK=0が先に可視化され、後着した署名済みsession-loss episodeが旧targetから新targetへの交代を確定する",
+      "expected": {
+        "harness_classification": "PASS",
+        "absent_blocker": "ACK_COUNTER_REGRESSION_WITHIN_TARGET",
+        "absent_unknown_reason": "ACK_COUNTER_DISCONTINUITY_UNVERIFIED",
+        "recovered_episode_count": 1
+      }
+    },
+    {
+      "id": "historical_20260922_platform_first_active_rtmps",
+      "qualification": "HISTORICAL_REPLAY",
+      "description": "platform DOWNが先に見え、同じorigin targetのACTIVE RTMPS episode、後継targetを持つRECOVERED packetの順で到着しても1件へ束縛する",
+      "timeline_seconds": {"baseline": 0, "platform_down": 45, "active_visible": 60, "recovered_visible": 75, "end": 180},
+      "episode": {"started": 30, "detected": 45, "recovered": 70, "classification": "RTMPS_ACK_STALL_FFMPEG_REPLACED"},
+      "expected": {
+        "harness_classification": "PASS",
+        "live_health": "READY",
+        "recovered_episode_count": 1,
+        "absent_blocker": "RTMPS_EPISODE_OVERLAP"
+      }
+    },
+    {
+      "id": "unverified_ack_discontinuity",
+      "qualification": "ISOLATED_SEQUENCE",
+      "description": "同一targetのACK巻戻りに対応する署名済み交代episodeがなければSUT FAILへ昇格せず、証拠不十分として認定を止める",
+      "expected": {
+        "harness_classification": "MISSING_EVIDENCE",
+        "unknown_reason": "ACK_COUNTER_DISCONTINUITY_UNVERIFIED"
+      }
+    },
+    {
+      "id": "late_ack_reset_postdated_episode",
+      "qualification": "ISOLATED_SEQUENCE",
+      "description": "遅着ACK巻戻りより後のsource時刻に始まったepisodeは、replay可視化時刻が新しくても巻戻りを解消しない",
+      "expected": {
+        "harness_classification": "MISSING_EVIDENCE",
+        "unknown_reason": "ACK_COUNTER_DISCONTINUITY_UNVERIFIED"
+      }
+    },
+    {
+      "id": "late_retired_target_ack",
+      "qualification": "ISOLATED_SEQUENCE",
+      "description": "新target確定後に遅着した旧target ACKは旧target固有の高水位だけを更新しactive targetを戻さない",
+      "expected": {
+        "active_target": "successor",
+        "old_target_high_water_updated": true,
+        "new_target_progress_unchanged": true
+      }
+    },
+    {
+      "id": "formal_gate_exact_prefix_binding",
+      "qualification": "ISOLATED_SEQUENCE",
+      "description": "保存gateはsample数だけでなく確定byte prefix末尾のsample hash、epoch、configへ結合し、別prefix hashを拒否する",
+      "expected": {
+        "rejection_reason": "FORMAL_GATE_STALE_OR_UNBOUND"
+      }
+    },
+    {
+      "id": "target_scoped_ack_history_bound",
+      "qualification": "ISOLATED_SEQUENCE",
+      "description": "target履歴は128 identityに制限し、上限後の新targetはactive stateへ採用せず正式認定を保留する",
+      "expected": {
+        "harness_classification": "MISSING_EVIDENCE",
+        "unknown_reason": "TRANSPORT_TARGET_HISTORY_EXHAUSTED"
+      }
+    }
+  ]
+}

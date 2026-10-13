@@ -19,6 +19,9 @@ class FaultKind(StrEnum):
     DROP_STATUS_RESPONSE = "DROP_STATUS_RESPONSE"
     STALE_TARGET_MUTATION = "STALE_TARGET_MUTATION"
     SEQUENCE_GAP = "SEQUENCE_GAP"
+    STALE_SEQUENCE = "STALE_SEQUENCE"
+    STALE_AUTHORITY_EPOCH = "STALE_AUTHORITY_EPOCH"
+    RECONCILIATION_EPOCH_TRANSITION = "RECONCILIATION_EPOCH_TRANSITION"
     DUPLICATE_DELIVERY = "DUPLICATE_DELIVERY"
     SQLITE_WRITE_FAILURE = "SQLITE_WRITE_FAILURE"
     AGENT_RESTART = "AGENT_RESTART"
@@ -58,6 +61,7 @@ class FaultController:
     def __init__(self, definitions: tuple[dict[str, Any], ...]) -> None:
         self._records: dict[str, FaultRecord] = {}
         self._history: list[FaultRecord] = []
+        self._receipts: dict[str, str] = {}
         for index, definition in enumerate(definitions, start=1):
             fault_id = str(definition.get("fault_id", f"fault-{index}"))
             if fault_id in self._records:
@@ -95,9 +99,31 @@ class FaultController:
 
     def complete_all(self) -> None:
         for fault_id, record in tuple(self._records.items()):
-            if record.lifecycle != FaultLifecycle.TRIGGERED:
-                raise ValueError(f"fault was not triggered: {fault_id}")
-            self.transition(fault_id, FaultLifecycle.COMPLETED)
+            if record.lifecycle == FaultLifecycle.TRIGGERED and fault_id in self._receipts:
+                self.transition(fault_id, FaultLifecycle.COMPLETED)
+
+    def receipt(self, kind: FaultKind, hook: str, *, fault_id: str | None = None) -> None:
+        """Bind completion to the branch that actually exercised the hook."""
+        if not hook:
+            raise ValueError("fault hook receipt must identify its source")
+        matches = [
+            key for key, record in self._records.items()
+            if record.kind == kind and record.lifecycle in {FaultLifecycle.ARMED, FaultLifecycle.TRIGGERED}
+            and (fault_id is None or key == fault_id)
+        ]
+        if len(matches) > 1:
+            raise ValueError(f"ambiguous fault hook receipt: {kind}")
+        if fault_id is not None and not matches:
+            raise ValueError(f"fault hook receipt id/kind mismatch: {fault_id}:{kind}")
+        if matches:
+            key = matches[0]
+            if self._records[key].lifecycle == FaultLifecycle.ARMED:
+                self.transition(key, FaultLifecycle.TRIGGERED)
+            self._receipts[key] = hook
+
+    @property
+    def receipts(self) -> dict[str, str]:
+        return dict(self._receipts)
 
     @property
     def history(self) -> tuple[FaultRecord, ...]:

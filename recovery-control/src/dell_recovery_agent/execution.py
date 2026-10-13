@@ -7,6 +7,7 @@ import time
 import uuid
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import timedelta
 from typing import Any, Protocol
 
 from cra_dell_recovery.canonical import SignedMessageCodec, canonical_json
@@ -113,7 +114,7 @@ class TargetObserver(Protocol):
 
 
 class PhysicalAdapter(Protocol):
-    def restart_ffmpeg(self, expected_target: TargetIdentity) -> FakeExecutionResult: ...
+    def restart_ffmpeg(self, expected_target: TargetIdentity, *, authorization_expires_at: str | None = None) -> FakeExecutionResult: ...
 
 
 @dataclass(frozen=True)
@@ -141,7 +142,8 @@ class FakePhysicalAdapter:
         self.attempt_count = 0
         self.after_target = after_target
 
-    def restart_ffmpeg(self, expected_target: TargetIdentity) -> FakeExecutionResult:
+    def restart_ffmpeg(self, expected_target: TargetIdentity, *, authorization_expires_at: str | None = None) -> FakeExecutionResult:
+        del authorization_expires_at
         self.attempt_count += 1
         successor = self.after_target or TargetIdentity.from_dict(
             {
@@ -501,18 +503,70 @@ class AgentService:
                 "source": "Dell authority_fences high-water",
             },
         )
-        with self.store.write() as db:
-            self.store.transition_effect_scope(
-                db,
-                owner_id=command_id,
-                state="EFFECT_BOUNDARY_REACHED",
-                reason="PHYSICAL_ATTEMPT_RESERVED",
-                evidence={"physical_attempt_count": 1},
-                stamp=stamp,
-                effect_boundary=True,
-            )
         try:
-            result = self.adapter.restart_ffmpeg(expected)
+            with self.store.write() as db:
+                # The observation and maintenance audit can themselves take
+                # time. Admission checks are not authority at the effect
+                # boundary: re-read the durable fence/policy under the writer
+                # lock immediately before reserving a physical attempt.
+                deadline.ensure_valid()
+                current = db.execute("SELECT * FROM authority_fences WHERE target_id=?", (target_id,)).fetchone()
+                live_policy = db.execute(
+                    "SELECT * FROM agent_safety_policies WHERE target_id=?", (target_id,)
+                ).fetchone()
+                if current is None or current["authority_state"] != "CENTRAL_ACTIVE" or not int(current["action_ready"]):
+                    raise ValueError("CENTRAL_AUTHORITY_NOT_ACTIVE")
+                if not self.store.process_lease_valid(target_id):
+                    raise ValueError("AUTHORITY_LEASE_NOT_VALID")
+                if (
+                    int(current["highest_authority_epoch_seen"]) != int(command["authority_epoch"])
+                    or current["active_authority_session_id"] != command["authority_session_id"]
+                    or int(current["highest_command_seq_consumed"]) != int(command["command_seq"])
+                ):
+                    raise ValueError("AUTHORITY_CHANGED_BEFORE_EFFECT")
+                if parse_utc(str(command["expires_at"])) <= utc_now():
+                    raise ValueError("COMMAND_EXPIRED")
+                if live_policy is None or parse_utc(str(live_policy["expires_at"])) <= utc_now():
+                    raise ValueError("SAFETY_POLICY_UNAVAILABLE")
+                if command["action"] != live_policy["action"] or command["policy_revision"] != live_policy["policy_revision"]:
+                    raise ValueError("SAFETY_POLICY_MISMATCH")
+                deadline.ensure_valid()
+                self.store.transition_effect_scope(
+                    db,
+                    owner_id=command_id,
+                    state="EFFECT_BOUNDARY_REACHED",
+                    reason="PHYSICAL_ATTEMPT_RESERVED",
+                    evidence={"physical_attempt_count": 1},
+                    stamp=stamp,
+                    effect_boundary=True,
+                )
+                deadline.ensure_valid()
+        except (AuthorityDeadlineExceeded, ValueError) as error:
+            reason = "DB_DEADLINE_AUTHORITY_INVALIDATED" if isinstance(error, AuthorityDeadlineExceeded) else str(error)
+            if isinstance(error, AuthorityDeadlineExceeded):
+                self.store.set_process_lease_valid(target_id, False)
+            with self.store.write() as db:
+                db.execute(
+                    "UPDATE agent_commands SET state='EFFECT_FAILED',terminal_reason_code=?,updated_at=? WHERE command_id=?",
+                    (reason, stamp, command_id),
+                )
+                db.execute(
+                    "UPDATE execution_attempts SET state='FAILED',finished_at=?,outcome_reason_code=? WHERE command_id=?",
+                    (stamp, reason, command_id),
+                )
+                self.store.transition_effect_scope(
+                    db, owner_id=command_id, state="RELEASED_NO_EFFECT", reason=reason,
+                    evidence={"physical_attempt_count": 0}, stamp=stamp,
+                )
+            return self._reject(command, reason)
+        crash(CrashPoint.DELL_AFTER_EFFECT_BOUNDARY_COMMIT)
+        try:
+            result = self.adapter.restart_ffmpeg(
+                expected,
+                authorization_expires_at=isoformat_utc(
+                    min(parse_utc(str(command["expires_at"])), parse_utc(str(live_policy["expires_at"])))
+                ),
+            )
             if result.effect_observed and not is_expected_ffmpeg_successor(expected, result.after_target):
                 raise RuntimeError("POST_EFFECT_TARGET_RELATION_UNSAFE")
         except BaseException:
@@ -919,6 +973,73 @@ class AgentService:
             },
         )
         with self.store.write() as db:
+            current = db.execute(
+                "SELECT authority_state FROM authority_fences WHERE target_id=?", (candidate.target_id,)
+            ).fetchone()
+            active_session = db.execute(
+                "SELECT state FROM local_fallback_sessions WHERE local_session_id=? AND target_id=?",
+                (session_id, candidate.target_id),
+            ).fetchone()
+            live_policy = db.execute(
+                "SELECT * FROM agent_safety_policies WHERE target_id=?", (candidate.target_id,)
+            ).fetchone()
+            local_expiry = parse_utc(candidate.observed_at) + timedelta(seconds=LOCAL_CANDIDATE_MAX_AGE_SECONDS)
+            if (
+                current is None or current["authority_state"] != "LOCAL_FALLBACK"
+                or active_session is None or active_session["state"] != "ACTIVE"
+            ):
+                reason = "LOCAL_AUTHORITY_CHANGED_BEFORE_EFFECT"
+            elif (
+                live_policy is None or not int(live_policy["local_fallback_enabled"])
+                or parse_utc(str(live_policy["expires_at"])) <= utc_now()
+            ):
+                reason = "SAFETY_POLICY_UNAVAILABLE"
+            elif local_expiry <= utc_now():
+                reason = "LOCAL_EVIDENCE_STALE"
+            elif live_policy["action"] != candidate.action:
+                reason = "SAFETY_POLICY_MISMATCH"
+            else:
+                # A policy or recent completed action may change after the
+                # admission read. Recompute the entire local cost gate under
+                # the same writer transaction as the effect reservation.
+                current_time = utc_now()
+                completed_times = [
+                    parse_utc(str(row[0]))
+                    for row in db.execute(
+                        """SELECT finished_at FROM execution_attempts
+                           WHERE state='EFFECT_OBSERVED' AND finished_at IS NOT NULL
+                           UNION ALL SELECT updated_at FROM local_actions WHERE state='EFFECT_OBSERVED'"""
+                    )
+                ]
+                cost = int(live_policy["action_cost_sec"])
+                hourly_cost = sum(cost for completed_at in completed_times if (current_time - completed_at).total_seconds() <= 3600)
+                daily_cost = sum(cost for completed_at in completed_times if (current_time - completed_at).total_seconds() <= 86400)
+                if completed_times and (
+                    (current_time - max(completed_times)).total_seconds()
+                    < int(live_policy["minimum_action_interval_sec"])
+                ):
+                    reason = "HARD_COOLDOWN_ACTIVE"
+                elif hourly_cost + cost > int(live_policy["hourly_action_cost_limit_sec"]):
+                    reason = "HOURLY_ACTION_BUDGET_EXCEEDED"
+                elif daily_cost + cost > int(live_policy["daily_action_cost_limit_sec"]):
+                    reason = "DAILY_ACTION_BUDGET_EXCEEDED"
+                else:
+                    reason = None
+            if reason is not None:
+                db.execute(
+                    "UPDATE local_actions SET state='EFFECT_FAILED',updated_at=? WHERE local_action_id=?",
+                    (stamp, candidate.local_action_id),
+                )
+                self.store.transition_effect_scope(
+                    db, owner_id=candidate.local_action_id, state="RELEASED_NO_EFFECT",
+                    reason=reason, evidence={"physical_attempt_count": 0}, stamp=stamp,
+                )
+                self.store.append_local_journal(
+                    db, local_action_id=candidate.local_action_id, record_state="EFFECT_FAILED",
+                    before_target=before, after_target=None, evidence=candidate.evidence,
+                    reason_code=reason, stamp=stamp,
+                )
+                return reason
             self.store.transition_effect_scope(
                 db,
                 owner_id=candidate.local_action_id,
@@ -939,7 +1060,10 @@ class AgentService:
                 stamp=stamp,
             )
         try:
-            result = self.adapter.restart_ffmpeg(before)
+            result = self.adapter.restart_ffmpeg(
+                before,
+                authorization_expires_at=isoformat_utc(min(parse_utc(str(live_policy["expires_at"])), local_expiry)),
+            )
             if result.effect_observed and not is_expected_ffmpeg_successor(before, result.after_target):
                 raise RuntimeError("POST_EFFECT_TARGET_RELATION_UNSAFE")
         except BaseException:

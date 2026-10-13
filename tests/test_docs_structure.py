@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import re
+import json
 import unittest
+from datetime import datetime
 from pathlib import Path
 from urllib.parse import unquote
 
@@ -139,7 +141,7 @@ class PublicDocsStructureTests(unittest.TestCase):
                 "Review Paths",
             ],
         )
-        self.assertEqual(text.count("```mermaid"), 1)
+        self.assertEqual(text.count("```mermaid"), 2)
         self.assertTrue((DOCS / "assets" / "live-stream-screenshot.png").exists())
 
         review_paths = text.split("## Review Paths", 1)[1]
@@ -163,37 +165,33 @@ class PublicDocsStructureTests(unittest.TestCase):
             "## System Architecture", 1
         )[0]
 
-        for label in (
-            "Measurement start",
-            "Measurement endpoint",
-            "Expected video ID",
-            "Selected video ID at endpoint",
-            "Observed replacement actions",
-            "Candidate-new-URL samples",
-            "V2 stopped",
-            "First retained V3 production-send evidence",
-            "Cutover video ID check",
-            "Daily ledger checkpoints",
-            "Ledger URL transitions / candidate-new-URL / force-live",
-        ):
-            self.assertIn(label, evidence_snapshot)
-
-        for checkpoint in (
-            "2026-05-06 10:36:17 JST",
-            "2026-09-11 00:04:12 JST",
-            "127 days, 13 hours, 27 minutes, 55 seconds",
-            "107 / 107",
-            "2026-05-28 22:29:43 JST",
-            "2026-05-28 22:41:31 JST",
-            "OpMzOBFwM7M",
-        ):
-            self.assertIn(checkpoint, evidence_snapshot)
-
+        checkpoint = json.loads(read(ROOT / "publication" / "continuity-checkpoint.json"))
+        self.assertEqual(checkpoint["schema"], "stream.public_continuity_checkpoint.v1")
+        start = datetime.fromisoformat(checkpoint["measurement_start_jst"])
+        endpoint = datetime.fromisoformat(checkpoint["measurement_endpoint_jst"])
+        ledger_start = datetime.fromisoformat(checkpoint["ledger_first_checkpoint_jst"])
+        ledger_end = datetime.fromisoformat(checkpoint["ledger_last_checkpoint_jst"])
+        acquired = datetime.fromisoformat(checkpoint["acquired_at_jst"])
+        self.assertEqual((endpoint - start).days, checkpoint["elapsed_days"])
+        self.assertLess(start, ledger_start)
+        self.assertEqual(ledger_end, endpoint)
+        self.assertLessEqual(endpoint, acquired)
+        self.assertEqual((ledger_end.date() - ledger_start.date()).days + 1, checkpoint["expected_checkpoint_calendar_days"])
+        self.assertIn(f"At least {checkpoint['elapsed_days']} days", evidence_snapshot)
+        self.assertIn(f"{checkpoint['checkpoint_calendar_days']} / {checkpoint['expected_checkpoint_calendar_days']}", evidence_snapshot)
+        self.assertEqual(checkpoint["missing_checkpoint_dates"], [])
+        self.assertEqual(checkpoint["distinct_live_url_hashes"], 1)
+        self.assertEqual(checkpoint["selected_video_hash_mismatch_count"], 0)
+        self.assertEqual(checkpoint["expected_video_hash_mismatch_count"], 0)
+        self.assertEqual(checkpoint["recorded_url_transitions"], 0)
+        self.assertEqual(checkpoint["ledger_rows"], sum(checkpoint["event_counts"].values()))
+        self.assertFalse(checkpoint["production_mutation"])
         self.assertIn("uninterrupted frame delivery", evidence_snapshot)
-        self.assertIn("At least 127 days", evidence_snapshot)
-        self.assertNotIn("At least 109 days", evidence_snapshot)
 
         case_study = read(DOCS / "28-day-same-url-sli-case-study.md")
+        self.assertIn("At-Least-160-Day Continuity Checkpoint", case_study)
+        self.assertIn("160 days, 13 hours, 28 minutes, 40 seconds", case_study)
+        self.assertIn("140 / 140", case_study)
         self.assertIn("At-Least-127-Day Continuity Checkpoint", case_study)
         self.assertIn("One baseline plus 106 daily checkpoints", case_study)
         self.assertIn("Database integrity was `ok`", case_study)
@@ -352,23 +350,17 @@ class PublicDocsStructureTests(unittest.TestCase):
         self.assertGreater(total_blocks, 0)
 
     def test_readme_mermaid_preserves_plane_ownership(self) -> None:
-        block = MERMAID_BLOCK_RE.findall(read(README))[0]
-
-        for owner in (
-            "HP ProDesk / source + private observability",
-            "arena-server / Monitoring evidence",
-            "cra-01 / central recovery authority",
-            "Dell / k3s delivery",
-            "Raspberry Pi / public snapshot publisher",
-            "Public static edge",
-            "legacy recovery plan",
-            "exact FFmpeg-child executor",
-            "facts-only projection",
-            "fenced command",
-            "outbound upload",
-        ):
-            with self.subTest(owner=owner):
-                self.assertIn(owner, block)
+        text = read(README)
+        media, publication = MERMAID_BLOCK_RE.findall(text)
+        for owner in ("HP ProDesk", "Dell", "NVENC", "One FFmpeg remux sender", "OCI", "YouTube", "Twitch"):
+            with self.subTest(media_owner=owner):
+                self.assertIn(owner, media)
+        for owner in ("Grafana", "Prometheus", "Loki", "Pi-local Grafana proxy", "arena-server", "snapshot collectors", "GCS", "Cloudflare"):
+            with self.subTest(publication_owner=owner):
+                self.assertIn(owner, publication)
+        self.assertNotIn("cra-01", media + publication)
+        self.assertIn("production_behavior_change_authorized=false", text)
+        self.assertIn("Recovery source contract", text)
 
     def test_public_docs_preserve_private_public_boundary(self) -> None:
         forbidden = (

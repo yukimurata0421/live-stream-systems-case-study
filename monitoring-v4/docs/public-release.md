@@ -1,5 +1,11 @@
 # Public release boundary and provenance
 
+The 2026-10-13 source port adds the [relay provider evidence](relay-provider-evidence.md)
+contract. Earlier provenance and validation records below keep their original
+cutoffs. The current [selected-file source map](../../publication/source-map.json)
+and [local validation](../../publication/validation.json) record this later port;
+they do not establish a production deployment or formal qualification.
+
 Recorded: 2026-08-14 JST
 
 Status: sanitized public snapshot integrated under `monitoring-v4/` in the

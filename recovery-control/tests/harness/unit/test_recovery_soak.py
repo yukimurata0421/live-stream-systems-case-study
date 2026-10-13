@@ -12,14 +12,29 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 from cra_dell_recovery.canonical import KeyRing, Signer
+from cra_dell_recovery.errors import SignatureValidationError
 from cra_dell_recovery.recovery_history import POLICY_SCHEMA, empty_policy, history_hash
 from cra_dell_recovery.time import isoformat_utc
+from cra_no_action_soak import recovery_soak
+from cra_no_action_soak.append_only_jsonl import _serialized_line
 from cra_no_action_soak.host_status import atomic_write_json
-from cra_no_action_soak.recovery_facts import ACTION_TABLES, ROLES, HostBinding, sign_facts, source_hash
+from cra_no_action_soak.recovery_facts import ACTION_TABLES, ROLES, AdmissionCache, HostBinding, admit_facts, sign_facts, source_hash
 from cra_no_action_soak.recovery_live import advance
-from cra_no_action_soak.recovery_soak import CONFIG_SCHEMA, SAMPLE_SCHEMA, Config, collect, digest, evaluate, gate, watchdog
+from cra_no_action_soak.recovery_soak import (
+    CONFIG_SCHEMA,
+    HISTORY_CONFIG_SCHEMA,
+    SAMPLE_SCHEMA,
+    Config,
+    collect,
+    digest,
+    evaluate,
+    gate,
+    watchdog,
+)
+from cra_no_action_soak.recovery_window import RecoveryWindow
 
 START = datetime(2026, 9, 4, tzinfo=UTC)
+ROOT = Path(__file__).resolve().parents[3]
 
 
 @pytest.fixture
@@ -63,7 +78,30 @@ def packet(config: Config, signers: dict[str, Signer], role: str, seconds: int, 
                 "observed_at": at,
                 **({"episode": None} if config.value.get("require_network_episode_evidence") is True else {}),
             },
-            "transport": {"target": "target-1", "bytes_acked": 1000 + seconds * 100, "observed_at": at},
+            "transport": {
+                "target": "target-1",
+                "bytes_acked": 1000 + seconds * 100,
+                "observed_at": at,
+                **(
+                    {
+                        "rtmps_episode": {
+                            "schema": "stream_v3.rtmps_episode_snapshot.v2",
+                            "collector_id": "collector-1",
+                            "release_id": "collector-release-1",
+                            "epoch_id": "collector-release-1",
+                            "observed_at": at,
+                            "collector_sequence": seconds + 1,
+                            "source_status": "VALID",
+                            "source_observed_at": at,
+                            "reason_code": "SOURCE_VALID",
+                            "episode_sequence": 0,
+                            "episode": None,
+                        }
+                    }
+                    if config.value.get("require_rtmps_episode_evidence") is True
+                    else {}
+                ),
+            },
             "effects": {
                 "observed_at": at,
                 "integrity": "ok",
@@ -120,6 +158,37 @@ def packet(config: Config, signers: dict[str, Signer], role: str, seconds: int, 
     )
 
 
+def test_admission_cache_rechecks_lease_and_never_hides_mutation(
+    setup: tuple[Config, dict[str, Signer]], monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    config, signers = setup
+    signed = packet(config, signers, "arena", 0)
+    cache = AdmissionCache()
+    calls = 0
+    verify = config.keys.verify
+
+    def counted(value: dict[str, Any]) -> None:
+        nonlocal calls
+        calls += 1
+        verify(value)
+
+    monkeypatch.setattr(config.keys, "verify", counted)
+    assert cache.admit(signed, binding=config.bindings["arena"], keys=config.keys, now=START) == signed
+    assert cache.admit(
+        copy.deepcopy(signed), binding=config.bindings["arena"], keys=config.keys, now=START + timedelta(seconds=44)
+    ) == signed
+    assert calls == 1
+
+    with pytest.raises(ValueError, match="RECOVERY_ENVELOPE_STALE"):
+        cache.admit(signed, binding=config.bindings["arena"], keys=config.keys, now=START + timedelta(seconds=45))
+    assert calls == 1
+
+    signed["facts"]["platform"]["state"] = "DOWN"
+    with pytest.raises(SignatureValidationError, match="payload digest mismatch"):
+        cache.admit(signed, binding=config.bindings["arena"], keys=config.keys, now=START)
+    assert calls == 2
+
+
 def frames(config: Config, signers: dict[str, Signer], *, end: int = 180, outage: bool = True) -> list[dict[str, Any]]:
     result: list[dict[str, Any]] = []
     for seconds in range(0, end + 1, 15):
@@ -157,6 +226,47 @@ def rechain(rows: list[dict[str, Any]]) -> None:
         row["sample_hash"] = digest(row)
 
 
+def test_cra_safety_unavailable_is_unknown_not_positive_violation(
+    setup: tuple[Config, dict[str, Signer]],
+) -> None:
+    config, signers = setup
+    rows = frames(config, signers, outage=False)
+    for row in rows:
+        signed = row["inputs"]["cra"]
+        unsigned = {key: copy.deepcopy(value) for key, value in signed.items() if key not in {"signature", "payload_sha256"}}
+        unsigned["facts"]["safety"] = {
+            "observed_at": unsigned["observed_at"],
+            "evidence_status": "UNAVAILABLE",
+            "reason_code": "CENTRAL_SAFETY_READ_FAILED",
+            "integrity": "UNKNOWN",
+        }
+        row["inputs"]["cra"] = signers["cra"].sign(unsigned)
+    replay_checkpoints(config, rows)
+    rechain(rows)
+
+    result = evaluate(rows, config=config, now=START + timedelta(seconds=180))
+
+    assert "CRA_NO_ACTION_SAFETY_VIOLATED" not in result["blockers"]
+    assert "CRA_SAFETY_EVIDENCE_MISSING_OR_STALE" in result["unknown_reasons"]
+    assert result["harness_classification"] == "MISSING_EVIDENCE"
+
+
+def test_explicit_cra_safety_violation_survives_other_missing_fields() -> None:
+    assert recovery_soak._cra_safety_state({"command_delivery_enabled": True, "integrity": "UNKNOWN"}) == "VIOLATED"
+    assert recovery_soak._cra_safety_state({"control_capability_count": 1}) == "VIOLATED"
+    assert recovery_soak._cra_safety_state({"action_table_counts": {**dict.fromkeys(ACTION_TABLES, 0), "commands": 1}}) == "VIOLATED"
+    assert recovery_soak._cra_safety_state({"action_table_counts": {"commands": 1}}) == "VIOLATED"
+    assert recovery_soak._cra_safety_state({"integrity": "UNKNOWN"}) == "UNKNOWN"
+    assert recovery_soak._cra_safety_state({
+        "command_delivery_enabled": False,
+        "runtime_operating_mode": "NO_ACTION",
+        "control_capability_count": 0,
+        "integrity": "ok",
+        "action_table_counts": dict.fromkeys(ACTION_TABLES, 0),
+        "evidence_status": "UNAVAILABLE",
+    }) == "UNKNOWN"
+
+
 def replay_checkpoints(config: Config, rows: list[dict[str, Any]]) -> None:
     checkpoint = None
     for row in rows:
@@ -170,6 +280,592 @@ def replay_checkpoints(config: Config, rows: list[dict[str, Any]]) -> None:
         )
         row["live_recovery"] = checkpoint
     rechain(rows)
+
+
+def owner_running_lifecycle(seconds: int, *, successor: bool) -> tuple[dict[str, Any], str]:
+    pid, ticks = (124, 100) if successor else (123, 99)
+    anchor = {
+        "host_id": "dell-host",
+        "host_boot_id": "dell-boot",
+        "namespace": "streaming",
+        "pod_uid": "pod-id",
+        "container_name": "stream-engine",
+        "container_id": "containerd://stream-engine",
+        "ffmpeg_pid": pid,
+        "ffmpeg_generation": "",
+    }
+    anchor["ffmpeg_generation"] = "ffmpeg-" + hashlib.sha256(f"pod-id:containerd://stream-engine:{pid}:{ticks}".encode()).hexdigest()[:32]
+    return (
+        {
+            "schema": "runtime.child_lifecycle.v1",
+            "state": "RUNNING",
+            "reason": "EXACT_CHILD",
+            "observed_at": isoformat_utc(START + timedelta(seconds=seconds)),
+            "anchor_target": anchor,
+            "owner_pid": 50,
+            "owner_start_ticks": 10,
+            "child_pid": pid,
+            "child_start_ticks": ticks,
+        },
+        source_hash(anchor),
+    )
+
+
+def rtmps_episode_snapshot(
+    seconds: int,
+    *,
+    started_seconds: int = 45,
+    before: str = "a" * 64,
+    after: str = "b" * 64,
+    classification: str = "RTMPS_ACK_STALL_FFMPEG_REPLACED",
+) -> dict[str, Any]:
+    started = isoformat_utc(START + timedelta(seconds=started_seconds))
+    episode = {
+        "schema": "stream_v3_rtmps_episode/v2",
+        "episode_id": hashlib.sha256(f"dell-boot:1:{started}:{before}".encode()).hexdigest()[:32],
+        "sequence": 1,
+        "producer_instance_id": "runtime-producer-1",
+        "runtime_generation": "runtime-generation-1",
+        "host_boot_id": "dell-boot",
+        "pod_uid": "pod-1",
+        "stream_engine_container_id": "containerd://one",
+        "state": "RECOVERED",
+        "classification": classification,
+        "detection_basis": "SESSION_CONTINUITY_LOSS" if classification.startswith("FFMPEG_SESSION_LOSS") else "ACK_STALL",
+        "trigger_reason_code": (
+            "SOURCE_GENERATION_INVALID" if classification.startswith("FFMPEG_SESSION_LOSS") else "ZERO_ACK_WITH_SEND_PRESSURE"
+        ),
+        "started_at": started,
+        "detected_at": isoformat_utc(START + timedelta(seconds=max(started_seconds, 45))),
+        "last_observed_failure_at": isoformat_utc(START + timedelta(seconds=max(started_seconds, 45))),
+        "recovered_at": isoformat_utc(START + timedelta(seconds=60)),
+        "target_sha256": before,
+        "replacement_target_sha256": after,
+        "first_collector_sequence": 10,
+        "last_collector_sequence": 13,
+        "zero_ack_interval_count": 0 if classification.startswith("FFMPEG_SESSION_LOSS") else 1,
+    }
+    at = isoformat_utc(START + timedelta(seconds=seconds))
+    return {
+        "schema": "stream_v3.rtmps_episode_snapshot.v2",
+        "collector_id": "collector-1",
+        "release_id": "collector-release-1",
+        "epoch_id": "collector-release-1",
+        "observed_at": at,
+        "collector_sequence": seconds + 1,
+        "source_status": "VALID",
+        "source_observed_at": at,
+        "reason_code": "SOURCE_VALID",
+        "episode_sequence": 1,
+        "episode": episode,
+    }
+
+
+def test_signed_recovered_episode_does_not_bind_a_later_current_target(
+    setup: tuple[Config, dict[str, Signer]],
+) -> None:
+    config, signers = setup
+    signed = packet(config, signers, "dell", 90, transport={"target": "c" * 64, "rtmps_episode": rtmps_episode_snapshot(90)})
+    assert admit_facts(
+        signed, binding=config.bindings["dell"], keys=config.keys, now=START + timedelta(seconds=90)
+    ) == signed
+
+
+def test_signed_active_episode_remains_bound_to_current_target(
+    setup: tuple[Config, dict[str, Signer]],
+) -> None:
+    config, signers = setup
+    snapshot = rtmps_episode_snapshot(50)
+    snapshot["episode"].update(state="ACTIVE", classification="RTMPS_ACK_STALL", recovered_at=None, replacement_target_sha256=None)
+    signed = packet(config, signers, "dell", 50, transport={"target": "c" * 64, "rtmps_episode": snapshot})
+    with pytest.raises(ValueError, match="RECOVERY_RTMPS_EPISODE_TARGET_INVALID"):
+        admit_facts(signed, binding=config.bindings["dell"], keys=config.keys, now=START + timedelta(seconds=50))
+
+
+def test_replayed_third_target_keeps_historical_recovered_episode_admissible(
+    setup: tuple[Config, dict[str, Signer]],
+) -> None:
+    config, signers = setup
+    rows = frames(config, signers, outage=False)
+    for row in rows:
+        seconds = int((datetime.fromisoformat(row["observed_at"].replace("Z", "+00:00")) - START).total_seconds())
+        transport: dict[str, Any] = {"target": "a" * 64 if seconds < 60 else "b" * 64 if seconds < 90 else "c" * 64}
+        if seconds >= 60:
+            transport["rtmps_episode"] = rtmps_episode_snapshot(seconds)
+        row["inputs"]["dell"] = packet(config, signers, "dell", seconds, transport=transport)
+    replay_checkpoints(config, rows)
+    result = evaluate(rows, config=config, now=START + timedelta(seconds=180))
+    assert result["harness_classification"] == "PASS", result
+    assert "DELL_SIGNED_EVIDENCE_INVALID" not in result["blockers"]
+    assert "RECOVERY_RTMPS_EPISODE_TARGET_INVALID" not in result["unknown_reasons"]
+
+
+def test_signed_microsecond_session_loss_matches_owner_episode_in_live_and_replay(
+    setup: tuple[Config, dict[str, Signer]],
+) -> None:
+    config, signers = setup
+    config.value.update(require_rtmps_episode_evidence=True, require_owner_lifecycle_evidence=True)
+    rows = frames(config, signers, outage=False)
+    old_lifecycle, old_target = owner_running_lifecycle(0, successor=False)
+    _, new_target = owner_running_lifecycle(0, successor=True)
+    started = START + timedelta(seconds=60, microseconds=61621)
+    started_text = started.isoformat(timespec="microseconds").replace("+00:00", "Z")
+    for row in rows:
+        current = datetime.fromisoformat(row["observed_at"].replace("Z", "+00:00"))
+        seconds = int((current - START).total_seconds())
+        if seconds < 60:
+            lifecycle, target = owner_running_lifecycle(seconds, successor=False)
+        elif seconds == 60:
+            lifecycle = dict(old_lifecycle, state="ABSENT", reason="NO_MANAGED_CHILD",
+                             observed_at=isoformat_utc(current), child_pid=None, child_start_ticks=None)
+            target = None
+        else:
+            lifecycle, target = owner_running_lifecycle(seconds, successor=True)
+        transport: dict[str, Any] = {"target": target, "lifecycle": lifecycle}
+        if seconds == 60:
+            transport["bytes_acked"] = None
+        if seconds >= 75:
+            snapshot = rtmps_episode_snapshot(
+                seconds, started_seconds=60, before=old_target, after=new_target,
+                classification="FFMPEG_SESSION_LOSS_FFMPEG_REPLACED",
+            )
+            episode = snapshot["episode"]
+            episode["started_at"] = started_text
+            episode["episode_id"] = hashlib.sha256(
+                f"dell-boot:1:{started_text}:{old_target}".encode()
+            ).hexdigest()[:32]
+            episode["detected_at"] = isoformat_utc(START + timedelta(seconds=65))
+            episode["last_observed_failure_at"] = isoformat_utc(START + timedelta(seconds=65))
+            episode["recovered_at"] = isoformat_utc(START + timedelta(seconds=70))
+            transport["rtmps_episode"] = snapshot
+        signed = packet(config, signers, "dell", seconds, transport=transport)
+        if target is None:
+            signed["facts"]["effects"].update(
+                target_status="UNKNOWN", current_target_sha256=None,
+                current_target_unresolved_scope_count=None,
+            )
+            signed = sign_facts(
+                binding=config.bindings["dell"], signer=signers["dell"], host_boot_id="dell-boot",
+                producer_id="dell-producer", sequence=seconds + 1, now=current,
+                valid_until=current + timedelta(seconds=45), facts=signed["facts"],
+                source_hashes={"source": "a" * 64},
+            )
+        row["inputs"]["dell"] = signed
+    replay_checkpoints(config, rows)
+    result = evaluate(rows, config=config, now=START + timedelta(seconds=180))
+    live = rows[-1]["live_recovery"]["window"]
+    assert result["harness_classification"] == "PASS", result
+    assert result["recovery"]["recovered_episode_count"] == live["recovered_count"] == 1
+    assert result["recovery"]["verified_network_recovered_episode_count"] == 0
+    assert "RTMPS_EPISODE_OVERLAP" not in result["blockers"]
+    assert "RTMPS_EPISODE_IDENTITY_CONFLICT" not in result["blockers"]
+    assert "RECOVERY_NOT_EXERCISED" in result["pending_reasons"]
+
+
+def test_ack_reset_visible_before_signed_session_replacement_is_reconstructed(
+    setup: tuple[Config, dict[str, Signer]],
+) -> None:
+    config, signers = setup
+    config.value.update(require_rtmps_episode_evidence=True, require_owner_lifecycle_evidence=True)
+    rows = frames(config, signers, outage=False)
+    _, old_target = owner_running_lifecycle(0, successor=False)
+    _, new_target = owner_running_lifecycle(0, successor=True)
+    for row in rows:
+        current = datetime.fromisoformat(row["observed_at"].replace("Z", "+00:00"))
+        seconds = int((current - START).total_seconds())
+        lifecycle, target = owner_running_lifecycle(seconds, successor=seconds >= 75)
+        transport: dict[str, Any] = {"target": target, "lifecycle": lifecycle}
+        if seconds == 60:
+            transport.update(target=old_target, bytes_acked=0)
+        elif seconds >= 75:
+            transport["rtmps_episode"] = rtmps_episode_snapshot(
+                seconds,
+                started_seconds=60,
+                before=old_target,
+                after=new_target,
+                classification="FFMPEG_SESSION_LOSS_FFMPEG_REPLACED",
+            )
+        row["inputs"]["dell"] = packet(config, signers, "dell", seconds, transport=transport)
+    replay_checkpoints(config, rows)
+
+    result = evaluate(rows, config=config, now=START + timedelta(seconds=180))
+
+    assert result["harness_classification"] == "PASS", result
+    assert "ACK_COUNTER_DISCONTINUITY_UNVERIFIED" not in result["unknown_reasons"]
+    assert "ACK_COUNTER_REGRESSION_WITHIN_TARGET" not in result["blockers"]
+    assert result["recovery"]["recovered_episode_count"] == 1
+    assert rows[-1]["live_recovery"]["window"]["ack_high_watermarks"] == {
+        old_target: 5500,
+        new_target: 19_000,
+    }
+
+
+def test_formal_window_drift_from_same_signed_inputs_is_harness_failure(
+    setup: tuple[Config, dict[str, Signer]], monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    config, signers = setup
+    rows = frames(config, signers, outage=False)
+
+    class DriftedWindow(RecoveryWindow):
+        def observe(self, item: Any) -> None:
+            super().observe(item)
+            self.ack_point_count += 1
+
+    monkeypatch.setattr(recovery_soak, "RecoveryWindow", DriftedWindow)
+    result = evaluate(rows, config=config, now=START + timedelta(seconds=180))
+    assert result["harness_classification"] == "HARNESS_FAILURE"
+    assert "RECOVERY_WINDOW_PARITY_MISMATCH" in result["oracle_errors"]
+    rows[4]["inputs"]["cra"] = packet(config, signers, "cra", 60, safety={"command_delivery_enabled": True})
+    replay_checkpoints(config, rows)
+    safety = evaluate(rows, config=config, now=START + timedelta(seconds=180))
+    assert "RECOVERY_WINDOW_PARITY_MISMATCH" in safety["oracle_errors"]
+    assert "CRA_NO_ACTION_SAFETY_VIOLATED" in safety["blockers"]
+    for row in rows:
+        for role, signed in row["inputs"].items():
+            atomic_write_json(Path(config.value["hosts"][role]["inbox_file"]), signed)
+        collect(config, now=datetime.fromisoformat(row["observed_at"].replace("Z", "+00:00")))
+    formal = gate(config, now=START + timedelta(seconds=180))
+    assert formal["soak_status"] == "FAIL"
+    assert "RECOVERY_WINDOW_PARITY_MISMATCH" in formal["oracle_errors"]
+    assert "CRA_NO_ACTION_SAFETY_VIOLATED" in formal["blockers"]
+
+
+def test_previous_sample_schema_cannot_be_reused_for_new_checkpoint(
+    setup: tuple[Config, dict[str, Signer]],
+) -> None:
+    config, signers = setup
+    rows = frames(config, signers, outage=False)
+    rows[0]["schema"] = "cra.recovery_soak_sample.v2"
+    rechain(rows)
+    result = evaluate(rows, config=config, now=START + timedelta(seconds=180))
+    assert result["harness_classification"] != "PASS"
+    assert "SAMPLE_CHAIN_OR_EPOCH_INVALID" in result["oracle_errors"]
+
+
+def test_later_durable_rtmps_episode_resolves_only_covered_transport_gap(
+    setup: tuple[Config, dict[str, Signer]],
+) -> None:
+    config, signers = setup
+    config.value["require_rtmps_episode_evidence"] = True
+    rows = frames(config, signers, outage=False)
+    before, after = "a" * 64, "b" * 64
+    for index in range(len(rows)):
+        seconds = index * 15
+        target = before if seconds < 60 else after
+        transport: dict[str, Any] = {"target": target}
+        if seconds == 45:
+            transport["bytes_acked"] = 4000
+        if seconds >= 60:
+            transport["rtmps_episode"] = rtmps_episode_snapshot(seconds)
+        rows[index]["inputs"]["dell"] = packet(config, signers, "dell", seconds, transport=transport)
+    replay_checkpoints(config, rows)
+
+    result = evaluate(rows, config=config, now=START + timedelta(seconds=180))
+
+    assert result["harness_classification"] == "PASS", result
+    assert result["soak_status"] == "NOT_YET_ELIGIBLE"
+    assert "RECOVERY_SOURCE_GAP_OUTSIDE_KNOWN_OUTAGE" not in result["unknown_reasons"]
+    assert result["recovery"]["recovered_episode_count"] == 1
+    assert result["recovery"]["verified_network_recovered_episode_count"] == 0
+    assert "RECOVERY_NOT_EXERCISED" in result["pending_reasons"]
+
+
+def test_historical_20260922_platform_first_active_rtmps_is_one_episode(
+    setup: tuple[Config, dict[str, Signer]],
+) -> None:
+    catalog = json.loads((ROOT / "harness/scenarios/rtmps_failure_sequences_v1.json").read_text(encoding="utf-8"))
+    case = next(item for item in catalog["cases"] if item["id"] == "historical_20260922_platform_first_active_rtmps")
+    timeline = case["timeline_seconds"]
+    expected = case["expected"]
+    config, signers = setup
+    config.value["require_rtmps_episode_evidence"] = True
+    rows = frames(config, signers, end=timeline["end"], outage=False)
+    before, after = "a" * 64, "b" * 64
+    for row in rows:
+        current = datetime.fromisoformat(row["observed_at"].replace("Z", "+00:00"))
+        seconds = int((current - START).total_seconds())
+        target = before if seconds < timeline["recovered_visible"] else after
+        transport: dict[str, Any] = {"target": target}
+        if seconds >= timeline["active_visible"]:
+            snapshot = rtmps_episode_snapshot(
+                seconds,
+                started_seconds=case["episode"]["started"],
+                before=before,
+                after=after,
+            )
+            episode = snapshot["episode"]
+            episode["detected_at"] = isoformat_utc(START + timedelta(seconds=case["episode"]["detected"]))
+            episode["last_observed_failure_at"] = episode["detected_at"]
+            episode["recovered_at"] = isoformat_utc(START + timedelta(seconds=case["episode"]["recovered"]))
+            if seconds < timeline["recovered_visible"]:
+                episode.update(
+                    state="ACTIVE",
+                    classification="RTMPS_ACK_STALL",
+                    recovered_at=None,
+                    replacement_target_sha256=None,
+                )
+            transport["rtmps_episode"] = snapshot
+        row["inputs"]["dell"] = packet(config, signers, "dell", seconds, transport=transport)
+        if timeline["platform_down"] <= seconds < 90:
+            row["inputs"]["arena"] = packet(config, signers, "arena", seconds, platform={"state": "DOWN"})
+    replay_checkpoints(config, rows)
+
+    result = evaluate(rows, config=config, now=START + timedelta(seconds=timeline["end"]))
+
+    assert result["harness_classification"] == expected["harness_classification"], result
+    assert result["live_health"] == expected["live_health"]
+    assert result["recovery"]["recovered_episode_count"] == expected["recovered_episode_count"]
+    assert expected["absent_blocker"] not in result["blockers"]
+
+
+def test_historical_20260912_rtmps_gap_replay_is_classified(
+    setup: tuple[Config, dict[str, Signer]],
+) -> None:
+    catalog = json.loads((ROOT / "harness/scenarios/rtmps_failure_sequences_v1.json").read_text(encoding="utf-8"))
+    case = next(item for item in catalog["cases"] if item["id"] == "historical_20260912_sanitized")
+    timeline = case["timeline_seconds"]
+    expected = case["expected"]
+    config, signers = setup
+    config.value.update(require_rtmps_episode_evidence=True, require_owner_lifecycle_evidence=True)
+    rows = frames(config, signers, end=timeline["end"], outage=False)
+    for index in range(len(rows)):
+        seconds = index * 15
+        lifecycle, target = owner_running_lifecycle(seconds, successor=seconds >= timeline["episode_visible"])
+        transport: dict[str, Any] = {"target": target, "lifecycle": lifecycle}
+        if seconds == timeline["gap"]:
+            transport.update(
+                bytes_acked=None,
+                target=None,
+                lifecycle={
+                    "schema": "runtime.child_lifecycle.v1",
+                    "state": "UNKNOWN",
+                    "reason": "READ_UNAVAILABLE",
+                    "observed_at": isoformat_utc(START + timedelta(seconds=seconds)),
+                    "anchor_target": None,
+                    "owner_pid": None,
+                    "owner_start_ticks": None,
+                    "child_pid": None,
+                    "child_start_ticks": None,
+                },
+            )
+        if seconds >= timeline["episode_visible"]:
+            transport["rtmps_episode"] = rtmps_episode_snapshot(
+                seconds,
+                started_seconds=case["episode"]["started"],
+                before=owner_running_lifecycle(seconds, successor=False)[1],
+                after=owner_running_lifecycle(seconds, successor=True)[1],
+            )
+        dell_packet = packet(config, signers, "dell", seconds, transport=transport)
+        if seconds == timeline["gap"]:
+            facts = dell_packet["facts"]
+            facts["effects"].update(
+                target_status="UNKNOWN",
+                current_target_sha256=None,
+                current_target_unresolved_scope_count=None,
+            )
+            dell_packet = sign_facts(
+                binding=config.bindings["dell"],
+                signer=signers["dell"],
+                host_boot_id="dell-boot",
+                producer_id="dell-producer",
+                sequence=seconds + 1,
+                now=START + timedelta(seconds=seconds),
+                valid_until=START + timedelta(seconds=seconds + 45),
+                facts=facts,
+                source_hashes={"source": "a" * 64},
+            )
+        rows[index]["inputs"]["dell"] = dell_packet
+    replay_checkpoints(config, rows)
+
+    result = evaluate(rows, config=config, now=START + timedelta(seconds=timeline["end"]))
+
+    assert result["harness_classification"] == expected["harness_classification"], result
+    assert result["live_health"] == expected["live_health"]
+    assert result["recovery"]["recovered_episode_count"] == expected["recovered_episode_count"]
+    assert result["recovery"]["verified_network_recovered_episode_count"] == expected["verified_network_recovered_episode_count"]
+    assert expected["pending_reason"] in result["pending_reasons"]
+    assert expected["absent_unknown_reason"] not in result["unknown_reasons"]
+    assert expected["absent_owner_unknown_reason"] not in result["unknown_reasons"]
+    assert result["rtmps_episode_coverage"] == {
+        "transport_gap_sample_count": 1,
+        "explained_transport_gap_sample_count": 1,
+        "owner_unknown_sample_count": 1,
+        "explained_owner_unknown_sample_count": 1,
+    }
+
+
+def test_historical_20260912_eof_session_loss_replay_is_classified(
+    setup: tuple[Config, dict[str, Signer]],
+) -> None:
+    catalog = json.loads((ROOT / "harness/scenarios/rtmps_failure_sequences_v1.json").read_text(encoding="utf-8"))
+    case = next(item for item in catalog["cases"] if item["id"] == "historical_20260912_eof_without_flat_ack")
+    timeline = case["timeline_seconds"]
+    config, signers = setup
+    config.value.update(require_rtmps_episode_evidence=True, require_owner_lifecycle_evidence=True)
+    rows = frames(config, signers, end=timeline["end"], outage=False)
+    for index in range(len(rows)):
+        seconds = index * 15
+        lifecycle, target = owner_running_lifecycle(seconds, successor=seconds >= timeline["episode_visible"])
+        transport: dict[str, Any] = {"target": target, "lifecycle": lifecycle}
+        if seconds == timeline["gap"]:
+            transport.update(
+                bytes_acked=None,
+                target=None,
+                lifecycle={
+                    "schema": "runtime.child_lifecycle.v1",
+                    "state": "UNKNOWN",
+                    "reason": "READ_UNAVAILABLE",
+                    "observed_at": isoformat_utc(START + timedelta(seconds=seconds)),
+                    "anchor_target": None,
+                    "owner_pid": None,
+                    "owner_start_ticks": None,
+                    "child_pid": None,
+                    "child_start_ticks": None,
+                },
+            )
+        if seconds >= timeline["episode_visible"]:
+            transport["rtmps_episode"] = rtmps_episode_snapshot(
+                seconds,
+                started_seconds=case["episode"]["started"],
+                before=owner_running_lifecycle(seconds, successor=False)[1],
+                after=owner_running_lifecycle(seconds, successor=True)[1],
+                classification=case["episode"]["classification"],
+            )
+        dell_packet = packet(config, signers, "dell", seconds, transport=transport)
+        if seconds == timeline["gap"]:
+            facts = dell_packet["facts"]
+            facts["effects"].update(
+                target_status="UNKNOWN",
+                current_target_sha256=None,
+                current_target_unresolved_scope_count=None,
+            )
+            dell_packet = sign_facts(
+                binding=config.bindings["dell"],
+                signer=signers["dell"],
+                host_boot_id="dell-boot",
+                producer_id="dell-producer",
+                sequence=seconds + 1,
+                now=START + timedelta(seconds=seconds),
+                valid_until=START + timedelta(seconds=seconds + 45),
+                facts=facts,
+                source_hashes={"source": "a" * 64},
+            )
+        rows[index]["inputs"]["dell"] = dell_packet
+    replay_checkpoints(config, rows)
+
+    result = evaluate(rows, config=config, now=START + timedelta(seconds=timeline["end"]))
+
+    assert result["harness_classification"] == "PASS", result
+    assert result["live_health"] == "READY"
+    assert result["recovery"]["recovered_episode_count"] == 1
+    assert result["recovery"]["verified_network_recovered_episode_count"] == 0
+    assert "RECOVERY_NOT_EXERCISED" in result["pending_reasons"]
+    assert result["rtmps_episode_coverage"] == {
+        "transport_gap_sample_count": 1,
+        "explained_transport_gap_sample_count": 1,
+        "owner_unknown_sample_count": 1,
+        "explained_owner_unknown_sample_count": 1,
+    }
+
+
+def test_rtmps_episode_does_not_explain_gap_before_its_observed_start(
+    setup: tuple[Config, dict[str, Signer]],
+) -> None:
+    config, signers = setup
+    config.value["require_rtmps_episode_evidence"] = True
+    rows = frames(config, signers, outage=False)
+    before, after = "a" * 64, "b" * 64
+    for index in range(len(rows)):
+        seconds = index * 15
+        target = before if seconds < 60 else after
+        transport: dict[str, Any] = {"target": target}
+        if seconds == 45:
+            transport["bytes_acked"] = 4000
+        if seconds >= 60:
+            transport["rtmps_episode"] = rtmps_episode_snapshot(seconds, started_seconds=46)
+        rows[index]["inputs"]["dell"] = packet(config, signers, "dell", seconds, transport=transport)
+    replay_checkpoints(config, rows)
+
+    result = evaluate(rows, config=config, now=START + timedelta(seconds=180))
+
+    assert result["harness_classification"] == "MISSING_EVIDENCE"
+    assert "RECOVERY_SOURCE_GAP_OUTSIDE_KNOWN_OUTAGE" in result["unknown_reasons"]
+
+
+def test_rtmps_episode_does_not_explain_owner_unknown_before_its_observed_start(
+    setup: tuple[Config, dict[str, Signer]],
+) -> None:
+    config, signers = setup
+    config.value.update(require_rtmps_episode_evidence=True, require_owner_lifecycle_evidence=True)
+    rows = frames(config, signers, outage=False)
+    for index, row in enumerate(rows):
+        seconds = index * 15
+        lifecycle, target = owner_running_lifecycle(seconds, successor=seconds >= 60)
+        row["inputs"]["dell"] = packet(
+            config,
+            signers,
+            "dell",
+            seconds,
+            transport={"target": target, "lifecycle": lifecycle},
+        )
+    facts = copy.deepcopy(rows[3]["inputs"]["dell"]["facts"])
+    facts["transport"].update(
+        target=None,
+        bytes_acked=None,
+        lifecycle={
+            "schema": "runtime.child_lifecycle.v1",
+            "state": "UNKNOWN",
+            "reason": "READ_UNAVAILABLE",
+            "observed_at": isoformat_utc(START + timedelta(seconds=45)),
+            "anchor_target": None,
+            "owner_pid": None,
+            "owner_start_ticks": None,
+            "child_pid": None,
+            "child_start_ticks": None,
+        },
+    )
+    facts["effects"].update(
+        target_status="UNKNOWN",
+        current_target_sha256=None,
+        current_target_unresolved_scope_count=None,
+    )
+    rows[3]["inputs"]["dell"] = sign_facts(
+        binding=config.bindings["dell"],
+        signer=signers["dell"],
+        host_boot_id="dell-boot",
+        producer_id="dell-producer",
+        sequence=46,
+        now=START + timedelta(seconds=45),
+        valid_until=START + timedelta(seconds=90),
+        facts=facts,
+        source_hashes={"source": "a" * 64},
+    )
+    for index in range(4, len(rows)):
+        seconds = index * 15
+        facts = copy.deepcopy(rows[index]["inputs"]["dell"]["facts"])
+        facts["transport"]["rtmps_episode"] = rtmps_episode_snapshot(
+            seconds,
+            started_seconds=46,
+            before=owner_running_lifecycle(seconds, successor=False)[1],
+            after=owner_running_lifecycle(seconds, successor=True)[1],
+        )
+        rows[index]["inputs"]["dell"] = sign_facts(
+            binding=config.bindings["dell"],
+            signer=signers["dell"],
+            host_boot_id="dell-boot",
+            producer_id="dell-producer",
+            sequence=seconds + 1,
+            now=START + timedelta(seconds=seconds),
+            valid_until=START + timedelta(seconds=seconds + 45),
+            facts=facts,
+            source_hashes={"source": "a" * 64},
+        )
+    replay_checkpoints(config, rows)
+
+    result = evaluate(rows, config=config, now=START + timedelta(seconds=180))
+
+    assert result["harness_classification"] == "MISSING_EVIDENCE"
+    assert "DELL_OWNER_LIFECYCLE_UNKNOWN_OUTSIDE_RECOVERY" in result["unknown_reasons"]
 
 
 def test_recovered_outage_can_pass_instead_of_requiring_no_outages(setup: tuple[Config, dict[str, Signer]]) -> None:
@@ -429,6 +1125,21 @@ def test_false_dashboard_health_does_not_override_platform_nodata(setup: tuple[C
     assert "RECOVERY_DEADLINE_EXCEEDED" in result["blockers"]
 
 
+def test_upstream_oauth_probe_gap_pauses_formal_soak_without_sut_failure(
+    setup: tuple[Config, dict[str, Signer]],
+) -> None:
+    config, signers = setup
+    rows = frames(config, signers, outage=False)
+    rows[4]["inputs"]["arena"] = packet(config, signers, "arena", 60, platform={"state": "UNKNOWN"})
+    replay_checkpoints(config, rows)
+    result = evaluate(rows, config=config, now=START + timedelta(seconds=180))
+    assert result["harness_classification"] == "MISSING_EVIDENCE"
+    assert result["formal_evaluation_performed"] is False
+    assert result["soak_status"] is None
+    assert "SOURCE_EVIDENCE_UNKNOWN_OUTSIDE_KNOWN_OUTAGE" in result["unknown_reasons"]
+    assert "RECOVERY_SOURCE_GAP_OUTSIDE_KNOWN_OUTAGE" in result["unknown_reasons"]
+
+
 @pytest.mark.parametrize(
     "mutation,blocker",
     [
@@ -487,13 +1198,109 @@ def test_pi_failure_is_advisory_not_a_dell_recovery_trigger(setup: tuple[Config,
     assert result["blockers"] == []
 
 
-def test_collector_gap_cannot_be_excused_as_network_down(setup: tuple[Config, dict[str, Signer]]) -> None:
+def test_collector_gap_without_historical_replay_pauses_certification(setup: tuple[Config, dict[str, Signer]]) -> None:
     config, signers = setup
     rows = frames(config, signers)
     del rows[4:8]
+    replay_checkpoints(config, rows)
+    result = evaluate(rows, config=config, now=START + timedelta(seconds=180))
+    assert result["maximum_sample_gap_seconds"] == 75
+    assert result["soak_status"] is None
+    assert result["harness_classification"] == "MISSING_EVIDENCE"
+    assert "COLLECTOR_GAP_UNRECONSTRUCTED" in result["unknown_reasons"]
+    assert "COLLECTOR_GAP_UNRECONSTRUCTED" not in result["blockers"]
+    assert result["operator_status"]["soak_impact"] == "CERTIFICATION_PAUSED"
+    assert result["operator_status"]["failure_domain"] == "HARNESS"
+
+
+def test_three_collector_periods_are_the_inclusive_gap_boundary(setup: tuple[Config, dict[str, Signer]]) -> None:
+    config, signers = setup
+    rows = frames(config, signers, outage=False)
+    del rows[3:5]
+    replay_checkpoints(config, rows)
+    result = evaluate(rows, config=config, now=START + timedelta(seconds=180))
+    assert result["maximum_sample_gap_seconds"] == 45
+    assert "COLLECTOR_GAP_UNRECONSTRUCTED" not in result["unknown_reasons"]
+    assert result["harness_classification"] == "PASS"
+
+
+def test_history_config_is_new_epoch_bound_and_rejects_ambiguous_archive_paths(
+    setup: tuple[Config, dict[str, Signer]]
+) -> None:
+    config, _ = setup
+    root = Path(config.value["state_file"]).parent
+    old_identity = config.identity
+    config.value["schema"] = HISTORY_CONFIG_SCHEMA
+    config.value["minimum_duration_seconds"] = 604800
+    config.value["history_files"] = {role: str(root / f"{role}-history.jsonl") for role in ("dell", "arena", "cra")}
+    path = root / "history-config.json"
+    atomic_write_json(path, config.value)
+    loaded = Config.load(path)
+    assert loaded.identity != old_identity
+    assert loaded.value["history_files"] == config.value["history_files"]
+    config.value["history_files"]["cra"] = config.value["history_files"]["arena"]
+    atomic_write_json(path, config.value)
+    with pytest.raises(ValueError, match="PATH_COLLISION"):
+        Config.load(path)
+
+
+@pytest.mark.parametrize("corruption", [None, "missing_packet", "wrong_signature", "cra_effect"])
+def test_complete_three_host_history_reconstructs_only_proven_gap(setup: tuple[Config, dict[str, Signer]], corruption: str | None) -> None:
+    config, signers = setup
+    root = Path(config.value["state_file"]).parent
+    config.value["schema"] = HISTORY_CONFIG_SCHEMA
+    config.value["history_files"] = {role: str(root / f"{role}-history.jsonl") for role in ("dell", "arena", "cra")}
+    all_rows = frames(config, signers)
+    for index, row in enumerate(all_rows):
+        for role in ("dell", "arena", "cra"):
+            unsigned = {key: value for key, value in row["inputs"][role].items() if key not in {"signature", "payload_sha256"}}
+            unsigned["sequence"] = index + 1
+            row["inputs"][role] = signers[role].sign(unsigned)
+    for role in ("dell", "arena", "cra"):
+        packets = [row["inputs"][role] for row in all_rows]
+        if corruption == "missing_packet" and role == "dell":
+            del packets[5]
+        elif corruption == "wrong_signature" and role == "arena":
+            packets[5] = {**packets[5], "signature": "invalid"}
+        elif corruption == "cra_effect" and role == "cra":
+            unsigned = {key: value for key, value in packets[5].items() if key not in {"signature", "payload_sha256"}}
+            unsigned["facts"]["safety"]["command_delivery_enabled"] = True
+            packets[5] = signers[role].sign(unsigned)
+        Path(config.value["history_files"][role]).write_text("".join(json.dumps(packet) + "\n" for packet in packets))
+    del all_rows[4:8]
+    for row in all_rows:
+        for role, value in row["inputs"].items():
+            atomic_write_json(Path(config.value["hosts"][role]["inbox_file"]), value)
+        collect(config, now=datetime.fromisoformat(row["observed_at"].replace("Z", "+00:00")))
+    result = gate(config, now=START + timedelta(seconds=180))
+    assert result["maximum_sample_gap_seconds"] == 75
+    if corruption is None:
+        assert result["historical_replay"]["status"] == "RECONSTRUCTED", result
+        assert result["harness_classification"] == "PASS", result
+        assert result["soak_status"] == "PASS", result
+        atomic_write_json(Path(config.value["gate_file"]), result)
+        assert "HISTORICAL_EVIDENCE_UNAVAILABLE" not in watchdog(config, now=START + timedelta(seconds=180))["blockers"]
+        Path(config.value["history_files"]["dell"]).unlink()
+        assert "HISTORICAL_EVIDENCE_UNAVAILABLE" in watchdog(config, now=START + timedelta(seconds=180))["blockers"]
+    elif corruption == "cra_effect":
+        assert result["historical_replay"]["status"] == "RECONSTRUCTED"
+        assert result["soak_status"] == "FAIL"
+        assert "CRA_NO_ACTION_SAFETY_VIOLATED" in result["blockers"]
+    else:
+        assert result["historical_replay"]["status"] == "UNAVAILABLE_OR_INVALID"
+        assert result["soak_status"] is None
+        assert "COLLECTOR_GAP_UNRECONSTRUCTED" in result["unknown_reasons"]
+
+
+def test_collector_clock_regression_is_harness_error(setup: tuple[Config, dict[str, Signer]]) -> None:
+    config, signers = setup
+    rows = frames(config, signers, outage=False)
+    rows[4]["observed_at"] = rows[3]["observed_at"]
     rechain(rows)
     result = evaluate(rows, config=config, now=START + timedelta(seconds=180))
-    assert "COLLECTOR_GAP_OR_CLOCK_REGRESSION" in result["blockers"]
+    assert result["soak_status"] is None
+    assert result["harness_classification"] == "HARNESS_FAILURE"
+    assert "COLLECTOR_CLOCK_REGRESSION" in result["oracle_errors"]
 
 
 def test_missing_evidence_is_unknown_not_healthy(setup: tuple[Config, dict[str, Signer]]) -> None:
@@ -545,6 +1352,33 @@ def test_collector_and_replay_share_persisted_timestamp_precision(setup: tuple[C
     assert result["harness_classification"] != "HARNESS_FAILURE"
 
 
+def test_startup_timer_burst_does_not_become_false_seven_day_capacity_failure(
+    setup: tuple[Config, dict[str, Signer]],
+) -> None:
+    config, signers = setup
+    config.value["minimum_duration_seconds"] = 604800
+    for seconds in (0, 1):
+        for role in ROLES:
+            atomic_write_json(Path(config.value["hosts"][role]["inbox_file"]), packet(config, signers, role, seconds))
+        collect(config, now=START + timedelta(seconds=seconds))
+    startup = gate(config, now=START + timedelta(seconds=2))
+    assert startup["capacity_projection_warmup_seconds"] == 300
+    assert startup["projected_seven_day_bytes"] is None
+    assert "EVIDENCE_CAPACITY_NOT_YET_MEASURABLE" in startup["pending_reasons"]
+    assert "EVIDENCE_CAPACITY_NOT_PROVEN" not in startup["blockers"]
+    assert startup["harness_classification"] != "ENVIRONMENT_FAILURE"
+
+    for seconds in range(15, 301, 15):
+        for role in ROLES:
+            atomic_write_json(Path(config.value["hosts"][role]["inbox_file"]), packet(config, signers, role, seconds))
+        collect(config, now=START + timedelta(seconds=seconds))
+    measured = gate(config, now=START + timedelta(seconds=300))
+    assert measured["projected_seven_day_bytes"] is not None
+    assert measured["projected_safety_margin_bytes"] < measured["evidence_limit_bytes"]
+    assert "EVIDENCE_CAPACITY_NOT_YET_MEASURABLE" not in measured["pending_reasons"]
+    assert not measured["blockers"]
+
+
 def test_collector_records_unavailable_inputs_instead_of_stopping(setup: tuple[Config, dict[str, Signer]]) -> None:
     config, _ = setup
     sample = collect(config, now=START)
@@ -560,6 +1394,117 @@ def test_partial_tail_and_missing_state_fail_closed(setup: tuple[Config, dict[st
         stream.write(b'{"partial":')
     with pytest.raises(ValueError, match="PARTIAL"):
         collect(config, now=START + timedelta(seconds=15))
+
+
+def test_reserved_sample_conflicting_partial_tail_is_preserved(
+    setup: tuple[Config, dict[str, Signer]], monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    config, _ = setup
+    collect(config, now=START)
+    evidence = Path(config.value["evidence_file"])
+    original = recovery_soak._append_line
+
+    def conflicting(path: Path, _sample: dict[str, Any], **_kwargs: Any) -> None:
+        with path.open("ab") as stream:
+            stream.write(b'{"different":')
+        raise OSError("isolated conflicting short write")
+
+    monkeypatch.setattr(recovery_soak, "_append_line", conflicting)
+    with pytest.raises(OSError, match="conflicting short write"):
+        collect(config, now=START + timedelta(seconds=15))
+    before = evidence.read_bytes()
+    monkeypatch.setattr(recovery_soak, "_append_line", original)
+    with pytest.raises(ValueError, match="PENDING_PREFIX_CONFLICT"):
+        collect(config, now=START + timedelta(seconds=30))
+    assert evidence.read_bytes() == before
+    status = recovery_soak.watchdog(config, now=START + timedelta(seconds=30))
+    assert status["status"] == "AT_RISK"
+    assert "EVIDENCE_APPEND_PENDING" in status["blockers"]
+
+
+def _reserved_without_append(config: Config, monkeypatch: pytest.MonkeyPatch) -> dict[str, Any]:
+    original = recovery_soak._append_line
+    with monkeypatch.context() as patch:
+        patch.setattr(recovery_soak, "_append_line", lambda *_args, **_kwargs: (_ for _ in ()).throw(OSError("reserved")))
+        with pytest.raises(OSError, match="reserved"):
+            collect(config, now=START + timedelta(seconds=15))
+    assert recovery_soak._append_line is original
+    return json.loads(Path(config.value["state_file"]).read_bytes())["pending_sample"]
+
+
+def test_pending_resume_rejects_two_identical_full_frames(
+    setup: tuple[Config, dict[str, Signer]], monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    config, _ = setup
+    collect(config, now=START)
+    pending = _reserved_without_append(config, monkeypatch)
+    evidence = Path(config.value["evidence_file"])
+    with evidence.open("ab") as stream:
+        stream.write(_serialized_line(pending) * 2)
+    before = evidence.read_bytes()
+    with pytest.raises(ValueError, match="PENDING_PREFIX_CONFLICT"):
+        collect(config, now=START + timedelta(seconds=30))
+    assert evidence.read_bytes() == before
+    assert json.loads(Path(config.value["state_file"]).read_bytes())["sample_count"] == 1
+
+
+def test_pending_resume_rechecks_committed_frame_hash(
+    setup: tuple[Config, dict[str, Signer]], monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    config, _ = setup
+    collect(config, now=START)
+    _reserved_without_append(config, monkeypatch)
+    evidence = Path(config.value["evidence_file"])
+    row = json.loads(evidence.read_bytes())
+    row["observed_at"] = row["observed_at"].replace("00:00:00", "00:00:01")
+    evidence.write_bytes(_serialized_line(row))
+    before = evidence.read_bytes()
+    with pytest.raises(ValueError, match="PENDING_PREFIX_CONFLICT"):
+        collect(config, now=START + timedelta(seconds=30))
+    assert evidence.read_bytes() == before
+    assert json.loads(Path(config.value["state_file"]).read_bytes())["sample_count"] == 1
+
+
+def test_pending_snapshot_reads_only_committed_prefix_without_certifying_tail(
+    setup: tuple[Config, dict[str, Signer]], monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    config, _ = setup
+    committed = collect(config, now=START)
+    pending = _reserved_without_append(config, monkeypatch)
+    evidence = Path(config.value["evidence_file"])
+    with evidence.open("ab") as stream:
+        stream.write(_serialized_line(pending)[:19])
+    before = evidence.read_bytes()
+    head, rows = recovery_soak.snapshot(config)
+    assert head["sample_count"] == 1
+    assert list(rows) == [committed]
+    result = gate(config, now=START + timedelta(seconds=30))
+    assert result["sample_count"] == 1
+    assert result["soak_status"] is None
+    assert "EVIDENCE_APPEND_PENDING" in result["unknown_reasons"]
+    assert evidence.read_bytes() == before
+
+
+def test_raw_signed_failure_survives_capacity_projection_failure(
+    setup: tuple[Config, dict[str, Signer]],
+) -> None:
+    config, signers = setup
+    config.value["minimum_duration_seconds"] = 604800
+    config.value["maximum_evidence_bytes"] = 1024 * 1024
+    for seconds in range(0, 301, 15):
+        for role in ROLES:
+            changes = {"safety": {"command_delivery_enabled": True}} if role == "cra" and seconds == 300 else {}
+            atomic_write_json(Path(config.value["hosts"][role]["inbox_file"]), packet(config, signers, role, seconds, **changes))
+        collect(config, now=START + timedelta(seconds=seconds))
+    _, rows = recovery_soak.snapshot(config)
+    assert evaluate(rows, config=config, now=START + timedelta(seconds=300))["soak_status"] == "FAIL"
+    after = gate(config, now=START + timedelta(seconds=300))
+    assert after["projected_safety_margin_bytes"] > after["evidence_limit_bytes"]
+    assert after["soak_status"] == "FAIL"
+    assert after["formal_evaluation_performed"] is True
+    assert after["harness_classification"] == "SUT_FAILURE"
+    assert "CRA_NO_ACTION_SAFETY_VIOLATED" in after["blockers"]
+    assert "EVIDENCE_CAPACITY_NOT_PROVEN" in after["unknown_reasons"]
 
 
 def test_config_change_requires_new_epoch_not_state_reuse(setup: tuple[Config, dict[str, Signer]]) -> None:
@@ -595,14 +1540,139 @@ def test_lightweight_watchdog_preserves_deadline_across_collector_restart(setup:
     assert result["formal_status"] == "NOT_EVALUATED"
 
 
-def test_control_only_recovery_does_not_prove_lan_recovery(setup: tuple[Config, dict[str, Signer]]) -> None:
+def test_watchdog_binds_older_formal_gate_to_its_exact_committed_prefix(
+    setup: tuple[Config, dict[str, Signer]],
+) -> None:
+    config, signers = setup
+
+    def collect_at(seconds: int) -> dict[str, Any]:
+        for role in ROLES:
+            atomic_write_json(Path(config.value["hosts"][role]["inbox_file"]), packet(config, signers, role, seconds))
+        return collect(config, now=START + timedelta(seconds=seconds))
+
+    for seconds in (0, 15, 30):
+        collect_at(seconds)
+    formal = gate(config, now=START + timedelta(seconds=30))
+    atomic_write_json(Path(config.value["gate_file"]), formal)
+    later = [collect_at(seconds) for seconds in (45, 60)]
+
+    accepted = watchdog(config, now=START + timedelta(seconds=60))
+    assert "FORMAL_GATE_STALE_OR_UNBOUND" not in accepted["blockers"]
+
+    forged = dict(formal)
+    forged["last_sample_hash"] = later[0]["sample_hash"]
+    atomic_write_json(Path(config.value["gate_file"]), forged)
+    rejected = watchdog(config, now=START + timedelta(seconds=60))
+    assert "FORMAL_GATE_STALE_OR_UNBOUND" in rejected["blockers"]
+
+    forged = dict(formal)
+    forged["evidence_verified_bytes"] = Path(config.value["evidence_file"]).stat().st_size
+    atomic_write_json(Path(config.value["gate_file"]), forged)
+    rejected = watchdog(config, now=START + timedelta(seconds=60))
+    assert "FORMAL_GATE_STALE_OR_UNBOUND" in rejected["blockers"]
+
+
+def test_formal_history_revision_resolves_only_the_exact_live_transport_order_unknown(
+    setup: tuple[Config, dict[str, Signer]],
+) -> None:
+    config, signers = setup
+    root = Path(config.value["state_file"]).parent
+    config.value["schema"] = HISTORY_CONFIG_SCHEMA
+    config.value["history_files"] = {role: str(root / f"{role}-history.jsonl") for role in ("dell", "arena", "cra")}
+
+    targets = {
+        0: ("target-initial", 0),
+        15: ("target-unseen-predecessor", 15),
+        30: ("target-current", 30),
+        45: ("target-current", 45),
+        # The live sampler did not see target-unseen-predecessor before this
+        # delayed fact. The complete history did, and therefore knows it is a
+        # retired predecessor rather than a successor.
+        60: ("target-unseen-predecessor", 20),
+        75: ("target-current", 75),
+        90: ("target-current", 90),
+        105: ("target-current", 105),
+    }
+    packets: dict[str, list[dict[str, Any]]] = {role: [] for role in ROLES}
+    for sequence, seconds in enumerate(targets, start=1):
+        target, transport_seconds = targets[seconds]
+        for role in ROLES:
+            changes: dict[str, Any] = {}
+            if role == "dell":
+                changes["transport"] = {
+                    "target": target,
+                    "observed_at": isoformat_utc(START + timedelta(seconds=transport_seconds)),
+                    "bytes_acked": 1000 + seconds * 100,
+                }
+            signed = packet(config, signers, role, seconds, **changes)
+            unsigned = {key: value for key, value in signed.items() if key not in {"signature", "payload_sha256"}}
+            unsigned["sequence"] = sequence
+            packets[role].append(signers[role].sign(unsigned))
+
+    for role in ("dell", "arena", "cra"):
+        Path(config.value["history_files"][role]).write_text(
+            "".join(json.dumps(value) + "\n" for value in packets[role]), encoding="utf-8"
+        )
+
+    raw_seconds = (0, 45, 60, 75, 90, 105)
+    for seconds in raw_seconds:
+        index = list(targets).index(seconds)
+        for role in ROLES:
+            atomic_write_json(Path(config.value["hosts"][role]["inbox_file"]), packets[role][index])
+        collect(config, now=START + timedelta(seconds=seconds))
+
+    before = watchdog(config, now=START + timedelta(seconds=105))
+    assert "TRANSPORT_TARGET_ORDER_UNVERIFIED" in before["blockers"]
+
+    formal = gate(config, now=START + timedelta(seconds=105))
+    resolution = formal["live_unknown_resolutions"]["TRANSPORT_TARGET_ORDER_UNVERIFIED"]
+    assert formal["historical_replay"]["status"] == "RECONSTRUCTED", formal
+    assert "TRANSPORT_TARGET_ORDER_UNVERIFIED" not in formal["unknown_reasons"]
+    assert resolution["status"] == "RESOLVED"
+    assert resolution["observation_revision"]["revision"] == 1
+    atomic_write_json(Path(config.value["gate_file"]), formal)
+
+    accepted = watchdog(config, now=START + timedelta(seconds=105))
+    assert "TRANSPORT_TARGET_ORDER_UNVERIFIED" not in accepted["blockers"]
+    assert accepted["resolved_live_unknowns"] == ["TRANSPORT_TARGET_ORDER_UNVERIFIED"]
+
+    forged = copy.deepcopy(formal)
+    forged["live_unknown_resolutions"]["TRANSPORT_TARGET_ORDER_UNVERIFIED"]["observation_revision"]["revision"] = 2
+    atomic_write_json(Path(config.value["gate_file"]), forged)
+    rejected = watchdog(config, now=START + timedelta(seconds=105))
+    assert "TRANSPORT_TARGET_ORDER_UNVERIFIED" in rejected["blockers"]
+
+    atomic_write_json(Path(config.value["gate_file"]), formal)
+    new_packets: dict[str, dict[str, Any]] = {}
+    for role in ROLES:
+        changes = {
+            "transport": {
+                "target": "target-new-ambiguous",
+                "observed_at": isoformat_utc(START + timedelta(seconds=80)),
+                "bytes_acked": 99_999,
+            }
+        } if role == "dell" else {}
+        signed = packet(config, signers, role, 120, **changes)
+        unsigned = {key: value for key, value in signed.items() if key not in {"signature", "payload_sha256"}}
+        unsigned["sequence"] = len(targets) + 1
+        new_packets[role] = signers[role].sign(unsigned)
+        atomic_write_json(Path(config.value["hosts"][role]["inbox_file"]), new_packets[role])
+    collect(config, now=START + timedelta(seconds=120))
+    advanced = watchdog(config, now=START + timedelta(seconds=120))
+    assert "TRANSPORT_TARGET_ORDER_UNVERIFIED" in advanced["blockers"]
+    assert advanced["resolved_live_unknowns"] == []
+
+def test_cra_safe_block_uses_its_own_bounded_oracle(setup: tuple[Config, dict[str, Signer]]) -> None:
     config, signers = setup
     rows = frames(config, signers, outage=False)
     rows[3]["inputs"]["cra"] = packet(config, signers, "cra", 45, safety={"runtime_readiness": "SAFE_BLOCKED"})
     replay_checkpoints(config, rows)
     result = evaluate(rows, config=config, now=START + timedelta(seconds=180))
-    assert result["recovery"]["recovered_episode_count"] == 1
+    assert result["recovery"]["recovered_episode_count"] == 0
     assert result["recovery"]["verified_network_recovered_episode_count"] == 0
+    assert result["recovery"]["cra_safe_blocked_episode_count"] == 1
+    assert result["recovery"]["cra_max_safe_blocked_duration_seconds"] == 15
+    assert result["failure_domain_sample_counts"]["cra_runtime_safe_blocked"] == 1
     assert result["status"] == "NOT_YET_ELIGIBLE"
     assert "RECOVERY_NOT_EXERCISED" in result["pending_reasons"]
 

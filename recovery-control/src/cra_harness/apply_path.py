@@ -41,8 +41,9 @@ class _UnknownAdapter:
     def __init__(self) -> None:
         self.attempt_count = 0
 
-    def restart_ffmpeg(self, expected_target: TargetIdentity) -> FakeExecutionResult:
+    def restart_ffmpeg(self, expected_target: TargetIdentity, *, authorization_expires_at: str | None = None) -> FakeExecutionResult:
         del expected_target
+        del authorization_expires_at
         self.attempt_count += 1
         raise RuntimeError("SYNTHETIC_RESULT_LOST_AFTER_BOUNDARY")
 

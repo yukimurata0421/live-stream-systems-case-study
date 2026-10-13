@@ -98,7 +98,7 @@ def test_pass_artifact_has_stable_success_and_preserves_environment_semantics(pr
     assert (result["execution_status"], result["verification_status"], result["failure_owner"]) == ("EXECUTED", "PASS", "NONE")
     assert result["environment_status"] == {
         "fake": {"VERIFIED": 8},
-        "process": {"NOT_VERIFIED": 4, "VERIFIED": 4},
+        "process": {"NOT_VERIFIED": 2, "VERIFIED": 6},
         "production": {"OUT_OF_SCOPE": 8},
     }
 

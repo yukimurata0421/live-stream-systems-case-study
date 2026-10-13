@@ -1,7 +1,22 @@
 # Implementation Review Map
 
-This map is for reviewers who want to connect the public reliability claims to
-code and tests without reading the entire repository.
+Pick one question after reading [an incident story](operational-case-studies.md).
+This map is optional depth: it connects the plain-language result to a concrete
+code path and regression tests. It does not require a complete repository tour.
+
+## Recent Cases: Start Here
+
+| Interview question | Implementation and checks |
+| --- | --- |
+| How does the sender differ from the encoder? | [Delivery pipeline](../src/stream_core/engine/delivery_pipeline.py) and [tests](../tests/test_delivery_pipeline.py). |
+| What prevented replay after an uncertain route action? | [Runtime fence](../recovery-control/src/runtime_boundary/server.py) and [route tests](../recovery-control/tests/runtime_boundary/test_stream_route_fence.py). |
+| How was the unaffected YouTube output checked during Twitch renewal? | [Session reducer](../ops/relay/twitch_session.py), [adapter](../ops/relay/twitch_daily.py), and [tests](../tests/test_twitch_daily.py). |
+| Why did a current warning close without repairing history? | [Upload-source classifier](../src/stream_core/notifications/upload_source.py) and [tests](../tests/test_upload_source_recovery.py). |
+| How are multiple probes combined without authorizing recovery? | [Route observer](../ops/scripts/route_network_observer.py) and [tests](../tests/test_route_network_observer.py). |
+| Are the current page's assets included in the staged public upload? | [Uploader](../ops/public-publisher/site/scripts/push_to_gcs.py) and [frozen-upload test](../tests/test_public_publisher_build.py). |
+
+The remaining map is a detailed reference. Source tests and port checks remain
+separate from native qualification, deployed authority, and live reception.
 
 ## High-Signal Review Paths
 

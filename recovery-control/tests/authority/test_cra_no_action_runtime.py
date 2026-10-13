@@ -11,8 +11,10 @@ import pytest
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
+from cra_authority.archive_integrity import ArchiveIntegrityConfig, run_check
 from cra_authority.authorizer import CraAuthorizer, RecoveryPolicy
 from cra_authority.no_action_store import NoActionCentralStore
+from cra_authority.retention import SignedNoActionArchive
 from cra_authority.runtime import CraNoActionRuntime, RuntimeConfig, SingletonLock
 from cra_dell_recovery.canonical import Signer
 from cra_dell_recovery.time import isoformat_utc, utc_now
@@ -390,3 +392,100 @@ def test_runtime_v2_preserves_safe_reason_and_throttles_unchanged_events(tmp_pat
     assert len(events) == 1
     assert events[0]["event_type"] == "STATE_CHANGED"
     assert events[0]["error_reason_code"] == first["error_reason_code"]
+
+
+def _runtime_v3_fixture(tmp_path: Path) -> tuple[Path, dict[str, object]]:
+    path = _write_runtime_fixture(tmp_path)
+    value = json.loads(path.read_text(encoding="utf-8"))
+    release = str(value["runtime_release_id"])
+    archive_private = Ed25519PrivateKey.generate()
+    archive_key = tmp_path / "archive-private.pem"
+    archive_key.write_bytes(
+        archive_private.private_bytes(
+            serialization.Encoding.PEM,
+            serialization.PrivateFormat.PKCS8,
+            serialization.NoEncryption(),
+        )
+    )
+    os.chmod(archive_key, 0o600)
+    archive_database = tmp_path / "cra/archive.db"
+    archive_database.parent.mkdir(parents=True, exist_ok=True)
+    archive = SignedNoActionArchive(archive_database, key_id="archive-key-a", private_key=archive_private)
+    archive.close()
+    integrity_status = tmp_path / "cra/releases" / release / "archive-integrity-status.json"
+    integrity_config_value = {
+        "schema": "cra.archive_integrity.v1",
+        "runtime_release_id": release,
+        "archive_database": str(archive_database),
+        "status_file": str(integrity_status),
+        "busy_timeout_seconds": 5,
+    }
+    integrity_config_path = tmp_path / "archive-integrity.json"
+    integrity_config_path.write_text(json.dumps(integrity_config_value), encoding="utf-8")
+    os.chmod(integrity_config_path, 0o600)
+    integrity_result = run_check(ArchiveIntegrityConfig.load(integrity_config_path))
+    assert integrity_result["status"] == "PASS"
+    value.update(
+        {
+            "schema": "cra.runtime.v3",
+            "event_file": str(tmp_path / "cra/runtime-events.jsonl"),
+            "heartbeat_interval_seconds": 60,
+            "retention": {
+                "archive_database": str(archive_database),
+                "archive_signing_private_key": str(archive_key),
+                "archive_key_id": "archive-key-a",
+                "retain_decision_count": 16,
+                "compact_interval_seconds": 60,
+                "archive_integrity_status_file": str(integrity_status),
+                "archive_integrity_maximum_age_seconds": 5400,
+            },
+        }
+    )
+    path.write_text(json.dumps(value), encoding="utf-8")
+    return path, integrity_result
+
+
+def test_runtime_v3_consumes_external_integrity_without_running_full_check(tmp_path: Path) -> None:
+    path, _ = _runtime_v3_fixture(tmp_path)
+    runtime = CraNoActionRuntime(RuntimeConfig.load(path))
+    assert runtime.archive is not None
+    original_status = runtime.archive.status
+
+    def forbidden_status(*, full_integrity: bool = False) -> dict[str, object]:
+        raise AssertionError(f"archive.status must not run in v3: {full_integrity}")
+
+    runtime.archive.status = forbidden_status  # type: ignore[method-assign]
+    try:
+        status = runtime.run_once()
+    finally:
+        runtime.archive.status = original_status  # type: ignore[method-assign]
+        runtime.close()
+
+    assert status["readiness"] == "NO_ACTION_READY"
+    assert status["retention"]["archive_integrity_check"] == "ok"
+    assert status["retention"]["archive_integrity_check_mode"] == "EXTERNAL_CACHED"
+    assert status["command_delivery_enabled"] is False
+    assert status["control_capability_count"] == 0
+    assert status["physical_effect_count"] == 0
+
+
+def test_runtime_v3_fails_closed_on_stale_external_integrity(tmp_path: Path) -> None:
+    path, integrity = _runtime_v3_fixture(tmp_path)
+    stale = (utc_now() - timedelta(hours=2)).isoformat().replace("+00:00", "Z")
+    integrity["started_at"] = stale
+    integrity["checked_at"] = stale
+    config = json.loads(path.read_text(encoding="utf-8"))
+    integrity_path = Path(config["retention"]["archive_integrity_status_file"])
+    integrity_path.write_text(json.dumps(integrity), encoding="utf-8")
+    os.chmod(integrity_path, 0o600)
+
+    runtime = CraNoActionRuntime(RuntimeConfig.load(path))
+    try:
+        status = runtime.run_once()
+    finally:
+        runtime.close()
+
+    assert status["readiness"] == "SAFE_BLOCKED"
+    assert status["policy_decision"] == "NO_ACTION"
+    assert any("CRA_ARCHIVE_INTEGRITY_STATUS_STALE" in reason for reason in status["policy_blockers"])
+    assert status["command_delivery_enabled"] is False

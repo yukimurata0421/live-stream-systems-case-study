@@ -12,7 +12,9 @@ def test_coverage_closure_writes_revision_bound_non_effect_artifacts(tmp_path: P
     report = run_coverage_closure(ROOT, tmp_path / "coverage", seeds=(20260911,), cases_per_seed=4)
 
     assert report["classification"] == "PASS"
-    assert report["scenario_count"] == 2 + 127 + 8 + 4 + 8 + 8
+    # Deployment persistence now exercises every subset of its nine cutover
+    # fault points (2**9 - 1), in addition to the two fixed orderings.
+    assert report["scenario_count"] == 2 + 511 + 8 + 4 + 8 + 8
     assert report["negative_control_detection_rate"] == 1.0
     assert report["safety"]["physical_effect_count"] == 0
     assert report["runtime_versions"]["sqlite"] == "3.51.3"

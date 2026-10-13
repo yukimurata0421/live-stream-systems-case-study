@@ -12,13 +12,13 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 from cra_dell_recovery.canonical import KeyRing
-from cra_dell_recovery.errors import SignatureValidationError
+from cra_dell_recovery.errors import EvidenceFreshnessError, SignatureValidationError
 from cra_no_action_soak import resilient_host_status_pull as pull_module
 from cra_no_action_soak.resilient_host_status import ComponentStatus, ResilientHostStatusContract, build_resilient_status
 from cra_no_action_soak.resilient_host_status_pull import PullConfig, ResilientStatusPuller, _contract
 
 ROOT = Path(__file__).resolve().parents[3]
-SCHEMA = ROOT / "contracts/cra_no_action_soak/resilient_host_status.v3.schema.json"
+SCHEMA = ROOT / "contracts/cra_no_action_soak/resilient_host_status.v4.schema.json"
 CURRENT = datetime(2026, 9, 3, 0, 0, tzinfo=UTC)
 IDENTITY = {
     "release_manifest_sha256": "1" * 64,
@@ -309,6 +309,7 @@ def test_pull_fetches_verifies_and_admits_signed_status(
     assert result["disposition"] == "UPDATED"
     assert result["transport_attempt_count"] == 2
     assert result["transport_retry_count"] == 1
+    assert result["evidence_freshness_retry_count"] == 0
     assert json.loads((tmp_path / "inbox.json").read_text(encoding="utf-8"))["payload_sha256"] == status["payload_sha256"]
 
     puller.minimum_remaining_lease_seconds = 45
@@ -318,6 +319,66 @@ def test_pull_fetches_verifies_and_admits_signed_status(
     monkeypatch.setattr(pull_module, "fetch_bounded_json", lambda *_args, **_kwargs: (b"[]", 1))
     with pytest.raises(ValueError, match="RESPONSE_NOT_OBJECT"):
         puller.pull(now=CURRENT)
+
+
+@pytest.mark.parametrize("stale_ttl_seconds", [1, 5])
+def test_pull_refetches_valid_signed_status_with_insufficient_evidence_headroom(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    stale_ttl_seconds: int,
+) -> None:
+    key = Ed25519PrivateKey.from_private_bytes(bytes(range(1, 33)))
+    stale = _status(
+        tmp_path / "stale",
+        key,
+        now=CURRENT,
+        component_ttl_seconds=stale_ttl_seconds,
+        source_ttl_seconds=stale_ttl_seconds,
+    )
+    fresh = _status(tmp_path / "fresh", key, now=CURRENT + timedelta(seconds=1))
+    responses = iter((stale, fresh))
+    observed: list[tuple[str, str, int, bool]] = []
+    puller = _puller(tmp_path / "puller", key)
+    puller.failure_observer = lambda classification, attempt, exhausted: observed.append(
+        (classification.category, classification.reason_code, attempt, exhausted)
+    )
+    monkeypatch.setattr(
+        pull_module,
+        "fetch_bounded_json",
+        lambda *_args, **_kwargs: (json.dumps(next(responses)).encode(), 1),
+    )
+
+    result = puller.pull(now=CURRENT + timedelta(seconds=1))
+
+    assert result["host_status"]["payload_sha256"] == fresh["payload_sha256"]
+    assert result["transport_attempt_count"] == 2
+    assert result["transport_retry_count"] == 1
+    assert result["evidence_freshness_retry_count"] == 1
+    assert observed == [("OBSERVATION_FRESHNESS", "EVIDENCE_VALIDITY_INSUFFICIENT", 1, False)]
+
+
+def test_pull_exhausts_freshness_budget_without_admitting_near_expiry_status(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    key = Ed25519PrivateKey.from_private_bytes(bytes(range(1, 33)))
+    stale = _status(tmp_path / "stale", key, now=CURRENT, component_ttl_seconds=5, source_ttl_seconds=5)
+    observed: list[tuple[str, int, bool]] = []
+    puller = _puller(tmp_path / "puller", key)
+    puller.maximum_retry_elapsed_seconds = 0.05
+    puller.transient_retry_delays_seconds = (0.1,)
+    puller.failure_observer = lambda classification, attempt, exhausted: observed.append((classification.category, attempt, exhausted))
+    monkeypatch.setattr(
+        pull_module,
+        "fetch_bounded_json",
+        lambda *_args, **_kwargs: (json.dumps(stale).encode(), 1),
+    )
+
+    with pytest.raises(EvidenceFreshnessError, match="INSUFFICIENT_EVIDENCE_VALIDITY"):
+        puller.pull(now=CURRENT + timedelta(seconds=1))
+
+    assert observed == [("OBSERVATION_FRESHNESS", 1, True)]
+    assert not (tmp_path / "puller/inbox.json").exists()
 
 
 def test_production_ttl_and_pull_floor_preserve_cross_host_handoff_headroom(
@@ -458,6 +519,7 @@ def test_pull_main_covers_config_check_and_ready_status(
                 "pulled_at": "2026-09-03T00:00:00Z",
                 "transport_attempt_count": 2,
                 "transport_retry_count": 1,
+                "evidence_freshness_retry_count": 0,
                 "source_remaining_lease_seconds": 30.0,
                 "source_remaining_evidence_seconds": 20.0,
             }

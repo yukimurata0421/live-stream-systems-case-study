@@ -107,7 +107,7 @@ def test_example_configs_bind_new_host_identity_and_separate_release_ids() -> No
     projection = json.loads(_text("monitoring-live-projection.example.json"))
     server = json.loads(_text("monitoring-projection-server.example.json"))
 
-    assert dell["expected_target"]["host_id"] == "dell-yuki"
+    assert dell["expected_target"]["host_id"] == "delivery-host"
     assert dell["maximum_bundle_ttl_seconds"] == pull["maximum_ttl_seconds"] == 30
     assert dell["maximum_transport_age_seconds"] == dell["maximum_state_age_seconds"] == 30
     assert adapter["fact_ttl_seconds"] == projection["projection_ttl_seconds"] == 20
@@ -244,7 +244,7 @@ def test_resilient_status_v3_chain_clamps_report_to_evidence_and_keeps_local_onl
     assert dell["reporter_lease_seconds"] == arena["reporter_lease_seconds"] == 45
     assert dell["component_validity_seconds"] == arena["component_validity_seconds"] == 20
     assert dell["maximum_clock_tracking_age_seconds"] == 20
-    assert arena["maximum_clock_tracking_age_seconds"] == 10
+    assert arena["maximum_clock_tracking_age_seconds"] == 20
     assert dell["last_good_retention_seconds"] == arena["last_good_retention_seconds"] == 300
     assert set(dell["service_units"]) >= {"k3s_service", "target_snapshot_producer"}
     assert arena_pull["endpoint_url"].endswith("/v3/no-action-soak-status/latest")
@@ -285,6 +285,20 @@ def test_resilient_status_v3_chain_clamps_report_to_evidence_and_keeps_local_onl
     assert "OnUnitInactiveSec=5s" in _directives("dell-resilient-host-status-publisher@.timer")
     assert "OnUnitInactiveSec=3s" in _directives("monitoring-v4-dell-resilient-status-pull@.timer")
     assert dell["maximum_clock_tracking_age_seconds"] >= arena_pull["minimum_remaining_lease_seconds"] + 5 + 3
+    # The relay may spend its bounded refresh budget before signing.  Its local
+    # clock evidence and accepted Dell evidence must still survive one CRA pull
+    # interval plus the CRA admission floor and a completion margin.
+    assert arena["minimum_upstream_evidence_seconds"] == 10
+    assert sum(arena["upstream_refresh_delays_seconds"]) == 6
+    assert "OnUnitInactiveSec=3s" in _directives("monitoring-v4-resilient-status-publisher@.timer")
+    assert "OnUnitInactiveSec=3s" in _directives("cra-arena-resilient-status-pull@.timer")
+    assert arena["minimum_upstream_evidence_seconds"] >= cra_pull["minimum_remaining_lease_seconds"] + 3 + 2
+    assert arena["maximum_clock_tracking_age_seconds"] >= (
+        sum(arena["upstream_refresh_delays_seconds"])
+        + cra_pull["minimum_remaining_lease_seconds"]
+        + 3
+        + 2
+    )
     assert cra_pull["output_file"] == soak["arena_status_inbox_file"]
     assert cra_pull["status_file"] == soak["cra_pull_status_file"]
     assert cra_pull["recovery_state_file"] == soak["cra_pull_recovery_state_file"]

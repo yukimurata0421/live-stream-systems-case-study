@@ -5,9 +5,11 @@ import json
 import math
 import os
 import random
+import signal
 import ssl
 import stat
 import sys
+import threading
 import time
 import urllib.parse
 import urllib.request
@@ -320,12 +322,51 @@ class ProjectionPuller:
         }
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(description="mTLS puller for signed Monitoring v4 CRA projections")
-    parser.add_argument("--config", type=Path, required=True)
-    parser.add_argument("--check-config", action="store_true")
-    args = parser.parse_args()
-    config = ProjectionPullConfig.load(args.config)
+@dataclass
+class ResidentState:
+    started_at: str
+    base_interval_seconds: float
+    cycle_sequence: int = 0
+    connection_generation: int = 0
+    consecutive_failure_count: int = 0
+    last_success_at: str | None = None
+    last_failure_at: str | None = None
+    next_delay_seconds: float = 1.0
+
+    def begin_cycle(self) -> None:
+        self.cycle_sequence += 1
+
+    def begin_connection(self) -> None:
+        # A fresh TLS context and connection are constructed for every cycle.
+        # This is deliberately explicit so credential rotation is picked up
+        # without replacing the resident Python process.
+        self.connection_generation += 1
+
+    def record_success(self, observed_at: str) -> None:
+        self.consecutive_failure_count = 0
+        self.last_success_at = observed_at
+        self.next_delay_seconds = self.base_interval_seconds
+
+    def record_failure(self, observed_at: str) -> None:
+        self.consecutive_failure_count += 1
+        self.last_failure_at = observed_at
+        exponent = min(self.consecutive_failure_count - 1, 5)
+        self.next_delay_seconds = min(30.0, self.base_interval_seconds * (2**exponent))
+
+    def status_fields(self) -> dict[str, Any]:
+        return {
+            "execution_mode": "RESIDENT",
+            "resident_started_at": self.started_at,
+            "cycle_sequence": self.cycle_sequence,
+            "connection_generation": self.connection_generation,
+            "consecutive_failure_count": self.consecutive_failure_count,
+            "last_success_at": self.last_success_at,
+            "last_failure_at": self.last_failure_at,
+            "next_delay_seconds": self.next_delay_seconds,
+        }
+
+
+def _run_once(config: ProjectionPullConfig, *, resident: ResidentState | None = None) -> dict[str, Any]:
     value = config.value
     health: RecoveryHealthStore | None = None
     if value["schema"] == CONFIG_SCHEMA:
@@ -348,10 +389,6 @@ def main() -> None:
             maximum_ttl_seconds=float(value["maximum_ttl_seconds"]),
             maximum_check_age_seconds=float(value["maximum_check_age_seconds"]),
         )
-        if args.check_config:
-            print(json.dumps({"config": "VALID", "schema": value["schema"]}, sort_keys=True))
-            return
-
         def observe_failure(classification: FailureClassification, attempt: int, exhausted: bool) -> None:
             if health is not None:
                 health.record_failure(classification, attempt=attempt, exhausted=exhausted)
@@ -368,6 +405,8 @@ def main() -> None:
         ).pull()
         if health is not None:
             health.record_success(attempt_count=int(result["transport_attempt_count"]))
+        if resident is not None:
+            resident.record_success(str(result["pulled_at"]))
         status = {
             "schema": "cra.monitoring_projection_pull_status.v1",
             "status": "READY",
@@ -380,24 +419,141 @@ def main() -> None:
             "physical_effect_count": 0,
             "transport_attempt_count": result["transport_attempt_count"],
             "transport_retry_count": result["transport_retry_count"],
+            **(resident.status_fields() if resident is not None else {"execution_mode": "ONESHOT"}),
         }
         _atomic_json(Path(value["status_file"]), status)
-        print(json.dumps(status, separators=(",", ":"), sort_keys=True))
+        return status
     except Exception as error:
         if health is not None and health.snapshot()["current_state"] == "READY":
             health.record_failure(classify_failure(error), attempt=1, exhausted=True)
+        observed_at = isoformat_utc(utc_now())
+        if resident is not None:
+            resident.record_failure(observed_at)
         status = {
             "schema": "cra.monitoring_projection_pull_status.v1",
             "status": "SAFE_BLOCKED",
             "puller_release_id": value["puller_release_id"],
             "error_class": type(error).__name__,
-            "observed_at": isoformat_utc(utc_now()),
+            "observed_at": observed_at,
             "control_capability_count": 0,
             "physical_effect_count": 0,
+            **(resident.status_fields() if resident is not None else {"execution_mode": "ONESHOT"}),
         }
         _atomic_json(Path(value["status_file"]), status)
-        print(json.dumps(status, separators=(",", ":"), sort_keys=True), file=sys.stderr)
         raise
+
+
+def run_resident(
+    config_path: Path,
+    *,
+    interval_seconds: float,
+    stop_wait: Callable[[float], bool],
+    maximum_cycles: int | None = None,
+) -> int:
+    if (
+        isinstance(interval_seconds, bool)
+        or not isinstance(interval_seconds, (int, float))
+        or not math.isfinite(interval_seconds)
+        or not 0.1 <= float(interval_seconds) <= 60.0
+    ):
+        raise ValueError("PROJECTION_PULL_RESIDENT_INTERVAL_INVALID")
+    if maximum_cycles is not None and (isinstance(maximum_cycles, bool) or maximum_cycles < 1):
+        raise ValueError("PROJECTION_PULL_RESIDENT_MAXIMUM_CYCLES_INVALID")
+
+    pinned = ProjectionPullConfig.load(config_path)
+    state = ResidentState(
+        started_at=isoformat_utc(utc_now()),
+        base_interval_seconds=float(interval_seconds),
+        next_delay_seconds=float(interval_seconds),
+    )
+    last_reported_state: tuple[str, str | None] | None = None
+    while True:
+        state.begin_cycle()
+        try:
+            current = ProjectionPullConfig.load(config_path)
+            if current.value != pinned.value:
+                raise ValueError("PROJECTION_PULL_RESIDENT_CONFIG_CHANGED")
+        except Exception as error:
+            observed_at = isoformat_utc(utc_now())
+            state.record_failure(observed_at)
+            status = {
+                "schema": "cra.monitoring_projection_pull_status.v1",
+                "status": "SAFE_BLOCKED",
+                "puller_release_id": pinned.value["puller_release_id"],
+                "error_class": type(error).__name__,
+                "reason_code": "PROJECTION_PULL_RESIDENT_CONFIG_INVALID_OR_CHANGED",
+                "observed_at": observed_at,
+                "control_capability_count": 0,
+                "physical_effect_count": 0,
+                **state.status_fields(),
+            }
+            _atomic_json(Path(pinned.value["status_file"]), status)
+            print(json.dumps(status, separators=(",", ":"), sort_keys=True), file=sys.stderr, flush=True)
+            # A root-owned configuration change is a new revision, not a
+            # transient transport failure. Exit distinctly so systemd cannot
+            # silently restart and adopt the changed revision.
+            return 78
+        try:
+            state.begin_connection()
+            status = _run_once(current, resident=state)
+        except Exception:
+            status = _read_json(Path(pinned.value["status_file"]), maximum_bytes=64 * 1024)
+            report_state: tuple[str, str | None] = (str(status.get("status")), str(status.get("error_class")))
+            if report_state != last_reported_state:
+                print(json.dumps(status, separators=(",", ":"), sort_keys=True), file=sys.stderr, flush=True)
+            last_reported_state = report_state
+        else:
+            report_state = (str(status.get("status")), None)
+            if report_state != last_reported_state:
+                print(json.dumps(status, separators=(",", ":"), sort_keys=True), flush=True)
+            last_reported_state = report_state
+
+        if maximum_cycles is not None and state.cycle_sequence >= maximum_cycles:
+            return 0
+        if stop_wait(state.next_delay_seconds):
+            return 0
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="mTLS puller for signed Monitoring v4 CRA projections")
+    parser.add_argument("--config", type=Path, required=True)
+    parser.add_argument("--check-config", action="store_true")
+    parser.add_argument("--resident", action="store_true")
+    parser.add_argument("--interval-seconds", type=float, default=1.0)
+    args = parser.parse_args()
+    if args.check_config and args.resident:
+        parser.error("--check-config and --resident are mutually exclusive")
+    config = ProjectionPullConfig.load(args.config)
+    if args.check_config:
+        value = config.value
+        _client_context(
+            Path(value["tls_certificate"]),
+            Path(value["tls_private_key"]),
+            Path(value["server_ca_certificate"]),
+        )
+        MonitoringEvidenceContract(
+            Path(value["projection_schema_file"]),
+            KeyRing({str(value["monitoring_key_id"]): _public_key(Path(value["monitoring_public_key_file"]))}),
+            allowed_sources={str(value["source_instance_id"]): str(value["source_release_id"])},
+            maximum_ttl_seconds=float(value["maximum_ttl_seconds"]),
+            maximum_check_age_seconds=float(value["maximum_check_age_seconds"]),
+        )
+        print(json.dumps({"config": "VALID", "schema": value["schema"]}, sort_keys=True))
+        return
+    if args.resident:
+        stop = threading.Event()
+
+        def request_stop(signum: int, frame: Any) -> None:
+            del signum, frame
+            stop.set()
+
+        signal.signal(signal.SIGTERM, request_stop)
+        signal.signal(signal.SIGINT, request_stop)
+        raise SystemExit(
+            run_resident(args.config, interval_seconds=args.interval_seconds, stop_wait=stop.wait)
+        )
+    status = _run_once(config)
+    print(json.dumps(status, separators=(",", ":"), sort_keys=True))
 
 
 if __name__ == "__main__":

@@ -1,5 +1,11 @@
 # Raspberry Pi Public Publisher Boundary
 
+The 2026-10-13 public source includes separate relay, Twitch API/reception, and
+Twitch SLI collectors plus updated static layout assets. Their public fields
+remain allowlisted. This source port does not run the collectors, upload the
+site, change the publisher service, or include generated live JSON. See the
+[port record](public-source-port-2026-10-13.md).
+
 The Raspberry Pi is a static snapshot publisher. It is not a k3s node,
 Prometheus backend, Grafana instance, formal SLI authority, or recovery
 executor.

@@ -123,6 +123,7 @@ def diagnostic_event(stage: str, error: BaseException, *, process: dict[str, Any
     if isinstance(error, OSError):
         code = {
             errno.ENOENT: "FILE_DISAPPEARED",
+            errno.ESRCH: "FILE_DISAPPEARED",
             errno.EACCES: "PERMISSION_DENIED",
             errno.EPERM: "PERMISSION_DENIED",
         }.get(number if number is not None else -1, "OS_READ_FAILED")

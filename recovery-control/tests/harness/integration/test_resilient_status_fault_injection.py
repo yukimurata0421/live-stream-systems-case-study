@@ -13,7 +13,7 @@ from cra_dell_recovery.errors import SignatureValidationError, UnknownKeyError
 from cra_no_action_soak.resilient_host_status import ComponentStatus, ResilientHostStatusContract, build_resilient_status
 
 ROOT = Path(__file__).resolve().parents[3]
-SCHEMA = ROOT / "contracts/cra_no_action_soak/resilient_host_status.v3.schema.json"
+SCHEMA = ROOT / "contracts/cra_no_action_soak/resilient_host_status.v4.schema.json"
 CURRENT = datetime(2026, 9, 3, 0, 0, tzinfo=UTC)
 IDENTITY = {
     "release_manifest_sha256": "1" * 64,
@@ -91,7 +91,11 @@ def test_component_faults_remain_freshly_signed_and_never_gain_control(
     reason: str,
 ) -> None:
     key = Ed25519PrivateKey.from_private_bytes(bytes(range(1, 33)))
-    times = (CURRENT - timedelta(seconds=20), CURRENT - timedelta(seconds=1)) if state == "STALE" else (None, None)
+    times = (
+        (CURRENT - timedelta(seconds=20), CURRENT - timedelta(seconds=1))
+        if state == "STALE"
+        else (None, None)
+    )
     component = ComponentStatus(name, state, reason, times[0], times[1])
 
     status = _build(tmp_path, key, components=[component], current_source=False)

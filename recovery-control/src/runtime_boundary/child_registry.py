@@ -8,10 +8,12 @@ any stream credential. Unknown launch/exec identity remains unproven.
 from __future__ import annotations
 
 import os
+import hashlib
 import shutil
 import stat
 import subprocess
 import threading
+import time
 from collections.abc import Iterator, Mapping
 from contextlib import contextmanager, suppress
 from pathlib import Path
@@ -63,7 +65,6 @@ class ChildLifecycleRegistry:
                 search_path = os.fsdecode(raw_path)
             elif isinstance(raw_path, str):
                 search_path = raw_path
-        resolved: str | None
         if os.sep in executable:
             candidate = Path(executable)
             if not candidate.is_absolute():
@@ -167,8 +168,90 @@ class ChildLifecycleRegistry:
                     return process
 
             self._wrapper = tracked_popen
-            subprocess.Popen = tracked_popen  # type: ignore[misc, assignment]
+            subprocess.Popen = tracked_popen  # type: ignore[assignment]
             self._installed = True
+
+    def spawn_pipe_encoder(self, command: list[str], **kwargs: Any) -> subprocess.Popen[Any]:
+        """単一pipe outputのencoderを、観測lock内で明示的に束縛する。"""
+        if (not isinstance(command, list) or not command or Path(command[0]).name != "ffmpeg"
+            or command[-1] != "pipe:1" or command.count("pipe:1") != 1
+            or kwargs.get("stdout") != subprocess.PIPE
+            or any(str(arg).startswith(("rtmp:", "rtmps:", "http:", "https:", "tcp:", "udp:", "srt:")) for arg in command)):
+            raise ValueError("ENCODER_PIPE_COMMAND_INVALID")
+        with self._lock:
+            process = subprocess.Popen(command, **kwargs)
+            try:
+                entry = self._entries.get(process.pid)
+                if entry is None or entry["role"] != "DELIVERY_CANDIDATE" or process.stdout is None:
+                    raise ValueError("ENCODER_PIPE_POST_EXEC_UNPROVEN")
+                raw = b"\0".join(os.fsencode(arg) for arg in command) + b"\0"
+                entry.update(role="ENCODER_PIPE", encoder_command_sha256=hashlib.sha256(raw).hexdigest(),
+                             encoder_pipe_inode=os.fstat(process.stdout.fileno()).st_ino)
+                if not self.pipe_encoder_proven(process.pid, entry):
+                    raise ValueError("ENCODER_PIPE_BINDING_UNPROVEN")
+                return process
+            except BaseException:
+                # Popen created this child. Reap it before dropping its pidfd.
+                if process.poll() is None:
+                    process.terminate()
+                    try:
+                        process.wait(timeout=2)
+                    except subprocess.TimeoutExpired:
+                        process.kill()
+                        process.wait(timeout=1)
+                self._drop_locked(process.pid)
+                raise
+
+    def pipe_encoder_proven(self, pid: int, entry: Mapping[str, Any]) -> bool:
+        """argvは保存せずdigestを照合し、pipeとIP socket不在を前後で再読する。"""
+        deadline = time.clock_gettime(time.CLOCK_BOOTTIME) + .5
+        for _ in range(50):
+            try:
+                return self._pipe_encoder_proven_once(pid, entry)
+            except FileNotFoundError:
+                # Library loading can close an FD between listing and readlink.
+                # Discard that whole observation; identity checks remain exact.
+                if time.clock_gettime(time.CLOCK_BOOTTIME) >= deadline:
+                    break
+                time.sleep(.01)
+        return False
+
+    def _pipe_encoder_proven_once(self, pid: int, entry: Mapping[str, Any]) -> bool:
+        if entry.get("role") != "ENCODER_PIPE":
+            return False
+        root = self.proc_root / str(pid)
+        for _ in range(2):
+            if self._proc_stat(self.owner_pid)[2] != entry.get("owner_start_ticks"):
+                return False
+            state, parent, ticks = self._proc_stat(pid)
+            if state not in {"R", "S", "D", "I", "T", "t"} or (parent, ticks) != (self.owner_pid, entry.get("start_ticks")):
+                return False
+            _, dev, ino = self._proc_executable(pid)
+            if (dev, ino) != (entry.get("executable_device"), entry.get("executable_inode")):
+                return False
+            raw = (root / "cmdline").read_bytes()
+            if len(raw) > 32768 or hashlib.sha256(raw).hexdigest() != entry.get("encoder_command_sha256"):
+                return False
+            pipe_meta = (root / "fd/1").stat()
+            if not stat.S_ISFIFO(pipe_meta.st_mode) or pipe_meta.st_ino != entry.get("encoder_pipe_inode"):
+                return False
+            fd_paths = list((root / "fd").iterdir())
+            if len(fd_paths) > 256:
+                return False
+            sockets = set()
+            for fd in fd_paths:
+                link = os.readlink(fd)
+                if link.startswith("socket:["):
+                    sockets.add(link[8:-1])
+            for table in ("tcp", "tcp6", "udp", "udp6", "raw", "raw6"):
+                text = (root / "net" / table).read_text()
+                if len(text) > 131072:
+                    return False
+                for line in text.splitlines()[1:]:
+                    fields = line.split()
+                    if len(fields) < 10 or fields[9] in sockets:
+                        return False
+        return True
 
     @contextmanager
     def guard(self) -> Iterator[None]:
@@ -191,7 +274,7 @@ class ChildLifecycleRegistry:
     def close(self) -> None:
         with self._lock:
             if self._installed and subprocess.Popen is self._wrapper:
-                subprocess.Popen = self._original_popen  # type: ignore[misc]
+                subprocess.Popen = self._original_popen
             self._installed = False
             self._wrapper = None
             self._original_popen = None

@@ -202,7 +202,9 @@ def run_target_retirement_chaos(*, case_count: int = 512, seed: int = 20260901) 
                     passed = invariant and response.get("ok") is False and ledger.unresolved_count() == 1 and rows == 0
                     detected[mutation] += int(passed)
                 if not passed:
-                    failures.append({"index": index, "mutation": mutation, "response_reason": str(response.get("reason"))})
+                    failures.append(
+                        {"index": index, "mutation": mutation, "response_reason": str(response.get("reason"))}
+                    )
             finally:
                 server.close()
                 ledger.close()

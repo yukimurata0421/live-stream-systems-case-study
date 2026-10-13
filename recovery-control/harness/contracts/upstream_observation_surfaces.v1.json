@@ -1,0 +1,27 @@
+{
+  "schema": "cra.upstream_observation_surfaces.v1",
+  "producer": "stream_v3",
+  "source_file": "src/watchers/youtube_api.py",
+  "call_symbol": "youtube_live_api_get",
+  "callsites": [
+    {"function": "_list_bound_streams_with_transient_retry", "endpoint": "liveStreams", "role": "PROBE_READ"},
+    {"function": "list_owned_broadcasts", "endpoint": "liveBroadcasts", "role": "SHARED_READ"},
+    {"function": "update_video_category_from_existing_snippet", "endpoint": "videos", "role": "ACTION_SUPPORT_READ"}
+  ],
+  "probe_entry": "probe_with_oauth",
+  "retry_wrapper": "_probe_oauth_read_with_transient_retry",
+  "transient_http_codes": [500, 502, 503, 504],
+  "maximum_attempts": 2,
+  "required_tests": [
+    {"id": "broadcast_transient_each_code", "nodeid": "tests/test_youtube_api_quota.py::YouTubeApiQuotaResetTests::test_probe_with_oauth_retries_transient_live_broadcasts_errors", "expectation": "one retry then healthy"},
+    {"id": "stream_transient_each_code", "nodeid": "tests/test_youtube_api_quota.py::YouTubeApiQuotaResetTests::test_probe_with_oauth_retries_transient_live_streams_errors", "expectation": "one retry then healthy"},
+    {"id": "broadcast_retry_exhausted", "nodeid": "tests/test_youtube_api_quota.py::YouTubeApiQuotaResetTests::test_probe_with_oauth_fails_closed_after_broadcast_retry_exhaustion", "expectation": "unhealthy after bounded attempts"},
+    {"id": "stream_retry_exhausted", "nodeid": "tests/test_youtube_api_quota.py::YouTubeApiQuotaResetTests::test_probe_with_oauth_fails_closed_after_stream_retry_exhaustion", "expectation": "unhealthy after bounded attempts"},
+    {"id": "broadcast_nontransient", "nodeid": "tests/test_youtube_api_quota.py::YouTubeApiQuotaResetTests::test_probe_with_oauth_does_not_retry_non_transient_broadcast_errors", "expectation": "401/403/429 fail closed without retry"},
+    {"id": "stream_nontransient", "nodeid": "tests/test_youtube_api_quota.py::YouTubeApiQuotaResetTests::test_probe_with_oauth_does_not_retry_non_transient_live_streams_error", "expectation": "401/403/429 fail closed without retry"},
+    {"id": "broadcast_transport", "nodeid": "tests/test_youtube_api_quota.py::YouTubeApiQuotaResetTests::test_probe_with_oauth_does_not_retry_broadcast_transport_error", "expectation": "transport error fails closed"},
+    {"id": "stream_transport", "nodeid": "tests/test_youtube_api_quota.py::YouTubeApiQuotaResetTests::test_probe_with_oauth_does_not_retry_stream_transport_error", "expectation": "transport error fails closed"},
+    {"id": "action_retry_isolation", "nodeid": "tests/test_youtube_api_quota.py::YouTubeApiQuotaResetTests::test_broadcast_action_caller_does_not_inherit_probe_retry", "expectation": "action caller has no probe retry"}
+  ],
+  "claim_boundary": "Static callsite closure and isolated test execution only; no live OAuth, YouTube availability, CRA soak, or deployment claim."
+}

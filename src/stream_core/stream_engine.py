@@ -940,6 +940,9 @@ class StreamEngine:
         profile = encoder_profile or self.effective_encoder_profile()
         return build_ffmpeg_args(self.cfg, x11_input=x11_input, pulse_source=pulse_source, encoder_profile=profile)
 
+    def launch_delivery_ffmpeg(self, args: list[str]) -> subprocess.Popen:
+        return subprocess.Popen(args, stderr=subprocess.PIPE)
+
     def ffmpeg_heartbeat_action(self, encoder_profile: dict[str, object]) -> ffmpeg_lifecycle.HeartbeatAction:
         ffmpeg_pid = str(self.ffmpeg_proc.pid) if self.ffmpeg_proc else ""
         self.last_health_ok = True
@@ -1095,7 +1098,7 @@ class StreamEngine:
             self.audit_self_recovery(
                 phase="EFFECT_BOUNDARY", operation="start_ffmpeg", resource="stream-engine/ffmpeg", correlation_id=correlation_id, count=1
             )
-            self.ffmpeg_proc = subprocess.Popen(args, stderr=subprocess.PIPE)
+            self.ffmpeg_proc = self.launch_delivery_ffmpeg(args)
             self.ffmpeg_lifecycle_state = "FFMPEG_RUNNING"
             ffmpeg_pid = int(self.ffmpeg_proc.pid)
             capture = self.start_ffmpeg_stderr_capture(ffmpeg_pid)

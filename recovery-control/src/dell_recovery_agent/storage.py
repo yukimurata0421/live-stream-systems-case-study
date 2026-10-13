@@ -195,11 +195,24 @@ class DellStore(SQLiteLedger):
                     )
 
     def set_process_lease_valid(self, target_id: str, valid: bool) -> None:
-        with self._process_state_lock:
-            if valid:
-                self._process_lease_valid_targets.add(target_id)
-            else:
-                self._process_lease_valid_targets.discard(target_id)
+        # Use the same writer serialization as effect-boundary reservation.
+        # A lease transition can then linearize wholly before or after that
+        # durable boundary, never between its final check and COMMIT.
+        owns_writer = self._write_owner_thread == threading.get_ident()
+        if not owns_writer and not self._writer_lock.acquire(timeout=self._lock_timeout_seconds):
+            if not valid:
+                with self._process_state_lock:
+                    self._process_lease_valid_targets.discard(target_id)
+            raise LedgerUnavailable("PROCESS_LEASE_WRITER_LOCK_TIMEOUT")
+        try:
+            with self._process_state_lock:
+                if valid:
+                    self._process_lease_valid_targets.add(target_id)
+                else:
+                    self._process_lease_valid_targets.discard(target_id)
+        finally:
+            if not owns_writer:
+                self._writer_lock.release()
 
     def process_lease_valid(self, target_id: str) -> bool:
         with self._process_state_lock:

@@ -13,6 +13,7 @@ import pytest
 
 from cra_authority.projection_pull import ProjectionPuller
 from cra_dell_recovery.bounded_http import MAXIMUM_TRANSPORT_ATTEMPTS
+from cra_dell_recovery.errors import EvidenceFreshnessError
 from cra_dell_recovery.transport_resilience import classify_failure
 
 
@@ -183,6 +184,7 @@ def test_attempt_guard_stops_a_nonadvancing_injected_clock(tmp_path: Path) -> No
         (OSError(errno.EMFILE, "fd exhausted"), "RESOURCE", False),
         (OSError(errno.ENOBUFS, "socket buffers exhausted"), "RESOURCE", False),
         (OSError(errno.ENOSPC, "disk full"), "STORAGE", False),
+        (EvidenceFreshnessError("evidence near expiry"), "OBSERVATION_FRESHNESS", True),
     ],
 )
 def test_failure_taxonomy_separates_transport_resource_and_storage(

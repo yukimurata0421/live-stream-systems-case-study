@@ -1,63 +1,46 @@
-# Documentation
+# Documentation Guide
 
-The public documentation is written in English and optimized for review by
-interviewers and engineers who want to understand the system quickly.
+The public documentation is in English. It is arranged for a hiring reviewer to
+understand the result before inspecting the full implementation.
 
-Start with the top-level `README.md`. Most reviewers should then read only:
+## First Pass: Two To Five Minutes
 
-1. `hiring-reviewer-guide.md`
-2. `executive-summary.md`
-3. `operational-scorecard.md`
+1. [README](../README.md): what runs, the dated result, and two small diagrams.
+2. [Operational case studies](operational-case-studies.md): choose one failure.
+3. [Hiring reviewer guide](hiring-reviewer-guide.md): choose a role-specific next step.
 
-## Review Paths
+## Technical Pass: One Question At A Time
 
-### Compact Technical Pass
+| Question | Read next |
+| --- | --- |
+| What was built and what is the engineering challenge? | [Executive summary](executive-summary.md). |
+| What do the 160 days actually measure? | [Continuity evidence](28-day-same-url-sli-case-study.md). |
+| What was measured, tested, or left unknown? | [Scorecard](operational-scorecard.md). |
+| Where are the implementation and tests? | [Implementation review map](implementation-review-map.md). |
+| How does the OCI route work? | [OCI delivery](v3/oci-relay-and-twitch.md). |
+| How are network failure and missing evidence distinguished? | [Route observation](v3/route-network-observation.md) and [TCP investigation](v3/tcp-stall-case-study.md). |
+| How does public status stay separate from control? | [Publisher boundary](v3/public-publisher-boundary.md). |
 
-- `executive-summary.md`
-- `operational-scorecard.md`
-- `implementation-review-map.md`
+## Credential-Free Local Checks
 
-### Architecture Pass
+From the repository root, in an isolated development environment:
 
-- `architecture.md`
-- `physical-topology.md`
-- `runtime-contract.md`
-- `../monitoring-v4/docs/architecture.md`
-- `../recovery-control/docs/architecture.md`
-- `v3/map-rendering-and-monitoring.md`
-- `v3/public-status-snapshot.md`
+```bash
+python3 -m pip install -e '.[dev]'
+python3 -m pip install -e ./recovery-control
+python3 ops/scripts/validate_public_port.py
+python3 -m pytest -q tests/test_docs_structure.py tests/test_public_publisher_build.py
+python3 ops/scripts/route_network_observer.py --replay examples/route-observation/replay.json
+```
 
-### Reliability / SRE Pass
+The replay uses synthetic facts and performs no network or signal effects.
+Focused checks use temporary local state and mocked provider calls. They do not
+upload a site, run a live recovery, or establish native qualification. Component
+suites and further dependencies are described in their own READMEs and the
+[test strategy](test-strategy-and-safety-boundary.md).
 
-- `v3/sli-and-dashboard.md`
-- `v3/rolling-sli-error-budget-feedback.md`
-- `sli-methodology.md`
-- `28-day-same-url-sli-case-study.md`
-- `v3/tcp-stall-case-study.md`
-- `v3/tcp-stall-resolution-depth.md`
-- `v3/scoped-recovery-authority.md`
-- `../recovery-control/docs/why-cra.md`
-- `../recovery-control/docs/architecture.md`
-- `../recovery-control/docs/safety-model.md`
-- `v3/map-rendering-and-monitoring.md`
-- `v3/map-production-cutover-case-study.md`
-- `v3/map-mobile-legibility-review.md`
-- `v3/operational-reliability-and-external-evidence.md`
-- `v3/public-publisher-boundary.md`
-- `v3/three-host-source-consolidation.md`
-- `v3/single-node-dr-case-study.md`
-- `v3/failure-injection-and-chaos-draft.md`
+## Reference Catalog
 
-### Deep Design Review
-
-- `design-decisions-for-review.md`
-- `v3/decisions.md`
-- `implementation-review-map.md`
-
-For validation and incident-review boundaries, read
-`test-strategy-and-safety-boundary.md` and `incident-review-template.md`.
-Use `00_INDEX.md` as the full documentation catalog.
-
-The original private documentation contained detailed Japanese incident logs and
-routine checks. Those logs are not part of the public snapshot because they were
-too environment-specific and too noisy for a reusable repository.
+[00_INDEX.md](00_INDEX.md) lists the remaining architecture, safety, and historical
+evidence documents. It is a reference, not a required reading order. Private
+operational logs, credentials, raw evidence, and runtime databases are excluded.

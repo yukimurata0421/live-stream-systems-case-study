@@ -6,6 +6,7 @@ All kernel files, database rows, keys and clocks belong to the test fixture.
 from __future__ import annotations
 
 import copy
+import errno
 import hashlib
 import json
 import os
@@ -24,9 +25,63 @@ from cra_dell_recovery.recovery_history import empty_policy
 from cra_no_action_soak import recovery_observer, recovery_soak
 from cra_no_action_soak.recovery_facts import owner_target_snapshot, runtime_evidence_fact, sign_facts, source_hash
 from runtime_boundary import recovery_publisher as owner_module
+from runtime_boundary.child_registry import ChildLifecycleRegistry
 from tests.harness.unit.test_recovery_soak import START, packet
 from tests.harness.unit.test_recovery_soak import setup as setup
 from tests.runtime_boundary.test_recovery_publisher import publisher as publisher
+
+
+@pytest.mark.parametrize("fault", ["none", "digest", "pipe", "socket", "pid", "parent", "executable", "owner", "unbound", "unregistered"])
+def test_pipe_encoder_requires_all_independent_bindings(publisher: Any, fault: str, record_property: Any) -> None:
+    owner, process, _ = publisher
+    configure(owner, process)
+    managed_exe = owner.proc_root / "123/exe"
+    managed_exe.write_bytes(b"managed")
+    producer = owner.proc_root / "124"
+    (producer / "fd").mkdir(parents=True)
+    (producer / "net").mkdir()
+    executable = producer / "exe"
+    executable.write_bytes(b"encoder executable")
+    (producer / "stat").write_text(f"124 (ffmpeg) S {os.getpid()} " + "0 " * 17 + "100 0\n")
+    command = b"ffmpeg\0-f\0mpegts\0pipe:1\0"
+    (producer / "cmdline").write_bytes(command)
+    fifo = owner.proc_root / "encoder-fifo"
+    os.mkfifo(fifo, 0o600)
+    (producer / "fd/1").symlink_to(fifo)
+    for table in ("tcp", "tcp6", "udp", "udp6", "raw", "raw6"):
+        (producer / "net" / table).write_text("header\n")
+    registry = ChildLifecycleRegistry(proc_root=owner.proc_root)
+    encoder = registry_entry(owner, 124, role="ENCODER_PIPE", ticks=100, executable=executable)
+    encoder.update(encoder_command_sha256=hashlib.sha256(command).hexdigest(), encoder_pipe_inode=fifo.stat().st_ino)
+    registry._entries = {123: registry_entry(owner, 123, role="DELIVERY_CANDIDATE", ticks=99, executable=managed_exe), 124: encoder}
+    owner.child_registry = registry
+    process["local_encoder_pid"] = 124
+    (owner.proc_root / str(os.getpid()) / "task" / str(os.getpid()) / "children").write_text("123 124")
+    if fault == "digest":
+        (producer / "cmdline").write_bytes(command + b"changed\0")
+    elif fault == "pipe":
+        encoder["encoder_pipe_inode"] += 1
+    elif fault == "socket":
+        (producer / "fd/9").symlink_to("socket:[900]")
+        (producer / "net/tcp").write_text("header\n0 0 0 0 0 0 0 0 0 900\n")
+    elif fault == "pid":
+        encoder["start_ticks"] += 1
+    elif fault == "parent":
+        encoder["parent_pid"] += 1
+    elif fault == "executable":
+        encoder["executable_inode"] += 1
+    elif fault == "owner":
+        encoder["owner_start_ticks"] += 1
+    elif fault == "unbound":
+        process["local_encoder_pid"] = 125
+    elif fault == "unregistered":
+        registry._entries.pop(124)
+    result = owner.publish()
+    observed = {"state": result["lifecycle"]["state"], "target_present": result["target_identity"] is not None,
+                "physical_attempts": result["effects"]["physical_attempt_count"]}
+    record_property("cra_evidence", json.dumps(observed))
+    assert observed == {"state": "RUNNING" if fault == "none" else "UNKNOWN",
+                        "target_present": fault == "none", "physical_attempts": 0}
 
 
 def configure(owner: Any, process: dict[str, Any]) -> None:
@@ -101,6 +156,34 @@ def registry_entry(owner: Any, pid: int, *, role: str, ticks: int, executable: P
     }
 
 
+def bind_real_managed_child(owner: Any, process: dict[str, Any], target: dict[str, Any], managed: Any) -> None:
+    """Bind one test-owned kernel child to the owner without touching a live process."""
+    wait_for_proc_command(managed)
+    owner.config["evidence_schema"] = "runtime.recovery_evidence.v3"
+    owner.proc_root = Path("/proc")
+    _, _, ticks = owner._proc_stat(managed.pid)
+    target.update(
+        ffmpeg_pid=managed.pid,
+        host_boot_id=Path("/proc/sys/kernel/random/boot_id").read_text().strip(),
+    )
+    target["ffmpeg_generation"] = (
+        "ffmpeg-"
+        + hashlib.sha256(
+            f"{target['pod_uid']}:{target['container_id']}:{managed.pid}:{ticks}".encode()
+        ).hexdigest()[:32]
+    )
+    raw = json.loads(owner.target_path.read_text())
+    raw["target_identity"] = target
+    owner.target_path.write_text(json.dumps(raw))
+    process.update(
+        local_ffmpeg_pid=managed.pid,
+        ffmpeg_running=True,
+        managed_child_pids=[managed.pid],
+        managed_child_cardinality="1",
+        runtime_lifecycle_state="FFMPEG_RUNNING",
+    )
+
+
 @pytest.mark.parametrize("runtime", [None, [], "invalid", True, 1])
 def test_observer_rejects_invalid_runtime_binding_type(setup: Any, tmp_path: Path, runtime: Any) -> None:
     config, _ = setup
@@ -130,18 +213,84 @@ def test_live_child_revalidation_does_not_cache_activation_or_depend_on_async_ta
     assert all(after["activation"].values())
     (owner.proc_root / "123/environ").write_bytes(b"FR_FFMPEG_FORCE_KILL_ENABLED=0\0FFMPEG_RW_TIMEOUT_ENABLED=0\0")
     disabled = owner.publish()
-    record_property(
-        "cra_evidence",
-        json.dumps(
-            {
-                **disabled["activation"],
-                "ledger_changes": owner.ledger.connection.total_changes - changes,
-            }
-        ),
-    )
+    record_property("cra_evidence", json.dumps({
+        **disabled["activation"], "ledger_changes": owner.ledger.connection.total_changes - changes,
+    }))
     assert disabled["lifecycle"]["state"] == "RUNNING"
     assert disabled["activation"] == {"bounded_termination_enabled": False, "rw_timeout_enabled": False}
     assert owner.ledger.connection.total_changes == changes
+
+
+def test_real_kernel_child_activation_is_reread_after_async_target_loss(
+    publisher: Any, record_property: Any
+) -> None:
+    owner, process, target = publisher
+    mutator = r'''import ctypes,sys
+libc=ctypes.CDLL(None)
+environment=ctypes.POINTER(ctypes.c_void_p).in_dll(libc,"environ")
+print("READY",flush=True)
+sys.stdin.buffer.read(1)
+index=0
+while environment[index]:
+    value=ctypes.string_at(environment[index])
+    if value in (b"FR_FFMPEG_FORCE_KILL_ENABLED=1",b"FFMPEG_RW_TIMEOUT_ENABLED=1"):
+        ctypes.memmove(environment[index]+len(value)-1,b"0",1)
+    index+=1
+print("CHANGED",flush=True)
+sys.stdin.buffer.read(1)
+'''
+    managed = subprocess.Popen(
+        ["ffmpeg", "-c", mutator, "-rw_timeout", "15000000", "rtmps://test.invalid/unused"],
+        executable=sys.executable,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+        env={"FR_FFMPEG_FORCE_KILL_ENABLED": "1", "FFMPEG_RW_TIMEOUT_ENABLED": "1"},
+    )
+    try:
+        assert managed.stdout is not None
+        assert managed.stdout.readline() == b"READY\n"
+        bind_real_managed_child(owner, process, target, managed)
+        changes = owner.ledger.connection.total_changes
+        before = owner.publish()
+        assert before["lifecycle"]["state"] == "RUNNING"
+        assert all(before["activation"].values())
+        owner.target_path.unlink()
+        assert managed.stdin is not None
+        managed.stdin.write(b"0")
+        managed.stdin.flush()
+        assert managed.stdout.readline() == b"CHANGED\n"
+        deadline = time.monotonic() + 2
+        environment = Path(f"/proc/{managed.pid}/environ")
+        while b"ENABLED=0" not in environment.read_bytes():
+            assert time.monotonic() < deadline
+            time.sleep(0.001)
+
+        disabled = owner.publish()
+        observed = {
+            **disabled["activation"],
+            "ledger_changes": owner.ledger.connection.total_changes - changes,
+            "physical_attempts": disabled["effects"]["physical_attempt_count"],
+            "same_target": disabled["target_identity"] == before["target_identity"],
+            "state": disabled["lifecycle"]["state"],
+        }
+        record_property("cra_evidence", json.dumps(observed))
+        assert observed == {
+            "bounded_termination_enabled": False,
+            "rw_timeout_enabled": False,
+            "ledger_changes": 0,
+            "physical_attempts": 0,
+            "same_target": True,
+            "state": "RUNNING",
+        }
+    finally:
+        if managed.stdin is not None and not managed.stdin.closed:
+            managed.stdin.close()
+        try:
+            managed.wait(timeout=2)
+        except subprocess.TimeoutExpired:
+            managed.kill()
+            managed.wait(timeout=2)
 
 
 @pytest.mark.parametrize("auxiliary_state", ["R", "Z"])
@@ -156,7 +305,9 @@ def test_registered_empty_cmdline_auxiliary_does_not_hide_exact_delivery_child(
     auxiliary.mkdir()
     auxiliary_exe = auxiliary / "exe"
     auxiliary_exe.write_bytes(b"auxiliary")
-    (auxiliary / "stat").write_text(f"124 (helper) {auxiliary_state} {os.getpid()} " + "0 " * 17 + "100 0\n")
+    (auxiliary / "stat").write_text(
+        f"124 (helper) {auxiliary_state} {os.getpid()} " + "0 " * 17 + "100 0\n"
+    )
     (auxiliary / "cmdline").write_bytes(b"")
     (owner.proc_root / str(os.getpid()) / "task" / str(os.getpid()) / "children").write_text("123 124")
     owner.child_registry = FixtureRegistry(
@@ -229,7 +380,9 @@ def test_registry_ambiguity_remains_unknown(publisher: Any, fault: str, record_p
     assert result["activation"] == {"bounded_termination_enabled": None, "rw_timeout_enabled": None}
 
 
-def test_registered_auxiliary_launcher_exec_drift_remains_non_delivery(publisher: Any, record_property: Any) -> None:
+def test_registered_auxiliary_launcher_exec_drift_remains_non_delivery(
+    publisher: Any, record_property: Any
+) -> None:
     owner, process, _ = publisher
     configure(owner, process)
     managed_exe = owner.proc_root / "123/exe"
@@ -318,6 +471,201 @@ def test_registered_auxiliary_scheduler_state_churn_keeps_exact_delivery_child(
     }
 
 
+@pytest.mark.parametrize(
+    "missing_errno",
+    [pytest.param(errno.ENOENT, id="enoent"), pytest.param(errno.ESRCH, id="esrch")],
+)
+def test_registered_auxiliary_executable_exit_is_retried_with_original_errno(
+    publisher: Any, monkeypatch: pytest.MonkeyPatch, missing_errno: int, record_property: Any
+) -> None:
+    owner, process, _ = publisher
+    configure(owner, process)
+    before = owner.publish()
+    managed_exe = owner.proc_root / "123/exe"
+    managed_exe.write_bytes(b"managed")
+    helper_root = owner.proc_root / "124"
+    helper_root.mkdir()
+    auxiliary_exe = helper_root / "exe"
+    auxiliary_exe.write_bytes(b"auxiliary")
+    (helper_root / "stat").write_text(f"124 (helper) R {os.getpid()} " + "0 " * 17 + "100 0\n")
+    (owner.proc_root / str(os.getpid()) / "task" / str(os.getpid()) / "children").write_text("123 124")
+    owner.child_registry = FixtureRegistry(
+        {
+            123: registry_entry(owner, 123, role="DELIVERY_CANDIDATE", ticks=99, executable=managed_exe),
+            124: registry_entry(owner, 124, role="AUXILIARY", ticks=100, executable=auxiliary_exe),
+        }
+    )
+    original = owner._executable_identity
+    fired = False
+
+    def exit_before_executable_read(pid: int) -> tuple[int, int]:
+        nonlocal fired
+        if pid == 124 and not fired:
+            fired = True
+            auxiliary_exe.unlink()
+            (helper_root / "stat").unlink()
+            helper_root.rmdir()
+            (owner.proc_root / str(os.getpid()) / "task" / str(os.getpid()) / "children").write_text("123")
+            error_type = FileNotFoundError if missing_errno == errno.ENOENT else ProcessLookupError
+            raise error_type(missing_errno, "test-owned executable disappeared")
+        return original(pid)
+
+    monkeypatch.setattr(owner, "_executable_identity", exit_before_executable_read)
+    result = owner.publish()
+    diagnostics = result["lifecycle"]["read_diagnostics"]
+    observed = {
+        "triggered": fired,
+        "state": result["lifecycle"]["state"],
+        "same_target": result["target_identity"] == before["target_identity"],
+        "retries": diagnostics["proc_scan_retry_count"],
+        "errno_preserved": any(event["errno"] == missing_errno for event in diagnostics["events"]),
+        "registered_disappearance": any(
+            event["code"] == "RECOVERY_OWNER_REGISTERED_CHILD_DISAPPEARED"
+            for event in diagnostics["events"]
+        ),
+        "physical_attempts": result["effects"]["physical_attempt_count"],
+    }
+    record_property("cra_evidence", json.dumps(observed))
+    assert observed == {
+        "triggered": True,
+        "state": "RUNNING",
+        "same_target": True,
+        "retries": 1,
+        "errno_preserved": True,
+        "registered_disappearance": True,
+        "physical_attempts": 0,
+    }
+
+
+@pytest.mark.parametrize(
+    ("read_errno", "expected_code"),
+    [
+        pytest.param(errno.ENOENT, "FILE_DISAPPEARED", id="enoent-live"),
+        pytest.param(errno.EACCES, "PERMISSION_DENIED", id="permission"),
+        pytest.param(errno.EIO, "OS_READ_FAILED", id="io"),
+    ],
+)
+def test_registered_auxiliary_executable_failure_without_confirmed_exit_remains_unknown(
+    publisher: Any,
+    monkeypatch: pytest.MonkeyPatch,
+    read_errno: int,
+    expected_code: str,
+    record_property: Any,
+) -> None:
+    owner, process, _ = publisher
+    configure(owner, process)
+    owner.publish()
+    managed_exe = owner.proc_root / "123/exe"
+    managed_exe.write_bytes(b"managed")
+    auxiliary = owner.proc_root / "124"
+    auxiliary.mkdir()
+    auxiliary_exe = auxiliary / "exe"
+    auxiliary_exe.write_bytes(b"auxiliary")
+    (auxiliary / "stat").write_text(f"124 (helper) R {os.getpid()} " + "0 " * 17 + "100 0\n")
+    (owner.proc_root / str(os.getpid()) / "task" / str(os.getpid()) / "children").write_text("123 124")
+    owner.child_registry = FixtureRegistry(
+        {
+            123: registry_entry(owner, 123, role="DELIVERY_CANDIDATE", ticks=99, executable=managed_exe),
+            124: registry_entry(owner, 124, role="AUXILIARY", ticks=100, executable=auxiliary_exe),
+        }
+    )
+    original = owner._executable_identity
+    fired = False
+
+    def fail_once(pid: int) -> tuple[int, int]:
+        nonlocal fired
+        if pid == 124 and not fired:
+            fired = True
+            raise OSError(read_errno, "test-owned executable read failure")
+        return original(pid)
+
+    monkeypatch.setattr(owner, "_executable_identity", fail_once)
+    result = owner.publish()
+    diagnostics = result["lifecycle"]["read_diagnostics"]
+    observed = {
+        "triggered": fired,
+        "state": result["lifecycle"]["state"],
+        "target": result["target_identity"],
+        "retries": diagnostics["proc_scan_retry_count"],
+        "original_error": any(
+            event["code"] == expected_code and event["errno"] == read_errno
+            for event in diagnostics["events"]
+        ),
+        "physical_attempts": result["effects"]["physical_attempt_count"],
+    }
+    record_property("cra_evidence", json.dumps(observed))
+    assert observed == {
+        "triggered": True,
+        "state": "UNKNOWN",
+        "target": None,
+        "retries": 0,
+        "original_error": True,
+        "physical_attempts": 0,
+    }
+    assert result["activation"] == {"bounded_termination_enabled": None, "rw_timeout_enabled": None}
+
+
+@pytest.mark.parametrize("drift", ["auxiliary-pid-reuse", "managed-generation"])
+def test_registered_auxiliary_executable_exit_retry_rejects_identity_drift(
+    publisher: Any, monkeypatch: pytest.MonkeyPatch, drift: str, record_property: Any
+) -> None:
+    owner, process, _ = publisher
+    configure(owner, process)
+    owner.publish()
+    managed_exe = owner.proc_root / "123/exe"
+    managed_exe.write_bytes(b"managed")
+    auxiliary = owner.proc_root / "124"
+    auxiliary.mkdir()
+    auxiliary_exe = auxiliary / "exe"
+    auxiliary_exe.write_bytes(b"auxiliary")
+    auxiliary_stat = auxiliary / "stat"
+    auxiliary_stat.write_text(f"124 (helper) R {os.getpid()} " + "0 " * 17 + "100 0\n")
+    children = owner.proc_root / str(os.getpid()) / "task" / str(os.getpid()) / "children"
+    children.write_text("123 124")
+    owner.child_registry = FixtureRegistry(
+        {
+            123: registry_entry(owner, 123, role="DELIVERY_CANDIDATE", ticks=99, executable=managed_exe),
+            124: registry_entry(owner, 124, role="AUXILIARY", ticks=100, executable=auxiliary_exe),
+        }
+    )
+    original = owner._executable_identity
+    fired = False
+
+    def drift_during_exit(pid: int) -> tuple[int, int]:
+        nonlocal fired
+        if pid == 124 and not fired:
+            fired = True
+            auxiliary_exe.unlink()
+            if drift == "auxiliary-pid-reuse":
+                auxiliary_stat.write_text(f"124 (reused) R {os.getpid()} " + "0 " * 17 + "101 0\n")
+            else:
+                auxiliary_stat.unlink()
+                auxiliary.rmdir()
+                children.write_text("123")
+                process["ffmpeg_generation"] = "changed-during-retry"
+            raise FileNotFoundError(errno.ENOENT, "test-owned executable disappeared")
+        return original(pid)
+
+    monkeypatch.setattr(owner, "_executable_identity", drift_during_exit)
+    result = owner.publish()
+    diagnostics = result["lifecycle"]["read_diagnostics"]
+    observed = {
+        "triggered": fired,
+        "state": result["lifecycle"]["state"],
+        "target": result["target_identity"],
+        "retries": diagnostics["proc_scan_retry_count"],
+        "physical_attempts": result["effects"]["physical_attempt_count"],
+    }
+    record_property("cra_evidence", json.dumps(observed))
+    assert observed == {
+        "triggered": True,
+        "state": "UNKNOWN",
+        "target": None,
+        "retries": 0,
+        "physical_attempts": 0,
+    }
+
+
 def test_registered_auxiliary_executable_churn_remains_unknown(
     publisher: Any, monkeypatch: pytest.MonkeyPatch, record_property: Any
 ) -> None:
@@ -356,7 +704,10 @@ def test_registered_auxiliary_executable_churn_remains_unknown(
         "executable_changed": auxiliary_reads >= 4,
         "state": result["lifecycle"]["state"],
         "target": result["target_identity"],
-        "diagnostic_count": sum(event["code"] == "RECOVERY_OWNER_AUXILIARY_EXECUTABLE_CHANGED" for event in diagnostics["events"]),
+        "diagnostic_count": sum(
+            event["code"] == "RECOVERY_OWNER_AUXILIARY_EXECUTABLE_CHANGED"
+            for event in diagnostics["events"]
+        ),
         "physical_attempts": result["effects"]["physical_attempt_count"],
     }
     record_property("cra_evidence", json.dumps(observed))
@@ -399,7 +750,9 @@ def test_real_kernel_auxiliary_stop_state_does_not_invalidate_managed_child(
         target.update(ffmpeg_pid=managed.pid, host_boot_id=boot_id)
         target["ffmpeg_generation"] = (
             "ffmpeg-"
-            + hashlib.sha256(f"{target['pod_uid']}:{target['container_id']}:{managed.pid}:{managed_ticks}".encode()).hexdigest()[:32]
+            + hashlib.sha256(
+                f"{target['pod_uid']}:{target['container_id']}:{managed.pid}:{managed_ticks}".encode()
+            ).hexdigest()[:32]
         )
         raw = json.loads(owner.target_path.read_text())
         raw["target_identity"] = target
@@ -425,7 +778,9 @@ def test_real_kernel_auxiliary_stop_state_does_not_invalidate_managed_child(
         )
         for entry in (managed_entry, auxiliary_entry):
             entry["owner_start_ticks"] = owner_ticks
-        owner.child_registry = FixtureRegistry({managed.pid: managed_entry, auxiliary.pid: auxiliary_entry})
+        owner.child_registry = FixtureRegistry(
+            {managed.pid: managed_entry, auxiliary.pid: auxiliary_entry}
+        )
         original = owner._executable_identity
         transition_triggered = False
 
@@ -473,12 +828,125 @@ def test_real_kernel_auxiliary_stop_state_does_not_invalidate_managed_child(
                 child_process.wait(timeout=3)
 
 
-def test_managed_executable_read_failure_remains_unknown(publisher: Any, monkeypatch: pytest.MonkeyPatch, record_property: Any) -> None:
+def test_real_kernel_auxiliary_exit_during_first_executable_read_is_retried(
+    publisher: Any, monkeypatch: pytest.MonkeyPatch, record_property: Any
+) -> None:
+    """Exercise the production ordering with only test-owned kernel children."""
+    owner, process, target = publisher
+    owner.config["evidence_schema"] = "runtime.recovery_evidence.v3"
+    managed = subprocess.Popen(
+        ["ffmpeg", "-c", "import sys; sys.stdin.read(1)", "rtmps://test.invalid/unused"],
+        executable=sys.executable,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        env={"FR_FFMPEG_FORCE_KILL_ENABLED": "1", "FFMPEG_RW_TIMEOUT_ENABLED": "1"},
+    )
+    auxiliary = subprocess.Popen(
+        ["/bin/cat"],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    try:
+        wait_for_proc_command(managed)
+        wait_for_proc_command(auxiliary)
+        owner.proc_root = Path("/proc")
+        _, _, managed_ticks = owner._proc_stat(managed.pid)
+        _, _, auxiliary_ticks = owner._proc_stat(auxiliary.pid)
+        _, _, owner_ticks = owner._proc_stat(os.getpid())
+        boot_id = Path("/proc/sys/kernel/random/boot_id").read_text().strip()
+        target.update(ffmpeg_pid=managed.pid, host_boot_id=boot_id)
+        target["ffmpeg_generation"] = (
+            "ffmpeg-"
+            + hashlib.sha256(
+                f"{target['pod_uid']}:{target['container_id']}:{managed.pid}:{managed_ticks}".encode()
+            ).hexdigest()[:32]
+        )
+        raw = json.loads(owner.target_path.read_text())
+        raw["target_identity"] = target
+        owner.target_path.write_text(json.dumps(raw))
+        process.update(
+            local_ffmpeg_pid=managed.pid,
+            managed_child_pids=[managed.pid],
+            runtime_lifecycle_state="FFMPEG_RUNNING",
+        )
+        managed_entry = registry_entry(
+            owner,
+            managed.pid,
+            role="DELIVERY_CANDIDATE",
+            ticks=managed_ticks,
+            executable=Path(f"/proc/{managed.pid}/exe"),
+        )
+        auxiliary_entry = registry_entry(
+            owner,
+            auxiliary.pid,
+            role="AUXILIARY",
+            ticks=auxiliary_ticks,
+            executable=Path(f"/proc/{auxiliary.pid}/exe"),
+        )
+        for entry in (managed_entry, auxiliary_entry):
+            entry["owner_start_ticks"] = owner_ticks
+        owner.child_registry = FixtureRegistry({managed.pid: managed_entry, auxiliary.pid: auxiliary_entry})
+        before = owner.publish()
+        original = owner._executable_identity
+        fired = False
+
+        def exit_during_executable_read(pid: int) -> tuple[int, int]:
+            nonlocal fired
+            if pid == auxiliary.pid and not fired:
+                fired = True
+                assert auxiliary.stdin is not None
+                auxiliary.stdin.close()
+                auxiliary.wait(timeout=2)
+            return original(pid)
+
+        monkeypatch.setattr(owner, "_executable_identity", exit_during_executable_read)
+        started = time.monotonic()
+        result = owner.publish()
+        elapsed = time.monotonic() - started
+        diagnostics = result["lifecycle"]["read_diagnostics"]
+        observed = {
+            "triggered": fired,
+            "state": result["lifecycle"]["state"],
+            "same_target": result["target_identity"] == before["target_identity"],
+            "retries": diagnostics["proc_scan_retry_count"],
+            "file_disappeared": any(
+                event["code"] == "FILE_DISAPPEARED" and event["errno"] in {errno.ENOENT, errno.ESRCH}
+                for event in diagnostics["events"]
+            ),
+            "physical_attempts": result["effects"]["physical_attempt_count"],
+            "elapsed_seconds": elapsed,
+        }
+        record_property("cra_evidence", json.dumps(observed))
+        assert observed["triggered"] is True
+        assert observed["state"] == "RUNNING"
+        assert observed["same_target"] is True
+        assert observed["retries"] >= 1
+        assert observed["file_disappeared"] is True
+        assert observed["physical_attempts"] == 0
+        assert elapsed < owner_module.QUERY_SECONDS
+    finally:
+        for child_process in (auxiliary, managed):
+            if child_process.stdin is not None and not child_process.stdin.closed:
+                child_process.stdin.close()
+            try:
+                child_process.wait(timeout=0.05)
+            except subprocess.TimeoutExpired:
+                child_process.terminate()
+                child_process.wait(timeout=3)
+
+
+def test_managed_executable_read_failure_remains_unknown(
+    publisher: Any, monkeypatch: pytest.MonkeyPatch, record_property: Any
+) -> None:
     owner, process, _ = publisher
     configure(owner, process)
     managed_exe = owner.proc_root / "123/exe"
     managed_exe.write_bytes(b"managed")
-    owner.child_registry = FixtureRegistry({123: registry_entry(owner, 123, role="DELIVERY_CANDIDATE", ticks=99, executable=managed_exe)})
+    owner.child_registry = FixtureRegistry(
+        {123: registry_entry(owner, 123, role="DELIVERY_CANDIDATE", ticks=99, executable=managed_exe)}
+    )
     original = owner._executable_identity
 
     def deny_managed(pid: int) -> tuple[int, int]:
@@ -637,6 +1105,68 @@ def test_owner_snapshot_transition_preserves_only_proven_claims(
     assert result["target_identity"] is None
     assert all(value is None for value in result["activation"].values())
     assert result["effects"]["integrity"] == "ok"
+
+
+def test_real_kernel_child_exit_after_ledger_snapshot_is_finally_observed(
+    publisher: Any, monkeypatch: pytest.MonkeyPatch, record_property: Any
+) -> None:
+    owner, process, target = publisher
+    managed = subprocess.Popen(
+        ["ffmpeg", "-c", "import sys; sys.stdin.read(1)", "rtmps://test.invalid/unused"],
+        executable=sys.executable,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        env={"FR_FFMPEG_FORCE_KILL_ENABLED": "1", "FFMPEG_RW_TIMEOUT_ENABLED": "1"},
+    )
+    try:
+        bind_real_managed_child(owner, process, target, managed)
+        before = owner.publish()
+        assert before["lifecycle"]["state"] == "RUNNING"
+        real = owner_module.owner_evidence
+        triggered = False
+
+        def exit_after_ledger(db: Any, **kwargs: Any) -> Any:
+            nonlocal triggered
+            result = real(db, **kwargs)
+            assert managed.stdin is not None
+            managed.stdin.close()
+            managed.wait(timeout=2)
+            process.update(
+                local_ffmpeg_pid=0,
+                ffmpeg_running=False,
+                managed_child_pids=[],
+                managed_child_cardinality="0",
+                runtime_lifecycle_state="RESTART_DELAY",
+            )
+            triggered = True
+            return result
+
+        monkeypatch.setattr(owner_module, "owner_evidence", exit_after_ledger)
+        result = owner.publish()
+        observed = {
+            "triggered": triggered,
+            "state": result["lifecycle"]["state"],
+            "target": result["target_identity"],
+            "activation_unknown": all(value is None for value in result["activation"].values()),
+            "integrity": result["effects"]["integrity"],
+            "physical_attempts": result["effects"]["physical_attempt_count"],
+        }
+        record_property("cra_evidence", json.dumps(observed))
+        assert observed == {
+            "triggered": True,
+            "state": "ABSENT",
+            "target": None,
+            "activation_unknown": True,
+            "integrity": "ok",
+            "physical_attempts": 0,
+        }
+    finally:
+        if managed.stdin is not None and not managed.stdin.closed:
+            managed.stdin.close()
+        if managed.poll() is None:
+            managed.kill()
+        managed.wait(timeout=2)
 
 
 @pytest.mark.parametrize("time_offset", [None, -0.001, 0.502])
@@ -911,3 +1441,16 @@ def test_owner_adapter_rejects_malformed_lifecycle(publisher: Any, setup: Any, f
             history_policy=empty_policy(),
             physical_boot_id="boot-id",
         )
+
+
+def test_pipe_metadata_does_not_invent_a_sender_target(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, record_property: Any) -> None:
+    from runtime_boundary import observation
+    monkeypatch.setattr(observation, "_tcp_metrics", lambda *_: {})
+    owner = observation.RuntimeObservationPublisher(path=tmp_path/'observation.json', projection_path=tmp_path/'missing-projection',
+        target_snapshot_path=tmp_path/'missing-target',
+        process_supplier=lambda:{"local_encoder_pid":123,"delivery_route":"PRIMARY","delivery_route_generation":2})
+    value=owner.publish()
+    observed={"target":value["target_identity"],"sender_running":value["ffmpeg_running"],
+              "encoder_pid":value["local_encoder_pid"],"route_generation":value["delivery_route_generation"]}
+    record_property("cra_evidence",json.dumps(observed))
+    assert observed=={"target":None,"sender_running":False,"encoder_pid":123,"route_generation":2}

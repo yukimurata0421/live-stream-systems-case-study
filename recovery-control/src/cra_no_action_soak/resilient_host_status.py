@@ -21,9 +21,15 @@ from cra_dell_recovery.time import isoformat_utc, parse_utc
 
 from .host_status import atomic_write_json, read_object, read_regular_bytes
 
-SCHEMA = "cra.resilient_host_status.v3"
-STATE_SCHEMA = "cra.resilient_host_status_state.v2"
-EVENT_SCHEMA = "cra.resilient_host_status_transition_event.v1"
+SCHEMA = "cra.resilient_host_status.v4"
+STATE_SCHEMA = "cra.resilient_host_status_state.v4"
+LEGACY_STATE_SCHEMAS = frozenset(
+    {
+        "cra.resilient_host_status_state.v2",
+        "cra.resilient_host_status_state.v3",
+    }
+)
+EVENT_SCHEMA = "cra.resilient_host_status_transition_event.v2"
 HEALTH_EVENT_SCHEMA = "cra.resilient_host_status_health_transition.v1"
 STATUS_PATH = "/v3/no-action-soak-status/latest"
 REASON = re.compile(r"^[A-Z][A-Z0-9_]{2,127}$")
@@ -162,7 +168,11 @@ def _initial_state(host_id: str, boot_id: str) -> dict[str, Any]:
         "transition_high_watermark": 0,
         "last_event_hash": None,
         "last_target_identity_sha256": None,
+        "last_target_physical_effect_count": None,
         "open_episodes": [],
+        "open_episode_overflow_count": 0,
+        "open_episode_overflow_sha256": None,
+        "open_episode_overflow_started_at": None,
         "last_good": _empty_last_good(),
         "health_journal_id": f"resilient-health-{uuid.uuid4()}",
         "health_high_watermark": 0,
@@ -170,6 +180,17 @@ def _initial_state(host_id: str, boot_id: str) -> dict[str, Any]:
         "last_report_state": None,
         "last_report_reason_codes": [],
     }
+
+
+def _fold_open_episode_overflow(state: dict[str, Any], episode: Mapping[str, Any]) -> None:
+    overflow_value = {
+        "previous_sha256": state["open_episode_overflow_sha256"],
+        "episode": episode,
+    }
+    state["open_episode_overflow_sha256"] = hashlib.sha256(canonical_json(overflow_value)).hexdigest()
+    state["open_episode_overflow_count"] = int(state["open_episode_overflow_count"]) + 1
+    if state["open_episode_overflow_started_at"] is None:
+        state["open_episode_overflow_started_at"] = str(episode["started_at"])
 
 
 def _new_boot_state(state: Mapping[str, Any], boot_id: str) -> dict[str, Any]:
@@ -196,7 +217,11 @@ def _validate_state(value: Mapping[str, Any], *, host_id: str, boot_id: str) -> 
         "transition_high_watermark",
         "last_event_hash",
         "last_target_identity_sha256",
+        "last_target_physical_effect_count",
         "open_episodes",
+        "open_episode_overflow_count",
+        "open_episode_overflow_sha256",
+        "open_episode_overflow_started_at",
         "last_good",
         "health_journal_id",
         "health_high_watermark",
@@ -205,6 +230,25 @@ def _validate_state(value: Mapping[str, Any], *, host_id: str, boot_id: str) -> 
         "last_report_reason_codes",
     }
     state = dict(value)
+    if state.get("schema") in LEGACY_STATE_SCHEMAS:
+        legacy_required = required - {
+            "open_episode_overflow_count",
+            "open_episode_overflow_sha256",
+            "open_episode_overflow_started_at",
+        }
+        if state.get("schema") == "cra.resilient_host_status_state.v2":
+            legacy_required.remove("last_target_physical_effect_count")
+        if set(state) != legacy_required:
+            raise ValueError("RESILIENT_STATUS_STATE_IDENTITY_INVALID")
+        state.setdefault("last_target_physical_effect_count", None)
+        state.update(
+            {
+                "schema": STATE_SCHEMA,
+                "open_episode_overflow_count": 0,
+                "open_episode_overflow_sha256": None,
+                "open_episode_overflow_started_at": None,
+            }
+        )
     if set(state) != required or state.get("schema") != STATE_SCHEMA or state.get("host_id") != host_id:
         raise ValueError("RESILIENT_STATUS_STATE_IDENTITY_INVALID")
     if state.get("host_boot_id") != boot_id:
@@ -220,6 +264,9 @@ def _validate_state(value: Mapping[str, Any], *, host_id: str, boot_id: str) -> 
         raw = state.get(name)
         if raw is not None and (not isinstance(raw, str) or SHA256.fullmatch(raw) is None):
             raise ValueError("RESILIENT_STATUS_STATE_DIGEST_INVALID")
+    effect_count = state.get("last_target_physical_effect_count")
+    if effect_count is not None and (isinstance(effect_count, bool) or not isinstance(effect_count, int) or effect_count < 0):
+        raise ValueError("RESILIENT_STATUS_STATE_EFFECT_COUNT_INVALID")
     if not isinstance(state.get("last_good"), dict):
         raise ValueError("RESILIENT_STATUS_LAST_GOOD_STATE_INVALID")
     if state.get("last_report_state") is not None and state["last_report_state"] not in REPORT_STATES:
@@ -230,9 +277,34 @@ def _validate_state(value: Mapping[str, Any], *, host_id: str, boot_id: str) -> 
     open_episodes = state.get("open_episodes")
     if not isinstance(open_episodes, list) or len(open_episodes) > 64 or not all(isinstance(item, dict) for item in open_episodes):
         raise ValueError("RESILIENT_STATUS_OPEN_EPISODES_INVALID")
+    for episode in open_episodes:
+        _validate_transition_episode(episode)
+        if episode.get("effect_request_id") is not None or episode.get("effect_scope_id") is not None:
+            raise ValueError("RESILIENT_STATUS_OPEN_EPISODE_EFFECT_BINDING_INVALID")
     episode_ids = [str(item.get("episode_id")) for item in open_episodes]
     if len(episode_ids) != len(set(episode_ids)):
         raise ValueError("RESILIENT_STATUS_OPEN_EPISODE_DUPLICATE")
+    overflow_count = state.get("open_episode_overflow_count")
+    overflow_sha256 = state.get("open_episode_overflow_sha256")
+    overflow_started_at = state.get("open_episode_overflow_started_at")
+    if isinstance(overflow_count, bool) or not isinstance(overflow_count, int) or overflow_count < 0:
+        raise ValueError("RESILIENT_STATUS_OPEN_EPISODE_OVERFLOW_INVALID")
+    if overflow_count == 0:
+        if overflow_sha256 is not None or overflow_started_at is not None:
+            raise ValueError("RESILIENT_STATUS_OPEN_EPISODE_OVERFLOW_INVALID")
+    else:
+        if not isinstance(overflow_sha256, str) or SHA256.fullmatch(overflow_sha256) is None:
+            raise ValueError("RESILIENT_STATUS_OPEN_EPISODE_OVERFLOW_INVALID")
+        if not isinstance(overflow_started_at, str):
+            raise ValueError("RESILIENT_STATUS_OPEN_EPISODE_OVERFLOW_INVALID")
+        parse_utc(overflow_started_at)
+        # An earlier local candidate retained 64 exact entries after creating
+        # the overflow digest, while its signed view exposed only 63 of them.
+        # Fold that otherwise hidden oldest entry during load so every
+        # unresolved transition remains represented by either the digest or
+        # an exact episode.
+        if len(open_episodes) == 64:
+            _fold_open_episode_overflow(state, open_episodes.pop(0))
     return state
 
 
@@ -258,6 +330,58 @@ def _append_event(path: Path, value: Mapping[str, Any]) -> None:
 def _event_hash(value: Mapping[str, Any]) -> str:
     unsigned = {name: item for name, item in value.items() if name != "event_hash"}
     return hashlib.sha256(canonical_json(unsigned)).hexdigest()
+
+
+def _validate_transition_episode(value: Mapping[str, Any]) -> None:
+    required = {
+        "episode_id",
+        "event_type",
+        "started_at",
+        "before_target_identity_sha256",
+        "after_target_identity_sha256",
+        "effect_request_id",
+        "effect_scope_id",
+        "physical_effect_count_before",
+        "physical_effect_count_observed",
+    }
+    if set(value) != required or not isinstance(value.get("episode_id"), str) or not value["episode_id"]:
+        raise ValueError("RESILIENT_STATUS_TRANSITION_EPISODE_FIELDS_INVALID")
+    before = value.get("before_target_identity_sha256")
+    after = value.get("after_target_identity_sha256")
+    for digest in (before, after):
+        if digest is not None and (not isinstance(digest, str) or SHA256.fullmatch(digest) is None):
+            raise ValueError("RESILIENT_STATUS_TRANSITION_EPISODE_IDENTITY_INVALID")
+    expected_event_type = "TARGET_RECOVERED" if before is None else "TARGET_LOST" if after is None else "TARGET_CHANGED"
+    if value.get("event_type") != expected_event_type:
+        raise ValueError("RESILIENT_STATUS_TRANSITION_EPISODE_TYPE_INVALID")
+    parse_utc(str(value.get("started_at")))
+    for name in ("physical_effect_count_before", "physical_effect_count_observed"):
+        count = value.get(name)
+        if count is not None and (isinstance(count, bool) or not isinstance(count, int) or count < 0):
+            raise ValueError("RESILIENT_STATUS_TRANSITION_EPISODE_EFFECT_COUNT_INVALID")
+
+
+def _validate_transition_event(value: Mapping[str, Any]) -> None:
+    episode = value.get("episode")
+    if not isinstance(episode, Mapping):
+        raise ValueError("RESILIENT_STATUS_TRANSITION_EPISODE_INVALID")
+    _validate_transition_episode(episode)
+    action = value.get("event_action")
+    causal_state = value.get("causal_state")
+    if action == "CLASSIFIED" and causal_state not in {"EXACT", "NO_AUTHORITY_EFFECT"}:
+        raise ValueError("RESILIENT_STATUS_TRANSITION_CLASSIFICATION_INVALID")
+    request_id = episode.get("effect_request_id")
+    scope_id = episode.get("effect_scope_id")
+    if causal_state == "EXACT":
+        if not isinstance(request_id, str) or not request_id or not isinstance(scope_id, str) or not scope_id:
+            raise ValueError("RESILIENT_STATUS_TRANSITION_EXACT_BINDING_INVALID")
+    elif request_id is not None or scope_id is not None:
+        raise ValueError("RESILIENT_STATUS_TRANSITION_EFFECT_BINDING_UNEXPECTED")
+    if causal_state == "NO_AUTHORITY_EFFECT":
+        before = episode.get("physical_effect_count_before")
+        observed = episode.get("physical_effect_count_observed")
+        if before is None or observed is None or before != observed:
+            raise ValueError("RESILIENT_STATUS_TRANSITION_NO_EFFECT_PROOF_INVALID")
 
 
 def _journal_events(path: Path, *, journal_id: str) -> list[dict[str, Any]]:
@@ -306,12 +430,13 @@ def _journal_events(path: Path, *, journal_id: str) -> list[dict[str, Any]]:
             or value.get("journal_id") != journal_id
             or value.get("sequence") != sequence
             or value.get("previous_event_hash") != previous_hash
-            or value.get("event_action") not in {"OBSERVED", "CAUSAL_BOUND"}
-            or value.get("causal_state") not in {"EXACT", "UNBOUND"}
+            or value.get("event_action") not in {"OBSERVED", "CLASSIFIED"}
+            or value.get("causal_state") not in {"EXACT", "NO_AUTHORITY_EFFECT", "UNBOUND"}
             or value.get("event_hash") != _event_hash(value)
             or not isinstance(value.get("episode"), dict)
         ):
             raise ValueError("RESILIENT_STATUS_JOURNAL_CHAIN_INVALID")
+        _validate_transition_event(value)
         parse_utc(str(value.get("observed_at")))
         result.append(dict(value))
         previous_hash = str(value["event_hash"])
@@ -481,18 +606,51 @@ def record_publisher_failure(
 def _apply_event(state: dict[str, Any], event: Mapping[str, Any]) -> None:
     episode = dict(event["episode"])
     if event["event_action"] == "OBSERVED":
-        state["last_target_identity_sha256"] = episode.get("after_target_identity_sha256")
+        after_target = episode.get("after_target_identity_sha256")
+        if after_target is not None:
+            state["last_target_identity_sha256"] = after_target
+        observed_effect_count = episode.get("physical_effect_count_observed")
+        if observed_effect_count is not None:
+            state["last_target_physical_effect_count"] = observed_effect_count
         if event["causal_state"] == "UNBOUND":
             if any(item.get("episode_id") == episode.get("episode_id") for item in state["open_episodes"]):
                 raise ValueError("RESILIENT_STATUS_OPEN_EPISODE_DUPLICATE")
+            exact_limit = 63 if state["open_episode_overflow_count"] else 64
+            while len(state["open_episodes"]) >= exact_limit:
+                _fold_open_episode_overflow(state, state["open_episodes"].pop(0))
+                exact_limit = 63
             state["open_episodes"].append(episode)
     else:
         matches = [item for item in state["open_episodes"] if item.get("episode_id") == episode.get("episode_id")]
-        if len(matches) != 1 or event["causal_state"] != "EXACT":
+        if len(matches) != 1 or event["causal_state"] not in {"EXACT", "NO_AUTHORITY_EFFECT"}:
             raise ValueError("RESILIENT_STATUS_CAUSAL_BINDING_ORPHANED")
         state["open_episodes"] = [item for item in state["open_episodes"] if item.get("episode_id") != episode.get("episode_id")]
+        observed_effect_count = episode.get("physical_effect_count_observed")
+        if observed_effect_count is not None:
+            state["last_target_physical_effect_count"] = observed_effect_count
     state["transition_high_watermark"] = int(event["sequence"])
     state["last_event_hash"] = str(event["event_hash"])
+
+
+def _reported_open_episodes(state: Mapping[str, Any]) -> list[dict[str, Any]]:
+    episodes = [dict(item) for item in state["open_episodes"]]
+    overflow_count = int(state["open_episode_overflow_count"])
+    if overflow_count == 0:
+        return episodes
+    overflow_sha256 = str(state["open_episode_overflow_sha256"])
+    overflow_started_at = str(state["open_episode_overflow_started_at"])
+    aggregate = {
+        "episode_id": f"target-transition-overflow-{overflow_sha256}",
+        "event_type": "TARGET_CHANGED",
+        "started_at": overflow_started_at,
+        "before_target_identity_sha256": None,
+        "after_target_identity_sha256": None,
+        "effect_request_id": None,
+        "effect_scope_id": None,
+        "physical_effect_count_before": None,
+        "physical_effect_count_observed": None,
+    }
+    return [aggregate, *episodes[-63:]]
 
 
 def _reconcile_journal(state: dict[str, Any], journal: Path) -> None:
@@ -538,7 +696,9 @@ def _transition_event(
     before: str | None,
     after: str | None,
     binding: ExactTransitionBinding | None,
-) -> None:
+    physical_effect_count_before: int | None,
+    physical_effect_count_observed: int | None,
+) -> str:
     if before is None and after is not None:
         event_type = "TARGET_RECOVERED"
     elif before is not None and after is None:
@@ -553,15 +713,28 @@ def _transition_event(
         "after_target_identity_sha256": after,
         "effect_request_id": binding.effect_request_id if binding is not None else None,
         "effect_scope_id": binding.effect_scope_id if binding is not None else None,
+        "physical_effect_count_before": physical_effect_count_before,
+        "physical_effect_count_observed": physical_effect_count_observed,
     }
+    if binding is not None:
+        causal_state = "EXACT"
+    elif (
+        physical_effect_count_before is not None
+        and physical_effect_count_observed is not None
+        and physical_effect_count_before == physical_effect_count_observed
+    ):
+        causal_state = "NO_AUTHORITY_EFFECT"
+    else:
+        causal_state = "UNBOUND"
     _append_state_event(
         state,
         journal,
         now=now,
         event_action="OBSERVED",
         episode=episode,
-        causal_state="EXACT" if binding is not None else "UNBOUND",
+        causal_state=causal_state,
     )
+    return causal_state
 
 
 def _resolve_open_episode(
@@ -570,6 +743,7 @@ def _resolve_open_episode(
     *,
     now: datetime,
     binding: ExactTransitionBinding,
+    physical_effect_count: int | None,
 ) -> bool:
     matches = [
         item
@@ -583,14 +757,48 @@ def _resolve_open_episode(
         **matches[0],
         "effect_request_id": binding.effect_request_id,
         "effect_scope_id": binding.effect_scope_id,
+        "physical_effect_count_observed": physical_effect_count,
     }
     _append_state_event(
         state,
         journal,
         now=now,
-        event_action="CAUSAL_BOUND",
+        event_action="CLASSIFIED",
         episode=episode,
         causal_state="EXACT",
+    )
+    return True
+
+
+def _resolve_no_authority_effect_episode(
+    state: dict[str, Any],
+    journal: Path,
+    *,
+    now: datetime,
+    target_identity_sha256: str,
+    physical_effect_count: int | None,
+) -> bool:
+    if physical_effect_count is None:
+        return False
+    matches = [
+        item
+        for item in state["open_episodes"]
+        if item.get("after_target_identity_sha256") == target_identity_sha256
+        and item.get("physical_effect_count_before") == physical_effect_count
+    ]
+    if len(matches) != 1:
+        return False
+    episode = {
+        **matches[0],
+        "physical_effect_count_observed": physical_effect_count,
+    }
+    _append_state_event(
+        state,
+        journal,
+        now=now,
+        event_action="CLASSIFIED",
+        episode=episode,
+        causal_state="NO_AUTHORITY_EFFECT",
     )
     return True
 
@@ -709,9 +917,18 @@ def build_resilient_status(
         _reconcile_journal(state, transition_journal)
         _reconcile_health_journal(state, health_journal)
         before_target = state.get("last_target_identity_sha256")
-        transition_observable = not source_observed_in_future
+        before_effect_count = state.get("last_target_physical_effect_count")
+        transition_observable = (
+            not source_observed_in_future
+            and source_observed_at is not None
+            and source_valid_until is not None
+            and source_valid_until.astimezone(UTC) > current_time
+            and target_identity_sha256 is not None
+            and source_payload_sha256 is not None
+            and origin_host_id is not None
+        )
         effective_target_identity_sha256 = target_identity_sha256 if transition_observable else None
-        transition_recorded = False
+        transition_classification: str | None = None
         binding_resolved = False
         if exact_transition_binding is not None and transition_observable and before_target == effective_target_identity_sha256:
             binding_resolved = _resolve_open_episode(
@@ -719,31 +936,46 @@ def build_resilient_status(
                 transition_journal,
                 now=current_time,
                 binding=exact_transition_binding,
+                physical_effect_count=physical_effect_count,
             )
             if not binding_resolved:
                 raise ValueError("RESILIENT_STATUS_CAUSAL_BINDING_ORPHANED")
+            transition_classification = "EXACT"
+        elif transition_observable and before_target == effective_target_identity_sha256:
+            binding_resolved = _resolve_no_authority_effect_episode(
+                state,
+                transition_journal,
+                now=current_time,
+                target_identity_sha256=str(effective_target_identity_sha256),
+                physical_effect_count=physical_effect_count,
+            )
+            if binding_resolved:
+                transition_classification = "NO_AUTHORITY_EFFECT"
         if (
             track_target_transitions
             and transition_observable
             and before_target != effective_target_identity_sha256
-            and (before_target is not None or int(state["producer_sequence"]) > 0)
+            and before_target is not None
         ):
             if exact_transition_binding is not None and (
                 exact_transition_binding.before_target_identity_sha256 != before_target
                 or exact_transition_binding.after_target_identity_sha256 != effective_target_identity_sha256
             ):
                 raise ValueError("RESILIENT_STATUS_CAUSAL_BINDING_TARGET_MISMATCH")
-            _transition_event(
+            transition_classification = _transition_event(
                 state,
                 transition_journal,
                 now=current_time,
                 before=before_target,
                 after=effective_target_identity_sha256,
                 binding=exact_transition_binding,
+                physical_effect_count_before=(int(before_effect_count) if isinstance(before_effect_count, int) else None),
+                physical_effect_count_observed=physical_effect_count,
             )
-            transition_recorded = True
-        elif transition_observable and (not track_target_transitions or int(state["producer_sequence"]) == 0):
+        elif transition_observable and (not track_target_transitions or before_target is None):
             state["last_target_identity_sha256"] = effective_target_identity_sha256
+            if physical_effect_count is not None:
+                state["last_target_physical_effect_count"] = physical_effect_count
 
         current = _current_value(
             source_observed_at=source_observed_at if transition_observable else None,
@@ -762,22 +994,24 @@ def build_resilient_status(
             and current["origin_host_id"] is not None
         )
         open_episodes = list(state["open_episodes"])
-        report_state = "READY" if components_ready and source_ready and not open_episodes else "DEGRADED_SOURCE"
+        overflow_count = int(state["open_episode_overflow_count"])
+        unresolved_transition = bool(open_episodes) or overflow_count > 0
+        report_state = "READY" if components_ready and source_ready and not unresolved_transition else "DEGRADED_SOURCE"
         nonfresh_component_names = {str(value["name"]) for value in component_values if value["state"] != "FRESH"}
         if (
             nonfresh_component_names
             and nonfresh_component_names <= {"publisher_resources"}
             and source_ready
-            and not open_episodes
+            and not unresolved_transition
             and clock_state == "SYNCED"
         ):
             report_state = "DEGRADED_OBSERVABILITY"
-        if open_episodes:
+        if unresolved_transition:
             report_state = "RECOVERING"
         if explicit_state is not None:
             if explicit_state not in REPORT_STATES:
                 raise ValueError("RESILIENT_STATUS_EXPLICIT_STATE_INVALID")
-            if explicit_state == "READY" and (not components_ready or not source_ready or open_episodes):
+            if explicit_state == "READY" and (not components_ready or not source_ready or unresolved_transition):
                 raise ValueError("RESILIENT_STATUS_EXPLICIT_READY_UNSAFE")
             report_state = explicit_state
 
@@ -785,8 +1019,10 @@ def build_resilient_status(
         reasons.update(value["reason_code"] for value in component_values if value["state"] != "FRESH")
         if source_observed_in_future:
             reasons.add("SOURCE_OBSERVED_IN_FUTURE")
-        if open_episodes:
+        if unresolved_transition:
             reasons.add("TARGET_TRANSITION_UNBOUND")
+        if overflow_count > 0:
+            reasons.add("TARGET_TRANSITION_HISTORY_OVERFLOW")
         if report_state == "READY":
             reasons.add("ALL_REQUIRED_SOURCES_FRESH")
         elif not reasons:
@@ -824,7 +1060,8 @@ def build_resilient_status(
             health_journal,
             journal_id=str(state["health_journal_id"]),
         )[-64:]
-        causal_state = "UNBOUND" if state["open_episodes"] else ("EXACT" if transition_recorded or binding_resolved else "NONE")
+        reported_open_episodes = _reported_open_episodes(state)
+        causal_state = "UNBOUND" if unresolved_transition else (transition_classification or "NONE")
         report_lease_candidates = [current_time + timedelta(seconds=reporter_lease_seconds)]
         report_lease_candidates.extend(
             parse_utc(str(value["valid_until"]))
@@ -861,8 +1098,8 @@ def build_resilient_status(
                 "high_watermark": state["transition_high_watermark"],
                 "last_event_hash": state["last_event_hash"],
                 "causal_state": causal_state,
-                "open_episode_count": len(state["open_episodes"]),
-                "open_episodes": state["open_episodes"],
+                "open_episode_count": len(reported_open_episodes),
+                "open_episodes": reported_open_episodes,
                 "event_tail": journal_event_tail,
             },
             "health_transition": {
@@ -981,6 +1218,33 @@ class ResilientHostStatusContract:
         open_episode_ids = [str(item["episode_id"]) for item in transition["open_episodes"]]
         if len(open_episode_ids) != len(set(open_episode_ids)):
             raise ValueError("RESILIENT_STATUS_OPEN_EPISODE_DUPLICATE")
+        overflow_markers = [
+            item
+            for item in transition["open_episodes"]
+            if str(item["episode_id"]).startswith("target-transition-overflow-")
+        ]
+        overflow_reason = "TARGET_TRANSITION_HISTORY_OVERFLOW" in payload["reason_codes"]
+        if bool(overflow_markers) != overflow_reason or len(overflow_markers) > 1:
+            raise ValueError("RESILIENT_STATUS_TRANSITION_OVERFLOW_MARKER_INVALID")
+        if overflow_markers:
+            marker = overflow_markers[0]
+            if (
+                transition["open_episodes"][0] != marker
+                or SHA256.fullmatch(str(marker["episode_id"])[len("target-transition-overflow-") :]) is None
+                or marker["event_type"] != "TARGET_CHANGED"
+                or any(
+                    marker[name] is not None
+                    for name in (
+                        "before_target_identity_sha256",
+                        "after_target_identity_sha256",
+                        "effect_request_id",
+                        "effect_scope_id",
+                        "physical_effect_count_before",
+                        "physical_effect_count_observed",
+                    )
+                )
+            ):
+                raise ValueError("RESILIENT_STATUS_TRANSITION_OVERFLOW_MARKER_INVALID")
         if transition["causal_state"] == "UNBOUND" and not transition["open_episodes"]:
             raise ValueError("RESILIENT_STATUS_CAUSAL_STATE_INVALID")
         if transition["open_episodes"] and transition["causal_state"] != "UNBOUND":
@@ -1005,6 +1269,7 @@ class ResilientHostStatusContract:
                     or event["event_hash"] != _event_hash(event)
                 ):
                     raise ValueError("RESILIENT_STATUS_EVENT_TAIL_CHAIN_INVALID")
+                _validate_transition_event(event)
                 previous_hash = event["event_hash"]
         health = payload["health_transition"]
         health_tail = health["event_tail"]

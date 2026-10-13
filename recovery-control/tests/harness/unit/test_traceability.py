@@ -201,9 +201,7 @@ def test_component_task_view_classifies_every_process_gap(project: Path, tmp_pat
     view = build_task_view(project, component="OwnerObservationPipeline", result_directory=result)
     process_gaps = [item for item in view["known_gaps"] if item["environment"] == "process"]
     assert {item["invariant_id"]: item["reason"] for item in process_gaps} == {
-        "I-OWNER-FINAL": "INJECTOR_MISSING",
         "I-OWNER-DIAGNOSTICS": "PROCESS_NOT_APPLICABLE",
-        "I-OWNER-ACTIVATION": "INJECTOR_MISSING",
         "I-OWNER-RETENTION": "PROCESS_NOT_APPLICABLE",
     }
     assert all(item["missing_capability"] and item["next_action"] for item in process_gaps)

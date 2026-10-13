@@ -12,16 +12,25 @@ Most reviewers should start with:
 3. `executive-summary.md`
 4. `operational-scorecard.md`
 
+Start with `operational-case-studies.md` for a short account of the recent failures.
 Use the rest of this page as a reference catalog.
 
 ## Core Entry Points
 
 - `hiring-reviewer-guide.md`
 - `executive-summary.md`
+- `operational-case-studies.md`
 - `operational-scorecard.md`
 - `implementation-review-map.md`
 - `docs/README.md`
 - `v3/README.md`
+
+## OCI And Twitch Source Update
+
+- `v3/oci-relay-and-twitch.md`: single sender, relay ownership, and reception evidence.
+- `v3/route-network-observation.md`: multiple probes, causal baselines, and offline replay.
+- `v3/twitch-session-renewal.md`: daily ownership and the retained failed exercise.
+- `v3/public-source-port-2026-10-13.md`: source decisions, provenance, and validation limits.
 
 ## Architecture And Runtime
 

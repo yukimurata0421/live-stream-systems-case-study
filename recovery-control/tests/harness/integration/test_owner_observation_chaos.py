@@ -134,7 +134,9 @@ def test_normal_cleanup_interleaving_keeps_fresh_exact_child(publisher: Any, mon
     validate_lifecycle(after["lifecycle"], now=datetime.now(UTC), boot_id="boot-id")
 
 
-def test_registered_child_reaped_between_enumeration_and_prune_is_retried(publisher: Any, record_property: Any) -> None:
+def test_registered_child_reaped_between_enumeration_and_prune_is_retried(
+    publisher: Any, record_property: Any
+) -> None:
     owner, process, _ = publisher
     configure(owner, process)
     before = running(owner)
@@ -169,7 +171,9 @@ def test_registered_child_reaped_between_enumeration_and_prune_is_retried(publis
         "state": after["lifecycle"]["state"],
         "same_target": after["target_identity"] == before["target_identity"],
         "retries": diagnostics["proc_scan_retry_count"],
-        "registered_disappearance": any(event["code"] == "RECOVERY_OWNER_REGISTERED_CHILD_DISAPPEARED" for event in diagnostics["events"]),
+        "registered_disappearance": any(
+            event["code"] == "RECOVERY_OWNER_REGISTERED_CHILD_DISAPPEARED" for event in diagnostics["events"]
+        ),
     }
     record_property("cra_evidence", json.dumps(observed))
     assert observed == {
@@ -250,18 +254,11 @@ def test_retry_never_certifies_unknown_or_changed_identity(
     owner._next_cycle = 0
     owner.publish_if_due()
     result = json.loads(owner.path.read_text())
-    record_property(
-        "cra_evidence",
-        json.dumps(
-            {
-                "triggered": fired,
-                "state": result["lifecycle"]["state"],
-                "target": result["target_identity"],
-                "attempts": result["lifecycle"]["read_diagnostics"]["proc_scan_attempt_count"],
-                "diagnostic_count": len(result["lifecycle"]["read_diagnostics"]["events"]),
-            }
-        ),
-    )
+    record_property("cra_evidence", json.dumps({
+        "triggered": fired, "state": result["lifecycle"]["state"], "target": result["target_identity"],
+        "attempts": result["lifecycle"]["read_diagnostics"]["proc_scan_attempt_count"],
+        "diagnostic_count": len(result["lifecycle"]["read_diagnostics"]["events"]),
+    }))
     assert fired
     assert result["lifecycle"]["state"] != "RUNNING", result
     assert result["target_identity"] is None
@@ -687,17 +684,11 @@ def test_auxiliary_exit_does_not_invalidate_running_child(publisher: Any, monkey
 
     monkeypatch.setattr(owner, "_proc_stat", stat)
     after = running(owner)
-    record_property(
-        "cra_evidence",
-        json.dumps(
-            {
-                "triggered": fired,
-                "state": after["lifecycle"]["state"],
-                "retries": after["lifecycle"]["read_diagnostics"]["proc_scan_retry_count"],
-                "physical_attempts": after["effects"]["physical_attempt_count"],
-            }
-        ),
-    )
+    record_property("cra_evidence", json.dumps({
+        "triggered": fired, "state": after["lifecycle"]["state"],
+        "retries": after["lifecycle"]["read_diagnostics"]["proc_scan_retry_count"],
+        "physical_attempts": after["effects"]["physical_attempt_count"],
+    }))
     assert fired
     assert after["lifecycle"]["state"] == "RUNNING"
 
@@ -713,10 +704,7 @@ def test_real_kernel_exit_after_cmdline_open(
     owner.config["evidence_schema"] = "runtime.recovery_evidence.v3"
     managed = subprocess.Popen(
         ["ffmpeg", "-c", "import sys; sys.stdin.read(1)", "-rw_timeout", "15000000", "rtmps://test.invalid/unused"],
-        executable=sys.executable,
-        stdin=subprocess.PIPE,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
+        executable=sys.executable, stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
         env={"FR_FFMPEG_FORCE_KILL_ENABLED": "1", "FFMPEG_RW_TIMEOUT_ENABLED": "1"},
     )
     auxiliary = None
@@ -769,8 +757,7 @@ def test_real_kernel_exit_after_cmdline_open(
                 nonlocal fired
                 source = original_open(path, *args, **kwargs)
                 if (
-                    not fired
-                    and path == Path("/proc") / str(retired.pid) / "cmdline"
+                    not fired and path == Path("/proc") / str(retired.pid) / "cmdline"
                     and owner._read_stage == stage
                     and owner._read_diagnostics["proc_scan_attempt_count"] == context
                 ):
@@ -784,15 +771,11 @@ def test_real_kernel_exit_after_cmdline_open(
             durations.append(time.monotonic() - started)
             diag = after["lifecycle"]["read_diagnostics"]
             observed = {
-                "triggered": fired,
-                "kernel_errno": errors[-1] if errors else None,
-                "state": after["lifecycle"]["state"],
-                "target": after["target_identity"],
+                "triggered": fired, "kernel_errno": errors[-1] if errors else None,
+                "state": after["lifecycle"]["state"], "target": after["target_identity"],
                 "same_target": after["target_identity"] == before["target_identity"],
-                "retries": diag["proc_scan_retry_count"],
-                "physical_attempts": after["effects"]["physical_attempt_count"],
-                "native_cycles": len(durations),
-                "maximum_cycle_seconds": max(durations),
+                "retries": diag["proc_scan_retry_count"], "physical_attempts": after["effects"]["physical_attempt_count"],
+                "native_cycles": len(durations), "maximum_cycle_seconds": max(durations),
             }
             assert fired and errors[-1] == errno.ESRCH, observed
             assert observed["physical_attempts"] == 0 and after["effects"]["integrity"] == "ok"
@@ -852,9 +835,7 @@ def test_esrch_retry_requires_live_anchor(
     monkeypatch.setattr(Path, "open", opened)
     after = owner.publish()
     observed = {
-        "triggered": fired,
-        "state": after["lifecycle"]["state"],
-        "target": after["target_identity"],
+        "triggered": fired, "state": after["lifecycle"]["state"], "target": after["target_identity"],
         "retries": after["lifecycle"]["read_diagnostics"]["proc_scan_retry_count"],
         "physical_attempts": after["effects"]["physical_attempt_count"],
     }

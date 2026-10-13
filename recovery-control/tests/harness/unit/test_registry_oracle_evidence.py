@@ -45,10 +45,79 @@ def test_taxonomy_is_complete() -> None:
     }
 
 
+_ALLOWED_STDLIB_IMPORTS = {
+    "__future__", "collections.abc", "dataclasses", "datetime", "enum", "typing", "uuid",
+}
+_ORACLE_HELPER_ALLOWLIST = {
+    "cra_dell_recovery.time", "cra_harness.observers.evidence",
+    "cra_harness.scenarios.model", "cra_harness.classifiers.taxonomy",
+}
+
+
+def _imports(path: Path) -> set[str]:
+    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    names: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            names.update(alias.name for alias in node.names)
+        elif isinstance(node, ast.ImportFrom):
+            if node.level:
+                raise AssertionError(f"relative oracle import requires explicit review: {path}")
+            if node.module:
+                names.add(node.module)
+    return names
+
+
+def _oracle_import_violations(paths: list[Path], *, root: Path = ROOT) -> set[str]:
+    queued = list(paths)
+    visited: set[Path] = set()
+    violations: set[str] = set()
+    while queued:
+        path = queued.pop()
+        if path in visited:
+            continue
+        visited.add(path)
+        for name in _imports(path):
+            if name in _ALLOWED_STDLIB_IMPORTS:
+                continue
+            if name in _ORACLE_HELPER_ALLOWLIST or name.startswith("cra_harness.oracles."):
+                helper = root / "src" / (name.replace(".", "/") + ".py")
+                if not helper.is_file():
+                    violations.add(f"{path.name}:missing-helper:{name}")
+                else:
+                    queued.append(helper)
+            else:
+                violations.add(f"{path.name}:unreviewed-import:{name}")
+    return violations
+
+
 def test_oracle_source_has_no_sut_decision_imports() -> None:
-    source = (ROOT / "src/cra_harness/oracles/contract.py").read_text(encoding="utf-8")
-    imported = {node.module for node in ast.walk(ast.parse(source)) if isinstance(node, ast.ImportFrom) and node.module is not None}
-    assert not any(name.startswith(("cra_authority", "dell_recovery_agent", "cra_dell_recovery.states")) for name in imported)
+    paths = sorted((ROOT / "src/cra_harness/oracles").glob("*.py"))
+    assert paths
+    assert _oracle_import_violations(paths) == set()
+
+
+@pytest.mark.parametrize("source", [
+    "import cra_authority.storage\n",
+    "from dell_recovery_agent.execution import AgentService\n",
+    "from cra_no_action_soak import recovery_soak\n",
+    "import fast_recovery_controller.ack_delivery\n",
+    "from cra_dell_recovery import states\n",
+    "import subprocess\n",
+])
+def test_oracle_import_guard_detects_direct_sut_import(tmp_path: Path, source: str) -> None:
+    candidate = tmp_path / "oracle.py"
+    candidate.write_text(source, encoding="utf-8")
+    assert _oracle_import_violations([candidate])
+
+
+def test_oracle_import_guard_detects_transitive_sut_import(tmp_path: Path) -> None:
+    candidate = tmp_path / "oracle.py"
+    candidate.write_text("from cra_harness.observers.evidence import EvidenceBundle\n", encoding="utf-8")
+    helper = tmp_path / "src/cra_harness/observers/evidence.py"
+    helper.parent.mkdir(parents=True)
+    helper.write_text("import dell_recovery_agent.execution\n", encoding="utf-8")
+    assert any("dell_recovery_agent.execution" in item for item in _oracle_import_violations([candidate], root=tmp_path))
 
 
 def test_oracle_evaluates_fixture_expectations_only() -> None:

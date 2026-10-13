@@ -16,20 +16,90 @@
     "production_behavior_modified"
   ],
   "properties": {
-    "schema_version": {"const": "runtime.ffmpeg_observation.v1"},
-    "observation_id": {"type": "string", "minLength": 1},
-    "executor_instance_id": {"type": "string", "minLength": 1},
-    "sequence": {"type": "integer", "minimum": 1},
-    "observed_at": {"type": "string", "format": "date-time"},
-    "ffmpeg_running": {"type": "boolean"},
-    "ffmpeg_generation": {"type": "string"},
-    "target_snapshot_status": {"enum": ["VALID", "UNKNOWN"]},
-    "target_identity": {"type": ["object", "null"]},
-    "runtime_snapshot_status": {"enum": ["VALID", "UNKNOWN"]},
-    "runtime_identity": {"type": ["object", "null"]},
-    "runtime_lifecycle_state": {"type": "string"},
-    "managed_child_cardinality": {"enum": ["0", "1", "2+", "UNKNOWN"]},
-    "maintenance_evidence_status": {"enum": ["AVAILABLE", "UNKNOWN", "STALE", "INVALID"]},
-    "production_behavior_modified": {"const": false}
+    "schema_version": {
+      "const": "runtime.ffmpeg_observation.v1"
+    },
+    "observation_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "executor_instance_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sequence": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "observed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "ffmpeg_running": {
+      "type": "boolean"
+    },
+    "ffmpeg_generation": {
+      "type": "string"
+    },
+    "target_snapshot_status": {
+      "enum": [
+        "VALID",
+        "UNKNOWN"
+      ]
+    },
+    "target_identity": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "runtime_snapshot_status": {
+      "enum": [
+        "VALID",
+        "UNKNOWN"
+      ]
+    },
+    "runtime_identity": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "runtime_lifecycle_state": {
+      "type": "string"
+    },
+    "managed_child_cardinality": {
+      "enum": [
+        "0",
+        "1",
+        "2+",
+        "UNKNOWN"
+      ]
+    },
+    "maintenance_evidence_status": {
+      "enum": [
+        "AVAILABLE",
+        "UNKNOWN",
+        "STALE",
+        "INVALID"
+      ]
+    },
+    "production_behavior_modified": {
+      "const": false
+    },
+    "local_encoder_pid": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "delivery_route": {
+      "enum": [
+        "PRIMARY",
+        "FALLBACK"
+      ]
+    },
+    "delivery_route_generation": {
+      "type": "integer",
+      "minimum": 1
+    }
   }
 }

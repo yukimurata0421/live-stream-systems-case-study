@@ -1,0 +1,8 @@
+{
+  "runtime": "/run/stream-control/runtime-observation.json",
+  "transport": "/var/lib/stream-control/controller/runtime/ffmpeg_transport_latest.json",
+  "anchors": "/var/lib/stream-network-observer/persistent_tcp_anchor_observer_latest.json",
+  "wan": "/var/lib/stream-network-observer/wan_address_observer_latest.json",
+  "maintenance": "/var/lib/stream-control/projection/maintenance-snapshot.json",
+  "relay_ssh_alias": "relay-host"
+}

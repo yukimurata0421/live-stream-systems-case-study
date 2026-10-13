@@ -139,10 +139,7 @@ def test_real_kernel_unreaped_exit_returns_empty_cmdline(
     owner.config["evidence_schema"] = "runtime.recovery_evidence.v3"
     managed = subprocess.Popen(
         ["ffmpeg", "-c", "import sys; sys.stdin.read(1)", "-rw_timeout", "15000000", "rtmps://test.invalid/unused"],
-        executable=sys.executable,
-        stdin=subprocess.PIPE,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
+        executable=sys.executable, stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
         env={"FR_FFMPEG_FORCE_KILL_ENABLED": "1", "FFMPEG_RW_TIMEOUT_ENABLED": "1"},
     )
     auxiliary = None
@@ -201,10 +198,8 @@ def test_real_kernel_unreaped_exit_returns_empty_cmdline(
                 nonlocal fired
                 source = original_open(path, *args, **kwargs)
                 if (
-                    not fired
-                    and path == Path("/proc") / str(retired.pid) / "cmdline"
-                    and owner._read_stage == stage
-                    and owner._read_diagnostics["proc_scan_attempt_count"] == context
+                    not fired and path == Path("/proc") / str(retired.pid) / "cmdline"
+                    and owner._read_stage == stage and owner._read_diagnostics["proc_scan_attempt_count"] == context
                 ):
                     fired = True
                     return ProcFile(source, retired)
@@ -215,14 +210,10 @@ def test_real_kernel_unreaped_exit_returns_empty_cmdline(
             after = owner.publish()
             durations.append(time.monotonic() - started)
             observed = {
-                "triggered": fired,
-                "kernel_read_bytes": lengths[-1] if lengths else None,
-                "state": after["lifecycle"]["state"],
-                "same_target": after["target_identity"] == before["target_identity"],
-                "target": after["target_identity"],
-                "retries": after["lifecycle"]["read_diagnostics"]["proc_scan_retry_count"],
-                "physical_attempts": after["effects"]["physical_attempt_count"],
-                "native_cycles": len(durations),
+                "triggered": fired, "kernel_read_bytes": lengths[-1] if lengths else None,
+                "state": after["lifecycle"]["state"], "same_target": after["target_identity"] == before["target_identity"],
+                "target": after["target_identity"], "retries": after["lifecycle"]["read_diagnostics"]["proc_scan_retry_count"],
+                "physical_attempts": after["effects"]["physical_attempt_count"], "native_cycles": len(durations),
                 "maximum_cycle_seconds": max(durations),
             }
             assert fired and observed["kernel_read_bytes"] == 0, observed
@@ -272,9 +263,7 @@ def test_empty_cmdline_never_bypasses_identity_or_read_failure(
     def opened(path: Path, *args: Any, **kwargs: Any) -> Any:
         nonlocal fired
         if (
-            not fired
-            and path == owner.proc_root / "124/cmdline"
-            and owner._read_stage == stage
+            not fired and path == owner.proc_root / "124/cmdline" and owner._read_stage == stage
             and owner._read_diagnostics["proc_scan_attempt_count"] == context
         ):
             fired = True
@@ -284,11 +273,8 @@ def test_empty_cmdline_never_bypasses_identity_or_read_failure(
                 return io.BytesIO(b"x" * (128 * 1024 + 1))
             if fault != "live-empty":
                 stat = owner.proc_root / "124/stat"
-                stat.write_text(
-                    f"124 (probe-helper) Z {1 if fault == 'reparent' else os.getpid()} "
-                    + "0 " * 17
-                    + ("101 0\n" if fault == "pid-reuse" else "100 0\n")
-                )
+                stat.write_text(f"124 (probe-helper) Z {1 if fault == 'reparent' else os.getpid()} " + "0 " * 17
+                                + ("101 0\n" if fault == "pid-reuse" else "100 0\n"))
             if fault == "managed-exit":
                 child(owner, process, absent=True)
             if fault == "owner-reuse":
@@ -306,13 +292,8 @@ def test_empty_cmdline_never_bypasses_identity_or_read_failure(
     monkeypatch.setattr(owner, "_proc_stat", stat)
     after = owner.publish()
     diag = after["lifecycle"]["read_diagnostics"]
-    observed = {
-        "triggered": fired,
-        "state": after["lifecycle"]["state"],
-        "target": after["target_identity"],
-        "retries": diag["proc_scan_retry_count"],
-        "physical_attempts": after["effects"]["physical_attempt_count"],
-    }
+    observed = {"triggered": fired, "state": after["lifecycle"]["state"], "target": after["target_identity"],
+                "retries": diag["proc_scan_retry_count"], "physical_attempts": after["effects"]["physical_attempt_count"]}
     record_property("cra_evidence", json.dumps(observed))
     assert fired and observed["state"] != "RUNNING", observed
     assert observed["target"] is None and observed["physical_attempts"] == 0
@@ -358,14 +339,9 @@ def test_empty_cmdline_reobservation_remains_bounded_and_fresh(
         monkeypatch.setattr(module, "PROC_SCAN_SECONDS", 0.0)
     after = owner.publish()
     diag = after["lifecycle"]["read_diagnostics"]
-    observed = {
-        "triggered": fired,
-        "state": after["lifecycle"]["state"],
-        "attempts": diag["proc_scan_attempt_count"],
-        "retries": diag["proc_scan_retry_count"],
-        "rw_timeout": after["activation"]["rw_timeout_enabled"],
-        "physical_attempts": after["effects"]["physical_attempt_count"],
-    }
+    observed = {"triggered": fired, "state": after["lifecycle"]["state"], "attempts": diag["proc_scan_attempt_count"],
+                "retries": diag["proc_scan_retry_count"], "rw_timeout": after["activation"]["rw_timeout_enabled"],
+                "physical_attempts": after["effects"]["physical_attempt_count"]}
     record_property("cra_evidence", json.dumps(observed))
     assert fired and observed["physical_attempts"] == 0
     assert diag["proc_scan_attempt_count"] <= 6 and diag["proc_scan_retry_count"] <= 4

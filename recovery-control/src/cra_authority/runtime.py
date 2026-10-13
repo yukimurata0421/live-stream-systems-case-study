@@ -25,7 +25,8 @@ from cra_authority.no_action_store import NoActionCentralStore
 from cra_authority.retention import SignedNoActionArchive, load_archive_private_key
 from cra_dell_recovery.canonical import KeyRing
 from cra_dell_recovery.release_identity import require_runtime_release
-from cra_dell_recovery.time import isoformat_utc, utc_now
+from cra_dell_recovery.sqlite import production_sqlite_gate
+from cra_dell_recovery.time import isoformat_utc, parse_utc, utc_now
 
 
 def _file_size(path: Path) -> int:
@@ -164,18 +165,18 @@ class RuntimeConfig:
         optional_v2 = {"event_file", "heartbeat_interval_seconds", "retention"}
         if frozenset(raw) not in {frozenset(required), frozenset(required | optional_v2)}:
             raise ValueError(f"CRA config fields must be exact: {sorted(required)}")
-        if raw["schema"] not in {"cra.runtime.v1", "cra.runtime.v2"}:
+        if raw["schema"] not in {"cra.runtime.v1", "cra.runtime.v2", "cra.runtime.v3"}:
             raise ValueError("unsupported CRA runtime config schema")
         if raw["schema"] == "cra.runtime.v1" and set(raw) != required:
             raise ValueError("cra.runtime.v1 does not accept v2 fields")
-        if raw["schema"] == "cra.runtime.v2" and set(raw) != required | optional_v2:
-            raise ValueError("cra.runtime.v2 fields are not exact")
+        if raw["schema"] in {"cra.runtime.v2", "cra.runtime.v3"} and set(raw) != required | optional_v2:
+            raise ValueError(f"{raw['schema']} fields are not exact")
         if raw["operating_mode"] != "NO_ACTION":
             raise ValueError("this release is fail-closed to NO_ACTION")
         _required_string(raw["runtime_release_id"], field="runtime_release_id")
         require_runtime_release(raw["runtime_release_id"], "CRA_RUNTIME_RELEASE_MISMATCH")
         path_fields = ["database", "migration", "lock_file", "status_file"]
-        if raw["schema"] == "cra.runtime.v2":
+        if raw["schema"] in {"cra.runtime.v2", "cra.runtime.v3"}:
             path_fields.append("event_file")
         paths = {field: _required_path(raw[field], field=field) for field in path_fields}
         _required_string(raw["target_id"], field="target_id")
@@ -183,18 +184,24 @@ class RuntimeConfig:
             if "releases" in paths[state_field].parts:
                 raise ValueError(f"CRA_RELEASE_SCOPED_STATE_FORBIDDEN:{state_field}")
         _finite_number(raw["cycle_interval_seconds"], field="cycle_interval_seconds", minimum=0.1, maximum=300)
-        if raw["schema"] == "cra.runtime.v2":
+        if raw["schema"] in {"cra.runtime.v2", "cra.runtime.v3"}:
             _finite_number(raw["heartbeat_interval_seconds"], field="heartbeat_interval_seconds", minimum=10, maximum=3600)
             retention = raw["retention"]
-            if not isinstance(retention, dict) or set(retention) != {
+            retention_v2 = {
                 "archive_database",
                 "archive_signing_private_key",
                 "archive_key_id",
                 "retain_decision_count",
                 "compact_interval_seconds",
-            }:
+            }
+            retention_v3 = retention_v2 | {
+                "archive_integrity_status_file",
+                "archive_integrity_maximum_age_seconds",
+            }
+            expected_retention = retention_v3 if raw["schema"] == "cra.runtime.v3" else retention_v2
+            if not isinstance(retention, dict) or set(retention) != expected_retention:
                 raise ValueError("retention config fields are not exact")
-            _required_path(retention["archive_database"], field="retention.archive_database")
+            archive_database = _required_path(retention["archive_database"], field="retention.archive_database")
             _required_path(retention["archive_signing_private_key"], field="retention.archive_signing_private_key")
             _required_string(retention["archive_key_id"], field="retention.archive_key_id")
             _bounded_integer(
@@ -209,6 +216,21 @@ class RuntimeConfig:
                 minimum=10,
                 maximum=86400,
             )
+            if raw["schema"] == "cra.runtime.v3":
+                integrity_status = _required_path(
+                    retention["archive_integrity_status_file"],
+                    field="retention.archive_integrity_status_file",
+                )
+                if raw["runtime_release_id"] not in integrity_status.parts:
+                    raise ValueError("CRA_ARCHIVE_INTEGRITY_STATUS_NOT_RELEASE_SCOPED")
+                if integrity_status == archive_database:
+                    raise ValueError("CRA_ARCHIVE_INTEGRITY_STATUS_PATH_CONFLICT")
+                _finite_number(
+                    retention["archive_integrity_maximum_age_seconds"],
+                    field="retention.archive_integrity_maximum_age_seconds",
+                    minimum=60,
+                    maximum=86400,
+                )
         monitoring = raw["monitoring"]
         if not isinstance(monitoring, dict) or set(monitoring) != {
             "projection_file",
@@ -335,7 +357,7 @@ class CraNoActionRuntime:
         self._last_event_at = 0.0
         self._last_event_fingerprint = ""
         self._event_sequence = 0
-        if value["schema"] == "cra.runtime.v2":
+        if value["schema"] in {"cra.runtime.v2", "cra.runtime.v3"}:
             retention = dict(value["retention"])
             self.archive = SignedNoActionArchive(
                 Path(retention["archive_database"]),
@@ -364,7 +386,7 @@ class CraNoActionRuntime:
             "physical_effect_count": 0,
             "command_delivery_enabled": False,
         }
-        retention_status = self._retention_status()
+        retention_status, retention_blocker = self._retention_status()
         if retention_status is not None:
             base["retention"] = retention_status
         try:
@@ -424,12 +446,136 @@ class CraNoActionRuntime:
                 },
                 "incident_state": "UNKNOWN",
             }
+        if retention_blocker is not None:
+            status["readiness"] = "SAFE_BLOCKED"
+            status["policy_decision"] = "NO_ACTION"
+            status["policy_blockers"] = list(dict.fromkeys([*status["policy_blockers"], retention_blocker]))
+            status["policy_action"] = None
+            status["policy_decision_reason_code"] = retention_blocker
+            status["policy_reason_code"] = retention_blocker
+            status["policy_decision_digest"] = ""
+            status["policy_reason_binding"] = "UNAVAILABLE"
         status["process_cpu_seconds"] = round(time.process_time(), 6)
         _atomic_json(Path(self.config.value["status_file"]), status)
         self._emit_event(status)
         return status
 
-    def _retention_status(self) -> dict[str, Any] | None:
+    @staticmethod
+    def _archive_identity(path: Path) -> tuple[int, int]:
+        descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+        try:
+            metadata = os.fstat(descriptor)
+            if not stat.S_ISREG(metadata.st_mode):
+                raise ValueError("CRA_ARCHIVE_DATABASE_NOT_REGULAR_FILE")
+            return int(metadata.st_dev), int(metadata.st_ino)
+        finally:
+            os.close(descriptor)
+
+    def _external_archive_status(self, retention: dict[str, Any]) -> dict[str, Any]:
+        path = Path(retention["archive_integrity_status_file"])
+        value = load_object(_secure_read(path, maximum_bytes=64 * 1024), maximum_bytes=64 * 1024)
+        if not isinstance(value, dict):
+            raise ValueError("CRA_ARCHIVE_INTEGRITY_STATUS_NOT_OBJECT")
+        common = {
+            "schema",
+            "runtime_release_id",
+            "archive_database",
+            "started_at",
+            "status",
+            "reason_code",
+            "checked_at",
+            "duration_seconds",
+            "check_mode",
+        }
+        passed = common | {
+            "archive_device",
+            "archive_inode",
+            "archive_record_count",
+            "archive_record_high_water",
+            "archive_checkpoint_count",
+            "archive_database_bytes",
+            "archive_wal_bytes",
+            "archive_shm_bytes",
+            "archive_sqlite_total_bytes",
+            "archive_quick_check",
+            "archive_integrity_check",
+            "archive_journal_mode",
+            "sqlite_version",
+        }
+        expected = passed if value.get("status") == "PASS" else common
+        if set(value) != expected:
+            raise ValueError("CRA_ARCHIVE_INTEGRITY_STATUS_FIELDS_NOT_EXACT")
+        if value["schema"] != "cra.archive_integrity_status.v1":
+            raise ValueError("CRA_ARCHIVE_INTEGRITY_STATUS_SCHEMA_UNSUPPORTED")
+        if value["runtime_release_id"] != self.config.value["runtime_release_id"]:
+            raise ValueError("CRA_ARCHIVE_INTEGRITY_STATUS_RELEASE_MISMATCH")
+        if value["archive_database"] != retention["archive_database"]:
+            raise ValueError("CRA_ARCHIVE_INTEGRITY_STATUS_DATABASE_MISMATCH")
+        if value["check_mode"] != "EXTERNAL_FULL":
+            raise ValueError("CRA_ARCHIVE_INTEGRITY_STATUS_MODE_INVALID")
+        _required_string(value["reason_code"], field="archive_integrity.reason_code")
+        duration = _finite_number(
+            value["duration_seconds"], field="archive_integrity.duration_seconds", minimum=0, maximum=900
+        )
+        checked_at = parse_utc(_required_string(value["checked_at"], field="archive_integrity.checked_at"))
+        started_at = parse_utc(_required_string(value["started_at"], field="archive_integrity.started_at"))
+        if started_at > checked_at:
+            raise ValueError("CRA_ARCHIVE_INTEGRITY_STATUS_TIME_ORDER_INVALID")
+        age = (utc_now() - checked_at).total_seconds()
+        if age < -1:
+            raise ValueError("CRA_ARCHIVE_INTEGRITY_STATUS_FROM_FUTURE")
+        if age > float(retention["archive_integrity_maximum_age_seconds"]):
+            raise ValueError("CRA_ARCHIVE_INTEGRITY_STATUS_STALE")
+        if value["status"] != "PASS":
+            raise ValueError(f"CRA_ARCHIVE_INTEGRITY_STATUS_REPORTED_{value['reason_code']}")
+        for field in (
+            "archive_device",
+            "archive_inode",
+            "archive_record_count",
+            "archive_record_high_water",
+            "archive_checkpoint_count",
+            "archive_database_bytes",
+            "archive_wal_bytes",
+            "archive_shm_bytes",
+            "archive_sqlite_total_bytes",
+        ):
+            if isinstance(value[field], bool) or not isinstance(value[field], int) or value[field] < 0:
+                raise ValueError(f"CRA_ARCHIVE_INTEGRITY_STATUS_INTEGER_INVALID:{field}")
+        if value["archive_record_high_water"] < value["archive_record_count"]:
+            raise ValueError("CRA_ARCHIVE_INTEGRITY_STATUS_RECORD_RANGE_INVALID")
+        if value["archive_sqlite_total_bytes"] != sum(
+            value[field] for field in ("archive_database_bytes", "archive_wal_bytes", "archive_shm_bytes")
+        ):
+            raise ValueError("CRA_ARCHIVE_INTEGRITY_STATUS_SIZE_RELATION_INVALID")
+        if value["archive_quick_check"] != "ok" or value["archive_integrity_check"] != "ok":
+            raise ValueError("CRA_ARCHIVE_INTEGRITY_STATUS_CHECK_FAILED")
+        if value["archive_journal_mode"] != "wal":
+            raise ValueError("CRA_ARCHIVE_INTEGRITY_STATUS_JOURNAL_MODE_INVALID")
+        if not production_sqlite_gate(_required_string(value["sqlite_version"], field="archive_integrity.sqlite_version")):
+            raise ValueError("CRA_ARCHIVE_INTEGRITY_STATUS_SQLITE_VERSION_UNSUPPORTED")
+        device, inode = self._archive_identity(Path(retention["archive_database"]))
+        if (value["archive_device"], value["archive_inode"]) != (device, inode):
+            raise ValueError("CRA_ARCHIVE_INTEGRITY_STATUS_DATABASE_IDENTITY_MISMATCH")
+        return {
+            "archive_record_count": value["archive_record_count"],
+            "archive_checkpoint_count": value["archive_checkpoint_count"],
+            "archive_database_bytes": value["archive_database_bytes"],
+            "archive_wal_bytes": value["archive_wal_bytes"],
+            "archive_shm_bytes": value["archive_shm_bytes"],
+            "archive_sqlite_total_bytes": value["archive_sqlite_total_bytes"],
+            "archive_quick_check": value["archive_quick_check"],
+            "archive_integrity_check": value["archive_integrity_check"],
+            "archive_integrity_check_mode": "EXTERNAL_CACHED",
+            "archive_integrity_checked_at": value["checked_at"],
+            "archive_integrity_check_duration_seconds": duration,
+            "archive_integrity_status_age_seconds": round(max(0.0, age), 3),
+            "archive_integrity_status_release_id": value["runtime_release_id"],
+            "archive_integrity_database_device": device,
+            "archive_integrity_database_inode": inode,
+            "archive_integrity_sqlite_version": value["sqlite_version"],
+        }
+
+    def _retention_status(self) -> tuple[dict[str, Any] | None, str | None]:
         # Maintenance can block on SQLite/filesystem work. Finish it before
         # acquiring the projection whose freshness the status will assert.
         if self.archive is not None:
@@ -441,22 +587,46 @@ class CraNoActionRuntime:
                     retain_decision_count=int(retention["retain_decision_count"]),
                 )
                 self._last_compaction = current_monotonic
-            full_integrity = current_monotonic - self._last_archive_integrity_check >= 3600
-            archive_status = self.archive.status(full_integrity=full_integrity)
-            if archive_status["archive_integrity_check_mode"] == "FULL":
-                self._last_archive_integrity_check = current_monotonic
+            blocker: str | None = None
+            if self.config.value["schema"] == "cra.runtime.v3":
+                try:
+                    archive_status = self._external_archive_status(retention)
+                except Exception as exc:
+                    blocker = f"ARCHIVE_INTEGRITY_STATUS_INVALID:{_error_reason_code(exc)}"[:240]
+                    archive_database = Path(retention["archive_database"])
+                    archive_database_bytes = _file_size(archive_database)
+                    archive_wal_bytes = _file_size(archive_database.with_name(f"{archive_database.name}-wal"))
+                    archive_shm_bytes = _file_size(archive_database.with_name(f"{archive_database.name}-shm"))
+                    archive_status = {
+                        "archive_record_count": 0,
+                        "archive_checkpoint_count": 0,
+                        "archive_database_bytes": archive_database_bytes,
+                        "archive_wal_bytes": archive_wal_bytes,
+                        "archive_shm_bytes": archive_shm_bytes,
+                        "archive_sqlite_total_bytes": archive_database_bytes + archive_wal_bytes + archive_shm_bytes,
+                        "archive_quick_check": "unknown",
+                        "archive_integrity_check": "unknown",
+                        "archive_integrity_check_mode": "EXTERNAL_INVALID",
+                        "archive_integrity_checked_at": None,
+                        "archive_integrity_reason_code": blocker,
+                    }
+            else:
+                full_integrity = current_monotonic - self._last_archive_integrity_check >= 3600
+                archive_status = self.archive.status(full_integrity=full_integrity)
+                if archive_status["archive_integrity_check_mode"] == "FULL":
+                    self._last_archive_integrity_check = current_monotonic
             hot_database = Path(self.config.value["database"])
             hot_database_bytes = _file_size(hot_database)
             hot_wal_bytes = _file_size(hot_database.with_name(f"{hot_database.name}-wal"))
             hot_shm_bytes = _file_size(hot_database.with_name(f"{hot_database.name}-shm"))
-            return {
+            return ({
                 **archive_status,
                 "hot_database_bytes": hot_database_bytes,
                 "hot_wal_bytes": hot_wal_bytes,
                 "hot_shm_bytes": hot_shm_bytes,
                 "hot_sqlite_total_bytes": hot_database_bytes + hot_wal_bytes + hot_shm_bytes,
-            }
-        return None
+            }, blocker)
+        return None, None
 
     def _emit_event(self, status: dict[str, Any]) -> None:
         if self.config.value["schema"] == "cra.runtime.v1":

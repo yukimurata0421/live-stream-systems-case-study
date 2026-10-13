@@ -104,7 +104,7 @@ class EffectLedger:
                 producer_id TEXT NOT NULL,
                 producer_generation INTEGER NOT NULL,
                 intent_type TEXT NOT NULL CHECK(intent_type IN (
-                    'RESTART_FFMPEG','RECONCILE_FFMPEG','ESCALATE_RUNTIME_RECOVERY'
+                    'RESTART_FFMPEG','RECONCILE_FFMPEG','ESCALATE_RUNTIME_RECOVERY','SWITCH_STREAM_ROUTE'
                 )),
                 operation TEXT NOT NULL,
                 failure_domain TEXT NOT NULL,
@@ -191,6 +191,7 @@ class EffectLedger:
             """,
             (producer_id, generation, now_text()),
         )
+        self._migrate_route_request_constraint()
         self._backfill_effect_scope_fences()
         self._backfill_logical_generation_scopes()
         self.connection.execute(
@@ -198,6 +199,29 @@ class EffectLedger:
                ON effect_scope_fences(logical_generation_scope_id)
                WHERE logical_generation_scope_id IS NOT NULL"""
         )
+
+    def _migrate_route_request_constraint(self) -> None:
+        """既存request/fence履歴を保持したままtyped enumだけを拡張する。"""
+        sql = self.connection.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='typed_effect_requests'").fetchone()[0]
+        if "SWITCH_STREAM_ROUTE" in sql:
+            return
+        sql = sql.replace("'ESCALATE_RUNTIME_RECOVERY'", "'ESCALATE_RUNTIME_RECOVERY','SWITCH_STREAM_ROUTE'")
+        self.connection.execute("BEGIN EXCLUSIVE")
+        try:
+            before = self.connection.execute("SELECT * FROM typed_effect_requests ORDER BY request_id").fetchall()
+            self.connection.execute("ALTER TABLE typed_effect_requests RENAME TO typed_effect_requests_route_migration")
+            self.connection.execute(sql)
+            self.connection.execute("INSERT INTO typed_effect_requests SELECT * FROM typed_effect_requests_route_migration")
+            after = self.connection.execute("SELECT * FROM typed_effect_requests ORDER BY request_id").fetchall()
+            if [tuple(row) for row in before] != [tuple(row) for row in after]:
+                raise RuntimeError("ROUTE_LEDGER_MIGRATION_HISTORY_MISMATCH")
+            self.connection.execute("DROP TABLE typed_effect_requests_route_migration")
+            self.connection.execute("CREATE INDEX typed_effect_requests_state_idx ON typed_effect_requests(state)")
+            self.connection.execute("CREATE INDEX typed_effect_requests_correlation_id_idx ON typed_effect_requests(correlation_id)")
+            self.connection.execute("COMMIT")
+        except BaseException:
+            self.connection.execute("ROLLBACK")
+            raise
 
     def _backfill_logical_generation_scopes(self) -> None:
         """Fail closed if legacy rows split one generation across multiple PIDs."""
@@ -210,7 +234,7 @@ class EffectLedger:
             """SELECT effect_scope_id,action,identity_json
                FROM effect_scope_fences ORDER BY created_at,effect_scope_id"""
         ):
-            if str(row["action"]) != "restart_ffmpeg":
+            if str(row["action"]) not in {"restart_ffmpeg", "switch_stream_route"}:
                 continue
             try:
                 identity = dict(json.loads(str(row["identity_json"])))
@@ -817,11 +841,10 @@ class EffectLedger:
                     raise ValueError("RECONCILIATION_OWNER_REQUEST_MISMATCH")
                 if str(scope["owner_request_digest"]) != owner_request_digest:
                     raise ValueError("RECONCILIATION_OWNER_DIGEST_MISMATCH")
-                if str(scope["state"]) not in {
-                    "EFFECT_BOUNDARY_REACHED",
-                    "EXECUTION_STARTED",
-                    "OUTCOME_UNKNOWN",
-                }:
+                expected_states = ({"EFFECT_OBSERVED_AWAITING_VERIFICATION"}
+                    if evidence.get("physical_effect_outcome") == "EFFECT_OBSERVED"
+                    else {"EFFECT_BOUNDARY_REACHED", "EXECUTION_STARTED", "OUTCOME_UNKNOWN"})
+                if str(scope["state"]) not in expected_states:
                     raise ValueError("RECONCILIATION_SCOPE_ALREADY_RESOLVED")
                 if int(scope["physical_attempt_count"]) != 1:
                     raise ValueError("TARGET_RETIREMENT_REQUIRES_ONE_PHYSICAL_ATTEMPT")

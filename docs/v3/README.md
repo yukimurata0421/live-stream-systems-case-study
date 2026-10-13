@@ -6,6 +6,21 @@ unqualified current contract describes repository behavior. Monitoring v4 and
 CRA source integration does not itself prove live deployment or production
 authorization.
 
+The current primary media route includes OCI fanout to YouTube and Twitch.
+The 2026-10-13 source update preserves historical measurements and separates
+local validation from live operation and native qualification.
+
+For a first interview pass, use the [short incident stories](../operational-case-studies.md)
+and [dated continuity evidence](../28-day-same-url-sli-case-study.md). The detailed
+contracts below are optional follow-up reading.
+
+## Current OCI And Twitch Contract
+
+- [OCI relay and Twitch](oci-relay-and-twitch.md)
+- [Route network observation and baselines](route-network-observation.md)
+- [Twitch session renewal](twitch-session-renewal.md)
+- [Public source-port record](public-source-port-2026-10-13.md)
+
 ## Documents
 
 - Current contract:

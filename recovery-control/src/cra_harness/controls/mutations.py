@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import Any
+
+from cra_harness.injectors.faults import FaultKind
 
 
 class BrokenMutationAdapter:
@@ -15,8 +18,21 @@ class BrokenMutationAdapter:
         "NC-06": {"restored_pending_replay_count": 1},
     }
 
-    def inject(self, scenario_id: str) -> dict[str, Any]:
+    _FAULT_KINDS = {
+        "NC-01": FaultKind.MUTATE_DUPLICATE_EFFECT,
+        "NC-02": FaultKind.MUTATE_STALE_TARGET_ACCEPTED,
+        "NC-03": FaultKind.MUTATE_EFFECT_BEFORE_DURABLE_ACCEPT,
+        "NC-04": FaultKind.MUTATE_DUAL_AUTHORITY,
+        "NC-05": FaultKind.MUTATE_UNKNOWN_RETRY,
+        "NC-06": FaultKind.MUTATE_RESTORED_PENDING_REPLAY,
+    }
+
+    def inject(self, scenario_id: str, *, receipt: Callable[[FaultKind, str], None] | None = None) -> dict[str, Any]:
         try:
-            return dict(self._OBSERVATIONS[scenario_id])
+            result = dict(self._OBSERVATIONS[scenario_id])
+            kind = self._FAULT_KINDS[scenario_id]
         except KeyError as error:
             raise ValueError(f"unsupported negative control: {scenario_id}") from error
+        if receipt is not None:
+            receipt(kind, "BrokenMutationAdapter.inject")
+        return result

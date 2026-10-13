@@ -31,7 +31,7 @@ def _config(host_id: str, mode: str) -> dict[str, Any]:
     if mode == "serve":
         value.update(
             {
-                "listen_host": "10.1.2.3",
+                "listen_host": "192.0.2.3",
                 "listen_port": 24443,
                 "packets": {role: f"/run/test/{role}.json" for role in roles},
             }
@@ -41,7 +41,7 @@ def _config(host_id: str, mode: str) -> dict[str, Any]:
             {
                 "sources": {
                     role: {
-                        "url": f"https://10.1.2.3:24443{module.ROUTES[role]}",
+                        "url": f"https://192.0.2.3:24443{module.ROUTES[role]}",
                         "output_file": f"/run/test/{role}.json",
                     }
                     for role in roles
@@ -137,11 +137,11 @@ def test_listener_must_be_a_specific_private_ipv4(address: str, monkeypatch: pyt
 @pytest.mark.parametrize(
     "url",
     [
-        "http://10.1.2.3/v1/recovery-facts/dell",
-        "https://10.1.2.3/v1/recovery-facts/arena",
-        "https://10.1.2.3/v1/recovery-facts/dell?fresh=1",
-        "https://user@10.1.2.3/v1/recovery-facts/dell",
-        "https://10.1.2.3/v1/recovery-facts/dell#fragment",
+        "http://192.0.2.3/v1/recovery-facts/dell",
+        "https://192.0.2.3/v1/recovery-facts/arena",
+        "https://192.0.2.3/v1/recovery-facts/dell?fresh=1",
+        "https://user@192.0.2.3/v1/recovery-facts/dell",
+        "https://192.0.2.3/v1/recovery-facts/dell#fragment",
     ],
 )
 def test_pull_url_is_exact_https_role_route_without_metadata(url: str, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -183,9 +183,55 @@ def test_security_inputs_must_be_absolute(field: str, monkeypatch: pytest.Monkey
 
 def test_extra_configuration_field_is_rejected(monkeypatch: pytest.MonkeyPatch) -> None:
     value = copy.deepcopy(_config("dell-stream-runtime", "serve"))
-    value["command_endpoint"] = "https://10.1.2.3/v1/commands"
+    value["command_endpoint"] = "https://192.0.2.3/v1/commands"
     with pytest.raises(ValueError, match="CONFIG_INVALID"):
         _validate(value, monkeypatch)
+
+
+def test_history_profile_requires_fixed_same_peer_routes_and_distinct_paths(monkeypatch: pytest.MonkeyPatch) -> None:
+    serve = _config("dell-stream-runtime", "serve")
+    serve["schema"] = module.HISTORY_SCHEMA
+    serve["histories"] = {"dell": "/run/test/dell-history.jsonl"}
+    _validate(serve, monkeypatch)
+    serve["histories"]["dell"] = serve["packets"]["dell"]
+    with pytest.raises(ValueError, match="HISTORY_PATH_COLLISION"):
+        _validate(serve, monkeypatch)
+
+    pull = _config("arena-monitoring-facts", "pull")
+    pull["schema"] = module.HISTORY_SCHEMA
+    pull["sources"]["dell"].update(
+        history_url="https://192.0.2.3:24443/v1/recovery-history/dell",
+        history_output_file="/run/test/dell-history.jsonl",
+    )
+    _validate(pull, monkeypatch)
+    pull["sources"]["dell"]["history_url"] = "https://192.0.2.4:24443/v1/recovery-history/dell"
+    with pytest.raises(ValueError, match="HISTORY_URL_INVALID"):
+        _validate(pull, monkeypatch)
+
+
+def test_history_page_reaches_retained_packets_beyond_old_tail_scan_limit(tmp_path: Path) -> None:
+    archive = tmp_path / "history.jsonl"
+    with archive.open("w") as stream:
+        for sequence in range(1, 1025):
+            stream.write(json.dumps({"role": "dell", "sequence": sequence, "padding": "x" * 20_000}) + "\n")
+    assert archive.stat().st_size > 16 * 1024 * 1024
+    first = module.history_page(archive, role="dell", after=0)
+    middle = module.history_page(archive, role="dell", after=512)
+    end = module.history_page(archive, role="dell", after=1024)
+    assert [packet["sequence"] for packet in first["packets"]] == list(range(1, 17))
+    assert [packet["sequence"] for packet in middle["packets"]] == list(range(513, 529))
+    assert first["more"] and middle["more"] and not end["more"]
+    assert end["packets"] == []
+
+
+def test_history_page_rejects_missing_sequence_at_requested_position(tmp_path: Path) -> None:
+    archive = tmp_path / "history.jsonl"
+    archive.write_text('::{bad}\n')
+    with pytest.raises(ValueError):
+        module.history_page(archive, role="dell", after=0)
+    archive.write_text('{"role":"dell","sequence":1}\n{"role":"dell","sequence":3}\n')
+    with pytest.raises(ValueError, match="SEQUENCE_GAP"):
+        module.history_page(archive, role="dell", after=1)
 
 
 @pytest.mark.parametrize("packets", [{}, {"unknown": "/run/test/value.json"}, []])
@@ -211,7 +257,7 @@ def test_pull_source_role_mapping_must_match_host_contract(sources: object, monk
         _validate(value, monkeypatch)
 
 
-@pytest.mark.parametrize("source", [None, {}, {"url": "https://10.1.2.3/"}, {"url": "x", "output_file": "x", "extra": 1}])
+@pytest.mark.parametrize("source", [None, {}, {"url": "https://192.0.2.3/"}, {"url": "x", "output_file": "x", "extra": 1}])
 def test_pull_source_entry_has_an_exact_shape(source: object, monkeypatch: pytest.MonkeyPatch) -> None:
     value = _config("arena-monitoring-facts", "pull")
     value["sources"]["dell"] = source

@@ -7,6 +7,8 @@ import ssl
 import urllib.error
 from dataclasses import dataclass
 
+from .errors import EvidenceFreshnessError
+
 RETRYABLE_HTTP_STATUS = frozenset({408, 425, 429, 500, 502, 503, 504})
 RETRYABLE_ERRNOS = frozenset(
     {
@@ -64,6 +66,8 @@ def classify_failure(error: BaseException) -> FailureClassification:
         return FailureClassification("PROTOCOL", f"HTTP_{status}", False)
 
     reason = _unwrap(error)
+    if isinstance(reason, EvidenceFreshnessError):
+        return FailureClassification("OBSERVATION_FRESHNESS", "EVIDENCE_VALIDITY_INSUFFICIENT", True)
     if isinstance(reason, ssl.SSLCertVerificationError):
         return FailureClassification("SECURITY", "TLS_CERTIFICATE_REJECTED", False)
     if isinstance(reason, ssl.SSLEOFError):

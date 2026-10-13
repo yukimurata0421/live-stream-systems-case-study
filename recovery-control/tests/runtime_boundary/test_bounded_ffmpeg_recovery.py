@@ -1,12 +1,15 @@
 from __future__ import annotations
 
+import json
+import os
 import select
 import signal
 import subprocess
 import sys
+import tempfile
 import time
 from collections.abc import Iterator
-from contextlib import contextmanager
+from contextlib import ExitStack, contextmanager
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from types import SimpleNamespace
@@ -15,18 +18,80 @@ from unittest import mock
 
 import pytest
 
-RECOVERY_CONTROL_ROOT = Path(__file__).resolve().parents[2]
-REPOSITORY_CONTAINER = RECOVERY_CONTROL_ROOT.parent
-STREAM_V3_ROOT = REPOSITORY_CONTAINER if (REPOSITORY_CONTAINER / "src" / "stream_v3").is_dir() else REPOSITORY_CONTAINER / "stream_v3"
-STREAM_V3_SRC = STREAM_V3_ROOT / "src"
+STREAM_V3_SRC = Path(__file__).resolve().parents[3] / "stream_v3" / "src"
 if str(STREAM_V3_SRC) not in sys.path:
     sys.path.insert(0, str(STREAM_V3_SRC))
 
 import stream_core.runtime_boundary_entrypoint as runtime_entrypoint  # noqa: E402
+import stream_core.stream_engine as production_stream_engine  # noqa: E402
 from stream_core.runtime_boundary_entrypoint import RuntimeBoundaryStreamEngine  # noqa: E402
 
 from fast_recovery_controller import ack_delivery  # noqa: E402
 from runtime_boundary import OutcomeUnknown  # noqa: E402
+
+
+def run_production_stream_restart_contract(*, exit_code: int, stop_requested_on_exit: bool) -> list[dict[str, Any]]:
+    """Exercise the production StreamEngine loop with only test-owned process objects."""
+    with tempfile.TemporaryDirectory() as temporary:
+        event_log = Path(temporary) / "logs" / "stream_engine_events.jsonl"
+        environment = {
+            "BASE_DIR": temporary,
+            "TEST_MODE": "1",
+            "TEST_OUTPUT": "null",
+            "TEST_OUTPUT_FILE": str(Path(temporary) / "capture.mkv"),
+            "EVENT_LOG_FILE": str(event_log),
+            "RESTART_DELAY_SEC": "0.01",
+            "RUNTIME_HEARTBEAT_SEC": "0.01",
+        }
+        with mock.patch.dict(os.environ, environment, clear=False):
+            config = production_stream_engine.load_config()
+            engine = production_stream_engine.StreamEngine(config)
+
+        process = mock.Mock()
+        process.pid = 43210
+
+        def wait_for_exit(*_args: object, **_kwargs: object) -> int:
+            if stop_requested_on_exit:
+                engine.stop_requested = True
+            return exit_code
+
+        process.wait.side_effect = wait_for_exit
+        capture = mock.Mock()
+        capture.stop.return_value = {}
+
+        def finish_restart_delay(_seconds: float) -> None:
+            engine.stop_requested = True
+
+        with ExitStack() as stack:
+            for method in (
+                "ensure_commands",
+                "assert_systemd_launch",
+                "configure_target_runtime_paths",
+                "ensure_pulse_server",
+                "acquire_single_instance_lock",
+                "acquire_capture_lock",
+                "cleanup_stale_rtmp_ffmpeg",
+                "cleanup_stale_capture_helpers",
+                "assert_rtmp_health_gate",
+                "ensure_x_display",
+                "start_overlay_server",
+                "ensure_virtual_sink",
+                "ensure_local_audio_monitor",
+                "start_browser",
+                "wait_for_render_ready",
+                "emit_startup_restart_context",
+                "audit_self_recovery",
+            ):
+                stack.enter_context(mock.patch.object(engine, method))
+            stack.enter_context(mock.patch.object(engine, "detect_pulse_monitor", return_value="stream_sink.monitor"))
+            stack.enter_context(mock.patch.object(engine, "ensure_capture_helpers_running", return_value=[]))
+            stack.enter_context(mock.patch.object(engine, "start_ffmpeg_stderr_capture", return_value=capture))
+            stack.enter_context(mock.patch.object(engine, "ffmpeg_args", return_value=["ffmpeg-test-owned"]))
+            stack.enter_context(mock.patch.object(engine, "wait_for_ffmpeg_restart_delay", side_effect=finish_restart_delay))
+            stack.enter_context(mock.patch.object(production_stream_engine.subprocess, "Popen", return_value=process))
+            assert engine.run() == 0
+
+        return [json.loads(line) for line in event_log.read_text(encoding="utf-8").splitlines()]
 
 
 class StubbornProcess:
@@ -61,7 +126,7 @@ def request(*, generation: str = "run-1:3:4200") -> SimpleNamespace:
         idempotency_key="request-1",
         expected_ffmpeg_generation=generation,
         target_identity={
-            "host_id": "dell-yuki",
+            "host_id": "delivery-host",
             "host_boot_id": "boot-1",
             "namespace": "stream-v3",
             "pod_uid": "pod-1",
@@ -264,6 +329,23 @@ def test_force_kill_fails_closed_when_pidfd_is_unavailable() -> None:
     assert proc.kill_count == 0
 
 
+def test_reqlox_restart_contract_suppresses_restart_after_explicit_stop() -> None:
+    events = run_production_stream_restart_contract(exit_code=255, stop_requested_on_exit=True)
+
+    assert any(event["event_type"] == "ffmpeg_exited" for event in events)
+    assert not any(event["event_type"] == "ffmpeg_restart_scheduled" for event in events)
+    assert any(event["event_type"] == "engine_stopping" for event in events)
+
+
+@pytest.mark.parametrize("exit_code", [255, 0], ids=["abnormal-exit", "unexpected-clean-exit"])
+def test_continuous_stream_restarts_unexpected_exit_including_zero(exit_code: int) -> None:
+    events = run_production_stream_restart_contract(exit_code=exit_code, stop_requested_on_exit=False)
+
+    scheduled = [event for event in events if event["event_type"] == "ffmpeg_restart_scheduled"]
+    assert len(scheduled) == 1
+    assert scheduled[0]["exit_code"] == exit_code
+
+
 def test_measurement_derived_candidate_reaches_one_bounded_exact_child_effect() -> None:
     start = datetime(2026, 9, 3, tzinfo=UTC)
     state: dict[str, Any] = {}
@@ -277,7 +359,7 @@ def test_measurement_derived_candidate_reaches_one_bounded_exact_child_effect() 
             "protocol_ffmpeg_pid": 4200,
             "ffmpeg_generation": "native-generation",
             "target_identity": {
-                "host_id": "dell-yuki",
+                "host_id": "delivery-host",
                 "host_boot_id": "boot-1",
                 "namespace": "stream-v3",
                 "pod_uid": "pod-1",

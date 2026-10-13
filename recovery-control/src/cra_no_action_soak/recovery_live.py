@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import datetime
 from typing import Any, cast
 
@@ -9,7 +10,7 @@ from cra_dell_recovery.canonical import KeyRing
 from cra_dell_recovery.errors import RecoveryControlError
 from cra_dell_recovery.recovery_history import validate_effect_history
 
-from .recovery_facts import HostBinding, admit_facts, nonnegative_integer, source_fresh, source_hash, timestamp
+from .recovery_facts import AdmissionCache, HostBinding, admit_facts, nonnegative_integer, source_fresh, source_hash, timestamp
 from .recovery_window import Health, RecoveryObservation, RecoveryWindow
 
 
@@ -46,13 +47,27 @@ def observation(
             owner_target = None
     raw_network_episode = network.get("episode")
     network_episode: dict[str, Any] = raw_network_episode if isinstance(raw_network_episode, dict) else {}
+    raw_rtmps_snapshot = transport.get("rtmps_episode")
+    rtmps_snapshot: dict[str, Any] = raw_rtmps_snapshot if isinstance(raw_rtmps_snapshot, dict) else {}
+    raw_rtmps_episode = rtmps_snapshot.get("episode")
+    rtmps_episode: dict[str, Any] = raw_rtmps_episode if isinstance(raw_rtmps_episode, dict) else {}
     platform, control = part("arena", "platform"), part("arena", "control_path")
     safety = part("cra", "safety")
+    # Keep authority domains separate. CRA runtime readiness describes whether
+    # Central can consume its current Monitoring projection; it is not proof
+    # that arena's independently observed control path is down. In particular,
+    # an exact-target transition can make CRA fail closed while the mTLS path
+    # remains reachable. The soak gate evaluates CRA SAFE_BLOCKED duration from
+    # its dedicated cumulative oracle instead of relabelling this fact.
     control_health = health(control, 45)
-    if not source_fresh(safety.get("runtime_observed_at"), now, 45):
-        control_health = "UNKNOWN"
-    elif safety.get("runtime_readiness") != "NO_ACTION_READY" and control_health == "UP":
-        control_health = "DOWN" if safety.get("runtime_readiness") == "SAFE_BLOCKED" else "UNKNOWN"
+    cra_readiness_observed_at = at(safety.get("runtime_observed_at"))
+    cra_readiness: Health = "UNKNOWN"
+    if source_fresh(safety.get("runtime_observed_at"), now, 45):
+        runtime_readiness = safety.get("runtime_readiness")
+        if runtime_readiness == "NO_ACTION_READY":
+            cra_readiness = "UP"
+        elif isinstance(runtime_readiness, str) and runtime_readiness.startswith("SAFE_BLOCKED"):
+            cra_readiness = "DOWN"
     effects = part("dell", "effects")
     unresolved = effects.get("unresolved_scope_count") if source_fresh(effects.get("observed_at"), now, 45) else None
     if unresolved is not None:
@@ -78,6 +93,8 @@ def observation(
         platform_observed_at=at(platform.get("observed_at")),
         platform_stream_id=platform.get("stream_id"),
         control_path=control_health,
+        cra_readiness=cra_readiness,
+        cra_readiness_observed_at=cra_readiness_observed_at,
         unresolved_effect_count=unresolved if nonnegative_integer(unresolved) else None,
         network_episode_id=(network_episode.get("episode_id") if isinstance(network_episode.get("episode_id"), str) else None),
         network_episode_sequence=(network_episode.get("sequence") if nonnegative_integer(network_episode.get("sequence")) else None),
@@ -86,6 +103,22 @@ def observation(
         network_episode_recovered_at=at(network_episode.get("recovered_at")),
         child_lifecycle=(lifecycle.get("state") if lifecycle_fresh else "UNKNOWN" if lifecycle_present else None),
         owner_target=owner_target,
+        rtmps_episode_id=(rtmps_episode.get("episode_id") if isinstance(rtmps_episode.get("episode_id"), str) else None),
+        rtmps_episode_sequence=(rtmps_episode.get("sequence") if nonnegative_integer(rtmps_episode.get("sequence")) else None),
+        rtmps_episode_state=(rtmps_episode.get("state") if rtmps_episode.get("state") in {"ACTIVE", "RECOVERED"} else None),
+        rtmps_episode_classification=(
+            rtmps_episode.get("classification") if isinstance(rtmps_episode.get("classification"), str) else None
+        ),
+        rtmps_episode_started_at=at(rtmps_episode.get("started_at")),
+        rtmps_episode_detected_at=at(rtmps_episode.get("detected_at")),
+        rtmps_episode_recovered_at=at(rtmps_episode.get("recovered_at")),
+        rtmps_episode_target=(rtmps_episode.get("target_sha256") if isinstance(rtmps_episode.get("target_sha256"), str) else None),
+        rtmps_episode_replacement_target=(
+            rtmps_episode.get("replacement_target_sha256") if isinstance(rtmps_episode.get("replacement_target_sha256"), str) else None
+        ),
+        control_path_observed_at=at(control.get("observed_at")),
+        owner_observed_at=at(lifecycle.get("observed_at")) if lifecycle_fresh else None,
+        effects_observed_at=at(effects.get("observed_at")),
     )
 
 
@@ -97,6 +130,8 @@ def advance(
     keys: KeyRing,
     now: datetime,
     history_policy: dict[str, Any] | None = None,
+    replay_step: int = 0,
+    admission_cache: AdmissionCache | None = None,
 ) -> dict[str, Any]:
     expected_fields = {"window", "packet_heads", "integrity_blockers", "source_failure_deltas"}
     if previous is not None and set(previous) != expected_fields:
@@ -115,7 +150,11 @@ def advance(
         if packet is None:
             continue
         try:
-            checked = admit_facts(packet, binding=bindings[role], keys=keys, now=now)
+            checked = (
+                admission_cache.admit(packet, binding=bindings[role], keys=keys, now=now)
+                if admission_cache is not None
+                else admit_facts(packet, binding=bindings[role], keys=keys, now=now)
+            )
         except (ValueError, TypeError, KeyError, RecoveryControlError) as error:
             if str(error) != "RECOVERY_ENVELOPE_STALE":
                 blockers.add(role.upper() + "_SIGNED_EVIDENCE_INVALID")
@@ -145,7 +184,8 @@ def advance(
             )
         except (ValueError, TypeError):
             blockers.add("DELL_EFFECT_HISTORY_INVALID")
-    window.observe(observation(admitted, stream_id=bindings["dell"].stream_id, now=now, history_policy=history_policy))
+    item = observation(admitted, stream_id=bindings["dell"].stream_id, now=now, history_policy=history_policy)
+    window.observe(replace(item, replay_step=replay_step) if replay_step else item)
     window.finish(now)
     return {
         "window": window.checkpoint(),

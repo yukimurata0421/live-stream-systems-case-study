@@ -130,7 +130,7 @@ def effect_safety(
         "history_policy_sha256": history_hash(policy),
         "historical_retired_unknown": historical,
         "unauthorized_effect_count": sum(
-            p not in allowed_producers or op not in {"restart_ffmpeg", "reconcile_ffmpeg"} for p, op in producers
+            p not in allowed_producers or op not in {"restart_ffmpeg", "reconcile_ffmpeg", "switch_stream_route"} for p, op in producers
         ),
         "last_reconciliation": proof,
     }

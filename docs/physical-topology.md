@@ -1,5 +1,13 @@
 # Physical Topology
 
+The primary media route observed on 2026-10-13 JST adds OCI: one Dell encoding
+producer feeds a bounded packet buffer and a single remux sender; OCI forwards
+to independent YouTube and Twitch handlers. The historical home-host source
+and static-publication descriptions below remain relevant, while direct
+Dell-to-YouTube media diagrams describe the earlier route. See the current
+[OCI delivery contract](v3/oci-relay-and-twitch.md) and
+[source-port record](v3/public-source-port-2026-10-13.md).
+
 This page preserves the three-home-host production topology supported by the
 retained v3 evidence: Dell runs delivery, HP ProDesk owns the ADS-B RF/source
 and earlier observability/control path, Raspberry Pi publishes the public-safe

@@ -28,6 +28,7 @@ def test_observation_units_separate_io_and_do_not_touch_old_soak(component: str)
 def test_dell_source_bind_keeps_atomic_replacement_visible() -> None:
     text = next(v for k, v in render("dell", "dell-recovery-test-1234").items() if "-observer-" in k and k.endswith(".service"))
     assert "wan-observer:/run/recovery-inputs/network" in text
+    assert ("/var/lib/stream-recovery-control/tcp-stall/epochs/dell-recovery-test-1234:/run/recovery-inputs/rtmps") in text
     assert "latest.json:" not in text
     assert "ProtectHome=true" in text
 

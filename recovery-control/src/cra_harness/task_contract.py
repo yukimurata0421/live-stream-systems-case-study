@@ -7,6 +7,7 @@ import json
 import re
 import subprocess
 import xml.etree.ElementTree as ET
+from collections.abc import Iterable
 from dataclasses import asdict
 from pathlib import Path
 from typing import Any
@@ -18,6 +19,15 @@ from cra_harness.scenarios.model import InvariantExpectation
 CATALOG = "harness/scenarios/owner_observation_chaos_v1.json"
 REVIEW = "harness/contracts/owner_observation_review.json"
 SPEC = "docs/oracle/04_owner_observation_contract.md"
+CAUSAL_HISTORY_DOCS = (
+    "docs/engineering/causal_history/README.md",
+    "docs/engineering/causal_history/SYSTEM_STATE.md",
+    "docs/engineering/causal_history/ARCHITECTURE.md",
+    "docs/engineering/causal_history/INVARIANTS.md",
+    "docs/engineering/causal_history/FAILURE_LEDGER.md",
+    "docs/engineering/causal_history/CHANGELOG.md",
+    "docs/engineering/causal_history/KNOWN_ASSUMPTIONS.md",
+)
 DOCS = (
     "AGENTS.md",
     ".agents/skills/cra-evidence-workflow/SKILL.md",
@@ -29,12 +39,14 @@ DOCS = (
     SPEC,
     "docs/oracle/05_evidence_lineage_and_restart_domains.md",
     "docs/engineering/harness_trust_model.md",
+    *CAUSAL_HISTORY_DOCS,
     "docs/runbooks/cra_evidence_workflow.md",
     "harness/contracts/evidence_lineage.v1.schema.json",
     "harness/scenarios/cra_evidence_lineage_v1.json",
     CATALOG,
 )
 SEMANTIC_SOURCES = (
+    "src/cra_harness/change_impact.py",
     "src/cra_harness/evidence_lineage.py",
     "src/cra_harness/task_contract.py",
     "src/cra_harness/traceability.py",
@@ -43,9 +55,12 @@ SEMANTIC_SOURCES = (
     "src/cra_harness/observers/evidence.py",
     "src/cra_harness/scenarios/model.py",
     "tools/cra_task.py",
+    "tools/run_change_impact_ci.py",
     "tools/run_owner_observation_chaos.py",
     "tools/run_cra_workflow_eval.py",
+    "tools/verify_owner_trial_read.py",
     "tests/harness/unit/test_task_contract.py",
+    "tests/harness/unit/test_change_impact.py",
     "tests/harness/unit/test_traceability.py",
     "tests/harness/unit/test_verification_gate.py",
 )
@@ -56,6 +71,7 @@ CI_ADAPTERS = (
 )
 COVERAGE_GAP_REASONS = {"INJECTOR_MISSING", "PROCESS_NOT_APPLICABLE", "EVIDENCE_INSUFFICIENT", "IMPLEMENTATION_INCOMPLETE"}
 UNPROVEN = ("real_ffmpeg", "network_recovery", "cra_action", "viewer_recovery", "formal_soak")
+MAX_FOCUSED_CONTEXT_BYTES = 512 * 1024
 
 
 def read(root: Path, relative: str) -> bytes:
@@ -222,18 +238,56 @@ def review_status(root: Path) -> dict[str, Any]:
     return {"classification": "PASS" if valid and not changed else "HOLD", "changed": changed}
 
 
-def prepare(root: Path, output: Path) -> dict[str, Any]:
+def prepare(root: Path, output: Path, *, focus_paths: Iterable[str] = ()) -> dict[str, Any]:
     root = root.resolve()
     if output.exists():
         raise FileExistsError("CONTEXT_OUTPUT_EXISTS")
     # Materialize every input before writing; a missing spec cannot silently fall back to history.
     hashes = source_hashes(root)
-    contents = [(path, read(root, path).decode()) for path in DOCS]
+    focus = tuple(dict.fromkeys(focus_paths))
+    if len(focus) > 8:
+        raise ValueError("CONTEXT_FOCUS_TOO_BROAD")
+    focus_hashes = {path: digest(read(root, path)) for path in focus}
+    machine_assets = {
+        CATALOG,
+        "harness/scenarios/cra_evidence_lineage_v1.json",
+        "harness/contracts/evidence_lineage.v1.schema.json",
+        "docs/oracle/02_oracle_specification.md",
+        "docs/oracle/03_code_and_doc_drift_map.md",
+        "docs/oracle/05_evidence_lineage_and_restart_domains.md",
+    }
+    contents = [(path, read(root, path).decode()) for path in DOCS if not focus or path not in machine_assets]
     head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
     context = "# CRA task context\n\nLocal source only; not live state or mutation authorization.\n"
     context += f"\nRepository: {root}\nGit HEAD: {head}\n"
     for path, content in contents:
         context += f"\n<repository-document path={json.dumps(path)} sha256={json.dumps(hashes[path])}>\n{content}\n</repository-document>\n"
+    if focus:
+        # The large machine assets remain hash-bound but are never presented as full text.
+        from cra_harness.change_impact import POSTMORTEM_PATH, build_index
+
+        index = build_index(root)
+        focus_hashes[POSTMORTEM_PATH] = digest(read(root, POSTMORTEM_PATH))
+        selection = {path: index.get(path, {}) for path in focus}
+        owner = load_catalog(root)
+        selected_cases = {case_id for row in selection.values() for case_id in row.get("owner", [])}
+        bindings = [binding for binding in owner["assurance"]["bindings"] if binding["verification_case_id"] in selected_cases]
+        context += "\n# Focused machine-asset index (excerpts, not complete source files)\n"
+        for path in sorted(machine_assets | {POSTMORTEM_PATH}):
+            sha = hashes.get(path) or focus_hashes.get(path)
+            context += f"<repository-index path={json.dumps(path)} sha256={json.dumps(sha)} />\n"
+        for path, row in selection.items():
+            summary = {
+                key: {"total": len(values), "first": values[:8]}
+                for key, values in row.items()
+            }
+            context += f"\n<focus-path path={json.dumps(path)} sha256={json.dumps(focus_hashes[path])}>\n"
+            context += json.dumps(summary, ensure_ascii=False, sort_keys=True) + "\n</focus-path>\n"
+        context += "\n<repository-excerpt source=\"harness/scenarios/owner_observation_chaos_v1.json\" kind=\"selected-bindings\">\n"
+        context += json.dumps(bindings, ensure_ascii=False, sort_keys=True, indent=2) + "\n</repository-excerpt>\n"
+        context += "Use impact-view --changed-file for the next page of refs; read the named canonical source before changing semantics.\n"
+        if len(context.encode("utf-8")) > MAX_FOCUSED_CONTEXT_BYTES:
+            raise ValueError("CONTEXT_FOCUS_TOO_LARGE:use impact-view and narrower focus paths")
     manifest = {
         "schema": "cra.task_context.v1",
         "root": str(root),
@@ -241,6 +295,8 @@ def prepare(root: Path, output: Path) -> dict[str, Any]:
         "source_hashes": hashes,
         "context_sha256": digest(context.encode()),
         "review": review_status(root),
+        "focus_paths": list(focus),
+        "focus_source_hashes": focus_hashes,
     }
     output.mkdir(parents=True, mode=0o700)
     (output / "context.md").write_text(context, encoding="utf-8")
@@ -255,6 +311,24 @@ def verify_context(root: Path, output: Path) -> list[str]:
         errors.append("CONTEXT_SOURCE_DRIFT")
     if manifest.get("context_sha256") != digest(read(output, "context.md")):
         errors.append("CONTEXT_BODY_DRIFT")
+    focus_hashes = manifest.get("focus_source_hashes", {})
+    focus_paths = manifest.get("focus_paths", [])
+    if (
+        not isinstance(focus_paths, list)
+        or not all(isinstance(path, str) for path in focus_paths)
+        or not isinstance(focus_hashes, dict)
+        or not set(focus_paths).issubset(focus_hashes)
+        or (focus_paths and "harness/scenarios/postmortem_io_v1.json" not in focus_hashes)
+    ):
+        errors.append("CONTEXT_FOCUS_INVALID")
+    else:
+        try:
+            current_focus = {path: digest(read(root, path)) for path in focus_hashes}
+        except (OSError, ValueError, TypeError):
+            errors.append("CONTEXT_FOCUS_SOURCE_MISSING")
+        else:
+            if current_focus != focus_hashes:
+                errors.append("CONTEXT_FOCUS_SOURCE_DRIFT")
     head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
     if manifest.get("git_head") != head:
         errors.append("CONTEXT_REVISION_DRIFT")

@@ -28,6 +28,21 @@ ProDesk readsb -> Beast feed to Dell `delivery-host:30104` -> Dell readsb ->
 Dell modified tar1090 ADS-B JSON -> sanitized proxy -> `stream_v3` MapLibre
 browser rendering.
 
+## Primary Media Route: 2026-10-13 Source Cutoff
+
+Dell owns the NVENC encoding producer, bounded MPEG-TS buffer, and one remux
+sender. The primary sender reaches OCI through an SSH tunnel. OCI owns the
+finite-lease/fresh-input guard and independent YouTube/Twitch forwarding.
+Twitch has a separate durable daily-session owner; its planned break must not
+reset YouTube forwarding. Local loopback ACK is not proof of remote reception.
+
+Read [OCI relay and Twitch](oci-relay-and-twitch.md),
+[route network observation](route-network-observation.md), and
+[Twitch renewal](twitch-session-renewal.md) for current code, historical exercise,
+and explicit qualification limits. The source includes a manually authorized,
+fenced route-transition protocol; automatic failover remains disabled.
+Public policy still supplies no executable production authority.
+
 ## Delivery Owner
 
 - `stream-v3-runtime` deployment
@@ -37,7 +52,7 @@ browser rendering.
 - `fast-recovery-loop` container
 - custom MapLibre rendering, precipitation, and overlay
 - PulseAudio
-- FFmpeg RTMPS ingest
+- FFmpeg encoding producer and one RTMPS remux sender
 - NVIDIA NVENC
 
 ## Retained Monitoring Owner

@@ -12,7 +12,7 @@ from pathlib import Path
 
 SITE_DIR = Path(__file__).resolve().parents[1]
 PUBLIC_DIR = SITE_DIR / "public"
-STATUS_DIR = Path(os.environ.get("STATUS_DIR", str(SITE_DIR.parent / "status"))).expanduser()
+STATUS_DIR = Path(os.environ.get("STATUS_DIR", str(SITE_DIR.parent / "status")))
 
 
 def run_collect() -> None:
@@ -51,6 +51,10 @@ def copy_optional(name: str) -> None:
 def main() -> int:
     run_collect()
     run_reliability_collect()
+    # This fetches an already sanitized artifact; Twitch failure stays separate.
+    subprocess.run([sys.executable,str(SITE_DIR/'scripts/collect_twitch_public.py')],check=True)
+    subprocess.run([sys.executable,str(SITE_DIR/'scripts/collect_relay_public.py')],check=True)
+    subprocess.run([sys.executable,str(SITE_DIR/'scripts/collect_twitch_sli.py')],check=True)
 
     copy_required("stream-v3-prometheus.json")
     copy_required("stream-v3-loki.json")

@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "monitoring_v4.recovery_verification.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "verification_id", "command_id", "incident_id", "target_id",
+    "monitoring_cycle_id", "observed_at", "evidence_fresh_until",
+    "expected_effect", "observed_target", "checks", "verdict", "reason_codes",
+    "evidence_refs", "observation_revision", "policy_revision", "idempotency_key",
+    "payload_sha256"
+  ],
+  "properties": {
+    "schema": {"const": "monitoring_v4.recovery_verification.v1"},
+    "verification_id": {"$ref": "#/$defs/id"},
+    "command_id": {"$ref": "#/$defs/id"},
+    "incident_id": {"$ref": "#/$defs/id"},
+    "target_id": {"type": "string", "minLength": 1, "maxLength": 200},
+    "monitoring_cycle_id": {"$ref": "#/$defs/id"},
+    "observed_at": {"type": "string", "format": "date-time"},
+    "evidence_fresh_until": {"type": "string", "format": "date-time"},
+    "expected_effect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["action", "before_ffmpeg_generation", "require_new_ffmpeg_generation", "require_same_host_boot_id", "require_same_pod_uid"],
+      "properties": {
+        "action": {"const": "restart_ffmpeg"},
+        "before_ffmpeg_generation": {"type": "string", "minLength": 1},
+        "require_new_ffmpeg_generation": {"const": true},
+        "require_same_host_boot_id": {"const": true},
+        "require_same_pod_uid": {"const": true}
+      }
+    },
+    "observed_target": {"$ref": "#/$defs/target_identity"},
+    "checks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stream_engine_ready", "ffmpeg_present", "ffmpeg_generation_changed", "tcp_flow_healthy", "upload_progress_healthy", "external_public_signal", "youtube_state", "startup_gate"],
+      "properties": {
+        "stream_engine_ready": {"$ref": "#/$defs/check"},
+        "ffmpeg_present": {"$ref": "#/$defs/check"},
+        "ffmpeg_generation_changed": {"$ref": "#/$defs/check"},
+        "tcp_flow_healthy": {"$ref": "#/$defs/check"},
+        "upload_progress_healthy": {"$ref": "#/$defs/check"},
+        "external_public_signal": {"$ref": "#/$defs/check"},
+        "youtube_state": {"$ref": "#/$defs/check"},
+        "startup_gate": {"$ref": "#/$defs/check"}
+      }
+    },
+    "verdict": {"enum": ["RECOVERED", "FAILED", "UNKNOWN"]},
+    "reason_codes": {"type": "array", "items": {"$ref": "#/$defs/reason"}, "minItems": 1, "uniqueItems": true},
+    "evidence_refs": {"type": "array", "items": {"$ref": "#/$defs/id"}, "minItems": 1, "uniqueItems": true},
+    "observation_revision": {"$ref": "#/$defs/id"},
+    "policy_revision": {"$ref": "#/$defs/id"},
+    "idempotency_key": {"type": "string", "minLength": 3, "maxLength": 720},
+    "payload_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  },
+  "$defs": {
+    "id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:/-]{0,239}$"},
+    "reason": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]{1,95}$"},
+    "check": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["result", "evidence_ref", "observed_at", "evidence_role"],
+      "properties": {
+        "result": {"enum": ["PASS", "FAIL", "UNKNOWN", "NOT_APPLICABLE"]},
+        "evidence_ref": {"$ref": "#/$defs/id"},
+        "observed_at": {"type": "string", "format": "date-time"},
+        "evidence_role": {"enum": ["current_authoritative", "current_correlated", "supporting", "diagnostic"]}
+      }
+    },
+    "target_identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["host_id", "host_boot_id", "namespace", "pod_uid", "container_name", "container_id", "ffmpeg_generation", "ffmpeg_pid"],
+      "properties": {
+        "host_id": {"type": "string", "minLength": 1},
+        "host_boot_id": {"type": "string", "minLength": 1},
+        "namespace": {"type": "string", "minLength": 1},
+        "pod_uid": {"type": "string", "minLength": 1},
+        "container_name": {"const": "stream-engine"},
+        "container_id": {"type": "string", "minLength": 1},
+        "ffmpeg_generation": {"type": "string", "minLength": 1},
+        "ffmpeg_pid": {"type": "integer", "minimum": 2}
+      }
+    }
+  }
+}

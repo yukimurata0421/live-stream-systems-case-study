@@ -79,11 +79,14 @@ def test_owner_traceability_workflow_is_a_thin_read_only_adapter(
     owner = [(index, tokens) for index, _, tokens in command_steps if "tools/run_owner_observation_chaos.py" in tokens]
     gates = [(index, step, tokens) for index, step, tokens in command_steps if "verification-gate" in tokens]
     adapter_tests = [(index, tokens) for index, _, tokens in command_steps if "tests/harness/unit/test_traceability_ci.py" in tokens]
-    assert len(owner) == len(gates) == len(adapter_tests) == 1
+    impact = [(index, tokens) for index, _, tokens in command_steps if "tools/run_change_impact_ci.py" in tokens]
+    assert len(owner) == len(gates) == len(adapter_tests) == len(impact) == 1
     assert "tests/harness/unit/test_fixed_sqlite_entrypoint.py" in adapter_tests[0][1]
+    assert "tests/harness/unit/test_change_impact.py" in adapter_tests[0][1]
     owner_index, owner_tokens = owner[0]
     gate_index, gate_step, gate_tokens = gates[0]
-    assert adapter_tests[0][0] < owner_index < gate_index
+    assert adapter_tests[0][0] < impact[0][0] < owner_index < gate_index
+    assert impact[0][1] == ["PYTHONPATH=src:.", "python", "tools/run_change_impact_ci.py"]
     owner_output = owner_tokens[owner_tokens.index("--output") + 1]
     assert gate_tokens[:3] == ["PYTHONPATH=src:.", "python", "tools/cra_task.py"]
     assert gate_tokens[gate_tokens.index("--result") + 1] == owner_output

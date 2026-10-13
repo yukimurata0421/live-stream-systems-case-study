@@ -78,6 +78,8 @@ class SignedNoActionArchive:
         os.chmod(path, 0o600)
         self._last_integrity_check = "unknown"
         self._last_integrity_checked_at: str | None = None
+        self._last_quick_check = "unknown"
+        self._last_quick_checked_at: str | None = None
 
     def close(self) -> None:
         self.connection.close()
@@ -195,7 +197,13 @@ class SignedNoActionArchive:
     def status(self, *, full_integrity: bool = False) -> dict[str, Any]:
         record = self.connection.execute("SELECT count(*),coalesce(max(rowid),0) FROM archive_records").fetchone()
         checkpoint = self.connection.execute("SELECT count(*) FROM daily_checkpoints").fetchone()
-        quick_check = str(self.connection.execute("PRAGMA quick_check").fetchone()[0])
+
+        quick_check_mode = "CACHED"
+        if full_integrity or self._last_quick_checked_at is None:
+            self._last_quick_check = str(self.connection.execute("PRAGMA quick_check").fetchone()[0])
+            self._last_quick_checked_at = isoformat_utc(utc_now())
+            quick_check_mode = "FULL"
+
         integrity_mode = "CACHED"
         if full_integrity or self._last_integrity_checked_at is None:
             self._last_integrity_check = str(self.connection.execute("PRAGMA integrity_check").fetchone()[0])
@@ -211,7 +219,7 @@ class SignedNoActionArchive:
             "archive_wal_bytes": wal_bytes,
             "archive_shm_bytes": shm_bytes,
             "archive_sqlite_total_bytes": database_bytes + wal_bytes + shm_bytes,
-            "archive_quick_check": quick_check,
+            "archive_quick_check": self._last_quick_check,
             "archive_integrity_check": self._last_integrity_check,
             "archive_integrity_check_mode": integrity_mode,
             "archive_integrity_checked_at": self._last_integrity_checked_at,

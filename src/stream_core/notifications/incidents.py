@@ -8,11 +8,13 @@ try:
     from stream_core.common.json_io import iter_jsonl, read_json_file
     from stream_core.common.timeutil import parse_utc_ts
     from stream_core.notifications import connectivity_correlation
+    from stream_core.notifications.upload_source import current_upload_source
     from stream_core.notifications.planned_rollout import planned_rollout_context
 except ModuleNotFoundError:
     from common.json_io import iter_jsonl, read_json_file
     from common.timeutil import parse_utc_ts
     from notifications import connectivity_correlation
+    from notifications.upload_source import current_upload_source
     from notifications.planned_rollout import planned_rollout_context
 
 ObservePayload = Callable[[int], tuple[int, dict, str]]
@@ -711,18 +713,30 @@ def operational_reliability_incidents(*, status_file: Path | None, now_ts: int) 
             "audio_source_freshness_unavailable",
             "no_measurement_evidence",
         }
-        if coverage_reasons.intersection(reasons) or any(
+        historical_measurement_gap = bool(coverage_reasons.intersection(reasons) or any(
             "coverage" in reason or "freshness" in reason for reason in reasons
-        ):
+        ))
+        current_upload = current_upload_source(status_file.parent, now_ts) if family == "upload_ceiling" else {}
+        # A rolling historical gap stays UNKNOWN in the formal gate. Its source
+        # recovery incident closes only with sustained independent current evidence.
+        historical_upload_recovered = (
+            family == "upload_ceiling"
+            and current_upload.get("status") == "RECOVERED"
+            and bool(reasons)
+            and set(reasons) <= {"source_freshness_not_met", "upload_source_freshness_unavailable"}
+        )
+        current_upload_failed = family == "upload_ceiling" and current_upload.get("status") in {"FAILED", "UNKNOWN", "RECOVERING"}
+        if (historical_measurement_gap and not historical_upload_recovered) or current_upload_failed:
             results.append(
                 incident(
                     ident=f"reliability:{family}_coverage_or_freshness",
                     severity="warning",
                     component=f"{family}_measurement_coverage",
-                    summary=f"{family} formal measurement is unknown",
+                    summary=("upload current measurement source requires attention" if current_upload_failed else f"{family} formal measurement is unknown"),
                     evidence=(
                         f"reasons={','.join(reasons)} coverage_pct={gate.get('coverage_pct')} "
                         f"freshness_pct={gate.get('source_freshness_pct')}"
+                        + (f" current_source={current_upload.get('status')} current_reason={current_upload.get('reason')}" if current_upload else "")
                     ),
                     recovery_type="measurement_source_recovery",
                     follow_up="source probe と retention gap を直し、SLO値自体は変更しない",

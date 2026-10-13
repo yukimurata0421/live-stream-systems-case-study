@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import hashlib
 import json
 import sqlite3
@@ -11,7 +12,15 @@ import pytest
 
 from cra_authority.recovery_safety import central_safety, query_only
 from cra_dell_recovery.time import isoformat_utc
-from cra_no_action_soak.recovery_facts import network_fact, platform_fact, publication_fact, strict_object, transport_fact, wifi_diagnosis
+from cra_no_action_soak.recovery_facts import (
+    network_fact,
+    platform_fact,
+    publication_fact,
+    rtmps_episode_fact,
+    strict_object,
+    transport_fact,
+    wifi_diagnosis,
+)
 from runtime_boundary.recovery_evidence import effect_safety, runtime_activation
 
 NOW = datetime(2026, 9, 4, tzinfo=UTC)
@@ -98,6 +107,23 @@ def test_healthy_availability_cannot_override_inactive_nodata() -> None:
     assert platform_fact(value, stream_id="stream", expected_video_id="other")["state"] == "UNKNOWN"
 
 
+def test_failed_oauth_observation_is_unknown_not_platform_down() -> None:
+    value = {
+        "healthy": True,
+        "status": "ok",
+        "ingest_connected": True,
+        "oauth_broadcast_id": "expected",
+        "oauth_probe_ok": False,
+        "oauth_healthy": False,
+        "oauth_stream_status": "inactive",
+        "oauth_stream_health_status": "noData",
+        "oauth_checked_ts_utc": AT,
+    }
+    assert platform_fact(value, stream_id="stream", expected_video_id="expected") == {
+        "state": "UNKNOWN", "observed_at": AT, "stream_id": "stream",
+    }
+
+
 def test_missing_platform_source_timestamp_is_not_wrapper_timestamp() -> None:
     value = {
         "video_id": "expected",
@@ -128,6 +154,107 @@ def test_transport_requires_fresh_exact_target_and_acked_bytes() -> None:
     assert transport_fact(target, transport, now=NOW)["bytes_acked"] is None
     transport["ffmpeg_pid"] = 123
     assert transport_fact(target, transport, now=NOW + timedelta(seconds=16))["target"] is None
+
+
+def test_rtmps_episode_snapshot_is_release_boot_time_and_digest_bound() -> None:
+    started = isoformat_utc(NOW - timedelta(seconds=10))
+    target = "a" * 64
+    episode = {
+        "schema": "stream_v3_rtmps_episode/v2",
+        "episode_id": hashlib.sha256(f"boot:1:{started}:{target}".encode()).hexdigest()[:32],
+        "sequence": 1,
+        "producer_instance_id": "runtime-1",
+        "runtime_generation": "generation-1",
+        "host_boot_id": "boot",
+        "pod_uid": "pod-1",
+        "stream_engine_container_id": "containerd://one",
+        "state": "RECOVERED",
+        "classification": "RTMPS_ACK_STALL_FFMPEG_REPLACED",
+        "detection_basis": "ACK_STALL",
+        "trigger_reason_code": "ZERO_ACK_WITH_SEND_PRESSURE",
+        "started_at": started,
+        "detected_at": started,
+        "last_observed_failure_at": started,
+        "recovered_at": AT,
+        "target_sha256": target,
+        "replacement_target_sha256": "b" * 64,
+        "first_collector_sequence": 10,
+        "last_collector_sequence": 12,
+        "zero_ack_interval_count": 1,
+    }
+    snapshot = {
+        "schema": "stream_v3.rtmps_episode_snapshot.v2",
+        "collector_id": "collector-1",
+        "release_id": "release-1",
+        "epoch_id": "release-1",
+        "observed_at": AT,
+        "collector_sequence": 12,
+        "source_status": "VALID",
+        "source_observed_at": AT,
+        "reason_code": "SOURCE_VALID",
+        "episode_sequence": 1,
+        "episode": episode,
+    }
+    binding = {"collector_id": "collector-1", "release_id": "release-1", "epoch_id": "release-1"}
+    assert rtmps_episode_fact(snapshot, binding=binding, host_boot_id="boot", now=NOW)["episode"] == episode
+    future_source = copy.deepcopy(snapshot)
+    future_source["source_observed_at"] = isoformat_utc(NOW + timedelta(seconds=1))
+    with pytest.raises(ValueError, match="SOURCE_TIME_INVALID"):
+        rtmps_episode_fact(future_source, binding=binding, host_boot_id="boot", now=NOW)
+    impossible_sequence = copy.deepcopy(snapshot)
+    impossible_sequence["episode"]["last_collector_sequence"] = 13
+    with pytest.raises(ValueError, match="SEQUENCE_INVALID"):
+        rtmps_episode_fact(impossible_sequence, binding=binding, host_boot_id="boot", now=NOW)
+    snapshot["episode"]["episode_id"] = "0" * 32
+    with pytest.raises(ValueError, match="DIGEST_INVALID"):
+        rtmps_episode_fact(snapshot, binding=binding, host_boot_id="boot", now=NOW)
+
+
+def test_session_loss_episode_is_distinct_from_ack_stall_and_still_strictly_bound() -> None:
+    started = isoformat_utc(NOW - timedelta(seconds=10))
+    before = "a" * 64
+    episode = {
+        "schema": "stream_v3_rtmps_episode/v2",
+        "episode_id": hashlib.sha256(f"boot:1:{started}:{before}".encode()).hexdigest()[:32],
+        "sequence": 1,
+        "producer_instance_id": "runtime-1",
+        "runtime_generation": "generation-1",
+        "host_boot_id": "boot",
+        "pod_uid": "pod-1",
+        "stream_engine_container_id": "containerd://one",
+        "state": "RECOVERED",
+        "classification": "FFMPEG_SESSION_LOSS_FFMPEG_REPLACED",
+        "detection_basis": "SESSION_CONTINUITY_LOSS",
+        "trigger_reason_code": "SOURCE_GENERATION_INVALID",
+        "started_at": started,
+        "detected_at": started,
+        "last_observed_failure_at": started,
+        "recovered_at": AT,
+        "target_sha256": before,
+        "replacement_target_sha256": "b" * 64,
+        "first_collector_sequence": 10,
+        "last_collector_sequence": 12,
+        "zero_ack_interval_count": 0,
+    }
+    snapshot = {
+        "schema": "stream_v3.rtmps_episode_snapshot.v2",
+        "collector_id": "collector-1",
+        "release_id": "release-1",
+        "epoch_id": "release-1",
+        "observed_at": AT,
+        "collector_sequence": 12,
+        "source_status": "VALID",
+        "source_observed_at": AT,
+        "reason_code": "SOURCE_VALID",
+        "episode_sequence": 1,
+        "episode": episode,
+    }
+    binding = {"collector_id": "collector-1", "release_id": "release-1", "epoch_id": "release-1"}
+    assert rtmps_episode_fact(snapshot, binding=binding, host_boot_id="boot", now=NOW)["episode"] == episode
+    invalid = copy.deepcopy(snapshot)
+    invalid["episode"]["zero_ack_interval_count"] = 1
+    with pytest.raises(ValueError, match="STATE_INVALID"):
+        rtmps_episode_fact(invalid, binding=binding, host_boot_id="boot", now=NOW)
 
 
 def test_publication_supports_real_numeric_generated_at_and_separates_mirror() -> None:

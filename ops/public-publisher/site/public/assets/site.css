@@ -324,6 +324,22 @@ h2 {
   background: var(--surface-2);
 }
 
+.reliability-card.ok {
+  box-shadow: inset 0 3px 0 var(--ok);
+}
+
+.reliability-card.warn {
+  box-shadow: inset 0 3px 0 var(--warn);
+}
+
+.reliability-card.bad {
+  box-shadow: inset 0 3px 0 var(--bad);
+}
+
+.reliability-card.unknown {
+  box-shadow: inset 0 3px 0 var(--unknown);
+}
+
 .reliability-head {
   display: flex;
   align-items: flex-start;
@@ -379,6 +395,67 @@ h2 {
   color: var(--subtle);
   font-size: 11px;
   line-height: 1.45;
+}
+
+.active-incident-list {
+  display: grid;
+  gap: 9px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.active-incident-list li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 9px;
+}
+
+.active-incident-list li > div {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.active-incident-list b,
+.active-incident-list code,
+.active-incident-list small {
+  overflow-wrap: anywhere;
+}
+
+.active-incident-list code,
+.active-incident-list small {
+  color: var(--subtle);
+  font-size: 11px;
+}
+
+.incident-severity {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 3px 7px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.incident-severity.critical {
+  border-color: #8b3338;
+  background: var(--bad-bg);
+  color: var(--bad);
+}
+
+.incident-severity.warning {
+  border-color: #8b6e26;
+  background: var(--warn-bg);
+  color: var(--warn);
+}
+
+.incident-severity.info {
+  border-color: #2c7143;
+  background: var(--ok-bg);
+  color: var(--ok);
 }
 
 .trend-grid,

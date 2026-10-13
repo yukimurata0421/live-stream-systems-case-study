@@ -6,12 +6,13 @@ never call an effect socket, invoke a command, or use Pi evidence for control.
 
 from __future__ import annotations
 
+import copy
 import hashlib
 import math
 import re
 from collections.abc import Mapping
-from dataclasses import dataclass
-from datetime import UTC, datetime
+from dataclasses import dataclass, field
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any, TypeGuard
 
@@ -53,6 +54,8 @@ ENVELOPE_FIELDS = {
 ACTION_TABLES = ("commands", "recovery_authorizations", "delivery_attempts", "effect_scope_ledger", "effect_reconciliations")
 NETWORK_EPISODE_SCHEMA = "stream_v3_network_episode/v1"
 NETWORK_EPISODE_ANCHORS = ["cloudflare_v4", "cloudflare_v6", "google_v4", "google_v6"]
+RTMPS_EPISODE_SNAPSHOT_SCHEMA = "stream_v3.rtmps_episode_snapshot.v2"
+RTMPS_EPISODE_SCHEMA = "stream_v3_rtmps_episode/v2"
 
 
 def strict_json_object(raw: bytes) -> dict[str, Any]:
@@ -137,6 +140,15 @@ def sign_facts(
     )
 
 
+def _admit_envelope_window(packet: Mapping[str, Any], *, now: datetime) -> None:
+    observed = timestamp(packet["observed_at"])
+    expires = timestamp(packet["valid_until"])
+    if observed > now or not 0 < (expires - observed).total_seconds() <= 45:
+        raise ValueError("RECOVERY_ENVELOPE_FUTURE_OR_LEASE_INVALID")
+    if now >= expires:
+        raise ValueError("RECOVERY_ENVELOPE_STALE")
+
+
 def admit_facts(packet: dict[str, Any], *, binding: HostBinding, keys: KeyRing, now: datetime) -> dict[str, Any]:
     if set(packet) != ENVELOPE_FIELDS or packet.get("schema") != FACTS_SCHEMA:
         raise ValueError("RECOVERY_ENVELOPE_FIELDS_INVALID")
@@ -144,12 +156,7 @@ def admit_facts(packet: dict[str, Any], *, binding: HostBinding, keys: KeyRing, 
         if packet.get(key) != expected:
             raise ValueError("RECOVERY_HOST_RELEASE_STREAM_BINDING_INVALID")
     keys.verify(packet)
-    observed = timestamp(packet["observed_at"])
-    expires = timestamp(packet["valid_until"])
-    if observed > now or not 0 < (expires - observed).total_seconds() <= 45:
-        raise ValueError("RECOVERY_ENVELOPE_FUTURE_OR_LEASE_INVALID")
-    if now >= expires:
-        raise ValueError("RECOVERY_ENVELOPE_STALE")
+    _admit_envelope_window(packet, now=now)
     if not nonnegative_integer(packet["sequence"]) or packet["sequence"] < 1:
         raise ValueError("RECOVERY_SEQUENCE_INVALID")
     if not nonnegative_integer(packet["source_failure_count"]):
@@ -188,6 +195,20 @@ def admit_facts(packet: dict[str, Any], *, binding: HostBinding, keys: KeyRing, 
             lifecycle = validate_lifecycle(transport["lifecycle"], now=timestamp(packet["observed_at"]), boot_id=packet["host_boot_id"])
             if lifecycle["state"] == "RUNNING" and transport.get("target") not in (None, source_hash(lifecycle["anchor_target"])):
                 raise ValueError("OWNER_LIFECYCLE_TRANSPORT_TARGET_INVALID")
+        if isinstance(transport, dict) and "rtmps_episode" in transport:
+            rtmps = validate_rtmps_episode_fact(
+                transport["rtmps_episode"],
+                host_boot_id=packet["host_boot_id"],
+                now=timestamp(packet["observed_at"]),
+            )
+            episode = rtmps.get("episode")
+            if (
+                isinstance(episode, dict)
+                and episode["state"] == "ACTIVE"
+                and transport.get("target") is not None
+                and transport["target"] != episode["target_sha256"]
+            ):
+                raise ValueError("RECOVERY_RTMPS_EPISODE_TARGET_INVALID")
     hashes = packet["source_hashes"]
     if not isinstance(hashes, dict) or not hashes or len(hashes) > 16:
         raise ValueError("RECOVERY_SOURCE_HASHES_INVALID")
@@ -200,6 +221,33 @@ def admit_facts(packet: dict[str, Any], *, binding: HostBinding, keys: KeyRing, 
     ):
         raise ValueError("RECOVERY_SOURCE_HASHES_INVALID")
     return packet
+
+
+@dataclass
+class AdmissionCache:
+    """Bounded cache for repeated packets in one ordered replay.
+
+    Logical reconstruction presents the same current packet at several event
+    times and through two independent RecoveryWindow instances.  Signature and
+    nested structure validation are static for byte-equivalent content, while
+    the envelope lease is not.  Retain only one packet per role, compare the
+    complete JSON value before every reuse, and always recheck the event-time
+    lease.  A caller mutation or binding/key-ring change therefore takes the
+    full admission path, and memory is bounded by the four source roles.
+    """
+
+    _entries: dict[str, tuple[HostBinding, KeyRing, dict[str, Any]]] = field(default_factory=dict, init=False)
+
+    def admit(self, packet: dict[str, Any], *, binding: HostBinding, keys: KeyRing, now: datetime) -> dict[str, Any]:
+        cached = self._entries.get(binding.role)
+        if cached is not None:
+            cached_binding, cached_keys, frozen = cached
+            if cached_binding == binding and cached_keys is keys and packet == frozen:
+                _admit_envelope_window(packet, now=now)
+                return packet
+        checked = admit_facts(packet, binding=binding, keys=keys, now=now)
+        self._entries[binding.role] = (binding, keys, copy.deepcopy(checked))
+        return checked
 
 
 def network_fact(raw: Mapping[str, Any], *, host_boot_id: str | None = None) -> dict[str, Any]:
@@ -220,11 +268,12 @@ def network_fact(raw: Mapping[str, Any], *, host_boot_id: str | None = None) -> 
     if "network_episode" in raw:
         episode = raw.get("network_episode")
         if episode is not None:
-            episode_boot_id = episode.get("host_boot_id") if isinstance(episode, dict) else ""
-            effective_boot_id = host_boot_id if host_boot_id is not None else episode_boot_id
+            episode_boot_id = host_boot_id
+            if episode_boot_id is None and isinstance(episode, dict) and isinstance(episode.get("host_boot_id"), str):
+                episode_boot_id = episode["host_boot_id"]
             validate_network_episode(
                 episode,
-                host_boot_id=effective_boot_id if isinstance(effective_boot_id, str) else "",
+                host_boot_id=episode_boot_id or "",
                 network_observed_at=raw.get("ts_utc"),
             )
         result["episode"] = episode
@@ -286,6 +335,176 @@ def validate_network_episode(
     ):
         raise ValueError("RECOVERY_NETWORK_EPISODE_TIME_OR_DIGEST_INVALID")
     return value
+
+
+def validate_rtmps_episode(
+    value: object,
+    *,
+    host_boot_id: str,
+    snapshot_observed_at: object,
+) -> dict[str, Any]:
+    fields = {
+        "schema",
+        "episode_id",
+        "sequence",
+        "producer_instance_id",
+        "runtime_generation",
+        "host_boot_id",
+        "pod_uid",
+        "stream_engine_container_id",
+        "state",
+        "classification",
+        "detection_basis",
+        "trigger_reason_code",
+        "started_at",
+        "detected_at",
+        "last_observed_failure_at",
+        "recovered_at",
+        "target_sha256",
+        "replacement_target_sha256",
+        "first_collector_sequence",
+        "last_collector_sequence",
+        "zero_ack_interval_count",
+    }
+    if not isinstance(value, dict) or set(value) != fields or value.get("schema") != RTMPS_EPISODE_SCHEMA:
+        raise ValueError("RECOVERY_RTMPS_EPISODE_FIELDS_INVALID")
+    sequence = value.get("sequence")
+    target = value.get("target_sha256")
+    replacement = value.get("replacement_target_sha256")
+    if (
+        value.get("host_boot_id") != host_boot_id
+        or not nonnegative_integer(sequence)
+        or sequence < 1
+        or not isinstance(target, str)
+        or re.fullmatch(r"[0-9a-f]{64}", target) is None
+        or replacement is not None
+        and (not isinstance(replacement, str) or re.fullmatch(r"[0-9a-f]{64}", replacement) is None)
+        or any(
+            not isinstance(value.get(name), str) or not value[name]
+            for name in ("producer_instance_id", "runtime_generation", "pod_uid", "stream_engine_container_id")
+        )
+        or not nonnegative_integer(value.get("first_collector_sequence"))
+        or not nonnegative_integer(value.get("last_collector_sequence"))
+        or not nonnegative_integer(value.get("zero_ack_interval_count"))
+        or value["first_collector_sequence"] < 1
+        or value["last_collector_sequence"] < value["first_collector_sequence"]
+    ):
+        raise ValueError("RECOVERY_RTMPS_EPISODE_IDENTITY_INVALID")
+    state = value.get("state")
+    classification = value.get("classification")
+    basis = value.get("detection_basis")
+    reason = value.get("trigger_reason_code")
+    recovered_raw = value.get("recovered_at")
+    if (
+        basis not in {"ACK_STALL", "SESSION_CONTINUITY_LOSS"}
+        or not isinstance(reason, str)
+        or re.fullmatch(r"[A-Z][A-Z0-9_]{1,63}", reason) is None
+        or basis == "ACK_STALL"
+        and (value["zero_ack_interval_count"] < 1 or reason != "ZERO_ACK_WITH_SEND_PRESSURE")
+        or basis == "SESSION_CONTINUITY_LOSS"
+        and (value["zero_ack_interval_count"] != 0 or reason == "SOURCE_VALID")
+        or state not in {"ACTIVE", "RECOVERED"}
+        or (state == "ACTIVE") != (recovered_raw is None)
+        or classification
+        not in {
+            "RTMPS_ACK_STALL",
+            "RTMPS_ACK_STALL_FFMPEG_REPLACED",
+            "RTMPS_ACK_STALL_RECOVERED_SAME_TARGET",
+            "FFMPEG_SESSION_LOSS",
+            "FFMPEG_SESSION_LOSS_FFMPEG_REPLACED",
+        }
+        or state == "ACTIVE"
+        and classification != ("RTMPS_ACK_STALL" if basis == "ACK_STALL" else "FFMPEG_SESSION_LOSS")
+        or state == "RECOVERED"
+        and replacement is None
+        or state == "RECOVERED"
+        and basis == "SESSION_CONTINUITY_LOSS"
+        and classification != "FFMPEG_SESSION_LOSS_FFMPEG_REPLACED"
+        or state == "RECOVERED"
+        and basis == "ACK_STALL"
+        and classification not in {"RTMPS_ACK_STALL_FFMPEG_REPLACED", "RTMPS_ACK_STALL_RECOVERED_SAME_TARGET"}
+        or classification in {"RTMPS_ACK_STALL_FFMPEG_REPLACED", "FFMPEG_SESSION_LOSS_FFMPEG_REPLACED"}
+        and replacement == target
+        or classification == "RTMPS_ACK_STALL_RECOVERED_SAME_TARGET"
+        and replacement != target
+    ):
+        raise ValueError("RECOVERY_RTMPS_EPISODE_STATE_INVALID")
+    try:
+        observed = timestamp(snapshot_observed_at)
+        started = timestamp(value.get("started_at"))
+        detected = timestamp(value.get("detected_at"))
+        failed = timestamp(value.get("last_observed_failure_at"))
+        recovered = timestamp(recovered_raw) if recovered_raw is not None else None
+    except (TypeError, ValueError, OverflowError) as error:
+        raise ValueError("RECOVERY_RTMPS_EPISODE_TIME_INVALID") from error
+    episode_id = hashlib.sha256(f"{host_boot_id}:{sequence}:{value['started_at']}:{target}".encode()).hexdigest()[:32]
+    if (
+        not started <= detected <= failed <= observed
+        or recovered is not None
+        and not failed <= recovered <= observed
+        or value.get("episode_id") != episode_id
+    ):
+        raise ValueError("RECOVERY_RTMPS_EPISODE_TIME_OR_DIGEST_INVALID")
+    return value
+
+
+def validate_rtmps_episode_fact(value: object, *, host_boot_id: str, now: datetime) -> dict[str, Any]:
+    fields = {
+        "schema",
+        "collector_id",
+        "release_id",
+        "epoch_id",
+        "observed_at",
+        "collector_sequence",
+        "source_status",
+        "source_observed_at",
+        "reason_code",
+        "episode_sequence",
+        "episode",
+    }
+    if not isinstance(value, dict) or set(value) != fields or value.get("schema") != RTMPS_EPISODE_SNAPSHOT_SCHEMA:
+        raise ValueError("RECOVERY_RTMPS_EPISODE_SNAPSHOT_FIELDS_INVALID")
+    if (
+        any(not isinstance(value.get(name), str) or not value[name] for name in ("collector_id", "release_id", "epoch_id", "reason_code"))
+        or not nonnegative_integer(value.get("collector_sequence"))
+        or value["collector_sequence"] < 1
+        or not nonnegative_integer(value.get("episode_sequence"))
+        or value.get("source_status") not in {"VALID", "STALE", "FUTURE", "UNAVAILABLE", "INVALID"}
+        or not source_fresh(value.get("observed_at"), now, 45)
+    ):
+        raise ValueError("RECOVERY_RTMPS_EPISODE_SNAPSHOT_INVALID")
+    try:
+        observed = timestamp(value["observed_at"])
+        source_observed = timestamp(value["source_observed_at"]) if value.get("source_observed_at") is not None else None
+    except (TypeError, ValueError, OverflowError) as error:
+        raise ValueError("RECOVERY_RTMPS_EPISODE_SOURCE_TIME_INVALID") from error
+    if value["source_status"] == "VALID":
+        if source_observed is None or not timedelta(0) <= observed - source_observed <= timedelta(seconds=45):
+            raise ValueError("RECOVERY_RTMPS_EPISODE_SOURCE_TIME_INVALID")
+    elif source_observed is not None and source_observed > observed:
+        raise ValueError("RECOVERY_RTMPS_EPISODE_SOURCE_TIME_INVALID")
+    episode = value.get("episode")
+    if episode is None:
+        if value["episode_sequence"] != 0:
+            raise ValueError("RECOVERY_RTMPS_EPISODE_SEQUENCE_INVALID")
+    else:
+        checked = validate_rtmps_episode(episode, host_boot_id=host_boot_id, snapshot_observed_at=value["observed_at"])
+        if checked["sequence"] != value["episode_sequence"] or checked["last_collector_sequence"] > value["collector_sequence"]:
+            raise ValueError("RECOVERY_RTMPS_EPISODE_SEQUENCE_INVALID")
+    return value
+
+
+def rtmps_episode_fact(
+    raw: Mapping[str, Any],
+    *,
+    binding: Mapping[str, str],
+    host_boot_id: str,
+    now: datetime,
+) -> dict[str, Any]:
+    checked = validate_rtmps_episode_fact(dict(raw), host_boot_id=host_boot_id, now=now)
+    if any(checked.get(name) != binding.get(name) for name in ("collector_id", "release_id", "epoch_id")):
+        raise ValueError("RECOVERY_RTMPS_EPISODE_BINDING_INVALID")
+    return dict(checked)
 
 
 def transport_fact(target: Mapping[str, Any], transport: Mapping[str, Any], *, now: datetime) -> dict[str, Any]:

@@ -15,6 +15,7 @@ from email.message import Message
 from pathlib import Path
 from typing import Any
 
+from cra_dell_recovery.errors import EvidenceFreshnessError
 from cra_dell_recovery.transport_resilience import FailureClassification, classify_failure
 
 
@@ -52,6 +53,12 @@ FAULTS = (
     Fault("content_type", lambda: ValueError("CONTENT_TYPE_INVALID"), False, "contract"),
     Fault("framing", lambda: ValueError("CONTENT_LENGTH_MISMATCH"), False, "contract"),
     Fault("json", lambda: json.JSONDecodeError("injected", "{", 0), False, "contract"),
+    Fault(
+        "evidence_freshness",
+        lambda: EvidenceFreshnessError("RESILIENT_STATUS_PULL_INSUFFICIENT_EVIDENCE_VALIDITY"),
+        True,
+        "observation_freshness",
+    ),
     Fault("disk_full", lambda: OSError(errno.ENOSPC, "injected"), False, "storage"),
     Fault("sqlite_busy", lambda: OSError(errno.EBUSY, "injected"), False, "storage"),
 )

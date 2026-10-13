@@ -22,6 +22,7 @@ from cra_no_action_soak.resilient_host_status_publisher import (
     _chronyc_uncertainty,
     _clock_status,
     _target_component,
+    _transition_context,
     publish,
 )
 
@@ -63,7 +64,7 @@ def _config(tmp_path: Path, key: Ed25519PrivateKey) -> PublisherConfig:
     value = {
         "role": "dell",
         "host_id": "dell-stream-runtime",
-        "target_source_host_id": "dell-yuki",
+        "target_source_host_id": "delivery-host",
         "release_id": release_id,
         "release_manifest_file": str(identity),
         "runtime_manifest_file": str(identity),
@@ -79,7 +80,7 @@ def _config(tmp_path: Path, key: Ed25519PrivateKey) -> PublisherConfig:
         "credential_files": {"dell_target_observer": str(identity)},
         "signing_private_key_file": str(key_file),
         "key_id": "dell-resilient-key",
-        "resilient_host_status_schema_file": str(ROOT / "contracts/cra_no_action_soak/resilient_host_status.v3.schema.json"),
+        "resilient_host_status_schema_file": str(ROOT / "contracts/cra_no_action_soak/resilient_host_status.v4.schema.json"),
         "output_file": str(tmp_path / "status.json"),
         "state_file": str(tmp_path / "state.json"),
         "transition_journal_file": str(tmp_path / "transitions.jsonl"),
@@ -113,7 +114,7 @@ def test_publisher_emits_fresh_signed_degraded_status_instead_of_going_silent(
     key = Ed25519PrivateKey.from_private_bytes(bytes(range(1, 33)))
     config = _config(tmp_path, key)
     target = {
-        "host_id": "dell-yuki",
+        "host_id": "delivery-host",
         "host_boot_id": "boot-one",
         "namespace": "stream-v3",
         "pod_uid": "pod-one",
@@ -176,14 +177,20 @@ def test_publisher_emits_fresh_signed_degraded_status_instead_of_going_silent(
     ready = publish(config, now=CURRENT)
     observation_state[0] = ComponentStatus("dell_observation", "ERROR", "DELL_OBSERVATION_UNAVAILABLE")
     degraded = publish(config, now=CURRENT + timedelta(seconds=5))
+    observation_state[0] = _fresh("dell_observation")
+    recovered = publish(config, now=CURRENT + timedelta(seconds=10))
 
     assert ready["state"] == "READY"
     assert degraded["state"] == "DEGRADED_SOURCE"
     assert degraded["producer_sequence"] == 2
     assert degraded["last_good"]["present"] is True
     assert degraded["last_good"]["diagnostic_only"] is True
+    assert degraded["transition"]["open_episode_count"] == 0
+    assert recovered["state"] == "READY"
+    assert recovered["transition"]["high_watermark"] == 0
+    assert not Path(config.value["transition_journal_file"]).exists()
     contract = ResilientHostStatusContract(
-        ROOT / "contracts/cra_no_action_soak/resilient_host_status.v3.schema.json",
+        ROOT / "contracts/cra_no_action_soak/resilient_host_status.v4.schema.json",
         KeyRing({"dell-resilient-key": key.public_key()}),
         key_id="dell-resilient-key",
         expected_role="dell",
@@ -201,7 +208,7 @@ def test_publisher_signs_disjoint_source_windows_as_degraded_without_tracking_a_
     config = _config(tmp_path, key)
     report_time = CURRENT + timedelta(seconds=25)
     target = {
-        "host_id": "dell-yuki",
+        "host_id": "delivery-host",
         "host_boot_id": "boot-one",
         "namespace": "stream-v3",
         "pod_uid": "pod-one",
@@ -279,7 +286,7 @@ def test_publisher_signs_disjoint_source_windows_as_degraded_without_tracking_a_
     }
     assert degraded["transition"]["open_episode_count"] == 0
     contract = ResilientHostStatusContract(
-        ROOT / "contracts/cra_no_action_soak/resilient_host_status.v3.schema.json",
+        ROOT / "contracts/cra_no_action_soak/resilient_host_status.v4.schema.json",
         KeyRing({"dell-resilient-key": key.public_key()}),
         key_id="dell-resilient-key",
         expected_role="dell",
@@ -291,7 +298,7 @@ def test_publisher_signs_disjoint_source_windows_as_degraded_without_tracking_a_
 
 def test_target_component_separates_snapshot_runtime_and_ffmpeg_identity(tmp_path: Path) -> None:
     target = {
-        "host_id": "dell-yuki",
+        "host_id": "delivery-host",
         "host_boot_id": "boot-one",
         "namespace": "stream-v3",
         "pod_uid": "pod-one",
@@ -301,7 +308,7 @@ def test_target_component_separates_snapshot_runtime_and_ffmpeg_identity(tmp_pat
         "ffmpeg_pid": 123,
     }
     runtime = {
-        "host_id": "dell-yuki",
+        "host_id": "delivery-host",
         "host_boot_id": "boot-one",
         "namespace": "stream-v3",
         "pod_uid": "pod-one",
@@ -333,7 +340,7 @@ def test_target_component_separates_snapshot_runtime_and_ffmpeg_identity(tmp_pat
     components, actual, observed, valid_until = _target_component(
         path,
         ROOT / "contracts/cra_dell_recovery/target_snapshot.v1.schema.json",
-        expected_source_host_id="dell-yuki",
+        expected_source_host_id="delivery-host",
         current=CURRENT,
     )
 
@@ -348,7 +355,7 @@ def test_target_component_separates_snapshot_runtime_and_ffmpeg_identity(tmp_pat
     components, actual, _, _ = _target_component(
         path,
         ROOT / "contracts/cra_dell_recovery/target_snapshot.v1.schema.json",
-        expected_source_host_id="dell-yuki",
+        expected_source_host_id="delivery-host",
         current=CURRENT,
     )
     assert [component.state for component in components] == ["ERROR", "ERROR", "ERROR"]
@@ -384,6 +391,32 @@ def test_publisher_config_load_validates_the_complete_runtime_contract(
     assert loaded.path == config_path
 
 
+@pytest.mark.parametrize(
+    "schema",
+    [
+        "cra.resilient_host_status_state.v2",
+        "cra.resilient_host_status_state.v3",
+        "cra.resilient_host_status_state.v4",
+    ],
+)
+def test_transition_context_accepts_migratable_state_versions(tmp_path: Path, schema: str) -> None:
+    state = {
+        "schema": schema,
+        "last_target_identity_sha256": "a" * 64,
+        "open_episodes": [
+            {
+                "before_target_identity_sha256": "a" * 64,
+                "after_target_identity_sha256": "b" * 64,
+            }
+        ],
+    }
+    path = tmp_path / "state.json"
+    path.write_text(json.dumps(state), encoding="utf-8")
+    path.chmod(0o600)
+
+    assert _transition_context(path) == ("a" * 64, [("a" * 64, "b" * 64)])
+
+
 def test_publisher_main_covers_config_check_success_and_safe_block(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -399,7 +432,7 @@ def test_publisher_main_covers_config_check_success_and_safe_block(
     assert json.loads(capsys.readouterr().out)["config"] == "VALID"
 
     result = {
-        "schema": "cra.resilient_host_status.v3",
+        "schema": "cra.resilient_host_status.v4",
         "state": "READY",
         "producer_sequence": 7,
         "observed_at": "2026-09-03T00:00:00Z",
@@ -638,8 +671,8 @@ def test_resource_component_validates_after_read_without_local_clock_skew_allowa
 
 
 def test_exact_transition_binding_requires_one_reconciled_physical_attempt(tmp_path: Path) -> None:
-    before = {"host_id": "dell-yuki", "ffmpeg_pid": 100}
-    after = {"host_id": "dell-yuki", "ffmpeg_pid": 200}
+    before = {"host_id": "delivery-host", "ffmpeg_pid": 100}
+    after = {"host_id": "delivery-host", "ffmpeg_pid": 200}
     database = tmp_path / "effects.sqlite3"
     connection = sqlite3.connect(database)
     connection.execute(

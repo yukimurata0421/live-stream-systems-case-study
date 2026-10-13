@@ -1,5 +1,11 @@
 # Public Release Boundary
 
+The 2026-10-13 source port adds the [current evidence and route source](current-evidence-and-route-source.md)
+contract. Earlier provenance and validation records below keep their original
+cutoffs. The current [selected-file source map](../../publication/source-map.json)
+and [local validation](../../publication/validation.json) record this later port;
+they do not establish a production deployment or formal qualification.
+
 Recorded: 2026-09-10 JST
 
 Status: sanitized snapshot integrated under `recovery-control/` in the public

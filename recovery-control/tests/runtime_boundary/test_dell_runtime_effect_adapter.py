@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import pytest
 
 from cra_dell_recovery.effect_scope import effect_scope_id
 from cra_dell_recovery.models import TargetIdentity
+from cra_dell_recovery.time import isoformat_utc, parse_utc
 from dell_recovery_agent.runtime_effect_adapter import RuntimeEffectAdapter
 
 
@@ -53,6 +55,24 @@ def test_adapter_uses_stable_scope_id_and_only_delegates_to_executor() -> None:
     assert client.payloads[0]["request_id"] == f"dell-scope-{expected_scope}"
     assert client.payloads[0]["idempotency_key"] == f"dell-scope-{expected_scope}"
     assert client.payloads[0]["ffmpeg_target_identity"] == target.to_dict()
+
+
+def test_adapter_never_extends_original_authorization(monkeypatch: pytest.MonkeyPatch) -> None:
+    from dell_recovery_agent import runtime_effect_adapter
+
+    fixed = datetime(2026, 9, 14, tzinfo=UTC)
+    monkeypatch.setattr(runtime_effect_adapter, "utc_now", lambda: fixed)
+    client = Client({"ok": False, "state": "EFFECT_FAILED"})
+    adapter = RuntimeEffectAdapter(
+        client, producer_id="dell-agent", producer_generation=1, executor_instance_id="executor-a",
+        observe_after=_target, projection=lambda: ("projection-a", 1, "AVAILABLE"),
+    )
+    expiry = isoformat_utc(fixed + timedelta(milliseconds=500))
+    adapter.restart_ffmpeg(_target(), authorization_expires_at=expiry)
+    assert parse_utc(str(client.payloads[0]["expires_at"])) <= parse_utc(expiry)
+    rejected = adapter.restart_ffmpeg(_target(), authorization_expires_at=isoformat_utc(fixed - timedelta(milliseconds=1)))
+    assert rejected.effect_observed is False
+    assert len(client.payloads) == 1
 
 
 def test_adapter_propagates_unknown_without_retry() -> None:

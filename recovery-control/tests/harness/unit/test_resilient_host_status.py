@@ -12,13 +12,14 @@ from cra_no_action_soak.resilient_host_status import (
     ComponentStatus,
     ExactTransitionBinding,
     ResilientHostStatusContract,
+    _event_hash,
     build_resilient_status,
     record_publisher_failure,
     served_resilient_status_bytes,
 )
 
 ROOT = Path(__file__).resolve().parents[3]
-SCHEMA = ROOT / "contracts/cra_no_action_soak/resilient_host_status.v3.schema.json"
+SCHEMA = ROOT / "contracts/cra_no_action_soak/resilient_host_status.v4.schema.json"
 IDENTITY = {
     "release_manifest_sha256": "1" * 64,
     "runtime_manifest_sha256": "2" * 64,
@@ -260,13 +261,14 @@ def test_degraded_status_advances_and_retains_explicitly_diagnostic_last_good(tm
     )
 
     assert ready["state"] == "READY"
-    assert degraded["state"] == "RECOVERING"
-    assert degraded["reason_codes"] == ["K3S_API_UNAVAILABLE", "TARGET_TRANSITION_UNBOUND"]
+    assert degraded["state"] == "DEGRADED_SOURCE"
+    assert degraded["reason_codes"] == ["K3S_API_UNAVAILABLE"]
     assert degraded["producer_sequence"] == 2
     assert degraded["last_good"]["present"] is True  # type: ignore[index]
     assert degraded["last_good"]["diagnostic_only"] is True  # type: ignore[index]
     assert degraded["last_good"]["target_identity_sha256"] == "6" * 64  # type: ignore[index]
     assert degraded["current"]["target_identity_sha256"] is None  # type: ignore[index]
+    assert degraded["transition"]["open_episode_count"] == 0  # type: ignore[index]
     assert _contract(key).decode(degraded, now=CURRENT + timedelta(seconds=5)) == degraded
 
 
@@ -278,6 +280,7 @@ def test_unbound_target_change_is_hash_chained_and_stays_open(tmp_path: Path) ->
         tmp_path,
         key,
         target_identity_sha256="8" * 64,
+        physical_effect_count=1,
         now=CURRENT + timedelta(seconds=2),
     )
 
@@ -287,10 +290,126 @@ def test_unbound_target_change_is_hash_chained_and_stays_open(tmp_path: Path) ->
     episode = changed["transition"]["open_episodes"][0]  # type: ignore[index]
     assert episode["before_target_identity_sha256"] == "6" * 64
     assert episode["after_target_identity_sha256"] == "8" * 64
+    assert episode["physical_effect_count_before"] == 0
+    assert episode["physical_effect_count_observed"] == 1
     event = json.loads((tmp_path / "transitions.jsonl").read_text(encoding="utf-8"))
     assert event["sequence"] == 1
     assert event["previous_event_hash"] is None
     assert event["event_hash"] == changed["transition"]["last_event_hash"]  # type: ignore[index]
+
+
+def test_target_change_without_physical_effect_is_classified_and_closed(tmp_path: Path) -> None:
+    key = Ed25519PrivateKey.from_private_bytes(bytes(range(1, 33)))
+    _build(tmp_path, key)
+
+    changed = _build(
+        tmp_path,
+        key,
+        target_identity_sha256="8" * 64,
+        physical_effect_count=0,
+        now=CURRENT + timedelta(seconds=1),
+    )
+
+    assert changed["state"] == "READY"
+    assert changed["transition"]["causal_state"] == "NO_AUTHORITY_EFFECT"  # type: ignore[index]
+    assert changed["transition"]["open_episode_count"] == 0  # type: ignore[index]
+    event = json.loads((tmp_path / "transitions.jsonl").read_text(encoding="utf-8"))
+    assert event["causal_state"] == "NO_AUTHORITY_EFFECT"
+    assert event["episode"]["physical_effect_count_before"] == 0
+    assert event["episode"]["physical_effect_count_observed"] == 0
+    assert event["episode"]["effect_request_id"] is None
+    assert event["episode"]["effect_scope_id"] is None
+    assert _contract(key).decode(changed, now=CURRENT + timedelta(seconds=1)) == changed
+
+
+def test_no_authority_effect_classification_requires_equal_signed_counters(tmp_path: Path) -> None:
+    key = Ed25519PrivateKey.from_private_bytes(bytes(range(1, 33)))
+    _build(tmp_path, key)
+    changed = _build(
+        tmp_path,
+        key,
+        target_identity_sha256="8" * 64,
+        physical_effect_count=0,
+        now=CURRENT + timedelta(seconds=1),
+    )
+    event = changed["transition"]["event_tail"][0]  # type: ignore[index]
+    event["episode"]["physical_effect_count_observed"] = 1
+    event["event_hash"] = _event_hash(event)
+    changed["transition"]["last_event_hash"] = event["event_hash"]  # type: ignore[index]
+    unsigned = {name: value for name, value in changed.items() if name not in {"payload_sha256", "signature"}}
+    tampered = Signer("dell-resilient-key", key).sign(unsigned)
+
+    with pytest.raises(ValueError, match="NO_EFFECT_PROOF_INVALID"):
+        _contract(key).decode(tampered, now=CURRENT + timedelta(seconds=1))
+
+
+def test_missing_source_does_not_fabricate_target_loss_or_erase_last_valid_identity(tmp_path: Path) -> None:
+    key = Ed25519PrivateKey.from_private_bytes(bytes(range(1, 33)))
+    _build(tmp_path, key)
+    missing = _build(
+        tmp_path,
+        key,
+        components=[ComponentStatus("target_snapshot", "INVALID", "TARGET_SNAPSHOT_INVALID")],
+        source_observed_at=None,
+        source_valid_until=None,
+        target_identity_sha256=None,
+        source_payload_sha256=None,
+        origin_host_id=None,
+        physical_effect_count=None,
+        now=CURRENT + timedelta(seconds=1),
+    )
+    recovered = _build(tmp_path, key, now=CURRENT + timedelta(seconds=2))
+
+    assert missing["state"] == "DEGRADED_SOURCE"
+    assert missing["transition"]["high_watermark"] == 0  # type: ignore[index]
+    assert recovered["state"] == "READY"
+    assert recovered["transition"]["high_watermark"] == 0  # type: ignore[index]
+    assert not (tmp_path / "transitions.jsonl").exists()
+
+
+def test_late_unchanged_effect_counter_closes_temporarily_unclassified_transition(tmp_path: Path) -> None:
+    key = Ed25519PrivateKey.from_private_bytes(bytes(range(1, 33)))
+    _build(tmp_path, key)
+    unclassified = _build(
+        tmp_path,
+        key,
+        target_identity_sha256="8" * 64,
+        physical_effect_count=None,
+        now=CURRENT + timedelta(seconds=1),
+    )
+    classified = _build(
+        tmp_path,
+        key,
+        target_identity_sha256="8" * 64,
+        physical_effect_count=0,
+        now=CURRENT + timedelta(seconds=2),
+    )
+
+    assert unclassified["state"] == "RECOVERING"
+    assert classified["state"] == "READY"
+    assert classified["transition"]["causal_state"] == "NO_AUTHORITY_EFFECT"  # type: ignore[index]
+    events = [json.loads(line) for line in (tmp_path / "transitions.jsonl").read_text(encoding="utf-8").splitlines()]
+    assert [event["event_action"] for event in events] == ["OBSERVED", "CLASSIFIED"]
+    assert [event["causal_state"] for event in events] == ["UNBOUND", "NO_AUTHORITY_EFFECT"]
+
+
+def test_effect_increment_without_target_change_is_not_forgotten_before_later_transition(tmp_path: Path) -> None:
+    key = Ed25519PrivateKey.from_private_bytes(bytes(range(1, 33)))
+    _build(tmp_path, key)
+    _build(tmp_path, key, physical_effect_count=1, now=CURRENT + timedelta(seconds=1))
+    changed = _build(
+        tmp_path,
+        key,
+        target_identity_sha256="8" * 64,
+        physical_effect_count=1,
+        now=CURRENT + timedelta(seconds=2),
+    )
+
+    assert changed["state"] == "RECOVERING"
+    assert changed["transition"]["causal_state"] == "UNBOUND"  # type: ignore[index]
+    episode = changed["transition"]["open_episodes"][0]  # type: ignore[index]
+    assert episode["physical_effect_count_before"] == 0
+    assert episode["physical_effect_count_observed"] == 1
 
 
 def test_exact_transition_binding_does_not_create_unbound_episode(tmp_path: Path) -> None:
@@ -300,6 +419,7 @@ def test_exact_transition_binding_does_not_create_unbound_episode(tmp_path: Path
         tmp_path,
         key,
         target_identity_sha256="8" * 64,
+        physical_effect_count=1,
         exact_transition_binding=ExactTransitionBinding("request-one", "scope-one", "6" * 64, "8" * 64),
         now=CURRENT + timedelta(seconds=2),
     )
@@ -412,12 +532,19 @@ def test_component_freshness_and_duplicate_names_fail_closed(tmp_path: Path) -> 
 def test_late_exact_binding_closes_matching_episode_and_appends_resolution(tmp_path: Path) -> None:
     key = Ed25519PrivateKey.from_private_bytes(bytes(range(1, 33)))
     _build(tmp_path, key)
-    _build(tmp_path, key, target_identity_sha256="8" * 64, now=CURRENT + timedelta(seconds=1))
+    _build(
+        tmp_path,
+        key,
+        target_identity_sha256="8" * 64,
+        physical_effect_count=1,
+        now=CURRENT + timedelta(seconds=1),
+    )
 
     resolved = _build(
         tmp_path,
         key,
         target_identity_sha256="8" * 64,
+        physical_effect_count=1,
         exact_transition_binding=ExactTransitionBinding("request-one", "scope-one", "6" * 64, "8" * 64),
         now=CURRENT + timedelta(seconds=2),
     )
@@ -426,15 +553,27 @@ def test_late_exact_binding_closes_matching_episode_and_appends_resolution(tmp_p
     assert resolved["transition"]["causal_state"] == "EXACT"  # type: ignore[index]
     assert resolved["transition"]["open_episode_count"] == 0  # type: ignore[index]
     events = [json.loads(line) for line in (tmp_path / "transitions.jsonl").read_text(encoding="utf-8").splitlines()]
-    assert [event["event_action"] for event in events] == ["OBSERVED", "CAUSAL_BOUND"]
+    assert [event["event_action"] for event in events] == ["OBSERVED", "CLASSIFIED"]
     assert events[1]["previous_event_hash"] == events[0]["event_hash"]
 
 
 def test_multiple_unbound_transitions_are_not_collapsed(tmp_path: Path) -> None:
     key = Ed25519PrivateKey.from_private_bytes(bytes(range(1, 33)))
     _build(tmp_path, key)
-    _build(tmp_path, key, target_identity_sha256="8" * 64, now=CURRENT + timedelta(seconds=1))
-    changed_again = _build(tmp_path, key, target_identity_sha256="9" * 64, now=CURRENT + timedelta(seconds=2))
+    _build(
+        tmp_path,
+        key,
+        target_identity_sha256="8" * 64,
+        physical_effect_count=1,
+        now=CURRENT + timedelta(seconds=1),
+    )
+    changed_again = _build(
+        tmp_path,
+        key,
+        target_identity_sha256="9" * 64,
+        physical_effect_count=2,
+        now=CURRENT + timedelta(seconds=2),
+    )
 
     assert changed_again["state"] == "RECOVERING"
     assert changed_again["transition"]["high_watermark"] == 2  # type: ignore[index]
@@ -446,15 +585,167 @@ def test_multiple_unbound_transitions_are_not_collapsed(tmp_path: Path) -> None:
     ]
 
 
+def test_unbound_transition_overflow_stays_bounded_signed_and_fail_closed_after_replay(tmp_path: Path) -> None:
+    key = Ed25519PrivateKey.from_private_bytes(bytes(range(1, 33)))
+    _build(tmp_path, key)
+    state_before_overflow = b""
+    final_target = ""
+    for index in range(1, 82):
+        observed = CURRENT + timedelta(seconds=index)
+        final_target = f"{index:064x}"
+        if index == 65:
+            state_before_overflow = (tmp_path / "state.json").read_bytes()
+        status = _build(
+            tmp_path,
+            key,
+            components=[
+                ComponentStatus(
+                    "target_snapshot",
+                    "FRESH",
+                    "SOURCE_FRESH",
+                    observed,
+                    observed + timedelta(seconds=20),
+                    "5" * 64,
+                )
+            ],
+            source_observed_at=observed,
+            source_valid_until=observed + timedelta(seconds=20),
+            target_identity_sha256=final_target,
+            physical_effect_count=index,
+            now=observed,
+        )
+
+    state = json.loads((tmp_path / "state.json").read_text(encoding="utf-8"))
+    assert state["open_episode_overflow_count"] == 18
+    assert len(state["open_episodes"]) == 63
+    assert state["open_episode_overflow_count"] + len(state["open_episodes"]) == 81
+    assert status["state"] == "RECOVERING"
+    assert status["reason_codes"] == ["TARGET_TRANSITION_HISTORY_OVERFLOW", "TARGET_TRANSITION_UNBOUND"]
+    assert status["transition"]["open_episode_count"] == 64  # type: ignore[index]
+    assert len(status["transition"]["open_episodes"]) == 64  # type: ignore[index]
+    assert status["transition"]["open_episodes"][0]["episode_id"].startswith(  # type: ignore[index]
+        "target-transition-overflow-"
+    )
+    _contract(key).decode(status, now=CURRENT + timedelta(seconds=81))
+
+    journal_after_overflow = (tmp_path / "transitions.jsonl").read_bytes()
+    (tmp_path / "state.json").write_bytes(state_before_overflow)
+    assert (tmp_path / "transitions.jsonl").read_bytes() == journal_after_overflow
+    replayed = _build(
+        tmp_path,
+        key,
+        components=[
+            ComponentStatus(
+                "target_snapshot",
+                "FRESH",
+                "SOURCE_FRESH",
+                CURRENT + timedelta(seconds=82),
+                CURRENT + timedelta(seconds=102),
+                "5" * 64,
+            )
+        ],
+        source_observed_at=CURRENT + timedelta(seconds=82),
+        source_valid_until=CURRENT + timedelta(seconds=102),
+        target_identity_sha256=final_target,
+        physical_effect_count=81,
+        now=CURRENT + timedelta(seconds=82),
+    )
+    replayed_state = json.loads((tmp_path / "state.json").read_text(encoding="utf-8"))
+    assert replayed_state["open_episode_overflow_count"] == 18
+    assert len(replayed_state["open_episodes"]) == 63
+    assert replayed_state["open_episode_overflow_count"] + len(replayed_state["open_episodes"]) == 81
+    assert replayed["transition"]["high_watermark"] == 81  # type: ignore[index]
+    assert replayed["reason_codes"] == ["TARGET_TRANSITION_HISTORY_OVERFLOW", "TARGET_TRANSITION_UNBOUND"]
+
+
+def test_negative_control_detects_missing_transition_overflow_reason(tmp_path: Path) -> None:
+    key = Ed25519PrivateKey.from_private_bytes(bytes(range(1, 33)))
+    status = _build(tmp_path, key)
+    unsigned = {name: value for name, value in status.items() if name not in {"payload_sha256", "signature"}}
+    unsigned["state"] = "RECOVERING"
+    unsigned["reason_codes"] = ["TARGET_TRANSITION_UNBOUND"]
+    unsigned["transition"] = {
+        **status["transition"],  # type: ignore[dict-item]
+        "causal_state": "UNBOUND",
+        "open_episode_count": 1,
+        "open_episodes": [
+            {
+                "episode_id": f"target-transition-overflow-{'a' * 64}",
+                "event_type": "TARGET_CHANGED",
+                "started_at": "2026-09-03T00:00:00Z",
+                "before_target_identity_sha256": None,
+                "after_target_identity_sha256": None,
+                "effect_request_id": None,
+                "effect_scope_id": None,
+                "physical_effect_count_before": None,
+                "physical_effect_count_observed": None,
+            }
+        ],
+    }
+    tampered = Signer("dell-resilient-key", key).sign(unsigned)
+
+    with pytest.raises(ValueError, match="TRANSITION_OVERFLOW_MARKER_INVALID"):
+        _contract(key).decode(tampered, now=CURRENT)
+
+
+@pytest.mark.parametrize(
+    ("legacy_schema", "remove_effect_count"),
+    [
+        ("cra.resilient_host_status_state.v2", True),
+        ("cra.resilient_host_status_state.v3", False),
+    ],
+)
+def test_legacy_state_migrates_to_bounded_transition_state(
+    tmp_path: Path,
+    legacy_schema: str,
+    remove_effect_count: bool,
+) -> None:
+    key = Ed25519PrivateKey.from_private_bytes(bytes(range(1, 33)))
+    _build(tmp_path, key)
+    state_path = tmp_path / "state.json"
+    state = json.loads(state_path.read_text(encoding="utf-8"))
+    state["schema"] = legacy_schema
+    for name in (
+        "open_episode_overflow_count",
+        "open_episode_overflow_sha256",
+        "open_episode_overflow_started_at",
+    ):
+        state.pop(name)
+    if remove_effect_count:
+        state.pop("last_target_physical_effect_count")
+    state_path.write_text(json.dumps(state), encoding="utf-8")
+
+    migrated = _build(tmp_path, key, now=CURRENT + timedelta(seconds=1))
+    saved = json.loads(state_path.read_text(encoding="utf-8"))
+
+    assert migrated["state"] == "READY"
+    assert saved["schema"] == "cra.resilient_host_status_state.v4"
+    assert saved["open_episode_overflow_count"] == 0
+    assert saved["open_episode_overflow_sha256"] is None
+    assert saved["open_episode_overflow_started_at"] is None
+
+
 def test_journal_ahead_of_state_is_replayed_after_crash(tmp_path: Path) -> None:
     key = Ed25519PrivateKey.from_private_bytes(bytes(range(1, 33)))
     _build(tmp_path, key)
     state_before = (tmp_path / "state.json").read_bytes()
-    changed = _build(tmp_path, key, target_identity_sha256="8" * 64, now=CURRENT + timedelta(seconds=1))
+    changed = _build(
+        tmp_path,
+        key,
+        target_identity_sha256="8" * 64,
+        physical_effect_count=1,
+        now=CURRENT + timedelta(seconds=1),
+    )
     assert changed["transition"]["high_watermark"] == 1  # type: ignore[index]
     (tmp_path / "state.json").write_bytes(state_before)
 
-    replayed = _build(tmp_path, key, target_identity_sha256="8" * 64, now=CURRENT + timedelta(seconds=2))
+    replayed = _build(
+        tmp_path,
+        key,
+        target_identity_sha256="8" * 64,
+        physical_effect_count=1,
+        now=CURRENT + timedelta(seconds=2),
+    )
 
     assert replayed["transition"]["high_watermark"] == 1  # type: ignore[index]
     assert replayed["transition"]["open_episode_count"] == 1  # type: ignore[index]
@@ -464,13 +755,20 @@ def test_journal_ahead_of_state_is_replayed_after_crash(tmp_path: Path) -> None:
 def test_boot_change_preserves_transition_journal_and_opens_new_producer_instance(tmp_path: Path) -> None:
     key = Ed25519PrivateKey.from_private_bytes(bytes(range(1, 33)))
     first = _build(tmp_path, key)
-    _build(tmp_path, key, target_identity_sha256="8" * 64, now=CURRENT + timedelta(seconds=1))
+    _build(
+        tmp_path,
+        key,
+        target_identity_sha256="8" * 64,
+        physical_effect_count=1,
+        now=CURRENT + timedelta(seconds=1),
+    )
 
     after_boot = _build(
         tmp_path,
         key,
         host_boot_id="boot-two",
         target_identity_sha256="8" * 64,
+        physical_effect_count=1,
         now=CURRENT + timedelta(seconds=2),
     )
 

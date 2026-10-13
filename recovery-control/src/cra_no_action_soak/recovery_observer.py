@@ -21,33 +21,43 @@ from typing import Any
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
-from cra_dell_recovery.canonical import Signer
+from cra_dell_recovery.canonical import KeyRing, Signer
 from cra_dell_recovery.recovery_history import validate_policy
 from cra_dell_recovery.time import isoformat_utc
 
+from .append_only_jsonl import _append_line, _complete_pending_line, _last_line
 from .host_status import atomic_write_json, read_regular_bytes
 from .recovery_facts import (
+    ENVELOPE_FIELDS,
+    FACTS_SCHEMA,
     HostBinding,
     network_fact,
+    nonnegative_integer,
     owner_target_snapshot,
     platform_fact,
     publication_fact,
+    rtmps_episode_fact,
     runtime_evidence_fact,
     sign_facts,
     source_hash,
     strict_json_object,
     strict_object,
+    timestamp,
     transport_fact,
 )
 
 CONFIG_SCHEMA = "cra.recovery_observer_config.v1"
+HISTORY_CONFIG_SCHEMA = "cra.recovery_observer_config.v2"
 STATE_SCHEMA = "cra.recovery_observer_state.v1"
+HISTORY_STATE_SCHEMA = "cra.recovery_observer_state.v2"
+MAXIMUM_HISTORY_BYTES = 2 * 1024 * 1024 * 1024
 SOURCE_NAMES = {
     "dell": {"network", "target", "transport", "runtime_evidence"},
     "arena": {"network", "platform", "control_path"},
     "cra": {"runtime"},
     "raspi": {"local_artifact", "remote_artifact", "publisher", "network"},
 }
+DELL_OPTIONAL_SOURCE_NAMES = {"transport_episode"}
 
 
 def _private_key(path: Path) -> Ed25519PrivateKey:
@@ -57,17 +67,44 @@ def _private_key(path: Path) -> Ed25519PrivateKey:
     return key
 
 
+def _verify_own_packet(packet: dict[str, Any], *, binding: HostBinding, boot: str, producer: str, keys: KeyRing) -> None:
+    """Verify durable identity without promoting nested facts to a formal verdict."""
+    if (
+        set(packet) != ENVELOPE_FIELDS
+        or packet.get("schema") != FACTS_SCHEMA
+        or any(packet.get(name) != expected for name, expected in binding.__dict__.items())
+        or packet.get("host_boot_id") != boot
+        or packet.get("producer_id") != producer
+        or not nonnegative_integer(packet.get("sequence"))
+        or packet["sequence"] < 1
+        or not nonnegative_integer(packet.get("source_failure_count"))
+    ):
+        raise ValueError("RECOVERY_OBSERVER_HISTORY_PACKET_IDENTITY_INVALID")
+    observed = timestamp(packet.get("observed_at"))
+    expires = timestamp(packet.get("valid_until"))
+    if not 0 < (expires - observed).total_seconds() <= 45:
+        raise ValueError("RECOVERY_OBSERVER_HISTORY_PACKET_LEASE_INVALID")
+    keys.verify(packet)
+
+
 def validate_config(config: dict[str, Any]) -> HostBinding:
-    if config.get("schema") != CONFIG_SCHEMA or not isinstance(config.get("binding"), dict):
+    if config.get("schema") not in (CONFIG_SCHEMA, HISTORY_CONFIG_SCHEMA) or not isinstance(config.get("binding"), dict):
         raise ValueError("RECOVERY_OBSERVER_CONFIG_INVALID")
     binding = HostBinding(**config["binding"])
     fields = {"schema", "binding", "sources", "state_file", "output_file", "signing_private_key_file", "host_contract_file"}
+    if config["schema"] == HISTORY_CONFIG_SCHEMA:
+        fields.add("history_file")
     fields.update(
         {"dell": {"runtime_binding", "effect_history_policy"}, "arena": {"expected_video_id"}, "cra": {"database_file"}, "raspi": set()}[
             binding.role
         ]
     )
     source_names = SOURCE_NAMES[binding.role]
+    if binding.role == "dell" and "transport_episode" in config.get("sources", {}):
+        source_names = source_names | DELL_OPTIONAL_SOURCE_NAMES
+        fields.add("transport_episode_binding")
+        if "transport_episode_binding" not in config:
+            raise ValueError("RECOVERY_OBSERVER_RTMPS_EPISODE_BINDING_REQUIRED")
     runtime = config.get("runtime_binding")
     if binding.role == "dell" and isinstance(runtime, dict) and runtime.get("evidence_schema") == "runtime.recovery_evidence.v3":
         source_names = source_names - {"target"}
@@ -96,6 +133,13 @@ def validate_config(config: dict[str, Any]) -> HostBinding:
             or not runtime["target_host_id"]
         ):
             raise ValueError("RECOVERY_OBSERVER_RUNTIME_BINDING_REQUIRED")
+        episode_binding = config.get("transport_episode_binding")
+        if "transport_episode" in config["sources"] and (
+            not isinstance(episode_binding, dict)
+            or set(episode_binding) != {"collector_id", "release_id", "epoch_id"}
+            or any(not isinstance(episode_binding.get(name), str) or not episode_binding[name] for name in episode_binding)
+        ):
+            raise ValueError("RECOVERY_OBSERVER_RTMPS_EPISODE_BINDING_REQUIRED")
     return binding
 
 
@@ -155,6 +199,16 @@ def build_facts(
         }
         if lifecycle is not None:
             facts["transport"]["lifecycle"] = lifecycle
+        if "transport_episode" in config["sources"]:
+            try:
+                facts["transport"]["rtmps_episode"] = rtmps_episode_fact(
+                    sources.get("transport_episode", {}),
+                    binding=config["transport_episode_binding"],
+                    host_boot_id=host_boot_id or "",
+                    now=now,
+                )
+            except (TypeError, ValueError):
+                errors.append("transport_episode")
     elif role == "arena":
         status = sources.get("control_path", {})
         facts = {
@@ -174,7 +228,12 @@ def build_facts(
         try:
             safety = central_safety(Path(config["database_file"]), sources.get("runtime", {}), now=now)
         except (OSError, ValueError):
-            safety = {"observed_at": isoformat_utc(now), "integrity": "UNKNOWN"}
+            safety = {
+                "observed_at": isoformat_utc(now),
+                "evidence_status": "UNAVAILABLE",
+                "reason_code": "CENTRAL_SAFETY_READ_FAILED",
+                "integrity": "UNKNOWN",
+            }
             errors.append("central_database")
         facts = {"safety": safety}
     elif role == "raspi":
@@ -205,9 +264,13 @@ def observe(config: dict[str, Any], *, now: datetime | None = None) -> dict[str,
     if config.get("database_file"):
         inputs.append(Path(config["database_file"]).resolve())
     outputs = [state_path.resolve(), output_path.resolve(), state_path.with_suffix(".lock").resolve()]
+    history_path = Path(config["history_file"]) if config["schema"] == HISTORY_CONFIG_SCHEMA else None
+    if history_path is not None:
+        outputs.append(history_path.resolve())
     if (
         not state_path.is_absolute()
         or not output_path.is_absolute()
+        or (history_path is not None and not history_path.is_absolute())
         or len(set(outputs)) != len(outputs)
         or any(path in inputs for path in outputs)
     ):
@@ -223,26 +286,77 @@ def observe(config: dict[str, Any], *, now: datetime | None = None) -> dict[str,
     try:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         boot = Path("/proc/sys/kernel/random/boot_id").read_text().strip()
-        if output_path.exists() and not state_path.exists():
+        if (output_path.exists() or history_path is not None and history_path.exists()) and not state_path.exists():
             raise ValueError("RECOVERY_OBSERVER_STATE_MISSING")
         state: dict[str, Any] = (
             strict_object(state_path)
             if state_path.exists()
             else {
-                "schema": STATE_SCHEMA,
+                "schema": HISTORY_STATE_SCHEMA if history_path is not None else STATE_SCHEMA,
                 "host_boot_id": boot,
                 "producer_id": str(uuid.uuid4()),
                 "sequence": 0,
                 "config_sha256": source_hash(config),
                 "source_failure_count": 0,
+                **({"pending_packet": None} if history_path is not None else {}),
             }
         )
-        if state.get("schema") != STATE_SCHEMA or state.get("host_boot_id") != boot or state.get("config_sha256") != source_hash(config):
+        if (
+            state.get("schema") != (HISTORY_STATE_SCHEMA if history_path is not None else STATE_SCHEMA)
+            or state.get("host_boot_id") != boot
+            or state.get("config_sha256") != source_hash(config)
+            or type(state.get("sequence")) is not int
+            or state["sequence"] < 0
+            or type(state.get("source_failure_count")) is not int
+            or state["source_failure_count"] < 0
+            or (history_path is not None and set(state) != {
+                "schema", "host_boot_id", "producer_id", "sequence", "config_sha256", "source_failure_count", "pending_packet"
+            })
+        ):
             raise ValueError("RECOVERY_OBSERVER_BOOT_ROTATION_REQUIRES_FRESH_EPOCH")
+        if history_path is not None:
+            own_keys = KeyRing({binding.key_id: _private_key(Path(config["signing_private_key_file"])).public_key()})
+            pending = state["pending_packet"]
+            if pending is not None:
+                if not isinstance(pending, dict) or pending.get("sequence") != state["sequence"]:
+                    raise ValueError("RECOVERY_OBSERVER_HISTORY_PENDING_INVALID")
+                _verify_own_packet(pending, binding=binding, boot=boot, producer=state["producer_id"], keys=own_keys)
+            try:
+                tail = _last_line(history_path, maximum_bytes=MAXIMUM_HISTORY_BYTES)
+            except ValueError as error:
+                if str(error) != "RESILIENT_SOAK_EVIDENCE_PARTIAL_TAIL" or pending is None:
+                    raise
+                _complete_pending_line(history_path, pending, maximum_bytes=MAXIMUM_HISTORY_BYTES)
+                tail = _last_line(history_path, maximum_bytes=MAXIMUM_HISTORY_BYTES)
+            if tail is not None:
+                _verify_own_packet(tail, binding=binding, boot=boot, producer=state["producer_id"], keys=own_keys)
+            if pending is not None:
+                if (tail is None and state["sequence"] == 1) or (tail is not None and tail.get("sequence") == state["sequence"] - 1):
+                    _append_line(history_path, pending, maximum_bytes=MAXIMUM_HISTORY_BYTES)
+                    tail = pending
+                elif tail != pending:
+                    raise ValueError("RECOVERY_OBSERVER_HISTORY_STATE_FORK")
+                atomic_write_json(output_path, pending)
+                state = {**state, "pending_packet": None}
+                atomic_write_json(state_path, state)
+            if (tail is None and state["sequence"] != 0) or (
+                tail is not None
+                and (
+                    tail.get("sequence") != state["sequence"]
+                    or tail.get("producer_id") != state["producer_id"]
+                    or tail.get("host_boot_id") != boot
+                    or tail.get("release_id") != binding.release_id
+                    or tail.get("source_commit") != binding.source_commit
+                    or tail.get("key_id") != binding.key_id
+                )
+            ):
+                raise ValueError("RECOVERY_OBSERVER_HISTORY_STATE_FORK")
         # All file reads precede the wrapper timestamp. Per-source timestamps
         # remain untouched, including source failures and stale cache entries.
         facts, hashes = build_facts(config, now=now, host_boot_id=boot)
         current = now or datetime.now(UTC)
+        if history_path is not None and tail is not None and current <= timestamp(tail.get("observed_at")):
+            raise ValueError("RECOVERY_OBSERVER_CLOCK_REGRESSION")
         failures = state["source_failure_count"] + int(hashes["read_errors"] != source_hash({"names": []}))
         packet = sign_facts(
             binding=binding,
@@ -258,10 +372,19 @@ def observe(config: dict[str, Any], *, now: datetime | None = None) -> dict[str,
         )
         # Reserve sequence first: crash may leave a gap but never reuse a
         # sequence for a different signed packet.
-        updated = {**state, "sequence": packet["sequence"], "source_failure_count": failures}
+        updated = {
+            **state,
+            "sequence": packet["sequence"],
+            "source_failure_count": failures,
+            **({"pending_packet": packet} if history_path is not None else {}),
+        }
         atomic_write_json(state_path, updated)
         try:
+            if history_path is not None:
+                _append_line(history_path, packet, maximum_bytes=MAXIMUM_HISTORY_BYTES)
             atomic_write_json(output_path, packet)
+            if history_path is not None:
+                atomic_write_json(state_path, {**updated, "pending_packet": None})
         except OSError:
             atomic_write_json(state_path, {**updated, "source_failure_count": failures + 1})
             raise

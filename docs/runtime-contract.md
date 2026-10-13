@@ -1,5 +1,13 @@
 # Runtime Contract
 
+The primary media route observed on 2026-10-13 JST adds OCI: one Dell encoding
+producer feeds a bounded packet buffer and a single remux sender; OCI forwards
+to independent YouTube and Twitch handlers. The historical home-host source
+and static-publication descriptions below remain relevant, while direct
+Dell-to-YouTube media diagrams describe the earlier route. See the current
+[OCI delivery contract](v3/oci-relay-and-twitch.md) and
+[source-port record](v3/public-source-port-2026-10-13.md).
+
 `stream_v3` treats streaming as a delivery-plane workload and monitoring as a
 separate observability-plane workload. This page distinguishes the retained v3
 deployment topology from the newer cross-host recovery authority contract.

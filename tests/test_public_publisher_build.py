@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import importlib.util
+import json
+import re
+import shutil
 import tempfile
 import unittest
 from pathlib import Path
@@ -79,11 +82,17 @@ class PublicPublisherBuildTests(unittest.TestCase):
             with (
                 mock.patch.object(build, "run_collect") as collect,
                 mock.patch.object(build, "run_reliability_collect") as reliability,
+                mock.patch.object(build.subprocess, "run") as providers,
             ):
                 self.assertEqual(build.main(), 0)
 
             collect.assert_called_once_with()
             reliability.assert_called_once_with()
+            self.assertEqual(providers.call_count, 3)
+            self.assertEqual(
+                [Path(call.args[0][1]).name for call in providers.call_args_list],
+                ["collect_twitch_public.py", "collect_relay_public.py", "collect_twitch_sli.py"],
+            )
             self.assertEqual((public / "stream-v3-prometheus.json").read_text(), "{}\n")
             self.assertEqual((public / "stream-v3-loki.json").read_text(), "{}\n")
             self.assertEqual((public / "stream-v3-prometheus.html").read_text(), "prom\n")
@@ -99,6 +108,29 @@ class PublicPublisherBuildTests(unittest.TestCase):
             [build.sys.executable, str(collector), "--force"],
             check=True,
         )
+
+    def test_frozen_upload_contains_current_html_assets_and_provider_snapshots(self) -> None:
+        push = load_script("push_to_gcs.py")
+        html = (PUBLISHER / "site/public/index.html").read_text()
+        assets = re.findall(r'(?:src|href)=["\']\./(assets/[^"\']+)["\']', html)
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory) / "source"
+            source.mkdir()
+            (source / "index.html").write_text(html)
+            for name in assets:
+                path = source / name
+                path.parent.mkdir(exist_ok=True)
+                shutil.copy2(PUBLISHER / "site/public" / name, path)
+            provider_files = ("twitch-observation.json", "relay-observation.json", "twitch-sli.json")
+            for name in (*push.REQUIRED_JSON, *provider_files):
+                (source / name).write_text(json.dumps({"generated_at": 1000}))
+            (source / "raw-log.json").write_text("{}")
+            destination = Path(directory) / "frozen"
+            hashes = push.stage_public_tree(source, destination, now=1000)
+            self.assertTrue(assets)
+            self.assertTrue(set(assets).issubset(hashes))
+            self.assertTrue(set(provider_files).issubset(hashes))
+            self.assertFalse((destination / "raw-log.json").exists())
 
     def test_push_builds_then_syncs_and_sets_cache_control(self) -> None:
         push = load_script("push_to_gcs.py")

@@ -20,7 +20,6 @@ _SUT_BLOCKERS = frozenset(
         "DELL_EFFECT_SAFETY_VIOLATED",
         "NO_ACTION_PHYSICAL_EFFECT_DETECTED",
         "RECOVERY_DEADLINE_EXCEEDED",
-        "FORMAL_GATE_NOT_HEALTHY",
     }
 )
 
@@ -35,14 +34,18 @@ _ENVIRONMENT_BLOCKERS = frozenset(
 _HARNESS_BLOCKERS = frozenset(
     {
         "COLLECTOR_GAP_OR_CLOCK_REGRESSION",
+        "COLLECTOR_GAP_UNRECONSTRUCTED",
+        "COLLECTOR_CLOCK_REGRESSION",
         "COLLECTOR_STALE",
         "FORMAL_GATE_EVALUATION_UNTRUSTED",
         "FORMAL_GATE_STALE_OR_UNBOUND",
         "FORMAL_GATE_UNAVAILABLE",
+        "HISTORICAL_EVIDENCE_UNAVAILABLE",
         "LIVE_RECOVERY_CHECKPOINT_MISSING",
         "LIVE_STATE_EVIDENCE_NOT_SYNCHRONIZED",
         "SAMPLE_FROM_FUTURE",
         "SAMPLE_INPUT_ROLES_INVALID",
+        "FORMAL_GATE_NOT_HEALTHY",
     }
 )
 
@@ -56,7 +59,7 @@ def _display_code(code: object) -> str:
 def _evidence_status(code: str) -> str:
     if "PERMISSION_DENIED" in code or "ACCESS_DENIED" in code:
         return "ACCESS_DENIED"
-    if "STALE" in code or code in {"COLLECTOR_GAP_OR_CLOCK_REGRESSION", "SAMPLE_FROM_FUTURE"}:
+    if "STALE" in code or code in {"COLLECTOR_GAP_OR_CLOCK_REGRESSION", "COLLECTOR_GAP_UNRECONSTRUCTED", "SAMPLE_FROM_FUTURE"}:
         return "STALE"
     if "READ_FAILURE" in code or "READ_FAILED" in code or "OS_READ_FAILED" in code:
         return "READ_ERROR"
@@ -70,6 +73,8 @@ def _evidence_status(code: str) -> str:
 
 
 def _failure_domain(code: str, *, source: str) -> str:
+    if source == "unverified_deadline":
+        return "OBSERVATION_SOURCE"
     if source == "oracle":
         return "ORACLE"
     if source == "environment":
@@ -129,8 +134,15 @@ def classify_gate(result: Mapping[str, Any]) -> dict[str, Any]:
         add("EVIDENCE_ENVIRONMENT_NOT_PROVEN", source="environment")
     elif harness_classification == "HARNESS_FAILURE" and not result.get("oracle_errors"):
         add("EVIDENCE_HARNESS_EVALUATION_FAILED", source="harness")
+    deadline_verified = (
+        result.get("formal_evaluation_performed") is True
+        and result.get("soak_status") == "FAIL"
+        and harness_classification == "SUT_FAILURE"
+        and not result.get("oracle_errors")
+        and not result.get("unknown_reasons")
+    )
     for code in result.get("blockers", []) if isinstance(result.get("blockers"), list) else []:
-        add(code, source="blocker")
+        add(code, source="unverified_deadline" if code == "RECOVERY_DEADLINE_EXCEEDED" and not deadline_verified else "blocker")
     for code in result.get("unknown_reasons", []) if isinstance(result.get("unknown_reasons"), list) else []:
         add(code, source="evidence")
 

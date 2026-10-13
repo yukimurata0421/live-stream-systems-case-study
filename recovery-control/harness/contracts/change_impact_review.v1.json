@@ -1,0 +1,305 @@
+{
+  "decisions": {
+    "contracts/runtime_boundary/runtime_observation.v1.schema.json": {
+      "impacts": {
+        "catalog": [],
+        "graph": [
+          "failure.owner_child_lifecycle"
+        ],
+        "owner": [],
+        "postmortem": []
+      },
+      "kind": "BEHAVIOR",
+      "sha256": "13c7c73207773730be8d16cb67df82676a8884c9afbdbd7d93723b848eeb9bc7"
+    },
+    "contracts/runtime_boundary/typed_effect_request.v3.schema.json": {
+      "impacts": {
+        "catalog": [],
+        "graph": [
+          "failure.owner_child_lifecycle"
+        ],
+        "owner": [],
+        "postmortem": []
+      },
+      "kind": "BEHAVIOR",
+      "sha256": "5fbd99a4254fcd83c6ca2c64a1b9198178ebc2d6bff780cbad317682bf1281ee"
+    },
+    "docs/oracle/01_restart_authority_detail.md": {
+      "impacts": {
+        "catalog": [],
+        "graph": [],
+        "owner": [],
+        "postmortem": []
+      },
+      "kind": "DOC_ONLY",
+      "sha256": "b5d0d360b283f8d8bc1c7c7999dccd71211d5ab07a733f690ccbd9e9a4529f40"
+    },
+    "docs/oracle/04_owner_observation_contract.md": {
+      "impacts": {
+        "catalog": [],
+        "graph": [
+          "failure.cutover_reboot_persistence",
+          "failure.owner_child_lifecycle",
+          "failure.soak_harness_or_oracle"
+        ],
+        "owner": [
+          "VC-OWNER-ACTIVATION-001",
+          "VC-OWNER-BOUNDED-001",
+          "VC-OWNER-CLEANUP-001",
+          "VC-OWNER-DIAGNOSTICS-001",
+          "VC-OWNER-FINAL-001",
+          "VC-OWNER-IDENTITY-001",
+          "VC-OWNER-REGISTRY-001",
+          "VC-OWNER-RETENTION-001"
+        ],
+        "postmortem": []
+      },
+      "kind": "DOC_ONLY",
+      "sha256": "22d54b3400e98f69e71daabe526413ab362f9bc1fd88e9282b2355ae0fcd1d3a"
+    },
+    "docs/oracle/05_evidence_lineage_and_restart_domains.md": {
+      "impacts": {
+        "catalog": [],
+        "graph": [],
+        "owner": [],
+        "postmortem": []
+      },
+      "kind": "DOC_ONLY",
+      "sha256": "4c99ac14eef330cf3c654d329e869f777a8c94ad8993948a081ac9d58b6d60d2"
+    },
+    "harness/contracts/owner_observation_review.json": {
+      "impacts": {
+        "catalog": [],
+        "graph": [],
+        "owner": [],
+        "postmortem": []
+      },
+      "kind": "HARNESS",
+      "sha256": "b906553faf74ef37f8c69118bc7e8f82de8401f919d3ced4650ae85e71a2a0e4"
+    },
+    "harness/scenarios/cra_evidence_lineage_v1.json": {
+      "impacts": {
+        "catalog": [
+          "harness/scenarios/cra_evidence_lineage_v1.json"
+        ],
+        "graph": [
+          "failure.cra_control_safety",
+          "failure.cutover_reboot_persistence",
+          "failure.ffmpeg_session_loss",
+          "failure.full_wan_outage",
+          "failure.observation_source_or_transport",
+          "failure.owner_child_lifecycle",
+          "failure.rtmps_session_ack_stall",
+          "failure.soak_harness_or_oracle",
+          "failure.upstream_oauth_observation"
+        ],
+        "owner": [],
+        "postmortem": []
+      },
+      "kind": "STRUCTURE",
+      "sha256": "c7a2c28a1027613a310c4d4657a0574e2690a0a2db318ab5ee3224a07640cf1d"
+    },
+    "harness/scenarios/owner_observation_chaos_v1.json": {
+      "impacts": {
+        "catalog": [
+          "harness/scenarios/owner_observation_chaos_v1.json"
+        ],
+        "graph": [
+          "failure.cutover_reboot_persistence",
+          "failure.owner_child_lifecycle",
+          "failure.soak_harness_or_oracle"
+        ],
+        "owner": [
+          "VC-OWNER-ACTIVATION-001",
+          "VC-OWNER-BOUNDED-001",
+          "VC-OWNER-CLEANUP-001",
+          "VC-OWNER-DIAGNOSTICS-001",
+          "VC-OWNER-FINAL-001",
+          "VC-OWNER-IDENTITY-001",
+          "VC-OWNER-REGISTRY-001",
+          "VC-OWNER-RETENTION-001"
+        ],
+        "postmortem": []
+      },
+      "kind": "BEHAVIOR",
+      "sha256": "ff08aef09f96ca74d92ede78aa9f7fa8ac37941df5e7107d27103bd4a66af1e1"
+    },
+    "src/runtime_boundary/__init__.py": {
+      "impacts": {
+        "catalog": [],
+        "graph": [
+          "failure.owner_child_lifecycle"
+        ],
+        "owner": [],
+        "postmortem": []
+      },
+      "kind": "BEHAVIOR",
+      "sha256": "69249ee1c6346cf26efeb5b6d6266e7f08939dbe8f717096dae7b3770831cf54"
+    },
+    "src/runtime_boundary/child_registry.py": {
+      "impacts": {
+        "catalog": [],
+        "graph": [
+          "failure.owner_child_lifecycle"
+        ],
+        "owner": [
+          "VC-OWNER-REGISTRY-001"
+        ],
+        "postmortem": []
+      },
+      "kind": "BEHAVIOR",
+      "sha256": "c0a043aa92a2e31828c7b25a72f353efd63a558cd807396aabb430701bdf5405"
+    },
+    "src/runtime_boundary/ledger.py": {
+      "impacts": {
+        "catalog": [],
+        "graph": [
+          "failure.cra_control_safety",
+          "failure.owner_child_lifecycle"
+        ],
+        "owner": [],
+        "postmortem": []
+      },
+      "kind": "BEHAVIOR",
+      "sha256": "8518ce7f7f09ed2999f878cd03c5f5a188c60ea6c1343889a696e0637e3b8e82"
+    },
+    "src/runtime_boundary/model.py": {
+      "impacts": {
+        "catalog": [],
+        "graph": [
+          "failure.owner_child_lifecycle"
+        ],
+        "owner": [],
+        "postmortem": []
+      },
+      "kind": "BEHAVIOR",
+      "sha256": "4e3dd3a12c188a329c49c21ba633db727ae0fe118d51e0d062e98071ad2723c6"
+    },
+    "src/runtime_boundary/observation.py": {
+      "impacts": {
+        "catalog": [],
+        "graph": [
+          "failure.owner_child_lifecycle"
+        ],
+        "owner": [
+          "VC-OWNER-IDENTITY-001"
+        ],
+        "postmortem": []
+      },
+      "kind": "BEHAVIOR",
+      "sha256": "bcda67df19ba1e7aac1fd539a57c7b107a892cee3abd8e40525b056d7b6ecc28"
+    },
+    "src/runtime_boundary/operator_route.py": {
+      "impacts": {
+        "catalog": [],
+        "graph": [
+          "failure.owner_child_lifecycle"
+        ],
+        "owner": [],
+        "postmortem": []
+      },
+      "kind": "BEHAVIOR",
+      "sha256": "4b129221391d3e27f3a94d73ec3829238c1f3d1654babc27d91c4ecd1391cbca"
+    },
+    "src/runtime_boundary/recovery_publisher.py": {
+      "impacts": {
+        "catalog": [],
+        "graph": [
+          "failure.ffmpeg_session_loss",
+          "failure.owner_child_lifecycle",
+          "failure.rtmps_session_ack_stall"
+        ],
+        "owner": [
+          "VC-OWNER-ACTIVATION-001",
+          "VC-OWNER-BOUNDED-001",
+          "VC-OWNER-CLEANUP-001",
+          "VC-OWNER-FINAL-001",
+          "VC-OWNER-IDENTITY-001",
+          "VC-OWNER-REGISTRY-001"
+        ],
+        "postmortem": []
+      },
+      "kind": "BEHAVIOR",
+      "sha256": "0a98a53a158232c1af1f72d24440f21e200a927ef109c82129696e39239a8d21"
+    },
+    "src/runtime_boundary/server.py": {
+      "impacts": {
+        "catalog": [],
+        "graph": [
+          "failure.cra_control_safety",
+          "failure.owner_child_lifecycle"
+        ],
+        "owner": [],
+        "postmortem": []
+      },
+      "kind": "BEHAVIOR",
+      "sha256": "520b576542248fef482ef64339b68676f228c80ac9527606b1d983323b388b34"
+    },
+    "tests/harness/integration/test_owner_lifecycle_evidence.py": {
+      "impacts": {
+        "catalog": [],
+        "graph": [
+          "failure.owner_child_lifecycle"
+        ],
+        "owner": [
+          "VC-OWNER-ACTIVATION-001",
+          "VC-OWNER-CLEANUP-001",
+          "VC-OWNER-FINAL-001",
+          "VC-OWNER-IDENTITY-001",
+          "VC-OWNER-REGISTRY-001"
+        ],
+        "postmortem": []
+      },
+      "kind": "TEST_ONLY",
+      "sha256": "ac9a0a08b4ff969d813211433ad5aa09572f35754e67464e198c2d3921d9cbfa"
+    },
+    "tests/harness/unit/test_evidence_lineage.py": {
+      "impacts": {
+        "catalog": [
+          "harness/scenarios/cra_evidence_lineage_v1.json"
+        ],
+        "graph": [],
+        "owner": [],
+        "postmortem": []
+      },
+      "kind": "TEST_ONLY",
+      "sha256": "4d662ae06e52bdc7411bcb6deb9e3abb16522c1a26fbe4534e2700d1947f6879"
+    },
+    "tests/runtime_boundary/test_recovery_publisher.py": {
+      "impacts": {
+        "catalog": [],
+        "graph": [],
+        "owner": [],
+        "postmortem": []
+      },
+      "kind": "TEST_ONLY",
+      "sha256": "69bfe4492b65115fd06c8e9065babb935b9dbf5b18f9d76bccf90215fb09a419"
+    },
+    "tests/runtime_boundary/test_stream_route_fence.py": {
+      "impacts": {
+        "catalog": [],
+        "graph": [
+          "failure.owner_child_lifecycle"
+        ],
+        "owner": [],
+        "postmortem": []
+      },
+      "kind": "TEST_ONLY",
+      "sha256": "b411069168f7f90a0b5c2350737cb11bdfa6e5d3f8eab9f4394304ea18e034f1"
+    },
+    "tools/run_owner_observation_chaos.py": {
+      "impacts": {
+        "catalog": [
+          "harness/scenarios/owner_observation_chaos_v1.json"
+        ],
+        "graph": [],
+        "owner": [],
+        "postmortem": []
+      },
+      "kind": "HARNESS",
+      "sha256": "8f4def880501a4ebf0c94c00742762028a8db9f531c68d4deb079ee4e1cce0ca"
+    }
+  },
+  "reason": "pipe proof、encoder metadataからsender健康を推定しない境界、typed route v3とroot peer/専用grant/共通fenceをcurrent spec/schema/catalog/lineage/固定期待値へ照合した。invariant evidenceとregression-only fileの矛盾を解消した。旧履歴/UNKNOWNを消さず、CRA live/他host/旧soakは変更しない。",
+  "schema": "cra.change_impact_review.v1"
+}

@@ -1,7 +1,7 @@
 {
   "schema": "cra.owner_observation_chaos_catalog.v1",
   "corpus": {
-    "root": "tests/fixtures/postmortems",
+    "root": "/srv/operator/projects/immunize/post-mortems",
     "legacy_sha256": "84e0443c46b25bda742c1d6db6ffda46c80320948dde5220cb2ab3a103196310",
     "legacy_rows": 201,
     "legacy_unique_sources": 200,
@@ -149,6 +149,8 @@
           "no_retry",
           "deployed_esrch_baseline",
           "missing_esrch_retry",
+          "missing_registered_executable_retry",
+          "drop_registered_executable_errno",
           "deployed_empty_cmdline_baseline"
         ],
         "probes": [
@@ -183,6 +185,156 @@
               }
             ],
             "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_lifecycle_evidence.py::test_registered_auxiliary_executable_exit_is_retried_with_original_errno[enoent]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.state",
+              "observed.same_target",
+              "observed.retries",
+              "observed.errno_preserved",
+              "observed.registered_disappearance",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "eq",
+                "expected": "RUNNING"
+              },
+              {
+                "evidence": "observed.same_target",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.retries",
+                "operator": "gte",
+                "expected": 1
+              },
+              {
+                "evidence": "observed.errno_preserved",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.registered_disappearance",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_lifecycle_evidence.py::test_registered_auxiliary_executable_exit_is_retried_with_original_errno[esrch]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.state",
+              "observed.same_target",
+              "observed.retries",
+              "observed.errno_preserved",
+              "observed.registered_disappearance",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "eq",
+                "expected": "RUNNING"
+              },
+              {
+                "evidence": "observed.same_target",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.retries",
+                "operator": "gte",
+                "expected": 1
+              },
+              {
+                "evidence": "observed.errno_preserved",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.registered_disappearance",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_lifecycle_evidence.py::test_real_kernel_auxiliary_exit_during_first_executable_read_is_retried",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.state",
+              "observed.same_target",
+              "observed.retries",
+              "observed.file_disappeared",
+              "observed.physical_attempts",
+              "observed.elapsed_seconds"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "eq",
+                "expected": "RUNNING"
+              },
+              {
+                "evidence": "observed.same_target",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.retries",
+                "operator": "gte",
+                "expected": 1
+              },
+              {
+                "evidence": "observed.file_disappeared",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              },
+              {
+                "evidence": "observed.elapsed_seconds",
+                "operator": "lte",
+                "expected": 0.5
+              }
+            ],
+            "environment": "process"
           },
           {
             "nodeid": "tests/harness/integration/test_owner_observation_chaos.py::test_real_kernel_exit_after_cmdline_open[auxiliary-child_command-1]",
@@ -648,7 +800,9 @@
           "conflate_scheduler_state_with_identity",
           "trust_unregistered_child",
           "trust_auxiliary_exec_as_delivery",
-          "prune_reaped_identity_before_snapshot"
+          "retry_unconfirmed_executable_gap",
+          "prune_reaped_identity_before_snapshot",
+          "ignore_encoder_pipe_proof"
         ],
         "probes": [
           {
@@ -659,9 +813,65 @@
               "observed.physical_attempts"
             ],
             "expectations": [
-              {"evidence": "observed.state", "operator": "eq", "expected": "RUNNING"},
-              {"evidence": "observed.target_present", "operator": "true", "expected": true},
-              {"evidence": "observed.physical_attempts", "operator": "eq", "expected": 0}
+              {
+                "evidence": "observed.state",
+                "operator": "eq",
+                "expected": "RUNNING"
+              },
+              {
+                "evidence": "observed.target_present",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_lifecycle_evidence.py::test_registered_auxiliary_executable_failure_without_confirmed_exit_remains_unknown[enoent-live]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.state",
+              "observed.target",
+              "observed.retries",
+              "observed.original_error",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "eq",
+                "expected": "UNKNOWN"
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.retries",
+                "operator": "eq",
+                "expected": 0
+              },
+              {
+                "evidence": "observed.original_error",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
             ],
             "environment": "fake"
           },
@@ -673,9 +883,21 @@
               "observed.physical_attempts"
             ],
             "expectations": [
-              {"evidence": "observed.state", "operator": "eq", "expected": "RUNNING"},
-              {"evidence": "observed.target_present", "operator": "true", "expected": true},
-              {"evidence": "observed.physical_attempts", "operator": "eq", "expected": 0}
+              {
+                "evidence": "observed.state",
+                "operator": "eq",
+                "expected": "RUNNING"
+              },
+              {
+                "evidence": "observed.target_present",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
             ],
             "environment": "fake"
           },
@@ -688,10 +910,26 @@
               "observed.diagnostic_count"
             ],
             "expectations": [
-              {"evidence": "observed.state", "operator": "eq", "expected": "UNKNOWN"},
-              {"evidence": "observed.target", "operator": "eq", "expected": null},
-              {"evidence": "observed.physical_attempts", "operator": "eq", "expected": 0},
-              {"evidence": "observed.diagnostic_count", "operator": "gte", "expected": 1}
+              {
+                "evidence": "observed.state",
+                "operator": "eq",
+                "expected": "UNKNOWN"
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              },
+              {
+                "evidence": "observed.diagnostic_count",
+                "operator": "gte",
+                "expected": 1
+              }
             ],
             "environment": "fake"
           },
@@ -703,9 +941,21 @@
               "observed.physical_attempts"
             ],
             "expectations": [
-              {"evidence": "observed.state", "operator": "eq", "expected": "RUNNING"},
-              {"evidence": "observed.target_present", "operator": "true", "expected": true},
-              {"evidence": "observed.physical_attempts", "operator": "eq", "expected": 0}
+              {
+                "evidence": "observed.state",
+                "operator": "eq",
+                "expected": "RUNNING"
+              },
+              {
+                "evidence": "observed.target_present",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
             ],
             "environment": "fake"
           },
@@ -719,11 +969,31 @@
               "observed.physical_attempts"
             ],
             "expectations": [
-              {"evidence": "observed.scheduler_state_changed", "operator": "true", "expected": true},
-              {"evidence": "observed.state", "operator": "eq", "expected": "RUNNING"},
-              {"evidence": "observed.target_present", "operator": "true", "expected": true},
-              {"evidence": "observed.retries", "operator": "eq", "expected": 0},
-              {"evidence": "observed.physical_attempts", "operator": "eq", "expected": 0}
+              {
+                "evidence": "observed.scheduler_state_changed",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "eq",
+                "expected": "RUNNING"
+              },
+              {
+                "evidence": "observed.target_present",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.retries",
+                "operator": "eq",
+                "expected": 0
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
             ],
             "environment": "fake"
           },
@@ -737,11 +1007,31 @@
               "observed.physical_attempts"
             ],
             "expectations": [
-              {"evidence": "observed.executable_changed", "operator": "true", "expected": true},
-              {"evidence": "observed.state", "operator": "eq", "expected": "UNKNOWN"},
-              {"evidence": "observed.target", "operator": "eq", "expected": null},
-              {"evidence": "observed.diagnostic_count", "operator": "gte", "expected": 1},
-              {"evidence": "observed.physical_attempts", "operator": "eq", "expected": 0}
+              {
+                "evidence": "observed.executable_changed",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "eq",
+                "expected": "UNKNOWN"
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.diagnostic_count",
+                "operator": "gte",
+                "expected": 1
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
             ],
             "environment": "fake"
           },
@@ -755,11 +1045,31 @@
               "observed.physical_attempts"
             ],
             "expectations": [
-              {"evidence": "observed.scheduler_state_changed", "operator": "true", "expected": true},
-              {"evidence": "observed.state", "operator": "eq", "expected": "RUNNING"},
-              {"evidence": "observed.target_present", "operator": "true", "expected": true},
-              {"evidence": "observed.retries", "operator": "eq", "expected": 0},
-              {"evidence": "observed.physical_attempts", "operator": "eq", "expected": 0}
+              {
+                "evidence": "observed.scheduler_state_changed",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "eq",
+                "expected": "RUNNING"
+              },
+              {
+                "evidence": "observed.target_present",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.retries",
+                "operator": "eq",
+                "expected": 0
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
             ],
             "environment": "process"
           },
@@ -772,10 +1082,26 @@
               "observed.diagnostic_count"
             ],
             "expectations": [
-              {"evidence": "observed.state", "operator": "eq", "expected": "UNKNOWN"},
-              {"evidence": "observed.target", "operator": "eq", "expected": null},
-              {"evidence": "observed.physical_attempts", "operator": "eq", "expected": 0},
-              {"evidence": "observed.diagnostic_count", "operator": "gte", "expected": 1}
+              {
+                "evidence": "observed.state",
+                "operator": "eq",
+                "expected": "UNKNOWN"
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              },
+              {
+                "evidence": "observed.diagnostic_count",
+                "operator": "gte",
+                "expected": 1
+              }
             ],
             "environment": "fake"
           },
@@ -788,10 +1114,26 @@
               "observed.physical_attempts"
             ],
             "expectations": [
-              {"evidence": "observed.state", "operator": "eq", "expected": "UNKNOWN"},
-              {"evidence": "observed.target", "operator": "eq", "expected": null},
-              {"evidence": "observed.permission_diagnostic", "operator": "true", "expected": true},
-              {"evidence": "observed.physical_attempts", "operator": "eq", "expected": 0}
+              {
+                "evidence": "observed.state",
+                "operator": "eq",
+                "expected": "UNKNOWN"
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.permission_diagnostic",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
             ],
             "environment": "fake"
           },
@@ -803,9 +1145,21 @@
               "observed.parent_matches"
             ],
             "expectations": [
-              {"evidence": "observed.registered", "operator": "true", "expected": true},
-              {"evidence": "observed.credential_field_count", "operator": "eq", "expected": 0},
-              {"evidence": "observed.parent_matches", "operator": "true", "expected": true}
+              {
+                "evidence": "observed.registered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.credential_field_count",
+                "operator": "eq",
+                "expected": 0
+              },
+              {
+                "evidence": "observed.parent_matches",
+                "operator": "true",
+                "expected": true
+              }
             ],
             "environment": "process"
           },
@@ -817,9 +1171,21 @@
               "observed.credential_field_count"
             ],
             "expectations": [
-              {"evidence": "observed.exec_changed", "operator": "true", "expected": true},
-              {"evidence": "observed.pid_identity_retained", "operator": "true", "expected": true},
-              {"evidence": "observed.credential_field_count", "operator": "eq", "expected": 0}
+              {
+                "evidence": "observed.exec_changed",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.pid_identity_retained",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.credential_field_count",
+                "operator": "eq",
+                "expected": 0
+              }
             ],
             "environment": "process"
           },
@@ -880,6 +1246,266 @@
               }
             ],
             "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_lifecycle_evidence.py::test_pipe_encoder_requires_all_independent_bindings[none]",
+            "required_evidence": [
+              "observed.state",
+              "observed.target_present",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.state",
+                "operator": "eq",
+                "expected": "RUNNING"
+              },
+              {
+                "evidence": "observed.target_present",
+                "operator": "eq",
+                "expected": true
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_lifecycle_evidence.py::test_pipe_encoder_requires_all_independent_bindings[digest]",
+            "required_evidence": [
+              "observed.state",
+              "observed.target_present",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.state",
+                "operator": "eq",
+                "expected": "UNKNOWN"
+              },
+              {
+                "evidence": "observed.target_present",
+                "operator": "eq",
+                "expected": false
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_lifecycle_evidence.py::test_pipe_encoder_requires_all_independent_bindings[pipe]",
+            "required_evidence": [
+              "observed.state",
+              "observed.target_present",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.state",
+                "operator": "eq",
+                "expected": "UNKNOWN"
+              },
+              {
+                "evidence": "observed.target_present",
+                "operator": "eq",
+                "expected": false
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_lifecycle_evidence.py::test_pipe_encoder_requires_all_independent_bindings[socket]",
+            "required_evidence": [
+              "observed.state",
+              "observed.target_present",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.state",
+                "operator": "eq",
+                "expected": "UNKNOWN"
+              },
+              {
+                "evidence": "observed.target_present",
+                "operator": "eq",
+                "expected": false
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_lifecycle_evidence.py::test_pipe_encoder_requires_all_independent_bindings[pid]",
+            "required_evidence": [
+              "observed.state",
+              "observed.target_present",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.state",
+                "operator": "eq",
+                "expected": "UNKNOWN"
+              },
+              {
+                "evidence": "observed.target_present",
+                "operator": "eq",
+                "expected": false
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_lifecycle_evidence.py::test_pipe_encoder_requires_all_independent_bindings[parent]",
+            "required_evidence": [
+              "observed.state",
+              "observed.target_present",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.state",
+                "operator": "eq",
+                "expected": "UNKNOWN"
+              },
+              {
+                "evidence": "observed.target_present",
+                "operator": "eq",
+                "expected": false
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_lifecycle_evidence.py::test_pipe_encoder_requires_all_independent_bindings[executable]",
+            "required_evidence": [
+              "observed.state",
+              "observed.target_present",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.state",
+                "operator": "eq",
+                "expected": "UNKNOWN"
+              },
+              {
+                "evidence": "observed.target_present",
+                "operator": "eq",
+                "expected": false
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_lifecycle_evidence.py::test_pipe_encoder_requires_all_independent_bindings[owner]",
+            "required_evidence": [
+              "observed.state",
+              "observed.target_present",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.state",
+                "operator": "eq",
+                "expected": "UNKNOWN"
+              },
+              {
+                "evidence": "observed.target_present",
+                "operator": "eq",
+                "expected": false
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_lifecycle_evidence.py::test_pipe_encoder_requires_all_independent_bindings[unbound]",
+            "required_evidence": [
+              "observed.state",
+              "observed.target_present",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.state",
+                "operator": "eq",
+                "expected": "UNKNOWN"
+              },
+              {
+                "evidence": "observed.target_present",
+                "operator": "eq",
+                "expected": false
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_lifecycle_evidence.py::test_pipe_encoder_requires_all_independent_bindings[unregistered]",
+            "required_evidence": [
+              "observed.state",
+              "observed.target_present",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.state",
+                "operator": "eq",
+                "expected": "UNKNOWN"
+              },
+              {
+                "evidence": "observed.target_present",
+                "operator": "eq",
+                "expected": false
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
           }
         ],
         "sut": [
@@ -899,6 +1525,7 @@
           "skip_command_recheck",
           "deployed_empty_final_baseline",
           "accept_unproven_empty",
+          "retry_unconfirmed_executable_gap",
           "skip_empty_identity",
           "skip_empty_final_check"
         ],
@@ -935,6 +1562,170 @@
                 "evidence": "observed.diagnostic_count",
                 "operator": "gte",
                 "expected": 1
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_lifecycle_evidence.py::test_registered_auxiliary_executable_failure_without_confirmed_exit_remains_unknown[permission]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.state",
+              "observed.target",
+              "observed.retries",
+              "observed.original_error",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "eq",
+                "expected": "UNKNOWN"
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.retries",
+                "operator": "eq",
+                "expected": 0
+              },
+              {
+                "evidence": "observed.original_error",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_lifecycle_evidence.py::test_registered_auxiliary_executable_failure_without_confirmed_exit_remains_unknown[io]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.state",
+              "observed.target",
+              "observed.retries",
+              "observed.original_error",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "eq",
+                "expected": "UNKNOWN"
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.retries",
+                "operator": "eq",
+                "expected": 0
+              },
+              {
+                "evidence": "observed.original_error",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_lifecycle_evidence.py::test_registered_auxiliary_executable_exit_retry_rejects_identity_drift[auxiliary-pid-reuse]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.state",
+              "observed.target",
+              "observed.retries",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "eq",
+                "expected": "UNKNOWN"
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.retries",
+                "operator": "eq",
+                "expected": 0
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_lifecycle_evidence.py::test_registered_auxiliary_executable_exit_retry_rejects_identity_drift[managed-generation]",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.state",
+              "observed.target",
+              "observed.retries",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "eq",
+                "expected": "UNKNOWN"
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.retries",
+                "operator": "eq",
+                "expected": 0
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
               }
             ],
             "environment": "fake"
@@ -2958,10 +3749,43 @@
               }
             ],
             "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_lifecycle_evidence.py::test_pipe_metadata_does_not_invent_a_sender_target",
+            "required_evidence": [
+              "observed.target",
+              "observed.sender_running",
+              "observed.encoder_pid",
+              "observed.route_generation"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.sender_running",
+                "operator": "eq",
+                "expected": false
+              },
+              {
+                "evidence": "observed.encoder_pid",
+                "operator": "eq",
+                "expected": 123
+              },
+              {
+                "evidence": "observed.route_generation",
+                "operator": "eq",
+                "expected": 2
+              }
+            ],
+            "environment": "fake"
           }
         ],
         "sut": [
-          "src/runtime_boundary/recovery_publisher.py"
+          "src/runtime_boundary/recovery_publisher.py",
+          "src/runtime_boundary/observation.py"
         ],
         "verification_case_id": "VC-OWNER-IDENTITY-001",
         "component_id": "OwnerObservationPipeline",
@@ -2994,6 +3818,50 @@
               }
             ],
             "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_lifecycle_evidence.py::test_real_kernel_child_exit_after_ledger_snapshot_is_finally_observed",
+            "required_evidence": [
+              "observed.triggered",
+              "observed.state",
+              "observed.target",
+              "observed.activation_unknown",
+              "observed.integrity",
+              "observed.physical_attempts"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.triggered",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "eq",
+                "expected": "ABSENT"
+              },
+              {
+                "evidence": "observed.target",
+                "operator": "eq",
+                "expected": null
+              },
+              {
+                "evidence": "observed.activation_unknown",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.integrity",
+                "operator": "eq",
+                "expected": "ok"
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              }
+            ],
+            "environment": "process"
           }
         ],
         "sut": [
@@ -3001,15 +3869,7 @@
         ],
         "verification_case_id": "VC-OWNER-FINAL-001",
         "component_id": "OwnerObservationPipeline",
-        "oracle_ref": "owner-independent-expectations",
-        "coverage_gaps": [
-          {
-            "environment": "process",
-            "reason": "INJECTOR_MISSING",
-            "missing_capability": "deterministic test-owned child exit barrier after the ledger snapshot and before final owner observation",
-            "next_action": "add a bounded process injector that records the post-ledger transition without touching a live process"
-          }
-        ]
+        "oracle_ref": "owner-independent-expectations"
       },
       {
         "invariant_id": "I-OWNER-BOUNDED",
@@ -3287,6 +4147,50 @@
               }
             ],
             "environment": "fake"
+          },
+          {
+            "nodeid": "tests/harness/integration/test_owner_lifecycle_evidence.py::test_real_kernel_child_activation_is_reread_after_async_target_loss",
+            "required_evidence": [
+              "observed.bounded_termination_enabled",
+              "observed.rw_timeout_enabled",
+              "observed.ledger_changes",
+              "observed.physical_attempts",
+              "observed.same_target",
+              "observed.state"
+            ],
+            "expectations": [
+              {
+                "evidence": "observed.bounded_termination_enabled",
+                "operator": "false",
+                "expected": false
+              },
+              {
+                "evidence": "observed.rw_timeout_enabled",
+                "operator": "false",
+                "expected": false
+              },
+              {
+                "evidence": "observed.ledger_changes",
+                "operator": "eq",
+                "expected": 0
+              },
+              {
+                "evidence": "observed.physical_attempts",
+                "operator": "eq",
+                "expected": 0
+              },
+              {
+                "evidence": "observed.same_target",
+                "operator": "true",
+                "expected": true
+              },
+              {
+                "evidence": "observed.state",
+                "operator": "eq",
+                "expected": "RUNNING"
+              }
+            ],
+            "environment": "process"
           }
         ],
         "sut": [
@@ -3295,15 +4199,7 @@
         ],
         "verification_case_id": "VC-OWNER-ACTIVATION-001",
         "component_id": "OwnerObservationPipeline",
-        "oracle_ref": "owner-independent-expectations",
-        "coverage_gaps": [
-          {
-            "environment": "process",
-            "reason": "INJECTOR_MISSING",
-            "missing_capability": "test-owned child environment mutation combined with an independently removed asynchronous target",
-            "next_action": "add an isolated child fixture that proves fresh activation reads and zero ledger writes"
-          }
-        ]
+        "oracle_ref": "owner-independent-expectations"
       },
       {
         "invariant_id": "I-OWNER-RETENTION",
@@ -3504,7 +4400,10 @@
               "cra_no_action_soak.recovery_soak::collect",
               "cra_no_action_soak.recovery_soak::evaluate",
               "cra_no_action_soak.operator_status::classify_gate",
-              "cra_dell_recovery.owner_diagnostics::validate_diagnostics"
+              "cra_dell_recovery.owner_diagnostics::validate_diagnostics",
+              "runtime_boundary.child_registry::ChildLifecycleRegistry.spawn_pipe_encoder",
+              "runtime_boundary.child_registry::ChildLifecycleRegistry.pipe_encoder_proven",
+              "runtime_boundary.observation::RuntimeObservationPublisher.publish"
             ]
           }
         ]

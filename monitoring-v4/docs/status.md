@@ -23,11 +23,18 @@ credential, real delivery process, public publisher cutover, or runtime
 mutation authority is enabled. R2 and R3 remain incomplete until their elapsed
 live evidence gates are satisfied for one unchanged revision pair.
 
+## OCI/Twitch Source Addition
+
+Read-only relay/provider/API/reception projections are now available; see
+[their source and uncertainty contract](relay-provider-evidence.md).
+This addition leaves notification/runtime authority and revision-bound soak
+gates disabled. The validation counts below describe the earlier milestone.
+
 ## Validation recorded for this public milestone
 
 - Committed private implementation lineage through `8f2c1aa...` is represented
   by public history through `997863c`.
-- Current host validation: `391 tests / 385 passed / 6 skipped`.
+- Historical host validation: `391 tests / 385 passed / 6 skipped`.
 - Disposable PostgreSQL 17: the six normally skipped destructive integration
   tests all passed after schema versions 1 through 6 were applied.
 - k3s rendering: 19 resources and 1,277 lines before placeholder substitution.

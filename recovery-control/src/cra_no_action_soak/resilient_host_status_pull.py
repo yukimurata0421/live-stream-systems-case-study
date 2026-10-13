@@ -14,8 +14,9 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from cra_dell_recovery.bounded_http import fetch_bounded_json
+from cra_dell_recovery.bounded_http import MAXIMUM_TRANSPORT_ATTEMPTS, fetch_bounded_json
 from cra_dell_recovery.canonical import KeyRing
+from cra_dell_recovery.errors import EvidenceFreshnessError
 from cra_dell_recovery.recovery_health import RecoveryHealthStore
 from cra_dell_recovery.release_identity import require_runtime_release
 from cra_dell_recovery.time import isoformat_utc, parse_utc
@@ -226,30 +227,67 @@ class ResilientStatusPuller:
 
     def pull(self, *, now: datetime | None = None) -> dict[str, Any]:
         request = urllib.request.Request(self.endpoint_url, headers={"Accept": "application/json"}, method="GET")
-        raw, attempts = fetch_bounded_json(
-            request,
-            context=self.ssl_context,
-            open_url=self.open_url,
-            timeout_seconds=self.timeout_seconds,
-            transient_retry_delays_seconds=self.transient_retry_delays_seconds,
-            maximum_retry_elapsed_seconds=self.maximum_retry_elapsed_seconds,
-            maximum_bytes=self.maximum_bytes,
-            monotonic=self.monotonic,
-            wait=self.wait,
-            jitter=self.jitter,
-            error_prefix="RESILIENT_STATUS",
-            retryable=lambda error: classify_failure(error).retryable,
-            failure_observer=self.failure_observer,
-        )
-        value = json.loads(raw)
-        if not isinstance(value, dict):
-            raise ValueError("RESILIENT_STATUS_PULL_RESPONSE_NOT_OBJECT")
-        current = (now or self.clock()).astimezone(UTC)
-        verified = self.contract.decode(value, now=current)
-        remaining = (parse_utc(str(verified["report_lease_until"])) - current).total_seconds()
-        evidence_remaining = (evidence_valid_until(verified) - current).total_seconds()
-        if evidence_remaining < self.minimum_remaining_lease_seconds:
-            raise ValueError("RESILIENT_STATUS_PULL_INSUFFICIENT_EVIDENCE_VALIDITY")
+        invocation_deadline = self.monotonic() + self.maximum_retry_elapsed_seconds
+        attempts = 0
+        evidence_freshness_retries = 0
+
+        def observe_failure(classification: FailureClassification, attempt: int, exhausted: bool) -> None:
+            if self.failure_observer is not None:
+                self.failure_observer(classification, attempts + attempt, exhausted)
+
+        while True:
+            remaining_budget = invocation_deadline - self.monotonic()
+            if remaining_budget <= 0 or attempts >= MAXIMUM_TRANSPORT_ATTEMPTS:
+                error = EvidenceFreshnessError("RESILIENT_STATUS_PULL_EVIDENCE_REFRESH_BUDGET_EXHAUSTED")
+                if self.failure_observer is not None:
+                    self.failure_observer(classify_failure(error), attempts + 1, True)
+                raise error
+            raw, request_attempts = fetch_bounded_json(
+                request,
+                context=self.ssl_context,
+                open_url=self.open_url,
+                timeout_seconds=self.timeout_seconds,
+                transient_retry_delays_seconds=self.transient_retry_delays_seconds,
+                maximum_retry_elapsed_seconds=remaining_budget,
+                maximum_bytes=self.maximum_bytes,
+                monotonic=self.monotonic,
+                wait=self.wait,
+                jitter=self.jitter,
+                error_prefix="RESILIENT_STATUS",
+                retryable=lambda error: classify_failure(error).retryable,
+                failure_observer=observe_failure,
+            )
+            attempts += request_attempts
+            value = json.loads(raw)
+            if not isinstance(value, dict):
+                raise ValueError("RESILIENT_STATUS_PULL_RESPONSE_NOT_OBJECT")
+            current = (now or self.clock()).astimezone(UTC)
+            try:
+                verified = self.contract.decode(value, now=current)
+            except ValueError as error:
+                if str(error) not in {
+                    "RESILIENT_STATUS_REPORT_EXPIRED",
+                    "RESILIENT_STATUS_COMPONENT_FRESH_EXPIRED",
+                }:
+                    raise
+                verified = None
+            if verified is not None:
+                remaining = (parse_utc(str(verified["report_lease_until"])) - current).total_seconds()
+                evidence_remaining = (evidence_valid_until(verified) - current).total_seconds()
+                if evidence_remaining >= self.minimum_remaining_lease_seconds:
+                    break
+            freshness_error = EvidenceFreshnessError("RESILIENT_STATUS_PULL_INSUFFICIENT_EVIDENCE_VALIDITY")
+            remaining_budget = invocation_deadline - self.monotonic()
+            retry_cap = self.transient_retry_delays_seconds[min(evidence_freshness_retries, len(self.transient_retry_delays_seconds) - 1)]
+            can_retry = retry_cap < remaining_budget and attempts < MAXIMUM_TRANSPORT_ATTEMPTS
+            if self.failure_observer is not None:
+                self.failure_observer(classify_failure(freshness_error), attempts, not can_retry)
+            if not can_retry:
+                raise freshness_error
+            evidence_freshness_retries += 1
+            self.wait(retry_cap)
+
+        assert verified is not None
         disposition = self._admit(verified)
         return {
             "host_status": verified,
@@ -257,6 +295,7 @@ class ResilientStatusPuller:
             "pulled_at": isoformat_utc(current),
             "transport_attempt_count": attempts,
             "transport_retry_count": attempts - 1,
+            "evidence_freshness_retry_count": evidence_freshness_retries,
             "source_remaining_lease_seconds": round(remaining, 3),
             "source_remaining_evidence_seconds": round(evidence_remaining, 3),
         }
@@ -290,7 +329,7 @@ def _contract(config: PullConfig) -> ResilientHostStatusContract:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Pull and admit signed resilient status v3")
+    parser = argparse.ArgumentParser(description="Pull and admit signed resilient status v4")
     parser.add_argument("--config", type=Path, required=True)
     parser.add_argument("--check-config", action="store_true")
     args = parser.parse_args()
@@ -341,6 +380,7 @@ def main() -> None:
             "observed_at": result["pulled_at"],
             "transport_attempt_count": result["transport_attempt_count"],
             "transport_retry_count": result["transport_retry_count"],
+            "evidence_freshness_retry_count": result["evidence_freshness_retry_count"],
             "source_remaining_lease_seconds": result["source_remaining_lease_seconds"],
             "source_remaining_evidence_seconds": result["source_remaining_evidence_seconds"],
             "control_capability_count": 0,

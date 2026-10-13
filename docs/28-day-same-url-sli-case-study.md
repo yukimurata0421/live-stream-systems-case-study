@@ -1,14 +1,44 @@
-# Historical 28-Day Same-URL SLI And Current Continuity Checkpoint
+# Historical SLI And Same-URL Continuity Evidence
 
-This page has two deliberately separate evidence layers. The fixed June 2026
-review preserves the original 28-day SLI windows and denominators. The later
-checkpoint extends only the exact-video-identity claim through a retained
-September ledger endpoint. It does not recompute the historical ratios or turn
-them into a moving uptime number.
+This page keeps three evidence periods separate: the latest October URL-identity
+checkpoint, the earlier September checkpoint, and the fixed May/June 14-day and
+28-day availability review. A longer URL-observation period does not increase
+those older availability ratios or prove every delivered frame.
 
-Together they show the operating method behind `stream_v3`: define the
-objective, measure the denominator, separate invariants from availability, and
-publish unresolved risks instead of hiding them behind one percentage.
+## At-Least-160-Day Continuity Checkpoint
+
+From `2026-05-06 10:36:17 JST` to `2026-10-14 00:04:57 JST`, the retained
+identity record spans **160 days, 13 hours, 28 minutes, 40 seconds**. The public
+YouTube video ID is still `OpMzOBFwM7M` at the latest operational-ledger checkpoint.
+
+The October 14 read-only query was bound to the running monitoring process's
+state directory. One SQL read transaction returned:
+
+| Evidence | Result |
+| --- | --- |
+| Observation acquired | `2026-10-14 01:14:12 JST` |
+| Ledger first / last checkpoint | `2026-05-28 22:57:22 JST` / `2026-10-14 00:04:57 JST` |
+| Checkpoint calendar dates | `140 / 140`; no missing JST dates |
+| Rows | `140`: one baseline plus 139 daily checkpoints |
+| Distinct public-URL hashes | `1` |
+| Selected / expected video-ID hash mismatches | `0 / 0` |
+| Recorded URL transitions | `0` |
+| Ledger candidate-new-URL / force-live flags | `0 / 0` |
+
+The machine-readable [checkpoint](../publication/continuity-checkpoint.json)
+contains aggregates and dates, not the private database or raw logs. The initial
+May measurement predates the May 28 ledger, so the 160-day span combines that
+retained starting identity with the later checkpoint record. It is not 160 days
+of daily ledger coverage.
+
+Daily identity checks can miss changes between observations and do not measure
+continuous frames. Network interruption, process restart, API health, correct
+audio/video, and watch-URL identity have different denominators. This is a
+same-URL observation claim, not a contractual availability guarantee. No new
+14-day or 28-day ratio was calculated for this checkpoint.
+
+The earlier September evidence below remains intact. Its `107 / 107` dates and
+127-day span describe that older endpoint; they are not current totals.
 
 ## At-Least-127-Day Continuity Checkpoint
 
@@ -21,7 +51,7 @@ architecture, and at the endpoint.
 | Evidence item | Observed value | Interpretation boundary |
 | --- | --- | --- |
 | Measurement start | `2026-05-06 10:36:17 JST` | Start of the retained 14-day same-URL observation. |
-| Measurement endpoint | `2026-09-11 00:04:12 JST` | Latest retained arena-server daily ledger checkpoint reviewed for this publication; this is not an uninterrupted-frame denominator. |
+| Measurement endpoint | `2026-09-11 00:04:12 JST` | Earlier retained arena-server daily ledger checkpoint reviewed for the September publication; this is not an uninterrupted-frame denominator. |
 | Expected video ID | `OpMzOBFwM7M` | The configured identity contract. |
 | Selected video ID at endpoint | `OpMzOBFwM7M` | The ledger's selected and expected ID hashes both match the SHA-256 of this public ID. |
 | Daily ledger coverage | `107 / 107` JST days from `2026-05-28` through `2026-09-11` | One baseline plus 106 daily checkpoints; this daily ledger begins at the V3 handoff evidence, not the May 6 measurement start. |

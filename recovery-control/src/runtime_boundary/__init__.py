@@ -5,6 +5,7 @@ from .model import (
     EXECUTOR_OWNED_INTENTS,
     RECONCILE_FFMPEG,
     RESTART_FFMPEG,
+    SWITCH_STREAM_ROUTE,
     EffectRequest,
     ProtocolError,
 )
@@ -26,6 +27,7 @@ __all__ = [
     "ProtocolError",
     "RECONCILE_FFMPEG",
     "RESTART_FFMPEG",
+    "SWITCH_STREAM_ROUTE",
     "RuntimeSnapshotDecision",
     "RuntimeSnapshotReader",
     "TargetSnapshotDecision",

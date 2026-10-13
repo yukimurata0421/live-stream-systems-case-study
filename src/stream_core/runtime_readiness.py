@@ -153,6 +153,30 @@ def readiness_status(
     ffmpeg_pid, ffmpeg_args = find_stream_ffmpeg(proc_root=proc_root)
     ffmpeg_uptime_sec = process_uptime_sec(ffmpeg_pid, proc_root=proc_root)
     nvenc_active = command_uses_nvenc(ffmpeg_args)
+    encoder_pid = ffmpeg_pid
+    split_proven = False
+    if env("STREAM_DELIVERY_CONFIG_FILE"):
+        try:
+            import stat
+            from runtime_boundary.child_registry import ChildLifecycleRegistry
+            path = Path(env("FR_RUNTIME_OBSERVATION_FILE"))
+            meta = path.stat()
+            observation = json.loads(path.read_text())
+            age = (datetime.now(timezone.utc) - datetime.fromisoformat(observation["observed_at"].replace("Z", "+00:00"))).total_seconds()
+            capsule = observation["encoder_pipe_identity"]
+            encoder_pid = int(observation["local_encoder_pid"])
+            sender_parent = int((proc_root/str(ffmpeg_pid)/"stat").read_text().rsplit(")",1)[1].split()[1])
+            proof = ChildLifecycleRegistry(proc_root=proc_root)
+            proof.owner_pid = sender_parent
+            split_proven = (meta.st_uid == 0 and not meta.st_mode & 0o022 and 0 <= age <= 5
+                and observation["pod_uid"] == env("STREAM_V3_POD_UID")
+                and observation["local_ffmpeg_pid"] == ffmpeg_pid and observation["managed_child_cardinality"] == "1"
+                and capsule["pid"] == encoder_pid and capsule["owner_pid"] == sender_parent
+                and proof.pipe_encoder_proven(encoder_pid, capsule))
+            nvenc_active = split_proven and command_uses_nvenc(process_cmdline(encoder_pid, proc_root=proc_root))
+        except (OSError, ValueError, KeyError, TypeError):
+            nvenc_active = False
+
     socket_ok, socket_detail = established_rtmp_socket(ffmpeg_pid, ports=rtmp_ports, runner=runner)
 
     reasons: list[str] = []
@@ -179,6 +203,8 @@ def readiness_status(
         "ffmpeg_pid": ffmpeg_pid,
         "ffmpeg_uptime_sec": ffmpeg_uptime_sec,
         "nvenc_active": nvenc_active,
+        "encoder_pid": encoder_pid,
+        "split_encoder_identity_proven": split_proven,
         "rtmp_socket_established": socket_ok,
         "gpu_ok": gpu_ok,
         "driver_version": gpu_detail if gpu_ok else "",
@@ -235,7 +261,7 @@ def main() -> int:
     args = parse_args()
     status = readiness_status(
         min_ffmpeg_uptime_sec=max(1, int_env("STREAM_READINESS_MIN_FFMPEG_UPTIME_SEC", 10)),
-        rtmp_ports=parse_ports(env("STREAM_READINESS_RTMP_PORTS", "443,1935")),
+        rtmp_ports=parse_ports(env("FR_RTMP_PORTS", "443,1936") if env("STREAM_DELIVERY_CONFIG_FILE") else env("STREAM_READINESS_RTMP_PORTS", "443,1935")),
     )
     if status["ready"] and not args.check_only:
         write_marker(args.marker_file, status)

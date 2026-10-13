@@ -1,0 +1,483 @@
+{
+  "schema": "stream.route_replay.v1",
+  "evidence_class": "SYNTHETIC_NOT_LIVE",
+  "frames": [
+    {
+      "observed_at": "2026-01-01T00:00:00+00:00",
+      "local": {
+        "status": "VALID",
+        "observed_at": "2026-01-01T00:00:00+00:00",
+        "probe_observed_at": "2026-01-01T00:00:00+00:00",
+        "route": "PRIMARY",
+        "route_generation": 1,
+        "encoder_profile_sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "target_sha256": "fixture-target",
+        "ffmpeg_running": true,
+        "stream_established": true,
+        "in_flight_count": 0,
+        "network": {
+          "dns_ok": true,
+          "tcp_probe_ok": true,
+          "network_down": false
+        },
+        "point": {
+          "id": "fixture-sender",
+          "bytes": 0
+        },
+        "tcp": {
+          "send_q": 0,
+          "notsent": 0
+        }
+      },
+      "oci": {
+        "status": "VALID",
+        "observed_at": "2026-01-01T00:00:00+00:00",
+        "host_boot_id": "fixture-boot",
+        "relay_instance": "fixture-relay",
+        "relay_source_sha256": "rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr",
+        "enabled": true,
+        "halted": false,
+        "twitch_planned_break": false,
+        "input": {
+          "id": "fixture-input",
+          "bytes": 0
+        },
+        "destinations": [
+          {
+            "provider": "youtube",
+            "id": "fixture-youtube",
+            "bytes": 0,
+            "error_present": false
+          },
+          {
+            "provider": "twitch",
+            "id": "fixture-twitch",
+            "bytes": 0,
+            "error_present": false
+          }
+        ]
+      },
+      "pings": {
+        "cloudflare": {
+          "ok": true,
+          "observed_at": "2026-01-01T00:00:00+00:00"
+        },
+        "google": {
+          "ok": true,
+          "observed_at": "2026-01-01T00:00:00+00:00"
+        },
+        "quad9": {
+          "ok": true,
+          "observed_at": "2026-01-01T00:00:00+00:00"
+        },
+        "gateway": {
+          "ok": true,
+          "observed_at": "2026-01-01T00:00:00+00:00"
+        }
+      },
+      "anchors": {
+        "status": "VALID",
+        "observed_at": "2026-01-01T00:00:00+00:00",
+        "probes": {
+          "cloudflare_v4": true,
+          "google_v4": true,
+          "cloudflare_v6": true,
+          "google_v6": true
+        }
+      },
+      "uplink": {
+        "status": "VALID",
+        "identity_sha256": "fixture-uplink"
+      },
+      "maintenance": {
+        "status": "VALID",
+        "inactive": true
+      }
+    },
+    {
+      "observed_at": "2026-01-01T00:00:15+00:00",
+      "local": {
+        "status": "VALID",
+        "observed_at": "2026-01-01T00:00:15+00:00",
+        "probe_observed_at": "2026-01-01T00:00:15+00:00",
+        "route": "PRIMARY",
+        "route_generation": 1,
+        "encoder_profile_sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "target_sha256": "fixture-target",
+        "ffmpeg_running": true,
+        "stream_established": true,
+        "in_flight_count": 0,
+        "network": {
+          "dns_ok": true,
+          "tcp_probe_ok": true,
+          "network_down": false
+        },
+        "point": {
+          "id": "fixture-sender",
+          "bytes": 6750000
+        },
+        "tcp": {
+          "send_q": 0,
+          "notsent": 0
+        }
+      },
+      "oci": {
+        "status": "VALID",
+        "observed_at": "2026-01-01T00:00:15+00:00",
+        "host_boot_id": "fixture-boot",
+        "relay_instance": "fixture-relay",
+        "relay_source_sha256": "rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr",
+        "enabled": true,
+        "halted": false,
+        "twitch_planned_break": false,
+        "input": {
+          "id": "fixture-input",
+          "bytes": 6750000
+        },
+        "destinations": [
+          {
+            "provider": "youtube",
+            "id": "fixture-youtube",
+            "bytes": 6750000,
+            "error_present": false
+          },
+          {
+            "provider": "twitch",
+            "id": "fixture-twitch",
+            "bytes": 6750000,
+            "error_present": false
+          }
+        ]
+      },
+      "pings": {
+        "cloudflare": {
+          "ok": true,
+          "observed_at": "2026-01-01T00:00:15+00:00"
+        },
+        "google": {
+          "ok": true,
+          "observed_at": "2026-01-01T00:00:15+00:00"
+        },
+        "quad9": {
+          "ok": true,
+          "observed_at": "2026-01-01T00:00:15+00:00"
+        },
+        "gateway": {
+          "ok": true,
+          "observed_at": "2026-01-01T00:00:15+00:00"
+        }
+      },
+      "anchors": {
+        "status": "VALID",
+        "observed_at": "2026-01-01T00:00:15+00:00",
+        "probes": {
+          "cloudflare_v4": true,
+          "google_v4": true,
+          "cloudflare_v6": true,
+          "google_v6": true
+        }
+      },
+      "uplink": {
+        "status": "VALID",
+        "identity_sha256": "fixture-uplink"
+      },
+      "maintenance": {
+        "status": "VALID",
+        "inactive": true
+      }
+    },
+    {
+      "observed_at": "2026-01-01T00:00:30+00:00",
+      "local": {
+        "status": "VALID",
+        "observed_at": "2026-01-01T00:00:30+00:00",
+        "probe_observed_at": "2026-01-01T00:00:30+00:00",
+        "route": "PRIMARY",
+        "route_generation": 1,
+        "encoder_profile_sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "target_sha256": "fixture-target",
+        "ffmpeg_running": true,
+        "stream_established": true,
+        "in_flight_count": 0,
+        "network": {
+          "dns_ok": true,
+          "tcp_probe_ok": true,
+          "network_down": false
+        },
+        "point": {
+          "id": "fixture-sender",
+          "bytes": 13500000
+        },
+        "tcp": {
+          "send_q": 0,
+          "notsent": 0
+        }
+      },
+      "oci": {
+        "status": "VALID",
+        "observed_at": "2026-01-01T00:00:30+00:00",
+        "host_boot_id": "fixture-boot",
+        "relay_instance": "fixture-relay",
+        "relay_source_sha256": "rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr",
+        "enabled": true,
+        "halted": false,
+        "twitch_planned_break": false,
+        "input": {
+          "id": "fixture-input",
+          "bytes": 13500000
+        },
+        "destinations": [
+          {
+            "provider": "youtube",
+            "id": "fixture-youtube",
+            "bytes": 13500000,
+            "error_present": false
+          },
+          {
+            "provider": "twitch",
+            "id": "fixture-twitch",
+            "bytes": 13500000,
+            "error_present": false
+          }
+        ]
+      },
+      "pings": {
+        "cloudflare": {
+          "ok": true,
+          "observed_at": "2026-01-01T00:00:30+00:00"
+        },
+        "google": {
+          "ok": true,
+          "observed_at": "2026-01-01T00:00:30+00:00"
+        },
+        "quad9": {
+          "ok": true,
+          "observed_at": "2026-01-01T00:00:30+00:00"
+        },
+        "gateway": {
+          "ok": true,
+          "observed_at": "2026-01-01T00:00:30+00:00"
+        }
+      },
+      "anchors": {
+        "status": "VALID",
+        "observed_at": "2026-01-01T00:00:30+00:00",
+        "probes": {
+          "cloudflare_v4": true,
+          "google_v4": true,
+          "cloudflare_v6": true,
+          "google_v6": true
+        }
+      },
+      "uplink": {
+        "status": "VALID",
+        "identity_sha256": "fixture-uplink"
+      },
+      "maintenance": {
+        "status": "VALID",
+        "inactive": true
+      }
+    },
+    {
+      "observed_at": "2026-01-01T00:00:45+00:00",
+      "local": {
+        "status": "VALID",
+        "observed_at": "2026-01-01T00:00:45+00:00",
+        "probe_observed_at": "2026-01-01T00:00:45+00:00",
+        "route": "PRIMARY",
+        "route_generation": 1,
+        "encoder_profile_sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "target_sha256": "fixture-target",
+        "ffmpeg_running": true,
+        "stream_established": true,
+        "in_flight_count": 0,
+        "network": {
+          "dns_ok": false,
+          "tcp_probe_ok": false,
+          "network_down": true
+        },
+        "point": {
+          "id": "fixture-sender",
+          "bytes": 20250000
+        },
+        "tcp": {
+          "send_q": 0,
+          "notsent": 0
+        }
+      },
+      "oci": {
+        "status": "UNKNOWN"
+      },
+      "pings": {
+        "cloudflare": {
+          "ok": false,
+          "observed_at": "2026-01-01T00:00:45+00:00"
+        },
+        "google": {
+          "ok": false,
+          "observed_at": "2026-01-01T00:00:45+00:00"
+        },
+        "quad9": {
+          "ok": false,
+          "observed_at": "2026-01-01T00:00:45+00:00"
+        },
+        "gateway": {
+          "ok": false,
+          "observed_at": "2026-01-01T00:00:45+00:00"
+        }
+      },
+      "anchors": {
+        "status": "VALID",
+        "observed_at": "2026-01-01T00:00:45+00:00",
+        "probes": {
+          "cloudflare_v4": false,
+          "google_v4": false,
+          "cloudflare_v6": false,
+          "google_v6": false
+        }
+      },
+      "uplink": {
+        "status": "VALID",
+        "identity_sha256": "fixture-uplink"
+      },
+      "maintenance": {
+        "status": "VALID",
+        "inactive": true
+      }
+    },
+    {
+      "observed_at": "2026-01-01T00:01:00+00:00",
+      "local": {
+        "status": "VALID",
+        "observed_at": "2026-01-01T00:01:00+00:00",
+        "probe_observed_at": "2026-01-01T00:01:00+00:00",
+        "route": "PRIMARY",
+        "route_generation": 1,
+        "encoder_profile_sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "target_sha256": "fixture-target",
+        "ffmpeg_running": true,
+        "stream_established": true,
+        "in_flight_count": 0,
+        "network": {
+          "dns_ok": false,
+          "tcp_probe_ok": false,
+          "network_down": true
+        },
+        "point": {
+          "id": "fixture-sender",
+          "bytes": 27000000
+        },
+        "tcp": {
+          "send_q": 0,
+          "notsent": 0
+        }
+      },
+      "oci": {
+        "status": "UNKNOWN"
+      },
+      "pings": {
+        "cloudflare": {
+          "ok": false,
+          "observed_at": "2026-01-01T00:01:00+00:00"
+        },
+        "google": {
+          "ok": false,
+          "observed_at": "2026-01-01T00:01:00+00:00"
+        },
+        "quad9": {
+          "ok": false,
+          "observed_at": "2026-01-01T00:01:00+00:00"
+        },
+        "gateway": {
+          "ok": false,
+          "observed_at": "2026-01-01T00:01:00+00:00"
+        }
+      },
+      "anchors": {
+        "status": "VALID",
+        "observed_at": "2026-01-01T00:01:00+00:00",
+        "probes": {
+          "cloudflare_v4": false,
+          "google_v4": false,
+          "cloudflare_v6": false,
+          "google_v6": false
+        }
+      },
+      "uplink": {
+        "status": "VALID",
+        "identity_sha256": "fixture-uplink"
+      },
+      "maintenance": {
+        "status": "VALID",
+        "inactive": true
+      }
+    },
+    {
+      "observed_at": "2026-01-01T00:01:15+00:00",
+      "local": {
+        "status": "VALID",
+        "observed_at": "2026-01-01T00:01:15+00:00",
+        "probe_observed_at": "2026-01-01T00:01:15+00:00",
+        "route": "PRIMARY",
+        "route_generation": 1,
+        "encoder_profile_sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "target_sha256": "fixture-target",
+        "ffmpeg_running": true,
+        "stream_established": true,
+        "in_flight_count": 0,
+        "network": {
+          "dns_ok": false,
+          "tcp_probe_ok": false,
+          "network_down": true
+        },
+        "point": {
+          "id": "fixture-sender",
+          "bytes": 33750000
+        },
+        "tcp": {
+          "send_q": 0,
+          "notsent": 0
+        }
+      },
+      "oci": {
+        "status": "UNKNOWN"
+      },
+      "pings": {
+        "cloudflare": {
+          "ok": false,
+          "observed_at": "2026-01-01T00:01:15+00:00"
+        },
+        "google": {
+          "ok": false,
+          "observed_at": "2026-01-01T00:01:15+00:00"
+        },
+        "quad9": {
+          "ok": false,
+          "observed_at": "2026-01-01T00:01:15+00:00"
+        },
+        "gateway": {
+          "ok": false,
+          "observed_at": "2026-01-01T00:01:15+00:00"
+        }
+      },
+      "anchors": {
+        "status": "VALID",
+        "observed_at": "2026-01-01T00:01:15+00:00",
+        "probes": {
+          "cloudflare_v4": false,
+          "google_v4": false,
+          "cloudflare_v6": false,
+          "google_v6": false
+        }
+      },
+      "uplink": {
+        "status": "VALID",
+        "identity_sha256": "fixture-uplink"
+      },
+      "maintenance": {
+        "status": "VALID",
+        "inactive": true
+      }
+    }
+  ]
+}

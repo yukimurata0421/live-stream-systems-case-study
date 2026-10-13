@@ -4,197 +4,120 @@
 [![Python >=3.10](https://img.shields.io/badge/python-%3E%3D3.10-3776AB.svg)](pyproject.toml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-[![Live ADS-B stream screenshot](docs/assets/live-stream-screenshot.png)](https://www.youtube.com/@yukimurata0421/live)
+[![Aircraft map rendered by this system](docs/assets/live-stream-screenshot.png)](https://www.youtube.com/@yukimurata0421/live)
 
-*Current runtime frame: aircraft icons have no retained tracks or labels; the
-violet outline is 24-hour LOS-aware reception coverage.*
-
-**Live stream:** <https://www.youtube.com/@yukimurata0421/live>
-
-**Public status snapshot:** <https://yukimurata0421.dev/>
-
-This is open-source code published as a reliability engineering case study, not
-a supported streaming product or general-purpose starter.
+**Watch:** [YouTube](https://www.youtube.com/@yukimurata0421/live) ·
+[Twitch](https://www.twitch.tv/tokyoflighttracker) ·
+[Public status](https://yukimurata0421.dev/)
 
 ## 30-Second Summary
 
-`stream_v3` is a self-built 24/7 YouTube Live pipeline for ADS-B visualization
-and credited provider-aware music. Its current renderer combines a track-free custom MapLibre map,
-analysis-only JMA precipitation with bounded last-known-good handling, locally
-calculated time-of-day base-map transitions, and explicit render readiness. The
-engineering focus is same-watch-URL continuity, SLI-based monitoring, fault
-classification, bounded recovery authority, and public-safe status publication.
+I built and operate a continuous aircraft-map stream on a home network.
+It combines live aircraft data, weather, and music, then sends video to YouTube
+and Twitch through an Oracle Cloud Infrastructure (OCI) relay.
 
-The detailed renderer, weather, GPU-readiness, and read-only probe boundaries
-are in the [map rendering and monitoring contract](docs/v3/map-rendering-and-monitoring.md).
+The engineering challenge is keeping the stream recoverable when the network,
+encoder, monitoring, or cloud relay fails. This repository shows the code,
+measurements, and operational decisions behind that work. It is a small,
+single-operator system; its value is the handling of real failures and uncertain
+results, rather than service scale.
 
-The repository also contains a reviewed but not live-deployed [mobile map legibility proposal](docs/v3/map-mobile-legibility-review.md).
-
-The public data path historically spans three home hosts:
-
-- an HP ProDesk owns the Airspy/readsb source and private k3s observability
-  workloads;
-- a Dell workstation owns the k3s delivery runtime, browser/audio/FFmpeg, and
-  local fast recovery;
-- a Raspberry Pi pulls allowlisted evidence through its local Grafana proxy and
-  publishes a static snapshot to GCS, which Cloudflare serves publicly.
-
-The integrated [Monitoring v4 subsystem](monitoring-v4/README.md) gives
-`arena-server` typed current state, incident evidence, notification intents,
-and a facts-only projection. The sibling [recovery-control subproject](recovery-control/README.md) gives `cra-01`
-recovery policy and command lifecycle while Dell keeps only the exact fenced
-FFmpeg-child effect. The [design rationale](recovery-control/docs/why-cra.md)
-traces this split to observed duplicate restart scopes; neither subtree claims
-that public source is deployed or production-authorized.
-
-This is a single-operator system with a small blast radius. Its value is the
-explicit evidence and safety boundaries, not enterprise scale.
+For hiring review, start with the results below and
+[short incident stories](docs/operational-case-studies.md).
+Implementation details are available after that first pass.
 
 ## Evidence Snapshot
 
-**At least 127 days on one public YouTube Live URL.** The same public Live
-identity was selected at the initial measurement checkpoint, across the v2-to-v3
-production cutover, and again at the evidence endpoint. No selected replacement
-action was observed in the retained review windows.
+**At least 160 days of same-URL observation**, from May 6 through October 14,
+2026. The YouTube video ID stayed the same at the reviewed checkpoints.
+The later daily record began on May 28 and contains **140 / 140 checkpoint
+dates**, with **zero recorded URL transitions**.
 
-| Continuity evidence | Measured value |
+This measures URL preservation, **not uninterrupted frame delivery**. Network
+outages and restarts occurred. The latest checkpoint is
+`2026-10-14 00:04:57 JST`; it is not a promise about every frame or later state.
+See [the dated evidence and counting method](docs/28-day-same-url-sli-case-study.md).
+
+| What the project demonstrates | Evidence |
 | --- | --- |
-| Measurement start | `2026-05-06 10:36:17 JST` |
-| Measurement endpoint | `2026-09-11 00:04:12 JST` (`127 days, 13 hours, 27 minutes, 55 seconds`) |
-| Expected video ID | `OpMzOBFwM7M` |
-| Selected video ID at endpoint | `OpMzOBFwM7M` (SHA-256 match in the retained ledger) |
-| Daily ledger checkpoints | `107 / 107` JST days from `2026-05-28` through `2026-09-11` |
-| Ledger URL transitions / candidate-new-URL / force-live | `0 / 0 / 0` |
-| Observed replacement actions | `0` across the retained review windows |
-| Candidate-new-URL samples | `2` transient samples in the initial 14-day window; neither was selected |
-| V2 stopped | `2026-05-28 22:29:43 JST` |
-| First retained V3 production-send evidence | `2026-05-28 22:41:31 JST` |
-| Cutover video ID check | V2 final resolver and V3 first public identity evidence both selected `OpMzOBFwM7M` |
+| Preserve a usable public URL through changes and recovery | Same-URL checkpoints, retained migration evidence, and recovery guards. |
+| Diagnose faults across several layers | Network stalls, a watchdog that rejected a new relay port, and stale public-cache incidents. |
+| Correct recovery without hiding failed attempts | A Twitch renewal initially disrupted YouTube; the corrected bounded exercise was verified separately. |
+| Recognize when testing has not proved safety | The qualification harness failed to produce its results; native qualification remains unverified. |
 
-This establishes URL identity preservation, not uninterrupted frame delivery.
-The exact production-authority handoff was not logged as a standalone event,
-and the retained V2-stop to V3-send evidence gap is `11 minutes, 48 seconds`.
-See the [historical 28-day SLI and current continuity checkpoint](docs/28-day-same-url-sli-case-study.md)
-for the evidence chain and counting boundaries.
-
-| Signal | Measured result | Boundary |
-| --- | --- | --- |
-| k3s service restart drill | 10.7 seconds to observability metrics OK; the FFmpeg PID and TCP socket survived, and `bytes_sent` advanced by 37,503,068 bytes. | This was not a node reboot, disk restore, or RTMPS reconnect drill. |
-| Viewer-facing drill signals | YouTube ingest, public watch, same URL, and watchdog metrics stayed OK in the sampled window. | Sampling does not prove every delivered frame. |
-| Transport MTTR baseline | Historical `tcp_stall` clusters: 90.0s median, 1190.8s p95, 1474.0s max local transport MTTR. | Local transport MTTR is not direct viewer MTTR. |
-| 28-day same-URL review | Replacement actions `0`; strict v3 same-URL samples `6558 / 6568`, `99.848%`. | This is a retained historical window, not a current uptime promise. |
-
-The measured, tested, documented, and unknown status is kept in the
-[operational scorecard](docs/operational-scorecard.md); measurements carry explicit cutoffs, while current contracts describe source behavior.
+The [incident stories](docs/operational-case-studies.md) explain what happened,
+what changed, what was checked, and what remains unknown.
 
 ## System Architecture
 
+### Video delivery
+
+The observed primary route uses one encoding producer and one network sender.
+Dell mirrors aircraft data through readsb / modified tar1090, renders the map,
+and mixes music. OCI forwards the resulting stream to each provider separately.
+
 ```mermaid
-flowchart LR
-    subgraph PD["HP ProDesk / source + private observability"]
-        AIR["Airspy + airspy_adsb + readsb"]
-        MON["stream-v3-control"]
-        EXP["stream-v3-observer"]
-        GRAF["Prometheus + Loki + Grafana"]
-        GUARD["legacy recovery plan<br/>migration surface"]
-        MON --> EXP --> GRAF
-        MON --> GUARD
-    end
-
-    subgraph ARENA["arena-server / Monitoring evidence"]
-        FACTS["current + incident + parity<br/>facts-only projection"]
-    end
-
-    subgraph CRA["cra-01 / central recovery authority"]
-        AUTH["policy + budget + cooldown<br/>command + final verification"]
-    end
-
-    subgraph DELL["Dell / k3s delivery"]
-        RS["readsb + modified tar1090 ADS-B source"]
-        RUN["stream-v3-runtime<br/>MapLibre + weather + audio + NVENC + recovery"]
-        EXEC["exact FFmpeg-child executor<br/>production disabled in public source"]
-        RS --> RUN
-        RUN --> EXEC
-    end
-
-    subgraph PI["Raspberry Pi / public snapshot publisher"]
-        PROXY["Pi-local /grafana/ proxy"]
-        BUILD["allowlisted static snapshot"]
-        PROXY --> BUILD
-    end
-
-    subgraph EDGE["Public static edge"]
-        GCS["GCS"]
-        CF["Cloudflare<br/>yukimurata0421.dev"]
-        GCS --> CF
-    end
-
-    YT["YouTube Live"]
-
-    AIR -->|"beast feed"| RS
-    RUN -->|"RTMPS"| YT
-    MON -. "read-only runtime + YouTube evidence" .-> RUN
-    GUARD -. "facts only" .-> FACTS
-    RUN -. "signed local facts" .-> FACTS
-    FACTS -. "signed projection" .-> AUTH
-    AUTH -. "fenced command" .-> EXEC
-    GRAF -->|"datasource JSON"| PROXY
-    BUILD -->|"outbound upload"| GCS
+flowchart TB
+    SOURCE["Aircraft data: HP ProDesk / Airspy / readsb"] --> MEDIA["Dell: map + music + GPU encoder (NVENC)"]
+    MEDIA --> SEND["Dell: bounded buffer + One FFmpeg remux sender"]
+    SEND -->|"encrypted SSH tunnel"| OCI["OCI relay"]
+    OCI --> YT["YouTube"]
+    OCI --> TW["Twitch"]
 ```
 
-The public status path is static. Public readers do not reach the private
-Grafana, Prometheus, Loki, home network, or delivery runtime. The Raspberry Pi
-is a publisher, not a k3s node or monitoring backend. Detailed host and runtime
-contracts are in [physical topology](docs/physical-topology.md) and
-[runtime contract](docs/runtime-contract.md).
+### Public status
+
+Internal monitoring stays private. Raspberry Pi's snapshot collectors pull
+filtered information, build static files, and upload them to the public edge.
+Public readers do not connect to the private monitoring services.
+
+```mermaid
+flowchart TB
+    GRAF["Private Grafana / Prometheus / Loki"] -->|"Pi-local Grafana proxy / read-only GET"| PI["Pi: snapshot collectors + filtered static files"]
+    ARENA["arena-server: relay / Twitch observations"] -->|"read-only pull"| PI
+    PI -->|"outbound upload"| GCS["GCS"]
+    GCS --> CF["Cloudflare: public status"]
+```
+
+### Recovery source contract
+
+The public code separates monitoring, recovery decisions, and the component
+that owns a process. Monitoring supplies facts; CRA (Central Restart Authority)
+handles policy and authorization; Dell owns the exact media-process effect.
+Raspberry Pi only publishes status. In the included policy,
+`production_behavior_change_authorized=false`: this code does not enable a
+live CRA command path or automatic failover.
+
+The [runtime contract](docs/v3/current-runtime-contract.md) and
+[OCI delivery design](docs/v3/oci-relay-and-twitch.md) contain the detailed
+ownership and transport rules.
 
 ## Key Design Decisions
 
-- `SV3-SAME-URL`: preserve the current YouTube watch URL when a fault is recoverable; replacement is never inferred from transport noise alone.
-- `SV3-RECOVERY-GUARD`: arena publishes facts, CRA owns the recovery decision and command lifecycle, and Dell retains only exact FFmpeg-child ownership.
-- `SV3-PUBLIC-BOUNDARY`: publish only an allowlisted static snapshot through GCS and Cloudflare.
-- `SV3-EVIDENCE-STRENGTH`: keep restart observation separate from confirmed TCP send recovery; stale, missing, or ambiguous evidence cannot claim recovery.
-- Treat API quota exhaustion and public-probe failures as degraded evidence, not immediate proof of stream failure.
-- Keep ADS-B source freshness, visual correctness, audio correctness, upload pressure, and YouTube lifecycle state as separate fault domains.
-- Keep map, viewer, and precipitation probes read-only; repeated visual evidence must be correlated before recovery.
-- Keep independent public checks as supporting evidence: disagreement is `unknown`, and external evidence alone cannot burn an SLO or authorize restart.
-- Route broad warnings to Discord; delivery, GPU, and RTMPS critical incidents escalate to Slack with bounded retry.
+<!-- Public claim mapping: `SV3-SAME-URL`, `SV3-RECOVERY-GUARD`, `SV3-PUBLIC-BOUNDARY`, `SV3-EVIDENCE-STRENGTH`. -->
+
+- Recover an existing YouTube stream before considering a new URL.
+- A warning is not permission to restart a larger component.
+- Publish filtered static status without exposing the private backend.
+- A process restart, moving bytes, and playable media are separate results.
+
+These choices came from operational failures, not only architecture diagrams.
+The [case studies](docs/operational-case-studies.md) connect each lesson to its evidence.
 
 ## Claims And Limits
 
-| Claim ID | What the repository supports | What it does not claim |
-| --- | --- | --- |
-| `SV3-SAME-URL` | Historical same-URL windows and zero selected replacement actions. | Contractual availability or continuous frame-by-frame auditing. |
-| `SV3-RECOVERY-GUARD` | Public CRA protocol/fence tests plus V3 legacy-surface auditability. | A deployed CRA path, production mutation authorization, or ideal multi-node HA. |
-| `SV3-PUBLIC-BOUNDARY` | Static GCS/Cloudflare publication with private monitoring kept off the public path. | Public Grafana, raw logs, credentials, or home-network ingress. |
-| `SV3-EVIDENCE-STRENGTH` | Notifications distinguish restart observed, recovery unconfirmed, and TCP send recovery confirmed. | CPE-versus-carrier ownership or exact viewer impact from a notification alone. |
+The October 14 checkpoint extends the URL-identity record. It does not extend
+older availability ratios or prove uninterrupted video/audio. Current warnings,
+missing measurements, and actual delivery faults are treated separately.
 
-Production state, logs, media, packet captures, credentials, and host-specific
-configuration are intentionally excluded. The full publication boundary is
-documented in [public release notes](docs/public-release.md).
-
-The latest [three-host source consolidation](docs/v3/three-host-source-consolidation.md) is repository-only; its [external evidence contract](docs/v3/operational-reliability-and-external-evidence.md) does not claim a live rollout.
-The [failure-injection and chaos-testing draft](docs/v3/failure-injection-and-chaos-draft.md) likewise defines test-only work, not production authorization.
+The OCI/Twitch path has observed live reception and a corrected manual renewal.
+Complete native failure qualification, long-term reception soak, and automatic
+failover are not established. Production credentials, raw logs, and databases
+are excluded from this repository. The [scorecard](docs/operational-scorecard.md)
+keeps measured results, source tests, and remaining gaps separate.
 
 ## Review Paths
 
-Use one of these three entry points:
-
-1. [Hiring reviewer guide](docs/hiring-reviewer-guide.md) for a role-specific
-   reading path.
-2. [Operational scorecard](docs/operational-scorecard.md) for measured, tested,
-   documented, and unknown claims.
-3. [Implementation review map](docs/implementation-review-map.md) to connect
-   reliability claims to code and tests.
-
-Local non-mutating validation:
-
-```bash
-python3 ops/scripts/validate_k3s_manifests.py
-python3 ops/scripts/v3_shadow_acceptance.py
-python3 -m pytest -q
-```
-
-The public workflow compiles the code, validates manifests and shadow behavior,
-and runs the full deterministic test suite. It does not publish to YouTube,
-install host units, or mutate a production cluster.
+1. [Hiring reviewer guide](docs/hiring-reviewer-guide.md): a two-minute overview or a short technical interview path.
+2. [Operational scorecard](docs/operational-scorecard.md): results, dates, and evidence limits.
+3. [Implementation review map](docs/implementation-review-map.md): selected code and tests for a deeper review.

@@ -126,8 +126,14 @@ from datetime import datetime
 from pathlib import Path
 from cra_no_action_soak import recovery_soak as r
 cfg = r.Config.load(Path(sys.argv[1]))
+original_write = r.atomic_write_json
+commits = 0
 def interrupted_commit(*args, **kwargs):
-    os._exit(75)
+    global commits
+    commits += 1
+    if commits == 2:
+        os._exit(75)
+    return original_write(*args, **kwargs)
 r.atomic_write_json = interrupted_commit
 r.collect(cfg, now=datetime.fromisoformat(sys.argv[2]))
 """
@@ -140,7 +146,9 @@ r.collect(cfg, now=datetime.fromisoformat(sys.argv[2]))
         timeout=15,
     )
     assert crashed.returncode == 75, crashed.stderr
-    assert Path(config.value["state_file"]).read_bytes() == state_bytes
+    interrupted_state = json.loads(Path(config.value["state_file"]).read_bytes())
+    assert interrupted_state["sample_count"] == 5763
+    assert interrupted_state["pending_sample"]["sample_sequence"] == 5764
     interrupted_prefix = Path(config.value["evidence_file"]).read_bytes()
     assert interrupted_prefix.startswith(source_bytes)
     assert len(interrupted_prefix.splitlines()) == 5764

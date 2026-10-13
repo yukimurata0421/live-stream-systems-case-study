@@ -6,7 +6,7 @@ from typing import Any, Protocol
 
 from cra_dell_recovery.effect_scope import effect_scope_id
 from cra_dell_recovery.models import TargetIdentity, is_expected_ffmpeg_successor
-from cra_dell_recovery.time import isoformat_utc, utc_now
+from cra_dell_recovery.time import isoformat_utc, parse_utc, utc_now
 from dell_recovery_agent.execution import FakeExecutionResult
 
 
@@ -45,10 +45,15 @@ class RuntimeEffectAdapter:
         self.projection = projection
         self.request_lifetime_seconds = request_lifetime_seconds
 
-    def restart_ffmpeg(self, expected_target: TargetIdentity) -> FakeExecutionResult:
+    def restart_ffmpeg(self, expected_target: TargetIdentity, *, authorization_expires_at: str | None = None) -> FakeExecutionResult:
         scope_id = effect_scope_id("restart_ffmpeg", expected_target)
         projection_id, projection_sequence, evidence_status = self.projection()
         now = utc_now()
+        expiry = now + timedelta(seconds=self.request_lifetime_seconds)
+        if authorization_expires_at is not None:
+            expiry = min(expiry, parse_utc(authorization_expires_at))
+        if expiry <= now:
+            return FakeExecutionResult(False, expected_target, "AUTHORIZATION_EXPIRED_BEFORE_RUNTIME_EFFECT")
         request_id = f"dell-scope-{scope_id}"
         payload: dict[str, object] = {
             "schema_version": "runtime.typed_effect_request.v2",
@@ -59,7 +64,7 @@ class RuntimeEffectAdapter:
             "reason": "CRA or Dell local candidate passed durable target-wide admission",
             "failure_domain": "FFMPEG_LOCAL",
             "issued_at": isoformat_utc(now),
-            "expires_at": isoformat_utc(now + timedelta(seconds=self.request_lifetime_seconds)),
+            "expires_at": isoformat_utc(expiry),
             "ffmpeg_target_identity": expected_target.to_dict(),
             "runtime_identity": None,
             "expected_ffmpeg_generation": expected_target.ffmpeg_generation,

@@ -89,8 +89,7 @@ def test_release_builder_rejects_dirty_tree_and_private_material(tmp_path: Path)
         build_release(source, tmp_path / "dirty.tar.gz", "cra-no-action-test-release-b")
     (source / "untracked.txt").unlink()
     private = source / "src/private.pem"
-    private_marker = "-----BEGIN " + "PRIVATE KEY-----"
-    private.write_text(f"{private_marker}\nnot-a-real-key\n", encoding="utf-8")
+    private.write_text("-----BEGIN " + "PRIVATE KEY-----\nnot-a-real-key\n", encoding="utf-8")
     _git(source, "add", ".")
     _git(source, "commit", "-q", "-m", "bad fixture")
     with pytest.raises(ValueError, match="RELEASE_FORBIDDEN_FILE"):
@@ -119,6 +118,7 @@ def test_actual_no_action_release_is_import_closed_without_central_command_store
             """import importlib.util
 import pathlib
 import cra_authority.no_action_store
+import cra_authority.archive_integrity
 import cra_authority.projection_pull
 import cra_authority.provision
 import cra_authority.runtime
@@ -142,6 +142,7 @@ assert importlib.util.find_spec('cra_authority.storage') is None
     assert probe.stderr == ""
     for module in (
         "cra_authority.projection_pull",
+        "cra_authority.archive_integrity",
         "cra_authority.provision",
         "cra_authority.runtime",
         "cra_no_action_soak.gate",
@@ -164,6 +165,7 @@ assert importlib.util.find_spec('cra_authority.storage') is None
 
 def test_installer_verifies_production_soak_modules() -> None:
     expected = {
+        "cra_authority.archive_integrity",
         "cra_no_action_soak.gate",
         "cra_no_action_soak.host_status_pull",
         "cra_no_action_soak.sample",

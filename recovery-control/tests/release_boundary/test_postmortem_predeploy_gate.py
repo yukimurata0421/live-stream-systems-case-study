@@ -243,6 +243,8 @@ def _evaluate(paths: dict[str, Path]) -> dict[str, Any]:
         "OWNER_UNREAPED_EXIT_AND_EMPTY_READ",
         "OWNER_REGISTERED_CHILD_REAP_RACE",
         "OWNER_AUXILIARY_SCHEDULER_STATE_CLASSIFICATION",
+        "OWNER_AUXILIARY_EXECUTABLE_EXIT_RACE",
+        "UPSTREAM_OAUTH_TRANSIENT_READ_GAP",
     ],
 )
 @pytest.mark.parametrize(
@@ -286,8 +288,16 @@ def test_diagnostic_disposition_preserves_unknown_and_requires_exact_binding(
                 "DELL_OWNER_LIFECYCLE_UNKNOWN_OUTSIDE_RECOVERY",
                 "RECOVERY_SOURCE_GAP_OUTSIDE_KNOWN_OUTAGE",
             ],
+            "OWNER_AUXILIARY_EXECUTABLE_EXIT_RACE": [
+                "DELL_OWNER_LIFECYCLE_UNKNOWN_OUTSIDE_RECOVERY",
+                "RECOVERY_SOURCE_GAP_OUTSIDE_KNOWN_OUTAGE",
+            ],
             "OWNER_LIFECYCLE_EVIDENCE_GAP": [
                 "DELL_ACTIVATION_EVIDENCE_UNKNOWN_OUTSIDE_RECOVERY",
+                "RECOVERY_SOURCE_GAP_OUTSIDE_KNOWN_OUTAGE",
+                "SOURCE_EVIDENCE_UNKNOWN_OUTSIDE_KNOWN_OUTAGE",
+            ],
+            "UPSTREAM_OAUTH_TRANSIENT_READ_GAP": [
                 "RECOVERY_SOURCE_GAP_OUTSIDE_KNOWN_OUTAGE",
                 "SOURCE_EVIDENCE_UNKNOWN_OUTSIDE_KNOWN_OUTAGE",
             ],

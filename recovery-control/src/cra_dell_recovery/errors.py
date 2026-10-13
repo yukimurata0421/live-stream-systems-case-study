@@ -26,6 +26,10 @@ class AuthorityDeadlineExceeded(RecoveryControlError):
     """A critical DB operation outlived the authority-validity budget."""
 
 
+class EvidenceFreshnessError(ValueError):
+    """A valid observation must be refreshed before downstream admission."""
+
+
 class CommandBlocked(RecoveryControlError):
     def __init__(self, reason_code: str):
         super().__init__(reason_code)

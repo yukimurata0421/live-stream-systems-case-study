@@ -83,7 +83,6 @@ class DellObservationHTTPSServer:
 
         resource_writer: Callable[[], None] | None = None
         if resource_ref is not None:
-
             def write_resources() -> None:
                 write_server_resource_status(
                     resource_ref,
@@ -326,7 +325,8 @@ def _load_server_config(path: Path) -> dict[str, Any]:
         if not isinstance(value["host_status_host_id"], str) or not value["host_status_host_id"].strip():
             raise ValueError("DELL_OBSERVATION_SERVER_HOST_STATUS_HOST_ID_INVALID")
     if value["schema"] == CONFIG_SCHEMA and (
-        not isinstance(value["resilient_host_status_file"], str) or not str(value["resilient_host_status_file"]).startswith("/")
+        not isinstance(value["resilient_host_status_file"], str)
+        or not str(value["resilient_host_status_file"]).startswith("/")
     ):
         raise ValueError("DELL_OBSERVATION_SERVER_RESILIENT_HOST_STATUS_FILE_INVALID")
     try:

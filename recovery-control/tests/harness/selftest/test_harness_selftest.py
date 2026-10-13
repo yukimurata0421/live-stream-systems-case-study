@@ -64,6 +64,49 @@ def test_untriggered_injector_is_harness_failure() -> None:
     assert result.classification == Classification.HARNESS_FAILURE
 
 
+def test_negative_control_does_not_receipt_unexecuted_extra_fault(tmp_path: Path) -> None:
+    from cra_harness.runner.executor import ScenarioExecutor
+
+    scenario = ScenarioRegistry.load(ROOT / "harness/scenarios/protocol_v1.json").by_id("NC-01")
+    scenario = replace(
+        scenario,
+        faults=scenario.faults + ({"fault_id": "unused-write", "kind": "SQLITE_WRITE_FAILURE"},),
+    )
+    execution = ScenarioExecutor(ROOT, tmp_path, {"run_id": "unused-negative-fault"}).execute("unused-negative-fault", scenario)
+    assert execution.injector_errors == ("FAULT_NOT_COMPLETED:unused-write",)
+    applications = [item.data for item in execution.evidence.named("fault_application")]
+    assert all(item["fault_id"] != "unused-write" for item in applications)
+
+
+def test_fault_lifecycle_requires_matching_hook_receipt() -> None:
+    from cra_harness.injectors.faults import FaultKind
+
+    controller = FaultController(({"fault_id": "expected", "kind": "SQLITE_WRITE_FAILURE"},))
+    controller.arm_all()
+    controller.receipt(FaultKind.DROP_HEARTBEAT, "wrong.operation")
+    controller.complete_all()
+    assert controller.untriggered == ("expected",)
+    assert [item.lifecycle.value for item in controller.history] == ["requested", "armed"]
+    with pytest.raises(ValueError, match="id/kind mismatch"):
+        controller.receipt(FaultKind.SQLITE_WRITE_FAILURE, "DellStore.write.injected_sqlite_ioerr", fault_id="wrong")
+    controller.receipt(FaultKind.SQLITE_WRITE_FAILURE, "DellStore.write.injected_sqlite_ioerr")
+    controller.complete_all()
+    assert controller.untriggered == ()
+    assert [item.lifecycle.value for item in controller.history][-2:] == ["triggered", "completed"]
+
+
+def test_noop_crash_hook_does_not_complete_fault(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from cra_harness.controls.manifest import build_manifest
+    from cra_harness.runner import executor
+
+    monkeypatch.setattr(executor, "crash_at", lambda _point: lambda _actual: None)
+    scenario = ScenarioRegistry.load(ROOT / "harness/scenarios/protocol_v1.json").by_id("D-04-central-commit-crash")
+    manifest = build_manifest(ROOT, "noop-crash", 1, ["isolated no-op mutation control"])
+    execution = executor.ScenarioExecutor(ROOT, tmp_path, manifest).execute("noop-crash", scenario)
+    assert execution.injector_errors == ("FAULT_NOT_COMPLETED:fault-1",)
+    assert [event.data["lifecycle"] for event in execution.evidence.named("fault_events")] == ["requested", "armed"]
+
+
 def test_duplicate_artifact_run_is_rejected(tmp_path: Path) -> None:
     ArtifactWriter(tmp_path, "same-run")
     with pytest.raises(FileExistsError):

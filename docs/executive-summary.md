@@ -1,110 +1,65 @@
 # Executive Summary
 
-`stream_v3` is a public reliability engineering case study for a self-built
-24/7 YouTube Live pipeline. The workload is custom MapLibre ADS-B visualization,
-analysis-only precipitation, and credited provider-aware music, but the engineering focus is the
-delivery system around it: browser rendering, PulseAudio, AutoDJ, FFmpeg/NVENC,
-YouTube evidence, API quota, observability, guarded recovery, k3s runtime
-boundaries, and public-release safety.
+`stream_v3` is a continuously operated aircraft-map broadcast built on a home
+network. It combines live aircraft data, a custom map, weather, and music, then
+sends video through an OCI cloud relay to YouTube and Twitch. The important
+engineering work is keeping the service recoverable while the network and
+individual software components fail.
 
 ## What Was Built
 
-The retained v3 deployment and the current public source contract are related
-but not identical. The retained three-home-host evidence places delivery on
-Dell, observability on HP ProDesk, and static publication on Raspberry Pi. The
-newer control contract separates four duties:
-
-- `arena-server`: observations, current state, incidents, parity, notification
-  intents, and a facts-only projection;
-- `cra-01`: recovery policy, budget, cooldown, authorization, durable command
-  lifecycle, reconciliation, and final verification;
-- Dell delivery: browser/audio/FFmpeg/NVENC plus signed local facts and one
-  exact fenced FFmpeg-child effect; and
-- Raspberry Pi: allowlisted static publication without incident or control
-  authority.
-
-The Monitoring v4 and CRA subprojects are integrated for review and testing,
-but the public source does not claim that either is live-deployed or
-production-authorized. Older ProDesk control and remote-recovery code remains
-visible as migration history, not as the current cross-host authority model.
-
-The ADS-B source chain is also explicit: Airspy on HP ProDesk, `airspy_adsb`,
-ProDesk readsb, Dell readsb, Dell modified tar1090 ADS-B JSON, a sanitizing
-proxy, and then the `stream_v3` custom renderer. The public status site is not
-public Grafana access or a
-home-network entrypoint; Raspberry Pi publishes a reduced static snapshot to
-GCS, and Cloudflare serves the public domain so repeated public reads do not
-consume home uplink bandwidth.
-
-The current public status site, <https://yukimurata0421.dev/>, is a sanitized
-static snapshot pushed outbound from Raspberry Pi to GCS and served through
-Cloudflare. It is meant to expose freshness, decision checks, guardrails,
-trends, and recovery-boundary summaries without publishing Grafana, Prometheus,
-Loki, raw logs, credentials, home-network ingress, or the private dashboard
-entrypoints.
-
-## What Makes It Operationally Interesting
-
-The hard part is not only publishing pixels to YouTube. The system has to avoid
-bad recovery actions while real symptoms are ambiguous:
-
-- a TCP stall must not automatically become a YouTube broadcast replacement;
-- a YouTube API or OAuth failure must not automatically become delivery
-  failure;
-- lower upload is not accepted if it makes YouTube classify the input as
-  unhealthy;
-- a live RTMPS socket is not proof that viewers see correct video and audio;
-- dashboard red state is not trusted until raw metric source, freshness, and
-  owner are checked.
-
-The central operating invariant is same-watch-URL preservation. Short local
-recovery is acceptable when it protects the public URL. Destructive YouTube
-lifecycle mutation is intentionally harder because it can break viewers,
-bookmarks, embeds, and external links.
-
-Observed duplicate restart scopes also made request-level deduplication
-insufficient. The current design records central intent and outbox state,
-admits one target-wide fenced effect, and reconciles `OUTCOME_UNKNOWN` instead
-of treating uncertainty as permission to try again.
-
-## Highest-Signal Evidence
-
-| Claim | Public evidence |
+| Part | Purpose |
 | --- | --- |
-| Monitoring cannot acquire recovery authority. | `monitoring-v4/docs/architecture.md`, `recovery-control/docs/architecture.md`, authority tests |
-| Duplicate restart scopes are contained by one durable intent and exact effect fence. | `recovery-control/docs/why-cra.md`, `recovery-control/docs/harness-trust.md`, CRA integration tests |
-| Recovery is guarded before destructive action. | `src/stream_v2/recovery_orchestrator/gate.py`, `ops/scripts/v3_shadow_acceptance.py`, `tests/test_v3_shadow_acceptance.py` |
-| Same-URL continuity is a production invariant. | `docs/28-day-same-url-sli-case-study.md`, `docs/v3/youtube-lifecycle-safety.md` |
-| Rolling SLI feedback is read without overclaiming. | `docs/v3/rolling-sli-error-budget-feedback.md`, `docs/v3/sli-and-dashboard.md` |
-| TCP stall diagnosis was split by evidence layer. | `docs/v3/tcp-stall-case-study.md`, `docs/v3/tcp-stall-resolution-depth.md`, `ops/scripts/wan_address_observer.py`, `ops/scripts/persistent_tcp_anchor_observer.py` |
-| Encoder/upload tuning uses measured YouTube health, not nominal bitrate alone. | `docs/v3/encoder-upload-case-study.md`, `docs/v3/encoder-fps-tuning-2026-05-31.md` |
-| Public operational evidence is reduced before publication. | `docs/v3/public-status-snapshot.md`, <https://yukimurata0421.dev/> |
-| ADS-B publication and provider-specific music attribution are documented as constraints. | `docs/compliance-and-licensing-boundary.md`, `docs/v3/music-provider-and-loudness-contract.md` |
-| Public validation is non-mutating. | `.github/workflows/public-snapshot-check.yml`, `docs/test-strategy-and-safety-boundary.md` |
-| Claims can be mapped to code and tests. | `docs/implementation-review-map.md` |
+| Aircraft-data source and map | Turn receiver data into a readable live view. |
+| Dell media runtime | Render, mix audio, encode once, and feed one network sender. |
+| OCI relay | Receive that input and forward independently to YouTube and Twitch. |
+| Monitoring | Collect evidence about delivery, provider state, and measurement freshness. |
+| Recovery source | Separate policy from the component that can change a process. |
+| Public status publisher | Export filtered static information without exposing internal services. |
 
-## What This Repository Does Not Claim
+The detailed design has strict identifiers and ownership rules. Their practical
+purpose is simple: a stale warning or uncertain command should not trigger
+another action against the wrong process.
 
-This repository does not claim to be a reusable streaming product. It does not
-ship secrets, production state, media files, raw private logs, or a one-command
-restore procedure. Public CI does not perform live YouTube mutation or apply to
-a production cluster.
+## What Was Measured
 
-Some reliability claims are measured, some are tested, and some are only
-documented as future drills. `docs/operational-scorecard.md` is the compact
-ledger for that distinction.
+The same YouTube video identity was observed across a **160-day measurement
+period**, ending at `2026-10-14 00:04:57 JST`. The operational ledger contains
+**140 / 140 daily checkpoint dates** since the later ledger began, with one URL
+hash and no recorded transitions. The earlier measurement start predates that
+ledger. [The evidence note](28-day-same-url-sli-case-study.md) preserves both
+counting periods and the older 14-day/28-day review.
 
-## Suggested Review In 20 Minutes
+This is evidence of URL preservation through operation and recovery. It is not
+160 days of uninterrupted frames. The [scorecard](operational-scorecard.md)
+separates that result from transport recovery, tests, and unmeasured risks.
 
-1. `README.md`
-2. `docs/operational-scorecard.md`
-3. `docs/implementation-review-map.md`
-4. `docs/v3/youtube-lifecycle-safety.md`
-5. `docs/v3/tcp-stall-case-study.md`
-6. `docs/v3/encoder-upload-case-study.md`
-7. `docs/v3/public-status-snapshot.md`
-8. `docs/test-strategy-and-safety-boundary.md`
+## What The Failures Show
 
-The review signal is operational judgment: naming failure domains, refusing
-unsafe actions from weak evidence, and keeping public claims proportional to the
-evidence that exists.
+The [operational case studies](operational-case-studies.md) cover:
+
+- a recurring network stall investigated with independent external connections;
+- a watchdog whose old connection-port assumption disrupted a new cloud route;
+- a Twitch renewal that initially recreated the YouTube forwarding handler;
+- a warning that remained open after the current measurement source recovered;
+- stale public-cache data and a broken external status-page string check; and
+- a qualification harness that did not preserve enough evidence to establish a result.
+
+Each story names the symptom, intervention, verification, and remaining limit.
+Failures remain part of the record even when a later correction succeeds.
+
+## Scope And Remaining Gaps
+
+This is a single-operator system with a modest blast radius. It demonstrates
+operational diagnosis, recovery boundaries, and honest measurement. It does not
+claim commercial availability, multi-tenant scale, or disaster recovery from
+power and disk loss.
+
+The public CRA policy keeps production authorization disabled. The observed
+OCI/Twitch operation is separate from native failure qualification, complete
+crash/reconciliation testing, and a long reception soak. Those gates are not
+presented as completed.
+
+A reviewer can start with one [incident](operational-case-studies.md), then use
+[the implementation map](implementation-review-map.md) to inspect its code and
+regression tests. The full reference set is optional.

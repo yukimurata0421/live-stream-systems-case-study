@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "monitoring_v4.twitch_api_evidence.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "source_host_id", "source_boot_id", "collector_revision", "collector_instance", "sequence", "user_id", "user_login", "request_started_at", "probe_status", "provider_state", "stream_id", "started_at", "viewer_count", "error_reason", "http_status", "retry_after_sec", "collected_at", "valid_until", "freshness_ttl_sec", "last_success_at", "api_request_count", "rate_limit_remaining"],
+  "properties": {
+    "schema": {"const": "monitoring_v4.twitch_api_evidence.v1"},
+    "source_host_id": {"const": "arena-monitoring-facts"},
+    "source_boot_id": {"type": "string", "format": "uuid"},
+    "collector_revision": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "collector_instance": {"type": "string", "pattern": "^[0-9a-f]{32}$"},
+    "sequence": {"type": "integer", "minimum": 1},
+    "user_id": {"type": "string", "pattern": "^[0-9]{1,64}$"},
+    "user_login": {"type": "string", "pattern": "^[a-z0-9_]{1,25}$"},
+    "request_started_at": {"type": "string", "format": "date-time"},
+    "collected_at": {"type": "string", "format": "date-time"},
+    "valid_until": {"type": "string", "format": "date-time"},
+    "last_success_at": {"type": ["string", "null"], "format": "date-time"},
+    "freshness_ttl_sec": {"type": "integer", "minimum": 180, "maximum": 900},
+    "probe_status": {"enum": ["ok", "unknown"]},
+    "provider_state": {"enum": ["LIVE", "OFFLINE", "UNKNOWN"]},
+    "stream_id": {"type": ["string", "null"], "pattern": "^[0-9]{1,64}$"},
+    "started_at": {"type": ["string", "null"], "format": "date-time"},
+    "viewer_count": {"type": ["integer", "null"], "minimum": 0, "maximum": 1000000000},
+    "error_reason": {"type": "string", "pattern": "^[a-z_]{0,80}$"},
+    "http_status": {"type": "integer", "minimum": 0, "maximum": 599},
+    "retry_after_sec": {"type": "number", "minimum": 0, "maximum": 86400},
+    "api_request_count": {"type": "integer", "minimum": 0, "maximum": 4},
+    "rate_limit_remaining": {"type": ["integer", "null"], "minimum": 0}
+  },
+  "allOf": [
+    {"if": {"properties": {"probe_status": {"const": "unknown"}}}, "then": {"properties": {"provider_state": {"const": "UNKNOWN"}, "stream_id": {"type": "null"}, "started_at": {"type": "null"}, "viewer_count": {"type": "null"}}}},
+    {"if": {"properties": {"provider_state": {"const": "LIVE"}}}, "then": {"properties": {"probe_status": {"const": "ok"}, "http_status": {"const": 200}, "error_reason": {"const": ""}, "stream_id": {"type": "string"}, "started_at": {"type": "string"}, "viewer_count": {"type": "integer"}}}},
+    {"if": {"properties": {"provider_state": {"const": "OFFLINE"}}}, "then": {"properties": {"probe_status": {"const": "ok"}, "http_status": {"const": 200}, "error_reason": {"const": ""}, "stream_id": {"type": "null"}, "started_at": {"type": "null"}, "viewer_count": {"type": "null"}}}}
+  ]
+}

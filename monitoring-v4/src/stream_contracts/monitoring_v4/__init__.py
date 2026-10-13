@@ -5,6 +5,11 @@ from .incident import IncidentEpisode, IncidentTransition
 from .notification import NotificationIntent
 from .observation import ObservationEnvelope, ObservationRejection
 from .recovery import RecoveryAuthorization, RuntimeActionResult, RuntimeControlCommand
+from .recovery_verification import (
+    RecoveryVerification,
+    RecoveryVerificationProducer,
+    VerificationEvidence,
+)
 from .runtime_evidence import (
     RuntimeLifecycleEvent,
     RuntimeLifecycleProjection,
@@ -22,12 +27,15 @@ __all__ = [
     "ObservationEnvelope",
     "ObservationRejection",
     "RecoveryAuthorization",
+    "RecoveryVerification",
+    "RecoveryVerificationProducer",
     "RuntimeActionResult",
     "RuntimeControlCommand",
     "RuntimeLifecycleEvent",
     "RuntimeLifecycleProjection",
     "RuntimeRolloutProjection",
     "SLIProjection",
+    "VerificationEvidence",
     "VerifiedRolloutEvidence",
     "YouTubeApiEvidence",
 ]

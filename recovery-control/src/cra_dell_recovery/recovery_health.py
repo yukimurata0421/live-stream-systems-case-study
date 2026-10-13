@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import fcntl
 import hashlib
 import json
@@ -14,10 +15,15 @@ from typing import Any
 from cra_dell_recovery.time import isoformat_utc
 from cra_dell_recovery.transport_resilience import FailureClassification
 
-STATE_SCHEMA = "cra.transport_recovery_state.v1"
+LEGACY_STATE_SCHEMA = "cra.transport_recovery_state.v1"
+STATE_SCHEMA = "cra.transport_recovery_state.v2"
 EVENT_SCHEMA = "cra.transport_recovery_event.v1"
 ZERO_HASH = "0" * 64
-MAXIMUM_EVENT_JOURNAL_BYTES = 64 * 1024 * 1024
+# The journal may outlive one seven-day qualification. Recovery work is
+# bounded to the committed byte watermark plus a small suffix, so the total
+# file size is no longer also (incorrectly) used as the replay budget.
+MAXIMUM_EVENT_JOURNAL_BYTES = 1024 * 1024 * 1024
+MAXIMUM_EVENT_REPLAY_BYTES = 64 * 1024 * 1024
 MAXIMUM_EVENT_LINE_BYTES = 1024 * 1024
 
 
@@ -76,7 +82,7 @@ def _read_state(path: Path) -> dict[str, Any] | None:
     finally:
         if descriptor >= 0:
             os.close(descriptor)
-    if not isinstance(value, dict) or value.get("schema") != STATE_SCHEMA:
+    if not isinstance(value, dict) or value.get("schema") not in {LEGACY_STATE_SCHEMA, STATE_SCHEMA}:
         raise ValueError("RECOVERY_HEALTH_STATE_INVALID")
     return dict(value)
 
@@ -107,16 +113,57 @@ def _open_event_file(path: Path) -> tuple[int, os.stat_result] | tuple[None, Non
     return descriptor, metadata
 
 
-def _event_tail(path: Path) -> dict[str, Any] | None:
+def _verify_event_file_unchanged(path: Path, descriptor: int, opened: os.stat_result) -> None:
+    """Keep one immutable journal snapshot across validation and replay."""
+
+    current = os.fstat(descriptor)
+    try:
+        visible = os.stat(path, follow_symlinks=False)
+    except FileNotFoundError as error:
+        raise ValueError("RECOVERY_HEALTH_EVENT_FILE_CHANGED_DURING_READ") from error
+    identity = (opened.st_dev, opened.st_ino)
+    if (
+        (current.st_dev, current.st_ino) != identity
+        or (visible.st_dev, visible.st_ino) != identity
+        or current.st_size != opened.st_size
+        or current.st_mtime_ns != opened.st_mtime_ns
+        or current.st_ctime_ns != opened.st_ctime_ns
+    ):
+        raise ValueError("RECOVERY_HEALTH_EVENT_FILE_CHANGED_DURING_READ")
+
+
+def _frozen_event_lines(handle: Any, *, start: int, end: int) -> Iterator[bytes]:
+    """Yield newline-terminated frames only inside the captured byte prefix."""
+
+    if not 0 <= start <= end:
+        raise ValueError("RECOVERY_HEALTH_EVENT_PREFIX_INVALID")
+    handle.seek(start)
+    consumed = start
+    while consumed < end:
+        maximum = min(MAXIMUM_EVENT_LINE_BYTES + 1, end - consumed)
+        raw = handle.readline(maximum)
+        if not raw or len(raw) > MAXIMUM_EVENT_LINE_BYTES or not raw.endswith(b"\n"):
+            raise ValueError("RECOVERY_HEALTH_EVENT_INVALID")
+        consumed += len(raw)
+        yield raw
+    if consumed != end:
+        raise ValueError("RECOVERY_HEALTH_EVENT_PREFIX_INVALID")
+
+
+def _event_tail(path: Path, *, committed_bytes: int | None = None) -> dict[str, Any] | None:
     descriptor, metadata = _open_event_file(path)
     if descriptor is None or metadata is None:
         return None
     try:
-        if metadata.st_size == 0:
+        size = metadata.st_size if committed_bytes is None else committed_bytes
+        if not 0 <= size <= metadata.st_size:
+            raise ValueError("RECOVERY_HEALTH_EVENT_PREFIX_INVALID")
+        if size == 0:
             return None
-        start = max(0, metadata.st_size - MAXIMUM_EVENT_LINE_BYTES)
+        start = max(0, size - MAXIMUM_EVENT_LINE_BYTES)
         os.lseek(descriptor, start, os.SEEK_SET)
-        raw = os.read(descriptor, metadata.st_size - start)
+        raw = os.read(descriptor, size - start)
+        _verify_event_file_unchanged(path, descriptor, metadata)
     finally:
         os.close(descriptor)
     if start > 0:
@@ -217,18 +264,22 @@ def _apply_replayed_event(state: dict[str, Any], event: dict[str, Any]) -> None:
 
 def _replay_events(path: Path, *, component: str, release_id: str, now: datetime) -> dict[str, Any]:
     state = _new_state(component, release_id, now)
-    descriptor, _metadata = _open_event_file(path)
+    descriptor, metadata = _open_event_file(path)
     if descriptor is None:
         return state
+    assert metadata is not None
+    if metadata.st_size > MAXIMUM_EVENT_REPLAY_BYTES:
+        os.close(descriptor)
+        raise ValueError("RECOVERY_HEALTH_FULL_REPLAY_TOO_LARGE")
     previous = ZERO_HASH
     try:
-        with os.fdopen(descriptor, "r", encoding="utf-8") as handle:
+        with os.fdopen(descriptor, "rb") as handle:
             descriptor = -1
-            for sequence, line in enumerate(handle, start=1):
-                if len(line.encode()) > MAXIMUM_EVENT_LINE_BYTES:
-                    raise ValueError("RECOVERY_HEALTH_EVENT_LINE_TOO_LARGE")
+            for sequence, raw in enumerate(
+                _frozen_event_lines(handle, start=0, end=metadata.st_size), start=1
+            ):
                 try:
-                    event = json.loads(line)
+                    event = json.loads(raw)
                 except json.JSONDecodeError as error:
                     raise ValueError("RECOVERY_HEALTH_EVENT_INVALID") from error
                 if not isinstance(event, dict):
@@ -245,6 +296,8 @@ def _replay_events(path: Path, *, component: str, release_id: str, now: datetime
                 _apply_replayed_event(state, event)
                 state["event_count"] = sequence
                 state["last_event_hash"] = previous
+                state["event_verified_bytes"] += len(raw)
+            _verify_event_file_unchanged(path, handle.fileno(), metadata)
     finally:
         if descriptor >= 0:
             os.close(descriptor)
@@ -284,8 +337,147 @@ def _new_state(component: str, release_id: str, now: datetime) -> dict[str, Any]
         "maximum_recovery_duration_ms": 0,
         "event_count": 0,
         "last_event_hash": ZERO_HASH,
+        "event_verified_bytes": 0,
+        "pending_event": None,
         "updated_at": isoformat_utc(now),
     }
+
+
+def _event_bytes(event: dict[str, Any]) -> bytes:
+    raw = (json.dumps(event, separators=(",", ":"), sort_keys=True) + "\n").encode()
+    if len(raw) > MAXIMUM_EVENT_LINE_BYTES:
+        raise ValueError("RECOVERY_HEALTH_EVENT_LINE_TOO_LARGE")
+    return raw
+
+
+def _write_all(descriptor: int, raw: bytes) -> None:
+    remaining = memoryview(raw)
+    while remaining:
+        written = os.write(descriptor, remaining)
+        if written <= 0:
+            raise OSError("RECOVERY_HEALTH_EVENT_WRITE_NO_PROGRESS")
+        remaining = remaining[written:]
+
+
+def _event_file_size(path: Path) -> int:
+    descriptor, metadata = _open_event_file(path)
+    if descriptor is None or metadata is None:
+        return 0
+    os.close(descriptor)
+    return metadata.st_size
+
+
+def _committed_event_matches(path: Path, state: dict[str, Any]) -> bool:
+    count = state.get("event_count")
+    event_hash = state.get("last_event_hash")
+    committed_bytes = state.get("event_verified_bytes")
+    if (
+        isinstance(count, bool)
+        or not isinstance(count, int)
+        or count < 0
+        or not isinstance(event_hash, str)
+        or isinstance(committed_bytes, bool)
+        or not isinstance(committed_bytes, int)
+        or committed_bytes < 0
+    ):
+        return False
+    tail = _event_tail(path, committed_bytes=committed_bytes)
+    if count == 0:
+        return committed_bytes == 0 and event_hash == ZERO_HASH and tail is None
+    return (
+        isinstance(tail, dict)
+        and tail.get("sequence") == count
+        and tail.get("event_hash") == event_hash
+        and _event_hash(tail) == event_hash
+    )
+
+
+def _append_reserved_event(path: Path, event: dict[str, Any], *, committed_bytes: int) -> int:
+    """Complete only the exact reserved frame after a committed prefix."""
+
+    expected = _event_bytes(event)
+    path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+    descriptor = os.open(path, os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW, 0o600)
+    try:
+        metadata = os.fstat(descriptor)
+        if not stat.S_ISREG(metadata.st_mode) or stat.S_IMODE(metadata.st_mode) & 0o077:
+            raise ValueError("RECOVERY_HEALTH_EVENT_FILE_UNSAFE")
+        if metadata.st_size > MAXIMUM_EVENT_JOURNAL_BYTES:
+            raise ValueError("RECOVERY_HEALTH_EVENT_FILE_TOO_LARGE")
+        suffix_size = metadata.st_size - committed_bytes
+        if suffix_size < 0 or suffix_size > len(expected):
+            raise ValueError("RECOVERY_HEALTH_PENDING_EVENT_CONFLICT")
+        suffix = os.pread(descriptor, suffix_size, committed_bytes)
+        if suffix != expected[:suffix_size]:
+            raise ValueError("RECOVERY_HEALTH_PENDING_EVENT_CONFLICT")
+        if committed_bytes + len(expected) > MAXIMUM_EVENT_JOURNAL_BYTES:
+            raise ValueError("RECOVERY_HEALTH_EVENT_FILE_TOO_LARGE")
+        os.lseek(descriptor, 0, os.SEEK_END)
+        _write_all(descriptor, expected[suffix_size:])
+        os.fsync(descriptor)
+        if os.fstat(descriptor).st_size != committed_bytes + len(expected):
+            raise ValueError("RECOVERY_HEALTH_PENDING_EVENT_CONFLICT")
+    finally:
+        os.close(descriptor)
+    _fsync_directory(path.parent)
+    return committed_bytes + len(expected)
+
+
+def _replay_event_suffix(
+    path: Path,
+    state: dict[str, Any],
+    *,
+    component: str,
+    release_id: str,
+) -> dict[str, Any]:
+    committed_bytes = int(state["event_verified_bytes"])
+    descriptor, metadata = _open_event_file(path)
+    if descriptor is None or metadata is None:
+        if committed_bytes:
+            raise ValueError("RECOVERY_HEALTH_EVENT_JOURNAL_TRUNCATED")
+        return state
+    size = metadata.st_size
+    if size < committed_bytes:
+        os.close(descriptor)
+        raise ValueError("RECOVERY_HEALTH_EVENT_JOURNAL_TRUNCATED")
+    if size - committed_bytes > MAXIMUM_EVENT_REPLAY_BYTES:
+        os.close(descriptor)
+        raise ValueError("RECOVERY_HEALTH_SUFFIX_REPLAY_TOO_LARGE")
+    if size == committed_bytes:
+        os.close(descriptor)
+        return state
+    replayed = copy.deepcopy(state)
+    replayed["pending_event"] = None
+    previous = str(replayed["last_event_hash"])
+    sequence = int(replayed["event_count"])
+    try:
+        with os.fdopen(descriptor, "rb") as handle:
+            descriptor = -1
+            for raw in _frozen_event_lines(handle, start=committed_bytes, end=size):
+                try:
+                    event = json.loads(raw)
+                except json.JSONDecodeError as error:
+                    raise ValueError("RECOVERY_HEALTH_EVENT_INVALID") from error
+                sequence += 1
+                if (
+                    not isinstance(event, dict)
+                    or event.get("schema") != EVENT_SCHEMA
+                    or event.get("component") != component
+                    or event.get("release_id") != release_id
+                    or event.get("sequence") != sequence
+                    or event.get("previous_event_hash") != previous
+                ):
+                    raise ValueError("RECOVERY_HEALTH_EVENT_CHAIN_INVALID")
+                previous = _event_hash(event)
+                _apply_replayed_event(replayed, event)
+                replayed["event_count"] = sequence
+                replayed["last_event_hash"] = previous
+                replayed["event_verified_bytes"] += len(raw)
+            _verify_event_file_unchanged(path, handle.fileno(), metadata)
+    finally:
+        if descriptor >= 0:
+            os.close(descriptor)
+    return replayed
 
 
 def _episode_id(component: str, release_id: str, started_at: str, ordinal: int) -> str:
@@ -304,25 +496,99 @@ class RecoveryHealthStore:
         self.release_id = release_id
 
     def _load(self, now: datetime) -> dict[str, Any]:
-        state = _read_state(self.state_file) or _new_state(self.component, self.release_id, now)
+        state = _read_state(self.state_file)
+        if state is None:
+            if _event_file_size(self.event_file):
+                state = _replay_events(
+                    self.event_file,
+                    component=self.component,
+                    release_id=self.release_id,
+                    now=now,
+                )
+                _atomic_json(self.state_file, state)
+                return state
+            return _new_state(self.component, self.release_id, now)
         if state.get("component") != self.component or state.get("release_id") != self.release_id:
             raise ValueError("RECOVERY_HEALTH_IDENTITY_MISMATCH")
-        tail = _event_tail(self.event_file)
-        if tail is None:
-            if state.get("event_count") != 0 or state.get("last_event_hash") != ZERO_HASH:
-                raise ValueError("RECOVERY_HEALTH_EVENT_JOURNAL_MISSING")
+
+        if state.get("schema") == LEGACY_STATE_SCHEMA:
+            legacy_fields = set(_new_state(self.component, self.release_id, now)) - {
+                "event_verified_bytes",
+                "pending_event",
+            }
+            if set(state) != legacy_fields:
+                raise ValueError("RECOVERY_HEALTH_STATE_INVALID")
+            tail = _event_tail(self.event_file)
+            size = _event_file_size(self.event_file)
+            if tail is None:
+                if state.get("event_count") != 0 or state.get("last_event_hash") != ZERO_HASH:
+                    raise ValueError("RECOVERY_HEALTH_EVENT_JOURNAL_MISSING")
+            elif (
+                state.get("event_count") != tail.get("sequence")
+                or state.get("last_event_hash") != _event_hash(tail)
+            ):
+                replayed = _replay_events(
+                    self.event_file,
+                    component=self.component,
+                    release_id=self.release_id,
+                    now=now,
+                )
+                if int(state.get("event_count", 0)) > int(replayed["event_count"]):
+                    raise ValueError("RECOVERY_HEALTH_STATE_AHEAD_OF_JOURNAL")
+                _atomic_json(self.state_file, replayed)
+                return replayed
+            state.update(
+                schema=STATE_SCHEMA,
+                event_verified_bytes=size,
+                pending_event=None,
+            )
+            _atomic_json(self.state_file, state)
             return state
-        tail_hash = _event_hash(tail)
-        if state.get("event_count") == tail.get("sequence") and state.get("last_event_hash") == tail_hash:
+
+        if set(state) != set(_new_state(self.component, self.release_id, now)):
+            raise ValueError("RECOVERY_HEALTH_STATE_INVALID")
+        try:
+            committed_matches = _committed_event_matches(self.event_file, state)
+        except ValueError:
+            # Preserve the historical tamper classification when a rewrite
+            # changed the serialized length of the committed tail.
+            current_tail = _event_tail(self.event_file)
+            if isinstance(current_tail, dict) and current_tail.get("sequence") == state.get("event_count"):
+                _event_hash(current_tail)
+            raise
+        if not committed_matches:
+            raise ValueError("RECOVERY_HEALTH_COMMITTED_PREFIX_INVALID")
+        pending = state["pending_event"]
+        if pending is not None:
+            if (
+                not isinstance(pending, dict)
+                or pending.get("schema") != EVENT_SCHEMA
+                or pending.get("component") != self.component
+                or pending.get("release_id") != self.release_id
+                or pending.get("sequence") != int(state["event_count"]) + 1
+                or pending.get("previous_event_hash") != state["last_event_hash"]
+                or _event_hash(pending) != pending.get("event_hash")
+            ):
+                raise ValueError("RECOVERY_HEALTH_PENDING_EVENT_INVALID")
+            state["event_verified_bytes"] = _append_reserved_event(
+                self.event_file,
+                pending,
+                committed_bytes=int(state["event_verified_bytes"]),
+            )
+            state["event_count"] = pending["sequence"]
+            state["last_event_hash"] = pending["event_hash"]
+            state["pending_event"] = None
+            _atomic_json(self.state_file, state)
             return state
-        # Event append is fsynced before the derived current-state cache is
-        # replaced.  A crash in that window leaves the journal ahead.  Replay
-        # the authoritative chain and repair the cache instead of appending a
-        # duplicate sequence/hash branch.
-        replayed = _replay_events(self.event_file, component=self.component, release_id=self.release_id, now=now)
-        if int(state.get("event_count", 0)) > int(replayed["event_count"]):
-            raise ValueError("RECOVERY_HEALTH_STATE_AHEAD_OF_JOURNAL")
-        _atomic_json(self.state_file, replayed)
+
+        replayed = _replay_event_suffix(
+            self.event_file,
+            state,
+            component=self.component,
+            release_id=self.release_id,
+        )
+        if replayed is not state:
+            _atomic_json(self.state_file, replayed)
         return replayed
 
     def _append_event(self, state: dict[str, Any], payload: dict[str, Any]) -> None:
@@ -338,27 +604,16 @@ class RecoveryHealthStore:
         canonical = json.dumps(event, separators=(",", ":"), sort_keys=True).encode()
         event_hash = hashlib.sha256(previous.encode() + b"\0" + canonical).hexdigest()
         event["event_hash"] = event_hash
-        self.event_file.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
-        descriptor = os.open(
+        state["pending_event"] = event
+        _atomic_json(self.state_file, state)
+        state["event_verified_bytes"] = _append_reserved_event(
             self.event_file,
-            os.O_WRONLY | os.O_APPEND | os.O_CREAT | os.O_NOFOLLOW,
-            0o600,
+            event,
+            committed_bytes=int(state["event_verified_bytes"]),
         )
-        try:
-            metadata = os.fstat(descriptor)
-            if not stat.S_ISREG(metadata.st_mode) or stat.S_IMODE(metadata.st_mode) & 0o077:
-                raise ValueError("RECOVERY_HEALTH_EVENT_FILE_UNSAFE")
-            with os.fdopen(descriptor, "a", encoding="utf-8") as handle:
-                descriptor = -1
-                handle.write(json.dumps(event, separators=(",", ":"), sort_keys=True) + "\n")
-                handle.flush()
-                os.fsync(handle.fileno())
-        finally:
-            if descriptor >= 0:
-                os.close(descriptor)
-        _fsync_directory(self.event_file.parent)
         state["event_count"] = event["sequence"]
         state["last_event_hash"] = event_hash
+        state["pending_event"] = None
 
     def record_failure(
         self,
@@ -490,7 +745,10 @@ class RecoveryHealthStore:
         if isinstance(episode, dict):
             age_ms = max(0, int((current - _parse_utc(str(episode["started_at"]))).total_seconds() * 1000))
         return {
-            "schema": STATE_SCHEMA,
+            # The signed/published projection stays v1-compatible. The v2
+            # schema is the private cache transaction format and adds no
+            # remotely trusted health claim.
+            "schema": LEGACY_STATE_SCHEMA,
             "component": state["component"],
             "release_id": state["release_id"],
             "current_state": state["current_state"],

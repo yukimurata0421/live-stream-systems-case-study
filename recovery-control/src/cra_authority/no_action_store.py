@@ -204,6 +204,29 @@ class NoActionCentralStore:
                     stamp,
                 ),
             )
+            db.execute(
+                """INSERT INTO monitoring_projection_heads(
+                       target_id,projection_id,source_instance_id,observation_revision,
+                       observation_sequence,projection_sha256,state_revision,updated_at
+                   ) VALUES(?,?,?,?,?,?,1,?)
+                   ON CONFLICT(target_id) DO UPDATE SET
+                       projection_id=excluded.projection_id,
+                       source_instance_id=excluded.source_instance_id,
+                       observation_revision=excluded.observation_revision,
+                       observation_sequence=excluded.observation_sequence,
+                       projection_sha256=excluded.projection_sha256,
+                       state_revision=monitoring_projection_heads.state_revision+1,
+                       updated_at=excluded.updated_at""",
+                (
+                    projection["target_id"],
+                    projection["projection_id"],
+                    projection["source_instance_id"],
+                    projection["observation_revision"],
+                    projection["observation_sequence"],
+                    projection["payload_sha256"],
+                    stamp,
+                ),
+            )
         return "ACCEPTED"
 
     def central_policy_blockers(
