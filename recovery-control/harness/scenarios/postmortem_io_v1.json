@@ -1,6 +1,6 @@
 {
   "schema": "cra.postmortem_io_fault_catalog.v1",
-  "catalog_id": "postmortem-io-20260906-v1",
+  "catalog_id": "postmortem-io-20260916-v4",
   "execution_boundary": {
     "network": "loopback_mtls_only",
     "paths": "pytest_tmp_path_only",
@@ -29,9 +29,19 @@
         "src/cra_dell_recovery/json_input.py",
         "src/cra_no_action_soak/recovery_facts.py"
       ],
-      "injection_points": ["JSON decode", "canonicalization input"],
-      "required_observations": ["invalid input rejected", "independent role retained", "formal result is not PASS"],
-      "invariants": ["no fabricated packet", "no cross-role suppression"],
+      "injection_points": [
+        "JSON decode",
+        "canonicalization input"
+      ],
+      "required_observations": [
+        "invalid input rejected",
+        "independent role retained",
+        "formal result is not PASS"
+      ],
+      "invariants": [
+        "no fabricated packet",
+        "no cross-role suppression"
+      ],
       "regression_nodeids": [
         "tests/harness/integration/test_postmortem_io_faults.py::test_recovery_parser_rejects_noncanonical_or_unbounded_input",
         "tests/harness/integration/test_postmortem_io_faults.py::test_bad_inbox_is_recorded_without_stopping_other_roles"
@@ -39,7 +49,10 @@
       "negative_control_nodeids": [
         "tests/harness/integration/test_postmortem_io_faults.py::test_negative_control_detects_permissive_json"
       ],
-      "unproven_scope": ["production producer correctness", "physical resource exhaustion"]
+      "unproven_scope": [
+        "production producer correctness",
+        "physical resource exhaustion"
+      ]
     },
     {
       "scenario_id": "PF-02",
@@ -57,10 +70,22 @@
         }
       ],
       "hypothesis": "A truncated or malformed response from one role must not suppress the next role's GET and evidence.",
-      "target_modules": ["src/cra_no_action_soak/recovery_transport.py"],
-      "injection_points": ["chunked response body", "HTTP status line"],
-      "required_observations": ["both GET paths observed", "failed role output absent", "healthy role original bytes persisted"],
-      "invariants": ["role-local failure containment", "no forged replacement input"],
+      "target_modules": [
+        "src/cra_no_action_soak/recovery_transport.py"
+      ],
+      "injection_points": [
+        "chunked response body",
+        "HTTP status line"
+      ],
+      "required_observations": [
+        "both GET paths observed",
+        "failed role output absent",
+        "healthy role original bytes persisted"
+      ],
+      "invariants": [
+        "role-local failure containment",
+        "no forged replacement input"
+      ],
       "regression_nodeids": [
         "tests/harness/integration/test_postmortem_io_faults.py::test_protocol_failure_does_not_suppress_next_role",
         "tests/harness/integration/test_postmortem_io_faults.py::test_two_hop_loopback_mtls_recovers_without_fabricating_missing_dell_packet",
@@ -69,7 +94,11 @@
       "negative_control_nodeids": [
         "tests/harness/integration/test_postmortem_io_faults.py::test_negative_control_detects_missing_protocol_exception_isolation"
       ],
-      "unproven_scope": ["physical multi-host partition", "PMTU", "conntrack exhaustion"]
+      "unproven_scope": [
+        "physical multi-host partition",
+        "PMTU",
+        "conntrack exhaustion"
+      ]
     },
     {
       "scenario_id": "PF-03",
@@ -82,17 +111,30 @@
         }
       ],
       "hypothesis": "Every HTTP error response must be closed before retry, observer callback, or terminal exit.",
-      "target_modules": ["src/cra_dell_recovery/bounded_http.py"],
-      "injection_points": ["HTTP 503 before response context manager"],
-      "required_observations": ["prior body closed before next GET", "all retained error bodies closed"],
-      "invariants": ["bounded retry budget", "no response resource retained by the puller"],
+      "target_modules": [
+        "src/cra_dell_recovery/bounded_http.py"
+      ],
+      "injection_points": [
+        "HTTP 503 before response context manager"
+      ],
+      "required_observations": [
+        "prior body closed before next GET",
+        "all retained error bodies closed"
+      ],
+      "invariants": [
+        "bounded retry budget",
+        "no response resource retained by the puller"
+      ],
       "regression_nodeids": [
         "tests/harness/integration/test_postmortem_io_faults.py::test_http_error_responses_are_closed_before_retry_or_exit"
       ],
       "negative_control_nodeids": [
         "tests/harness/integration/test_postmortem_io_faults.py::test_negative_control_detects_error_response_leak"
       ],
-      "unproven_scope": ["production FD ceiling", "kernel socket reclamation latency"]
+      "unproven_scope": [
+        "production FD ceiling",
+        "kernel socket reclamation latency"
+      ]
     },
     {
       "scenario_id": "PF-04",
@@ -106,29 +148,59 @@
         {
           "incident_date": "2017-01-31",
           "name": "GitLab database outage postmortem",
-          "url": "https://about.gitlab.com/blog/postmortem-of-database-outage-of-january-31/"
+          "url": "https://about.gitlab.com/2017/02/10/postmortem-of-database-outage-of-january-31/"
         }
       ],
       "hypothesis": "A committed first or later frame must recover once after state replacement failure or abrupt process exit.",
       "target_modules": [
         "src/cra_no_action_soak/recovery_soak.py",
-        "src/cra_no_action_soak/resilient_soak.py"
+        "src/cra_no_action_soak/resilient_soak.py",
+        "src/cra_no_action_soak/recovery_observer.py",
+        "src/cra_no_action_soak/append_only_jsonl.py",
+        "src/cra_dell_recovery/recovery_health.py",
+        "src/cra_no_action_soak/resilient_host_status.py"
       ],
-      "injection_points": ["empty head commit", "frame append", "state replace", "abrupt child exit"],
-      "required_observations": ["old prefix retained", "next sequence is monotonic", "no duplicate frame"],
-      "invariants": ["state never blesses uncommitted evidence", "only one complete frame may be recovered"],
+      "injection_points": [
+        "empty head commit",
+        "frame append",
+        "state replace",
+        "abrupt child exit",
+        "journal growth during full or suffix replay",
+        "more than 64 unresolved target transitions followed by state replay"
+      ],
+      "required_observations": [
+        "old prefix retained",
+        "next sequence is monotonic",
+        "no duplicate frame",
+        "opened journal identity and size remain fixed through replay",
+        "signed report remains bounded and RECOVERING while overflow evidence is retained"
+      ],
+      "invariants": [
+        "state never blesses uncommitted evidence",
+        "only one complete frame may be recovered",
+        "replay never consumes bytes beyond its immutable opened prefix",
+        "bounded transition detail never erases the unresolved safety state"
+      ],
       "regression_nodeids": [
         "tests/harness/integration/test_postmortem_io_faults.py::test_state_replace_failure_after_append_recovers_exactly_once",
         "tests/harness/integration/test_postmortem_io_faults.py::test_first_append_survives_abrupt_test_process_exit",
         "tests/harness/integration/test_postmortem_io_faults.py::test_complete_append_fsync_failure_recovers_one_frame_without_sequence_reuse",
         "tests/harness/integration/test_postmortem_io_faults.py::test_missing_state_with_existing_evidence_is_not_silently_reinitialized",
-        "tests/harness/unit/test_resilient_soak.py::test_first_resilient_append_state_failure_recovers_exactly_once"
+        "tests/harness/unit/test_resilient_soak.py::test_first_resilient_append_state_failure_recovers_exactly_once",
+        "tests/harness/unit/test_recovery_observer.py::test_history_profile_finishes_reserved_packet_after_append_failure",
+        "tests/harness/unit/test_recovery_observer.py::test_history_profile_finishes_reserved_packet_after_projection_failure",
+        "tests/harness/unit/test_resilient_host_status.py::test_unbound_transition_overflow_stays_bounded_signed_and_fail_closed_after_replay"
       ],
       "negative_control_nodeids": [
         "tests/harness/integration/test_postmortem_io_faults.py::test_negative_control_detects_missing_initial_committed_head",
-        "tests/harness/unit/test_resilient_soak.py::test_negative_control_detects_missing_initial_resilient_head"
+        "tests/harness/unit/test_resilient_soak.py::test_negative_control_detects_missing_initial_resilient_head",
+        "tests/harness/unit/test_resilient_host_status.py::test_negative_control_detects_missing_transition_overflow_reason"
       ],
-      "unproven_scope": ["power-loss cache durability", "filesystem corruption", "host restore RPO and RTO"]
+      "unproven_scope": [
+        "power-loss cache durability",
+        "filesystem corruption",
+        "host restore RPO and RTO"
+      ]
     },
     {
       "scenario_id": "PF-05",
@@ -142,22 +214,45 @@
         {
           "incident_date": "2017-01-31",
           "name": "GitLab database outage postmortem",
-          "url": "https://about.gitlab.com/blog/postmortem-of-database-outage-of-january-31/"
+          "url": "https://about.gitlab.com/2017/02/10/postmortem-of-database-outage-of-january-31/"
         }
       ],
-      "hypothesis": "Short writes must be completed; zero progress, ENOSPC, and EIO must not advance committed state.",
-      "target_modules": ["src/cra_no_action_soak/resilient_soak.py"],
-      "injection_points": ["regular-file write progress", "mid-frame ENOSPC", "mid-frame EIO"],
-      "required_observations": ["complete JSONL frame after short writes", "state bytes unchanged after incomplete append", "partial tail rejected"],
-      "invariants": ["no incomplete frame reported committed", "no silent truncation"],
+      "hypothesis": "Short writes must be completed; zero progress, ENOSPC, and EIO must not advance committed state. A reserved exact prefix may be completed on the next invocation without discarding evidence.",
+      "target_modules": [
+        "src/cra_no_action_soak/resilient_soak.py",
+        "src/cra_no_action_soak/append_only_jsonl.py",
+        "src/cra_no_action_soak/recovery_soak.py",
+        "src/cra_no_action_soak/recovery_observer.py"
+      ],
+      "injection_points": [
+        "regular-file write progress",
+        "mid-frame ENOSPC",
+        "mid-frame EIO"
+      ],
+      "required_observations": [
+        "complete JSONL frame after short writes",
+        "committed state unchanged while pending sample is reserved",
+        "exact reserved prefix completed on next invocation",
+        "conflicting partial tail rejected unchanged"
+      ],
+      "invariants": [
+        "no incomplete frame reported committed",
+        "no silent truncation",
+        "reserved packet and sample sequence never reused for different content"
+      ],
       "regression_nodeids": [
         "tests/harness/integration/test_postmortem_io_faults.py::test_append_retries_short_regular_file_writes",
-        "tests/harness/integration/test_postmortem_io_faults.py::test_incomplete_append_never_advances_committed_state"
+        "tests/harness/integration/test_postmortem_io_faults.py::test_incomplete_append_never_advances_committed_state",
+        "tests/harness/unit/test_recovery_observer.py::test_history_profile_completes_exact_partial_pending_packet_without_truncation",
+        "tests/harness/unit/test_recovery_soak.py::test_reserved_sample_conflicting_partial_tail_is_preserved"
       ],
       "negative_control_nodeids": [
         "tests/harness/integration/test_postmortem_io_faults.py::test_negative_control_detects_single_short_write"
       ],
-      "unproven_scope": ["real device write-cache behavior", "controller-level media errors"]
+      "unproven_scope": [
+        "real device write-cache behavior",
+        "controller-level media errors"
+      ]
     },
     {
       "scenario_id": "PF-06",
@@ -170,17 +265,131 @@
         }
       ],
       "hypothesis": "A FIFO in place of evidence must be rejected without blocking collector or watchdog progress.",
-      "target_modules": ["src/cra_no_action_soak/resilient_soak.py"],
-      "injection_points": ["tail open", "append open"],
-      "required_observations": ["child exits before outer timeout", "non-regular path is rejected"],
-      "invariants": ["bounded invocation", "type error never becomes READY"],
+      "target_modules": [
+        "src/cra_no_action_soak/resilient_soak.py",
+        "src/cra_no_action_soak/append_only_jsonl.py"
+      ],
+      "injection_points": [
+        "tail open",
+        "append open"
+      ],
+      "required_observations": [
+        "child exits before outer timeout",
+        "non-regular path is rejected"
+      ],
+      "invariants": [
+        "bounded invocation",
+        "type error never becomes READY"
+      ],
       "regression_nodeids": [
         "tests/harness/integration/test_postmortem_io_faults.py::test_evidence_fifo_does_not_block_before_type_check"
       ],
       "negative_control_nodeids": [
         "tests/harness/integration/test_postmortem_io_faults.py::test_negative_control_detects_blocking_fifo_open"
       ],
-      "unproven_scope": ["production filesystem replacement", "remote filesystem semantics"]
+      "unproven_scope": [
+        "production filesystem replacement",
+        "remote filesystem semantics"
+      ]
+    },
+    {
+      "scenario_id": "PF-07",
+      "fault_family": "sparse_collector_misses_signed_source_transition",
+      "sources": [
+        {
+          "incident_date": "2021-10-04",
+          "name": "Meta outage details",
+          "url": "https://engineering.fb.com/2021/10/05/networking-traffic/outage-details/"
+        },
+        {
+          "incident_date": "2017-01-31",
+          "name": "GitLab database outage postmortem",
+          "url": "https://about.gitlab.com/2017/02/10/postmortem-of-database-outage-of-january-31/"
+        }
+      ],
+      "hypothesis": "A short raw collector gap does not excuse omitted signed source transitions; complete per-role history is required before certification.",
+      "target_modules": [
+        "src/cra_no_action_soak/recovery_soak.py",
+        "src/cra_no_action_soak/recovery_observer.py",
+        "src/cra_no_action_soak/recovery_transport.py",
+        "src/cra_no_action_soak/append_only_jsonl.py",
+        "src/cra_no_action_soak/recovery_window.py",
+        "src/cra_no_action_soak/recovery_live.py"
+      ],
+      "injection_points": [
+        "signed packet between raw polls",
+        "signed packet arrives after its source timestamp falls behind the preceding raw sample",
+        "multiple late packets and an on-time packet share the first visibility millisecond",
+        "hidden unsafe packet is skipped inside a logical-time tie",
+        "missing or modified archive packet",
+        "CRA signature failure after a valid Dell safety violation in the same raw interval",
+        "shared recovery transition mutation"
+      ],
+      "required_observations": [
+        "raw gap remains exactly 45 seconds",
+        "hidden source fault reaches formal replay",
+        "bounded late signed packet is replayed without moving source-time deadlines or hiding unsafe effect",
+        "same-millisecond logical steps retain every signed packet without inventing an empty physical millisecond",
+        "a replay-model exception is classified as Harness failure rather than source evidence loss",
+        "late packet beyond signed validity remains unobservable",
+        "source-time episode start, recovery, deadline, and completion match fixed independent expectations",
+        "incomplete archive pauses certification",
+        "each role stops at its first invalid packet while other valid prefixes retain proven safety violations and all role failures",
+        "fixed independent expectation detects common-mode transition defect"
+      ],
+      "invariants": [
+        "every source sequence transition is replayed, including below the raw gap threshold",
+        "no historical evidence loss becomes PASS",
+        "collector and gate agreement is not the sole oracle"
+      ],
+      "regression_nodeids": [
+        "tests/harness/integration/test_postmortem_history_oracle.py::test_short_gap_replays_each_hidden_source_domain",
+        "tests/harness/integration/test_postmortem_history_oracle.py::test_short_gap_replays_hidden_no_action_safety_breach",
+        "tests/harness/integration/test_postmortem_history_oracle.py::test_short_gap_incomplete_or_modified_history_never_passes",
+        "tests/harness/integration/test_postmortem_history_oracle.py::test_signed_safety_violation_survives_later_required_packet_failure",
+        "tests/harness/integration/test_postmortem_history_oracle.py::test_signed_dell_effect_violation_survives_later_arena_signature_failure",
+        "tests/harness/integration/test_postmortem_history_oracle.py::test_raw_signed_failure_remains_formal_fail_when_history_open_fails",
+        "tests/harness/integration/test_postmortem_history_oracle.py::test_confirmed_sut_violation_retains_formal_fail_across_unrelated_evidence_failure",
+        "tests/harness/integration/test_postmortem_history_oracle.py::test_confirmed_sut_safety_matrix_matches_raw_retention_registry",
+        "tests/harness/integration/test_postmortem_history_oracle.py::test_unverified_or_targetless_activation_is_not_promoted_to_sut_failure",
+        "tests/harness/integration/test_postmortem_history_oracle.py::test_raw_signed_activation_remains_fail_when_other_raw_source_and_history_are_missing",
+        "tests/harness/integration/test_postmortem_history_oracle.py::test_positive_safety_sinks_match_retention_registry_on_both_replay_paths",
+        "tests/harness/integration/test_postmortem_history_oracle.py::test_confirmed_sut_violation_retains_formal_fail_after_reconstructed_missing_evidence",
+        "tests/harness/integration/test_postmortem_history_oracle.py::test_confirmed_sut_violation_retains_formal_fail_after_final_sample_stales",
+        "tests/harness/integration/test_postmortem_history_oracle.py::test_missing_evidence_without_proven_safety_violation_stays_unclassified",
+        "tests/harness/integration/test_postmortem_history_oracle.py::test_dell_counter_regression_rebound_is_not_proof_of_new_effect",
+        "tests/harness/integration/test_postmortem_history_oracle.py::test_signed_counter_exceeding_pre_regression_high_water_remains_proven_effect",
+        "tests/harness/integration/test_postmortem_history_oracle.py::test_unverified_counter_regression_does_not_create_effect",
+        "tests/harness/integration/test_postmortem_history_oracle.py::test_expired_initial_dell_counter_cannot_create_false_effect",
+        "tests/harness/integration/test_postmortem_history_oracle.py::test_expired_high_initial_dell_counter_cannot_hide_later_effect",
+        "tests/harness/integration/test_postmortem_history_oracle.py::test_role_prefix_safety_survives_other_role_failure",
+        "tests/harness/integration/test_postmortem_history_oracle.py::test_role_prefix_aggregates_failures_and_proven_violation",
+        "tests/harness/integration/test_postmortem_history_oracle.py::test_formal_replay_streams_more_than_4096_packets_in_one_raw_interval",
+        "tests/harness/unit/test_recovery_soak.py::test_pending_resume_rejects_two_identical_full_frames",
+        "tests/harness/unit/test_recovery_soak.py::test_pending_resume_rechecks_committed_frame_hash",
+        "tests/harness/unit/test_recovery_soak.py::test_pending_snapshot_reads_only_committed_prefix_without_certifying_tail",
+        "tests/harness/unit/test_recovery_soak.py::test_raw_signed_failure_survives_capacity_projection_failure",
+        "tests/harness/integration/test_postmortem_history_oracle.py::test_late_signed_packet_is_replayed_at_bounded_visibility_without_losing_source_time",
+        "tests/harness/integration/test_postmortem_history_oracle.py::test_late_hidden_packet_cannot_be_skipped_or_replayed_after_lease",
+        "tests/harness/integration/test_postmortem_history_oracle.py::test_late_packets_and_on_time_packet_share_one_millisecond_without_losing_history",
+        "tests/harness/integration/test_postmortem_history_oracle.py::test_millisecond_collision_does_not_hide_signed_no_action_violation",
+        "tests/harness/integration/test_postmortem_history_oracle.py::test_same_role_unsafe_then_safe_late_packets_are_both_evaluated",
+        "tests/harness/integration/test_postmortem_history_oracle.py::test_expired_hidden_packet_remains_unverified_at_collision",
+        "tests/harness/integration/test_postmortem_history_oracle.py::test_unexpected_replay_exception_is_harness_failure_not_missing_source",
+        "tests/harness/integration/test_postmortem_history_oracle.py::test_history_cursor_scales_past_old_global_selection_limit"
+      ],
+      "negative_control_nodeids": [
+        "tests/harness/integration/test_postmortem_history_oracle.py::test_negative_control_detects_skipped_dell_prefix_after_cra_failure",
+        "tests/harness/integration/test_postmortem_history_oracle.py::test_negative_control_detects_shared_recovery_transition_defect",
+        "tests/harness/integration/test_postmortem_history_oracle.py::test_negative_control_detects_hidden_packet_skipped_inside_logical_tie",
+        "tests/harness/integration/test_postmortem_history_oracle.py::test_negative_control_detects_skipped_history_reconstruction",
+        "tests/harness/integration/test_postmortem_history_oracle.py::test_negative_control_detects_shared_deadline_extension"
+      ],
+      "unproven_scope": [
+        "real multi-host network partition",
+        "physical FFmpeg and RTMPS recovery",
+        "seven-day gate runtime on production archives"
+      ]
     }
   ]
 }

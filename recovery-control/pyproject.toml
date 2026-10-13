@@ -28,6 +28,7 @@ test = [
 [project.scripts]
 cra-authority = "cra_authority.cli:main"
 cra-runtime = "cra_authority.runtime:main"
+cra-archive-integrity = "cra_authority.archive_integrity:main"
 cra-provision = "cra_authority.provision:main"
 cra-monitoring-project = "monitoring_projection.producer:main"
 cra-monitoring-serve = "monitoring_projection.server:main"
@@ -99,5 +100,6 @@ packages = [
   "snapshot_projection",
   "runtime_boundary",
   "monitoring_projection",
+  "tcp_stall_collector",
 ]
 mypy_path = "src"

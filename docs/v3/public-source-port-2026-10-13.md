@@ -100,3 +100,15 @@ A new read-only query extends the continuity checkpoint through October 14:
 September checkpoint and original fixed availability ratios are retained.
 The [aggregate checkpoint](../../publication/continuity-checkpoint.json) is
 measurement evidence; it is not a claim of uninterrupted frames or a new SLO.
+
+## Public CI correction: 2026-10-14 JST
+
+The first publication check exposed missing test dependencies and incomplete
+release inputs. Monitoring now declares `pytest` and uses it to run both the
+existing unittest cases and the Twitch API function tests. CRA's portable
+builders include the current schema and append-only writer; inert examples,
+catalog bindings, checkpoint validation, and diagnostic dispositions match the
+ported source. The publisher test resolves the integrated repository layout.
+The failed CI run remains available and is recorded in the validation metadata.
+These checks validate public source and disposable test artifacts; they do not
+establish native qualification or authorize a production deployment.

@@ -4,7 +4,7 @@
   "source_instance_id": "dell-stream-runtime-observer",
   "source_release_id": "replace-with-immutable-dell-observation-release-id",
   "expected_target": {
-    "host_id": "dell-yuki",
+    "host_id": "delivery-host",
     "namespace": "stream-v3",
     "container_name": "stream-engine"
   },

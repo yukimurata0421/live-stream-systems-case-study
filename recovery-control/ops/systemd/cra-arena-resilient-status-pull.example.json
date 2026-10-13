@@ -6,7 +6,7 @@
   "tls_certificate": "/etc/stream-recovery-control/cra-monitoring-client.pem",
   "tls_private_key": "/etc/stream-recovery-control/cra-monitoring-client-key.pem",
   "server_ca_certificate": "/etc/stream-recovery-control/cra-monitoring-server-ca.pem",
-  "resilient_host_status_schema_file": "/opt/stream-recovery-control/releases/replace-with-immutable-cra-release-id/contracts/cra_no_action_soak/resilient_host_status.v3.schema.json",
+  "resilient_host_status_schema_file": "/opt/stream-recovery-control/releases/replace-with-immutable-cra-release-id/contracts/cra_no_action_soak/resilient_host_status.v4.schema.json",
   "source_key_id": "replace-with-monitoring-projection-key-id",
   "source_public_key_file": "/etc/stream-recovery-control/monitoring-ed25519-public.pem",
   "source_role": "arena",

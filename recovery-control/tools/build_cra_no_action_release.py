@@ -31,7 +31,7 @@ ALLOWED_FILES = frozenset(
         "constraints/sqlite-runtime.json",
         "contracts/monitoring_v4/evidence_projection.v1.schema.json",
         "contracts/cra_no_action_soak/host_status.v1.schema.json",
-        "contracts/cra_no_action_soak/resilient_host_status.v3.schema.json",
+        "contracts/cra_no_action_soak/resilient_host_status.v4.schema.json",
         "ops/systemd/cra-arena-host-status-pull.example.json",
         "ops/systemd/cra-arena-host-status-pull@.service",
         "ops/systemd/cra-arena-host-status-pull@.timer",
@@ -40,8 +40,12 @@ ALLOWED_FILES = frozenset(
         "ops/systemd/cra-arena-resilient-status-pull@.timer",
         "ops/systemd/cra-monitoring-projection-pull@.service",
         "ops/systemd/cra-monitoring-projection-pull@.timer",
+        "ops/systemd/cra-monitoring-projection-pull-daemon@.service",
         "ops/systemd/cra-monitoring-pull.example.json",
         "ops/systemd/cra-provisioning.example.json",
+        "ops/systemd/cra-archive-integrity.example.json",
+        "ops/systemd/cra-archive-integrity@.service",
+        "ops/systemd/cra-archive-integrity@.timer",
         "ops/systemd/cra-runtime-no-action@.service",
         "ops/systemd/cra-runtime.example.json",
         "ops/systemd/cra-no-action-soak-local-collector@.service",
@@ -55,6 +59,7 @@ ALLOWED_FILES = frozenset(
         "ops/systemd/cra-resilient-status-soak-watchdog@.service",
         "ops/systemd/cra-resilient-status-soak-watchdog@.timer",
         "src/cra_authority/__init__.py",
+        "src/cra_authority/archive_integrity.py",
         "src/cra_authority/authorizer.py",
         "src/cra_authority/json_input.py",
         "src/cra_dell_recovery/json_input.py",
@@ -70,6 +75,7 @@ ALLOWED_FILES = frozenset(
         "src/cra_authority/schema_contract.py",
         "src/cra_authority/verifier.py",
         "src/cra_no_action_soak/__init__.py",
+        "src/cra_no_action_soak/append_only_jsonl.py",
         "src/cra_no_action_soak/gate.py",
         "src/cra_no_action_soak/host_status.py",
         "src/cra_no_action_soak/host_status_pull.py",
@@ -108,6 +114,7 @@ REQUIRED_FILES = frozenset(
         "constraints/sqlite-runtime.json",
         "pyproject.toml",
         "src/cra_authority/authorizer.py",
+        "src/cra_authority/archive_integrity.py",
         "src/cra_authority/json_input.py",
         "src/cra_dell_recovery/json_input.py",
         "src/cra_dell_recovery/owner_diagnostics.py",
@@ -119,6 +126,7 @@ REQUIRED_FILES = frozenset(
         "src/cra_authority/schema_contract.py",
         "src/cra_authority/projection_pull.py",
         "src/cra_no_action_soak/gate.py",
+        "src/cra_no_action_soak/append_only_jsonl.py",
         "src/cra_no_action_soak/host_status.py",
         "src/cra_no_action_soak/host_status_pull.py",
         "src/cra_no_action_soak/operator_status.py",
@@ -136,9 +144,13 @@ REQUIRED_FILES = frozenset(
         "src/cra_dell_recovery/sqlite.py",
         "src/maintenance_audit/__init__.py",
         "contracts/monitoring_v4/evidence_projection.v1.schema.json",
-        "contracts/cra_no_action_soak/resilient_host_status.v3.schema.json",
+        "contracts/cra_no_action_soak/resilient_host_status.v4.schema.json",
         "migrations/central/001_initial.sql",
         "ops/systemd/cra-runtime-no-action@.service",
+        "ops/systemd/cra-archive-integrity.example.json",
+        "ops/systemd/cra-archive-integrity@.service",
+        "ops/systemd/cra-archive-integrity@.timer",
+        "ops/systemd/cra-monitoring-projection-pull-daemon@.service",
         "ops/systemd/cra-arena-host-status-pull@.service",
         "ops/systemd/cra-arena-resilient-status-pull@.service",
         "ops/systemd/cra-resilient-status-soak@.service",
@@ -178,6 +190,7 @@ dependencies = [
 
 [project.scripts]
 cra-runtime = "cra_authority.runtime:main"
+cra-archive-integrity = "cra_authority.archive_integrity:main"
 cra-provision = "cra_authority.provision:main"
 cra-monitoring-pull = "cra_authority.projection_pull:main"
 cra-no-action-soak-gate = "cra_no_action_soak.gate:main"

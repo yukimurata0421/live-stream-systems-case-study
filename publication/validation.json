@@ -2,8 +2,8 @@
   "schema": "stream.public_port_validation.v1",
   "status": "LOCAL_SOURCE_CHECKS_PASS",
   "validated_at_jst": "2026-10-14T01:36:53.466204+09:00",
-  "source_map_sha256": "e13f4d9bf740568b6f37c10fda7400c8377e14092df0c529073b48baa0ced403",
-  "selected_public_files": 224,
+  "source_map_sha256": "4a80055748ccb5e84d48a2e7f7a3c9291a08cb4f8218f21af8ce771ebe43ff1f",
+  "selected_public_files": 250,
   "runtime": {
     "python": "3.14.4",
     "sqlite": "3.51.3",
@@ -234,7 +234,7 @@
     }
   ],
   "unperformed_gates": [
-    "full recovery public test execution",
+    "full local recovery public test execution",
     "native qualification campaigns",
     "browser DOM/media validation",
     "live deployment or publisher upload",
@@ -342,5 +342,36 @@
     "skip_reason": "Disposable PostgreSQL DSNs were not supplied",
     "elapsed_sec": 24.158,
     "source_parity": "monitoring sources match; entrypoints and workflow layouts differ by repository"
+  },
+  "ci_recovery_port_correction": {
+    "initial_run": "https://github.com/yukimurata0421/live-stream-systems-case-study/actions/runs/38445669512",
+    "initial_result": {
+      "passed": 3185,
+      "failed": 19,
+      "errors": 20
+    },
+    "corrections": [
+      "resolve publisher test against the integrated root",
+      "include schema-v4 and append-only writer in minimal release builders",
+      "include inert archive, resident pull, and TCP collector examples",
+      "bind pending checkpoint validation and seventh postmortem scenario",
+      "align fault catalog kinds and diagnostic dispositions with current source",
+      "keep example target identities and freshness bounds consistent"
+    ],
+    "source_only": true,
+    "deployment_performed": false,
+    "native_qualification_performed": false,
+    "focused_validation": "PASS",
+    "recorded_at_jst": "2026-10-14T03:33:52.288789+09:00",
+    "focused_tests_passed": 205,
+    "focused_elapsed_sec": 12.97,
+    "initial_focused_validation": {
+      "passed": 203,
+      "failed": 2,
+      "preserved": true
+    },
+    "subsequent_failed_run": "https://github.com/yukimurata0421/live-stream-systems-case-study/actions/runs/38446157254",
+    "full_local_native_suite_performed": false,
+    "full_ci_after_correction": "pending"
   }
 }

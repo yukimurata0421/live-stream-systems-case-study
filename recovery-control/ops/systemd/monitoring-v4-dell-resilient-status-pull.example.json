@@ -6,7 +6,7 @@
   "tls_certificate": "/etc/stream-monitoring-cra-projection/credentials/dell-observation-client.pem",
   "tls_private_key": "/etc/stream-monitoring-cra-projection/credentials/dell-observation-client-key.pem",
   "server_ca_certificate": "/etc/stream-monitoring-cra-projection/credentials/dell-observation-server-ca.pem",
-  "resilient_host_status_schema_file": "/opt/stream-monitoring-cra-projection/releases/replace-with-immutable-arena-projection-release-id/contracts/cra_no_action_soak/resilient_host_status.v3.schema.json",
+  "resilient_host_status_schema_file": "/opt/stream-monitoring-cra-projection/releases/replace-with-immutable-arena-projection-release-id/contracts/cra_no_action_soak/resilient_host_status.v4.schema.json",
   "source_key_id": "replace-with-dell-observation-key-id",
   "source_public_key_file": "/etc/stream-monitoring-cra-projection/credentials/dell-observation-ed25519-public.pem",
   "source_role": "dell",

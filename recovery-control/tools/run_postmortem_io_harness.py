@@ -17,7 +17,7 @@ from tools.run_candidate_full_validation import classify_test_result
 
 SCHEMA = "cra.postmortem_io_fault_catalog.v1"
 SUMMARY_SCHEMA = "cra.postmortem_io_harness_summary.v1"
-EXPECTED_IDS = tuple(f"PF-{index:02d}" for index in range(1, 7))
+EXPECTED_IDS = tuple(f"PF-{index:02d}" for index in range(1, 8))
 BOUND_INPUT_FILES = (
     "tools/run_postmortem_io_harness.py",
     "tools/run_candidate_full_validation.py",
@@ -28,10 +28,14 @@ BOUND_INPUT_FILES = (
     "src/cra_harness/controls/sqlite_runtime.py",
     "src/cra_dell_recovery/owner_diagnostics.py",
     "src/cra_no_action_soak/recovery_observer.py",
+    "src/cra_no_action_soak/recovery_transport.py",
+    "src/cra_no_action_soak/recovery_soak.py",
+    "src/cra_no_action_soak/append_only_jsonl.py",
     "src/cra_no_action_soak/recovery_live.py",
     "src/cra_no_action_soak/recovery_window.py",
     "src/cra_no_action_soak/operator_status.py",
     "src/cra_dell_recovery/recovery_history.py",
+    "src/cra_harness/oracles/contract.py",
     "pyproject.toml",
 )
 SCENARIO_FIELDS = {
@@ -308,7 +312,7 @@ def run_catalog(catalog_path: Path, output: Path, project_root: Path, *, timeout
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Run the isolated postmortem-derived PF-01..06 harness")
+    parser = argparse.ArgumentParser(description="Run the isolated postmortem-derived PF-01..07 harness")
     parser.add_argument("--catalog", type=Path, default=Path("harness/scenarios/postmortem_io_v1.json"))
     parser.add_argument("--output", type=Path)
     parser.add_argument("--project-root", type=Path, default=Path.cwd())

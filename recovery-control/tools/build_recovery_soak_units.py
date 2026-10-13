@@ -93,6 +93,9 @@ def render(component: str, release_id: str) -> dict[str, str]:
             if local:
                 # Mount the directory, not the atomically replaced file inode.
                 lines.append("BindReadOnlyPaths=/var/lib/stream-v3/wan-observer:/run/recovery-inputs/network")
+                lines.append(
+                    f"BindReadOnlyPaths=-/var/lib/stream-recovery-control/tcp-stall/epochs/{release_id}:/run/recovery-inputs/rtmps"
+                )
             else:
                 lines.append("InaccessiblePaths=/etc/stream-recovery-observation/credentials/dell-observation-ed25519-private.pem")
         if component == "arena" and not local:

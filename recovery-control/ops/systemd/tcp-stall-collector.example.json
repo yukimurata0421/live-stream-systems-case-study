@@ -1,0 +1,23 @@
+{
+  "schema": "stream_v3.tcp_stall_collector_config.v1",
+  "collector_id": "dell-tcp-stall-readonly-v1",
+  "release_id": "tcp-stall-YYYYMMDDThhmmssJST-shortsha",
+  "source_file": "/run/stream-v3-control/runtime-observation.json",
+  "expected_host_id": "delivery-host",
+  "expected_namespace": "stream-v3",
+  "expected_container_name": "stream-engine",
+  "expected_producer_id": "stream-engine-effect-executor",
+  "interval_seconds": 5,
+  "max_adjacent_interval_seconds": 8,
+  "stall_confirmation_seconds": 10,
+  "replacement_correlation_seconds": 45,
+  "source_max_age_seconds": 30,
+  "future_tolerance_seconds": 2,
+  "max_output_bytes": 2147483648,
+  "stream_profile": {
+    "video_bitrate": "3400k",
+    "video_maxrate": "3400k",
+    "video_bufsize": "6800k",
+    "audio_bitrate": "192k"
+  }
+}

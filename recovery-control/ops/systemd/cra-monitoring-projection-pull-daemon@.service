@@ -1,0 +1,46 @@
+[Unit]
+Description=Continuously pull and verify Monitoring projection for immutable release %i
+After=network-online.target
+Wants=network-online.target
+ConditionPathExists=/opt/stream-recovery-control/releases/%i/release_manifest.json
+ConditionPathExists=/opt/stream-recovery-control/runtimes/%i/runtime_manifest.json
+ConditionPathExists=/etc/stream-recovery-control/releases/%i/cra-monitoring-pull.json
+StartLimitIntervalSec=30s
+StartLimitBurst=5
+
+[Service]
+Type=simple
+TimeoutStopSec=15s
+Restart=on-failure
+RestartPreventExitStatus=78
+RestartSec=2s
+User=stream-recovery
+Group=stream-recovery
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=PYTHONNOUSERSITE=1
+Environment=PYTHONPATH=/opt/stream-recovery-control/releases/%i/src
+Environment=CRA_IMMUTABLE_RELEASE_ID=%i
+ExecStart=/opt/stream-recovery-control/runtimes/%i/.venv/bin/python -m cra_authority.projection_pull --config /etc/stream-recovery-control/releases/%i/cra-monitoring-pull.json --resident --interval-seconds 1
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+MemoryMax=256M
+TasksMax=16
+LimitNOFILE=64
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+ReadOnlyPaths=/etc/stream-recovery-control/releases/%i /opt/stream-recovery-control/releases/%i /opt/stream-recovery-control/runtimes/%i
+ReadWritePaths=/var/lib/stream-recovery-control/monitoring-inbox
+InaccessiblePaths=/var/lib/stream-recovery-control/cra
+
+# Transport only. It cannot open Central SQLite or deliver a Dell command.
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,13 @@
+[Unit]
+Description=Hourly read-only CRA archive integrity check for immutable release %i
+
+[Timer]
+OnBootSec=2min
+OnUnitInactiveSec=1h
+AccuracySec=1min
+RandomizedDelaySec=0
+Persistent=true
+Unit=cra-archive-integrity@%i.service
+
+[Install]
+WantedBy=timers.target

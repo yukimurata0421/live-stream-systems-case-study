@@ -1,0 +1,7 @@
+{
+  "schema": "cra.archive_integrity.v1",
+  "runtime_release_id": "replace-with-immutable-release-id",
+  "archive_database": "/var/lib/stream-recovery-control/cra/archive/no-action-evidence.sqlite3",
+  "status_file": "/var/lib/stream-recovery-control/cra/releases/replace-with-immutable-release-id/archive-integrity-status.json",
+  "busy_timeout_seconds": 5
+}

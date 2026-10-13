@@ -5,7 +5,7 @@
   "source_release_id": "replace-with-immutable-arena-projection-release-id",
   "target_id": "stream-v3-youtube-primary",
   "expected_target": {
-    "host_id": "dell-yuki",
+    "host_id": "delivery-host",
     "namespace": "stream-v3",
     "container_name": "stream-engine"
   },

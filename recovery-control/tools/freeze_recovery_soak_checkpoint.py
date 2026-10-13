@@ -73,6 +73,7 @@ def _validate_state(config: recovery_soak.Config, state: dict[str, Any]) -> None
         or not nonnegative_integer(state.get("verified_bytes"))
         or int(state["sample_count"]) < 1
         or int(state["verified_bytes"]) < 1
+        or state.get("pending_sample") is not None
     ):
         raise ValueError("CHECKPOINT_STATE_INVALID")
 
@@ -229,7 +230,7 @@ def freeze_checkpoint(
         raise ValueError("CHECKPOINT_OUTPUT_SOURCE_COLLISION")
     identity_before, identity_payloads = _identity_material(material_paths)
     state_path = Path(config.value["state_file"])
-    state_raw = _read_regular(state_path, maximum_bytes=64 * 1024)
+    state_raw = _read_regular(state_path, maximum_bytes=256 * 1024)
     state = _strict_object(state_raw, code="CHECKPOINT_STATE_JSON_INVALID")
     _validate_state(config, state)
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -285,7 +286,7 @@ def freeze_checkpoint(
         if _identity_material(material_paths) != (identity_before, identity_payloads):
             raise ValueError("CHECKPOINT_IDENTITY_CHANGED_DURING_CAPTURE")
         state_after = _strict_object(
-            _read_regular(state_path, maximum_bytes=64 * 1024),
+            _read_regular(state_path, maximum_bytes=256 * 1024),
             code="CHECKPOINT_STATE_JSON_INVALID",
         )
         _validate_state(config, state_after)

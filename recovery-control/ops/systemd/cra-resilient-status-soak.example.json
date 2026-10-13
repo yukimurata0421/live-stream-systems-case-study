@@ -1,7 +1,7 @@
 {
   "schema": "cra.resilient_status_soak_config.v2",
   "cra_release_id": "replace-with-immutable-cra-release-id",
-  "resilient_host_status_schema_file": "/opt/stream-recovery-control/releases/replace-with-immutable-cra-release-id/contracts/cra_no_action_soak/resilient_host_status.v3.schema.json",
+  "resilient_host_status_schema_file": "/opt/stream-recovery-control/releases/replace-with-immutable-cra-release-id/contracts/cra_no_action_soak/resilient_host_status.v4.schema.json",
   "arena_key_id": "replace-with-monitoring-projection-key-id",
   "arena_public_key_file": "/etc/stream-recovery-control/monitoring-ed25519-public.pem",
   "arena_host_id": "arena-monitoring-facts",

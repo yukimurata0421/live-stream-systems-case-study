@@ -367,7 +367,7 @@
       "faults": [
         {
           "fault_id": "fault-1",
-          "kind": "CRA_RESTART",
+          "kind": "STALE_AUTHORITY_EPOCH",
           "parameters": {
             "test_only": true
           }
@@ -423,7 +423,7 @@
       "faults": [
         {
           "fault_id": "fault-1",
-          "kind": "DUPLICATE_DELIVERY",
+          "kind": "STALE_SEQUENCE",
           "parameters": {
             "test_only": true
           }
@@ -831,7 +831,7 @@
       "faults": [
         {
           "fault_id": "fault-1",
-          "kind": "AGENT_RESTART",
+          "kind": "RECONCILIATION_EPOCH_TRANSITION",
           "parameters": {
             "test_only": true
           }

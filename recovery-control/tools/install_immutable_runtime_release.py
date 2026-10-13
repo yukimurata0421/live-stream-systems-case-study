@@ -60,6 +60,7 @@ RELEASE_SCHEMAS = {
 }
 IMPORTS = {
     "cra": (
+        "cra_authority.archive_integrity",
         "cra_authority.runtime",
         "cra_authority.provision",
         "cra_authority.projection_pull",
@@ -97,6 +98,7 @@ IMPORTS = {
 }
 CLI_MODULES = {
     "cra": (
+        "cra_authority.archive_integrity",
         "cra_authority.runtime",
         "cra_authority.provision",
         "cra_authority.projection_pull",

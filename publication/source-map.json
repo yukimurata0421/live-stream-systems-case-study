@@ -173,7 +173,7 @@
       "decision": "curated-current-contract-and-dated-evidence",
       "before_sha256": null,
       "source_sha256": null,
-      "public_sha256": "2ba008a2d92c83ae4147549826123d7b81c15b48ae74601fa96f57ee60f52884"
+      "public_sha256": "48e404e524f77cece815a450a539b383c5752dc03ac6a8b84336d58a48edf604"
     },
     {
       "path": "docs/v3/route-network-observation.md",
@@ -704,6 +704,22 @@
       "public_sha256": "080a147d5537eb3e9d49c54601be2a5b1e12bca0e785a2aa297639ebd50989b4"
     },
     {
+      "path": "recovery-control/harness/scenarios/postmortem_io_v1.json",
+      "source_role": "public-ci-correction",
+      "decision": "complete-source-bound-public-release-inputs",
+      "before_sha256": "98245ca214311fc18eded5c48203b2f13da78005401b17f98a013179227dfe71",
+      "source_sha256": "9cf5bf723803dc0a8ec7671209873909ef77707355468028fd2a3bcf6b2aa139",
+      "public_sha256": "9cf5bf723803dc0a8ec7671209873909ef77707355468028fd2a3bcf6b2aa139"
+    },
+    {
+      "path": "recovery-control/harness/scenarios/protocol_v1.json",
+      "source_role": "public-ci-correction",
+      "decision": "complete-source-bound-public-release-inputs",
+      "before_sha256": "71beae40314a2fcacd9e395fd0e35dda5c815f0b04fbe20ab74dcdda9610b038",
+      "source_sha256": "ef435225ea22e959d9f96b0b14551c5e3bba4690cc07b9b198cae079aa2da05d",
+      "public_sha256": "ef435225ea22e959d9f96b0b14551c5e3bba4690cc07b9b198cae079aa2da05d"
+    },
+    {
       "path": "recovery-control/harness/scenarios/rtmps_failure_sequences_v1.json",
       "source_role": "development-recovery-static-contract",
       "decision": "required-static-scenario-dependency",
@@ -718,6 +734,142 @@
       "before_sha256": null,
       "source_sha256": "f71994590d5137522cb65eb4c7ad58a3e4431ebfe2a9d3b0b7b18a6da936d556",
       "public_sha256": "f71994590d5137522cb65eb4c7ad58a3e4431ebfe2a9d3b0b7b18a6da936d556"
+    },
+    {
+      "path": "recovery-control/ops/systemd/cra-archive-integrity.example.json",
+      "source_role": "public-ci-correction",
+      "decision": "complete-source-bound-public-release-inputs",
+      "before_sha256": null,
+      "source_sha256": "3cd1a26ef8aafe75388ca2d41630d43ff971bc22c5eb50f906a93f9bd6863311",
+      "public_sha256": "3cd1a26ef8aafe75388ca2d41630d43ff971bc22c5eb50f906a93f9bd6863311"
+    },
+    {
+      "path": "recovery-control/ops/systemd/cra-archive-integrity@.service",
+      "source_role": "public-ci-correction",
+      "decision": "complete-source-bound-public-release-inputs",
+      "before_sha256": null,
+      "source_sha256": "ad44a8e531c512df2a8adbfeb8e772e1258d308bd202227db4e353685a1cbbe3",
+      "public_sha256": "ad44a8e531c512df2a8adbfeb8e772e1258d308bd202227db4e353685a1cbbe3"
+    },
+    {
+      "path": "recovery-control/ops/systemd/cra-archive-integrity@.timer",
+      "source_role": "public-ci-correction",
+      "decision": "complete-source-bound-public-release-inputs",
+      "before_sha256": null,
+      "source_sha256": "8c2fc9d03ee2988b6460194e7d4ba77962fc4f245830a569776232d6ad2ca6f3",
+      "public_sha256": "8c2fc9d03ee2988b6460194e7d4ba77962fc4f245830a569776232d6ad2ca6f3"
+    },
+    {
+      "path": "recovery-control/ops/systemd/cra-arena-resilient-status-pull.example.json",
+      "source_role": "public-ci-correction",
+      "decision": "complete-source-bound-public-release-inputs",
+      "before_sha256": "f6530dc885f4667119b1675320b7fb5e61d19628d35ceb6f8444be1d313fa47d",
+      "source_sha256": "f23f77e82f989407d79883efc1eafc5745050eb46de6c87f7fce9910060a41c0",
+      "public_sha256": "f23f77e82f989407d79883efc1eafc5745050eb46de6c87f7fce9910060a41c0"
+    },
+    {
+      "path": "recovery-control/ops/systemd/cra-monitoring-projection-pull-daemon@.service",
+      "source_role": "public-ci-correction",
+      "decision": "complete-source-bound-public-release-inputs",
+      "before_sha256": null,
+      "source_sha256": "8fd6825fd4b6dd917263eddc15ea68dd151ccfa9f63474b428e78c051a1044a0",
+      "public_sha256": "8fd6825fd4b6dd917263eddc15ea68dd151ccfa9f63474b428e78c051a1044a0"
+    },
+    {
+      "path": "recovery-control/ops/systemd/cra-resilient-status-soak.example.json",
+      "source_role": "public-ci-correction",
+      "decision": "complete-source-bound-public-release-inputs",
+      "before_sha256": "a4292526a6c416fc39531d2267d5b2be6bb0fe1d4e6101b7a9875f3a6a4de926",
+      "source_sha256": "65f86a2eaa8dcdcd3a15fe30864822dfbb9b5dd556dc54e610e4294002155bdc",
+      "public_sha256": "65f86a2eaa8dcdcd3a15fe30864822dfbb9b5dd556dc54e610e4294002155bdc"
+    },
+    {
+      "path": "recovery-control/ops/systemd/cra-runtime.example.json",
+      "source_role": "public-ci-correction",
+      "decision": "complete-source-bound-public-release-inputs",
+      "before_sha256": "b464e658f7d84b1548c3ddf1e56453b1186c2f361193ead14ae1870b2a5e747a",
+      "source_sha256": "3449b0eb3ab09491410481355f53710dc06415374a855090117e7acc073ba63d",
+      "public_sha256": "3449b0eb3ab09491410481355f53710dc06415374a855090117e7acc073ba63d"
+    },
+    {
+      "path": "recovery-control/ops/systemd/dell-observation-publisher.example.json",
+      "source_role": "public-ci-correction",
+      "decision": "complete-source-bound-public-release-inputs",
+      "before_sha256": "e63e58b9aa57a240faa8ad54f922858290fcd5e44f38afb49a6fd4cacf3ee542",
+      "source_sha256": "e63e58b9aa57a240faa8ad54f922858290fcd5e44f38afb49a6fd4cacf3ee542",
+      "public_sha256": "e018906d1b32738cea5d69226e7f844e749e21adf5e1cfc87624710fd653d078"
+    },
+    {
+      "path": "recovery-control/ops/systemd/dell-observation-pull.example.json",
+      "source_role": "public-ci-correction",
+      "decision": "complete-source-bound-public-release-inputs",
+      "before_sha256": "642a9ace2c2def5e7dbfdbbd7a6b967f2578b8787c00bdbbb33ee5a68116ab1b",
+      "source_sha256": "642a9ace2c2def5e7dbfdbbd7a6b967f2578b8787c00bdbbb33ee5a68116ab1b",
+      "public_sha256": "a6f84b8ce8d63bc1186dd1341c09810e53d95b17132e093bbece5df646830be9"
+    },
+    {
+      "path": "recovery-control/ops/systemd/dell-resilient-host-status-publisher.example.json",
+      "source_role": "public-ci-correction",
+      "decision": "complete-source-bound-public-release-inputs",
+      "before_sha256": "f770cbdd66b25650f80f38a38b80dc7aea3da82f97b63e9c643ec3bde26a8a9d",
+      "source_sha256": "5b0155707f7af9e401ae6e39d34b67c592b0a437abeb55d826fbd02af6a4b808",
+      "public_sha256": "a798809fd8c42140777e228414af784dc3da3817a5c7fca30278fb86f4bcb9ce"
+    },
+    {
+      "path": "recovery-control/ops/systemd/monitoring-live-adapter.example.json",
+      "source_role": "public-ci-correction",
+      "decision": "complete-source-bound-public-release-inputs",
+      "before_sha256": "69af192eda40828180ec2162621406b494dc80d4a3517fd92cb040e6d50fcd54",
+      "source_sha256": "69af192eda40828180ec2162621406b494dc80d4a3517fd92cb040e6d50fcd54",
+      "public_sha256": "9bc6baf53a1f0f8ceb83c95cf25169d85389c268100b729866a2ae938a0f62cc"
+    },
+    {
+      "path": "recovery-control/ops/systemd/monitoring-live-projection.example.json",
+      "source_role": "public-ci-correction",
+      "decision": "complete-source-bound-public-release-inputs",
+      "before_sha256": "d6e1865d959c0d9b735f1e39e960dde3c1ea68a7974bad39b8da34ba7c804078",
+      "source_sha256": "d6e1865d959c0d9b735f1e39e960dde3c1ea68a7974bad39b8da34ba7c804078",
+      "public_sha256": "c2acb48effbca340168c8c541a7c1a040d592623bdad2ba4f476b500387608a5"
+    },
+    {
+      "path": "recovery-control/ops/systemd/monitoring-v4-dell-resilient-status-pull.example.json",
+      "source_role": "public-ci-correction",
+      "decision": "complete-source-bound-public-release-inputs",
+      "before_sha256": "dbf4e40beb94942bf121bbf00eeeb9dd33264db2539c5a499887c554bf8762cc",
+      "source_sha256": "7b04ad5b359b53b76cdf1e28ff6fde9ebfe93e0850e64e4551c08ab5cc5c3753",
+      "public_sha256": "7b04ad5b359b53b76cdf1e28ff6fde9ebfe93e0850e64e4551c08ab5cc5c3753"
+    },
+    {
+      "path": "recovery-control/ops/systemd/monitoring-v4-resilient-status-publisher.example.json",
+      "source_role": "public-ci-correction",
+      "decision": "complete-source-bound-public-release-inputs",
+      "before_sha256": "54e145c4a42066275e06dd2fb683a2bad0d17781033fa18d32ed3e8613aec4a9",
+      "source_sha256": "4a0be0c2d52d9b25f0797169ca0f26abff995abee1cf2f2092f8b81bf6d3f878",
+      "public_sha256": "c40db35d6072905fd4b30edcec0a51dc8ee2dbd9b6f9a29621e46accc5d91525"
+    },
+    {
+      "path": "recovery-control/ops/systemd/stream-v3-tcp-stall-collector@.service",
+      "source_role": "public-ci-correction",
+      "decision": "complete-source-bound-public-release-inputs",
+      "before_sha256": null,
+      "source_sha256": "c7e1151445a18f0ccea4c538644e2d776f0f4bc536d96e72622f2818fc2b2369",
+      "public_sha256": "c7e1151445a18f0ccea4c538644e2d776f0f4bc536d96e72622f2818fc2b2369"
+    },
+    {
+      "path": "recovery-control/ops/systemd/tcp-stall-collector.example.json",
+      "source_role": "public-ci-correction",
+      "decision": "complete-source-bound-public-release-inputs",
+      "before_sha256": null,
+      "source_sha256": "9135ec9c1a6c9557b53396c3501070c625f303f53db532b5d20d6ed32e80a5e6",
+      "public_sha256": "60dba4c26c4341852d63514ee4f9dc398fc7b650a0cbde505b7cd019f33d62a3"
+    },
+    {
+      "path": "recovery-control/pyproject.toml",
+      "source_role": "public-ci-correction",
+      "decision": "complete-source-bound-public-release-inputs",
+      "before_sha256": "be04e9dd1b9e67e8f83352a861269baf5b6f25a88cc072a2803ea8a27bc1acbd",
+      "source_sha256": "9620ef85c926f8e68b96a9adb63f6057d834a0c8ad4f07c827f768a5c0d89ad3",
+      "public_sha256": "9620ef85c926f8e68b96a9adb63f6057d834a0c8ad4f07c827f768a5c0d89ad3"
     },
     {
       "path": "recovery-control/src/cra_authority/archive_integrity.py",
@@ -1605,7 +1757,7 @@
       "decision": "adapted",
       "before_sha256": "0afbeaa78bade640ecc89e1e537aba325ecb697015b4983d7021e18bbe5102c6",
       "source_sha256": "34813d3300576281e4cf96397b40d77a7755ed06a8872696e2ff73ff38f5c094",
-      "public_sha256": "34813d3300576281e4cf96397b40d77a7755ed06a8872696e2ff73ff38f5c094"
+      "public_sha256": "89e54691d67dd2cb7a9677c039632789ee9425823d477d1746f8a99f2bf886ce"
     },
     {
       "path": "recovery-control/tests/runtime_boundary/test_recovery_publisher.py",
@@ -1632,12 +1784,68 @@
       "public_sha256": "bd0d5b618de88218450904b9710ec89d013495fb57f72809440a4e54681f0c94"
     },
     {
+      "path": "recovery-control/tools/build_cra_no_action_release.py",
+      "source_role": "public-ci-correction",
+      "decision": "complete-source-bound-public-release-inputs",
+      "before_sha256": "7c881a48f086437428e152f6fc811d78830951269117f84b67e2d9df6b07a60e",
+      "source_sha256": "a2f8e6aa0d86e0bcf1dd9b7a7703873fd15cd280ed3c391755bff09eb1402ab7",
+      "public_sha256": "d744c0462b4b8f7c9087c7c83cc3295f9ecc2beb7c7f372464762c33f68aa4ef"
+    },
+    {
+      "path": "recovery-control/tools/build_observation_plane_release.py",
+      "source_role": "public-ci-correction",
+      "decision": "complete-source-bound-public-release-inputs",
+      "before_sha256": "3555bb0b4a525198a150185ca1bf9014e3d7d6d378e2cc48fa875fef310c6a6b",
+      "source_sha256": "07fed10613106e80aa02107973c7d7cc0c3dcca3ab0343217fc8f236165b3551",
+      "public_sha256": "914c4074659940745742126b208a866dc6fa21826b8c29c0dbeed9671443f1a2"
+    },
+    {
+      "path": "recovery-control/tools/build_recovery_soak_units.py",
+      "source_role": "public-ci-correction",
+      "decision": "complete-source-bound-public-release-inputs",
+      "before_sha256": "d85eea2169ea8c0ed98dac36a6708eda8ed0dfe37e36dbd9d8962120eb6f31e1",
+      "source_sha256": "e1f32da29a29efd4eb1399c3027fcae13d04a54a76bffcf8280ee39df9071d91",
+      "public_sha256": "96fef2bb828045a158654594abc160539e9ef6b29016eacf2a67802a7f3c9cb6"
+    },
+    {
       "path": "recovery-control/tools/build_tcp_stall_collector_release.py",
       "source_role": "development-recovery",
       "decision": "adapted",
       "before_sha256": null,
       "source_sha256": "eab4c8073f49a4a4b7175c9e79172f232bcf17277d3780ea44defbc10ae57586",
       "public_sha256": "eab4c8073f49a4a4b7175c9e79172f232bcf17277d3780ea44defbc10ae57586"
+    },
+    {
+      "path": "recovery-control/tools/evaluate_postmortem_predeploy_gate.py",
+      "source_role": "public-ci-correction",
+      "decision": "complete-source-bound-public-release-inputs",
+      "before_sha256": "69526a4371b79309b4d5009eb65152904f51b64fc0ef513c6f04c515c5ed4ea1",
+      "source_sha256": "02737668efba4e25328f18f5b9ba027ad2ef7d19effd268db758f2b2217dcfff",
+      "public_sha256": "02737668efba4e25328f18f5b9ba027ad2ef7d19effd268db758f2b2217dcfff"
+    },
+    {
+      "path": "recovery-control/tools/freeze_recovery_soak_checkpoint.py",
+      "source_role": "public-ci-correction",
+      "decision": "complete-source-bound-public-release-inputs",
+      "before_sha256": "97c27cc8e35d27180fe717c71a912f885e6954f332c3174f359bcdbae4698d24",
+      "source_sha256": "6d8b99f13cb67bc0b39a004d9272b74cdea70635db3793aeb39f5214d693ed0c",
+      "public_sha256": "6d8b99f13cb67bc0b39a004d9272b74cdea70635db3793aeb39f5214d693ed0c"
+    },
+    {
+      "path": "recovery-control/tools/install_immutable_runtime_release.py",
+      "source_role": "public-ci-correction",
+      "decision": "complete-source-bound-public-release-inputs",
+      "before_sha256": "482ec59afa1f3aa27d6bae0f2ceb2ba947ac9e42a52477fd6428e431b8c0a94a",
+      "source_sha256": "e66288ea0ac1639d62c59a4bc94875c074cec28c240d510b1219708544e98e75",
+      "public_sha256": "16b4459c7aa26e6cec90e5c7e2239045b0d4f86f8aca7b7cffe24aaa239a34ac"
+    },
+    {
+      "path": "recovery-control/tools/run_postmortem_io_harness.py",
+      "source_role": "public-ci-correction",
+      "decision": "complete-source-bound-public-release-inputs",
+      "before_sha256": "8579902af762d7088c332e9bee5eb18e2ad2e04d1557cd217c4f5908d4029798",
+      "source_sha256": "5dd6903c563f663600c095636da32a6a5bb3eee7eb5866866ccfd324b508fdac",
+      "public_sha256": "5dd6903c563f663600c095636da32a6a5bb3eee7eb5866866ccfd324b508fdac"
     },
     {
       "path": "recovery-control/tools/verify_owner_trial_read.py",
@@ -1847,7 +2055,7 @@
     },
     {
       "path": "recovery-control/harness/contracts/owner_observation_review.json",
-      "reason": "private operator read-proof bindings replaced by explicitly unbound public placeholder"
+      "reason": "Private owner review bindings and proofs are omitted; the same path contains an explicitly unbound public placeholder."
     }
   ],
   "additional_excluded_categories": [

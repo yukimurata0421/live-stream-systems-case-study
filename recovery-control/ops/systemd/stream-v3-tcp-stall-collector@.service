@@ -1,0 +1,60 @@
+[Unit]
+Description=Collect read-only high-cadence TCP stall evidence for immutable epoch %i
+After=local-fs.target
+ConditionPathExists=/opt/stream-recovery-control/tcp-stall/releases/%i/release_manifest.json
+ConditionPathExists=/etc/stream-recovery-control/tcp-stall/releases/%i/collector.json
+
+[Service]
+Type=simple
+User=stream-recovery
+Group=stream-recovery
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=PYTHONNOUSERSITE=1
+Environment=PYTHONPATH=/opt/stream-recovery-control/tcp-stall/releases/%i/src
+ExecStart=/usr/bin/python3 -m tcp_stall_collector.service --config /run/stream-v3-tcp-stall-collector/collector.json --epoch-id %i --output-dir /var/lib/stream-recovery-control/tcp-stall/epochs/%i
+Restart=on-failure
+RestartSec=5s
+TimeoutStopSec=15s
+UMask=0027
+Nice=10
+IOSchedulingClass=idle
+MemoryMax=64M
+TasksMax=16
+StateDirectory=stream-recovery-control/tcp-stall/epochs/%i
+StateDirectoryMode=0750
+RuntimeDirectory=stream-v3-tcp-stall-collector
+RuntimeDirectoryMode=0750
+NoNewPrivileges=true
+PrivateNetwork=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectClock=true
+ProtectHostname=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+ProtectProc=invisible
+ProcSubset=pid
+RestrictSUIDSGID=true
+RestrictRealtime=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+RemoveIPC=true
+CapabilityBoundingSet=
+RestrictAddressFamilies=AF_UNIX
+SystemCallFilter=~@network-io @mount @reboot @swap
+ReadOnlyPaths=/opt/stream-recovery-control/tcp-stall/releases/%i
+ReadOnlyPaths=-/run/stream-v3-control/runtime-observation.json
+ReadWritePaths=/var/lib/stream-recovery-control/tcp-stall/epochs/%i
+BindReadOnlyPaths=/etc/stream-recovery-control/tcp-stall/releases/%i/collector.json:/run/stream-v3-tcp-stall-collector/collector.json
+InaccessiblePaths=-/etc/stream-recovery-control
+InaccessiblePaths=-/run/stream-v3-control/effect.sock -/run/stream-v3-control/runtime-recovery.sock
+InaccessiblePaths=-/run/stream-v3-control/runtime-recovery-observation.json -/run/stream-v3-control/source
+InaccessiblePaths=-/var/lib/stream-recovery-control/controller -/var/lib/stream-recovery-control/cra
+InaccessiblePaths=-/var/lib/rancher/k3s -/run/credentials
+
+[Install]
+WantedBy=multi-user.target

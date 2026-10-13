@@ -284,8 +284,16 @@ def evaluate(
                     "DELL_OWNER_LIFECYCLE_UNKNOWN_OUTSIDE_RECOVERY",
                     "RECOVERY_SOURCE_GAP_OUTSIDE_KNOWN_OUTAGE",
                 ],
+                "OWNER_AUXILIARY_EXECUTABLE_EXIT_RACE": [
+                    "DELL_OWNER_LIFECYCLE_UNKNOWN_OUTSIDE_RECOVERY",
+                    "RECOVERY_SOURCE_GAP_OUTSIDE_KNOWN_OUTAGE",
+                ],
                 "OWNER_LIFECYCLE_EVIDENCE_GAP": [
                     "DELL_ACTIVATION_EVIDENCE_UNKNOWN_OUTSIDE_RECOVERY",
+                    "RECOVERY_SOURCE_GAP_OUTSIDE_KNOWN_OUTAGE",
+                    "SOURCE_EVIDENCE_UNKNOWN_OUTSIDE_KNOWN_OUTAGE",
+                ],
+                "UPSTREAM_OAUTH_TRANSIENT_READ_GAP": [
                     "RECOVERY_SOURCE_GAP_OUTSIDE_KNOWN_OUTAGE",
                     "SOURCE_EVIDENCE_UNKNOWN_OUTSIDE_KNOWN_OUTAGE",
                 ],

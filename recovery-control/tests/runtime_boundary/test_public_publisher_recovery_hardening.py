@@ -10,7 +10,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-SCRIPT = Path(__file__).resolve().parents[3] / "stream_v3/ops/public-publisher/site/scripts/push_to_gcs.py"
+SCRIPT = Path(__file__).resolve().parents[3] / "ops/public-publisher/site/scripts/push_to_gcs.py"
 
 
 @pytest.fixture
