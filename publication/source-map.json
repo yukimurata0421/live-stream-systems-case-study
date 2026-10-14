@@ -37,7 +37,9 @@
       "decision": "curated-current-contract-and-dated-evidence",
       "before_sha256": "0ebeadd27f3369db87b86768ca826933afa5987914ca8b4330c6c115fbfee0bf",
       "source_sha256": null,
-      "public_sha256": "e32ab253e63bfe09d4ec42a5fc1594a2025b8bd859cab754ee1558798c0391dc"
+      "public_sha256": "8d1a817a33964e5c0ca8a76b62ec9ab1f8eab8fe5b8b0e8a6470f0a4fe870467",
+      "pre_pi_publisher_source_port_sha256": "e32ab253e63bfe09d4ec42a5fc1594a2025b8bd859cab754ee1558798c0391dc",
+      "pi_publisher_source_port": "2026-10-14 Pi publisher source reconciliation; no live mutation."
     },
     {
       "path": "docs/28-day-same-url-sli-case-study.md",
@@ -165,7 +167,9 @@
       "decision": "current-component-index-and-publication-boundary",
       "before_sha256": "13f8a22fed3663e4f423d8e86f22a6150437b99c59dc74f876c9b3bbd4dc202a",
       "source_sha256": null,
-      "public_sha256": "9c7649fba1de17fa7cfbd9a5f19af6dd18d7be5c29f80b15f12ec50b512d88ec"
+      "public_sha256": "2aaaa185daa40778e62f48afcff2a223d3cdc0e7ac0367f620bcd9d758c8493c",
+      "pre_pi_publisher_source_port_sha256": "9c7649fba1de17fa7cfbd9a5f19af6dd18d7be5c29f80b15f12ec50b512d88ec",
+      "pi_publisher_source_port": "2026-10-14 Pi publisher source reconciliation; no live mutation."
     },
     {
       "path": "docs/v3/public-source-port-2026-10-13.md",
@@ -525,7 +529,9 @@
       "decision": "port-missing-fixed-current-assets-and-provider-artifacts-upload-allowlist",
       "before_sha256": "5378112b4043be6f281279db02402b1274006d86cfc333800807423b9160c5d6",
       "source_sha256": "83a2b329123bf7f24e8e502b1e73e887d09c66424f019b1b0f1abe062c7559b7",
-      "public_sha256": "83a2b329123bf7f24e8e502b1e73e887d09c66424f019b1b0f1abe062c7559b7"
+      "public_sha256": "46fea0718b2e4ff11a8928af96753d68f37cb77329f7e20d6934da81dc092abd",
+      "pre_pi_publisher_source_port_sha256": "83a2b329123bf7f24e8e502b1e73e887d09c66424f019b1b0f1abe062c7559b7",
+      "pi_publisher_source_port": "2026-10-14 Pi publisher source reconciliation; no live mutation."
     },
     {
       "path": "ops/relay/operator_route.py",
@@ -2014,6 +2020,70 @@
       "before_sha256": null,
       "source_sha256": "da6513c0ab04e59b8b3494fca87716d2de6290dfc4a435c8ffe2a006915437f9",
       "public_sha256": "da6513c0ab04e59b8b3494fca87716d2de6290dfc4a435c8ffe2a006915437f9"
+    },
+    {
+      "path": "ops/public-publisher/site/scripts/collect_reliability.py",
+      "source_role": "public-pi-publisher-port",
+      "decision": "Pi publisher source reconciliation with portable defaults and English documentation.",
+      "before_sha256": "81b07550d545ed52f4baf574052a7e3b205b155f85f5efc7a337fa3b745884b1",
+      "source_sha256": "c8851c006d75aa0bf27697524cb57b07cb4c3f316a1551824623cc3bdc303645",
+      "public_sha256": "9388ba7379c1242f7f6f2ec90e5dac1aef8ce4441af08689326b85fa501cff68"
+    },
+    {
+      "path": "ops/public-publisher/status/collect_stream_v3_public.py",
+      "source_role": "public-pi-publisher-port",
+      "decision": "Pi publisher source reconciliation with portable defaults and English documentation.",
+      "before_sha256": "d26183a3cef74e0613df595f4178e8f0f3a7152173d5f6555f2e4982ce9b3add",
+      "source_sha256": "8f52a02a979e79a7c9ab188d12bef402ff23a4e02fe7238149cdd00fba557c02",
+      "public_sha256": "8f52a02a979e79a7c9ab188d12bef402ff23a4e02fe7238149cdd00fba557c02"
+    },
+    {
+      "path": "tests/test_public_reliability_collector.py",
+      "source_role": "public-pi-publisher-port",
+      "decision": "Pi publisher source reconciliation with portable defaults and English documentation.",
+      "before_sha256": "5dafe0a636cb8eb41f941a2f1ad35068b3fb054fd210ff8f3f9735f941e1eb7f",
+      "source_sha256": "eeda05269af3504d584eccf1a275cd04ba6f2f82026e919fd1d2adc9ffd0905d",
+      "public_sha256": "50600497eee0d2b2fda33d07e41c2c86b870d639f1b45a8c1b89be6d7975480e"
+    },
+    {
+      "path": "tests/test_public_map_collector.py",
+      "source_role": "public-pi-publisher-port",
+      "decision": "Pi publisher source reconciliation with portable defaults and English documentation.",
+      "before_sha256": "26156d58535da0f2cc29547c22704fc7d003fc260bd916d0356f3143067a7c21",
+      "source_sha256": null,
+      "public_sha256": "ecbef4f1147e7547ed06bae7e16843babec653a61118bf86a24967bf618d9954"
+    },
+    {
+      "path": "ops/public-publisher/site/README.md",
+      "source_role": "public-pi-publisher-port",
+      "decision": "Pi publisher source reconciliation with portable defaults and English documentation.",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "a880b9130ace2049cb9b57c03e7cd813b5f537fd47b5bb0e3982063a38454995"
+    },
+    {
+      "path": "docs/v3/pi-publisher-source-port-2026-10-14.md",
+      "source_role": "public-pi-publisher-port",
+      "decision": "Pi publisher source reconciliation with portable defaults and English documentation.",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "a6b895472f8eec6fb1214e85a36a6de35bdd101f09a400703397ca5f6a6c3dd2"
+    },
+    {
+      "path": "publication/pi-publisher-source-port-20261014.json",
+      "source_role": "public-pi-publisher-port",
+      "decision": "Pi publisher source reconciliation with portable defaults and English documentation.",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "48c3b06aeae3d90cc58ab869c33234aed9f525853c23d739ef329465a54a2cdb"
+    },
+    {
+      "path": "ops/public-publisher/site/systemd/stream-v3-public-publisher.env.example",
+      "source_role": "public-pi-publisher-port",
+      "decision": "Pi publisher source reconciliation with portable defaults and English documentation.",
+      "before_sha256": "09ee5602761e86922bdc7d3e5d8053643c9ab3f2648da4180338fd8e37d7d18e",
+      "source_sha256": null,
+      "public_sha256": "503b2276e213e6750e80cb53fb9e95b4f97f903f2f8a15d238b054fdc9f2b4f6"
     }
   ],
   "omissions": [
@@ -2069,5 +2139,13 @@
     "publication/validation.json"
   ],
   "evidence_checkpoint_cutoff_jst": "2026-10-14T00:04:57+09:00",
-  "documentation_audience": "hiring and technical reviewers"
+  "documentation_audience": "hiring and technical reviewers",
+  "pi_publisher_source_port": {
+    "record": "publication/pi-publisher-source-port-20261014.json",
+    "scope": "Pi publisher source changes over d1292354024ea6ae7cd642181b15d2ee98708283",
+    "unrelated_worktree_changes_included": false,
+    "deployment_performed": false,
+    "commit_prepared": true,
+    "push_performed": false
+  }
 }

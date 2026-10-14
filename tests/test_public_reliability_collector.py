@@ -7,15 +7,7 @@ from unittest import mock
 from pathlib import Path
 
 
-ROOT = Path(__file__).resolve().parents[1]
-MODULE_PATH = (
-    ROOT
-    / "ops"
-    / "public-publisher"
-    / "site"
-    / "scripts"
-    / "collect_reliability.py"
-)
+MODULE_PATH = Path(__file__).resolve().parents[1] / "ops" / "public-publisher" / "site" / "scripts" / "collect_reliability.py"
 
 
 def load_collector():
@@ -77,13 +69,30 @@ def raw_report() -> dict:
             "event_coverage_pct": 84.0,
             "coverage_pct": 80.0,
             "evidence_unit": "viewer_probe_events",
+            "high_resolution_points": 3,
+            "low_resolution_points": 36,
+            "resolution_unknown_points": 1,
+            "high_resolution_scheduled_coverage_pct": 6.0,
         }
     )
     adsb = summary(100.0, None, observed=90, bad=0)
-    adsb.update({"total_monitor_events": 91, "unknown_points": 1})
+    adsb.update(
+        {
+            "expected_points": 100,
+            "total_monitor_events": 91,
+            "active_points": 88,
+            "quiet_points": 2,
+            "stale_points": 0,
+            "unknown_points": 1,
+            "missing_points": 9,
+            "coverage_pct": 90.0,
+            "report_issue_points": 3,
+        }
+    )
     visual = {
         **viewer,
         "viewer_probe_events": viewer,
+        "adsb_source_events": adsb,
         "adsb_rendering_events": adsb,
         "assessment_scope": "supporting_only",
         "evidence_units_separated": True,
@@ -108,13 +117,13 @@ def raw_report() -> dict:
 
 
 class PublicReliabilityCollectorTests(unittest.TestCase):
-    def test_public_payload_has_six_neutral_numeric_indicators(self) -> None:
+    def test_public_payload_has_seven_neutral_numeric_indicators(self) -> None:
         collector = load_collector()
         payload = collector.build_public_payload(raw_report())
-        self.assertEqual(payload["schema"], "stream-v3-reliability-public.v4")
+        self.assertEqual(payload["schema"], "stream-v3-reliability-public.v5")
+        self.assertEqual(len(payload["items"]), 7)
         self.assertEqual(collector.DEFAULT_CACHE_SEC, 60)
         self.assertEqual(payload["cadence_sec"], 60)
-        self.assertEqual(len(payload["items"]), 6)
         self.assertNotIn("status", payload)
         self.assertTrue(all("status" not in item and "state" not in item for item in payload["items"]))
         self.assertNotIn("prometheus", str(payload).lower())
@@ -169,10 +178,23 @@ class PublicReliabilityCollectorTests(unittest.TestCase):
         self.assertEqual(facts["Confirmed visual bad"], 1.0)
         self.assertEqual(facts["Probe unavailable"], 2.0)
         self.assertEqual(facts["Probe event coverage"], 84.0)
-        self.assertEqual(facts["ADS-B monitor events"], 91.0)
-        self.assertEqual(facts["ADS-B supporting bad"], 0.0)
-        self.assertIn("separate denominator", item["note"])
+        self.assertEqual(facts["Full-HD evidence"], 3.0)
+        self.assertEqual(facts["Legacy low-resolution"], 36.0)
+        self.assertEqual(facts["Resolution unknown"], 1.0)
+        self.assertEqual(facts["Full-HD scheduled coverage"], 6.0)
+        self.assertNotIn("ADS-B monitor events", facts)
         self.assertIn("not visual correctness", item["note"])
+        self.assertIn("legacy 320x180", item["note"])
+
+        adsb = next(row for row in payload["items"] if row["id"] == "adsb_source_health")
+        adsb_facts = {row["label"]: row["value"] for row in adsb["facts"]}
+        self.assertEqual(adsb["label"], "ADS-B source availability")
+        self.assertEqual(adsb["value"], 100.0)
+        self.assertEqual(adsb_facts["Active"], 88.0)
+        self.assertEqual(adsb_facts["Quiet"], 2.0)
+        self.assertEqual(adsb_facts["Unknown"], 1.0)
+        self.assertEqual(adsb_facts["Report issues (diagnostic)"], 3.0)
+        self.assertIn("Zero traffic", adsb["note"])
 
     def test_fetch_uses_pinned_release_code_with_explicit_persistent_state(self) -> None:
         collector = load_collector()
@@ -196,13 +218,83 @@ class PublicReliabilityCollectorTests(unittest.TestCase):
             command,
         )
 
-    def test_visual_keeps_legacy_card_until_event_schema_is_deployed(self) -> None:
+    def test_legacy_composite_is_withheld_until_event_schema_is_deployed(self) -> None:
         collector = load_collector()
-        item = collector.visual_support_item(summary(98.9, None, observed=50, bad=1))
+        legacy = summary(98.9, None, observed=50, bad=1)
+        viewer = collector.viewer_support_item(legacy)
+        adsb = collector.adsb_source_item(legacy)
+        facts = {row["label"]: row["value"] for row in viewer["facts"]}
+        self.assertEqual(viewer["label"], "Viewer evidence coverage")
+        self.assertIsNone(viewer["value"])
+        self.assertEqual(facts["Legacy grid points withheld"], 50.0)
+        self.assertIsNone(adsb["value"])
+        self.assertNotIn("98.9", str(viewer))
+
+
+    def test_adsb_source_is_a_separate_reliability_indicator(self) -> None:
+        collector = load_collector()
+        payload = collector.build_public_payload(raw_report())
+        item = next(row for row in payload["items"] if row["id"] == "adsb_source_health")
         facts = {row["label"]: row["value"] for row in item["facts"]}
-        self.assertEqual(item["label"], "Visual supporting samples")
-        self.assertEqual(facts["Observed"], 50.0)
-        self.assertIn("pending the event-based source release", item["note"])
+        self.assertEqual(item["value"], 100.0)
+        self.assertEqual(facts["Active"], 88.0)
+        self.assertEqual(facts["Quiet"], 2.0)
+        self.assertEqual(facts["Stale"], 0.0)
+        self.assertIn("Zero traffic is activity information", item["note"])
+
+    def test_active_incidents_are_separate_from_numeric_indicators(self) -> None:
+        collector = load_collector()
+        payload = collector.build_public_payload(
+            raw_report(),
+            active_incidents=[
+                {
+                    "id": "reliability:upload_ceiling_multi_window_burn",
+                    "severity": "critical",
+                    "recovery_type": "human_review_no_automatic_restart",
+                    "observed_ts": 1_790_013_060,
+                }
+            ],
+            active_incidents_status="ok",
+        )
+
+        self.assertEqual(len(payload["items"]), 7)
+        self.assertEqual(payload["active_incidents"]["count"], 1)
+        incident = payload["active_incidents"]["items"][0]
+        self.assertEqual(incident["label"], "Upload ceiling multi-window burn")
+        self.assertEqual(incident["severity"], "critical")
+        self.assertEqual(incident["recovery_type"], "human_review_no_automatic_restart")
+        self.assertNotIn("summary", incident)
+
+    def test_fetch_active_incidents_reads_only_allowlisted_fields(self) -> None:
+        collector = load_collector()
+        completed = mock.Mock(
+            returncode=0,
+            stdout=json.dumps(
+                {
+                    "items": [
+                        {
+                            "id": "reliability:upload_ceiling_multi_window_burn",
+                            "severity": "critical",
+                            "recovery_type": "human_review_no_automatic_restart",
+                            "observed_ts": 1_790_013_060,
+                            "summary": "must not pass through",
+                        }
+                    ]
+                }
+            ),
+            stderr="",
+        )
+        with mock.patch.object(collector.subprocess, "run", return_value=completed) as run_mock:
+            incidents = collector.fetch_active_incidents(
+                "arena-test",
+                "/var/lib/stream-v3/observability-monitor",
+                timeout_sec=10,
+            )
+
+        command = run_mock.call_args.args[0][-1]
+        self.assertIn("stream_notify_state.json", command)
+        self.assertEqual(len(incidents), 1)
+        self.assertNotIn("summary", incidents[0])
 
 
 if __name__ == "__main__":

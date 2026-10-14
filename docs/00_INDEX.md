@@ -44,6 +44,7 @@ Use the rest of this page as a reference catalog.
 - `v3/current-runtime-contract.md`
 - `v3/public-status-snapshot.md`
 - `v3/public-publisher-boundary.md`
+- `v3/pi-publisher-source-port-2026-10-14.md`: [Pi publisher source reconciliation and offline validation](v3/pi-publisher-source-port-2026-10-14.md).
 - `v3/runtime-state-and-evidence.md`
 - `v3/map-rendering-and-monitoring.md`
 - `v3/map-mobile-legibility-review.md`

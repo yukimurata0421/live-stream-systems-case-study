@@ -10,6 +10,13 @@ The Raspberry Pi is a static snapshot publisher. It is not a k3s node,
 Prometheus backend, Grafana instance, formal SLI authority, or recovery
 executor.
 
+The [2026-10-14 Pi source port](pi-publisher-source-port-2026-10-14.md) adds
+reliability schema v5, separate Viewer/ADS-B evidence, Full-HD sample facts,
+and a field-filtered active-incident section. Notification backlog now counts
+pending delivery only. The [source guide](../../ops/public-publisher/site/README.md)
+describes portable setup and offline validation. Live configuration, generated
+snapshots, and the older machine-specific Japanese operations notes are excluded.
+
 ## Data Flow
 
 ```text

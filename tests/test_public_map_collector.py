@@ -26,6 +26,13 @@ def load_collector():
 
 
 class PublicMapCollectorTests(unittest.TestCase):
+    def test_notification_backlog_does_not_include_active_incidents(self) -> None:
+        collector = load_collector()
+        item = next(row for row in collector.PROM_QUERIES if row["id"] == "notify_issues")
+        self.assertEqual(item["label"], "Notification backlog")
+        self.assertIn("stream_v3_notify_pending", item["query"])
+        self.assertNotIn("stream_v3_notify_active_incidents", item["query"])
+
     def test_map_queries_are_public_aggregates(self) -> None:
         collector = load_collector()
         map_queries = [item for item in collector.PROM_QUERIES if item["id"].startswith("map_")]

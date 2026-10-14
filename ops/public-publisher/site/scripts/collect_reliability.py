@@ -20,6 +20,33 @@ DEFAULT_OUTPUT = SITE_DIR / "public" / "reliability-indicators.json"
 DEFAULT_SOURCE_DIR = "/opt/stream_v3"
 DEFAULT_STATE_DIR = "/var/lib/stream-v3/observability-monitor"
 DEFAULT_CACHE_SEC = 60
+PUBLIC_INCIDENT_LABELS = {
+    "reliability:upload_ceiling_multi_window_burn": "Upload ceiling multi-window burn",
+}
+ACTIVE_INCIDENTS_REMOTE_SCRIPT = """
+import json
+import sys
+
+with open(sys.argv[1], encoding="utf-8") as handle:
+    payload = json.load(handle)
+
+active = payload.get("active") if isinstance(payload, dict) else {}
+items = []
+for incident_id, state in sorted((active or {}).items()):
+    if not isinstance(state, dict):
+        continue
+    incident = state.get("last_incident")
+    if not isinstance(incident, dict):
+        incident = {}
+    items.append({
+        "id": incident_id,
+        "severity": incident.get("severity"),
+        "recovery_type": incident.get("recovery_type"),
+        "observed_ts": incident.get("observed_ts"),
+    })
+
+print(json.dumps({"items": items}, separators=(",", ":")))
+""".strip()
 
 
 def as_number(value: Any) -> float | None:
@@ -78,24 +105,24 @@ def metric_item(
     }
 
 
-def visual_support_item(visual: dict[str, Any]) -> dict[str, Any]:
+def viewer_support_item(visual: dict[str, Any]) -> dict[str, Any]:
     viewer = visual.get("viewer_probe_events")
     if not isinstance(viewer, dict):
-        return metric_item(
-            item_id="visual_supporting_samples",
-            label="Visual supporting samples",
-            window="available 7d evidence",
-            value=visual.get("sli_pct"),
-            unit="%",
-            reference=None,
-            summary=visual,
-            extra_facts=[],
-            note=(
-                "Legacy minute-grid supporting evidence pending the event-based source release. "
-                "The formal visual check remains a sampled 1920x1080 capture checklist."
+        return {
+            "id": "visual_supporting_samples",
+            "label": "Viewer evidence coverage",
+            "window": "rolling 7d scheduled probes",
+            "value": None,
+            "unit": "%",
+            "facts": [
+                fact("Legacy grid points withheld", visual.get("observed_points"), "samples"),
+                fact("Legacy bad points withheld", visual.get("bad_points"), "samples"),
+            ],
+            "note": (
+                "Event-based Viewer evidence is unavailable. The legacy minute-grid composite is "
+                "withheld because it mixes Viewer and ADS-B signals."
             ),
-        )
-    adsb = visual.get("adsb_rendering_events") or {}
+        }
     return {
         "id": "visual_supporting_samples",
         "label": "Viewer evidence coverage",
@@ -111,21 +138,115 @@ def visual_support_item(visual: dict[str, Any]) -> dict[str, Any]:
             fact("Probe unavailable", viewer.get("unknown_points"), "events"),
             fact("Scheduled missing", viewer.get("missing_points"), "events"),
             fact("Probe event coverage", viewer.get("event_coverage_pct"), "%"),
-            fact("ADS-B monitor events", adsb.get("total_monitor_events"), "events"),
-            fact("ADS-B supporting bad", adsb.get("bad_points"), "events"),
-            fact("ADS-B supporting unknown", adsb.get("unknown_points"), "events"),
-            fact("ADS-B support rate", adsb.get("sli_pct"), "%"),
+            fact("Full-HD evidence", viewer.get("high_resolution_points"), "events"),
+            fact("Legacy low-resolution", viewer.get("low_resolution_points"), "events"),
+            fact("Resolution unknown", viewer.get("resolution_unknown_points"), "events"),
+            fact("Full-HD scheduled coverage", viewer.get("high_resolution_scheduled_coverage_pct"), "%"),
         ],
         "note": (
             "The primary value is eligible-frame evidence coverage over scheduled five-minute probes, "
             "not visual correctness. Eligible-frame result is conditional on captured frames; capture "
-            "failures are unavailable evidence, not confirmed bad frames. ADS-B monitor events use a "
-            "separate denominator. The formal visual check remains a sampled 1920x1080 capture checklist."
+            "failures are unavailable evidence, not confirmed bad frames. New evidence records both the "
+            "selected source and saved frame dimensions and counts as Full-HD only when both are at least "
+            "1920x1080; legacy 320x180 samples remain explicitly separate."
         ),
     }
 
 
-def build_public_payload(raw: dict[str, Any], *, now: float | None = None) -> dict[str, Any]:
+def adsb_source_item(visual: dict[str, Any]) -> dict[str, Any]:
+    adsb = visual.get("adsb_source_events") or visual.get("adsb_rendering_events")
+    if not isinstance(adsb, dict):
+        return {
+            "id": "adsb_source_health",
+            "label": "ADS-B source availability",
+            "window": "rolling 7d monitor events",
+            "value": None,
+            "unit": "%",
+            "facts": [],
+            "note": (
+                "Event-based ADS-B source evidence is unavailable; the legacy mixed composite is not substituted."
+            ),
+        }
+    return {
+        "id": "adsb_source_health",
+        "label": "ADS-B source availability",
+        "window": "rolling 7d monitor events",
+        "value": rounded(adsb.get("sli_pct")),
+        "unit": "%",
+        "facts": [
+            fact("Scheduled events", adsb.get("expected_points"), "events"),
+            fact("Monitor events", adsb.get("total_monitor_events"), "events"),
+            fact("Classified events", adsb.get("observed_points"), "events"),
+            fact("Active", adsb.get("active_points"), "events"),
+            fact("Quiet", adsb.get("quiet_points"), "events"),
+            fact("Stale", adsb.get("stale_points", adsb.get("bad_points")), "events"),
+            fact("Unknown", adsb.get("unknown_points"), "events"),
+            fact("Missing", adsb.get("missing_points"), "events"),
+            fact("Evidence coverage", adsb.get("coverage_pct"), "%"),
+            fact("Report issues (diagnostic)", adsb.get("report_issue_points"), "events"),
+        ],
+        "note": (
+            "Active and quiet are both healthy when the aircraft.json source heartbeat is fresh. "
+            "Zero traffic is activity information, not a source failure. Unknown and missing evidence "
+            "are excluded from the availability result and shown separately."
+        ),
+    }
+
+
+def safe_incident_identifier(value: Any, *, max_length: int = 160) -> str:
+    text = str(value or "").strip()
+    if not text or len(text) > max_length:
+        return ""
+    if not all(character.isascii() and (character.isalnum() or character in ":_-") for character in text):
+        return ""
+    return text
+
+
+def normalize_active_incidents(raw_items: Any) -> list[dict[str, Any]]:
+    if not isinstance(raw_items, list):
+        return []
+    incidents: list[dict[str, Any]] = []
+    for raw in raw_items:
+        if not isinstance(raw, dict):
+            continue
+        incident_id = safe_incident_identifier(raw.get("id"))
+        if not incident_id:
+            continue
+        severity = str(raw.get("severity") or "unknown").strip().lower()
+        if severity not in {"critical", "warning", "info"}:
+            severity = "unknown"
+        recovery_type = safe_incident_identifier(raw.get("recovery_type")) or "unknown"
+        observed_ts = as_number(raw.get("observed_at", raw.get("observed_ts")))
+        incidents.append(
+            {
+                "id": incident_id,
+                "label": PUBLIC_INCIDENT_LABELS.get(incident_id, incident_id),
+                "severity": severity,
+                "recovery_type": recovery_type,
+                "observed_at": int(observed_ts) if observed_ts is not None else None,
+            }
+        )
+    return incidents
+
+
+def active_incidents_payload(raw_items: Any, *, status: str) -> dict[str, Any]:
+    incidents = normalize_active_incidents(raw_items)
+    available = status == "ok"
+    return {
+        "status": "ok" if available else "unavailable",
+        "count": len(incidents) if available else None,
+        "items": incidents if available else [],
+        "interpretation": "Current incidents are separate from notification delivery and recovery execution.",
+    }
+
+
+def build_public_payload(
+    raw: dict[str, Any],
+    *,
+    active_incidents: Any = None,
+    active_incidents_status: str = "unavailable",
+    now: float | None = None,
+) -> dict[str, Any]:
     windows = raw.get("windows") or {}
     week = windows.get("7d") or {}
     month = windows.get("30d") or {}
@@ -251,16 +372,21 @@ def build_public_payload(raw: dict[str, Any], *, now: float | None = None) -> di
             extra_facts=[],
             note="Pulse monitor energy and audio fault evidence observed by the monitoring layer.",
         ),
-        visual_support_item(visual),
+        viewer_support_item(visual),
+        adsb_source_item(visual),
     ]
 
     return {
-        "schema": "stream-v3-reliability-public.v4",
+        "schema": "stream-v3-reliability-public.v5",
         "generated_at": generated_at,
         "generated_at_iso": generated_iso,
         "cadence_sec": DEFAULT_CACHE_SEC,
         "scope": "operational_reliability_indicators",
         "interpretation": "Measured observations and internal reference lines; no pass/fail or availability guarantee.",
+        "active_incidents": active_incidents_payload(
+            active_incidents,
+            status=active_incidents_status,
+        ),
         "items": items,
     }
 
@@ -314,14 +440,47 @@ def fetch_raw_report(
     return payload
 
 
+def fetch_active_incidents(
+    target: str,
+    state_dir: str,
+    *,
+    timeout_sec: float,
+) -> list[dict[str, Any]]:
+    state_file = str(Path(state_dir) / "stream_notify_state.json")
+    remote = (
+        f"/usr/bin/python3 -c {shlex.quote(ACTIVE_INCIDENTS_REMOTE_SCRIPT)} "
+        f"{shlex.quote(state_file)}"
+    )
+    completed = subprocess.run(
+        [
+            "ssh",
+            "-o", "BatchMode=yes",
+            "-o", "ConnectTimeout=8",
+            "-o", "ServerAliveInterval=10",
+            "-o", "ServerAliveCountMax=2",
+            target,
+            remote,
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+        timeout=timeout_sec,
+    )
+    payload = json.loads(completed.stdout)
+    if not isinstance(payload, dict) or not isinstance(payload.get("items"), list):
+        raise RuntimeError("active incident projection is invalid")
+    return normalize_active_incidents(payload["items"])
+
+
 def unavailable_payload(*, now: float, reason: str) -> dict[str, Any]:
     return {
-        "schema": "stream-v3-reliability-public.v4",
+        "schema": "stream-v3-reliability-public.v5",
         "generated_at": now,
         "generated_at_iso": datetime.fromtimestamp(now).astimezone().isoformat(),
         "cadence_sec": DEFAULT_CACHE_SEC,
         "scope": "operational_reliability_indicators",
         "interpretation": "Measured observations and internal reference lines; no pass/fail or availability guarantee.",
+        "active_incidents": active_incidents_payload([], status="unavailable"),
         "items": [],
         "availability": "measurement unavailable",
         "reason": reason,
@@ -350,7 +509,23 @@ def main() -> int:
         if not target:
             raise RuntimeError("reliability source target is not configured")
         raw = fetch_raw_report(target, source_dir, state_dir, timeout_sec=args.timeout)
-        payload = build_public_payload(raw, now=now)
+        try:
+            active_incidents = fetch_active_incidents(
+                target,
+                state_dir,
+                timeout_sec=args.timeout,
+            )
+            active_incidents_status = "ok"
+        except (OSError, ValueError, json.JSONDecodeError, subprocess.SubprocessError, RuntimeError) as exc:
+            active_incidents = []
+            active_incidents_status = "unavailable"
+            print(f"active incident refresh unavailable: {exc}", file=sys.stderr)
+        payload = build_public_payload(
+            raw,
+            active_incidents=active_incidents,
+            active_incidents_status=active_incidents_status,
+            now=now,
+        )
         write_json_atomic(args.output, payload)
     except (OSError, ValueError, json.JSONDecodeError, subprocess.SubprocessError, RuntimeError) as exc:
         if args.output.exists():

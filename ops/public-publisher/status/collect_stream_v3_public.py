@@ -205,10 +205,10 @@ PROM_QUERIES: list[dict[str, Any]] = [
     {
         "id": "notify_issues",
         "group": "Recovery",
-        "label": "Notify issues",
+        "label": "Notification backlog",
         "unit": "count",
         "kind": "zero_ok",
-        "query": 'max(stream_v3_notify_pending{job="stream_v3_arena_monitor"}) + max(stream_v3_notify_active_incidents{job="stream_v3_arena_monitor"})',
+        "query": 'max(stream_v3_notify_pending{job="stream_v3_arena_monitor"})',
     },
     {
         "id": "restarts_1h",
