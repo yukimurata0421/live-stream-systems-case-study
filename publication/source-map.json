@@ -653,9 +653,9 @@
       "path": "ops/public-publisher/site/public/index.html",
       "source_role": "development-public-ui",
       "decision": "adapted",
-      "before_sha256": "ed663bf37c47d048373df39b0f9dc9a9175b6385cb76a32fd9a12b8852fc252f",
-      "source_sha256": "3ddb11b4a8fdbd463d9ca304a1a16248bd56a53df00b309ea97304fcf6c53368",
-      "public_sha256": "3ddb11b4a8fdbd463d9ca304a1a16248bd56a53df00b309ea97304fcf6c53368",
+      "before_sha256": "3ddb11b4a8fdbd463d9ca304a1a16248bd56a53df00b309ea97304fcf6c53368",
+      "source_sha256": "c973cf759460ed3c823ccf9c2f07ddb9dafd607a1607266cc7c3d11c3ec924de",
+      "public_sha256": "c973cf759460ed3c823ccf9c2f07ddb9dafd607a1607266cc7c3d11c3ec924de",
       "pre_graph_display_sha256": "cfadf662a3455f92df0f7ad67f767a2835285aebe9d2068a3b8c8ce3ab4888a9",
       "graph_display_change": "Observed link arrows, explicit direct-path inference, and timestamp-preserving charts.",
       "pre_twitch_sli_resilience_sha256": "86762c0461a6249d1d652160906ad02ef8340f1b74f99c399e3a6253f19caed0",
@@ -2597,12 +2597,13 @@
     },
     {
       "path": "ops/public-publisher/site/scripts/collect_reliability.py",
-      "source_role": "public-pi-publisher-port",
-      "before_sha256": "81b07550d545ed52f4baf574052a7e3b205b155f85f5efc7a337fa3b745884b1",
-      "source_sha256": "c8851c006d75aa0bf27697524cb57b07cb4c3f316a1551824623cc3bdc303645",
-      "public_sha256": "9388ba7379c1242f7f6f2ec90e5dac1aef8ce4441af08689326b85fa501cff68",
+      "source_role": "development-public-ui",
+      "before_sha256": "9388ba7379c1242f7f6f2ec90e5dac1aef8ce4441af08689326b85fa501cff68",
+      "source_sha256": "48e830d13d486a52468585db5d144417e0b149d3e9f038c2a0e22543d02b8a6d",
+      "public_sha256": "6e7fe5eb3bd6735f0303f9c3c41a51408b93938086c6293d190e22d2dca1de63",
       "pi_publisher_source_port": "2026-10-14 source reconciliation; portable English code and retained public protections; no live changes.",
-      "decision": "Pi publisher source reconciliation, portable paths, English source guide, and mock-based validation."
+      "decision": "adapted",
+      "port_date_jst": "2026-10-20"
     },
     {
       "path": "ops/public-publisher/status/collect_stream_v3_public.py",
@@ -2615,12 +2616,13 @@
     },
     {
       "path": "tests/test_public_reliability_collector.py",
-      "source_role": "public-pi-publisher-port",
-      "before_sha256": "5dafe0a636cb8eb41f941a2f1ad35068b3fb054fd210ff8f3f9735f941e1eb7f",
-      "source_sha256": "eeda05269af3504d584eccf1a275cd04ba6f2f82026e919fd1d2adc9ffd0905d",
-      "public_sha256": "50600497eee0d2b2fda33d07e41c2c86b870d639f1b45a8c1b89be6d7975480e",
+      "source_role": "public-validation",
+      "before_sha256": "50600497eee0d2b2fda33d07e41c2c86b870d639f1b45a8c1b89be6d7975480e",
+      "source_sha256": null,
+      "public_sha256": "8173e419e869e93793a1d2329a10ebadb4dd7a5f1a7a0671191e529e1d1041e9",
       "pi_publisher_source_port": "2026-10-14 source reconciliation; portable English code and retained public protections; no live changes.",
-      "decision": "Pi publisher source reconciliation, portable paths, English source guide, and mock-based validation."
+      "decision": "recent-window-collector-test",
+      "port_date_jst": "2026-10-20"
     },
     {
       "path": "tests/test_public_map_collector.py",
@@ -2801,27 +2803,27 @@
       "path": "ops/public-publisher/site/public/assets/ops-20261020.css",
       "source_role": "development-public-ui",
       "decision": "adapted",
-      "before_sha256": null,
-      "source_sha256": "f7548bb45614775757c5af8f23255022026240e9031a4ec3d069b986cf1eeda7",
-      "public_sha256": "f7548bb45614775757c5af8f23255022026240e9031a4ec3d069b986cf1eeda7",
+      "before_sha256": "f7548bb45614775757c5af8f23255022026240e9031a4ec3d069b986cf1eeda7",
+      "source_sha256": "bab0d1b52ad3a7ad696a333d27c57c8e439bad9c2e05349373fa5025f50521d4",
+      "public_sha256": "bab0d1b52ad3a7ad696a333d27c57c8e439bad9c2e05349373fa5025f50521d4",
       "port_date_jst": "2026-10-20"
     },
     {
       "path": "ops/public-publisher/site/public/assets/ops-20261020.js",
       "source_role": "development-public-ui",
       "decision": "adapted",
-      "before_sha256": "6551633bf34efafc83b5fff1d79125ada08ba0182f5035ff4d7e9bc897b42a6c",
-      "source_sha256": "11b96b5909aef92ca09f8b275242148c3bd236613a1214601e28e92a38984759",
-      "public_sha256": "11b96b5909aef92ca09f8b275242148c3bd236613a1214601e28e92a38984759",
+      "before_sha256": "11b96b5909aef92ca09f8b275242148c3bd236613a1214601e28e92a38984759",
+      "source_sha256": "2e553bcf4f20f8864e3319acfae4a8512ad62cbc076af1f0e2ef8f7f23a5c74f",
+      "public_sha256": "2e553bcf4f20f8864e3319acfae4a8512ad62cbc076af1f0e2ef8f7f23a5c74f",
       "port_date_jst": "2026-10-20"
     },
     {
       "path": "docs/v3/public-status-page-2026-10-20.md",
       "source_role": "public-documentation",
       "decision": "curated-current-contract-and-dated-evidence",
-      "before_sha256": "913baaa7e851130ec2f9f7000f1e531a185064f4858b49ce27693e43d3b8aaf8",
+      "before_sha256": "183f4649377a2cd5dcd05c013a0188c65407011b06e66124b62ae2776003871b",
       "source_sha256": null,
-      "public_sha256": "183f4649377a2cd5dcd05c013a0188c65407011b06e66124b62ae2776003871b",
+      "public_sha256": "f6f5e44fd84e2037bf66d1e03675cfc503d9c2c64fad41b5d4422fb66e7c5f0a",
       "port_date_jst": "2026-10-20"
     },
     {

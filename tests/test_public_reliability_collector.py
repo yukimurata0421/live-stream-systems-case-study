@@ -299,3 +299,24 @@ class PublicReliabilityCollectorTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class RecentWindowTests(unittest.TestCase):
+    def test_items_carry_the_24h_value_next_to_the_7d_value(self):
+        collector = load_collector()
+        raw = {
+            "generated_at_utc": "2026-10-20T12:28:00Z",
+            "windows": {
+                "7d": {"upload_ceiling": summary(88.91, 99.0, observed=10081, bad=1118),
+                       "audio_correctness": summary(98.274, 99.5)},
+                "24h": {"upload_ceiling": summary(100.0, 99.0, observed=1441, bad=0),
+                        "audio_correctness": summary(99.1, 99.5)},
+            },
+        }
+        items = {item["id"]: item for item in collector.build_public_payload(raw, now=0)["items"]}
+        self.assertEqual(items["upload_within_ceiling"]["value"], 88.91)
+        self.assertEqual(items["upload_within_ceiling"]["recent_24h"], 100.0)
+        self.assertEqual(items["audio_check_samples"]["recent_24h"], 99.1)
+        # A missing 24-hour value stays null instead of being inferred.
+        self.assertIsNone(items["delivery_availability_estimate"]["recent_24h"])
+        self.assertNotIn("recent_24h", items["same_url_observation"])

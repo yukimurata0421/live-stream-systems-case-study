@@ -66,6 +66,21 @@ shown as a warning ("fallback ending") rather than as the relay being down. Both
 were checked by rendering the page headlessly with fixtures for the current
 state, a recovering fallback, and a renewal in progress.
 
+## Reliability rows that did not appear to move
+
+"Upload within ceiling" stayed at 88.91% for hours. Its 1,118 minutes above the
+5.0 Mbps ceiling all came from the earlier route, more than 24 hours old but
+still inside the 7-day window, while every minute of the last 24 hours was
+within the ceiling. A rolling 7-day ratio only changes as old minutes leave the
+window, so the value was correct but hid the recovery. Twitch LIVE availability
+was 15.8% over seven days because Twitch was not relayed for most of that week;
+on a bar fixed to 90-100% it sat at the left edge.
+
+Each row now shows its 24-hour value beneath the 7-day value and as a ring on
+the bar, and a bar starts below 90% (in 10-point steps) when a value is lower.
+The daily renewal row lists ok, failed, and unknown renewals. The collector
+publishes the 24-hour value as `recent_24h`; it stays null when unavailable.
+
 ## Limits
 
 Checks were visual, in a browser, in light and dark themes and at a narrow

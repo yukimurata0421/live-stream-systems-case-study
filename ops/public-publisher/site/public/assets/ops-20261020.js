@@ -338,14 +338,19 @@
         state = it.value === 0 ? "good" : "warning"; label = it.value === 0 ? "URL unchanged" : "URL changed";
       }
       rows.push({name: it.label, window: it.window, value: it.unit === "%" ? pct(it.value, 2) : `${factValue({value: it.value})} ${it.unit || ""}`,
-        pctValue: it.unit === "%" ? it.value : null, target, state, label, facts: it.facts || [], note: it.note});
+        pctValue: it.unit === "%" ? it.value : null, recent: finite(it.recent_24h) ? it.recent_24h : null, target, state, label, facts: it.facts || [], note: it.note});
     }
     const week = (d.tsli?.windows || []).find(w => w.id === "7d");
+    const day = (d.tsli?.windows || []).find(w => w.id === "24h");
     for (const mt of week?.metrics || []) {
       if (!["provider_live", "daily_renewal"].includes(mt.id)) continue;
       const collecting = mt.assessment === "COLLECTING";
       const ok = finite(mt.value_percent) && finite(mt.target_percent) && mt.value_percent >= mt.target_percent;
-      rows.push({name: mt.label, window: "rolling 7d", value: pct(mt.value_percent, 1), pctValue: mt.value_percent, target: mt.target_percent,
+      const recent = (day?.metrics || []).find(x => x.id === mt.id)?.value_percent;
+      rows.push({name: mt.label, window: "rolling 7d", value: pct(mt.value_percent, 1), pctValue: mt.value_percent,
+        recent: mt.id === "provider_live" && finite(recent) ? recent : null, target: mt.target_percent,
+        sub: mt.id === "daily_renewal" && finite(mt.expected_events)
+          ? `${mt.good_events ?? 0} ok · ${mt.bad_events ?? 0} failed · ${mt.unknown_events ?? 0} unknown` : null,
         state: collecting ? "unknown" : ok ? "good" : "serious",
         label: collecting ? (finite(mt.coverage_percent) ? `collecting data (coverage ${pct(mt.coverage_percent, 0)})` : "collecting data") : ok ? "meets target" : "below target",
         facts: Object.entries(mt).filter(([k, v]) => /minutes$|events$|percent$/.test(k) && finite(v)).map(([k, v]) => ({label: k.replaceAll("_", " "), value: v})),
@@ -361,16 +366,26 @@
     if (!rows.length) { const tr = el("tr"); tr.append(el("td", {colspan: 6, class: "empty"}, "No reliability data published.")); body.append(tr); return; }
     for (const r of rows) {
       const tr = el("tr", {class: "row", tabindex: "0", "aria-expanded": "false"});
-      tr.append(el("td", {}, r.name), el("td", {class: "window"}, r.window || ""), el("td", {class: "num"}, r.value),
+      const valueCell = el("td", {class: "num"}, r.value);
+      // The 7-day value only moves when old samples leave the window; the 24-hour value shows recent recovery.
+      if (finite(r.recent)) valueCell.append(el("small", {class: "recent"}, `24 h ${pct(r.recent, r.recent % 1 ? 1 : 0)}`));
+      if (r.sub) valueCell.append(el("small", {class: "recent"}, r.sub));
+      tr.append(el("td", {}, r.name), el("td", {class: "window"}, r.window || ""), valueCell,
         el("td", {class: "num"}, finite(r.target) ? pct(r.target, r.target % 1 ? 1 : 0) : "—"));
       const barCell = el("td");
       if (finite(r.pctValue) && finite(r.target)) {
-        // 90–100% window so that sub-point gaps stay visible; values below 90% sit at the left edge.
-        const pos = v => `${Math.max(0, Math.min(100, (v - 90) * 10))}%`;
-        const bar = el("div", {class: "gap-bar", title: `${r.value} measured vs ${pct(r.target, 1)} target (scale 90–100%)`});
+        // Start at 90% so sub-point gaps stay visible, but lower the start (in 10-point steps) when a value is below it,
+        // otherwise low values all sit at the left edge and never appear to move.
+        const lowest = Math.min(r.pctValue, r.target, finite(r.recent) ? r.recent : 100);
+        const lo = Math.max(0, Math.min(90, Math.floor(lowest / 10) * 10));
+        const pos = v => `${Math.max(0, Math.min(100, ((v - lo) / (100 - lo)) * 100))}%`;
+        const scale = `scale ${lo}–100%`;
+        const bar = el("div", {class: "gap-bar", title: `${r.value} (7 d)${finite(r.recent) ? `, ${pct(r.recent, 1)} (24 h)` : ""} vs ${pct(r.target, 1)} target · ${scale}`});
         const fill = el("i"); fill.style.width = pos(r.pctValue);
         const mark = el("b"); mark.style.left = pos(r.target);
-        bar.append(fill, mark); barCell.append(bar);
+        bar.append(fill, mark);
+        if (finite(r.recent)) { const dot = el("u"); dot.style.left = pos(r.recent); bar.append(dot); }
+        barCell.append(bar, el("small", {class: "scale"}, scale));
       }
       tr.append(barCell, (() => { const td = el("td"); td.append(el("span", {class: `state ${r.state}`}, r.label)); return td; })());
       const det = el("tr", {class: "details", hidden: ""});

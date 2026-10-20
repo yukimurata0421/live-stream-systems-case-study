@@ -249,6 +249,7 @@ def build_public_payload(
 ) -> dict[str, Any]:
     windows = raw.get("windows") or {}
     week = windows.get("7d") or {}
+    day = windows.get("24h") or {}
     month = windows.get("30d") or {}
 
     availability = (week.get("youtube_availability") or {}).get("selected") or {}
@@ -261,6 +262,13 @@ def build_public_payload(
     input_raw = input_quality.get("raw_warning_evidence") or {}
     audio = week.get("audio_correctness") or {}
     visual = week.get("visual_correctness") or {}
+    # A 7-day value only moves as old minutes leave the window, so publish the 24-hour value beside it.
+    recent = {
+        "delivery_availability_estimate": ((day.get("youtube_availability") or {}).get("selected") or {}).get("sli_pct"),
+        "upload_within_ceiling": (day.get("upload_ceiling") or {}).get("sli_pct"),
+        "youtube_input_quality": (day.get("youtube_input_quality") or {}).get("sli_pct"),
+        "audio_check_samples": (day.get("audio_correctness") or {}).get("sli_pct"),
+    }
 
     generated_iso = str(raw.get("generated_at_utc") or "")
     try:
@@ -375,6 +383,9 @@ def build_public_payload(
         viewer_support_item(visual),
         adsb_source_item(visual),
     ]
+    for item in items:
+        if item["id"] in recent:
+            item["recent_24h"] = rounded(recent[item["id"]])
 
     return {
         "schema": "stream-v3-reliability-public.v5",
