@@ -150,7 +150,19 @@ duration and should not be compared directly with its 30-second start threshold.
 
 Through the relay, the measured send rate is about 3.6 Mbps, compared with a
 median of 4.88 Mbps on the earlier route, with unchanged encoder settings
-(3400k video and 192k audio). The cause has not been identified.
+(3400k video and 192k audio). Packet captures on 2026-10-21 explained the gap.
+Both rates come from the TCP payload counter of the sender's socket, which
+includes TLS framing. Sending RTMPS directly to YouTube, FFmpeg wrote very small
+TLS records (81 bytes on average, about 420,000 per minute), so framing added
+about 34% to the media bytes: 4.85 Mbps on the wire carried about 3.61 Mbps of
+RTMP. Toward the relay the records averaged about 3.4 KB and framing added under
+1%. The relay forwards about 3.62 Mbps to YouTube in large records.
+
+YouTube therefore receives the same amount of media as before. The difference
+was real uplink usage, so the relay route also saves about 1.2 Mbps of home
+uplink. YouTube has reported intermittent `bitrateLow` warnings since the route
+change, which a drop in delivered media cannot explain; that cause is still
+open.
 
 While the fallback runs, the controller samples the fallback FFmpeg's
 acknowledged bytes every 15 seconds and writes the rate to a Deployment

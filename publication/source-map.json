@@ -2736,9 +2736,9 @@
       "path": "docs/v3/self-healing-oci-fanout.md",
       "source_role": "public-documentation",
       "decision": "curated-current-contract-and-dated-evidence",
-      "before_sha256": null,
+      "before_sha256": "dbcc507a4abc4f11ee2de44989e824b316ec23ab67a93f27a8dd601042204249",
       "source_sha256": null,
-      "public_sha256": "dbcc507a4abc4f11ee2de44989e824b316ec23ab67a93f27a8dd601042204249",
+      "public_sha256": "48d29358844e168562269cc89c40934c5b66c3a45470ae3b55862c298e378094",
       "port_date_jst": "2026-10-20",
       "pre_documentation_restructure_sha256": "6ff062e19bdb420d125e2559e7f0f647f960374cf35794f18be82db7ce190be4",
       "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json."
@@ -2857,9 +2857,9 @@
       "path": "docs/current-status.md",
       "source_role": "public-documentation",
       "decision": "curated-current-contract-and-dated-evidence",
-      "before_sha256": null,
+      "before_sha256": "f47db24cb0923d814f2d586327c1562b4e15939001f608d2e17cf7459d5bfaaf",
       "source_sha256": null,
-      "public_sha256": "f47db24cb0923d814f2d586327c1562b4e15939001f608d2e17cf7459d5bfaaf",
+      "public_sha256": "a2a10f7458e1d08ae78244cf4787ed96e3f71e853cd48ccfc2b7ddde860f67c4",
       "port_date_jst": "2026-10-20",
       "documentation_restructure": "New single page for volatile state."
     },
@@ -2879,6 +2879,15 @@
       "before_sha256": "ae98f5c87b3302e52a3d97bacd24f42afaa2b9255f89b9c3b12531c10de128dd",
       "source_sha256": null,
       "public_sha256": "d7c1535cbaa341f6e5ac72152cb92abbe88e2763fb785c0b0a16d164e9cd8b95",
+      "port_date_jst": "2026-10-20"
+    },
+    {
+      "path": "docs/v3/encoder-upload-case-study.md",
+      "source_role": "public-documentation",
+      "decision": "curated-current-contract-and-dated-evidence",
+      "before_sha256": "db1d239fa9b46d20aabc42ee5fce9fc6e2676df4108634b63ddcbd064c04df0f",
+      "source_sha256": null,
+      "public_sha256": "c1bc9753087d91372b53bcee9fa46cdc2fb8daedc44934aa62f6eb261992f924",
       "port_date_jst": "2026-10-20"
     }
   ],

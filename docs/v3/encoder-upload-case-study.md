@@ -123,6 +123,22 @@ In this system, the practical difference was:
 That is why the v3 decision uses measured upload samples and YouTube health
 together instead of trusting nominal bitrate alone.
 
+### Correction: 2026-10-21 packet captures
+
+The upload values in this document are the TCP payload of the sender's RTMPS
+connection to YouTube, so they include TLS framing. A capture of a direct RTMPS
+sender at 3400k video and 192k audio measured 4.85 Mbps on the wire and about
+3.61 Mbps of RTMP inside TLS: FFmpeg wrote TLS records of about 81 bytes, and
+framing added about 34%. The same settings toward a relay that reads larger
+writes cost under 1%. The July emergency profile (2500k + 192k, about 3.7 Mbps
+measured) fits the same ratio.
+
+The upload values remain correct as uplink usage, which is what the 5.0 Mbps
+ceiling guards. They overstate the media bitrate YouTube received. The
+attribution above of the v2 to v3 difference to NVENC rate control was not
+re-measured and is not established; framing overhead, which depends on how the
+sender writes, may account for part or all of it.
+
 ## Guardrail
 
 The upload budget is a guardrail, not the product outcome.

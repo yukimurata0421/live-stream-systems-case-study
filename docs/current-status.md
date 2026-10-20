@@ -34,8 +34,10 @@ defines the components and thresholds.
 - Relay failure modes other than a stopped service: tunnel loss, relay-host
   outage, and provider-side failure.
 - Whether MediaMTX reconnects a dropped forward without the keeper.
-- The cause of the lower send rate through the relay (about 3.6 Mbps against a
-  4.88 Mbps median on the earlier route, with unchanged encoder settings).
+- Why YouTube has intermittently reported `bitrateLow` warnings since the
+  route change. Captures on 2026-10-21 showed that delivered media did not
+  drop: the earlier 4.88 Mbps included about 34% TLS framing on the direct
+  connection, and media is about 3.6 Mbps on both routes.
 - Long-term soak of the current route.
 
 ## Deliberately Disabled
