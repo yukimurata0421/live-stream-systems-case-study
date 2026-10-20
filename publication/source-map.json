@@ -660,9 +660,9 @@
       "path": "ops/public-publisher/site/public/index.html",
       "source_role": "development-public-ui",
       "decision": "adapted",
-      "before_sha256": "d172c74b90c3bad262b95fe6354041dbca0eb93c95c5958205e55ce3153f8598",
-      "source_sha256": "ed663bf37c47d048373df39b0f9dc9a9175b6385cb76a32fd9a12b8852fc252f",
-      "public_sha256": "ed663bf37c47d048373df39b0f9dc9a9175b6385cb76a32fd9a12b8852fc252f",
+      "before_sha256": "ed663bf37c47d048373df39b0f9dc9a9175b6385cb76a32fd9a12b8852fc252f",
+      "source_sha256": "3ddb11b4a8fdbd463d9ca304a1a16248bd56a53df00b309ea97304fcf6c53368",
+      "public_sha256": "3ddb11b4a8fdbd463d9ca304a1a16248bd56a53df00b309ea97304fcf6c53368",
       "pre_graph_display_sha256": "cfadf662a3455f92df0f7ad67f767a2835285aebe9d2068a3b8c8ce3ab4888a9",
       "graph_display_change": "Observed link arrows, explicit direct-path inference, and timestamp-preserving charts.",
       "pre_twitch_sli_resilience_sha256": "86762c0461a6249d1d652160906ad02ef8340f1b74f99c399e3a6253f19caed0",
@@ -2809,18 +2809,18 @@
       "path": "ops/public-publisher/site/public/assets/ops-20261020.js",
       "source_role": "development-public-ui",
       "decision": "adapted",
-      "before_sha256": null,
-      "source_sha256": "6551633bf34efafc83b5fff1d79125ada08ba0182f5035ff4d7e9bc897b42a6c",
-      "public_sha256": "6551633bf34efafc83b5fff1d79125ada08ba0182f5035ff4d7e9bc897b42a6c",
+      "before_sha256": "6551633bf34efafc83b5fff1d79125ada08ba0182f5035ff4d7e9bc897b42a6c",
+      "source_sha256": "11b96b5909aef92ca09f8b275242148c3bd236613a1214601e28e92a38984759",
+      "public_sha256": "11b96b5909aef92ca09f8b275242148c3bd236613a1214601e28e92a38984759",
       "port_date_jst": "2026-10-20"
     },
     {
       "path": "docs/v3/public-status-page-2026-10-20.md",
       "source_role": "public-documentation",
       "decision": "curated-current-contract-and-dated-evidence",
-      "before_sha256": null,
+      "before_sha256": "913baaa7e851130ec2f9f7000f1e531a185064f4858b49ce27693e43d3b8aaf8",
       "source_sha256": null,
-      "public_sha256": "913baaa7e851130ec2f9f7000f1e531a185064f4858b49ce27693e43d3b8aaf8",
+      "public_sha256": "183f4649377a2cd5dcd05c013a0188c65407011b06e66124b62ae2776003871b",
       "port_date_jst": "2026-10-20"
     },
     {
@@ -2839,6 +2839,15 @@
       "before_sha256": null,
       "source_sha256": null,
       "public_sha256": "f75da4630327260c186e15db7f65e267225a204f2b7a5936ddeedd3b0928cd17",
+      "port_date_jst": "2026-10-20"
+    },
+    {
+      "path": "tests/test_public_uptime_contract.py",
+      "source_role": "public-validation",
+      "decision": "uptime-contract-guard",
+      "before_sha256": null,
+      "source_sha256": "2c57d1e7bfa27bc24d7bbfec0f5d3999842969e398778b54d1df9caa9e0a263c",
+      "public_sha256": "882066504e24fc974970c2f63ab28224477ab0166e1934d4b17d50da223edfbd",
       "port_date_jst": "2026-10-20"
     }
   ],

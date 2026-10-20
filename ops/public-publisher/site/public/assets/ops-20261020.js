@@ -77,7 +77,13 @@
     const ytRecent = items.get("current_fail_1h");
     const twState = d.twitch?.observation?.provider_state || "UNKNOWN";
     const twFresh = d.twitch?.observation?.source_fresh === true;
-    return {t, d, items, promAge, relayFresh, fallback, input, dest, ytFlags, ytBad, ytRecent, twState, twFresh};
+    // Renewal comes from the relay keeper's own state; the clock window is only a fallback when the relay is unobserved.
+    const daily = relayFresh ? d.relay.daily : null;
+    const renewing = daily ? (daily.planned_break === true || ["WAIT_STOP", "WAIT_OFFLINE", "WAIT_START", "VERIFYING"].includes(daily.state))
+      : inRenewalWindow(t);
+    const relayHealthy = relayFresh && input?.status === "FLOWING" && dest?.youtube?.status === "FLOWING";
+    const fallbackReady = fbKnown ? fb.ready === true : null;
+    return {t, d, items, promAge, relayFresh, relayHealthy, fallback, fallbackReady, input, dest, ytFlags, ytBad, ytRecent, twState, twFresh, renewing};
   }
 
   /* ---------- status banner ---------- */
@@ -95,15 +101,22 @@
     for (const i of m.ytBad) add("critical", `YouTube: ${i.label} (${formatItem(i)}).`);
     if (finite(m.ytRecent?.value) && m.ytRecent.value > 0)
       add("warning", `YouTube had ${m.ytRecent.value} interruption${m.ytRecent.value > 1 ? "s" : ""} in the last hour; it is live now.`);
-    if (m.fallback === true) add("serious", "Relay path is down. YouTube continues on the automatic direct fallback; Twitch waits for the relay.");
+    if (m.fallback === true && m.relayHealthy)
+      add("warning", "The relay has recovered. The direct YouTube fallback keeps running until the relay has been healthy for 5 minutes, so two uploads run until then.");
+    else if (m.fallback === true)
+      add("serious", m.fallbackReady === false ? "Relay path is down. The direct YouTube fallback is starting."
+        : "Relay path is down. YouTube continues on the automatic direct fallback; Twitch waits for the relay.");
     else if (m.relayFresh && m.input?.status !== "FLOWING") add("serious", "The relay is not receiving the upload from Dell.");
     else if (!m.relayFresh) add("warning", "Relay observation is unavailable.");
     if (m.relayFresh && m.input?.status === "FLOWING") {
       for (const [name, label] of [["youtube", "YouTube"], ["twitch", "Twitch"]])
-        if (m.dest?.[name]?.status !== "FLOWING") add("serious", `Relay output to ${label} is not progressing.`);
+        if (m.dest?.[name]?.status !== "FLOWING") {
+          if (name === "twitch" && m.renewing) { if (m.twState !== "OFFLINE") add("warning", "Twitch daily session renewal is in progress; the relay output to Twitch is paused."); }
+          else add("serious", `Relay output to ${label} is not progressing.`);
+        }
     }
-    if (m.twState === "OFFLINE") add(inRenewalWindow(m.t) ? "warning" : "serious",
-      inRenewalWindow(m.t) ? "Twitch daily session renewal is in progress (00:00 JST)." : "Twitch is offline.");
+    if (m.twState === "OFFLINE") add(m.renewing ? "warning" : "serious",
+      m.renewing ? "Twitch daily session renewal is in progress." : "Twitch is offline.");
     else if (m.twState !== "LIVE" || !m.twFresh) add("warning", "Twitch status is not confirmed.");
     // The banner reflects the live state. Warning-level budget alerts are listed under Incidents only.
     const critical = (m.d.rel?.active_incidents?.items || []).filter(i => String(i.severity).toLowerCase() === "critical");
@@ -133,6 +146,7 @@
     for (const [k, v] of rows) if (v !== undefined && v !== null && v !== "") dl.append(el("dt", {}, k), el("dd", {}, v));
   }
   function routeName(m) {
+    if (m.fallback === true && m.relayHealthy) return "OCI relay + direct fallback (stopping)";
     if (m.fallback === true) return "Direct fallback (relay down)";
     if (m.relayFresh && m.input?.status === "FLOWING") return "OCI relay";
     return "not confirmed";
@@ -152,8 +166,8 @@
 
     const tw = m.d.twitch;
     const twGood = m.twState === "LIVE" && m.twFresh;
-    setBadge("twBadge", twGood ? "good" : m.twState === "OFFLINE" ? (inRenewalWindow(m.t) ? "warning" : "serious") : "unknown",
-      twGood ? "LIVE" : m.twState === "OFFLINE" ? "OFFLINE" : "UNKNOWN");
+    setBadge("twBadge", twGood ? "good" : m.twState === "OFFLINE" ? (m.renewing ? "warning" : "serious") : "unknown",
+      twGood ? "LIVE" : m.twState === "OFFLINE" ? (m.renewing ? "RENEWING" : "OFFLINE") : "UNKNOWN");
     $("twValue").textContent = twGood ? "Live" : m.twState === "OFFLINE" ? "Offline" : "Unknown";
     const next = toSec(m.d.relay?.daily?.next_renewal_at);
     facts("twFacts", [
@@ -165,11 +179,12 @@
 
     const vm = m.relayFresh ? m.d.relay.vm : null;
     if (m.fallback === true) {
-      setBadge("routeBadge", "serious", "FALLBACK");
+      setBadge("routeBadge", m.relayHealthy ? "warning" : "serious", m.relayHealthy ? "FALLBACK ENDING" : "FALLBACK");
       const fbRate = m.d.relay?.fallback?.mbps, mainRate = m.relayFresh ? m.input?.mbps : null;
       $("routeValue").textContent = finite(fbRate) && finite(mainRate) ? `2 uploads · ${(fbRate + mainRate).toFixed(2)} Mbps`
         : finite(fbRate) ? `2 uploads · direct ${fbRate.toFixed(2)} Mbps` : "2 uploads";
-      $("routeNote").textContent = "Dell is sending directly to YouTube until the relay is healthy for 5 minutes.";
+      $("routeNote").textContent = m.relayHealthy ? "The relay is healthy again; the direct feed stops after 5 minutes of relay health."
+        : "Dell is sending directly to YouTube until the relay is healthy for 5 minutes.";
     } else if (m.relayFresh && m.input?.status === "FLOWING") {
       setBadge("routeBadge", "good", "SINGLE UPLOAD");
       $("routeValue").textContent = mbps(m.input.mbps);
@@ -377,6 +392,7 @@
     "reliability:youtube_input_quality_multi_window_burn": ["YouTube input quality below target", "YouTube reported ingest health problems more often than allowed."],
     "reliability:audio_correctness_multi_window_burn": ["Audio checks below target", "Audio checks failed more often than allowed in both short and long windows."],
     "reliability:upload_ceiling_coverage_or_freshness": ["Upload measurement gap", "Upload bitrate measurements were missing or stale for part of the window."],
+    "external:blackbox_failed": ["External uptime check failed", "Independent cloud checkers could not confirm this page or the YouTube video from outside the home network."],
   };
   function renderIncidents(d) {
     const list = clear($("incidentList"));
@@ -390,7 +406,9 @@
       const li = el("li");
       li.append(el("span", {class: `state ${state}`}, sev), el("b", {title: inc.id || ""}, name));
       const seen = toSec(inc.observed_at);
-      li.append(el("small", {}, [why, finite(seen) ? `evaluated ${jst(seen)} JST` : "", inc.recovery_type === "human_review_no_automatic_restart" ? "operator review, no automatic restart" : ""].filter(Boolean).join(" · ")));
+      // Budget alerts come from an hourly evaluation of the past 1-6 hours, so they can outlive their cause by up to an hour.
+      const burn = String(inc.id || "").endsWith("_multi_window_burn") ? "covers the past 1–6 h; may stay listed up to 1 h after the cause clears" : "";
+      li.append(el("small", {}, [why, finite(seen) ? `evaluated ${jst(seen)} JST` : "", burn, inc.recovery_type === "human_review_no_automatic_restart" ? "operator review, no automatic restart" : ""].filter(Boolean).join(" · ")));
       list.append(li);
     }
 

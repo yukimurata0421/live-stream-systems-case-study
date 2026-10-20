@@ -44,6 +44,28 @@ The redesigned page was published from the Raspberry Pi at 11:49 JST on
 2026-10-20. The previous page stayed available on the live site as a separate
 file during the transition; it is not part of this public source.
 
+## Follow-up the same afternoon
+
+Two alerts stayed active after the redesign.
+
+- The external uptime check matches the text "Operational reliability" on the
+  page. The redesign had dropped it, so every checker region failed while the
+  page itself served normally. The heading was restored at 13:41 JST and a test
+  now guards the text.
+- An audio budget alert came from three short audio-check failures, each during
+  planned work that day: the plan B switch, the relay drill, and the RTMPS
+  change that restarted the main Pod three times. The alert logic was correct.
+  Budget alerts are evaluated hourly over the past one to six hours, so the
+  page now says they can stay listed for up to an hour after the cause clears.
+
+The same review changed two judgements on the page. Twitch renewal now follows
+the relay keeper's own state instead of a fixed 00:00 to 00:15 JST window, since
+a renewal can also start at the 46-hour limit and can take about 13 minutes.
+After the relay recovers, the five minutes in which the fallback still runs are
+shown as a warning ("fallback ending") rather than as the relay being down. Both
+were checked by rendering the page headlessly with fixtures for the current
+state, a recovering fallback, and a renewal in progress.
+
 ## Limits
 
 Checks were visual, in a browser, in light and dark themes and at a narrow
