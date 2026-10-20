@@ -1,0 +1,176 @@
+#!/usr/bin/env python3
+"""Fallback controller on the encoder host (self-healing fan-out).
+
+Normally the encoder host uploads one feed to the relay. Only while the relay path is unhealthy does
+it start a fallback Deployment that sends directly to the YouTube backup ingest.
+- Every 15 seconds it reads the relay's MediaMTX API over the private tunnel. Healthy means the input
+  path is ready and its received bytes advance, and the YouTube forward is forwarding without error
+  with advancing outbound bytes. An unreachable API or unknown observation counts as unhealthy.
+- After 30 seconds of continuous failure, the fallback is scaled 0 -> 1.
+- While the fallback runs, 300 seconds of continuous relay health scale it 1 -> 0 (back to one upload).
+It does not depend on the monitoring host. The fallback stops only after continuous health.
+While the fallback runs, the TCP bytes_acked of its ffmpeg are sampled and written to the Deployment
+annotation `stream-v3.io/fallback-upload`, which the public projection reads. Annotating a Deployment
+does not restart its Pods.
+"""
+from __future__ import annotations
+
+import json
+import os
+import re
+import subprocess
+import sys
+import time
+import urllib.request
+from dataclasses import dataclass
+from datetime import datetime, timezone
+
+OCI_API = os.environ.get('OCI_MEDIAMTX_API', '').rstrip('/')
+NAMESPACE = 'stream-v3'
+FALLBACK = os.environ.get('FALLBACK_DEPLOYMENT', 'stream-v3-youtube-backup')
+INTERVAL = 15
+START_AFTER = 30
+STOP_AFTER = 300
+
+
+@dataclass
+class Controller:
+    unhealthy_since: float | None = None
+    healthy_since: float | None = None
+    last: dict | None = None   # previous sample, used to require advancing byte counters
+
+    def healthy(self, sample: dict | None) -> bool:
+        """sample = {'ready': bool, 'bytes_received': int, 'youtube': {'state', 'error', 'outbound'}} or None"""
+        prev, self.last = self.last, sample
+        if sample is None or prev is None:
+            return False
+        yt = sample.get('youtube') or {}
+        prev_yt = prev.get('youtube') or {}
+        return (sample.get('ready') is True
+                and sample.get('bytes_received', 0) > prev.get('bytes_received', 0)
+                and yt.get('state') == 'forwarding' and not yt.get('error')
+                and yt.get('outbound', 0) > prev_yt.get('outbound', 0))
+
+    def decide(self, now: float, healthy: bool, fallback_replicas: int | None) -> str | None:
+        """Return 'START', 'STOP', or None. Do nothing while the replica count is unknown."""
+        if healthy:
+            self.unhealthy_since = None
+            self.healthy_since = self.healthy_since if self.healthy_since is not None else now
+        else:
+            self.healthy_since = None
+            self.unhealthy_since = self.unhealthy_since if self.unhealthy_since is not None else now
+        if fallback_replicas is None:
+            return None
+        if fallback_replicas == 0 and not healthy and now - self.unhealthy_since >= START_AFTER:
+            return 'START'
+        if fallback_replicas >= 1 and healthy and now - self.healthy_since >= STOP_AFTER:
+            return 'STOP'
+        return None
+
+
+def get(path: str):
+    with urllib.request.urlopen(OCI_API + path, timeout=3) as r:
+        return json.load(r)
+
+
+def observe() -> dict | None:
+    try:
+        path = get('/v3/paths/get/relay')
+        items = get('/v3/paths/forward-dests/list?path=relay').get('items', [])
+    except Exception:
+        return None
+    yt = next((i for i in items if i.get('pos') == 1), None)  # forward 1 = YouTube primary
+    return {'ready': bool(path.get('ready')), 'bytes_received': int(path.get('bytesReceived') or path.get('inboundBytes') or 0),
+            'youtube': None if yt is None else {'state': yt.get('state'), 'error': bool(yt.get('lastError')),
+                                                 'outbound': int(yt.get('outboundBytes') or 0)}}
+
+
+ANNOTATION = 'stream-v3.io/fallback-upload'
+
+
+def upload_rate(previous: dict | None, current: dict | None) -> float | None:
+    """Mbps from two samples of the same Pod; None after a Pod change or a counter reset."""
+    if not previous or not current or previous['pod'] != current['pod']:
+        return None
+    seconds = current['at'] - previous['at']
+    delta = current['bytes'] - previous['bytes']
+    if seconds <= 0 or delta < 0:
+        return None
+    return round(delta * 8 / seconds / 1e6, 3)
+
+
+def fallback_sample() -> dict | None:
+    """Bytes acknowledged on the fallback ffmpeg's :443 connection, or None."""
+    try:
+        pod = kubectl('get', 'pod', '-l', 'app.kubernetes.io/name=' + FALLBACK, '--field-selector=status.phase=Running',
+                      '-o', 'jsonpath={.items[0].metadata.name}').strip()
+        if not pod:
+            return None
+        out = kubectl('exec', pod, '-c', 'stream-engine', '--', 'ss', '-tni', 'state', 'established', '( dport = :443 )')
+        acked = [int(x) for x in re.findall(r'bytes_acked:(\d+)', out)]
+        return {'pod': pod, 'bytes': max(acked), 'at': time.monotonic()} if acked else None
+    except Exception:
+        return None
+
+
+def kubectl(*args: str) -> str:
+    return subprocess.run(['kubectl', '-n', NAMESPACE, *args], capture_output=True, text=True, timeout=20, check=True).stdout
+
+
+def replicas() -> int | None:
+    try:
+        return int(kubectl('get', 'deploy', FALLBACK, '-o', 'jsonpath={.spec.replicas}'))
+    except Exception:
+        return None
+
+
+def log(event: str, **values):
+    print(json.dumps({'at': datetime.now(timezone.utc).isoformat(), 'event': event, **values}), flush=True)
+
+
+def main():
+    if not OCI_API:
+        raise SystemExit('OCI_MEDIAMTX_API is required')
+    c = Controller()
+    log('controller_started', fallback=FALLBACK, start_after=START_AFTER, stop_after=STOP_AFTER)
+    previous_health = None
+    last_sample = None
+    annotated = None
+    while True:
+        now = time.monotonic()
+        ok = c.healthy(observe())
+        current = replicas()
+        action = c.decide(now, ok, current)
+        if ok != previous_health:
+            log('oci_path_health', healthy=ok, fallback_replicas=current)
+            previous_health = ok
+        if action:
+            target = '1' if action == 'START' else '0'
+            try:
+                kubectl('scale', 'deploy', FALLBACK, '--replicas=' + target)
+                log('fallback_' + action.lower(), replicas=target)
+            except Exception as error:
+                log('fallback_scale_failed', action=action, error=type(error).__name__)
+        # Publish the fallback upload rate while it runs; remove the annotation when stopped.
+        if current and current >= 1:
+            sample = fallback_sample()
+            mbps = upload_rate(last_sample, sample)
+            last_sample = sample or last_sample
+            value = json.dumps({'mbps': mbps, 'observed_at': datetime.now(timezone.utc).isoformat()})
+            try:
+                kubectl('annotate', 'deploy', FALLBACK, '--overwrite', f'{ANNOTATION}={value}')
+                annotated = True
+            except Exception as error:
+                log('fallback_annotate_failed', error=type(error).__name__)
+        elif annotated is not False:
+            last_sample = None
+            try:
+                kubectl('annotate', 'deploy', FALLBACK, f'{ANNOTATION}-')
+                annotated = False
+            except Exception:
+                pass
+        time.sleep(INTERVAL)
+
+
+if __name__ == '__main__':
+    sys.exit(main())

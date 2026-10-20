@@ -1,0 +1,588 @@
+{
+  "apiVersion": "apps/v1",
+  "kind": "Deployment",
+  "metadata": {
+    "name": "stream-v3-youtube-backup",
+    "namespace": "stream-v3",
+    "labels": {
+      "app.kubernetes.io/name": "stream-v3-youtube-backup",
+      "stream-v3.io/role": "youtube-backup"
+    },
+    "annotations": {
+      "stream-v3.io/purpose": "Fallback-only YouTube backup ingest (b.rtmps). Scaled 0<->1 by stream-v3-fallback-controller: started after 30 s of relay failure, stopped after 300 s of continuous relay health (2026-10-20 operator decision)."
+    }
+  },
+  "spec": {
+    "replicas": 0,
+    "strategy": {
+      "type": "Recreate"
+    },
+    "selector": {
+      "matchLabels": {
+        "app.kubernetes.io/name": "stream-v3-youtube-backup",
+        "stream-v3.io/role": "youtube-backup"
+      }
+    },
+    "template": {
+      "metadata": {
+        "labels": {
+          "app.kubernetes.io/name": "stream-v3-youtube-backup",
+          "stream-v3.io/role": "youtube-backup"
+        }
+      },
+      "spec": {
+        "restartPolicy": "Always",
+        "terminationGracePeriodSeconds": 30,
+        "containers": [
+          {
+            "name": "stream-engine",
+            "image": "stream-v3:local",
+            "imagePullPolicy": "Never",
+            "command": [
+              "/bin/sh",
+              "-c"
+            ],
+            "args": [
+              "rm -f /run/stream-pulse/runtime/pulse/pid /run/stream-pulse/native; exec /app/src/stream_v3/runtime_entrypoint.sh python3 -c \"$BACKUP_LAUNCHER\""
+            ],
+            "env": [
+              {
+                "name": "STREAM_V3_POD_NAME",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "metadata.name"
+                  }
+                }
+              },
+              {
+                "name": "STREAM_V3_POD_UID",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "metadata.uid"
+                  }
+                }
+              },
+              {
+                "name": "NOW_PLAYING_FILE",
+                "value": "/state/now_playing.txt"
+              },
+              {
+                "name": "FFMPEG_RW_TIMEOUT_ENABLED",
+                "value": "1"
+              },
+              {
+                "name": "FFMPEG_RW_TIMEOUT_USEC",
+                "value": "15000000"
+              },
+              {
+                "name": "OVERLAY_DIR",
+                "value": "/bridge/overlay"
+              },
+              {
+                "name": "STREAM_RUNTIME_STATE_DIR",
+                "value": "/state"
+              },
+              {
+                "name": "STREAM_RUNTIME_LOG_DIR",
+                "value": "/state/logs"
+              },
+              {
+                "name": "RUNTIME_STATE_FILE",
+                "value": "/state/runtime/stream_runtime_state.json"
+              },
+              {
+                "name": "BROWSER_PROFILE_DIR",
+                "value": "/state/runtime/chromium_profile"
+              },
+              {
+                "name": "STREAM_LOCK_DIR",
+                "value": "/state/locks"
+              },
+              {
+                "name": "VIDEO_ENCODER",
+                "value": "libx264"
+              },
+              {
+                "name": "VIDEO_PRESET",
+                "value": "ultrafast"
+              },
+              {
+                "name": "BROWSER_BIN",
+                "value": "/usr/bin/chromium"
+              },
+              {
+                "name": "TAKEOVER_ENABLED",
+                "value": "0"
+              },
+              {
+                "name": "TAKEOVER_FORCE_KILL",
+                "value": "0"
+              },
+              {
+                "name": "LOCAL_MONITOR_AUDIO",
+                "value": "0"
+              },
+              {
+                "name": "RENDER_SELF_RECOVERY_ENABLED",
+                "value": "0"
+              },
+              {
+                "name": "CAPTURE_HELPER_MEMORY_GUARD_ENABLED",
+                "value": "0"
+              },
+              {
+                "name": "RTMP_FIFO_RECOVERY",
+                "value": "0"
+              },
+              {
+                "name": "EMERGENCY_LOW_UPLOAD_ENABLED",
+                "value": "0"
+              },
+              {
+                "name": "REQUIRE_SYSTEMD_LAUNCH",
+                "value": "0"
+              },
+              {
+                "name": "STREAM_OCI_ROUTE_REQUIRED",
+                "value": "0"
+              },
+              {
+                "name": "STREAM_OCI_ROUTE_CONFIG_FILE"
+              },
+              {
+                "name": "STREAM_DELIVERY_CONFIG_FILE"
+              },
+              {
+                "name": "MAINTENANCE_AUDIT_ENABLED",
+                "value": "0"
+              },
+              {
+                "name": "MAINTENANCE_ENFORCEMENT_ENABLED",
+                "value": "0"
+              },
+              {
+                "name": "FR_EFFECT_EXECUTOR_ENABLED",
+                "value": "0"
+              },
+              {
+                "name": "RTMP_URL",
+                "value": "rtmps://b.rtmps.youtube.com:443/live2?backup=1"
+              },
+              {
+                "name": "FR_RTMP_HOST",
+                "value": "b.rtmps.youtube.com"
+              },
+              {
+                "name": "FR_RTMP_PORTS",
+                "value": "443"
+              },
+              {
+                "name": "RESTART_DELAY_SEC",
+                "value": "5"
+              },
+              {
+                "name": "PRE_FFMPEG_REQUIRE_OVERLAY_READY",
+                "value": "1"
+              },
+              {
+                "name": "PYTHONPATH",
+                "value": "/app/src:/app/src/stream_core"
+              },
+              {
+                "name": "BACKUP_LAUNCHER",
+                "value": "import sys\nfrom stream_core import stream_engine as se\norig=se.StreamEngine.ffmpeg_args\ndef args(self,*a,**k):\n    v=orig(self,*a,**k)\n    # Same output options as the earlier backup worker; the tail is ['-f','flv',url].\n    # If the shape is unexpected, send unchanged rather than stopping the backup.\n    if v[-3:-1]!=['-f','flv'] or '-threads:v' in v:\n        return v\n    return [*v[:-3],'-threads:v','1','-flvflags','aac_seq_header_detect',*v[-3:]]\nse.StreamEngine.ffmpeg_args=args\nsys.argv=['stream_engine']\nraise SystemExit(se.main())\n"
+              }
+            ],
+            "envFrom": [
+              {
+                "configMapRef": {
+                  "name": "stream-v3-shadow-env"
+                }
+              },
+              {
+                "secretRef": {
+                  "name": "stream-v3-secrets",
+                  "optional": true
+                }
+              }
+            ],
+            "resources": {
+              "limits": {
+                "cpu": "6",
+                "ephemeral-storage": "4Gi",
+                "memory": "4Gi"
+              },
+              "requests": {
+                "cpu": "1",
+                "ephemeral-storage": "4Gi",
+                "memory": "1Gi"
+              }
+            },
+            "volumeMounts": [
+              {
+                "mountPath": "/state",
+                "name": "state"
+              },
+              {
+                "mountPath": "/dev/shm",
+                "name": "shm"
+              },
+              {
+                "mountPath": "/run/stream-pulse",
+                "name": "pulse-run"
+              },
+              {
+                "mountPath": "/bridge",
+                "name": "bridge",
+                "readOnly": true
+              }
+            ]
+          },
+          {
+            "name": "auto-dj",
+            "image": "sha256:3fe936bd40047b36ebc1ec755e46b67fa84f7356a4f8b977460eb5928e15c818",
+            "imagePullPolicy": "Never",
+            "command": [
+              "/bin/sh",
+              "-lc"
+            ],
+            "args": [
+              "python3 /app/src/dj/auto_dj.py --music-root /music/time_tags --now-playing-file /state/now_playing.txt --snapshot-file /state/overlay/now_playing.json --history-jsonl-file /state/logs/play_history.jsonl --pulse-sink stream_v3_sink --max-track-sec 600 --duration-cache-file /music/duration_cache.json"
+            ],
+            "env": [
+              {
+                "name": "NOW_PLAYING_FILE",
+                "value": "/state/now_playing.txt"
+              },
+              {
+                "name": "STREAM_RUNTIME_STATE_DIR",
+                "value": "/state"
+              },
+              {
+                "name": "STREAM_RUNTIME_LOG_DIR",
+                "value": "/state/logs"
+              },
+              {
+                "name": "RUNTIME_STATE_FILE",
+                "value": "/state/runtime/stream_runtime_state.json"
+              },
+              {
+                "name": "BROWSER_PROFILE_DIR",
+                "value": "/state/runtime/chromium_profile"
+              },
+              {
+                "name": "STREAM_LOCK_DIR",
+                "value": "/state/locks"
+              },
+              {
+                "name": "VIDEO_ENCODER",
+                "value": "libx264"
+              },
+              {
+                "name": "VIDEO_PRESET",
+                "value": "ultrafast"
+              },
+              {
+                "name": "BROWSER_BIN",
+                "value": "/usr/bin/chromium"
+              },
+              {
+                "name": "TAKEOVER_ENABLED",
+                "value": "0"
+              },
+              {
+                "name": "TAKEOVER_FORCE_KILL",
+                "value": "0"
+              },
+              {
+                "name": "LOCAL_MONITOR_AUDIO",
+                "value": "0"
+              },
+              {
+                "name": "RENDER_SELF_RECOVERY_ENABLED",
+                "value": "0"
+              },
+              {
+                "name": "CAPTURE_HELPER_MEMORY_GUARD_ENABLED",
+                "value": "0"
+              },
+              {
+                "name": "RTMP_FIFO_RECOVERY",
+                "value": "0"
+              },
+              {
+                "name": "EMERGENCY_LOW_UPLOAD_ENABLED",
+                "value": "0"
+              },
+              {
+                "name": "REQUIRE_SYSTEMD_LAUNCH",
+                "value": "0"
+              },
+              {
+                "name": "STREAM_OCI_ROUTE_REQUIRED",
+                "value": "0"
+              },
+              {
+                "name": "STREAM_OCI_ROUTE_CONFIG_FILE"
+              },
+              {
+                "name": "STREAM_DELIVERY_CONFIG_FILE"
+              },
+              {
+                "name": "MAINTENANCE_AUDIT_ENABLED",
+                "value": "0"
+              },
+              {
+                "name": "MAINTENANCE_ENFORCEMENT_ENABLED",
+                "value": "0"
+              },
+              {
+                "name": "FR_EFFECT_EXECUTOR_ENABLED",
+                "value": "0"
+              },
+              {
+                "name": "STREAM_V3_POD_NAME",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "metadata.name"
+                  }
+                }
+              },
+              {
+                "name": "STREAM_V3_POD_UID",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "metadata.uid"
+                  }
+                }
+              }
+            ],
+            "envFrom": [
+              {
+                "configMapRef": {
+                  "name": "stream-v3-shadow-env"
+                }
+              },
+              {
+                "secretRef": {
+                  "name": "stream-v3-secrets",
+                  "optional": true
+                }
+              }
+            ],
+            "resources": {
+              "limits": {
+                "cpu": "1",
+                "memory": "1Gi"
+              },
+              "requests": {
+                "cpu": "250m",
+                "memory": "256Mi"
+              }
+            },
+            "volumeMounts": [
+              {
+                "mountPath": "/state",
+                "name": "state"
+              },
+              {
+                "mountPath": "/music",
+                "name": "music",
+                "readOnly": true
+              },
+              {
+                "mountPath": "/run/stream-pulse",
+                "name": "pulse-run"
+              }
+            ]
+          },
+          {
+            "name": "precipitation-fetcher",
+            "image": "sha256:499b99e07721cf0b71665f6efdb83d4ab3ff605273434fea0f9fd7e1f46b78a8",
+            "imagePullPolicy": "Never",
+            "command": [
+              "/bin/sh",
+              "-lc"
+            ],
+            "args": [
+              "PYTHONPATH=/app/src python3 -m stream_core.precipitation_fetcher --loop"
+            ],
+            "env": [
+              {
+                "name": "NOW_PLAYING_FILE",
+                "value": "/state/now_playing.txt"
+              },
+              {
+                "name": "STREAM_RUNTIME_STATE_DIR",
+                "value": "/state"
+              },
+              {
+                "name": "STREAM_RUNTIME_LOG_DIR",
+                "value": "/state/logs"
+              },
+              {
+                "name": "RUNTIME_STATE_FILE",
+                "value": "/state/runtime/stream_runtime_state.json"
+              },
+              {
+                "name": "BROWSER_PROFILE_DIR",
+                "value": "/state/runtime/chromium_profile"
+              },
+              {
+                "name": "STREAM_LOCK_DIR",
+                "value": "/state/locks"
+              },
+              {
+                "name": "VIDEO_ENCODER",
+                "value": "libx264"
+              },
+              {
+                "name": "VIDEO_PRESET",
+                "value": "ultrafast"
+              },
+              {
+                "name": "BROWSER_BIN",
+                "value": "/usr/bin/chromium"
+              },
+              {
+                "name": "TAKEOVER_ENABLED",
+                "value": "0"
+              },
+              {
+                "name": "TAKEOVER_FORCE_KILL",
+                "value": "0"
+              },
+              {
+                "name": "LOCAL_MONITOR_AUDIO",
+                "value": "0"
+              },
+              {
+                "name": "RENDER_SELF_RECOVERY_ENABLED",
+                "value": "0"
+              },
+              {
+                "name": "CAPTURE_HELPER_MEMORY_GUARD_ENABLED",
+                "value": "0"
+              },
+              {
+                "name": "RTMP_FIFO_RECOVERY",
+                "value": "0"
+              },
+              {
+                "name": "EMERGENCY_LOW_UPLOAD_ENABLED",
+                "value": "0"
+              },
+              {
+                "name": "REQUIRE_SYSTEMD_LAUNCH",
+                "value": "0"
+              },
+              {
+                "name": "STREAM_OCI_ROUTE_REQUIRED",
+                "value": "0"
+              },
+              {
+                "name": "STREAM_OCI_ROUTE_CONFIG_FILE"
+              },
+              {
+                "name": "STREAM_DELIVERY_CONFIG_FILE"
+              },
+              {
+                "name": "MAINTENANCE_AUDIT_ENABLED",
+                "value": "0"
+              },
+              {
+                "name": "MAINTENANCE_ENFORCEMENT_ENABLED",
+                "value": "0"
+              },
+              {
+                "name": "FR_EFFECT_EXECUTOR_ENABLED",
+                "value": "0"
+              },
+              {
+                "name": "STREAM_V3_POD_NAME",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "metadata.name"
+                  }
+                }
+              },
+              {
+                "name": "STREAM_V3_POD_UID",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "metadata.uid"
+                  }
+                }
+              }
+            ],
+            "envFrom": [
+              {
+                "configMapRef": {
+                  "name": "stream-v3-shadow-env"
+                }
+              }
+            ],
+            "resources": {
+              "limits": {
+                "cpu": "300m",
+                "memory": "256Mi"
+              },
+              "requests": {
+                "cpu": "50m",
+                "memory": "64Mi"
+              }
+            },
+            "volumeMounts": [
+              {
+                "mountPath": "/state",
+                "name": "state"
+              }
+            ]
+          }
+        ],
+        "volumes": [
+          {
+            "hostPath": {
+              "path": "/srv/stream-v3/music",
+              "type": "Directory"
+            },
+            "name": "music"
+          },
+          {
+            "emptyDir": {
+              "medium": "Memory",
+              "sizeLimit": "64Mi"
+            },
+            "name": "pulse-run"
+          },
+          {
+            "emptyDir": {
+              "medium": "Memory",
+              "sizeLimit": "1Gi"
+            },
+            "name": "shm"
+          },
+          {
+            "emptyDir": {
+              "sizeLimit": "4Gi"
+            },
+            "name": "state"
+          },
+          {
+            "hostPath": {
+              "path": "/etc/stream-v3/fallback-bridge",
+              "type": "Directory"
+            },
+            "name": "bridge"
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,34 @@
+# Example unit for the relay host. Replace the <...> placeholders; keep credentials outside the repository.
+[Unit]
+Description=Self-healing fan-out relay (encoder host over a private tunnel -> YouTube primary + Twitch)
+After=wg-quick@wg-stream.service network-online.target
+Wants=wg-quick@wg-stream.service
+StartLimitIntervalSec=0
+[Service]
+Type=simple
+DynamicUser=yes
+Environment=RELAY_ADDRESS=<relay-tunnel-address>
+Environment=ENCODER_ADDRESS=<encoder-tunnel-address>
+LoadCredential=mediamtx.yml:/etc/stream-v3-oci-mediamtx/mediamtx.yml
+LoadCredential=server.key:/etc/stream-v3-oci-mediamtx/server.key
+LoadCredential=server.crt:/etc/stream-v3-oci-mediamtx/server.crt
+# Admit RTMP, RTMPS, and the MediaMTX API only from the encoder over the tunnel.
+ExecStartPre=+/bin/sh -c 'iptables -C INPUT -s "$ENCODER_ADDRESS/32" -d "$RELAY_ADDRESS/32" -i wg-stream -p tcp -m multiport --dports 1935,1936,9997 -m comment --comment stream-v3-oci-mediamtx -j ACCEPT 2>/dev/null || iptables -I INPUT 1 -s "$ENCODER_ADDRESS/32" -d "$RELAY_ADDRESS/32" -i wg-stream -p tcp -m multiport --dports 1935,1936,9997 -m comment --comment stream-v3-oci-mediamtx -j ACCEPT'
+ExecStart=/opt/stream-v3-oci-relay/mediamtx ${CREDENTIALS_DIRECTORY}/mediamtx.yml
+Restart=always
+RestartSec=3
+Nice=5
+CPUQuota=100%
+MemoryMax=256M
+TasksMax=64
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+[Install]
+WantedBy=multi-user.target

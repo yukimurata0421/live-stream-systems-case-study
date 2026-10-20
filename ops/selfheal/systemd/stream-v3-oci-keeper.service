@@ -1,0 +1,27 @@
+# Example unit for the relay host. api.json holds the Twitch client_id/client_secret and stays outside the repository.
+[Unit]
+Description=Keep MediaMTX forwards healthy and renew Twitch daily (00:00 JST / 46h)
+After=stream-v3-oci-mediamtx.service network-online.target
+Wants=stream-v3-oci-mediamtx.service
+StartLimitIntervalSec=0
+[Service]
+Type=simple
+DynamicUser=yes
+StateDirectory=stream-v3-oci-keeper
+LoadCredential=mediamtx.yml:/etc/stream-v3-oci-mediamtx/mediamtx.yml
+LoadCredential=api.json:/etc/stream-v3-oci-keeper/api.json
+Environment=MEDIAMTX_API=http://127.0.0.1:9997
+Environment=TWITCH_USER_ID=<twitch-broadcaster-id>
+ExecStart=/usr/bin/python3 -B /opt/stream-v3-oci-keeper/forward_keeper.py
+Restart=always
+RestartSec=5
+CPUQuota=10%
+MemoryMax=64M
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,17 @@
+# Example unit for the encoder host. It scales the fallback Deployment; it needs kubectl access to the namespace.
+[Unit]
+Description=Start/stop direct YouTube fallback from relay path health (self-healing)
+After=k3s.service wg-quick@wg-stream.service network-online.target
+StartLimitIntervalSec=0
+[Service]
+Type=simple
+Environment=KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+Environment=OCI_MEDIAMTX_API=http://<relay-tunnel-address>:9997
+Environment=FALLBACK_DEPLOYMENT=stream-v3-youtube-backup
+ExecStart=/usr/bin/python3 -B /usr/local/libexec/stream-v3-fallback-controller.py
+Restart=always
+RestartSec=5
+CPUQuota=10%
+MemoryMax=64M
+[Install]
+WantedBy=multi-user.target

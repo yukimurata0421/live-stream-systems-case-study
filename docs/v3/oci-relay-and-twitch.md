@@ -1,5 +1,10 @@
 # OCI Relay And Two Provider Outputs
 
+> Superseded on 2026-10-20: production now uses the
+> [self-healing fan-out](self-healing-oci-fanout.md), and the signed-lease route
+> below was stopped. See [why it was retired](oci-route-simplification-decision.md).
+> This page remains the record of the 2026-10-13 design and its evidence.
+
 ## Current source and observed deployment
 
 The delivery path observed on 2026-10-13 JST uses one Dell encoder and one

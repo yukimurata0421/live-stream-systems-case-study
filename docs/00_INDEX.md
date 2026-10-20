@@ -28,7 +28,9 @@ Use the rest of this page as a reference catalog.
 
 ## OCI And Twitch Source Update
 
-- `v3/oci-relay-and-twitch.md`: single sender, relay ownership, and reception evidence.
+- `v3/self-healing-oci-fanout.md`: [current route: one upload, relay fan-out, fallback only on failure](v3/self-healing-oci-fanout.md).
+- `v3/oci-route-simplification-decision.md`: [why the signed-lease route was retired](v3/oci-route-simplification-decision.md).
+- `v3/oci-relay-and-twitch.md`: single sender, relay ownership, and reception evidence (2026-10-13 design, superseded).
 - `v3/route-network-observation.md`: multiple probes, causal baselines, and offline replay.
 - `v3/twitch-session-renewal.md`: daily ownership and the retained failed exercise.
 - `v3/public-source-port-2026-10-13.md`: source decisions, provenance, and validation limits.

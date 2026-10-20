@@ -6,7 +6,9 @@ unqualified current contract describes repository behavior. Monitoring v4 and
 CRA source integration does not itself prove live deployment or production
 authorization.
 
-The current primary media route includes OCI fanout to YouTube and Twitch.
+The current primary media route uploads one feed to an OCI relay that fans out
+to YouTube and Twitch; a direct YouTube backup upload runs only while the relay
+path fails.
 The 2026-10-13 source update preserves historical measurements and separates
 local validation from live operation and native qualification.
 
@@ -16,7 +18,9 @@ contracts below are optional follow-up reading.
 
 ## Current OCI And Twitch Contract
 
-- [OCI relay and Twitch](oci-relay-and-twitch.md)
+- [Self-healing OCI fan-out](self-healing-oci-fanout.md) (current since 2026-10-20)
+- [Retiring the signed-lease OCI route](oci-route-simplification-decision.md)
+- [OCI relay and Twitch](oci-relay-and-twitch.md) (2026-10-13 design, superseded)
 - [Route network observation and baselines](route-network-observation.md)
 - [Twitch session renewal](twitch-session-renewal.md)
 - [Public source-port record](public-source-port-2026-10-13.md)
