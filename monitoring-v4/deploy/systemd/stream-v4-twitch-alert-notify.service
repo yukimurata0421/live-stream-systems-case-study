@@ -1,0 +1,21 @@
+# Example unit. The environment file holds STREAM_NOTIFY_DISCORD_WEBHOOK_URL and stays outside the repository.
+[Unit]
+Description=Deliver Twitch Prometheus alerts to the existing Discord webhook (read-only)
+After=network-online.target prometheus.service
+StartLimitIntervalSec=0
+[Service]
+Type=simple
+DynamicUser=yes
+StateDirectory=stream-v4-twitch-alert-notify
+EnvironmentFile=/etc/default/stream-v4-notify
+ExecStart=/usr/bin/python3 -B /opt/stream-v4-twitch-alert-notify/current/twitch_alert_notify.py --state /var/lib/stream-v4-twitch-alert-notify/state.json
+Restart=always
+RestartSec=10
+CPUQuota=5%
+MemoryMax=64M
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+[Install]
+WantedBy=multi-user.target

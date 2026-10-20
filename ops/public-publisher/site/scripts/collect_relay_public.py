@@ -29,7 +29,13 @@ def numeric(v,upper=1e12):
 
 
 def validate(v,now):
-    keys(v,['schema','generated_at','observed_at','status','source_fresh','vm','relay','input','destinations','daily','twitch_api','issues'])
+    base=['schema','generated_at','observed_at','status','source_fresh','vm','relay','input','destinations','daily','twitch_api','issues']
+    # `fallback` (direct YouTube upload from the encoder host) was added on 2026-10-20; older artifacts without it remain valid.
+    keys(v,base+(['fallback'] if isinstance(v,dict) and 'fallback' in v else []))
+    if 'fallback' in v:
+        fb=v['fallback'];keys(fb,['active','ready','observed_at']+(['mbps'] if isinstance(fb,dict) and 'mbps' in fb else []));timestamp(fb['observed_at'])
+        if 'mbps' in fb:numeric(fb['mbps'],10000)
+        if any(v['fallback'][k] not in (True,False,None) for k in ('active','ready')):raise ValueError()
     if v['schema']!='stream.relay_public.v1' or type(v['generated_at']) not in (int,float) or not 0<=now-v['generated_at']<=180:raise ValueError()
     timestamp(v['observed_at'])
     if v['status'] not in ['OBSERVED','UNKNOWN'] or type(v['source_fresh']) is not bool:raise ValueError()

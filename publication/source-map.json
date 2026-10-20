@@ -284,9 +284,10 @@
       "path": "monitoring-v4/docs/relay-provider-evidence.md",
       "source_role": "public-documentation",
       "decision": "curated-current-contract-and-dated-evidence",
-      "before_sha256": null,
+      "before_sha256": "a88f9c9761e54ae04ce5ab866766ac3ca392a1b41e23f31e8648b332b1798559",
       "source_sha256": null,
-      "public_sha256": "a88f9c9761e54ae04ce5ab866766ac3ca392a1b41e23f31e8648b332b1798559"
+      "public_sha256": "2e03f832008b632eedc4a537c8e6917d396e96e5846497a4d84d62d7389c86c3",
+      "port_date_jst": "2026-10-20"
     },
     {
       "path": "monitoring-v4/docs/status.md",
@@ -373,18 +374,20 @@
     {
       "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/relay_observe.py",
       "source_role": "development-monitoring",
-      "decision": "configured-public-evidence-binding",
-      "before_sha256": null,
-      "source_sha256": "c18fa16481ec8caba014992dc278467a5b923cbcbb550aabe3f5ac69e7179573",
-      "public_sha256": "f62c2292d4f517af5db2367d6d2c96b50f00f5054af388299a2a50d04bc79b64"
+      "decision": "adapted-english-and-portable-bindings",
+      "before_sha256": "f62c2292d4f517af5db2367d6d2c96b50f00f5054af388299a2a50d04bc79b64",
+      "source_sha256": "b63021b478e460b97119b389a2364a064eefc650e9e738b3a255dedbb1914015",
+      "public_sha256": "13aeda4786d302d4f2c973acedf59d74c71d05f7ac45db3bcfd3db21fed6eb3d",
+      "port_date_jst": "2026-10-20"
     },
     {
       "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/relay_public.py",
       "source_role": "development-monitoring",
-      "decision": "adapted",
-      "before_sha256": null,
-      "source_sha256": "cb28453cf6022fca2d5587c43cd98ebf1d52c0d8c4a2bc93414cda510322bcbb",
-      "public_sha256": "cb28453cf6022fca2d5587c43cd98ebf1d52c0d8c4a2bc93414cda510322bcbb"
+      "decision": "adapted-english-and-portable-bindings",
+      "before_sha256": "cb28453cf6022fca2d5587c43cd98ebf1d52c0d8c4a2bc93414cda510322bcbb",
+      "source_sha256": "7bf4b88a339327e70cf08a4a941d8e1505c39c85746ed03338c2ee476931bea0",
+      "public_sha256": "3d8a5bc22f58331fc4b09e06ac43be012a27ca2961e2cd6b3b2bad943978df61",
+      "port_date_jst": "2026-10-20"
     },
     {
       "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/twitch_public.py",
@@ -668,11 +671,12 @@
     },
     {
       "path": "ops/public-publisher/site/scripts/collect_relay_public.py",
-      "source_role": "development-public-ui",
-      "decision": "adapted",
-      "before_sha256": null,
-      "source_sha256": "13d3c78420e5072944b80ca66e5d82cc08b1117fe040eb3d9db79cca678e955a",
-      "public_sha256": "13d3c78420e5072944b80ca66e5d82cc08b1117fe040eb3d9db79cca678e955a"
+      "source_role": "development-monitoring",
+      "decision": "adapted-english-and-portable-bindings",
+      "before_sha256": "13d3c78420e5072944b80ca66e5d82cc08b1117fe040eb3d9db79cca678e955a",
+      "source_sha256": "7a0356f5e08c8b2a4caac928209c637fc228a16c0029f021eb06a130b90d6e72",
+      "public_sha256": "31d1453fe04d6c26866bef463a26dc953ec5becfd6d5a1b86b83a6dbb6551bd4",
+      "port_date_jst": "2026-10-20"
     },
     {
       "path": "ops/public-publisher/site/scripts/collect_twitch_public.py",
@@ -2744,6 +2748,42 @@
       "before_sha256": "1858c49c09bbb1a1b3580c698f74df268e26cc7433c7c7dcabfb5787e65ac043",
       "source_sha256": null,
       "public_sha256": "cc5a2c51a32f637d0531872f56a0693d15987e75f0ee06f9a9c5fbc9ff14a7f2",
+      "port_date_jst": "2026-10-20"
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/twitch_alert_notify.py",
+      "source_role": "development-monitoring",
+      "decision": "adapted-english-and-portable-bindings",
+      "before_sha256": null,
+      "source_sha256": "fd5f598eadee98df04a31a8d98022295fe9099ec27f1d3c610c0f127e535ed33",
+      "public_sha256": "975734669111c3d64a85f1d95983d19b7f5d076befcbe51ebd369599746e7a03",
+      "port_date_jst": "2026-10-20"
+    },
+    {
+      "path": "monitoring-v4/tests/test_twitch_alert_notify.py",
+      "source_role": "development-monitoring",
+      "decision": "adapted-english-and-portable-bindings",
+      "before_sha256": null,
+      "source_sha256": "dc35982c6645c118f036e24d88ff699e8ab8a20e5f67270ac637f350549b10ed",
+      "public_sha256": "beb21a3171439c36798a4b995cc8c4b4a36dc7f59a5abf1fda1ea985fdbbfe5a",
+      "port_date_jst": "2026-10-20"
+    },
+    {
+      "path": "monitoring-v4/tests/test_relay_observe.py",
+      "source_role": "development-monitoring",
+      "decision": "adapted-english-and-portable-bindings",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "14cfd3988b630a1abb522dbde855b06b672cb3f563803a37574364aee881743c",
+      "port_date_jst": "2026-10-20"
+    },
+    {
+      "path": "monitoring-v4/deploy/systemd/stream-v4-twitch-alert-notify.service",
+      "source_role": "development-monitoring",
+      "decision": "adapted-english-and-portable-bindings",
+      "before_sha256": null,
+      "source_sha256": "dc84c58c70a4a1a6ea5464b2efd5e38735ad116b805d000af8b9824181ae0b5e",
+      "public_sha256": "a32e9ecc5df0ac03cc971e7187b5bf873f57d4c7ad98b58cd5cea43280abfeef",
       "port_date_jst": "2026-10-20"
     }
   ],
