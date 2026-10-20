@@ -102,9 +102,9 @@ class NotificationIntentTests(unittest.TestCase):
             now_at=utc_text(BASE_TS + 1860),
         )
         self.assertEqual({item.route for item in recovered.intents}, {"discord", "slack"})
-        self.assertTrue(all("復旧通知" in item.content for item in recovered.intents))
+        self.assertTrue(all("Recovery notification" in item.content for item in recovered.intents))
         self.assertTrue(
-            all("FFmpeg自己再起動イベント" not in item.content for item in recovered.intents)
+            all("FFmpeg self-restart event" not in item.content for item in recovered.intents)
         )
 
     def test_renderer_uses_jst_and_never_claims_automatic_restart(self) -> None:

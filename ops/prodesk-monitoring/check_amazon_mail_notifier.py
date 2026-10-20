@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-amazon_mail_notifier.service が本当に動いているかチェックする監視スクリプト。
+Monitor whether amazon_mail_notifier.service is running.
 
-- systemctl is-active amazon_mail_notifier.service を実行
-- active でなければ Discord にアラート通知
+- Run systemctl is-active amazon_mail_notifier.service
+- Send a Discord alert when the service is not active
 """
 
 import os
@@ -17,7 +17,7 @@ DISCORD_WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK_URL")
 
 
 def is_service_active(name: str) -> bool:
-    """systemctl is-active でサービス状態を確認"""
+    """Check service state with systemctl is-active"""
     result = subprocess.run(
         ["systemctl", "is-active", name],
         capture_output=True,
@@ -28,7 +28,7 @@ def is_service_active(name: str) -> bool:
 
 def send_discord(message: str):
     if not DISCORD_WEBHOOK_URL:
-        raise RuntimeError("DISCORD_WEBHOOK_URL が設定されていません。")
+        raise RuntimeError("DISCORD_WEBHOOK_URL is not configured.")
 
     payload = {"content": message}
     resp = requests.post(DISCORD_WEBHOOK_URL, json=payload, timeout=10)
@@ -44,10 +44,10 @@ def main():
         return
 
     msg = (
-        f"🚨 Amazon メール通知サービスが停止している可能性があります。\n"
-        f"サービス名: {SERVICE_NAME}\n"
-        f"時刻: {now}\n"
-        "systemctl status amazon_mail_notifier.service を確認してください。"
+        f"🚨 The Amazon email notification service may have stopped.\n"
+        f"Service: {SERVICE_NAME}\n"
+        f"Time: {now}\n"
+        "systemctl status amazon_mail_notifier.service should be checked."
     )
     print(msg)
     send_discord(msg)

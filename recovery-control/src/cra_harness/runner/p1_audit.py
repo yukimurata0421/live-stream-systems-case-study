@@ -964,7 +964,7 @@ def run_p1_audit_suite(project_root: Path, artifact_root: Path, run_id: str) -> 
 
 `P1_AUDIT_ONLY_INTEGRATION = {summary["p1_audit_only_integration"]}`
 
-これはlocal/deploy-ready評価であり、live production eventによる`VERIFIED`ではない。
+This is a local/deploy-ready assessment, not VERIFIED evidence from a live production event.
 
 `PRODUCTION_MAINTENANCE_FENCE = PENDING`
 

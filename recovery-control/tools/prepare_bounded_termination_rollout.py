@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Dell v25専用のread-only plan builder。applyは行わず、競合検知付きpatchを保存する。"""
+"""Read-only plan builder for Dell v25; save a conflict-detecting patch without applying it."""
 
 from __future__ import annotations
 
@@ -85,7 +85,7 @@ def main() -> None:
     ).stdout
     now = dt.datetime.now(dt.UTC)
     candidate, rollback = build_plan(json.loads(raw), now)
-    # Patchのtest operandに既存templateを含むため、Git除外領域へowner-onlyで保存する。
+    # Store the patch outside Git with owner-only permissions because its test operand contains the existing template.
     os.umask(0o077)
     args.output_dir.mkdir(parents=True, exist_ok=False)
     hashes = {}

@@ -414,20 +414,20 @@ def report(result: dict[str, Any]) -> str:
     gate = result.get("contract_gate", {})
     passed = result.get("classification") == gate.get("classification") == "PASS" and result.get("source_stable") is True
     lines = [
-        "# Owner observation 検証結果",
+        "# Owner observation validation results",
         "",
-        f"総合判定: {'PASS' if passed else 'HOLD'}",
-        f"仕様対応 gate: {gate.get('classification', 'HOLD')} / invariant {gate.get('invariant_count', 0)} 件",
+        f"Overall assessment: {'PASS' if passed else 'HOLD'}",
+        f"Specification gate: {gate.get('classification', 'HOLD')} / invariant {gate.get('invariant_count', 0)} items",
         "",
-        "| 検証対象 | 結果 |",
+        "| Validation scope | Result |",
         "|---|---|",
-        f"| owner / signed fixture のローカル契約 | {'確認済み' if passed else '未確認'} |",
+        f"| Local owner / signed-fixture contract | {'confirmed' if passed else 'unconfirmed'} |",
     ]
-    lines += [f"| {name} | 未検証（この profile の対象外） |" for name in UNPROVEN]
+    lines += [f"| {name} | Not verified (outside this profile) |" for name in UNPROVEN]
     lines += [
         "",
-        "実 kernel child は Python executable（argv[0]=ffmpeg）。実 FFmpeg codec / RTMPS の証拠にはならない。",
-        "本番の現在状態・soak の経過はこの試験から判断しない。",
-        "ID・実測・source の対応を検査した結果であり、全不具合の不存在や仕様の意味的正しさの保証ではない。",
+        "The actual kernel child is a Python executable with argv[0]=ffmpeg; it does not prove real FFmpeg codec or RTMPS behavior.",
+        "This test does not establish current production state or elapsed soak time.",
+        "These checks bind IDs, measurements, and sources; they do not guarantee absence of all defects or semantic correctness of the specification.",
     ]
     return "\n".join(lines) + "\n"

@@ -91,8 +91,8 @@ def build_coverage(
     lines.extend(
         [
             "",
-            "全直積の未探索cellをPASSとは扱わない。JSON artifactは探索済みcellのidentity、hit count、",
-            "scenario ID、classificationを保持する。",
+            "Unexplored cells of the full Cartesian product are not PASS. JSON artifacts retain explored-cell identity, hit count, ",
+            "scenario ID, and classification.",
             "",
         ]
     )

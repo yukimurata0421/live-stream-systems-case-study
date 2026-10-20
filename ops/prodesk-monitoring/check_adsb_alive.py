@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-ADS-B 受信サービスの監視スクリプト。
+Monitor the ADS-B receiver service.
 
-- 監視対象 service が active かどうかチェック
-- active でなければ Discord にアラート
-- 同一アラートの連投をクールダウンで抑制
+- Check whether the monitored service is active
+- Alert Discord when the service is not active
+- Suppress repeated identical alerts with a cooldown
 """
 
 import json
@@ -69,7 +69,7 @@ def _mark_recovered(now_ts: int) -> None:
 
 def send_discord(message: str):
     if not DISCORD_WEBHOOK_URL:
-        raise RuntimeError("DISCORD_WEBHOOK_URL が設定されていません。")
+        raise RuntimeError("DISCORD_WEBHOOK_URL is not configured.")
 
     payload = {"content": message}
     resp = requests.post(DISCORD_WEBHOOK_URL, json=payload, timeout=10)
@@ -87,10 +87,10 @@ def main():
         return
 
     msg = (
-        "🚨 ADS-B 受信システムが停止している可能性があります。\n"
-        f"サービス名: {SERVICE_NAME}\n"
-        f"時刻: {now}\n"
-        f"systemctl status {SERVICE_NAME} を確認してください。"
+        "🚨 The ADS-B receiver system may have stopped.\n"
+        f"Service: {SERVICE_NAME}\n"
+        f"Time: {now}\n"
+        f"systemctl status {SERVICE_NAME} should be checked."
     )
     print(msg)
 

@@ -158,7 +158,7 @@ class EffectRequest:
                 separators=(",", ":"),
             ).encode()
             return hashlib.sha256(encoded).hexdigest()
-        # route変更も同じdelivery childの物理効果。既存のnamespaceを維持する。
+        # A route change is an effect on the same delivery child; retain the existing namespace.
         return effect_scope_id("restart_ffmpeg", self.ffmpeg_target_identity)
 
     @property

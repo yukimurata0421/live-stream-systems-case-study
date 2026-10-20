@@ -115,12 +115,12 @@ def _report(summary: dict[str, Any], coverage: dict[str, Any]) -> str:
 
 ## 1. Baseline
 
-Harness v2の200 randomizedを同じ5 seedで再実行し、Phase 4 real no-action shadowの継続観測を別証跡として照合した。
-配備中serviceの変更、既存recovery停止、production LAN fault injectionは行っていない。
+Replayed the 200 Harness v2 randomized cases with the same five seeds and cross-checked continuing Phase 4 real no-action shadow observations as separate evidence.
+No deployed service changes, existing recovery shutdown, or production LAN fault injection were performed.
 
 ## 2. Operational State Space v3
 
-authority、target、monitoring、credential、network、maintenance、legacy recoveryを第一級axisに追加した。
+Added authority, target, monitoring, credential, network, maintenance, and legacy recovery as first-class axes.
 
 ## 3. Coverage Matrix
 
@@ -130,35 +130,35 @@ authority、target、monitoring、credential、network、maintenance、legacy re
 - high-risk cells: {len(coverage["high_risk_cells"])}
 - high-risk uncovered: {coverage["high_risk_uncovered"]}
 
-全直積の未探索cellを合格とは扱わず、探索済みcellだけをidentity付きでmaterializeした。
+Materialized only explored cells with identities; unexplored Cartesian-product cells are not considered passing.
 
 ## 4. Maintenance / Legacy Competition
 
-MAINTENANCE中のCRA/Local actionは0。legacy `WOULD_MUTATE`がquiesceされていなければmaintenance確立不可とした。
-productionの旧recovery経路は今回変更していない。
+CRA/Local actions during MAINTENANCE were zero. Maintenance cannot be established unless legacy WOULD_MUTATE paths are quiesced.
+The existing production recovery path was unchanged.
 
 ## 5. Target Unavailable
 
-Option B（`CENTRAL_SUSPECT`、action 0、grace後再評価）を推奨する。これはaccepted R7の変更ではなくDecision Proposalである。
+Recommend Option B: CENTRAL_SUSPECT, zero actions, and reevaluation after grace. This is a Decision Proposal, not a change to accepted R7.
 
 ## 6. Credential Lifecycle
 
-CR-01〜CR-07を検証した。expired/revokedはaction 0かつsequence非消費、rotationは有限overlapとrollbackを前提にした。
+Validated CR-01 through CR-07. Expired/revoked credentials produce zero actions without consuming sequence; rotation requires bounded overlap and rollback.
 
 ## 7. Network Fault Exploration
 
-latency、jitter、loss、asymmetry、TLS delay、half-open、MTU failureをtest-only modelで探索した。
-outcome uncertain時のsecond effectは0である。
+Explored latency, jitter, loss, asymmetry, TLS delay, half-open connections, and MTU failure in a test-only model.
+Second effects under uncertain outcomes were zero.
 
 ## 8. Long Lifecycle
 
-accelerated fake clockで{summary["long_lifecycle"]["simulated_days"]}日、{summary["long_lifecycle"]["cycles"]} cycleを再現した。
-SQLite integrityは{summary["long_lifecycle"]["sqlite"]["integrity_check"]}、FD growthは{summary["long_lifecycle"]["process"]["fd_growth"]}。
+An accelerated fake clock reproduced {summary["long_lifecycle"]["simulated_days"]} days and {summary["long_lifecycle"]["cycles"]} cycles.
+SQLite integrity: {summary["long_lifecycle"]["sqlite"]["integrity_check"]}; FD growth: {summary["long_lifecycle"]["process"]["fd_growth"]}.
 
 ## 9. Snapshot Performance
 
-実配備中Aは5秒cadenceでも有意なCPUを使用する。B persistent clientを安全条件付きのpreferred prototypeとし、
-Cはhint限定、Dはpre-effect double-check限定とした。Bのlive before/afterは未測定である。
+The deployed option A uses significant CPU even at five-second cadence. Option B, a persistent client subject to safety conditions, is the preferred prototype;
+C is limited to hints and D to pre-effect double-checks. Live before/after measurements for B are unavailable.
 
 ## 10. Availability Simulation
 
@@ -166,7 +166,7 @@ Cはhint限定、Dはpre-effect double-check限定とした。Bのlive before/af
 - time to authority transition: `{json.dumps(availability["time_to_authority_transition"], sort_keys=True)}`
 - time to WOULD_ACCEPT: `{json.dumps(availability["time_to_would_accept"], sort_keys=True)}`
 
-これらはphysical recovery timeではない。SLA/SLO閾値は設定していない。
+These are not physical recovery times. No SLA/SLO thresholds were set.
 
 ## 11. Randomized
 
@@ -177,28 +177,28 @@ Cはhint限定、Dはpre-effect double-check限定とした。Bのlive before/af
 
 ## 12. Negative Controls
 
-{summary["negative_control_detection"]["detected"]}/{summary["negative_control_detection"]["total"]}を検出した。
+{summary["negative_control_detection"]["detected"]}/{summary["negative_control_detection"]["total"]} were detected.
 
 ## 13. New SUT defects
 
-Phase 4 Agentで共有SQLite connectionのcritical readとheartbeat writer/checkpointの競合に相関する`KeyError`再起動を2回観測した。
-local candidateではcritical readをwriter lockへ直列化し、SUSPECT同一遷移のwrite amplificationも除去した。配備中releaseは未変更である。
+Observed two Phase 4 Agent KeyError restarts correlated with contention between critical reads and heartbeat writer/checkpoints on a shared SQLite connection.
+The local candidate serializes critical reads under the writer lock and removes write amplification on repeated SUSPECT transitions. The deployed release is unchanged.
 
 ## 14. New Harness defects
 
-0。coverageを件数だけで評価するgapをmatrix artifactで解消した。
+Zero. The matrix artifact closes the gap of evaluating coverage only by case count.
 
 ## 15. New Environment Findings
 
-実Agent restartはautomatic reconciliationで復帰し作用0だったが、直接原因は高信頼のconcurrency仮説に留まり完全証明ではない。
+Actual Agent restarts recovered via automatic reconciliation with zero effects, but the direct cause remains a strong concurrency hypothesis rather than a complete proof.
 
 ## 16. Regression Fixtures
 
-Agent checkpoint/read race、Operational v3 mandatory coverageをfixture化した。
+Added fixtures for the Agent checkpoint/read race and Operational v3 mandatory coverage.
 
 ## 17. Engineering Records
 
-Operational State Space、maintenance、target unavailable、credential、network、long soak、snapshotの7 recordと4 proposal/runbookを追加した。
+Added seven records covering Operational State Space, maintenance, target unavailable, credential, network, long soak, and snapshot, plus four proposals/runbooks.
 
 ## 18. Harness Trust Gate v3
 
@@ -214,42 +214,42 @@ Operational State Space、maintenance、target unavailable、credential、networ
 
 ## 20. Phase 5 Preconditions
 
-credential rotationのlive rehearsal、target semanticsのaccept、maintenance fence production実装、snapshot Bのlive測定、
-wall-clock long soak、live RecoveryVerification delivery、旧mutation path quiesceが未完了である。
+Live credential-rotation rehearsal, acceptance of target semantics, production maintenance fencing, live measurements of snapshot B,
+wall-clock long soak, live RecoveryVerification delivery, and quiescing the old mutation path remain incomplete.
 
 ## 21. Unexplored High-Risk Cells
 
-mandatory predicateは0件。ただし7-axis全直積の未探索は{coverage["unexplored_cells"]} cellであり、網羅とは主張しない。
+Missing mandatory predicates: zero. However, the seven-axis Cartesian product still has {coverage["unexplored_cells"]} unexplored cells; exhaustive coverage is not claimed.
 
 ## 22. Tests
 
-pytest {summary["test_counts"]["pytest_total"]}、scenario {summary["scenario_count"]}、合計verification unit
-{summary["test_counts"]["verification_units_total"]}。
+pytest {summary["test_counts"]["pytest_total"]}, scenarios {summary["scenario_count"]}, total verification units
+{summary["test_counts"]["verification_units_total"]}.
 
 ## 23. Safety Gate
 
-`SAFETY_GATE = {summary["safety_gate"]}`。real Phase 4のphysical attempt、FFmpeg signal、Pod/Deployment mutation、host restartは全0。
+`SAFETY_GATE = {summary["safety_gate"]}`. Real Phase 4 physical attempts, FFmpeg signals, Pod/Deployment mutations, and host restarts were all zero.
 
-## 24. 変更したもの
+## 24. Changes
 
-Harness v3、coverage、fake lifecycle/network/credential/maintenance model、回帰test、Engineering Record、runbook、Decision Proposal。
+Harness v3, coverage, fake lifecycle/network/credential/maintenance models, regression tests, Engineering Records, runbooks, and Decision Proposals.
 
-## 25. 変更していないもの
+## 25. Unchanged components
 
-stream_v3、既存Fast Recovery、既存remote recovery、live RBAC/credential、配備中Phase 4 release、accepted R7、Phase 5 adapter。
+stream_v3, existing Fast Recovery, existing remote recovery, live RBAC/credentials, the deployed Phase 4 release, accepted R7, and the Phase 5 adapter.
 
 ## 26. Remaining Risks
 
-1. 配備中Agentのcheckpoint/read競合再起動。
-2. maintenanceと旧recoveryのproduction競合。
-3. target-unavailable semantics未accept。
-4. credential rotation未rehearsal。
-5. snapshot persistent client未live測定。
-6. wall-clock long soakとlive RecoveryVerification未成立。
+1. Checkpoint/read race restarts in the deployed Agent.
+2. Production contention between maintenance and legacy recovery.
+3. Target-unavailable semantics not yet accepted.
+4. Credential rotation not yet rehearsed.
+5. No live measurements for the snapshot persistent client.
+6. Wall-clock long soak and live RecoveryVerification remain unestablished.
 
 ## 27. Final Judgment
 
-`C`: 新SUT defectを検出。local fixとregressionは成立したが、配備反映・real soak・原因確定が必要。Phase 4を継続しPhase 5へ進まない。
+`C`: Detected a new SUT defect. Local fixes and regressions passed, but deployment, real soak, and cause confirmation remain necessary. Continue Phase 4; do not advance to Phase 5.
 """
 
 

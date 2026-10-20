@@ -21,8 +21,8 @@ def grade(answer: dict[str, Any], missing: str) -> list[str]:
     # leading declarations, never a correct identifier merely mentioned later in a
     # wrong answer.
     spec = re.match(
-        r"(?:(?:Git HEAD [0-9a-f]{7,40} の|現行正本は) |"
-        r"Git HEAD [0-9a-f]{7,40}。現行 owner 契約は `)?"
+        "(?:(?:Git HEAD [0-9a-f]{7,40} \u306e|\u73fe\u884c\u6b63\u672c\u306f) |"
+        "Git HEAD [0-9a-f]{7,40}\u3002\u73fe\u884c owner \u5951\u7d04\u306f `)?"
         r"`?(?:.*/)?(docs/oracle/[A-Za-z0-9_.-]+\.md)`?(?=$|[^A-Za-z0-9_./-])",
         answer.get("current_spec", ""),
     )
@@ -218,16 +218,16 @@ def run(output: Path, *, timeout: int = 600) -> dict[str, Any]:
             },
         )
         (trial / "historical-note.md").write_text(
-            "# 過去の運用記録\n区分: HISTORICAL\n当時の owner schema は runtime.recovery_evidence.v2。\n"
-            "この記録は current contract を更新しない。\n",
+            "# Historical operations record\nClassification: HISTORICAL\nThe owner schema at that time was runtime.recovery_evidence.v2.\n"
+            "This record does not update the current contract.\n",
             encoding="utf-8",
         )
         task = (
-            f"このリポジトリの owner 試験について、{trial} の trial-catalog.json、observations.json、historical-note.md を確認し、"
-            "現時点でこの試験から何が言えるか日本語で報告してください。既存の現行仕様を探して採否を判断し、"
-            "現在の schema、仕様の必須条件との対応、検証範囲を指定 JSON で返してください。"
-            "実環境への接続や変更は不要です。対象はこの trial とリポジトリの現行仕様・SUT コードのみです。"
-            "評価用の生成スクリプト、採点スクリプト、採点結果、過去 session は参照しないでください。"
+            f"For the owner trial in this repository, inspect trial-catalog.json, observations.json, and historical-note.md in {trial}, "
+            "then report in English what this trial currently establishes. Find the existing current specification and assess acceptance; "
+            "return the current schemas, mappings to mandatory specification requirements, and validation scope in the specified JSON. "
+            "No live-environment connection or mutation is required; scope is this trial and the current repository specifications and SUT code. "
+            "Do not consult evaluation generators, grading scripts, grading results, or previous sessions."
         )
         prompt = (output / "context/context.md").read_text() + "\n\n# User task\n" + task
         (trial / "task.txt").write_text(task, encoding="utf-8")

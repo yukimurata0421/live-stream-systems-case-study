@@ -42,6 +42,7 @@ matters for the interview:
 
 | Question | Focused reading |
 | --- | --- |
+| How were compute, cooling, cost, and migration risk weighed? | [Hardware selection](hardware-selection.md). |
 | How was network failure distinguished from provider failure? | [TCP stall case study](v3/tcp-stall-case-study.md). |
 | Why split observation from recovery authorization? | [CRA rationale](../recovery-control/docs/why-cra.md) and [CRA architecture](../recovery-control/docs/architecture.md). |
 | What prevents uncertain actions from being retried? | [Harness and effect evidence](../recovery-control/docs/harness-trust.md). |

@@ -40,6 +40,9 @@ jobs:
         run: |
           python -m compileall -q src tests ops/scripts ops/public-publisher/status/tests
 
+      - name: Validate public English text
+        run: python ops/scripts/validate_public_language.py
+
       - name: Validate current public source port
         run: python ops/scripts/validate_public_port.py
 

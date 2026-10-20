@@ -68,16 +68,16 @@ def build_status_payload(
     if judgment == "oauth_refresh_token_invalid":
         actions.extend(
             [
-                "Google OAuth consent app が Testing のままなら Production 化する",
-                "YouTube チャンネル所有アカウントで offline consent を再実行し、YTW_OAUTH_REFRESH_TOKEN を差し替える",
-                "差し替え後に stream-new oauth-status --probe で oauth_probe_ok / oauth_stream_status / enableAutoStop を確認する",
-                "24h は YTW_OAUTH_SHADOW_MODE=1 のまま再発を監視する",
+                "Move the Google OAuth consent app from Testing to Production if necessary",
+                "Repeat offline consent with the YouTube channel owner account and replace YTW_OAUTH_REFRESH_TOKEN",
+                "After replacement, run stream-new oauth-status --probe and check oauth_probe_ok, oauth_stream_status, and enableAutoStop",
+                "Monitor recurrence for 24 hours with YTW_OAUTH_SHADOW_MODE=1",
             ]
         )
     elif judgment == "oauth_not_configured":
-        actions.append("YTW_OAUTH_CLIENT_ID と YTW_OAUTH_REFRESH_TOKEN を systemd env に設定する")
+        actions.append("Set YTW_OAUTH_CLIENT_ID and YTW_OAUTH_REFRESH_TOKEN in the systemd environment")
     elif judgment == "oauth_control_plane_degraded":
-        actions.append("stream-new oauth-status --probe で liveBroadcasts/liveStreams の実応答を確認する")
+        actions.append("Run stream-new oauth-status --probe to inspect actual liveBroadcasts/liveStreams responses")
 
     return {
         "ts_utc": utc_now_text(now_ts),

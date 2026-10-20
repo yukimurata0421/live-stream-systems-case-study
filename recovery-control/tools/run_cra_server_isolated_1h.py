@@ -347,26 +347,26 @@ def write_environment_closeouts(recorder: Recorder, stock_sqlite: str, initial_g
         sqlite_episode / "closeout_v1.md",
         f"""# CRA-01 SQLite Runtime Episode Closeout v1
 
-## 結論
+## Findings
 
 - State: `{sqlite_state}`
 - Production status: `NOT_TOUCHED`
-- OS標準PythonはSQLite `{stock_sqlite}`で、CRA production gate `{REQUIRED_SQLITE}`を満たさない。
-- 隔離unitはproject固定SQLite `{sqlite3.sqlite_version}`を`LD_LIBRARY_PATH`で読み込んだ。
+- The system Python uses SQLite `{stock_sqlite}`, which does not meet the CRA production gate `{REQUIRED_SQLITE}`.
+- The isolated unit loaded project-pinned SQLite `{sqlite3.sqlite_version}` through `LD_LIBRARY_PATH`.
 
-## 原因と対策
+## Cause and mitigation
 
-- `OBSERVED`: cra-01のOS標準SQLiteは`{stock_sqlite}`。
-- Systemic cause: OS package runtimeをCRA production constraintと同一視できない。
-- 対策: source-bound固定SQLiteをunit単位でloadし、process内versionとloaded library identityを同時検証する。
+- `OBSERVED`: The system SQLite on cra-01 is `{stock_sqlite}`.
+- Systemic cause: The OS package runtime cannot be equated with the CRA production constraint.
+- Mitigation: load source-bound pinned SQLite per unit and verify the in-process version together with the loaded library identity.
 - Loaded library: `{library or "UNKNOWN"}`
 - Loaded library SHA-256: `{library_hash}`
-- Intentionally unchanged: OS SQLite、production release/runtime/DB、他service。
+- Intentionally unchanged: OS SQLite, production release/runtime/DB, and other services.
 
-## 一般化と残存risk
+## Generalization and remaining risks
 
-- host package upgrade/downgrade、別Python起動、`LD_LIBRARY_PATH`脱落を同じruntime identity gateで検出する。
-- この対策はSQLite以外のABI差分を証明しない。1時間runのfull regressionとresource evidenceを別gateとする。
+- The same runtime-identity gate detects host package upgrades/downgrades, a different Python executable, and missing `LD_LIBRARY_PATH`.
+- This mitigation does not establish other ABI compatibility. Full regression and resource evidence from the one-hour run are separate gates.
 """,
     )
     network_episode = recorder.evidence / "episodes" / "cra01-network-isolation"
@@ -374,14 +374,14 @@ def write_environment_closeouts(recorder: Recorder, stock_sqlite: str, initial_g
         network_episode / "closeout_v1.md",
         f"""# CRA-01 Network Isolation Episode Closeout v1
 
-## 結論
+## Findings
 
 - State: `ISOLATED_ENVIRONMENT_MITIGATED`
 - Production status: `NOT_TOUCHED`
-- 非特権`unshare --user --map-root-user --net`はexit `{unshare_exit}`で利用不能。
-- root-owned transient systemd sandboxの`PrivateNetwork`とresource/capability制限へ切り替えた。
+- Unprivileged `unshare --user --map-root-user --net` was unavailable with exit `{unshare_exit}`.
+- Switched to a root-owned transient systemd sandbox with PrivateNetwork and resource/capability limits.
 
-## 検証
+## Validation
 
 - Visible interfaces: `{json.dumps(initial_guard["network"]["interfaces"])}`
 - Interface probe errno: `{initial_guard["network"]["interface_probe_errno"]}`
@@ -391,12 +391,12 @@ def write_environment_closeouts(recorder: Recorder, stock_sqlite: str, initial_g
 - Readable credential paths: `{json.dumps(initial_guard["readable_credential_paths"])}`
 - Production paths present: `{json.dumps(initial_guard["production_paths_present"])}`
 
-## Systemic causeと対策
+## Systemic cause and mitigation
 
-- Systemic cause: cra-01ではunprivileged user namespace作成がkernel/security policyで拒否される。
-- 対策: isolation失敗時にnetwork制限を外さず、root-owned transient unitを明示的sandboxとして使う。interface inventory用の
-  `AF_NETLINK`だけをprivate namespace/capability 0内で許可し、inventory不能はSafety Gate failureにする。
-- Intentionally unchanged: firewall、network config、SSH、production systemd unit、credential。
+- Systemic cause: On cra-01, kernel/security policy rejects unprivileged user-namespace creation.
+- Mitigation: retain network restrictions when isolation fails and use a root-owned transient unit as the explicit sandbox. Allow only
+  AF_NETLINK for interface inventory inside a private namespace with zero capabilities; unavailable inventory is a Safety Gate failure.
+- Intentionally unchanged: firewall, network config, SSH, production systemd units, and credentials.
 """,
     )
 
@@ -603,7 +603,7 @@ def run(args: argparse.Namespace) -> int:
         evidence / "run_closeout_v1.md",
         f"""# CRA-01 Isolated Autonomous Repair Run Closeout v1
 
-## 結論
+## Findings
 
 - Result: `{summary["result"]}`
 - JST window: `{summary["started_at_jst"]} -- {summary["ended_at_jst"]}`
@@ -630,8 +630,8 @@ def run(args: argparse.Namespace) -> int:
 
 ## Boundary
 
-このrunはcra-01固有runtime/SQLite/filesystem/systemd sandbox上の隔離evidenceであり、CRA NO_ACTION production配備、24時間soak、
-Dell effect、arena facts transportを証明しない。
+This run provides isolated evidence for the cra-01 runtime, SQLite, filesystem, and systemd sandbox; it does not establish CRA NO_ACTION production deployment, 24-hour soak,
+Dell effects, or arena facts transport.
 """,
     )
     artifact_manifest(evidence)

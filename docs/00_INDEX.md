@@ -17,6 +17,7 @@ Use the rest of this page as a reference catalog.
 
 ## Core Entry Points
 
+- `public-language-policy.md`: [English prose and Unicode inputs](public-language-policy.md).
 - `hiring-reviewer-guide.md`
 - `executive-summary.md`
 - `operational-case-studies.md`
@@ -34,6 +35,7 @@ Use the rest of this page as a reference catalog.
 
 ## Architecture And Runtime
 
+- `hardware-selection.md`: [CPU, GPU, workload separation, and the cost of changing a working system](hardware-selection.md).
 - `architecture.md`
 - `physical-topology.md`
 - `runtime-contract.md`
@@ -52,6 +54,9 @@ Use the rest of this page as a reference catalog.
 - `v3/program-map.md`
 
 ## Reliability Evidence
+
+- `v3/twitch-sli-resilience.md`: [Twitch collector resilience and visible missing-data states](v3/twitch-sli-resilience.md).
+- `v3/public-diagram-and-trend-display.md`: [Observed links, inferred direct delivery, and missing chart data](v3/public-diagram-and-trend-display.md).
 
 - `sli-methodology.md`
 - `28-day-same-url-sli-case-study.md`

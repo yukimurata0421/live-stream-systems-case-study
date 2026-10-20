@@ -201,7 +201,7 @@ class EffectLedger:
         )
 
     def _migrate_route_request_constraint(self) -> None:
-        """既存request/fence履歴を保持したままtyped enumだけを拡張する。"""
+        """Extend only the typed enum while preserving existing request and fence history."""
         sql = self.connection.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='typed_effect_requests'").fetchone()[0]
         if "SWITCH_STREAM_ROUTE" in sql:
             return

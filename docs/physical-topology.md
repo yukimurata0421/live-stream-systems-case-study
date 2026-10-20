@@ -15,6 +15,10 @@ snapshot, and GCS + Cloudflare form the public static edge. The newer
 Monitoring v4/CRA source contract is listed separately and is not inferred to
 be live from this topology record.
 
+For why the receiver moved to the ProDesk and why the Dell uses an E5-2695 v4
+and GTX 1070, read the [hardware selection retrospective](hardware-selection.md).
+It separates purchase-time constraints from later observations and untested options.
+
 ## Physical Hosts
 
 | Host or edge | Runtime role | Responsibility |

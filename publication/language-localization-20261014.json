@@ -1,0 +1,380 @@
+{
+  "schema": "stream.public_language_localization.v1",
+  "prepared_at_jst": "2026-10-14T12:58:05.500633+09:00",
+  "public_repository": "stream_v3",
+  "prior_public_head": "d1292354024ea6ae7cd642181b15d2ee98708283",
+  "scope": "Public Stream, Monitoring, and recovery-control prose only.",
+  "deployment_performed": false,
+  "commit_or_push_performed": false,
+  "prior_source_manifest": {
+    "path": "publication/history/source-map-before-english-20261014.json",
+    "sha256": "4a80055748ccb5e84d48a2e7f7a3c9291a08cb4f8218f21af8ce771ebe43ff1f"
+  },
+  "translation_scope": {
+    "integrated_files": 49,
+    "standalone_mirrored_files": 27,
+    "human_text": "Comments, docstrings, notifications, generated reports, and scenario descriptions."
+  },
+  "preserved": [
+    "Python AST topology, identifiers, operators, and nontext constants",
+    "JSON keys, sequence lengths, numeric and boolean values",
+    "Historical validation outcomes and production qualification boundaries",
+    "Private development files and production services"
+  ],
+  "language_policy": "publication/language-policy.json",
+  "validation": {
+    "integrated_public_tests": [
+      {
+        "scope": "Language guard and Stream notification/CLI cases",
+        "passed": 60
+      },
+      {
+        "scope": "Monitoring notifications and lifecycle",
+        "passed": 25
+      },
+      {
+        "scope": "CRA public scenario profiles",
+        "passed": 3
+      },
+      {
+        "scope": "CRA public report claim boundaries",
+        "passed": 2
+      }
+    ],
+    "total_selected_tests_passed": 90,
+    "scope_note": "Focused public tests; no full suite or live recovery qualification claimed.",
+    "retained_exclusion": {
+      "path": "recovery-control/tests/harness/unit/test_task_contract.py",
+      "status": "COLLECTION_UNAVAILABLE",
+      "reason": "Existing public exclusion retains a private workflow test that imports omitted model_name. A targeted collection attempt failed; portable report assertions ran separately."
+    },
+    "test_execution_repository": "stream_v3 (integrated public checkout)"
+  },
+  "files": [
+    {
+      "path": ".github/workflows/public-snapshot-check.yml",
+      "before_sha256": "c65619b21a7cfac68f9ba413417f7b8870f3554d00ac45292d439617fccee27b",
+      "public_sha256": "db63f10b020309449fa8ba2b3d00b445768066e9c0ccbbd52343f2d8da4529a9"
+    },
+    {
+      "path": "docs/00_INDEX.md",
+      "before_sha256": "e32ab253e63bfe09d4ec42a5fc1594a2025b8bd859cab754ee1558798c0391dc",
+      "public_sha256": "6a87a495eb3698b1a49e053ffcc109b28d94a59e9dd29cb3399a62279e196d3d"
+    },
+    {
+      "path": "docs/public-language-policy.md",
+      "before_sha256": null,
+      "public_sha256": "5fcc6c3383f62a6583d492f93385e61efc3fc490f304fa41165bfa3a80cb0590"
+    },
+    {
+      "path": "monitoring-v4/docs/public-language-policy.md",
+      "before_sha256": null,
+      "public_sha256": "5fcc6c3383f62a6583d492f93385e61efc3fc490f304fa41165bfa3a80cb0590"
+    },
+    {
+      "path": "monitoring-v4/docs/public-release.md",
+      "before_sha256": "704efa4cef3cdba565902fe1414f2b3a59d2877eda257053f4e2629204b1bb1c",
+      "public_sha256": "ca48ca415191a13b321cb7ef2d982c82d42dc583a8f2710935c1a8978109831a"
+    },
+    {
+      "path": "monitoring-v4/ops/scripts/validate_public_language.py",
+      "before_sha256": null,
+      "public_sha256": "ae121b6d5c5118c35dd0fd4006d4aac6553a92c055866d1f1cd558d50003755e"
+    },
+    {
+      "path": "monitoring-v4/publication/language-policy.json",
+      "before_sha256": null,
+      "public_sha256": "b1bff2ff21dadeb63e1be643e2be93c2e607d3a5b39840d1dd602b279959e824"
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/notifications/renderer.py",
+      "before_sha256": "f551b3f08c32aafd6bc0585e11d553e9236f0364962931a8101b2337eeca39fd",
+      "public_sha256": "d4365d3933a74e3b16c66cf8e707f025629e0ab281f88e268ff023bfefc4384a"
+    },
+    {
+      "path": "monitoring-v4/tests/fixtures/monitoring_v4/2026-08-12_time_boundary_replay.json",
+      "before_sha256": "c693dd58849b11162140a514ab5c19f186f3219ca79177155ef5d7270d748aaa",
+      "public_sha256": "efd1462f0d54f8da0671748de8baf29f914fdf90f7239f9fe72500c1b1ba0285"
+    },
+    {
+      "path": "monitoring-v4/tests/test_notifications.py",
+      "before_sha256": "c8288e60e2d7c3dfc302db3c42fc1f6bfa339d4b7ac52e51ca73a1578505b5bc",
+      "public_sha256": "0dd33ed89857e39ce7d1982fe949bf15374edf2b1002a6a1a15817ac6b682a2a"
+    },
+    {
+      "path": "monitoring-v4/tests/test_runtime_lifecycle.py",
+      "before_sha256": "5a4959c53a66d8f8cc27bc5555f1906d882969afa5039cc1c35b0f0aa22e4564",
+      "public_sha256": "98e1bb8733d8b0dad002decb5239beb2c689aa066abec45579abc100034dbc96"
+    },
+    {
+      "path": "ops/host-maintenance/bin/nvidia_driver_update_check.py",
+      "before_sha256": "6a37596dda2f813dd8ab6de95ed91dc41e8b6973a55809179468ef397631f999",
+      "public_sha256": "29ff59d8b4616950acd485b9bf2e3505cd2bee0be669f04f977486fc9926309e"
+    },
+    {
+      "path": "ops/prodesk-monitoring/check_adsb_alive.py",
+      "before_sha256": "1ff0395417fcb629bd33579ae0493bf44a74340b39336d9aaa509cf30b53526e",
+      "public_sha256": "42aa12cffee395cc43df514f2a787c6076fbf03e12bcd8edfe0ad4ee529aa82f"
+    },
+    {
+      "path": "ops/prodesk-monitoring/check_amazon_mail_notifier.py",
+      "before_sha256": "906733f0bfbfa71312e7f194bc8787b7ded9550221d3194b8cb5de6ab307c4cd",
+      "public_sha256": "4b00091b5bb0831fe76f8b443d5ba6dc0b4c981b31c55e7d0dc6652bee1467b4"
+    },
+    {
+      "path": "ops/relay/relay_guard.py",
+      "before_sha256": "e837158facfd80c094b08746e25f01a88ae43967fd9f21b4fb3285d5acdffa24",
+      "public_sha256": "57c972d4f31cd4d1453f10e3dd4ff29a221de7f281f47f92690619e972bdfe93"
+    },
+    {
+      "path": "ops/relay/relay_lease.py",
+      "before_sha256": "70f0e47fe50cb3e36fa61c1b311104811e49694927c54bad39288090581f7086",
+      "public_sha256": "73fe2c66a86baefde418da0667e11aa8e69668f543be581b4005182779e36304"
+    },
+    {
+      "path": "ops/relay/relay_supervisor.py",
+      "before_sha256": "5d27413b6cf83af44def0b6c862f10faee6358c0e298b6133db436a14039515f",
+      "public_sha256": "62980a67826f9c9846e2a7c81bf29939dba3251124e1cee00d3c601a6766d71d"
+    },
+    {
+      "path": "ops/relay/twitch_daily.py",
+      "before_sha256": "843ef769fe35f13d58506262533eb8d37406741ccffc4fc218e9c80dc437f034",
+      "public_sha256": "900b8c8e711a53f287ae1946f7703341c05f1eed0a1069c6a13da145525218dd"
+    },
+    {
+      "path": "ops/scripts/prepare_floracore_music.py",
+      "before_sha256": "38dde5a8c2ba84f4fd0dec06282e9879c763ceb60cf35bd6dcbf2784b7c4e476",
+      "public_sha256": "cdd788c05f406a0c04537079fd354be72291e075f5d53351f8c2fb3498467396"
+    },
+    {
+      "path": "ops/scripts/validate_public_language.py",
+      "before_sha256": null,
+      "public_sha256": "ae121b6d5c5118c35dd0fd4006d4aac6553a92c055866d1f1cd558d50003755e"
+    },
+    {
+      "path": "publication/history/source-map-before-english-20261014.json",
+      "before_sha256": null,
+      "public_sha256": "4a80055748ccb5e84d48a2e7f7a3c9291a08cb4f8218f21af8ce771ebe43ff1f"
+    },
+    {
+      "path": "publication/language-policy.json",
+      "before_sha256": null,
+      "public_sha256": "f2b41243dc33e5f1789585f0afbf51e9b5e4ff8e2b77feaa458db08987670701"
+    },
+    {
+      "path": "recovery-control/docs/00_INDEX.md",
+      "before_sha256": "c936259ad68b3d3802caac9deb84f893ba453c5129650a4485522eb2afe8da98",
+      "public_sha256": "78957f166d15b800f5c88e8ef691af40e4642ef50c8d0df5520891325366ba92"
+    },
+    {
+      "path": "recovery-control/docs/public-language-policy.md",
+      "before_sha256": null,
+      "public_sha256": "5fcc6c3383f62a6583d492f93385e61efc3fc490f304fa41165bfa3a80cb0590"
+    },
+    {
+      "path": "recovery-control/harness/contracts/change_impact_review.v1.json",
+      "before_sha256": "0833afeb5b9442033f5a05214ceee6e666aff9bc019370c757743774874b5ee3",
+      "public_sha256": "effdacf2d3c50df194178a1b7362a66b9feb012faa02f48556f88ffbd32c6bb1"
+    },
+    {
+      "path": "recovery-control/harness/scenarios/cra_evidence_lineage_v1.json",
+      "before_sha256": "c7a2c28a1027613a310c4d4657a0574e2690a0a2db318ab5ee3224a07640cf1d",
+      "public_sha256": "d92b448c44a789317015901ae887030e4465416d9aa22125b669642b18cac316"
+    },
+    {
+      "path": "recovery-control/harness/scenarios/owner_observation_chaos_v1.json",
+      "before_sha256": "080a147d5537eb3e9d49c54601be2a5b1e12bca0e785a2aa297639ebd50989b4",
+      "public_sha256": "0fbf97d86edff7b27b7046689726c4c9e9dfc8b167c77665fcb3f6927f490b03"
+    },
+    {
+      "path": "recovery-control/harness/scenarios/protocol_v1.json",
+      "before_sha256": "ef435225ea22e959d9f96b0b14551c5e3bba4690cc07b9b198cae079aa2da05d",
+      "public_sha256": "5a20c16f70457bdc6c5868fc46cd469d036d560a13a8d324500e206050d98bd0"
+    },
+    {
+      "path": "recovery-control/harness/scenarios/rtmps_failure_sequences_v1.json",
+      "before_sha256": "940387eb6dedfaddcf64d352d1aaf2d2fd81825f851e21e2a3236284b5b845ad",
+      "public_sha256": "d75254b5b3a857cfa384e4d0f582635a312d34e413ff22b5d5eb61915971040e"
+    },
+    {
+      "path": "recovery-control/ops/scripts/validate_public_language.py",
+      "before_sha256": null,
+      "public_sha256": "ae121b6d5c5118c35dd0fd4006d4aac6553a92c055866d1f1cd558d50003755e"
+    },
+    {
+      "path": "recovery-control/publication/language-policy.json",
+      "before_sha256": null,
+      "public_sha256": "ee58179fc4535d5d493928936889897ef24d7e5167c6613d3073f7ce1a6ec8a3"
+    },
+    {
+      "path": "recovery-control/src/cra_harness/evidence_lineage.py",
+      "before_sha256": "98b34227165000a73f6e5e1eef23b952c7d63dc592523f9057e047bdd4cb6ddb",
+      "public_sha256": "cc2bc4635f3c49e0c018d932237e04ae77f94ff0ed791f239090d8e26eb795ed"
+    },
+    {
+      "path": "recovery-control/src/cra_harness/reporting/artifacts.py",
+      "before_sha256": "8969d14dae20762dfe4acd377516202304f416dfaeb532ecf509b5c931743466",
+      "public_sha256": "3bf0aa5f01319b38e3c4f3c316727954e3bde012d93771871a29ae62507cad22"
+    },
+    {
+      "path": "recovery-control/src/cra_harness/reporting/coverage_v3.py",
+      "before_sha256": "784af0261051bf18ef336839d6b24063be3f2f5420ca452d8e80d2b9aa73ac8b",
+      "public_sha256": "e1bc0ba3032ee14fc98f935cd7ccc1259f1217eb5fb582f25289eba094c37aaa"
+    },
+    {
+      "path": "recovery-control/src/cra_harness/runner/p1_audit.py",
+      "before_sha256": "3fef57c94b11a2ed4b893bf1664aa0d66a0d041e049f1f6bad6c245a1529bf3c",
+      "public_sha256": "86474f3d653c8e38ce1a14f779ef25eb4fb74f215dd0d520cd6ed5e528273a4e"
+    },
+    {
+      "path": "recovery-control/src/cra_harness/runner/sqlite_concurrency.py",
+      "before_sha256": "6601d7809484be7df9c91467f470e7c2454707db1e55d0169216975fbb74513c",
+      "public_sha256": "f1731955ce95efbf55f91b575001d8d629a4b5a35c617dedecbb57a158ceeb25"
+    },
+    {
+      "path": "recovery-control/src/cra_harness/runner/suite.py",
+      "before_sha256": "0f19d8bc09ec9ab79b3e72b132eaa4748a1cfe20a20a6bcd7a7715d44984c2cb",
+      "public_sha256": "42d828fe78423324fc5db18db1f3b0eb59d3a7e6cb3be255c78fa029ce5f12dc"
+    },
+    {
+      "path": "recovery-control/src/cra_harness/runner/suite_v2.py",
+      "before_sha256": "a42be4ff70e35bc92887fa5eeef067306754e165ee7f5f0d0a50c28d49b78083",
+      "public_sha256": "4963f4c6551c0e36dc996bb0757aa658ef04cf0df63dfdb6850995c4b2f8c2ff"
+    },
+    {
+      "path": "recovery-control/src/cra_harness/runner/suite_v3.py",
+      "before_sha256": "7af866eac6abe5e276ddc5b9f6a13877a21841b06f118bd2db2c85ace39f938c",
+      "public_sha256": "fadcc67881c6f4e248ac3e6799f26292e4c9eae0549e3bb6734ceb29690c03d6"
+    },
+    {
+      "path": "recovery-control/src/cra_harness/task_contract.py",
+      "before_sha256": "e44692f2c9cfce546ea2fa7180c2a3dd77fb755f8fb552aa5e28bc44b1f72535",
+      "public_sha256": "9009382f506387c49132b3a805a61be1bcf77571d31a67566a0e8459f5bb0ba9"
+    },
+    {
+      "path": "recovery-control/src/runtime_boundary/child_registry.py",
+      "before_sha256": "61a513484086ad2238c739300ac37bdce2ab1a916a00a1a3952dcb2fb654be63",
+      "public_sha256": "389c8c8d80005041788f7f6327f365b21b435f1a778a1a913bd0691e70a62d75"
+    },
+    {
+      "path": "recovery-control/src/runtime_boundary/ledger.py",
+      "before_sha256": "e5b8fe136f35871fe15ad603e35e025a5f5b01676010b3222dd4820f8f5c1120",
+      "public_sha256": "0f201cd0fd8fdb0b617de84550d16f9f73955e9ad1e898ef34868b447b27ec37"
+    },
+    {
+      "path": "recovery-control/src/runtime_boundary/model.py",
+      "before_sha256": "4e3dd3a12c188a329c49c21ba633db727ae0fe118d51e0d062e98071ad2723c6",
+      "public_sha256": "d642e741c6eab51b931e902eb53b8a3bcfb404dec7300efe245da7f94f6dbbb3"
+    },
+    {
+      "path": "recovery-control/src/runtime_boundary/operator_route.py",
+      "before_sha256": "4b129221391d3e27f3a94d73ec3829238c1f3d1654babc27d91c4ecd1391cbca",
+      "public_sha256": "bded541352d1a10f1412f5db9189201dfb85a7c3ad8a379e1c1c3a2e065222a4"
+    },
+    {
+      "path": "recovery-control/tests/harness/unit/test_public_report_language.py",
+      "before_sha256": null,
+      "public_sha256": "b3f63abf6fe98e50e16f26a86b7d7bdc734242a254cebeddc3403041fcfc73ba"
+    },
+    {
+      "path": "recovery-control/tests/harness/unit/test_task_contract.py",
+      "before_sha256": "0a4dce430423eec7f923f3a933ce7c7c89d72cf1c813c1ffd5e4f691c962efcc",
+      "public_sha256": "eca43d464fa286dd0f5b38b09de180b2de0a217d5a00bef77d50791022cc8985"
+    },
+    {
+      "path": "recovery-control/tools/monitor_bounded_termination_external.py",
+      "before_sha256": "931b082d6adaf6a6c900de4f55cad54ecb3cb1b25349463e3188bcf63e710558",
+      "public_sha256": "86577b72745a2fd39711aa2871db38f8168f06f0cb577707f1b29b469f4e7167"
+    },
+    {
+      "path": "recovery-control/tools/prepare_bounded_termination_rollout.py",
+      "before_sha256": "5884e7aa7f00fd6140230413a1b5afe25b7f57d37159792e27ec7e5c785a5411",
+      "public_sha256": "0825f2aefe54f3aef56c993f6b3cd681118fc46cde5a37e5c2441cba842d81bc"
+    },
+    {
+      "path": "recovery-control/tools/run_cra_server_isolated_1h.py",
+      "before_sha256": "3fee396c84061c786cc16fa73db551f7daad4ae1f066186ae1656ff2ae26d9a6",
+      "public_sha256": "34c091773084520893ae644c1d73a873b527a13ab67457ae4bd3d417e851c702"
+    },
+    {
+      "path": "recovery-control/tools/run_cra_workflow_eval.py",
+      "before_sha256": "530b99e2138dc7899ae212cd7d4973e22395d3381860afe072100ae9b5c403f9",
+      "public_sha256": "2e7994971cfd3553ed42104ac481b9919e38a37f64bebcc68d0cc3a5e243090c"
+    },
+    {
+      "path": "src/dj/organize_time.py",
+      "before_sha256": "aa6b1649ba88e8e141db5ca58b240ed293c37ec495666e60b4f744597c8d62b0",
+      "public_sha256": "46b1b8fc3e0f5768eb9d332f1aa5e8e276183f8bae10b7402743fe87ed9eba31"
+    },
+    {
+      "path": "src/stream_core/engine/delivery_pipeline.py",
+      "before_sha256": "2be1007beb2938da144893295fb78b1ba7f5c8496dd3b38765d1608e331925c7",
+      "public_sha256": "fe1fe2f972165b9bf0777c5fc679b44ba03a34c3e2c7c1115f94ffb2d16b666d"
+    },
+    {
+      "path": "src/stream_core/engine/relay_lease_client.py",
+      "before_sha256": "71670dcfa37267ba4d32b8945a6fb7776190dbfc1093236eab1bd82374471c0a",
+      "public_sha256": "4ba977bd245649728c850c110517397727dd24b47e1f25915e6f329a76892504"
+    },
+    {
+      "path": "src/stream_core/notifications/cli_adapter.py",
+      "before_sha256": "17f96d6672c6019e36cc43f34c3c7b102b603eef5a67b8bcd8d306919ad79ddd",
+      "public_sha256": "7f86d0c742b6718caa6eb7d1d01fd44b773375753bc4e2371d0e48da603daa6f"
+    },
+    {
+      "path": "src/stream_core/notifications/connectivity_correlation.py",
+      "before_sha256": "0ffd47a9ad3e0400d0c1edd675732be5a0ed6c332e7d19569db4fefbc63feedd",
+      "public_sha256": "d6a670cf1ad8e7177030308642d1fd9e2c9ec1d9e8943dee9d78a8251a9da53a"
+    },
+    {
+      "path": "src/stream_core/notifications/incidents.py",
+      "before_sha256": "3096bfd3e78e238408c2943bbcce22103618a5cacd3d80bb14be424366524d70",
+      "public_sha256": "29068d15becd9d0df908c4c2095e77451a8c3c995ffeec4283e2434a4c2a67cd"
+    },
+    {
+      "path": "src/stream_core/notifications/renderer.py",
+      "before_sha256": "9f53c130d71a55e2569392013a9bcbfd4c07afabbcc121032633a91964f79091",
+      "public_sha256": "c292f4d317a38a2e2fa78be8a155ba07ee777509454f6e30c2c4bf469c646a4f"
+    },
+    {
+      "path": "src/stream_core/notifications/status_loop.py",
+      "before_sha256": "3ed318edb00f27873619f9d1ae6125dd4c79056a3de082c489fb88024da32df0",
+      "public_sha256": "5fbfef066cb27696f1df5e7d25d2555fa29e6e82cf03b282f1a45d8d691c7da7"
+    },
+    {
+      "path": "src/watchers/youtube_oauth/status.py",
+      "before_sha256": "408d9db886eecff83616bd34d448e9e277f9a5c7b8c7e8f6f3812d1470af9368",
+      "public_sha256": "a68fa8471f5dfd26317e1edb6fb8b0fb116f56669992b6b3aedeaeb11fe0885b"
+    },
+    {
+      "path": "tests/test_cli_ops_commands.py",
+      "before_sha256": "d53c0e2341dc6e0f2611c3a10802624ecfbcba5a6404f31ed19a9474558f740b",
+      "public_sha256": "2132f58f4513fca2c0ce0c3a3d14052001814c7d5a4bb26baf56c3e3fd2596f6"
+    },
+    {
+      "path": "tests/test_public_language_policy.py",
+      "before_sha256": null,
+      "public_sha256": "0b97f7927737211a5a763d8134002d630862aea9965f352af0de09ffbf45be33"
+    },
+    {
+      "path": "tests/test_relay_continuation.py",
+      "before_sha256": "31203c2a2e5ccc158b37a7403101cb71eedb68c7acf6df2930e784f4b43e702c",
+      "public_sha256": "a11b27ffafdfeefd7bd0055d8d919ae9c9a6a1e59437451fbf33c9cafb49e727"
+    },
+    {
+      "path": "tests/test_relay_lease.py",
+      "before_sha256": "5b5b8906e9d28e98e75fd28fb4a1f717ab6eb38936e95e4f3b7495386495de2c",
+      "public_sha256": "e8d611ef2ae382304c88c064d22dadd45e20892157bf9ecf21fcd9cf2df9889a"
+    },
+    {
+      "path": "tests/test_route_network_observer.py",
+      "before_sha256": "0269097940792e13723ea385438ffa640ff6c20ba247a4e144385cdc1ba15b0e",
+      "public_sha256": "86bedcb2797544ded23e4e91541bdf325023b057716b0c855ffbd76f9d5c34f7"
+    },
+    {
+      "path": "tests/test_twitch_daily.py",
+      "before_sha256": "41bd76aaf9b3da867a638101805ef18244988cb431c70ead3378441a97952262",
+      "public_sha256": "cea298bff7f347a60e6815c212739ab4ea67b673f31769eee91d533474b512a6"
+    }
+  ]
+}

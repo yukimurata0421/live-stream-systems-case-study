@@ -22,16 +22,16 @@ def seconds_to_human(seconds: int | float | None) -> str:
 
 def format_discord_message(*, phase: str, incidents: list[dict], state: dict, now_ts: int) -> str:
     recovery_titles = {
-        "restart_observed": "再起動観測・送信回復確認待ち",
-        "recovery_unconfirmed": "再起動後の送信回復未確認",
-        "auto_recovered": "自動復旧確認",
-        "planned_rollout": "計画更新完了",
+        "restart_observed": "Restart observed; publishing recovery pending",
+        "recovery_unconfirmed": "Publishing recovery unconfirmed after restart",
+        "auto_recovered": "Automatic recovery confirmed",
+        "planned_rollout": "Planned rollout completed",
     }
     if phase in recovery_titles:
         title = recovery_titles[phase]
         components = {str(item.get("component", "")) for item in incidents}
         if phase == "auto_recovered" and components == {"stream_engine_ffmpeg"}:
-            title = "FFmpeg自己再起動イベント"
+            title = "FFmpeg self-restart event"
         lines = [
             f"[ADS-B Stream] {title}",
             f"time={jst_text(now_ts)}",
@@ -73,24 +73,24 @@ def format_discord_message(*, phase: str, incidents: list[dict], state: dict, no
         first_seen = int(item.get("_first_seen_ts", now_ts) or now_ts)
         duration = seconds_to_human(now_ts - first_seen)
         lines = [
-            "[ADS-B Stream] メンテナンス継続中",
+            "[ADS-B Stream] Maintenance ongoing",
             f"time={jst_text(now_ts)}",
             "maintenance=on",
             f"window={jst_text_or_unknown(first_seen)} -> ongoing duration={duration}",
             "",
             "component=maintenance_mode severity=info",
-            "status=自動復旧・監視・report timer を一時停止中です。配信本体と AutoDJ は停止対象外です。",
-            "notify=Discord reminder は継続しています。",
+            "status=Automatic recovery, monitoring, and report timers are paused. Streaming and AutoDJ remain running.",
+            "notify=Discord reminders remain active.",
             f"evidence={item.get('evidence', '')}",
             f"follow_up={item.get('follow_up', '')}",
         ]
         return "\n".join(lines)
 
     title = {
-        "detected": "障害検知",
-        "status": "障害継続ステータス",
-        "recovered": "復旧フォローアップ",
-        "test": "通知テスト",
+        "detected": "Incident detected",
+        "status": "Ongoing incident status",
+        "recovered": "Recovery follow-up",
+        "test": "Notification test",
     }.get(phase, phase)
     active = state.get("active") if isinstance(state.get("active"), dict) else {}
     active_count = 0 if phase == "recovered" else len(active)
@@ -98,7 +98,7 @@ def format_discord_message(*, phase: str, incidents: list[dict], state: dict, no
     if phase == "recovered":
         lines.append(f"resolved_incidents={len(incidents)}")
     if phase == "test":
-        lines.append("stream-new notify-status の Discord webhook 接続確認です。")
+        lines.append("Discord webhook connectivity check from stream-new notify-status.")
     for item in incidents[:8]:
         ident = str(item.get("id", ""))
         active_state = state.get("active", {}).get(ident, {}) if isinstance(state.get("active"), dict) else {}

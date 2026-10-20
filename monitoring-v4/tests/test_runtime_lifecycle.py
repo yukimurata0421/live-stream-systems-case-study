@@ -70,10 +70,10 @@ class RuntimeLifecycleIncidentTests(unittest.TestCase):
         self.assertEqual(first.episode.status, "closed")
         self.assertEqual({item.route for item in first.intents}, {"discord", "slack"})
         self.assertTrue(
-            all("FFmpeg自己再起動イベント" in item.subject for item in first.intents)
+            all("FFmpeg self-restart event" in item.subject for item in first.intents)
         )
         self.assertTrue(
-            all("FFmpeg自己再起動イベント" in item.content for item in first.intents)
+            all("FFmpeg self-restart event" in item.content for item in first.intents)
         )
         self.assertTrue(
             all(item.template_revision == "monitoring-v4-ja-r5.2" for item in first.intents)

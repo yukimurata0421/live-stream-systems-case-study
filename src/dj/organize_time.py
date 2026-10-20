@@ -76,10 +76,10 @@ def main(argv: Sequence[str] | None = None) -> None:
             print(format_others_report(report))
         return
 
-    print("ファイル名/TIT2のジャンル表記を優先して再分類します...")
+    print("Reclassifying tracks using genre labels in filenames/TIT2 first...")
     source_counts = organize_library(music_root, target_base, overrides=overrides)
 
-    print("完了")
+    print("Done")
     for slot in TIME_SLOTS:
         major = source_counts["major"][slot]
         minor = source_counts["minor"][slot]

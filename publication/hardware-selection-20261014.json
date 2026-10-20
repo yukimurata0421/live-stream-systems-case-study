@@ -1,0 +1,64 @@
+{
+  "schema": "stream.hardware_selection_record.v1",
+  "recorded_at_jst": "2026-10-14T13:48:41.550737+09:00",
+  "scope": "Local development and English public documentation only.",
+  "development_record_sha256": "fa63925672898c7afe5e3a70ae57173e46985694011bd808aeccb28850af4bde",
+  "provenance": {
+    "selection_history": "Operator-supplied retrospective recorded 2026-10-14 JST; not an independently reconstructed purchase timeline.",
+    "specifications": "Manufacturer CPU, workstation, and receiver documentation checked 2026-10-14 JST.",
+    "inventory": "Read-only local DMI, lscpu, and nvidia-smi: Precision Tower 5810, E5-2695 v4, 1 socket, 18 cores, 36 logical threads, GTX 1070, 8192 MiB.",
+    "benchmarks": "Retained ARENA GTX 1060 / i7-8700K summaries and 2026-05-31 encoder trials; no new benchmark."
+  },
+  "clarifications": [
+    "825 W PSU discovery and subjective noise were later observations, not known CPU selection inputs.",
+    "Airspy software sample-rate settings do not qualify a manufacturer-supported 20 MSPS Mini configuration.",
+    "NVENC availability does not prove JAX CUDA availability or statistical workload acceleration.",
+    "Alternative CPU, rack-server plan, UPS runtime, and current-route performance remain unmeasured here.",
+    "Recovery policy, deployment, and formal qualification are not established by this retrospective."
+  ],
+  "runtime_changed": false,
+  "deployment_performed": false,
+  "commit_or_push_performed": false,
+  "original_source_cutoff_unchanged": true,
+  "validation": {
+    "status": "PASS",
+    "scope": "Documentation only; no hardware benchmark, native recovery exercise, or deployment.",
+    "documentation_structure_tests_passed": 17,
+    "owned_markdown_local_links_checked": 48,
+    "owned_links_and_whitespace_issues": 0,
+    "public_language_check": "PASS",
+    "authored_japanese_text_findings": 0,
+    "upstream_unicode_data_exceptions": 1,
+    "selected_file_digest_and_privacy_issues": 0,
+    "owned_public_secret_scan_findings": 0,
+    "existing_git_diff_whitespace_check": "PASS"
+  },
+  "files": [
+    {
+      "path": "docs/hardware-selection.md",
+      "before_sha256": null,
+      "public_sha256": "79d2205f0fbf0bf3631ea52be4c781140281e75bbdbf9d90e5c81d736463713f"
+    },
+    {
+      "path": "docs/00_INDEX.md",
+      "before_sha256": "781070c88879e895bbe8246864284f93267b6185ef9b27e407e168fcee3d21f4",
+      "public_sha256": "d643a0c496a20ef3556383e96075a4cf2113b5baca7f0d23264d762c52dd6b35"
+    },
+    {
+      "path": "docs/physical-topology.md",
+      "before_sha256": "2d89baec37ff20dead286090d0b49ba133c681088cb5f58ba52791c2939f04fb",
+      "public_sha256": "662e0dffdab3676c67d92113fc139df29c4b8597dad39d13ba8719930da53d3b"
+    },
+    {
+      "path": "docs/hiring-reviewer-guide.md",
+      "before_sha256": "65ecbe14498fddd0c29a76f2ece43b367b7d94b12aa269295b256a7950dfbda4",
+      "public_sha256": "bc1833f76dad6e07ba2b95f001528d7fdd9e3afd02b07581d7b740e2c1435a29"
+    },
+    {
+      "path": "docs/README.md",
+      "before_sha256": "e1fcb50d004b1acf7c7c79d457c62952161d199e9727f7619bb7fce5cd1ae260",
+      "public_sha256": "20e5c3f26664fbb401774003523f13ce038531ee5b630f2bda77ce31cfee9e0d"
+    }
+  ],
+  "validated_at_jst": "2026-10-14T13:50:31.502251+09:00"
+}

@@ -1,0 +1,50 @@
+[Unit]
+Description=Arena durable Twitch SLI observations and public projection
+After=stream-v4-twitch-api-collector.service stream-v4-relay-observer.service
+StartLimitIntervalSec=900
+StartLimitBurst=3
+
+[Service]
+Type=notify
+NotifyAccess=main
+User=stream-v4-twitch-sli
+Group=stream-v4-twitch-sli
+SupplementaryGroups=stream-v4-evidence-readers
+UMask=0077
+ExecStart=/usr/bin/python3 -I -B /opt/stream-v4-twitch-sli/current/twitch_sli.py --state /var/lib/stream-v4-twitch-sli --binding /etc/stream-v4-twitch-sli/binding.json
+StateDirectory=stream-v4-twitch-sli
+StateDirectoryMode=0700
+Restart=on-failure
+RestartSec=30
+WatchdogSec=90
+WatchdogSignal=SIGTERM
+TimeoutStartSec=60
+TimeoutStopSec=15
+KillMode=control-group
+Nice=10
+CPUQuota=5%
+MemoryMax=64M
+TasksMax=24
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+AmbientCapabilities=
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+RestrictSUIDSGID=yes
+RestrictRealtime=yes
+RestrictAddressFamilies=AF_INET AF_UNIX
+LockPersonality=yes
+Environment=PYTHONDONTWRITEBYTECODE=1
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=stream-v4-twitch-sli
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,34 @@
+/* Link states apply to the desktop diagram and the mobile route. */
+.route-svg .edge {stroke: #829b90; stroke-width: 2; opacity: .6;}
+.route-svg .edge[data-link-status="FLOWING"] {stroke: #c6e8a3; stroke-width: 3; opacity: 1;}
+.route-svg .edge[data-link-status="STALLED"],
+.route-svg .edge[data-link-status="DISCONNECTED"] {stroke: #ffb399; opacity: 1;}
+.route-svg .edge[data-link-status="CONNECTED"] {stroke: #b7c9c0; stroke-dasharray: 3 4; opacity: .9;}
+.route-svg .edge[data-link-status="UNKNOWN"],
+.route-svg .edge[data-link-status="STANDBY"] {stroke-dasharray: 5 6; opacity: .45;}
+.route-svg .edge[data-link-status="INFERRED"] {stroke: #ffd78f; stroke-width: 3; stroke-dasharray: 8 4; opacity: 1;}
+.route-svg .standby-label {font-size: 12px;}
+.route-svg .standby-label[data-link-status="INFERRED"] {fill: #ffd78f;}
+.route-svg [data-provider-node="youtube"].inferred .node {stroke: #ffd78f; stroke-width: 2;}
+.route-note {margin: 12px 0 0; color: #bbd0c3; font-size: 11px; line-height: 1.65;}
+.route-legend {flex-wrap: wrap; justify-content: flex-start; margin-top: 12px;}
+.legend-inferred {height: 0; width: 17px; border-top: 2px dashed #ffd78f;}
+.mobile-direct {margin-top: 18px; padding-top: 15px; border-top: 1px solid #365a48;}
+.mobile-direct .mobile-arrow[data-link-status="INFERRED"],
+.mobile-direct [data-link-status="INFERRED"] {color: #ffd78f;}
+.mobile-arrow[data-link-status="STALLED"],
+.mobile-arrow[data-link-status="DISCONNECTED"] {color: #ffb399;}
+.mobile-arrow[data-link-status="UNKNOWN"],
+.mobile-arrow[data-link-status="STANDBY"] {color: #9db4a7;}
+.mobile-node.inferred {border-color: #ffd78f;}
+.delivery-strip {grid-template-columns: repeat(4, minmax(0, 1fr));}
+.trend-axis {display: flex; justify-content: space-between; gap: 10px; color: var(--muted); font-size: 10px; margin-top: 4px;}
+.trend-axis span {font-size: 10px; font-weight: 400; letter-spacing: 0; color: var(--muted);}
+.trend-gap-note {font-size: 10px; color: var(--muted); line-height: 1.5;}
+.sparkline circle {fill: currentColor; opacity: .7;}
+@media (max-width: 1060px) {.delivery-strip {grid-template-columns: repeat(2, minmax(0, 1fr));}}
+@media (max-width: 760px) {
+  .delivery-strip {grid-template-columns: 1fr;}
+  .mobile-direct .mobile-destinations {grid-template-columns: 1fr;}
+  .route-legend .legend-meta {flex-basis: 100%;}
+}

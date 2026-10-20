@@ -73,7 +73,7 @@
     {
       "id": "OC-01",
       "source_row": 66,
-      "hypothesis": "通常の補助プロセス終了と観測の競合が、稼働中の同一FFmpegまでUNKNOWNにする。",
+      "hypothesis": "A race between normal helper exit and observation can incorrectly make the same running FFmpeg UNKNOWN.",
       "injections": [
         "helper exit at stat/cmdline/final stat",
         "thread exit/create",
@@ -82,12 +82,12 @@
         "real kernel ESRCH after cmdline open, both reads and both snapshot contexts",
         "unreaped kernel child exit between stat and each cmdline read in both snapshot contexts"
       ],
-      "expected": "同一childを前後で再証明し、全体を上限付き再読。成功した競合も診断証拠を保存。"
+      "expected": "Reprove the same child before and after a bounded full reread; retain diagnostic evidence even when the race is resolved."
     },
     {
       "id": "OC-02",
       "source_row": 37,
-      "hypothesis": "最初の検査後にmanaged childやownerが変わると、検査済みidentityの流用が誤った正常判定を生む。",
+      "hypothesis": "Reusing an earlier identity check can falsely report health when the managed child or owner changes after the initial check.",
       "injections": [
         "managed exit",
         "PID reuse",
@@ -100,12 +100,12 @@
         "empty cmdline with no proven exit, PID or parent changes, missing anchor, or stat read failure",
         "registered empty-cmdline helper, unregistered child, registry PID reuse, stable launcher exec, exec to delivery, and unbound delivery child"
       ],
-      "expected": "UNKNOWN/ABSENT/TRANSITIONとfalse/nullを保持し、古いlivenessを再使用しない。"
+      "expected": "Retain UNKNOWN/ABSENT/TRANSITION and false/null; never reuse stale liveness."
     },
     {
       "id": "OC-03",
       "source_row": 66,
-      "hypothesis": "競合の再試行が続くと観測周期を塞ぎ、原因を残さずに証拠欠落を増幅する。",
+      "hypothesis": "Persistent race retries can block the observation cycle and amplify evidence gaps without recording the cause.",
       "injections": [
         "continuous churn",
         "permission and I/O errors",
@@ -113,28 +113,28 @@
         "500ms snapshot deadline",
         "ENOSPC and SQLite failure"
       ],
-      "expected": "各scan最大3回、100ms再試行予算、全snapshot 500ms。非競合エラーは再試行しない。失敗exportは旧bytes維持とallowlist診断。"
+      "expected": "At most three attempts per scan, a 100ms retry budget, and 500ms per snapshot. Do not retry non-race errors. Failed exports preserve previous bytes and allowlisted diagnostics."
     },
     {
       "id": "OC-04",
       "source_row": 37,
-      "hypothesis": "証拠の署名や集計が欠測を隠すと、正常化した現在状態に過去の未観測を混同する。",
+      "hypothesis": "If signing or aggregation hides missing samples, a healthy current state can be confused with previously unobserved periods.",
       "injections": [
         "diagnostic malformed types",
         "signed facts tamper",
         "target-less activation null",
         "malformed transport"
       ],
-      "expected": "署名と厳密型を検証し、欠測sampleを集計。後続READYでも過去UNKNOWNを保持する。"
+      "expected": "Validate signatures and strict types, count missing samples, and retain historical UNKNOWN even after later READY."
     }
   ],
   "unproven_scope": [
-    "全373事例の自動再現ではない",
-    "本番LAN断・停電・host停止",
-    "CRA action実行",
-    "視聴者側end-to-end停止時間",
-    "本番sample46の直接原因は診断未記録のため未確定",
-    "本番 sample585 の errno=ESRCH は記録済みだが、終了した PID と process 種別は未記録"
+    "Does not automatically reproduce all 373 cases",
+    "Production LAN outages, power loss, or host shutdown",
+    "CRA action execution",
+    "Viewer-side end-to-end outage duration",
+    "The direct cause of production sample 46 remains unconfirmed because diagnostics were not recorded",
+    "Production sample 585 recorded errno=ESRCH, but not the exited PID or process type"
   ],
   "assurance": {
     "schema": "cra.owner_contract_bindings.v3",

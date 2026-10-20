@@ -1162,9 +1162,9 @@ class CliOpsCommandsTests(unittest.TestCase):
                                         self.assertEqual(cli.notify_status(now_ts=1120), 0)
 
         self.assertEqual(len(sent), 3)
-        self.assertIn("障害検知", sent[0])
-        self.assertIn("障害継続ステータス", sent[1])
-        self.assertIn("復旧フォローアップ", sent[2])
+        self.assertIn("Incident detected", sent[0])
+        self.assertIn("Ongoing incident status", sent[1])
+        self.assertIn("Recovery follow-up", sent[2])
         self.assertIn("window=1970-01-01 09:15:40 JST -> ongoing", sent[0])
         self.assertIn("detected_at=1970-01-01 09:16:40 JST", sent[0])
         self.assertIn("active_incidents=0", sent[2])
@@ -1222,8 +1222,8 @@ class CliOpsCommandsTests(unittest.TestCase):
 
         self.assertEqual(len(discord_sent), 2)
         self.assertEqual(len(slack_sent), 2)
-        self.assertIn("障害検知", slack_sent[0])
-        self.assertIn("復旧フォローアップ", slack_sent[1])
+        self.assertIn("Incident detected", slack_sent[0])
+        self.assertIn("Recovery follow-up", slack_sent[1])
         self.assertEqual(state["active"], {})
         self.assertIn("slack", {item["route"] for item in events})
         self.assertIn("discord", {item["route"] for item in events})
@@ -1279,7 +1279,7 @@ class CliOpsCommandsTests(unittest.TestCase):
 
         self.assertEqual(len(discord_sent), 4)
         self.assertEqual(len(slack_sent), 1)
-        self.assertIn("障害継続ステータス", slack_sent[0])
+        self.assertIn("Ongoing incident status", slack_sent[0])
         self.assertEqual(state["active"]["stream1090:overlay_report"]["slack_first_notified_ts"], 2800)
 
     def test_notify_status_honors_incident_specific_repeat_interval(self) -> None:
@@ -1335,8 +1335,8 @@ class CliOpsCommandsTests(unittest.TestCase):
                                     self.assertEqual(cli.notify_status(now_ts=1900), 0)
 
         self.assertEqual(len(discord_sent), 2)
-        self.assertIn("障害検知", discord_sent[0])
-        self.assertIn("障害継続ステータス", discord_sent[1])
+        self.assertIn("Incident detected", discord_sent[0])
+        self.assertIn("Ongoing incident status", discord_sent[1])
 
     def test_notify_status_force_test_routes_to_slack_even_without_incidents(self) -> None:
         config = {
@@ -1372,7 +1372,7 @@ class CliOpsCommandsTests(unittest.TestCase):
 
         self.assertEqual(len(discord_sent), 1)
         self.assertEqual(len(slack_sent), 1)
-        self.assertIn("通知テスト", slack_sent[0])
+        self.assertIn("Notification test", slack_sent[0])
 
     def test_notify_status_sends_maintenance_reminder_without_collecting_incidents(self) -> None:
         config = {
@@ -1443,9 +1443,9 @@ class CliOpsCommandsTests(unittest.TestCase):
             state = json.loads(state_file.read_text(encoding="utf-8"))
 
         self.assertEqual(len(sent), 2)
-        self.assertIn("メンテナンス継続中", sent[0])
+        self.assertIn("Maintenance ongoing", sent[0])
         self.assertIn("maintenance=on", sent[0])
-        self.assertIn("作業完了後は stream m off", sent[0])
+        self.assertIn("After completing maintenance, run stream m off", sent[0])
         self.assertIn("stream:current_fail", state["active"])
         self.assertTrue(state["maintenance_active"])
         self.assertEqual(state["last_maintenance_status_sent_ts"], 1211)
@@ -1529,7 +1529,7 @@ class CliOpsCommandsTests(unittest.TestCase):
             state = json.loads(state_file.read_text(encoding="utf-8"))
 
         self.assertEqual(len(sent), 1)
-        self.assertIn("自動復旧確認", sent[0])
+        self.assertIn("Automatic recovery confirmed", sent[0])
         self.assertIn("active_incidents=0", sent[0])
         self.assertIn("trigger=tcp_stall", sent[0])
         self.assertIn("stream service restart and TCP send recovery confirmed", sent[0])
@@ -1600,7 +1600,7 @@ class CliOpsCommandsTests(unittest.TestCase):
                                         self.assertEqual(cli.notify_status(now_ts=1061), 0)
 
         self.assertEqual(len(sent), 2)
-        self.assertIn("復旧フォローアップ", sent[1])
+        self.assertIn("Recovery follow-up", sent[1])
         self.assertIn("recovery_evidence=current_fail=False", sent[1])
         self.assertIn("youtube_status=ok", sent[1])
 
@@ -1678,8 +1678,8 @@ class CliOpsCommandsTests(unittest.TestCase):
             state = json.loads(state_file.read_text(encoding="utf-8"))
 
         self.assertEqual(len(sent), 1)
-        self.assertIn("FFmpeg自己再起動イベント", sent[0])
-        self.assertNotIn("自動復旧確認", sent[0])
+        self.assertIn("FFmpeg self-restart event", sent[0])
+        self.assertNotIn("Automatic recovery confirmed", sent[0])
         self.assertIn("trigger=ffmpeg_exit_code_1", sent[0])
         self.assertIn("ffmpeg child restart completed", sent[0])
         self.assertIn("evt-ffmpeg-1", state["stream_engine_ffmpeg_auto_recovered_notified"])

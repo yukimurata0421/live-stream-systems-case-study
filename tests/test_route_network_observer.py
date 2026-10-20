@@ -1,4 +1,4 @@
-"""経路identity、観測不能、ICMP単独失敗、計画停止、学習汚染の固定期待値。"""
+"""Fixed expectations for route identity, unavailable evidence, isolated ICMP failure, planned stops, and training contamination."""
 from __future__ import annotations
 
 import json

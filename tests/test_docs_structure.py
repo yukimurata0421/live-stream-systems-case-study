@@ -399,7 +399,7 @@ class PublicDocsStructureTests(unittest.TestCase):
     def test_public_docs_are_english(self) -> None:
         for path in markdown_files():
             with self.subTest(path=path.relative_to(ROOT)):
-                self.assertNotRegex(read(path), r"[ぁ-んァ-ヶ一-龠]")
+                self.assertNotRegex(read(path), "[\u3041-\u3093\u30a1-\u30f6\u4e00-\u9fa0]")
 
     def test_new_source_consolidation_docs_keep_public_and_live_boundaries(self) -> None:
         mobile = read(DOCS / "v3" / "map-mobile-legibility-review.md")

@@ -119,7 +119,7 @@ class DailyBoundaryTests(unittest.TestCase):
             r.change(self.command,None)
             payload=api.call_args.args[1]['forward'][0]
         self.assertNotIn('moqTransport',payload)
-        # Go decoderはkey省略ならzero-value、明示された空文字ならquic。
+        # The Go decoder uses the zero value for an omitted key, but quic for an explicit empty string.
         decoded={**payload,'moqTransport':payload.get('moqTransport','')}
         self.assertEqual(decoded,yt)
 

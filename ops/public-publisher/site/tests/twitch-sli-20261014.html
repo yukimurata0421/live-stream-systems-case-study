@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Twitch reliability missing-data regression</title>
+<body>
+<button id="refresh">Refresh fixture</button>
+<button data-sli-window="24h">24 hours</button><button data-sli-window="7d">7 days</button>
+<p id="sliWindowNote"></p><p id="sliCollection"></p><p id="sliCollectionMeta"></p>
+<div id="sliGrid"></div><div id="sliTimeline"></div><p id="sliStamp"></p>
+<pre id="result">RUNNING</pre>
+<script>
+const now=Date.now(), stamp=t=>new Date(t).toISOString();
+const definitions=[['provider_live','Twitch LIVE availability'],['api_measurement','API measurement coverage'],['relay_flow','Twitch relay continuity'],['daily_renewal','Daily session renewal']];
+const fixture={schema:'stream.twitch_sli_public.v1',generated_at:stamp(now),history_started_at:stamp(now-3600000),windows:['24h','7d'].map(id=>({id,full_history:false,metrics:definitions.map(([kind,label])=>({id:kind,label,definition:'Synthetic fixture only.',target_percent:kind==='daily_renewal'?100:99,value_percent:null,assessment:'COLLECTING',good_minutes:0,bad_minutes:0,unknown_minutes:0,missing_minutes:id==='24h'?1440:10080,coverage_percent:0,conservative_percent:0,error_budget_minutes:14.4,confirmed_budget_used_percent:0,good_events:0,bad_events:0,unknown_events:1,pending_events:0,expected_events:1}))})),timeline:Array.from({length:24},(_,i)=>({start_at:stamp(now-(24-i)*3600000),good:0,bad:0,unknown:0,missing:60}))};
+let response=fixture;
+window.fetch=async()=>({ok:true,json:async()=>response});
+</script>
+<script src="../public/assets/reliability-card-20261013.js"></script>
+<script src="../public/assets/sli-20261014-resilient.js"></script>
+<script>
+const pause=()=>new Promise(resolve=>setTimeout(resolve,20));
+const tests=[];
+function check(name,condition){if(!condition)throw new Error(name);tests.push(name);}
+async function refresh(value){response=value;document.getElementById('refresh').click();await pause();}
+(async()=>{
+  await pause();
+  check('fresh payload renders all four indicators',document.querySelectorAll('[data-sli]').length===4);
+  check('fresh payload retains missing-observation history',document.querySelectorAll('.sli-hour').length===24);
+  check('incomplete history remains collecting',document.getElementById('sliCollection').textContent==='Collecting history');
+  await refresh({...fixture,generated_at:stamp(now-181000)});
+  check('stale payload keeps four named cards',document.querySelectorAll('[data-sli]').length===4);
+  check('stale cards do not display old success percentages',[...document.querySelectorAll('[data-sli]')].every(card=>card.textContent.includes('Unknown')&&!card.textContent.includes('%')));
+  check('stale payload does not invent history bars',document.querySelectorAll('.sli-hour').length===0);
+  check('stale timestamp remains visible',document.getElementById('sliStamp').textContent.includes('stale'));
+  await refresh(null);
+  check('failed fetch/schema still renders four unavailable cards',document.querySelectorAll('[data-sli]').length===4);
+  check('unavailable history is explained',document.getElementById('sliTimeline').textContent.includes('History unavailable'));
+  await refresh({...fixture,generated_at:stamp(Date.now())});
+  check('recovery resumes history without a reload',document.querySelectorAll('.sli-hour').length===24);
+  document.querySelector('[data-sli-window="24h"]').click();
+  check('window controls still work after recovery',document.getElementById('sliWindowNote').textContent.includes('24 hours'));
+  document.getElementById('result').textContent=JSON.stringify({status:'PASS',tests});
+})().catch(error=>document.getElementById('result').textContent=JSON.stringify({status:'FAIL',error:error.message,tests}));
+</script>
+</body>
+</html>

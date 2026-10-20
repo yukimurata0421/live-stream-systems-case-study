@@ -1,0 +1,134 @@
+{
+  "schema": "stream.public_port_english.v1",
+  "prepared_at_jst": "2026-10-14T13:30:11.466172+09:00",
+  "repository": "stream_v3",
+  "scope": "Public source directory only",
+  "deployment_performed": false,
+  "commit_or_push_performed": false,
+  "source_manifest_history": "publication/history/source-map-before-unicode-20261014.json",
+  "public_language": "English",
+  "authored_japanese_literals_remaining": 0,
+  "literal_unicode_exception": "Unchanged upstream MapLibre Unicode character table",
+  "runtime_unicode_values_preserved": true,
+  "validation": {
+    "integrated_tests_passed": 41,
+    "recovery_tests_passed": 4,
+    "test_execution_repository": "stream_v3 integrated public checkout",
+    "python_ast_equal_files": 9,
+    "index_validation_initial_failure": "Two existing new documents lacked the catalog filename notation; index entries were corrected and the selected suite passed.",
+    "full_suite_run": false
+  },
+  "files": [
+    {
+      "path": "docs/00_INDEX.md",
+      "before_sha256": "201b5f06865578a19fd509129937850bcbdc3c8212443b8fa51eae6bd91b0b3f",
+      "public_sha256": "781070c88879e895bbe8246864284f93267b6185ef9b27e407e168fcee3d21f4"
+    },
+    {
+      "path": "docs/public-language-policy.md",
+      "before_sha256": "5fcc6c3383f62a6583d492f93385e61efc3fc490f304fa41165bfa3a80cb0590",
+      "public_sha256": "f640c1e9d01fc628879b7610f3d8674a595ca109af45839e2f77142568518a87"
+    },
+    {
+      "path": "monitoring-v4/docs/public-language-policy.md",
+      "before_sha256": "5fcc6c3383f62a6583d492f93385e61efc3fc490f304fa41165bfa3a80cb0590",
+      "public_sha256": "f640c1e9d01fc628879b7610f3d8674a595ca109af45839e2f77142568518a87"
+    },
+    {
+      "path": "monitoring-v4/docs/public-release.md",
+      "before_sha256": "ca48ca415191a13b321cb7ef2d982c82d42dc583a8f2710935c1a8978109831a",
+      "public_sha256": "7139fbd035e4d03c07b066d2a3186ca4b79f8e3aa40471d6a97b2b66224efd66"
+    },
+    {
+      "path": "monitoring-v4/publication/language-policy.json",
+      "before_sha256": "b1bff2ff21dadeb63e1be643e2be93c2e607d3a5b39840d1dd602b279959e824",
+      "public_sha256": "20dda88fa5d7573b33aa99a490b72724be4cf008363e2c79f34082dcdc3dc1df"
+    },
+    {
+      "path": "publication/language-policy.json",
+      "before_sha256": "f2b41243dc33e5f1789585f0afbf51e9b5e4ff8e2b77feaa458db08987670701",
+      "public_sha256": "f21c18e4e146ad3698aeeaa371007e22892d2fd15dd78b62775505a54d33ce3f"
+    },
+    {
+      "path": "recovery-control/docs/00_INDEX.md",
+      "before_sha256": "78957f166d15b800f5c88e8ef691af40e4642ef50c8d0df5520891325366ba92",
+      "public_sha256": "d53819f010f58f3fbcbb5f758ce68cb2d9f5c335c25c0cc0752920f065406394"
+    },
+    {
+      "path": "recovery-control/docs/public-language-policy.md",
+      "before_sha256": "5fcc6c3383f62a6583d492f93385e61efc3fc490f304fa41165bfa3a80cb0590",
+      "public_sha256": "f640c1e9d01fc628879b7610f3d8674a595ca109af45839e2f77142568518a87"
+    },
+    {
+      "path": "recovery-control/publication/language-policy.json",
+      "before_sha256": "ee58179fc4535d5d493928936889897ef24d7e5167c6613d3073f7ce1a6ec8a3",
+      "public_sha256": "20dda88fa5d7573b33aa99a490b72724be4cf008363e2c79f34082dcdc3dc1df"
+    },
+    {
+      "path": "recovery-control/tests/harness/unit/test_task_contract.py",
+      "before_sha256": "eca43d464fa286dd0f5b38b09de180b2de0a217d5a00bef77d50791022cc8985",
+      "public_sha256": "bf273ee478639f82fabf671eca84f51a6b1273dd133a63db5d7c7571aba50bcb",
+      "python_ast_equal": true
+    },
+    {
+      "path": "recovery-control/tests/runtime_boundary/test_recovery_evidence_import.py",
+      "before_sha256": "7f3c8c12727c50072f25f24e229c6cec509ddf4fc3e278ced04c58b5117749e2",
+      "public_sha256": "a2a88af8c930dfd34decc168f0b2b4021cbe6ccea0f2985c7fd98c415d531018",
+      "python_ast_equal": true
+    },
+    {
+      "path": "recovery-control/tools/run_cra_workflow_eval.py",
+      "before_sha256": "2e7994971cfd3553ed42104ac481b9919e38a37f64bebcc68d0cc3a5e243090c",
+      "public_sha256": "264d502dbf0a170968cff36844cc31133c51584b3570ba238bf7c2480bd531d6",
+      "python_ast_equal": true
+    },
+    {
+      "path": "tests/test_auto_dj_rotation.py",
+      "before_sha256": "4eccf36ad39d095e4b7bb2bd1beb8e238beff00db80431440f50d3fdf430f505",
+      "public_sha256": "0d4ba06632e8f1774768a815905cbd1eacb1c110e2d17fefe4fa8f4223db13fc",
+      "python_ast_equal": true
+    },
+    {
+      "path": "tests/test_docs_structure.py",
+      "before_sha256": "ad687380f09c8a9fb2642a991732247c0a40a804df9838b2c4a1f5b9fa7fd070",
+      "public_sha256": "965a898c7dc7cc16d1296539a1e7ea655ee3fd4c2e75ce7517a9d778db8570b6",
+      "python_ast_equal": true
+    },
+    {
+      "path": "tests/test_overlay_precipitation_state.py",
+      "before_sha256": "a48d65a46cf491ede3481c1e6e867f5c760567f56d2ceddc14ebf4ae0bae9ce1",
+      "public_sha256": "de98466529201db0625aaea3ea88066fe6986bea3109bed89fc7296d079c5c1d",
+      "python_ast_equal": true
+    }
+  ],
+  "graph_source_port": {
+    "files_match_development": true,
+    "files": [
+      {
+        "path": "ops/public-publisher/site/public/index.html",
+        "public_sha256": "86762c0461a6249d1d652160906ad02ef8340f1b74f99c399e3a6253f19caed0"
+      },
+      {
+        "path": "ops/public-publisher/site/public/assets/graphs-core-20261014.js",
+        "public_sha256": "836a9caf98142c076263b99adaf36386ce46e28438331e060daae950138b8091"
+      },
+      {
+        "path": "ops/public-publisher/site/public/assets/graphs-20261014.css",
+        "public_sha256": "0cda403b0270b1d43b97f2fe845afa60bc63d2f846f4f9d4c6e8d6aa3f6178f7"
+      },
+      {
+        "path": "ops/public-publisher/site/public/assets/operations-20261014.js",
+        "public_sha256": "7fda4314ff758937aab06ec9277a08cb9bc2dc261c96a20750f43a68c1b77317"
+      },
+      {
+        "path": "ops/public-publisher/site/public/assets/site-20261014-graphs.js",
+        "public_sha256": "0fa08439eec78775fba1405ee215d2d305a3bd84fd8c2c8d43ab462d89e9d92f"
+      },
+      {
+        "path": "ops/public-publisher/site/tests/graphs-20261014.html",
+        "public_sha256": "fd18168cc395d977228e1f51217a8aae39237e14c381e7f5188eea32d46c9ed3"
+      }
+    ],
+    "record": "publication/graph-display-20261014.json"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "schema": "stream.public_language_policy.v1",
+  "public_language": "English",
+  "scope": "Public comments, docstrings, documentation, notifications, and generated reports.",
+  "exception_rule": "Exact file and content hashes permit reviewed Unicode input data only. Python comments and docstrings are never exempt.",
+  "unicode_data_exceptions": [
+    {
+      "path": "ui/overlay/adsb-map/vendor/maplibre-gl-shared.mjs",
+      "line_sha256": "3d9c37b2bcb26058467d308a925d79951f600ea6fa0dcc7dba21976651d63c6a",
+      "reason": "Unmodified upstream MapLibre bundle contains Unicode glyph and vertical-writing character tables."
+    }
+  ],
+  "authored_unicode_data": "Authored multilingual fixtures and character ranges use Unicode escapes while preserving runtime values."
+}

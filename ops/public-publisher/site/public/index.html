@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="./assets/sli-20261013.css" />
     <link rel="stylesheet" href="./assets/dashboard-20261013.css" />
     <link rel="stylesheet" href="./assets/reliability-unified-20261013.css" />
+    <link rel="stylesheet" href="./assets/graphs-20261014.css" />
   </head>
   <body>
     <main class="page">
@@ -88,20 +89,30 @@
 <section id="broadcast" aria-labelledby="broadcastTitle">
         <div class="route-layout">
           <article class="route-panel">
-            <div class="section-title"><div><h2 id="broadcastTitle">The broadcast path</h2><p class="section-copy">Dell sends one feed to OCI. The relay forwards it to YouTube and Twitch. Each link below shows its own measured throughput.</p></div><span class="route-badge">SINGLE INPUT</span></div>
-            <svg class="route-svg" viewBox="0 0 800 290" role="img" aria-labelledby="routeDiagramTitle routeDiagramDesc">
-              <title id="routeDiagramTitle">Dell to OCI relay, then YouTube and Twitch</title><desc id="routeDiagramDesc">The normal path sends approximately 5 megabits per second per link. A dashed route indicates the direct Dell to YouTube failure path. Measured throughput is displayed separately.</desc>
-              <defs><marker id="arrowNormal" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#b7d994"/></marker><marker id="arrowFallback" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#91b2a1"/></marker></defs>
-              <path class="edge" d="M183 128H290" marker-end="url(#arrowNormal)"/><path class="edge" d="M443 128H481Q498 128 498 111V64Q498 57 510 57H545" marker-end="url(#arrowNormal)"/><path class="edge" d="M443 128H481Q498 128 498 146V190Q498 197 510 197H545" marker-end="url(#arrowNormal)"/>
-              <path class="edge fallback" d="M104 162V261H768V57H738" marker-end="url(#arrowFallback)"/>
-              <g data-flow-status="input"><rect class="node" x="28" y="93" width="155" height="70" rx="12"/><text class="node-title" x="47" y="121">Dell</text><text class="node-note" x="47" y="145">Encoder + sender</text></g>
+            <div class="section-title"><div><h2 id="broadcastTitle">The broadcast path</h2><p class="section-copy">Normally, Dell sends one feed to OCI, which forwards it to YouTube and Twitch. Each arrow reflects its own observed link. The direct route bypasses OCI; inferred delivery is marked separately.</p></div><span class="route-badge" id="routeBadge">ROUTE NOT CONFIRMED</span></div>
+            <svg class="route-svg" viewBox="0 0 800 306" role="img" aria-labelledby="routeDiagramTitle routeDiagramDesc">
+              <title id="routeDiagramTitle">Dell to OCI relay, then YouTube and Twitch</title><desc id="routeDiagramDesc">Measured arrows connect Dell to OCI and OCI to each provider. The direct Dell to YouTube route bypasses OCI. An amber dashed arrow indicates inferred direct delivery, with no measured direct bitrate.</desc>
+              <defs><marker id="arrowNormal" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#b7d994"/></marker><marker id="arrowFallback" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#91b2a1"/></marker><marker id="arrowRouteFault" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L10 5L0 10z" fill="#ffb399"/></marker><marker id="arrowRouteInferred" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L10 5L0 10z" fill="#ffd78f"/></marker></defs>
+              <path class="edge" data-route-link="input" d="M183 128H290" marker-end="url(#arrowNormal)"/><path class="edge" data-route-link="youtube" d="M443 128H481Q498 128 498 111V64Q498 57 510 57H545" marker-end="url(#arrowNormal)"/><path class="edge" data-route-link="twitch" d="M443 128H481Q498 128 498 146V190Q498 197 510 197H545" marker-end="url(#arrowNormal)"/>
+              <path class="edge fallback" data-route-link="direct" d="M104 163V274H768V57H738" marker-end="url(#arrowFallback)"/>
+              <g><rect class="node" x="28" y="93" width="155" height="70" rx="12"/><text class="node-title" x="47" y="121">Dell</text><text class="node-note" x="47" y="145">Encoder + sender</text></g>
               <g><rect class="node" x="290" y="93" width="153" height="70" rx="12"/><text class="node-title" x="310" y="121">OCI VM</text><text class="node-note" x="310" y="145" id="relayProcess">Observing relay</text></g>
-              <g data-flow-status="youtube"><rect class="node" x="545" y="22" width="193" height="70" rx="12"/><text class="node-title" x="565" y="50">YouTube</text><text class="node-note" x="565" y="74">Continuous session</text></g>
+              <g data-flow-status="youtube" data-provider-node="youtube"><rect class="node" x="545" y="22" width="193" height="70" rx="12"/><text class="node-title" x="565" y="50">YouTube</text><text class="node-note" x="565" y="74" id="youtubeRouteNote">Route not observed</text></g>
               <g data-flow-status="twitch"><rect class="node" x="545" y="162" width="193" height="70" rx="12"/><text class="node-title" x="565" y="190">Twitch</text><text class="node-note" x="565" y="214">Daily session renewal</text></g>
-              <text class="edge-label" x="210" y="114" data-rate="input">Measuring</text><text class="edge-label" x="411" y="38" data-rate="youtube">Measuring</text><text class="edge-label" x="407" y="228" data-rate="twitch">Measuring</text><text class="standby-label" x="221" y="251">Dell → YouTube · direct path on failure · design ~5 Mbps</text>
+              <text class="edge-label" x="210" y="114" data-rate="input">Measuring</text><text class="edge-label" x="411" y="38" data-rate="youtube">Measuring</text><text class="edge-label" x="407" y="228" data-rate="twitch">Measuring</text><text class="standby-label" x="221" y="262" data-route-link="direct" id="directRouteLabel">Dell → YouTube · direct route not observed</text>
             </svg>
-            <div class="flow-mobile" aria-label="Broadcast route on small screens"><div class="mobile-node" data-flow-status="input"><b>Dell</b><span>Encoder + sender</span></div><p class="mobile-arrow">↓ <span data-rate="input">Measuring</span></p><div class="mobile-node"><b>OCI VM</b><span>Single input relay</span></div><p class="mobile-arrow">↓ Forwarded independently</p><div class="mobile-destinations"><div class="mobile-node" data-flow-status="youtube"><b>YouTube</b><span data-rate="youtube">Measuring</span></div><div class="mobile-node" data-flow-status="twitch"><b>Twitch</b><span data-rate="twitch">Measuring</span></div></div><p class="mobile-fallback">┄ Dell → YouTube directly on failure · design ~5 Mbps</p></div>
-            <div class="route-legend"><span><i class="legend-line"></i>Normal route · design ~5 Mbps per link</span><span><i class="legend-dash"></i>Failure path</span><span class="legend-meta">Measured rates · 60 s windows</span></div>
+            <div class="flow-mobile" aria-label="Broadcast route on small screens">
+              <div class="mobile-node"><b>Dell</b><span>Encoder + sender</span></div>
+              <p class="mobile-arrow" data-route-link="input">↓ <span data-rate="input">Not observed</span></p>
+              <div class="mobile-node"><b>OCI VM</b><span>Single input relay</span></div>
+              <div class="mobile-destinations">
+                <div><p class="mobile-arrow" data-route-link="youtube">↓ <span data-rate="youtube">Not observed</span></p><div class="mobile-node" data-flow-status="youtube" data-provider-node="youtube"><b>YouTube</b><span>Relay output</span></div></div>
+                <div><p class="mobile-arrow" data-route-link="twitch">↓ <span data-rate="twitch">Not observed</span></p><div class="mobile-node" data-flow-status="twitch"><b>Twitch</b><span>Relay output</span></div></div>
+              </div>
+              <div class="mobile-direct"><div class="mobile-node"><b>Dell</b><span>Direct backup</span></div><p class="mobile-arrow" data-route-link="direct">↓ <span data-direct-note>Route not observed</span></p><div class="mobile-node" data-provider-node="youtube"><b>YouTube</b><span>Bypasses OCI</span></div></div>
+            </div>
+            <div class="route-legend"><span><i class="legend-line"></i>Observed link progress</span><span><i class="legend-dash"></i>Standby or unobserved</span><span><i class="legend-inferred"></i>Inferred direct delivery</span><span class="legend-meta">Independent rates · 60 s windows</span></div>
+            <p class="route-note" id="routeEvidence" role="status">Current route is not confirmed until fresh observations arrive.</p>
           </article>
           <article class="vm-panel" aria-labelledby="vmTitle"><p class="panel-overline">Relay infrastructure</p><div class="vm-heading"><h2 id="vmTitle">OCI VM</h2><span id="relayState" class="status-pill">Unknown</span></div>
             <div class="resource-row"><div class="resource-label"><span>CPU usage</span><strong id="relayCpu">—</strong></div><div class="meter"><i id="relayCpuMeter"></i></div></div>
@@ -111,7 +122,7 @@
             <div class="vm-observations"><p><span>Relay process</span><strong id="vmRelayProcess">Unknown</strong></p><p><span>Outputs progressing</span><strong id="vmOutputs">— / 2</strong></p><p><span>Relay service restarts</span><strong id="vmRelayRestarts">—</strong></p></div>
           </article>
         </div>
-        <div class="delivery-strip"><article class="delivery-stat"><span class="stat-label">Dell → OCI input</span><span class="stat-icon" aria-hidden="true">↗</span><strong data-rate="input">Measuring</strong><small id="relayInputMeta">Observation loading</small></article><article class="delivery-stat"><span class="stat-label">OCI → YouTube</span><span class="stat-icon" aria-hidden="true">↗</span><strong data-rate="youtube">Measuring</strong><small id="relayYoutubeMeta">Observation loading</small></article><article class="delivery-stat"><span class="stat-label">OCI → Twitch</span><span class="stat-icon" aria-hidden="true">↗</span><strong data-rate="twitch">Measuring</strong><small id="relayTwitchMeta">Observation loading</small></article></div>
+        <div class="delivery-strip"><article class="delivery-stat"><span class="stat-label">Dell → OCI input</span><span class="stat-icon" aria-hidden="true">↗</span><strong data-rate="input">Measuring</strong><small id="relayInputMeta">Observation loading</small></article><article class="delivery-stat"><span class="stat-label">OCI → YouTube</span><span class="stat-icon" aria-hidden="true">↗</span><strong data-rate="youtube">Measuring</strong><small id="relayYoutubeMeta">Observation loading</small></article><article class="delivery-stat"><span class="stat-label">OCI → Twitch</span><span class="stat-icon" aria-hidden="true">↗</span><strong data-rate="twitch">Measuring</strong><small id="relayTwitchMeta">Observation loading</small></article><article class="delivery-stat"><span class="stat-label">Dell → YouTube direct</span><span class="stat-icon" aria-hidden="true">↗</span><strong>Not measured</strong><small id="directRouteMeta">Route not observed</small></article></div>
         <div class="daily-bar"><div><span class="daily-title">Next Twitch session refresh</span><p id="relayDailyMeta">Twitch reconnects at 00:00 JST. YouTube continues through the relay.</p></div><strong id="relayDaily">Schedule loading</strong></div>
         <div id="relayIssues" class="signal-list" role="status" aria-live="polite"></div>
         <p id="relayObserved" class="snapshot-line" style="margin-top:10px">Relay observation loading</p>
@@ -160,11 +171,12 @@
       </details>
       <footer class="page-footer"><p>Tokyo Flight Tracker · ARENA receiver evaluation project<br />Local ADS-B reception in Tsuchiura, Ibaraki. Not for navigation.</p><p>Observations: arena-server → Raspberry Pi → GCS → public site<br /><a href="./relay-observation.json">Relay data</a> · <a href="./twitch-observation.json">Twitch data</a> · <a href="./stream-v3-prometheus.html">Metrics</a> · <a href="https://github.com/yukimurata0421/arena-eval-engine" target="_blank" rel="noopener noreferrer">Project ↗</a></p></footer>
     </main>
+    <script src="./assets/graphs-core-20261014.js" defer></script>
     <script src="./assets/reliability-card-20261013.js" defer></script>
-    <script src="./assets/site-20261013-unified.js" defer></script>
+    <script src="./assets/site-20261014-graphs.js" defer></script>
     <script src="./assets/twitch-20261013.js" defer></script>
-    <script src="./assets/operations-20261013.js" defer></script>
-    <script src="./assets/sli-20261013-unified.js" defer></script>
+    <script src="./assets/operations-20261014.js" defer></script>
+    <script src="./assets/sli-20261014-resilient.js" defer></script>
     <script src="./assets/dashboard-20261013.js" defer></script>
   </body>
 </html>

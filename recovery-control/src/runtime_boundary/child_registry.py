@@ -172,7 +172,7 @@ class ChildLifecycleRegistry:
             self._installed = True
 
     def spawn_pipe_encoder(self, command: list[str], **kwargs: Any) -> subprocess.Popen[Any]:
-        """単一pipe outputのencoderを、観測lock内で明示的に束縛する。"""
+        """Bind the encoder with a single pipe output explicitly under the observation lock."""
         if (not isinstance(command, list) or not command or Path(command[0]).name != "ffmpeg"
             or command[-1] != "pipe:1" or command.count("pipe:1") != 1
             or kwargs.get("stdout") != subprocess.PIPE
@@ -203,7 +203,7 @@ class ChildLifecycleRegistry:
                 raise
 
     def pipe_encoder_proven(self, pid: int, entry: Mapping[str, Any]) -> bool:
-        """argvは保存せずdigestを照合し、pipeとIP socket不在を前後で再読する。"""
+        """Verify the digest without retaining argv; reread pipe ownership and absence of IP sockets before and after."""
         deadline = time.clock_gettime(time.CLOCK_BOOTTIME) + .5
         for _ in range(50):
             try:

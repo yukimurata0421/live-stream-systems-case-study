@@ -297,9 +297,9 @@ def package_lines(observation: dict[str, Any]) -> list[str]:
     packages = observation.get("packages", {})
     for package in TRACKED_PACKAGES:
         item = packages.get(package, {})
-        installed = item.get("installed") or "未導入"
-        candidate = item.get("candidate") or "候補なし"
-        marker = " ← 更新候補" if item.get("update_available") else ""
+        installed = item.get("installed") or "not installed"
+        candidate = item.get("candidate") or "no candidate"
+        marker = " ← update available" if item.get("update_available") else ""
         lines.append(f"- {package}: {installed} → {candidate}{marker}")
     future = [
         f"{package}={packages.get(package, {}).get('candidate')}"
@@ -307,7 +307,7 @@ def package_lines(observation: dict[str, Any]) -> list[str]:
         if packages.get(package, {}).get("candidate")
     ]
     if future:
-        lines.append("- 非対象branch候補（適用禁止）: " + ", ".join(future))
+        lines.append("- Unsupported branch candidates (do not apply): " + ", ".join(future))
     return lines
 
 
@@ -319,32 +319,32 @@ def render_notification(kind: str, observation: dict[str, Any]) -> str:
     runtime = observation.get("runtime", {})
     gpu_names = ", ".join(
         str(gpu.get("name") or "") for gpu in runtime.get("gpus", []) if gpu.get("name")
-    ) or "取得不可"
-    guard = "有効" if observation.get("maintenance_guard", {}).get("active") else "無効"
-    recommended = observation.get("recommended_driver") or "取得不可"
+    ) or "unavailable"
+    guard = "enabled" if observation.get("maintenance_guard", {}).get("active") else "disabled"
+    recommended = observation.get("recommended_driver") or "unavailable"
 
     if kind == "resolved":
-        heading = "【NVIDIA/NVENC更新監視】前回の要対応状態が解消"
+        heading = "[NVIDIA/NVENC update monitor] Previous actionable condition resolved"
     else:
-        heading = "【NVIDIA/NVENC更新監視】確認が必要な変化を検知"
+        heading = "[NVIDIA/NVENC update monitor] Detected a change requiring review"
 
     lines = [
         heading,
-        f"確認時刻: {checked_jst}",
+        f"Checked at: {checked_jst}",
         f"GPU: {gpu_names}",
-        f"Ubuntu推奨: {recommended} / 運用branch: nvidia-driver-{SUPPORTED_BRANCH}",
-        f"自動更新除外: {guard}（自動適用は行っていません）",
+        f"Ubuntu recommendation: {recommended} / Active branch: nvidia-driver-{SUPPORTED_BRANCH}",
+        f"Automatic-update exclusion: {guard} (no automatic update was applied)",
         *package_lines(observation),
     ]
     reasons = observation.get("reasons", [])
     if reasons:
-        lines.append("判定: " + ", ".join(str(reason) for reason in reasons))
-        lines.append("対応: 直ちに切り替えず、候補確認後に保留期間と48時間smoke testを設定してください。")
+        lines.append("Assessment: " + ", ".join(str(reason) for reason in reasons))
+        lines.append("Action: review the candidate before switching, then define a hold period and a 48-hour smoke test.")
     else:
-        lines.append("判定: 要対応項目なし")
+        lines.append("Assessment: no actionable items")
     issues = observation.get("collection_issues", [])
     if issues:
-        lines.append("取得エラー: " + " / ".join(str(issue) for issue in issues)[:500])
+        lines.append("Fetch errors: " + " / ".join(str(issue) for issue in issues)[:500])
     return "\n".join(lines)
 
 

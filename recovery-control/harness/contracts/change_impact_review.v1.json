@@ -300,6 +300,6 @@
       "sha256": "8f4def880501a4ebf0c94c00742762028a8db9f531c68d4deb079ee4e1cce0ca"
     }
   },
-  "reason": "pipe proof、encoder metadataからsender健康を推定しない境界、typed route v3とroot peer/専用grant/共通fenceをcurrent spec/schema/catalog/lineage/固定期待値へ照合した。invariant evidenceとregression-only fileの矛盾を解消した。旧履歴/UNKNOWNを消さず、CRA live/他host/旧soakは変更しない。",
+  "reason": "Checked pipe proof, the boundary that prevents inferring sender health from encoder metadata, and typed route v3 with root peer, dedicated grant, and shared fence against current specifications, schemas, catalogs, lineage, and fixed expectations. Resolved inconsistencies between invariant evidence and regression-only files. Retained history and UNKNOWN; no changes to live CRA, other hosts, or prior soak evidence.",
   "schema": "cra.change_impact_review.v1"
 }

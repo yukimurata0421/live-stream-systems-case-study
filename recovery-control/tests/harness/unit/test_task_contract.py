@@ -31,9 +31,9 @@ def test_causal_history_is_a_complete_mandatory_context_set() -> None:
     )
     assert set(gate.CAUSAL_HISTORY_DOCS).issubset(gate.DOCS)
     policy = (ROOT / gate.CAUSAL_HISTORY_DOCS[0]).read_text(encoding="utf-8")
-    assert "FAILURE_LEDGER.md`を全件読む" in policy
-    assert "同一familyに既存entryが3件以上" in policy
-    assert "局所patchだけを最終解決として閉じない" in policy
+    assert "read every entry in FAILURE_LEDGER.md`" in policy
+    assert "at least three existing entries in the same family" in policy
+    assert "do not close a local patch alone as the final resolution" in policy
     assert gate.MAX_FOCUSED_CONTEXT_BYTES == 512 * 1024
 
 
@@ -75,7 +75,7 @@ def test_workflow_eval_uses_a_source_bound_focused_context() -> None:
     source = (ROOT / "tools/run_cra_workflow_eval.py").read_text(encoding="utf-8")
     assert 'prepare(ROOT, output / "context", focus_paths=["src/cra_no_action_soak/recovery_soak.py"])' in source
     assert 'f"python3 tools/verify_owner_trial_read.py --trial' in source
-    assert '"missing_invariants配列には欠落したI-OWNER-* IDだけをexact stringで入れ、"' in source
+    assert '"Populate missing_invariants with only the exact missing I-OWNER-* IDs, "' in source
 
 
 @pytest.mark.parametrize("value", ["gpt-5.6-luna", "model_1", "provider.model"])
@@ -261,9 +261,9 @@ def test_report_cannot_promote_child_counts_to_live_claims() -> None:
     }
     text = gate.report(value)
     for key in gate.UNPROVEN:
-        assert f"| {key} | 未検証" in text
+        assert f"| {key} | Not verified" in text
     del value["contract_gate"]
-    assert "総合判定: HOLD" in gate.report(value)
+    assert "Overall assessment: HOLD" in gate.report(value)
 
 
 @pytest.mark.parametrize(
@@ -295,20 +295,20 @@ def test_agent_eval_grades_decisions_instead_of_read_claims(fault: str) -> None:
     }
     if fault == "annotation":
         for key in ("current_spec", "owner_schema", "lifecycle_schema"):
-            answer[key] += "（現行。trial の準拠は未確認）"  # type: ignore[operator]
+            answer[key] += "\uff08\u73fe\u884c\u3002trial \u306e\u6e96\u62e0\u306f\u672a\u78ba\u8a8d\uff09"  # type: ignore[operator]
     elif fault == "git-head-prefix":
-        answer["current_spec"] = "Git HEAD 8ac2fbdc3c59142d195647ffc56215db64f6d1cb の " + gate.SPEC
+        answer["current_spec"] = "Git HEAD 8ac2fbdc3c59142d195647ffc56215db64f6d1cb \u306e " + gate.SPEC
     elif fault == "git-head-sentence-prefix":
-        answer["current_spec"] = "Git HEAD 8ac2fbdc3c59142d195647ffc56215db64f6d1cb。現行 owner 契約は `" + gate.SPEC + "`。"
+        answer["current_spec"] = "Git HEAD 8ac2fbdc3c59142d195647ffc56215db64f6d1cb\u3002\u73fe\u884c owner \u5951\u7d04\u306f `" + gate.SPEC + "`。"
     elif fault == "git-head-declared-spec":
-        answer["current_spec"] = "Git HEAD 8ac2fbdc3c59142d195647ffc56215db64f6d1cb。正本は " + gate.SPEC + "（現行仕様）。"
+        answer["current_spec"] = "Git HEAD 8ac2fbdc3c59142d195647ffc56215db64f6d1cb\u3002\u6b63\u672c\u306f " + gate.SPEC + "\uff08\u73fe\u884c\u4ed5\u69d8\uff09\u3002"
         answer["evidence_paths"] = [f"/tmp/project/{gate.SPEC}"]
     elif fault == "current-spec-prefix":
-        answer["current_spec"] = "現行正本は " + gate.SPEC + "（sha256: example）。"
+        answer["current_spec"] = "\u73fe\u884c\u6b63\u672c\u306f " + gate.SPEC + "（sha256: example）。"
     elif fault == "markdown-current-spec":
-        answer["current_spec"] = f"`{gate.SPEC}` の現行契約。"
+        answer["current_spec"] = f"`{gate.SPEC}` \u306e\u73fe\u884c\u5951\u7d04\u3002"
     elif fault == "semantic-current-spec":
-        answer["current_spec"] = "Git HEAD 8ac2fbd で照合した現行owner契約と必須invariantを使用。"
+        answer["current_spec"] = "Git HEAD 8ac2fbd \u3067\u7167\u5408\u3057\u305f\u73fe\u884cowner\u5951\u7d04\u3068\u5fc5\u9808invariant\u3092\u4f7f\u7528\u3002"
         answer["evidence_paths"] = [f"/tmp/project/{gate.SPEC}:12"]
     elif fault == "history":
         answer["owner_schema"] = "runtime.recovery_evidence.v2"

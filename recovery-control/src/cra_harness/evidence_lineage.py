@@ -622,18 +622,18 @@ def load_live_overlay(root: Path, path: Path) -> dict[str, Any]:
 
 def render_check(result: Mapping[str, Any]) -> str:
     lines = [
-        "# CRA evidence map 検証",
+        "# CRA evidence map validation",
         "",
-        f"判定: {result.get('status', 'HOLD')}",
+        f"Assessment: {result.get('status', 'HOLD')}",
     ]
     if result.get("mapping_sha256"):
         lines.append(f"mapping sha256: `{result['mapping_sha256']}`")
     counts = result.get("counts")
     if isinstance(counts, dict):
-        lines.append("対象: " + ", ".join(f"{name}={count}" for name, count in counts.items()))
+        lines.append("Scope: " + ", ".join(f"{name}={count}" for name, count in counts.items()))
     errors = result.get("errors", [])
     if errors:
-        lines += ["", "検出:"] + [f"- `{item}`" for item in errors]
+        lines += ["", "Detected:"] + [f"- `{item}`" for item in errors]
     return "\n".join(lines) + "\n"
 
 
@@ -641,7 +641,7 @@ def render_view(view: Mapping[str, Any]) -> str:
     lines = [
         "# CRA evidence lineage task view",
         "",
-        f"判定: {view['status']}",
+        f"Assessment: {view['status']}",
         f"mapping sha256: `{view['mapping_sha256']}`",
         "",
         "## Nodes",
@@ -680,21 +680,21 @@ def render_document(value: Mapping[str, Any]) -> str:
     for node in value["nodes"]:
         nodes_by_layer[node["layer"]].append(node)
     lines = [
-        "# 05 証拠lineageとrestart domainの正本マップ",
+        "# 05 Canonical evidence lineage and restart-domain map",
         "",
-        "状態: `CURRENT_STATE_SPEC / MACHINE_VALIDATED`",
+        "Status: `CURRENT_STATE_SPEC / MACHINE_VALIDATED`",
         "",
-        "この文書は `harness/scenarios/cra_evidence_lineage_v1.json` から機械生成する。正本はJSONであり、",
-        "owner invariant・fault・probeは `harness/scenarios/owner_observation_chaos_v1.json` を参照して重複定義しない。",
+        "This document is generated from the canonical harness/scenarios/cra_evidence_lineage_v1.json; ",
+        "owner invariants, faults, and probes reference harness/scenarios/owner_observation_chaos_v1.json without duplicate definitions.",
         "",
-        "## 境界",
+        "## Boundaries",
         "",
-        f"- 対象: {value['boundaries']['canonical_scope']}",
-        "- 実環境の現在値はJSON正本へ書かず、mapping digest付きのread-only live overlayへ置く。",
-        "- このマップと文書に配備・restart・action・epoch変更の操作許可はない。",
-        "- 証拠欠損は `NOT_OBSERVABLE / CERTIFICATION_PAUSED` とし、有効なSUT故障証拠なしにSUT failureへ変換しない。",
+        f"- Scope: {value['boundaries']['canonical_scope']}",
+        "- Place current live values in a read-only live overlay bound to the mapping digest, not in the canonical JSON.",
+        "- This map and document authorize no deployment, restart, action, or epoch change.",
+        "- Classify missing evidence as NOT_OBSERVABLE / CERTIFICATION_PAUSED, not as SUT failure without valid failure evidence.",
         "",
-        "## 全体構造",
+        "## Overall structure",
         "",
         "```mermaid",
         "flowchart LR",
@@ -767,8 +767,8 @@ def render_document(value: Mapping[str, Any]) -> str:
         "",
         "## Failure-mode closure",
         "",
-        "構造上の接続だけで完了とはしない。各failure modeをpositive source、detector、oracle、時系列試験、",
-        "evidence欠損時のfailure domain、隔離・履歴replay・本番read-only資格へ明示的に結ぶ。",
+        "Structural connectivity is insufficient. Bind every failure mode to a positive source, detector, oracle, temporal test, ",
+        "failure domain for missing evidence, and isolation, historical replay, and production read-only qualification.",
         "",
         "| failure mode | trigger | detector / oracle | sequence tests | absence / formal rule | qualification |",
         "|---|---|---|---|---|---|",
@@ -786,22 +786,22 @@ def render_document(value: Mapping[str, Any]) -> str:
         "",
         "## Current-state overlay",
         "",
-        "現在報告では、正本JSONのsha256に束縛した `cra.evidence_lineage_live_overlay.v1` を別artifactとして作る。",
-        "観測窓はJSTの開始・終了を持ち、全nodeを `OBSERVED / NOT_OBSERVABLE / NOT_APPLICABLE` のいずれかで明示し、",
-        "exact identity、freshness、raw source pointerを記録する。全restart domainも同じ状態語彙とsourceへ結び、次の結論を分離する。",
-        "`OBSERVED`の時刻は観測窓内で、`fresh_until`は窓の終了時刻以降でなければならない。",
-        "sourceは相対artifact pathとJSON pointer（`path#/pointer`）を要求する。validatorはそのfileの存在・内容・署名を取得しない。",
-        "raw証拠の真正性と配備identityは別途照合し、",
-        "この構造・鮮度検査だけを実環境の観測完了やformal soak判定として引用しない。",
-        "`evidence-map --snapshot`は構造が妥当でも`STRUCTURE_VALID / raw_evidence_status=UNVERIFIED`とHOLDを返す。",
+        "Current reports use a separate cra.evidence_lineage_live_overlay.v1 artifact bound to the canonical JSON SHA-256.",
+        "The observation window has JST start/end times and classifies every node as OBSERVED, NOT_OBSERVABLE, or NOT_APPLICABLE; ",
+        "record exact identity, freshness, and raw source pointers. Bind all restart domains to the same vocabulary and sources, separating the conclusions below.",
+        "OBSERVED timestamps must fall within the observation window, and fresh_until must be at or after its end.",
+        "Sources require relative artifact paths and JSON pointers (path#/pointer). The validator does not retrieve the referenced file, content, or signature.",
+        "Verify raw evidence authenticity and deployed identity separately; ",
+        "structural and freshness checks alone do not establish live observations or a formal soak verdict.",
+        "Even with valid structure, evidence-map --snapshot returns STRUCTURE_VALID / raw_evidence_status=UNVERIFIED and HOLD.",
         "",
         "- `current_stream_health`",
         "- `evidence_harness_status`",
         "- `formal_soak_status`",
         "",
-        "各結論は `status / failure_domain / reason_codes` を持つ。裸の `UNKNOWN` は結論値に使わない。",
-        "ただしraw contractのfail-closedな `UNKNOWN` は削除・改変せず、`NOT_OBSERVABLE`と具体的な",
-        "evidence status / failure domain / soak impactへ投影する。",
+        "Each conclusion has status / failure_domain / reason_codes; bare UNKNOWN is not a conclusion value.",
+        "Preserve fail-closed UNKNOWN in raw contracts; project it to NOT_OBSERVABLE with specific ",
+        "evidence status, failure domain, and soak impact.",
         "",
         "## Validation / task view",
         "",
@@ -813,9 +813,9 @@ def render_document(value: Mapping[str, Any]) -> str:
         "PYTHONPATH=src:. .venv/bin/python tools/cra_task.py evidence-map --snapshot <read-only-overlay.json>",
         "```",
         "",
-        "validatorはJSON Schema、ID一意性、全source/contract/unit path、Python symbol、graph接続とacyclic性、",
-        "owner catalog参照、Dell→arena→CRA host-status経路、systemd unitのrestart-domain完全性、current commit/epoch値の混入、",
-        "全node/edge/restart-domainのfailure-mode被覆、detector/oracle/test参照とRTMPS ACK stall・FFmpeg session lossの三環境資格、",
-        "live overlayのmapping/window/identity/期限/source pointer/classified conclusionを検査する。",
+        "The validator checks JSON Schema, unique IDs, all source/contract/unit paths, Python symbols, graph connectivity and acyclicity, ",
+        "owner catalog references, the Dell-to-arena-to-CRA host-status chain, complete systemd restart domains, accidental current commit/epoch values, ",
+        "failure-mode coverage for every node/edge/restart domain, detector/oracle/test references, three-environment qualification for RTMPS ACK stalls and FFmpeg session loss, ",
+        "and live-overlay mapping, window, identity, expiry, source pointers, and classified conclusions.",
     ]
     return "\n".join(lines) + "\n"

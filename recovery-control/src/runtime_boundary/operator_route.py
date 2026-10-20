@@ -1,4 +1,4 @@
-"""有限の手動route grant。CRAのpolicy/producerを代用しない。"""
+"""Finite manual route grants; do not replace CRA policy or its producer."""
 from __future__ import annotations
 
 import math

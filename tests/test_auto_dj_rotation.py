@@ -28,14 +28,14 @@ class AutoDJTitleTextTests(unittest.TestCase):
             "NXGHT - DANÇA DO VERÃO | Phonk",
         )
         self.assertEqual(
-            title_text.beautify_title("minor_RINZO - デイドリーム ｜ J Pop.mp3"),
-            "RINZO - デイドリーム | J Pop",
+            title_text.beautify_title("minor_RINZO - \u30c7\u30a4\u30c9\u30ea\u30fc\u30e0 \uff5c J Pop.mp3"),
+            "RINZO - \u30c7\u30a4\u30c9\u30ea\u30fc\u30e0 | J Pop",
         )
 
     def test_repairs_mojibake_without_changing_adjacent_japanese(self) -> None:
         self.assertEqual(
-            title_text.beautify_title("minor_DANÃ‡A DO VERÃƒO ｜ デイドリーム.mp3"),
-            "DANÇA DO VERÃO | デイドリーム",
+            title_text.beautify_title("minor_DAN\u00c3\u2021A DO VER\u00c3\u0192O \uff5c \u30c7\u30a4\u30c9\u30ea\u30fc\u30e0.mp3"),
+            "DAN\u00c7A DO VER\u00c3O | \u30c7\u30a4\u30c9\u30ea\u30fc\u30e0",
         )
 
     def test_removes_repeated_extension_without_changing_symbols(self) -> None:

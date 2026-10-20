@@ -14,6 +14,7 @@ understand the result before inspecting the full implementation.
 | Question | Read next |
 | --- | --- |
 | What was built and what is the engineering challenge? | [Executive summary](executive-summary.md). |
+| Why were these hosts, CPU, and GPU selected? | [Hardware selection](hardware-selection.md). |
 | What do the 160 days actually measure? | [Continuity evidence](28-day-same-url-sli-case-study.md). |
 | What was measured, tested, or left unknown? | [Scorecard](operational-scorecard.md). |
 | Where are the implementation and tests? | [Implementation review map](implementation-review-map.md). |

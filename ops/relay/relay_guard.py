@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""MediaMTXのforwardを有限leaseとfresh inputだけで許可するowner。"""
+"""Own MediaMTX forwarding, gated by a finite lease and fresh input."""
 from __future__ import annotations
 
 import argparse
@@ -91,7 +91,7 @@ class Guard:
         self.api("/v3/config/paths/patch/relay", {"forward": destinations})
 
     def stop(self, reason: str):
-        # 終了は永久停止。このinstanceへ新leaseを投入して再起動しない。
+        # Stopping is permanent. A new lease cannot restart this instance.
         with self.lock:
             started = elapsed()
             if not self.halted:
@@ -118,7 +118,7 @@ class Guard:
             lease = admit(value["lease"], value["signature"], key=self.key,
                           relay_instance=self.instance, highwater=self.highwater,
                           wall=time.time(), elapsed=elapsed(), previous=self.lease, continuous=self.continuous)
-            # fsyncを伴うSQLite commitより前にforwardへ反映しない。
+            # Do not enable forwarding before the durable SQLite commit.
             self.db.execute("UPDATE highwater SET sequence=? WHERE id=1", (lease.body["sequence"],))
             self.highwater, self.lease = lease.body["sequence"], lease
 
@@ -215,7 +215,7 @@ class Guard:
                     self.stop("YOUTUBE_FORWARD_FAILED")
                     return
                 twitch = next((r for r in self.projection if r["provider"] == "twitch"), None)
-                # Twitch失敗はYouTube handlerを保持したまま1回で無効化。無制限retryを持たない。
+                # Disable Twitch once on failure while preserving the YouTube handler; retries are bounded.
                 if not self.twitch_disabled and (twitch and twitch["error_present"] or elapsed() - self.twitch_first_attempt > 15 and (not twitch or twitch["state"] != "forwarding")):
                     self.forward(self.values["destinations"][:1])
                     self.twitch_disabled = True

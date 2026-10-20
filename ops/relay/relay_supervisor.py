@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""guardが停止しても、今回所有するrelay process groupを有限時間で停止する。"""
+"""Stop the owned relay process group within a bounded time, even if the guard stops."""
 from __future__ import annotations
 
 import argparse
@@ -48,7 +48,7 @@ def supervise(command, runtime, state=None):
     latest = {}
     try:
         while not stopped:
-            # wait/reap前のowned session leaderをanchorにする。
+            # Anchor ownership to the session leader before waiting or reaping.
             current = identity(proc.pid)
             if current != anchor:
                 reason = "GUARD_IDENTITY_CHANGED"
@@ -77,7 +77,7 @@ def supervise(command, runtime, state=None):
         else:
             reason = "OPERATOR_STOP"
     finally:
-        # PIDをreapせず同じsessionを確認してから、所有groupだけを停止する。
+        # Verify the same session before reaping the PID, then stop only the owned group.
         if identity(proc.pid) != anchor:
             raise RuntimeError("RELAY_SUPERVISOR_STOP_IDENTITY_UNKNOWN")
         stop_started = elapsed()

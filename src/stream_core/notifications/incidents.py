@@ -206,7 +206,7 @@ def map_runtime_incidents(
                 summary="production map monitor sample is missing or stale",
                 evidence=f"sample_age={seconds_to_human(age)} source={status_file.name}",
                 recovery_type="arena_monitor_probe_recovery",
-                follow_up="arena monitor control loop と map_runtime_probe の更新を確認する",
+                follow_up="Check updates from the arena monitor control loop and map_runtime_probe",
                 observed_ts=observed_ts or now_ts,
             )
         ]
@@ -269,7 +269,7 @@ def map_runtime_incidents(
                     f"context_fatal={browser.get('context_fatal_failure')}"
                 ),
                 recovery_type="runtime_browser_or_pod_recovery",
-                follow_up="browser.log、stream_engine_events.jsonl、render heartbeatを突き合わせる",
+                follow_up="Correlate browser.log, stream_engine_events.jsonl, and the render heartbeat",
                 observed_ts=webgl_since,
             )
         )
@@ -282,7 +282,7 @@ def map_runtime_incidents(
                 summary="production map delivery contract is unhealthy",
                 evidence=f"active={seconds_to_human(delivery_sec)} reasons={','.join(str(v) for v in status.get('critical_reasons', [])[:5])}",
                 recovery_type="runtime_delivery_recovery",
-                follow_up="Pod topology、NVENC/RTMP、render heartbeat、Chromiumを確認する",
+                follow_up="Check Pod topology, NVENC/RTMP, the render heartbeat, and Chromium",
                 observed_ts=delivery_since,
             )
         )
@@ -295,7 +295,7 @@ def map_runtime_incidents(
                 summary="JMA precipitation data or fetcher is unhealthy",
                 evidence=f"active={seconds_to_human(precipitation_data_sec)} reasons={','.join(str(v) for v in status.get('weather_reasons', [])[:4])}",
                 recovery_type="precipitation_fetch_retry_recovery",
-                follow_up="降水status/healthとJMA取得履歴を確認する。配信runtimeは自動restartしない",
+                follow_up="Check precipitation status/health and JMA fetch history; do not automatically restart the streaming runtime",
                 observed_ts=precipitation_data_since,
                 repeat_sec=600,
             )
@@ -317,7 +317,7 @@ def map_runtime_incidents(
                     f"layer_validtime={render.get('layer_validtime', '')}"
                 ),
                 recovery_type="precipitation_browser_render_retry_recovery",
-                follow_up="browser heartbeat、validtime一致、no-rain状態、MapLibre降水layerを確認する。配信runtimeは自動restartしない",
+                follow_up="Check browser heartbeat, matching validtime, no-rain state, and the MapLibre precipitation layer; do not automatically restart the streaming runtime",
                 observed_ts=precipitation_render_since,
                 repeat_sec=600,
             )
@@ -334,7 +334,7 @@ def map_runtime_incidents(
                 summary="a production map runtime container has restarted",
                 evidence=f"active={seconds_to_human(restart_sec)} containers={','.join(restarted[:5])}",
                 recovery_type="k8s_container_self_recovery",
-                follow_up="Pod/container historyとrestart前後の永続event logを確認する",
+                follow_up="Check Pod/container history and durable event logs before and after the restart",
                 observed_ts=restart_since,
             )
         )
@@ -355,7 +355,7 @@ def viewer_synthetic_incidents(*, status_file: Path | None, now_ts: int) -> list
                 summary="viewer-side synthetic sample is missing or stale",
                 evidence=f"sample_age={seconds_to_human(age)} source={status_file.name}",
                 recovery_type="viewer_probe_recovery",
-                follow_up="yt-dlp/ffmpegとarena monitor viewer probeの更新を確認する",
+                follow_up="Check yt-dlp/ffmpeg and updates from the arena monitor viewer probe",
                 observed_ts=observed_ts or now_ts,
             )
         ]
@@ -373,7 +373,7 @@ def viewer_synthetic_incidents(*, status_file: Path | None, now_ts: int) -> list
                     f"freeze={status.get('freeze_detected')} video_id={status.get('video_id', '')}"
                 ),
                 recovery_type="youtube_or_runtime_delivery_recovery",
-                follow_up="viewer capture、YouTube health、local NVENC/RTMP、render heartbeatを突き合わせる",
+                follow_up="Correlate viewer capture, YouTube health, local NVENC/RTMP, and render heartbeat",
                 observed_ts=observed_ts,
             )
         ]
@@ -386,7 +386,7 @@ def viewer_synthetic_incidents(*, status_file: Path | None, now_ts: int) -> list
                 summary="viewer-side synthetic capture repeatedly failed",
                 evidence=f"probe_failures={probe_failures} reason={status.get('reason', '')}",
                 recovery_type="viewer_probe_or_public_path_recovery",
-                follow_up="YouTube live stateとyt-dlp/ffmpeg probeを確認し、local delivery failureと分離する",
+                follow_up="Check YouTube live state and the yt-dlp/ffmpeg probe separately from local delivery failures",
                 observed_ts=observed_ts,
             )
         ]
@@ -630,7 +630,7 @@ def operational_reliability_incidents(*, status_file: Path | None, now_ts: int) 
                 summary=f"operational reliability {artifact.replace('_', ' ')} is missing or stale",
                 evidence=f"sample_age={seconds_to_human(age)} source={status_file.name}",
                 recovery_type="rollup_timer_recovery",
-                follow_up="rollup timer、Prometheus、SQLite evidence store を確認する",
+                follow_up="Check the rollup timer, Prometheus, and SQLite evidence store",
                 observed_ts=observed_ts or now_ts,
             )
         ]
@@ -661,7 +661,7 @@ def operational_reliability_incidents(*, status_file: Path | None, now_ts: int) 
                         f"coverage_pct={input_feedback.get('coverage_pct')}"
                     ),
                     recovery_type="current_input_quality_recovery_no_automatic_restart",
-                    follow_up="現在のOAuth issue typeとmulti-window burnを確認し、current goodで復旧扱いにする",
+                    follow_up="Check the current OAuth issue type and multi-window burn; confirm recovery from current good evidence",
                     observed_ts=current_observed_ts,
                     repeat_sec=600,
                 )
@@ -678,7 +678,7 @@ def operational_reliability_incidents(*, status_file: Path | None, now_ts: int) 
                         f"coverage_pct={input_feedback.get('coverage_pct')}"
                     ),
                     recovery_type="measurement_source_recovery",
-                    follow_up="OAuth probe freshness と raw/Prometheus coverage を確認する",
+                    follow_up="Check OAuth probe freshness and raw/Prometheus coverage",
                     observed_ts=observed_ts,
                 )
             )
@@ -701,7 +701,7 @@ def operational_reliability_incidents(*, status_file: Path | None, now_ts: int) 
                     summary="official YouTube input quality SLO is breached",
                     evidence=f"sli_pct={gate.get('sli_pct')} coverage_pct={gate.get('coverage_pct')}",
                     recovery_type="human_review_no_automatic_restart",
-                    follow_up="OAuth issue type、encoder contract、YouTube input quality を突合する",
+                    follow_up="Correlate OAuth issue type, encoder contract, and YouTube input quality",
                     observed_ts=observed_ts,
                 )
             )
@@ -739,7 +739,7 @@ def operational_reliability_incidents(*, status_file: Path | None, now_ts: int) 
                         + (f" current_source={current_upload.get('status')} current_reason={current_upload.get('reason')}" if current_upload else "")
                     ),
                     recovery_type="measurement_source_recovery",
-                    follow_up="source probe と retention gap を直し、SLO値自体は変更しない",
+                    follow_up="Repair the source probe and retention gap without changing the SLO",
                     observed_ts=observed_ts,
                     repeat_sec=3600,
                 )
@@ -757,7 +757,7 @@ def operational_reliability_incidents(*, status_file: Path | None, now_ts: int) 
                     summary=f"{family} measurement sources disagree",
                     evidence=f"sli_pct={gate.get('sli_pct')} reasons={','.join(reasons)}",
                     recovery_type="source_reconciliation_no_automatic_restart",
-                    follow_up="raw evidence と Prometheus series を同一窓で比較する",
+                    follow_up="Compare raw evidence and Prometheus series in the same observation window",
                     observed_ts=observed_ts,
                 )
             )
@@ -774,7 +774,7 @@ def operational_reliability_incidents(*, status_file: Path | None, now_ts: int) 
                 summary=f"{family} multi-window error-budget burn",
                 evidence=f"rule={alert.get('rule')} burn_rates={alert.get('burn_rates')}",
                 recovery_type="human_review_no_automatic_restart",
-                follow_up="短窓と長窓の両方を確認し、根拠なしにtargetやruntimeを変更しない",
+                follow_up="Check both short and long windows; do not change the target or runtime without evidence",
                 observed_ts=observed_ts,
             )
         )
@@ -795,7 +795,7 @@ def external_blackbox_incidents(*, status_file: Path | None, now_ts: int) -> lis
                 summary="external black-box import is missing or stale",
                 evidence=f"collector_age={seconds_to_human(collector_age)} source={status_file.name}",
                 recovery_type="external_evidence_collection_recovery",
-                follow_up="Cloud Monitoring uptime check、ADC、import timerを確認し、配信runtimeは自動再起動しない",
+                follow_up="Check the Cloud Monitoring uptime check, ADC, and import timer; do not automatically restart the streaming runtime",
                 observed_ts=observed_ts or now_ts,
             )
         ]
@@ -831,7 +831,7 @@ def external_blackbox_incidents(*, status_file: Path | None, now_ts: int) -> lis
                 f"targets={target_states or 'none'}"
             ),
             recovery_type=recovery_type,
-            follow_up="外部checker地域別sampleと家庭内raw evidenceを突合し、単独でavailability burnやrestartへ変換しない",
+            follow_up="Correlate regional external-checker samples with local raw evidence; neither alone authorizes availability burn or restart",
             observed_ts=parse_utc_ts(str(payload.get("status_since_utc") or "")) or observed_ts or now_ts,
             repeat_sec=900 if status == "unknown" else 300,
         )
@@ -922,7 +922,7 @@ def collect_notification_incidents(
                 summary="observe_stream_health.py execution failed",
                 evidence=error[:240],
                 recovery_type="timer_or_script_recovery",
-                follow_up="observe script stderr and systemd notify timer statusを確認する",
+                follow_up="Check observer script stderr and systemd notification timer status",
             )
         )
     monitoring_only_youtube_gap = is_monitoring_only_youtube_stats_gap(checks)
@@ -945,7 +945,7 @@ def collect_notification_incidents(
                     f"pulse_pass={checks.get('pulse_pass')}"
                 ),
                 recovery_type=recovery_type,
-                follow_up="recovery event後に health-summary と stream_engine_events.jsonl を突き合わせる",
+                follow_up="Correlate health-summary and stream_engine_events.jsonl after the recovery event",
                 diagnostic_context=observe_context,
             )
         )
@@ -961,7 +961,7 @@ def collect_notification_incidents(
                     f"remote_status={checks.get('youtube_current_remote_status')}"
                 ),
                 recovery_type=recovery_type,
-                follow_up="OAuth/Data API/local ingest のどれが degraded を支えているか確認する",
+                follow_up="Identify which of OAuth, Data API, or local ingest supports the degraded classification",
                 diagnostic_context=observe_context,
             )
         )
@@ -979,7 +979,7 @@ def collect_notification_incidents(
                 summary=f"api_report_judgment={payload.get('api_report_judgment')}",
                 evidence=str(payload.get("api_report_judgment_reason", "")),
                 recovery_type="api_cost_report_timer_recovery",
-                follow_up="latest.json/open_day_latest.json と api cost report timer の更新時刻を確認する",
+                follow_up="Check update times for latest.json/open_day_latest.json and the API cost report timer",
                 diagnostic_context=compact_api_report_context(payload),
             )
         )
@@ -998,7 +998,7 @@ def collect_notification_incidents(
                     f"units_est={payload.get('fast_mode_api_units_estimated_24h')}"
                 ),
                 recovery_type="resolver_hysteresis_exit_or_api_guard",
-                follow_up="fast mode exit 条件と PT API usage の増分を確認する",
+                follow_up="Check fast-mode exit conditions and the increase in PT API usage",
                 diagnostic_context=observe_context,
             )
         )
@@ -1021,7 +1021,7 @@ def collect_notification_incidents(
                     f"duration_24h={payload.get('encoder_gap_enable_auto_stop_false_duration_sec_24h')}"
                 ),
                 recovery_type="encoder_or_stream_restart_if_current_fail",
-                follow_up="YouTube public state と local encoder state の gap が回復したか確認する",
+                follow_up="Check whether the gap between YouTube public state and local encoder state has recovered",
                 diagnostic_context=observe_context,
             )
         )
@@ -1038,7 +1038,7 @@ def collect_notification_incidents(
                     f"count_24h={payload.get('remote_warning_restart_count_24h')}"
                 ),
                 recovery_type="fast_recovery_restart:remote_warning",
-                follow_up="remote-warning-compare で local TCP と YouTube remote warning を再分離する",
+                follow_up="Use remote-warning-compare to distinguish local TCP evidence from YouTube remote warnings again",
                 diagnostic_context=observe_context,
             )
         )
@@ -1055,7 +1055,7 @@ def collect_notification_incidents(
                     f"count_24h={payload.get('stream_engine_ffmpeg_exit_224_count_24h')}"
                 ),
                 recovery_type="ffmpeg_child_self_recovery:exit_224_broken_pipe",
-                follow_up="Broken pipe が複数回なら ISP/RTMP ingest/上流ネットワークの切り分けに昇格する",
+                follow_up="Repeated Broken pipe errors require diagnosis of the ISP, RTMP ingest, and upstream network",
                 diagnostic_context=observe_context,
             )
         )
@@ -1081,7 +1081,7 @@ def collect_notification_incidents(
                     f"journal={journal_ssl_tls.get('count_24h')}"
                 ),
                 recovery_type="observe_rtmps_ssl_tls_before_transport_reclassification",
-                follow_up="journal / stream_engine_events / fast_recovery_events の SSL/TLS reason を見て RTMPS 固有か通常 transport か切り分ける",
+                follow_up="Inspect SSL/TLS reasons in journal, stream_engine_events, and fast_recovery_events to distinguish RTMPS-specific failures from general transport failures",
                 diagnostic_context=observe_context,
             )
         )
@@ -1102,7 +1102,7 @@ def collect_notification_incidents(
                     f"live_ok_24h={payload.get('public_probe_authoritative_live_ok_count_24h')}"
                 ),
                 recovery_type="observe_only_no_restart_when_oauth_data_api_local_ok",
-                follow_up="OAuth/Data API/local ingest が正常なら outage ではなく観測ノイズとして扱う",
+                follow_up="If OAuth, Data API, and local ingest are healthy, classify this as observation noise rather than an outage",
                 diagnostic_context=observe_context,
             )
         )
@@ -1139,7 +1139,7 @@ def collect_notification_incidents(
                     summary=f"{label} is not report_only_ok",
                     evidence=compact_report_evidence(item, age),
                     recovery_type="report_only_observation_no_stream_restart",
-                    follow_up="次の report-only sample で report_only_ok に戻るか確認する。連続するなら upstream/overlay を個別復旧する",
+                    follow_up="Check whether the next report-only sample returns to report_only_ok; persistent failures require separate upstream/overlay recovery",
                     observed_ts=observed_ts,
                     diagnostic_context=compact_report_context(
                         item=item,

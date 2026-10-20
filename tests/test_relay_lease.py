@@ -68,7 +68,7 @@ class LeaseBoundaryTests(unittest.TestCase):
         first = {**self.body, "grant_expires_at": 1010.}
         old = admit(first, sign(first, self.key), key=self.key, relay_instance="vm-new-instance",
                     highwater=1, wall=1000, elapsed=50, previous=None, continuous=True)
-        # 最初の期限を越えても新しいmedia/sequenceで10秒の許可を発行できる。
+        # Fresh media and a new sequence can renew a ten-second permission beyond the initial expiry.
         new = {**first, "issued_at": 1020., "expires_at": 1030., "grant_expires_at": 1030.,
                "sequence": 3, "input_sequence": 101}
         accepted = admit(new, sign(new, self.key), key=self.key, relay_instance="vm-new-instance",

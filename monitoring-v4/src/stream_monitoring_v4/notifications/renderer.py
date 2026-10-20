@@ -7,7 +7,7 @@ from stream_contracts.monitoring_v4.time import parse_utc, unix_ts
 
 
 JST = timezone(timedelta(hours=9))
-PHASE_LABELS = {"detected": "障害検知", "repeat": "障害継続ステータス", "recovered": "復旧通知"}
+PHASE_LABELS = {"detected": "Incident detected", "repeat": "Ongoing incident status", "recovered": "Recovery notification"}
 TEMPLATE_REVISION = "monitoring-v4-ja-r5.2"
 
 
@@ -20,7 +20,7 @@ def render(transition: IncidentTransition, episode: IncidentEpisode) -> tuple[st
         transition.phase == "recovered"
         and "ffmpeg_child_auto_recovered" in transition.reason_codes
     )
-    label = "FFmpeg自己再起動イベント" if ffmpeg_self_restart else PHASE_LABELS[transition.phase]
+    label = "FFmpeg self-restart event" if ffmpeg_self_restart else PHASE_LABELS[transition.phase]
     subject = f"[ADS-B Stream] {label}: {transition.domain}"
     duration = max(0, unix_ts(transition.occurred_at) - unix_ts(episode.opened_at))
     reasons = ",".join(transition.reason_codes) or "none"

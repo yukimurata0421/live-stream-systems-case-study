@@ -110,13 +110,13 @@ def _report(summary: dict[str, Any], manifest: dict[str, Any]) -> str:
     counts = summary["classification_counts"]
     return f"""# CRA Pre-Phase5 Harness v2 run {summary["run_id"]}
 
-## 結論
+## Findings
 
 `HARNESS_V2_TRUSTED = {str(summary["harness_v2_trusted"]).lower()}`
 
-SQLite fixed runtime {manifest["runtime"]["sqlite"]}、複合fault 8件、5 seedのrandomized 200件、
-Negative Control 10件、RecoveryVerification 7件、E2E 6件をtest-only環境で検証した。
-signal、Pod、Deployment、host、network、production credentialへの操作は0件である。
+Test-only validation used SQLite fixed runtime {manifest["runtime"]["sqlite"]}, eight compound faults, 200 randomized cases across five seeds,
+ten negative controls, seven RecoveryVerification cases, and six E2E cases.
+Signal, Pod, Deployment, host, network, and production-credential operations were zero.
 
 ## Classification
 
@@ -135,8 +135,8 @@ signal、Pod、Deployment、host、network、production credentialへの操作�
 
 ## Boundary
 
-Phase 4 no-action shadowのartifact readinessだけを評価した。
-deploy/install/start、Phase 5、実credential、実LAN、実process signalは未実施である。
+Evaluated only artifact readiness for the Phase 4 no-action shadow.
+Deployment/installation/start, Phase 5, real credentials, real LAN, and real process signals were not exercised.
 """
 
 

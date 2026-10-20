@@ -12,7 +12,7 @@ from tools.build_runtime_fence_release import copy_executor_packages
 
 
 def test_owner_hash_matches_signed_facts_canonicalization() -> None:
-    for value in ({}, {"ffmpeg_pid": 123, "host_id": "dell-yuki"}, {"message": "日本語", "nested": {"b": 2, "a": 1}}):
+    for value in ({}, {"ffmpeg_pid": 123, "host_id": "dell-yuki"}, {"message": "\u65e5\u672c\u8a9e", "nested": {"b": 2, "a": 1}}):
         assert source_hash(value) == hashlib.sha256(canonical_json({"raw": value})).hexdigest()
 
 

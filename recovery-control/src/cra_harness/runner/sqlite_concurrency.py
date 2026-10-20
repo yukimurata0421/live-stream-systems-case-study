@@ -616,10 +616,10 @@ def _report(summary: dict[str, Any]) -> str:
     performance = summary["performance"]
     return f"""# Dell Agent SQLite Concurrency Stress V1
 
-## 結論
+## Findings
 
-`SQLITE_CONCURRENCY_HARNESS_TRUSTED = {str(summary["sqlite_concurrency_harness_trusted"]).lower()}`。
-これはlocal fixed runtimeとFakePhysicalAdapterだけの証拠であり、live defect closure単独の根拠にはしない。
+`SQLITE_CONCURRENCY_HARNESS_TRUSTED = {str(summary["sqlite_concurrency_harness_trusted"]).lower()}`.
+This evidence covers only the local fixed runtime and FakePhysicalAdapter; it cannot alone establish live defect closure.
 
 ## Stress
 
@@ -648,7 +648,7 @@ def _report(summary: dict[str, Any]) -> str:
 
 ## Negative Controls
 
-既存15件とSQLite concurrency 5件を分けて集計し、{summary["negative_controls"]["detected"]}/{summary["negative_controls"]["total"]}検出した。
+Count the 15 existing controls separately from the five SQLite concurrency controls; {summary["negative_controls"]["detected"]}/{summary["negative_controls"]["total"]} were detected.
 
 ## Performance
 
@@ -658,12 +658,12 @@ def _report(summary: dict[str, Any]) -> str:
 
 ## Safety
 
-physical attempt、FFmpeg signal、Pod/Deployment mutation、host restartは全0。signal-capable adapterは存在しない。
+Physical attempts, FFmpeg signals, Pod/Deployment mutations, and host restarts were all zero. No signal-capable adapter is present.
 
 ## Classification
 
-local stressのclassificationは`{summary["classification"]}`。live fixed releaseのcheckpoint/read/write重畳を取得するまでdefectは
-`FIX_IMPLEMENTED / LIVE_VERIFICATION_PENDING`のままとする。
+Local stress classification: `{summary["classification"]}`. Until checkpoint/read/write overlap is observed on the live fixed release, the defect remains
+`FIX_IMPLEMENTED / LIVE_VERIFICATION_PENDING`.
 """
 
 

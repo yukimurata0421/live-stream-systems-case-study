@@ -10,3 +10,7 @@
 - [`public-release.md`](public-release.md): provenance, exclusions, and claim limits.
 - [`source-provenance.json`](source-provenance.json): machine-readable source identity.
 - [`current-evidence-and-route-source.md`](current-evidence-and-route-source.md): current evidence, reconciliation, route-fence source, and qualification boundaries.
+
+## Public source language
+
+See [Public Source Language](public-language-policy.md) for English prose and preserved Unicode input coverage.

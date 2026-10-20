@@ -1,4 +1,4 @@
-"""継続承認と期限付き送信許可の境界。外部通信・process起動なし。"""
+"""Continuous authorization versus finite publishing permission; no external traffic or process launch."""
 import json
 import pathlib
 import sys

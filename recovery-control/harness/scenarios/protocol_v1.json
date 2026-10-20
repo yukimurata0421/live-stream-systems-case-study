@@ -3,9 +3,9 @@
   "scenarios": [
     {
       "scenario_id": "D-01-normal",
-      "title": "通常のcentral command",
+      "title": "Normal central command",
       "category": "normal",
-      "description": "commitからeffect確認までの正常系",
+      "description": "Successful path from commit through effect confirmation",
       "initial_state": {
         "authority": "CENTRAL_ACTIVE",
         "ledger": "HEALTHY",
@@ -69,9 +69,9 @@
     },
     {
       "scenario_id": "D-02-duplicate",
-      "title": "重複配送",
+      "title": "Duplicate delivery",
       "category": "idempotency",
-      "description": "同一commandを2回配送して物理効果を1回に制限",
+      "description": "Deliver the same command twice and limit the physical effect to one attempt",
       "initial_state": {
         "authority": "CENTRAL_ACTIVE",
         "ledger": "HEALTHY",
@@ -125,9 +125,9 @@
     },
     {
       "scenario_id": "D-03-ack-loss",
-      "title": "ACK喪失",
+      "title": "Lost ACK",
       "category": "delivery",
-      "description": "effect後にCRA receipt保存前でcrashし同一outboxを再送",
+      "description": "Crash after the effect but before saving the CRA receipt, then redeliver the same outbox entry",
       "initial_state": {
         "authority": "CENTRAL_ACTIVE",
         "ledger": "HEALTHY",
@@ -181,9 +181,9 @@
     },
     {
       "scenario_id": "D-04-central-commit-crash",
-      "title": "central commit前crash",
+      "title": "Crash before central commit",
       "category": "transaction",
-      "description": "command intentとoutboxの原子的rollback",
+      "description": "Atomic rollback of command intent and outbox",
       "initial_state": {
         "authority": "CENTRAL_ACTIVE",
         "ledger": "HEALTHY",
@@ -237,9 +237,9 @@
     },
     {
       "scenario_id": "D-05-dell-accepted-crash",
-      "title": "Dell ACCEPTED後crash",
+      "title": "Crash after Dell ACCEPTED",
       "category": "recovery",
-      "description": "durable accept後でeffect前のagent crash",
+      "description": "Agent crash after durable acceptance but before the effect",
       "initial_state": {
         "authority": "CENTRAL_ACTIVE",
         "ledger": "HEALTHY",
@@ -293,9 +293,9 @@
     },
     {
       "scenario_id": "D-06-dell-started-crash",
-      "title": "Dell EXECUTION_STARTED後crash",
+      "title": "Crash after Dell EXECUTION_STARTED",
       "category": "recovery",
-      "description": "effect境界前のagent crashをOUTCOME_UNKNOWNへ",
+      "description": "Classify an agent crash before the effect boundary as OUTCOME_UNKNOWN",
       "initial_state": {
         "authority": "CENTRAL_ACTIVE",
         "ledger": "HEALTHY",
@@ -357,7 +357,7 @@
       "scenario_id": "D-07-stale-epoch",
       "title": "stale authority epoch",
       "category": "fencing",
-      "description": "Dell high-waterと一致しないepochを拒否",
+      "description": "Reject an epoch that does not match the Dell high-water mark",
       "initial_state": {
         "authority": "CENTRAL_ACTIVE",
         "ledger": "HEALTHY",
@@ -413,7 +413,7 @@
       "scenario_id": "D-08-stale-sequence",
       "title": "stale command sequence",
       "category": "fencing",
-      "description": "消費済みsequenceを新command idで拒否",
+      "description": "Reject a consumed sequence even with a new command ID",
       "initial_state": {
         "authority": "CENTRAL_ACTIVE",
         "ledger": "HEALTHY",
@@ -469,7 +469,7 @@
       "scenario_id": "D-09-sequence-gap",
       "title": "command sequence gap",
       "category": "fencing",
-      "description": "high-water+1を超えるsequenceを拒否",
+      "description": "Reject sequences beyond high-water + 1",
       "initial_state": {
         "authority": "CENTRAL_ACTIVE",
         "ledger": "HEALTHY",
@@ -525,7 +525,7 @@
       "scenario_id": "D-10-stale-target",
       "title": "stale target",
       "category": "target_identity",
-      "description": "2回目観測でtargetが変わった場合にeffectを拒否",
+      "description": "Reject the effect if the target changes at the second observation",
       "initial_state": {
         "authority": "CENTRAL_ACTIVE",
         "ledger": "HEALTHY",
@@ -581,7 +581,7 @@
       "scenario_id": "D-11-ledger-failure",
       "title": "Dell ledger failure",
       "category": "durability",
-      "description": "ledger非健全時にeffectをfail closed",
+      "description": "Fail closed on effects when the ledger is unhealthy",
       "initial_state": {
         "authority": "CENTRAL_ACTIVE",
         "ledger": "HEALTHY",
@@ -635,9 +635,9 @@
     },
     {
       "scenario_id": "D-12-heartbeat-late",
-      "title": "heartbeat遅延と復帰",
+      "title": "Delayed heartbeat and recovery",
       "category": "lease",
-      "description": "suspect後TTL内heartbeatでcentralへ復帰",
+      "description": "Return to central authority when a heartbeat arrives within TTL after suspicion",
       "initial_state": {
         "authority": "CENTRAL_ACTIVE",
         "ledger": "HEALTHY",
@@ -699,7 +699,7 @@
       "scenario_id": "D-13-heartbeat-expiry",
       "title": "heartbeat lease expiry",
       "category": "lease",
-      "description": "TTL満了でlocal fallbackへ遷移",
+      "description": "Transition to local fallback when TTL expires",
       "initial_state": {
         "authority": "CENTRAL_ACTIVE",
         "ledger": "HEALTHY",
@@ -755,7 +755,7 @@
       "scenario_id": "D-14-local-fallback",
       "title": "local fallback action",
       "category": "authority",
-      "description": "local authority時のみallowlist actionを1回実行",
+      "description": "Execute one allowlisted action only under local authority",
       "initial_state": {
         "authority": "CENTRAL_ACTIVE",
         "ledger": "HEALTHY",
@@ -821,7 +821,7 @@
       "scenario_id": "D-15-reconciliation",
       "title": "reconciliation",
       "category": "authority",
-      "description": "challenge/commitでepochを単調増加させheartbeat待ちへ",
+      "description": "Monotonically advance the epoch via challenge/commit, then wait for a heartbeat",
       "initial_state": {
         "authority": "CENTRAL_ACTIVE",
         "ledger": "HEALTHY",
@@ -883,7 +883,7 @@
       "scenario_id": "D-16-backup-restore",
       "title": "backup restore fencing",
       "category": "restore",
-      "description": "復元DBの古いpendingを配送不能かつterminalにする",
+      "description": "Make stale pending entries in a restored database terminal and undeliverable",
       "initial_state": {
         "authority": "CENTRAL_ACTIVE",
         "ledger": "HEALTHY",
@@ -951,7 +951,7 @@
       "scenario_id": "D-17-2026-replay",
       "title": "2026-08-21 replay",
       "category": "historical",
-      "description": "実障害fixtureを再生し根拠不足から自動commandを生成しない",
+      "description": "Replay real-failure fixtures without generating automatic commands from insufficient evidence",
       "initial_state": {
         "authority": "CENTRAL_ACTIVE",
         "ledger": "HEALTHY",
@@ -1005,7 +1005,7 @@
       "scenario_id": "NC-01",
       "title": "duplicate effect detector",
       "category": "negative_control",
-      "description": "意図的に壊したtest-only adapterをOracleが検出する",
+      "description": "The oracle detects a deliberately broken test-only adapter",
       "initial_state": {
         "authority": "CENTRAL_ACTIVE",
         "ledger": "HEALTHY",
@@ -1057,7 +1057,7 @@
       "scenario_id": "NC-02",
       "title": "stale target acceptance detector",
       "category": "negative_control",
-      "description": "意図的に壊したtest-only adapterをOracleが検出する",
+      "description": "The oracle detects a deliberately broken test-only adapter",
       "initial_state": {
         "authority": "CENTRAL_ACTIVE",
         "ledger": "HEALTHY",
@@ -1109,7 +1109,7 @@
       "scenario_id": "NC-03",
       "title": "effect before durable accept detector",
       "category": "negative_control",
-      "description": "意図的に壊したtest-only adapterをOracleが検出する",
+      "description": "The oracle detects a deliberately broken test-only adapter",
       "initial_state": {
         "authority": "CENTRAL_ACTIVE",
         "ledger": "HEALTHY",
@@ -1161,7 +1161,7 @@
       "scenario_id": "NC-04",
       "title": "dual authority detector",
       "category": "negative_control",
-      "description": "意図的に壊したtest-only adapterをOracleが検出する",
+      "description": "The oracle detects a deliberately broken test-only adapter",
       "initial_state": {
         "authority": "CENTRAL_ACTIVE",
         "ledger": "HEALTHY",
@@ -1213,7 +1213,7 @@
       "scenario_id": "NC-05",
       "title": "outcome unknown retry detector",
       "category": "negative_control",
-      "description": "意図的に壊したtest-only adapterをOracleが検出する",
+      "description": "The oracle detects a deliberately broken test-only adapter",
       "initial_state": {
         "authority": "CENTRAL_ACTIVE",
         "ledger": "HEALTHY",
@@ -1265,7 +1265,7 @@
       "scenario_id": "NC-06",
       "title": "restored pending replay detector",
       "category": "negative_control",
-      "description": "意図的に壊したtest-only adapterをOracleが検出する",
+      "description": "The oracle detects a deliberately broken test-only adapter",
       "initial_state": {
         "authority": "CENTRAL_ACTIVE",
         "ledger": "HEALTHY",
@@ -1317,7 +1317,7 @@
       "scenario_id": "R-01",
       "title": "randomized sequence 1",
       "category": "randomized_exploration",
-      "description": "seed固定の無効command変異を探索",
+      "description": "Explore invalid-command mutations with fixed seeds",
       "initial_state": {
         "authority": "CENTRAL_ACTIVE",
         "ledger": "HEALTHY",
@@ -1372,7 +1372,7 @@
       "scenario_id": "R-02",
       "title": "randomized target 2",
       "category": "randomized_exploration",
-      "description": "seed固定の無効command変異を探索",
+      "description": "Explore invalid-command mutations with fixed seeds",
       "initial_state": {
         "authority": "CENTRAL_ACTIVE",
         "ledger": "HEALTHY",
@@ -1427,7 +1427,7 @@
       "scenario_id": "R-03",
       "title": "randomized sequence 3",
       "category": "randomized_exploration",
-      "description": "seed固定の無効command変異を探索",
+      "description": "Explore invalid-command mutations with fixed seeds",
       "initial_state": {
         "authority": "CENTRAL_ACTIVE",
         "ledger": "HEALTHY",
@@ -1482,7 +1482,7 @@
       "scenario_id": "R-04",
       "title": "randomized target 4",
       "category": "randomized_exploration",
-      "description": "seed固定の無効command変異を探索",
+      "description": "Explore invalid-command mutations with fixed seeds",
       "initial_state": {
         "authority": "CENTRAL_ACTIVE",
         "ledger": "HEALTHY",
@@ -1537,7 +1537,7 @@
       "scenario_id": "R-05",
       "title": "randomized sequence 5",
       "category": "randomized_exploration",
-      "description": "seed固定の無効command変異を探索",
+      "description": "Explore invalid-command mutations with fixed seeds",
       "initial_state": {
         "authority": "CENTRAL_ACTIVE",
         "ledger": "HEALTHY",
@@ -1592,7 +1592,7 @@
       "scenario_id": "R-06",
       "title": "randomized target 6",
       "category": "randomized_exploration",
-      "description": "seed固定の無効command変異を探索",
+      "description": "Explore invalid-command mutations with fixed seeds",
       "initial_state": {
         "authority": "CENTRAL_ACTIVE",
         "ledger": "HEALTHY",
@@ -1647,7 +1647,7 @@
       "scenario_id": "R-07",
       "title": "randomized sequence 7",
       "category": "randomized_exploration",
-      "description": "seed固定の無効command変異を探索",
+      "description": "Explore invalid-command mutations with fixed seeds",
       "initial_state": {
         "authority": "CENTRAL_ACTIVE",
         "ledger": "HEALTHY",
@@ -1702,7 +1702,7 @@
       "scenario_id": "R-08",
       "title": "randomized target 8",
       "category": "randomized_exploration",
-      "description": "seed固定の無効command変異を探索",
+      "description": "Explore invalid-command mutations with fixed seeds",
       "initial_state": {
         "authority": "CENTRAL_ACTIVE",
         "ledger": "HEALTHY",
@@ -1757,7 +1757,7 @@
       "scenario_id": "R-09",
       "title": "randomized sequence 9",
       "category": "randomized_exploration",
-      "description": "seed固定の無効command変異を探索",
+      "description": "Explore invalid-command mutations with fixed seeds",
       "initial_state": {
         "authority": "CENTRAL_ACTIVE",
         "ledger": "HEALTHY",
@@ -1812,7 +1812,7 @@
       "scenario_id": "R-10",
       "title": "randomized target 10",
       "category": "randomized_exploration",
-      "description": "seed固定の無効command変異を探索",
+      "description": "Explore invalid-command mutations with fixed seeds",
       "initial_state": {
         "authority": "CENTRAL_ACTIVE",
         "ledger": "HEALTHY",
@@ -1867,7 +1867,7 @@
       "scenario_id": "R-11",
       "title": "randomized sequence 11",
       "category": "randomized_exploration",
-      "description": "seed固定の無効command変異を探索",
+      "description": "Explore invalid-command mutations with fixed seeds",
       "initial_state": {
         "authority": "CENTRAL_ACTIVE",
         "ledger": "HEALTHY",
@@ -1922,7 +1922,7 @@
       "scenario_id": "R-12",
       "title": "randomized target 12",
       "category": "randomized_exploration",
-      "description": "seed固定の無効command変異を探索",
+      "description": "Explore invalid-command mutations with fixed seeds",
       "initial_state": {
         "authority": "CENTRAL_ACTIVE",
         "ledger": "HEALTHY",
@@ -1977,7 +1977,7 @@
       "scenario_id": "R-13",
       "title": "randomized sequence 13",
       "category": "randomized_exploration",
-      "description": "seed固定の無効command変異を探索",
+      "description": "Explore invalid-command mutations with fixed seeds",
       "initial_state": {
         "authority": "CENTRAL_ACTIVE",
         "ledger": "HEALTHY",
@@ -2032,7 +2032,7 @@
       "scenario_id": "R-14",
       "title": "randomized target 14",
       "category": "randomized_exploration",
-      "description": "seed固定の無効command変異を探索",
+      "description": "Explore invalid-command mutations with fixed seeds",
       "initial_state": {
         "authority": "CENTRAL_ACTIVE",
         "ledger": "HEALTHY",
@@ -2087,7 +2087,7 @@
       "scenario_id": "R-15",
       "title": "randomized sequence 15",
       "category": "randomized_exploration",
-      "description": "seed固定の無効command変異を探索",
+      "description": "Explore invalid-command mutations with fixed seeds",
       "initial_state": {
         "authority": "CENTRAL_ACTIVE",
         "ledger": "HEALTHY",
@@ -2142,7 +2142,7 @@
       "scenario_id": "R-16",
       "title": "randomized target 16",
       "category": "randomized_exploration",
-      "description": "seed固定の無効command変異を探索",
+      "description": "Explore invalid-command mutations with fixed seeds",
       "initial_state": {
         "authority": "CENTRAL_ACTIVE",
         "ledger": "HEALTHY",
@@ -2197,7 +2197,7 @@
       "scenario_id": "R-17",
       "title": "randomized sequence 17",
       "category": "randomized_exploration",
-      "description": "seed固定の無効command変異を探索",
+      "description": "Explore invalid-command mutations with fixed seeds",
       "initial_state": {
         "authority": "CENTRAL_ACTIVE",
         "ledger": "HEALTHY",
@@ -2252,7 +2252,7 @@
       "scenario_id": "R-18",
       "title": "randomized target 18",
       "category": "randomized_exploration",
-      "description": "seed固定の無効command変異を探索",
+      "description": "Explore invalid-command mutations with fixed seeds",
       "initial_state": {
         "authority": "CENTRAL_ACTIVE",
         "ledger": "HEALTHY",
@@ -2307,7 +2307,7 @@
       "scenario_id": "R-19",
       "title": "randomized sequence 19",
       "category": "randomized_exploration",
-      "description": "seed固定の無効command変異を探索",
+      "description": "Explore invalid-command mutations with fixed seeds",
       "initial_state": {
         "authority": "CENTRAL_ACTIVE",
         "ledger": "HEALTHY",
@@ -2362,7 +2362,7 @@
       "scenario_id": "R-20",
       "title": "randomized target 20",
       "category": "randomized_exploration",
-      "description": "seed固定の無効command変異を探索",
+      "description": "Explore invalid-command mutations with fixed seeds",
       "initial_state": {
         "authority": "CENTRAL_ACTIVE",
         "ledger": "HEALTHY",
@@ -2417,7 +2417,7 @@
       "scenario_id": "R-21",
       "title": "randomized sequence 21",
       "category": "randomized_exploration",
-      "description": "seed固定の無効command変異を探索",
+      "description": "Explore invalid-command mutations with fixed seeds",
       "initial_state": {
         "authority": "CENTRAL_ACTIVE",
         "ledger": "HEALTHY",
@@ -2472,7 +2472,7 @@
       "scenario_id": "R-22",
       "title": "randomized target 22",
       "category": "randomized_exploration",
-      "description": "seed固定の無効command変異を探索",
+      "description": "Explore invalid-command mutations with fixed seeds",
       "initial_state": {
         "authority": "CENTRAL_ACTIVE",
         "ledger": "HEALTHY",
@@ -2527,7 +2527,7 @@
       "scenario_id": "R-23",
       "title": "randomized sequence 23",
       "category": "randomized_exploration",
-      "description": "seed固定の無効command変異を探索",
+      "description": "Explore invalid-command mutations with fixed seeds",
       "initial_state": {
         "authority": "CENTRAL_ACTIVE",
         "ledger": "HEALTHY",
@@ -2582,7 +2582,7 @@
       "scenario_id": "R-24",
       "title": "randomized target 24",
       "category": "randomized_exploration",
-      "description": "seed固定の無効command変異を探索",
+      "description": "Explore invalid-command mutations with fixed seeds",
       "initial_state": {
         "authority": "CENTRAL_ACTIVE",
         "ledger": "HEALTHY",
@@ -2637,7 +2637,7 @@
       "scenario_id": "R-25",
       "title": "randomized sequence 25",
       "category": "randomized_exploration",
-      "description": "seed固定の無効command変異を探索",
+      "description": "Explore invalid-command mutations with fixed seeds",
       "initial_state": {
         "authority": "CENTRAL_ACTIVE",
         "ledger": "HEALTHY",
@@ -2692,7 +2692,7 @@
       "scenario_id": "R-26",
       "title": "randomized target 26",
       "category": "randomized_exploration",
-      "description": "seed固定の無効command変異を探索",
+      "description": "Explore invalid-command mutations with fixed seeds",
       "initial_state": {
         "authority": "CENTRAL_ACTIVE",
         "ledger": "HEALTHY",
@@ -2747,7 +2747,7 @@
       "scenario_id": "R-27",
       "title": "randomized sequence 27",
       "category": "randomized_exploration",
-      "description": "seed固定の無効command変異を探索",
+      "description": "Explore invalid-command mutations with fixed seeds",
       "initial_state": {
         "authority": "CENTRAL_ACTIVE",
         "ledger": "HEALTHY",
@@ -2802,7 +2802,7 @@
       "scenario_id": "R-28",
       "title": "randomized target 28",
       "category": "randomized_exploration",
-      "description": "seed固定の無効command変異を探索",
+      "description": "Explore invalid-command mutations with fixed seeds",
       "initial_state": {
         "authority": "CENTRAL_ACTIVE",
         "ledger": "HEALTHY",
@@ -2857,7 +2857,7 @@
       "scenario_id": "R-29",
       "title": "randomized sequence 29",
       "category": "randomized_exploration",
-      "description": "seed固定の無効command変異を探索",
+      "description": "Explore invalid-command mutations with fixed seeds",
       "initial_state": {
         "authority": "CENTRAL_ACTIVE",
         "ledger": "HEALTHY",
@@ -2912,7 +2912,7 @@
       "scenario_id": "R-30",
       "title": "randomized target 30",
       "category": "randomized_exploration",
-      "description": "seed固定の無効command変異を探索",
+      "description": "Explore invalid-command mutations with fixed seeds",
       "initial_state": {
         "authority": "CENTRAL_ACTIVE",
         "ledger": "HEALTHY",
@@ -2967,7 +2967,7 @@
       "scenario_id": "R-31",
       "title": "randomized sequence 31",
       "category": "randomized_exploration",
-      "description": "seed固定の無効command変異を探索",
+      "description": "Explore invalid-command mutations with fixed seeds",
       "initial_state": {
         "authority": "CENTRAL_ACTIVE",
         "ledger": "HEALTHY",
@@ -3022,7 +3022,7 @@
       "scenario_id": "R-32",
       "title": "randomized target 32",
       "category": "randomized_exploration",
-      "description": "seed固定の無効command変異を探索",
+      "description": "Explore invalid-command mutations with fixed seeds",
       "initial_state": {
         "authority": "CENTRAL_ACTIVE",
         "ledger": "HEALTHY",

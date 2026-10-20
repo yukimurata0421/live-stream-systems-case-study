@@ -181,7 +181,7 @@ def main() -> None:
     total_bytes = sum(int(row["size_bytes"]) for row in rows)
     readme = f"""# Floracore EDM evening collection
 
-DELL の `stream_v3` で夕方向けに使う恒久音源として、深い元ディレクトリを 1 階層へ整理したものです。
+This package flattens the source directories for the permanent evening music library used by stream_v3 on Dell.
 
 - tracks: {len(rows)}
 - source collections: {len(collections)}
@@ -190,26 +190,26 @@ DELL の `stream_v3` で夕方向けに使う恒久音源として、深い元�
 - audio: MP3 / 44,100 Hz / stereo
 - exclusive bucket: `evening` (16:00–20:59 JST)
 
-## 音質の扱い
+## Audio quality
 
-再エンコード、音量変更、サンプルレート変更、ID3 タグ変更は行っていません。`tracks/` の各ファイルは元 MP3 のバイト同一コピーで、`SHA256SUMS` で検証できます。
+No re-encoding, gain adjustment, sample-rate conversion, or ID3 changes were performed. Each file in tracks/ is a byte-identical copy of its source MP3, verifiable with SHA256SUMS.
 
 ## Permission and credit
 
-YouTube Live での利用許可は取得済みで、配信時のクレジット表記が条件です。
+Permission for YouTube Live use has been obtained, conditional on attribution during the broadcast.
 
 ```text
 Music provided by @Floracore_EDM
 https://www.youtube.com/@Floracore_EDM
 ```
 
-## ファイル
+## Files
 
-- `tracks/`: 平坦化した MP3。通常は `Floracore - <title>.mp3`。
-- `manifest.csv`: 元プレイリスト、元曲順、長さ、bitrate、元相対パス、SHA-256 の対応表。
-- `SHA256SUMS`: 配布・転送後の整合性確認用。
+- `tracks/`: flattened MP3 files, normally named `Floracore - <title>.mp3`.
+- `manifest.csv`: source playlist, original track order, duration, bitrate, original relative path, and SHA-256.
+- `SHA256SUMS`: integrity verification after distribution or transfer.
 
-同名の `Celosia Evermore` は長さが異なる 2 ファイルなので、`[Artcore Mix]` と `[Data Mix]` を付けて両方保持しています。`time_tags/evening` のFloracore専用化は `ops/scripts/activate_floracore_evening.py` で管理し、この準備処理で音源本体を複製しません。
+The two Celosia Evermore files have different durations and are retained as [Artcore Mix] and [Data Mix]. ops/scripts/activate_floracore_evening.py manages the Floracore-only time_tags/evening selection; this preparation step does not duplicate the audio files.
 """
     atomic_write_text(OUTPUT_ROOT / "README.md", readme)
 

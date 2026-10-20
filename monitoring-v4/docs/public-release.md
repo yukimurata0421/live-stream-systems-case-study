@@ -120,3 +120,7 @@ For the `139ca84...` implementation milestone, the gate additionally recorded:
   not database or node high availability.
 - The current dual-device backup is still same-host protection. Off-host
   recovery, another node, and site-level RPO/RTO remain outside this milestone.
+
+## Public source language
+
+See [Public Source Language](public-language-policy.md) for English prose and preserved Unicode input coverage.

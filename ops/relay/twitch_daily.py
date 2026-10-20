@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""固定した既存relayのTwitchだけを、有限maintenance窓で日次更新する。"""
+"""Renew only Twitch on the bound relay within a finite daily maintenance window."""
 from __future__ import annotations
 
 import argparse
@@ -124,7 +124,7 @@ class Journal:
 
 
 class Helix:
-    """Client credentialsはmemoryのみ。UNKNOWNをOFFLINEへ補完しない。"""
+    """Keep client credentials in memory; never infer OFFLINE from UNKNOWN."""
     def __init__(self,credentials,broadcaster):
         self.credentials,self.broadcaster=credentials,broadcaster
         self.token='';self.expires=0.;self.validated=0.
@@ -184,7 +184,7 @@ class Relay:
 
     def bound(self,now):
         a=self.approval;g=json.loads(self.guard_status.read_text())
-        # file/API読取中にheartbeatが更新されるため、読取後のclockで照合する。
+        # Validate against the clock after reading because the heartbeat can advance during file/API reads.
         current_elapsed=time.clock_gettime(time.CLOCK_BOOTTIME)
         current_wall=time.time()
         if now.boot_id!=a['boot_id'] or g['instance']!=a['relay_instance'] or g['halted'] or not g['enabled']:
@@ -226,10 +226,10 @@ class Relay:
     def change(self,command,now):
         self.observe(now)
         self.bound(now)
-        # YouTubeの正本entry/indexをそのまま保持する唯一のwrite path。
+        # This is the only write path; preserve the canonical YouTube entry and its index.
         destination=twitch_forward_update(self.approval['forward'],twitch_destination=self.approval['forward'][1],action=command.action)
-        # v1.21.2はmoqTransport=""のJSON入力を"quic"へ変換する。
-        # RTMPSのzero-valueを明示すると同じYouTube設定でもhandlerが再生成される。
+        # v1.21.2 converts an explicitly empty moqTransport JSON value to quic.
+        # Explicit RTMPS zero values can recreate the handler even with the same YouTube configuration.
         wire=[{k:v for k,v in entry.items() if not (k=='moqTransport' and v=='')} for entry in destination]
         self.api('/v3/config/paths/patch/relay',{'forward':wire})
 
@@ -263,7 +263,7 @@ def run(config,state_directory,credentials,exercise=False,validation_grant=None)
     signal.signal(signal.SIGTERM,stop);signal.signal(signal.SIGINT,stop)
     facts=BroadcastFacts(approval['broadcaster_id'],datetime.now(UTC),BroadcastStatus.UNKNOWN)
     next_poll=0.;last_save=0.;pending_command=None;dispatch_started=0.;poll_failures=0
-    # 不明なdispatchを新ID/新processで再実行しない。
+    # Do not replay an unknown dispatch with a new ID or process.
     if journal.pending():
         status(state_directory/'status.json',{'state':'HOLD','reason':'OUTCOME_UNKNOWN_RECONCILIATION_REQUIRED'})
         return 2
@@ -320,7 +320,7 @@ def run(config,state_directory,credentials,exercise=False,validation_grant=None)
                     journal.finish(pending_command,outcome,tw['id'] if tw else None);pending_command=None
                 elif now.elapsed_seconds-dispatch_started>15:
                     raise ValueError('TWITCH_PHYSICAL_OUTCOME_UNKNOWN')
-            # exerciseはroot設定にある期限と一致する一回だけの検証承認。
+            # An exercise is a single validation authorization bound to the expiry in the root configuration.
             force_due=exercise and state.phase==Phase.TRACKING and valid_validation(validation,approval,now)
             if state.phase==Phase.TRACKING and (facts.status!=BroadcastStatus.LIVE or (now.utc-facts.observed_at).total_seconds()>60):
                 decision=None
@@ -348,10 +348,10 @@ def run(config,state_directory,credentials,exercise=False,validation_grant=None)
                 'next_renewal_at':next_daily_renewal_at(state.session.started_at).isoformat() if state.session else None,
                 'youtube_handler_unchanged':True,'observed_at':now.utc.isoformat()})
         except Exception as error:
-            # raw errorやdestination/tokenをstatus/logへ投影しない。relay全体は操作しない。
+            # Exclude raw errors, destinations, and tokens from status/logs; do not operate on the entire relay.
             known=str(error) if isinstance(error,ValueError) and str(error).startswith(('DAILY_','TWITCH_','LEGACY_','CLOCK_','RENEWAL_','ROUTE_')) else type(error).__name__
-            # legacy guardが計画停止でquiesceされた後は、このownerがTwitchの
-            # failure stopも1回だけ担当する。再開/retry/全relay操作はしない。
+            # After a planned stop quiesces the legacy guard, this owner also handles
+            # one Twitch failure stop. Do not resume, retry, or operate on the entire relay.
             try:
                 if known.startswith(('TWITCH_FORWARD_','TWITCH_PHYSICAL_')) and journal.writer()[2]:
                     _,_,fault_writer=relay.observe(now)
@@ -362,7 +362,7 @@ def run(config,state_directory,credentials,exercise=False,validation_grant=None)
                         journal.commit(state,dataclasses.replace(state,revision=state.revision+1,phase=Phase.UNKNOWN),command)
                         journal.dispatch_once(command);relay.change(command,now)
             except Exception:
-                pass  # 未確定intentを保持し、再送しない。lease ownerは独立して存続する。
+                pass  # Retain unresolved intents without replay; the lease owner continues independently.
             status(state_directory/'status.json',{'state':'HOLD','reason':known,'observed_at':now.utc.isoformat()})
             return 2
         time.sleep(1)

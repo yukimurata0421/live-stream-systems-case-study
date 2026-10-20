@@ -21,7 +21,9 @@
       "decision": "public-source-check-in-existing-CI",
       "before_sha256": "8cd9b2b664147a634dc5e11620f7dfebedcbbfd62722dbbe96125b0e064c549a",
       "source_sha256": null,
-      "public_sha256": "c65619b21a7cfac68f9ba413417f7b8870f3554d00ac45292d439617fccee27b"
+      "public_sha256": "db63f10b020309449fa8ba2b3d00b445768066e9c0ccbbd52343f2d8da4529a9",
+      "prior_public_sha256": "c65619b21a7cfac68f9ba413417f7b8870f3554d00ac45292d439617fccee27b",
+      "localization": "English prose; control structures and machine identifiers preserved."
     },
     {
       "path": "README.md",
@@ -34,12 +36,22 @@
     {
       "path": "docs/00_INDEX.md",
       "source_role": "public-documentation",
-      "decision": "curated-current-contract-and-dated-evidence",
+      "decision": "Pi publisher source reconciliation, portable paths, English source guide, and mock-based validation.",
       "before_sha256": "0ebeadd27f3369db87b86768ca826933afa5987914ca8b4330c6c115fbfee0bf",
       "source_sha256": null,
-      "public_sha256": "8d1a817a33964e5c0ca8a76b62ec9ab1f8eab8fe5b8b0e8a6470f0a4fe870467",
-      "pre_pi_publisher_source_port_sha256": "e32ab253e63bfe09d4ec42a5fc1594a2025b8bd859cab754ee1558798c0391dc",
-      "pi_publisher_source_port": "2026-10-14 Pi publisher source reconciliation; no live mutation."
+      "public_sha256": "a0f536dc3cbef641b2b07ac50a801d947ca02b48086d88dbfd41f90f1f35ae63",
+      "prior_public_sha256": "e32ab253e63bfe09d4ec42a5fc1594a2025b8bd859cab754ee1558798c0391dc",
+      "localization": "English prose; control structures and machine identifiers preserved.",
+      "pre_graph_display_sha256": "6a87a495eb3698b1a49e053ffcc109b28d94a59e9dd29cb3399a62279e196d3d",
+      "graph_display_change": "Observed link arrows, explicit direct-path inference, and timestamp-preserving charts.",
+      "before_unicode_source_sha256": "201b5f06865578a19fd509129937850bcbdc3c8212443b8fa51eae6bd91b0b3f",
+      "unicode_source_change": "English authored text; Unicode fixture values preserved with explicit escapes.",
+      "pre_hardware_selection_sha256": "781070c88879e895bbe8246864284f93267b6185ef9b27e407e168fcee3d21f4",
+      "hardware_selection_change": "Link the dated hardware selection retrospective from existing reviewer and topology routes.",
+      "pre_twitch_sli_resilience_sha256": "d643a0c496a20ef3556383e96075a4cf2113b5baca7f0d23264d762c52dd6b35",
+      "twitch_sli_resilience": "Locally checked candidate only; production application held for fresh task.",
+      "pre_pi_publisher_source_port_sha256": "1a57bd86d9466793daecec2756b29cd2ca24cad934a2dfd795a231e098a230e8",
+      "pi_publisher_source_port": "2026-10-14 source reconciliation; portable English code and retained public protections; no live changes."
     },
     {
       "path": "docs/28-day-same-url-sli-case-study.md",
@@ -55,7 +67,9 @@
       "decision": "curated-current-contract-and-dated-evidence",
       "before_sha256": "4f201bd8f2e2d7953c5400677a7e52d0dbe56bd801cff883ab8650b6cb3cb31b",
       "source_sha256": null,
-      "public_sha256": "e1fcb50d004b1acf7c7c79d457c62952161d199e9727f7619bb7fce5cd1ae260"
+      "public_sha256": "20e5c3f26664fbb401774003523f13ce038531ee5b630f2bda77ce31cfee9e0d",
+      "pre_hardware_selection_sha256": "e1fcb50d004b1acf7c7c79d457c62952161d199e9727f7619bb7fce5cd1ae260",
+      "hardware_selection_change": "Link the dated hardware selection retrospective from existing reviewer and topology routes."
     },
     {
       "path": "docs/architecture.md",
@@ -79,7 +93,9 @@
       "decision": "hiring-reader-summary-with-dated-evidence",
       "before_sha256": "0f210c8e1dcd7c05aa26abf9b3020838ec3467f49a2b7bcedcf300cebed1d7e7",
       "source_sha256": null,
-      "public_sha256": "65ecbe14498fddd0c29a76f2ece43b367b7d94b12aa269295b256a7950dfbda4"
+      "public_sha256": "bc1833f76dad6e07ba2b95f001528d7fdd9e3afd02b07581d7b740e2c1435a29",
+      "pre_hardware_selection_sha256": "65ecbe14498fddd0c29a76f2ece43b367b7d94b12aa269295b256a7950dfbda4",
+      "hardware_selection_change": "Link the dated hardware selection retrospective from existing reviewer and topology routes."
     },
     {
       "path": "docs/implementation-review-map.md",
@@ -111,7 +127,19 @@
       "decision": "curated-current-contract-and-dated-evidence",
       "before_sha256": "fe6fc5119357610803a289633db8f640f0b943a1588038b58387dfb0d31521d8",
       "source_sha256": null,
-      "public_sha256": "2d89baec37ff20dead286090d0b49ba133c681088cb5f58ba52791c2939f04fb"
+      "public_sha256": "662e0dffdab3676c67d92113fc139df29c4b8597dad39d13ba8719930da53d3b",
+      "pre_hardware_selection_sha256": "2d89baec37ff20dead286090d0b49ba133c681088cb5f58ba52791c2939f04fb",
+      "hardware_selection_change": "Link the dated hardware selection retrospective from existing reviewer and topology routes."
+    },
+    {
+      "path": "docs/public-language-policy.md",
+      "source_role": "public-localization",
+      "decision": "English prose and bounded Unicode data exceptions",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "f640c1e9d01fc628879b7610f3d8674a595ca109af45839e2f77142568518a87",
+      "before_unicode_source_sha256": "5fcc6c3383f62a6583d492f93385e61efc3fc490f304fa41165bfa3a80cb0590",
+      "unicode_source_change": "English authored text; Unicode fixture values preserved with explicit escapes."
     },
     {
       "path": "docs/public-release.md",
@@ -162,14 +190,22 @@
       "public_sha256": "1558d605da7002aa949ad125f71b1ba8faf4cac093dcf75eeedb366859d32333"
     },
     {
+      "path": "docs/v3/public-diagram-and-trend-display.md",
+      "source_role": "public-graph-display",
+      "decision": "Public-only display behavior and bounded browser fixtures",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "f9dd31c84a51e64a904fd4c8abfe3338373e4641a9e5d63f377f7e7ec67a199a"
+    },
+    {
       "path": "docs/v3/public-publisher-boundary.md",
       "source_role": "public-documentation",
-      "decision": "current-component-index-and-publication-boundary",
+      "decision": "Pi publisher source reconciliation, portable paths, English source guide, and mock-based validation.",
       "before_sha256": "13f8a22fed3663e4f423d8e86f22a6150437b99c59dc74f876c9b3bbd4dc202a",
       "source_sha256": null,
       "public_sha256": "2aaaa185daa40778e62f48afcff2a223d3cdc0e7ac0367f620bcd9d758c8493c",
       "pre_pi_publisher_source_port_sha256": "9c7649fba1de17fa7cfbd9a5f19af6dd18d7be5c29f80b15f12ec50b512d88ec",
-      "pi_publisher_source_port": "2026-10-14 Pi publisher source reconciliation; no live mutation."
+      "pi_publisher_source_port": "2026-10-14 source reconciliation; portable English code and retained public protections; no live changes."
     },
     {
       "path": "docs/v3/public-source-port-2026-10-13.md",
@@ -220,12 +256,26 @@
       "public_sha256": "ed3bb73f94d1501428678e0128eeef4988e6df6e622bf09414b1e282c58cd7ff"
     },
     {
+      "path": "monitoring-v4/docs/public-language-policy.md",
+      "source_role": "public-localization",
+      "decision": "English prose and bounded Unicode data exceptions",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "f640c1e9d01fc628879b7610f3d8674a595ca109af45839e2f77142568518a87",
+      "before_unicode_source_sha256": "5fcc6c3383f62a6583d492f93385e61efc3fc490f304fa41165bfa3a80cb0590",
+      "unicode_source_change": "English authored text; Unicode fixture values preserved with explicit escapes."
+    },
+    {
       "path": "monitoring-v4/docs/public-release.md",
       "source_role": "public-documentation",
       "decision": "adapted-for-integrated-publication-links",
       "before_sha256": "ff883e9ddb62f167bc602fbaf1f81bd1ca64ac2177079f90019d5c5d6a482490",
       "source_sha256": null,
-      "public_sha256": "704efa4cef3cdba565902fe1414f2b3a59d2877eda257053f4e2629204b1bb1c"
+      "public_sha256": "7139fbd035e4d03c07b066d2a3186ca4b79f8e3aa40471d6a97b2b66224efd66",
+      "prior_public_sha256": "704efa4cef3cdba565902fe1414f2b3a59d2877eda257053f4e2629204b1bb1c",
+      "localization": "English prose; control structures and machine identifiers preserved.",
+      "before_unicode_source_sha256": "ca48ca415191a13b321cb7ef2d982c82d42dc583a8f2710935c1a8978109831a",
+      "unicode_source_change": "English authored text; Unicode fixture values preserved with explicit escapes."
     },
     {
       "path": "monitoring-v4/docs/relay-provider-evidence.md",
@@ -242,6 +292,24 @@
       "before_sha256": "9868bd73c1548cf9567f8fdac4a99ddc72aa4e25f82518b88eeec10ca2f5977f",
       "source_sha256": null,
       "public_sha256": "5639c695dc1591c8812b35d4c8cbc907969ab3fb3edd5cfb8c710868159d9496"
+    },
+    {
+      "path": "monitoring-v4/ops/scripts/validate_public_language.py",
+      "source_role": "public-localization",
+      "decision": "English prose and bounded Unicode data exceptions",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "ae121b6d5c5118c35dd0fd4006d4aac6553a92c055866d1f1cd558d50003755e"
+    },
+    {
+      "path": "monitoring-v4/publication/language-policy.json",
+      "source_role": "public-localization",
+      "decision": "English prose and bounded Unicode data exceptions",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "20dda88fa5d7573b33aa99a490b72724be4cf008363e2c79f34082dcdc3dc1df",
+      "before_unicode_source_sha256": "b1bff2ff21dadeb63e1be643e2be93c2e607d3a5b39840d1dd602b279959e824",
+      "unicode_source_change": "English authored text; Unicode fixture values preserved with explicit escapes."
     },
     {
       "path": "monitoring-v4/pyproject.toml",
@@ -328,8 +396,10 @@
       "source_role": "development-monitoring",
       "decision": "configured-public-evidence-binding",
       "before_sha256": null,
-      "source_sha256": "a07e09b4e232c7288f9ccc1ca19b20c308adbabd3fd46055904af028aa3cf399",
-      "public_sha256": "6495cf95221045c5b61fcd3da91f67960477edccfabe95045dd4d3b5ffaed51c"
+      "source_sha256": "73b20ff8e16c7d63b72018a34c77f945a2322f85122647d87155ded20dfab608",
+      "public_sha256": "867319076851eae4850d3d57166520a34fbc8816ee33d6581135dfeea25d6218",
+      "pre_twitch_sli_resilience_sha256": "6495cf95221045c5b61fcd3da91f67960477edccfabe95045dd4d3b5ffaed51c",
+      "twitch_sli_resilience": "Locally checked candidate only; production application held for fresh task."
     },
     {
       "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/twitch_sli_public.py",
@@ -338,6 +408,30 @@
       "before_sha256": null,
       "source_sha256": "7fceed67ab8850edf4a899207c32ec1a7aedc883f39ce573c5a41a6971969f1a",
       "public_sha256": "7fceed67ab8850edf4a899207c32ec1a7aedc883f39ce573c5a41a6971969f1a"
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/notifications/renderer.py",
+      "source_role": "public-localization",
+      "decision": "English prose and bounded Unicode data exceptions",
+      "before_sha256": "f551b3f08c32aafd6bc0585e11d553e9236f0364962931a8101b2337eeca39fd",
+      "source_sha256": null,
+      "public_sha256": "d4365d3933a74e3b16c66cf8e707f025629e0ab281f88e268ff023bfefc4384a"
+    },
+    {
+      "path": "monitoring-v4/tests/fixtures/monitoring_v4/2026-08-12_time_boundary_replay.json",
+      "source_role": "public-localization",
+      "decision": "English prose and bounded Unicode data exceptions",
+      "before_sha256": "c693dd58849b11162140a514ab5c19f186f3219ca79177155ef5d7270d748aaa",
+      "source_sha256": null,
+      "public_sha256": "efd1462f0d54f8da0671748de8baf29f914fdf90f7239f9fe72500c1b1ba0285"
+    },
+    {
+      "path": "monitoring-v4/tests/test_notifications.py",
+      "source_role": "public-localization",
+      "decision": "English prose and bounded Unicode data exceptions",
+      "before_sha256": "c8288e60e2d7c3dfc302db3c42fc1f6bfa339d4b7ac52e51ca73a1578505b5bc",
+      "source_sha256": null,
+      "public_sha256": "0dd33ed89857e39ce7d1982fe949bf15374edf2b1002a6a1a15817ac6b682a2a"
     },
     {
       "path": "monitoring-v4/tests/test_recovery_verification.py",
@@ -354,6 +448,14 @@
       "before_sha256": null,
       "source_sha256": "5df3252efd40c9c0f3dfeed4adcaa6c4b306b96aa070c0324bf05e2c13ebe6b6",
       "public_sha256": "69819a1f72fa08b7bc952a69c9e80c42fee3f27b8bc46d1a476399365bef0075"
+    },
+    {
+      "path": "monitoring-v4/tests/test_runtime_lifecycle.py",
+      "source_role": "public-localization",
+      "decision": "English prose and bounded Unicode data exceptions",
+      "before_sha256": "5a4959c53a66d8f8cc27bc5555f1906d882969afa5039cc1c35b0f0aa22e4564",
+      "source_sha256": null,
+      "public_sha256": "98e1bb8733d8b0dad002decb5239beb2c689aa066abec45579abc100034dbc96"
     },
     {
       "path": "monitoring-v4/tests/test_twitch_api_collector.py",
@@ -376,8 +478,34 @@
       "source_role": "development-monitoring-tests",
       "decision": "configured-public-evidence-binding",
       "before_sha256": null,
-      "source_sha256": "09fa529711f2a91cb42543f3ae2f89965f3d26c6fb6781a64503858c3ed8d465",
-      "public_sha256": "c5aa04babecdaad7a7be108a70f9095bc5791b8a364eea739d9ac0735e447533"
+      "source_sha256": "cc73310ca1aa5e7ce292057f82b67cd39314b9065f1eb6e5954b45598b750f98",
+      "public_sha256": "c172b6ef5c0ec74bb4f42d208df0c0ca7c8c57789fd5bac773aab92f27049c61",
+      "pre_twitch_sli_resilience_sha256": "c5aa04babecdaad7a7be108a70f9095bc5791b8a364eea739d9ac0735e447533",
+      "twitch_sli_resilience": "Locally checked candidate only; production application held for fresh task."
+    },
+    {
+      "path": "ops/host-maintenance/bin/nvidia_driver_update_check.py",
+      "source_role": "public-localization",
+      "decision": "English prose and bounded Unicode data exceptions",
+      "before_sha256": "6a37596dda2f813dd8ab6de95ed91dc41e8b6973a55809179468ef397631f999",
+      "source_sha256": null,
+      "public_sha256": "29ff59d8b4616950acd485b9bf2e3505cd2bee0be669f04f977486fc9926309e"
+    },
+    {
+      "path": "ops/prodesk-monitoring/check_adsb_alive.py",
+      "source_role": "public-localization",
+      "decision": "English prose and bounded Unicode data exceptions",
+      "before_sha256": "1ff0395417fcb629bd33579ae0493bf44a74340b39336d9aaa509cf30b53526e",
+      "source_sha256": null,
+      "public_sha256": "42aa12cffee395cc43df514f2a787c6076fbf03e12bcd8edfe0ad4ee529aa82f"
+    },
+    {
+      "path": "ops/prodesk-monitoring/check_amazon_mail_notifier.py",
+      "source_role": "public-localization",
+      "decision": "English prose and bounded Unicode data exceptions",
+      "before_sha256": "906733f0bfbfa71312e7f194bc8787b7ded9550221d3194b8cb5de6ab307c4cd",
+      "source_sha256": null,
+      "public_sha256": "4b00091b5bb0831fe76f8b443d5ba6dc0b4c981b31c55e7d0dc6652bee1467b4"
     },
     {
       "path": "ops/public-publisher/site/public/assets/dashboard-20261013.css",
@@ -396,6 +524,22 @@
       "public_sha256": "4761b9e88ca4548beac5060c366deb1398e65bb0249ac163f6f9a736be784b60"
     },
     {
+      "path": "ops/public-publisher/site/public/assets/graphs-20261014.css",
+      "source_role": "public-graph-display",
+      "decision": "Public-only display behavior and bounded browser fixtures",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "0cda403b0270b1d43b97f2fe845afa60bc63d2f846f4f9d4c6e8d6aa3f6178f7"
+    },
+    {
+      "path": "ops/public-publisher/site/public/assets/graphs-core-20261014.js",
+      "source_role": "public-graph-display",
+      "decision": "Public-only display behavior and bounded browser fixtures",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "836a9caf98142c076263b99adaf36386ce46e28438331e060daae950138b8091"
+    },
+    {
       "path": "ops/public-publisher/site/public/assets/operations-20261013.css",
       "source_role": "development-public-ui",
       "decision": "adapted",
@@ -410,6 +554,14 @@
       "before_sha256": null,
       "source_sha256": "a18c9eaa06badd4dfefddaf1df1d474f9f14ab0763e4807864e6e78798b2ee27",
       "public_sha256": "a18c9eaa06badd4dfefddaf1df1d474f9f14ab0763e4807864e6e78798b2ee27"
+    },
+    {
+      "path": "ops/public-publisher/site/public/assets/operations-20261014.js",
+      "source_role": "public-graph-display",
+      "decision": "Public-only display behavior and bounded browser fixtures",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "7fda4314ff758937aab06ec9277a08cb9bc2dc261c96a20750f43a68c1b77317"
     },
     {
       "path": "ops/public-publisher/site/public/assets/reliability-card-20261013.js",
@@ -434,6 +586,14 @@
       "before_sha256": null,
       "source_sha256": "4e1dc168b3522bda0cc35bb7cc2b50f69c4c45003cdb8471ed4529de7bb8f7f8",
       "public_sha256": "4e1dc168b3522bda0cc35bb7cc2b50f69c4c45003cdb8471ed4529de7bb8f7f8"
+    },
+    {
+      "path": "ops/public-publisher/site/public/assets/site-20261014-graphs.js",
+      "source_role": "public-graph-display",
+      "decision": "Public-only display behavior and bounded browser fixtures",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "0fa08439eec78775fba1405ee215d2d305a3bd84fd8c2c8d43ab462d89e9d92f"
     },
     {
       "path": "ops/public-publisher/site/public/assets/site.css",
@@ -488,8 +648,12 @@
       "source_role": "development-public-ui",
       "decision": "adapted",
       "before_sha256": "b746d811c61fa5a7cf7fc46b7e4681a1f58764cc7b79427b3f756ee547552d63",
-      "source_sha256": "fdb3536280673f09d5199ac8f3e1e4ff8250e324edbae991f4e4fd4605b6f539",
-      "public_sha256": "cfadf662a3455f92df0f7ad67f767a2835285aebe9d2068a3b8c8ce3ab4888a9"
+      "source_sha256": "d172c74b90c3bad262b95fe6354041dbca0eb93c95c5958205e55ce3153f8598",
+      "public_sha256": "d172c74b90c3bad262b95fe6354041dbca0eb93c95c5958205e55ce3153f8598",
+      "pre_graph_display_sha256": "cfadf662a3455f92df0f7ad67f767a2835285aebe9d2068a3b8c8ce3ab4888a9",
+      "graph_display_change": "Observed link arrows, explicit direct-path inference, and timestamp-preserving charts.",
+      "pre_twitch_sli_resilience_sha256": "86762c0461a6249d1d652160906ad02ef8340f1b74f99c399e3a6253f19caed0",
+      "twitch_sli_resilience": "Locally checked candidate only; production application held for fresh task."
     },
     {
       "path": "ops/public-publisher/site/scripts/build_public.py",
@@ -526,12 +690,20 @@
     {
       "path": "ops/public-publisher/site/scripts/push_to_gcs.py",
       "source_role": "development-public-ui",
-      "decision": "port-missing-fixed-current-assets-and-provider-artifacts-upload-allowlist",
+      "decision": "Pi publisher source reconciliation, portable paths, English source guide, and mock-based validation.",
       "before_sha256": "5378112b4043be6f281279db02402b1274006d86cfc333800807423b9160c5d6",
       "source_sha256": "83a2b329123bf7f24e8e502b1e73e887d09c66424f019b1b0f1abe062c7559b7",
       "public_sha256": "46fea0718b2e4ff11a8928af96753d68f37cb77329f7e20d6934da81dc092abd",
       "pre_pi_publisher_source_port_sha256": "83a2b329123bf7f24e8e502b1e73e887d09c66424f019b1b0f1abe062c7559b7",
-      "pi_publisher_source_port": "2026-10-14 Pi publisher source reconciliation; no live mutation."
+      "pi_publisher_source_port": "2026-10-14 source reconciliation; portable English code and retained public protections; no live changes."
+    },
+    {
+      "path": "ops/public-publisher/site/tests/graphs-20261014.html",
+      "source_role": "public-graph-display",
+      "decision": "Public-only display behavior and bounded browser fixtures",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "fd18168cc395d977228e1f51217a8aae39237e14c381e7f5188eea32d46c9ed3"
     },
     {
       "path": "ops/relay/operator_route.py",
@@ -547,7 +719,9 @@
       "decision": "adapted",
       "before_sha256": null,
       "source_sha256": "e837158facfd80c094b08746e25f01a88ae43967fd9f21b4fb3285d5acdffa24",
-      "public_sha256": "e837158facfd80c094b08746e25f01a88ae43967fd9f21b4fb3285d5acdffa24"
+      "public_sha256": "57c972d4f31cd4d1453f10e3dd4ff29a221de7f281f47f92690619e972bdfe93",
+      "prior_public_sha256": "e837158facfd80c094b08746e25f01a88ae43967fd9f21b4fb3285d5acdffa24",
+      "localization": "English prose; control structures and machine identifiers preserved."
     },
     {
       "path": "ops/relay/relay_lease.py",
@@ -555,7 +729,9 @@
       "decision": "adapted",
       "before_sha256": null,
       "source_sha256": "70f0e47fe50cb3e36fa61c1b311104811e49694927c54bad39288090581f7086",
-      "public_sha256": "70f0e47fe50cb3e36fa61c1b311104811e49694927c54bad39288090581f7086"
+      "public_sha256": "73fe2c66a86baefde418da0667e11aa8e69668f543be581b4005182779e36304",
+      "prior_public_sha256": "70f0e47fe50cb3e36fa61c1b311104811e49694927c54bad39288090581f7086",
+      "localization": "English prose; control structures and machine identifiers preserved."
     },
     {
       "path": "ops/relay/relay_supervisor.py",
@@ -563,7 +739,9 @@
       "decision": "adapted",
       "before_sha256": null,
       "source_sha256": "5d27413b6cf83af44def0b6c862f10faee6358c0e298b6133db436a14039515f",
-      "public_sha256": "5d27413b6cf83af44def0b6c862f10faee6358c0e298b6133db436a14039515f"
+      "public_sha256": "62980a67826f9c9846e2a7c81bf29939dba3251124e1cee00d3c601a6766d71d",
+      "prior_public_sha256": "5d27413b6cf83af44def0b6c862f10faee6358c0e298b6133db436a14039515f",
+      "localization": "English prose; control structures and machine identifiers preserved."
     },
     {
       "path": "ops/relay/twitch_daily.py",
@@ -571,7 +749,9 @@
       "decision": "adapted",
       "before_sha256": null,
       "source_sha256": "843ef769fe35f13d58506262533eb8d37406741ccffc4fc218e9c80dc437f034",
-      "public_sha256": "843ef769fe35f13d58506262533eb8d37406741ccffc4fc218e9c80dc437f034"
+      "public_sha256": "900b8c8e711a53f287ae1946f7703341c05f1eed0a1069c6a13da145525218dd",
+      "prior_public_sha256": "843ef769fe35f13d58506262533eb8d37406741ccffc4fc218e9c80dc437f034",
+      "localization": "English prose; control structures and machine identifiers preserved."
     },
     {
       "path": "ops/relay/twitch_session.py",
@@ -590,12 +770,28 @@
       "public_sha256": "964fc253ff1e2eff0bbb0761db368f38e00429fcf7e1c386116c7dbaf4be2353"
     },
     {
+      "path": "ops/scripts/prepare_floracore_music.py",
+      "source_role": "public-localization",
+      "decision": "English prose and bounded Unicode data exceptions",
+      "before_sha256": "38dde5a8c2ba84f4fd0dec06282e9879c763ceb60cf35bd6dcbf2784b7c4e476",
+      "source_sha256": null,
+      "public_sha256": "cdd788c05f406a0c04537079fd354be72291e075f5d53351f8c2fb3498467396"
+    },
+    {
       "path": "ops/scripts/route_network_observer.py",
       "source_role": "development-route-observer",
       "decision": "portable-configured-and-offline-replay",
       "before_sha256": null,
       "source_sha256": "513b2acdd979071d1507f5f6506585b23fb5ef13392756bedaf8c1792cd3092d",
       "public_sha256": "fd3f4d6617a677d3e6939f491abb50530dc313069db0870040e05ba4fb68b563"
+    },
+    {
+      "path": "ops/scripts/validate_public_language.py",
+      "source_role": "public-localization",
+      "decision": "English prose and bounded Unicode data exceptions",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "ae121b6d5c5118c35dd0fd4006d4aac6553a92c055866d1f1cd558d50003755e"
     },
     {
       "path": "ops/scripts/validate_public_port.py",
@@ -612,6 +808,56 @@
       "before_sha256": null,
       "source_sha256": null,
       "public_sha256": "2d6ae3f8f21f80c00d088392d53b47af8d0d304df6e2e8a50d489fdeda77478f"
+    },
+    {
+      "path": "publication/graph-display-20261014.json",
+      "source_role": "public-graph-display",
+      "decision": "Public-only display behavior and bounded browser fixtures",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "58998ef40a8f35c1c0814f61c473cdea52b214a8b68b06737c4c27ac464680e4"
+    },
+    {
+      "path": "publication/history/source-map-before-english-20261014.json",
+      "source_role": "public-localization",
+      "decision": "English prose and bounded Unicode data exceptions",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "4a80055748ccb5e84d48a2e7f7a3c9291a08cb4f8218f21af8ce771ebe43ff1f"
+    },
+    {
+      "path": "publication/history/source-map-before-unicode-20261014.json",
+      "source_role": "public-source-history",
+      "decision": "Retain the preceding public source manifest unchanged.",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "9c052942cdb9edd54fe3f64c01fa6e3a9d0699bfd7d8c62b504e6d5d4b5c9ad8"
+    },
+    {
+      "path": "publication/language-localization-20261014.json",
+      "source_role": "public-localization-record",
+      "decision": "Bounded language-change record with retained previous manifest",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "7362ec9de5d600af4957cc1bad7f0d2121043a8b3003b3ca13f08e06a24daf92"
+    },
+    {
+      "path": "publication/language-policy.json",
+      "source_role": "public-localization",
+      "decision": "English prose and bounded Unicode data exceptions",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "f21c18e4e146ad3698aeeaa371007e22892d2fd15dd78b62775505a54d33ce3f",
+      "before_unicode_source_sha256": "f2b41243dc33e5f1789585f0afbf51e9b5e4ff8e2b77feaa458db08987670701",
+      "unicode_source_change": "English authored text; Unicode fixture values preserved with explicit escapes."
+    },
+    {
+      "path": "publication/public-port-english-20261014.json",
+      "source_role": "public-source-port-record",
+      "decision": "Bounded public port and English-source verification record.",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "05460d825c00ecdb5db1bf5e030710a72d2e0055e8d661cfd5f9bc65e59eeb26"
     },
     {
       "path": "recovery-control/README.md",
@@ -651,7 +897,11 @@
       "decision": "current-component-index-and-publication-boundary",
       "before_sha256": "1a194326d95942bd3f9c457b7307062a05193c69107c9ca78014f6ef4b246363",
       "source_sha256": null,
-      "public_sha256": "c936259ad68b3d3802caac9deb84f893ba453c5129650a4485522eb2afe8da98"
+      "public_sha256": "d53819f010f58f3fbcbb5f758ce68cb2d9f5c335c25c0cc0752920f065406394",
+      "prior_public_sha256": "c936259ad68b3d3802caac9deb84f893ba453c5129650a4485522eb2afe8da98",
+      "localization": "English prose; control structures and machine identifiers preserved.",
+      "before_unicode_source_sha256": "78957f166d15b800f5c88e8ef691af40e4642ef50c8d0df5520891325366ba92",
+      "unicode_source_change": "English authored text; Unicode fixture values preserved with explicit escapes."
     },
     {
       "path": "recovery-control/docs/current-evidence-and-route-source.md",
@@ -660,6 +910,16 @@
       "before_sha256": null,
       "source_sha256": null,
       "public_sha256": "b25aca31f384d8583e8151c485830d1fe0028e9672760150bb716bfa541ba9df"
+    },
+    {
+      "path": "recovery-control/docs/public-language-policy.md",
+      "source_role": "public-localization",
+      "decision": "English prose and bounded Unicode data exceptions",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "f640c1e9d01fc628879b7610f3d8674a595ca109af45839e2f77142568518a87",
+      "before_unicode_source_sha256": "5fcc6c3383f62a6583d492f93385e61efc3fc490f304fa41165bfa3a80cb0590",
+      "unicode_source_change": "English authored text; Unicode fixture values preserved with explicit escapes."
     },
     {
       "path": "recovery-control/docs/public-release.md",
@@ -675,7 +935,9 @@
       "decision": "adapted",
       "before_sha256": null,
       "source_sha256": "0833afeb5b9442033f5a05214ceee6e666aff9bc019370c757743774874b5ee3",
-      "public_sha256": "0833afeb5b9442033f5a05214ceee6e666aff9bc019370c757743774874b5ee3"
+      "public_sha256": "effdacf2d3c50df194178a1b7362a66b9feb012faa02f48556f88ffbd32c6bb1",
+      "prior_public_sha256": "0833afeb5b9442033f5a05214ceee6e666aff9bc019370c757743774874b5ee3",
+      "localization": "English prose; control structures and machine identifiers preserved."
     },
     {
       "path": "recovery-control/harness/contracts/owner_observation_review.json",
@@ -699,7 +961,9 @@
       "decision": "adapted",
       "before_sha256": "6cff400b083c64e5c80cbb7c45a60a5147db0645ddd638bd7bae5bb4b49cc2cf",
       "source_sha256": "c7a2c28a1027613a310c4d4657a0574e2690a0a2db318ab5ee3224a07640cf1d",
-      "public_sha256": "c7a2c28a1027613a310c4d4657a0574e2690a0a2db318ab5ee3224a07640cf1d"
+      "public_sha256": "d92b448c44a789317015901ae887030e4465416d9aa22125b669642b18cac316",
+      "prior_public_sha256": "c7a2c28a1027613a310c4d4657a0574e2690a0a2db318ab5ee3224a07640cf1d",
+      "localization": "English prose; control structures and machine identifiers preserved."
     },
     {
       "path": "recovery-control/harness/scenarios/owner_observation_chaos_v1.json",
@@ -707,7 +971,9 @@
       "decision": "adapted",
       "before_sha256": "64d8a6c2e0e8989d46d81a852a0f68b544034d2498f363f765d2c6309ccb8a49",
       "source_sha256": "ff08aef09f96ca74d92ede78aa9f7fa8ac37941df5e7107d27103bd4a66af1e1",
-      "public_sha256": "080a147d5537eb3e9d49c54601be2a5b1e12bca0e785a2aa297639ebd50989b4"
+      "public_sha256": "0fbf97d86edff7b27b7046689726c4c9e9dfc8b167c77665fcb3f6927f490b03",
+      "prior_public_sha256": "080a147d5537eb3e9d49c54601be2a5b1e12bca0e785a2aa297639ebd50989b4",
+      "localization": "English prose; control structures and machine identifiers preserved."
     },
     {
       "path": "recovery-control/harness/scenarios/postmortem_io_v1.json",
@@ -723,7 +989,9 @@
       "decision": "complete-source-bound-public-release-inputs",
       "before_sha256": "71beae40314a2fcacd9e395fd0e35dda5c815f0b04fbe20ab74dcdda9610b038",
       "source_sha256": "ef435225ea22e959d9f96b0b14551c5e3bba4690cc07b9b198cae079aa2da05d",
-      "public_sha256": "ef435225ea22e959d9f96b0b14551c5e3bba4690cc07b9b198cae079aa2da05d"
+      "public_sha256": "5a20c16f70457bdc6c5868fc46cd469d036d560a13a8d324500e206050d98bd0",
+      "prior_public_sha256": "ef435225ea22e959d9f96b0b14551c5e3bba4690cc07b9b198cae079aa2da05d",
+      "localization": "English prose; control structures and machine identifiers preserved."
     },
     {
       "path": "recovery-control/harness/scenarios/rtmps_failure_sequences_v1.json",
@@ -731,7 +999,9 @@
       "decision": "required-static-scenario-dependency",
       "before_sha256": null,
       "source_sha256": "940387eb6dedfaddcf64d352d1aaf2d2fd81825f851e21e2a3236284b5b845ad",
-      "public_sha256": "940387eb6dedfaddcf64d352d1aaf2d2fd81825f851e21e2a3236284b5b845ad"
+      "public_sha256": "d75254b5b3a857cfa384e4d0f582635a312d34e413ff22b5d5eb61915971040e",
+      "prior_public_sha256": "940387eb6dedfaddcf64d352d1aaf2d2fd81825f851e21e2a3236284b5b845ad",
+      "localization": "English prose; control structures and machine identifiers preserved."
     },
     {
       "path": "recovery-control/migrations/central/007_authorization_revision_binding.sql",
@@ -740,6 +1010,14 @@
       "before_sha256": null,
       "source_sha256": "f71994590d5137522cb65eb4c7ad58a3e4431ebfe2a9d3b0b7b18a6da936d556",
       "public_sha256": "f71994590d5137522cb65eb4c7ad58a3e4431ebfe2a9d3b0b7b18a6da936d556"
+    },
+    {
+      "path": "recovery-control/ops/scripts/validate_public_language.py",
+      "source_role": "public-localization",
+      "decision": "English prose and bounded Unicode data exceptions",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "ae121b6d5c5118c35dd0fd4006d4aac6553a92c055866d1f1cd558d50003755e"
     },
     {
       "path": "recovery-control/ops/systemd/cra-archive-integrity.example.json",
@@ -868,6 +1146,16 @@
       "before_sha256": null,
       "source_sha256": "9135ec9c1a6c9557b53396c3501070c625f303f53db532b5d20d6ed32e80a5e6",
       "public_sha256": "60dba4c26c4341852d63514ee4f9dc398fc7b650a0cbde505b7cd019f33d62a3"
+    },
+    {
+      "path": "recovery-control/publication/language-policy.json",
+      "source_role": "public-localization",
+      "decision": "English prose and bounded Unicode data exceptions",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "20dda88fa5d7573b33aa99a490b72724be4cf008363e2c79f34082dcdc3dc1df",
+      "before_unicode_source_sha256": "ee58179fc4535d5d493928936889897ef24d7e5167c6613d3073f7ce1a6ec8a3",
+      "unicode_source_change": "English authored text; Unicode fixture values preserved with explicit escapes."
     },
     {
       "path": "recovery-control/pyproject.toml",
@@ -1019,7 +1307,9 @@
       "decision": "adapted",
       "before_sha256": "d235bb37b5468e12a22e58698e30a78cd1f50c18f6271e25534b7366f1d5894d",
       "source_sha256": "98b34227165000a73f6e5e1eef23b952c7d63dc592523f9057e047bdd4cb6ddb",
-      "public_sha256": "98b34227165000a73f6e5e1eef23b952c7d63dc592523f9057e047bdd4cb6ddb"
+      "public_sha256": "cc2bc4635f3c49e0c018d932237e04ae77f94ff0ed791f239090d8e26eb795ed",
+      "prior_public_sha256": "98b34227165000a73f6e5e1eef23b952c7d63dc592523f9057e047bdd4cb6ddb",
+      "localization": "English prose; control structures and machine identifiers preserved."
     },
     {
       "path": "recovery-control/src/cra_harness/injectors/faults.py",
@@ -1046,6 +1336,22 @@
       "public_sha256": "d5027fb88c316fc480a00f71f9fc4a0a18f313285d1c3ffff9ef90090608bf18"
     },
     {
+      "path": "recovery-control/src/cra_harness/reporting/artifacts.py",
+      "source_role": "public-localization",
+      "decision": "English prose and bounded Unicode data exceptions",
+      "before_sha256": "8969d14dae20762dfe4acd377516202304f416dfaeb532ecf509b5c931743466",
+      "source_sha256": null,
+      "public_sha256": "3bf0aa5f01319b38e3c4f3c316727954e3bde012d93771871a29ae62507cad22"
+    },
+    {
+      "path": "recovery-control/src/cra_harness/reporting/coverage_v3.py",
+      "source_role": "public-localization",
+      "decision": "English prose and bounded Unicode data exceptions",
+      "before_sha256": "784af0261051bf18ef336839d6b24063be3f2f5420ca452d8e80d2b9aa73ac8b",
+      "source_sha256": null,
+      "public_sha256": "e1bc0ba3032ee14fc98f935cd7ccc1259f1217eb5fb582f25289eba094c37aaa"
+    },
+    {
       "path": "recovery-control/src/cra_harness/runner/executor.py",
       "source_role": "development-recovery",
       "decision": "adapted",
@@ -1059,7 +1365,41 @@
       "decision": "adapted",
       "before_sha256": "b9f12a30831327847fcd40a6efa0325223f0eb2e3975ea543c9d6d37993316f7",
       "source_sha256": "3fef57c94b11a2ed4b893bf1664aa0d66a0d041e049f1f6bad6c245a1529bf3c",
-      "public_sha256": "3fef57c94b11a2ed4b893bf1664aa0d66a0d041e049f1f6bad6c245a1529bf3c"
+      "public_sha256": "86474f3d653c8e38ce1a14f779ef25eb4fb74f215dd0d520cd6ed5e528273a4e",
+      "prior_public_sha256": "3fef57c94b11a2ed4b893bf1664aa0d66a0d041e049f1f6bad6c245a1529bf3c",
+      "localization": "English prose; control structures and machine identifiers preserved."
+    },
+    {
+      "path": "recovery-control/src/cra_harness/runner/sqlite_concurrency.py",
+      "source_role": "public-localization",
+      "decision": "English prose and bounded Unicode data exceptions",
+      "before_sha256": "6601d7809484be7df9c91467f470e7c2454707db1e55d0169216975fbb74513c",
+      "source_sha256": null,
+      "public_sha256": "f1731955ce95efbf55f91b575001d8d629a4b5a35c617dedecbb57a158ceeb25"
+    },
+    {
+      "path": "recovery-control/src/cra_harness/runner/suite.py",
+      "source_role": "public-localization",
+      "decision": "English prose and bounded Unicode data exceptions",
+      "before_sha256": "0f19d8bc09ec9ab79b3e72b132eaa4748a1cfe20a20a6bcd7a7715d44984c2cb",
+      "source_sha256": null,
+      "public_sha256": "42d828fe78423324fc5db18db1f3b0eb59d3a7e6cb3be255c78fa029ce5f12dc"
+    },
+    {
+      "path": "recovery-control/src/cra_harness/runner/suite_v2.py",
+      "source_role": "public-localization",
+      "decision": "English prose and bounded Unicode data exceptions",
+      "before_sha256": "a42be4ff70e35bc92887fa5eeef067306754e165ee7f5f0d0a50c28d49b78083",
+      "source_sha256": null,
+      "public_sha256": "4963f4c6551c0e36dc996bb0757aa658ef04cf0df63dfdb6850995c4b2f8c2ff"
+    },
+    {
+      "path": "recovery-control/src/cra_harness/runner/suite_v3.py",
+      "source_role": "public-localization",
+      "decision": "English prose and bounded Unicode data exceptions",
+      "before_sha256": "7af866eac6abe5e276ddc5b9f6a13877a21841b06f118bd2db2c85ace39f938c",
+      "source_sha256": null,
+      "public_sha256": "fadcc67881c6f4e248ac3e6799f26292e4c9eae0549e3bb6734ceb29690c03d6"
     },
     {
       "path": "recovery-control/src/cra_harness/running_qualification.py",
@@ -1083,7 +1423,9 @@
       "decision": "adapted",
       "before_sha256": "ef50ada56561c8f23863fdcd391bf92d3827e4f297816fdf374301c6571242d0",
       "source_sha256": "e44692f2c9cfce546ea2fa7180c2a3dd77fb755f8fb552aa5e28bc44b1f72535",
-      "public_sha256": "e44692f2c9cfce546ea2fa7180c2a3dd77fb755f8fb552aa5e28bc44b1f72535"
+      "public_sha256": "9009382f506387c49132b3a805a61be1bcf77571d31a67566a0e8459f5bb0ba9",
+      "prior_public_sha256": "e44692f2c9cfce546ea2fa7180c2a3dd77fb755f8fb552aa5e28bc44b1f72535",
+      "localization": "English prose; control structures and machine identifiers preserved."
     },
     {
       "path": "recovery-control/src/cra_harness/upstream_surface.py",
@@ -1259,7 +1601,9 @@
       "decision": "adapted",
       "before_sha256": "0974d7c39fa2829cac2f6213faaef18f13736a559cdaad856f122c23938b6bdc",
       "source_sha256": "61a513484086ad2238c739300ac37bdce2ab1a916a00a1a3952dcb2fb654be63",
-      "public_sha256": "61a513484086ad2238c739300ac37bdce2ab1a916a00a1a3952dcb2fb654be63"
+      "public_sha256": "389c8c8d80005041788f7f6327f365b21b435f1a778a1a913bd0691e70a62d75",
+      "prior_public_sha256": "61a513484086ad2238c739300ac37bdce2ab1a916a00a1a3952dcb2fb654be63",
+      "localization": "English prose; control structures and machine identifiers preserved."
     },
     {
       "path": "recovery-control/src/runtime_boundary/ledger.py",
@@ -1267,7 +1611,9 @@
       "decision": "adapted",
       "before_sha256": "625eb893a57f0e190b41baef2e7ced6c6fca6ce745eed3a380f2b0ba240fd587",
       "source_sha256": "e5b8fe136f35871fe15ad603e35e025a5f5b01676010b3222dd4820f8f5c1120",
-      "public_sha256": "e5b8fe136f35871fe15ad603e35e025a5f5b01676010b3222dd4820f8f5c1120"
+      "public_sha256": "0f201cd0fd8fdb0b617de84550d16f9f73955e9ad1e898ef34868b447b27ec37",
+      "prior_public_sha256": "e5b8fe136f35871fe15ad603e35e025a5f5b01676010b3222dd4820f8f5c1120",
+      "localization": "English prose; control structures and machine identifiers preserved."
     },
     {
       "path": "recovery-control/src/runtime_boundary/model.py",
@@ -1275,7 +1621,9 @@
       "decision": "adapted",
       "before_sha256": "f2ffeea22da40d72418c69a6768512af1afb67afec726e17c34d55254e5fe604",
       "source_sha256": "4e3dd3a12c188a329c49c21ba633db727ae0fe118d51e0d062e98071ad2723c6",
-      "public_sha256": "4e3dd3a12c188a329c49c21ba633db727ae0fe118d51e0d062e98071ad2723c6"
+      "public_sha256": "d642e741c6eab51b931e902eb53b8a3bcfb404dec7300efe245da7f94f6dbbb3",
+      "prior_public_sha256": "4e3dd3a12c188a329c49c21ba633db727ae0fe118d51e0d062e98071ad2723c6",
+      "localization": "English prose; control structures and machine identifiers preserved."
     },
     {
       "path": "recovery-control/src/runtime_boundary/observation.py",
@@ -1291,7 +1639,9 @@
       "decision": "adapted",
       "before_sha256": null,
       "source_sha256": "4b129221391d3e27f3a94d73ec3829238c1f3d1654babc27d91c4ecd1391cbca",
-      "public_sha256": "4b129221391d3e27f3a94d73ec3829238c1f3d1654babc27d91c4ecd1391cbca"
+      "public_sha256": "bded541352d1a10f1412f5db9189201dfb85a7c3ad8a379e1c1c3a2e065222a4",
+      "prior_public_sha256": "4b129221391d3e27f3a94d73ec3829238c1f3d1654babc27d91c4ecd1391cbca",
+      "localization": "English prose; control structures and machine identifiers preserved."
     },
     {
       "path": "recovery-control/src/runtime_boundary/recovery_evidence.py",
@@ -1502,6 +1852,14 @@
       "public_sha256": "8894b5f32f980ff92cf9ecf7803a5042c6ddab5fbb2bc5ce2f3148b8aa8a7f32"
     },
     {
+      "path": "recovery-control/tests/harness/unit/test_public_report_language.py",
+      "source_role": "public-localization",
+      "decision": "English prose and bounded Unicode data exceptions",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "b3f63abf6fe98e50e16f26a86b7d7bdc734242a254cebeddc3403041fcfc73ba"
+    },
+    {
       "path": "recovery-control/tests/harness/unit/test_recovery_facts.py",
       "source_role": "development-recovery-tests",
       "decision": "adapted",
@@ -1611,7 +1969,11 @@
       "decision": "adapted",
       "before_sha256": "24a9adc1b2f6ff6dde6243e78c37ec4964b534bfeee90ec1971f037ef51e4a91",
       "source_sha256": "0a4dce430423eec7f923f3a933ce7c7c89d72cf1c813c1ffd5e4f691c962efcc",
-      "public_sha256": "0a4dce430423eec7f923f3a933ce7c7c89d72cf1c813c1ffd5e4f691c962efcc"
+      "public_sha256": "bf273ee478639f82fabf671eca84f51a6b1273dd133a63db5d7c7571aba50bcb",
+      "prior_public_sha256": "0a4dce430423eec7f923f3a933ce7c7c89d72cf1c813c1ffd5e4f691c962efcc",
+      "localization": "English prose; control structures and machine identifiers preserved.",
+      "before_unicode_source_sha256": "eca43d464fa286dd0f5b38b09de180b2de0a217d5a00bef77d50791022cc8985",
+      "unicode_source_change": "English authored text; Unicode fixture values preserved with explicit escapes."
     },
     {
       "path": "recovery-control/tests/harness/unit/test_traceability.py",
@@ -1766,6 +2128,14 @@
       "public_sha256": "89e54691d67dd2cb7a9677c039632789ee9425823d477d1746f8a99f2bf886ce"
     },
     {
+      "path": "recovery-control/tests/runtime_boundary/test_recovery_evidence_import.py",
+      "source_role": "public-unicode-source",
+      "decision": "Preserve runtime Unicode behavior while using English-readable source.",
+      "before_sha256": "7f3c8c12727c50072f25f24e229c6cec509ddf4fc3e278ced04c58b5117749e2",
+      "source_sha256": null,
+      "public_sha256": "a2a88af8c930dfd34decc168f0b2b4021cbe6ccea0f2985c7fd98c415d531018"
+    },
+    {
       "path": "recovery-control/tests/runtime_boundary/test_recovery_publisher.py",
       "source_role": "development-recovery-tests",
       "decision": "adapted",
@@ -1846,6 +2216,40 @@
       "public_sha256": "16b4459c7aa26e6cec90e5c7e2239045b0d4f86f8aca7b7cffe24aaa239a34ac"
     },
     {
+      "path": "recovery-control/tools/monitor_bounded_termination_external.py",
+      "source_role": "public-localization",
+      "decision": "English prose and bounded Unicode data exceptions",
+      "before_sha256": "931b082d6adaf6a6c900de4f55cad54ecb3cb1b25349463e3188bcf63e710558",
+      "source_sha256": null,
+      "public_sha256": "86577b72745a2fd39711aa2871db38f8168f06f0cb577707f1b29b469f4e7167"
+    },
+    {
+      "path": "recovery-control/tools/prepare_bounded_termination_rollout.py",
+      "source_role": "public-localization",
+      "decision": "English prose and bounded Unicode data exceptions",
+      "before_sha256": "5884e7aa7f00fd6140230413a1b5afe25b7f57d37159792e27ec7e5c785a5411",
+      "source_sha256": null,
+      "public_sha256": "0825f2aefe54f3aef56c993f6b3cd681118fc46cde5a37e5c2441cba842d81bc"
+    },
+    {
+      "path": "recovery-control/tools/run_cra_server_isolated_1h.py",
+      "source_role": "public-localization",
+      "decision": "English prose and bounded Unicode data exceptions",
+      "before_sha256": "3fee396c84061c786cc16fa73db551f7daad4ae1f066186ae1656ff2ae26d9a6",
+      "source_sha256": null,
+      "public_sha256": "34c091773084520893ae644c1d73a873b527a13ab67457ae4bd3d417e851c702"
+    },
+    {
+      "path": "recovery-control/tools/run_cra_workflow_eval.py",
+      "source_role": "public-localization",
+      "decision": "English prose and bounded Unicode data exceptions",
+      "before_sha256": "530b99e2138dc7899ae212cd7d4973e22395d3381860afe072100ae9b5c403f9",
+      "source_sha256": null,
+      "public_sha256": "264d502dbf0a170968cff36844cc31133c51584b3570ba238bf7c2480bd531d6",
+      "before_unicode_source_sha256": "2e7994971cfd3553ed42104ac481b9919e38a37f64bebcc68d0cc3a5e243090c",
+      "unicode_source_change": "English authored text; Unicode fixture values preserved with explicit escapes."
+    },
+    {
       "path": "recovery-control/tools/run_postmortem_io_harness.py",
       "source_role": "public-ci-correction",
       "decision": "complete-source-bound-public-release-inputs",
@@ -1862,12 +2266,22 @@
       "public_sha256": "fb4c5971b1396bfe0b1b3769443874faa906d5dc2f3866eef3fab492e8743374"
     },
     {
+      "path": "src/dj/organize_time.py",
+      "source_role": "public-localization",
+      "decision": "English prose and bounded Unicode data exceptions",
+      "before_sha256": "aa6b1649ba88e8e141db5ca58b240ed293c37ec495666e60b4f744597c8d62b0",
+      "source_sha256": null,
+      "public_sha256": "46b1b8fc3e0f5768eb9d332f1aa5e8e276183f8bae10b7402743fe87ed9eba31"
+    },
+    {
       "path": "src/stream_core/engine/delivery_pipeline.py",
       "source_role": "running-delivery-source",
       "decision": "adapted",
       "before_sha256": null,
       "source_sha256": "2be1007beb2938da144893295fb78b1ba7f5c8496dd3b38765d1608e331925c7",
-      "public_sha256": "2be1007beb2938da144893295fb78b1ba7f5c8496dd3b38765d1608e331925c7"
+      "public_sha256": "fe1fe2f972165b9bf0777c5fc679b44ba03a34c3e2c7c1115f94ffb2d16b666d",
+      "prior_public_sha256": "2be1007beb2938da144893295fb78b1ba7f5c8496dd3b38765d1608e331925c7",
+      "localization": "English prose; control structures and machine identifiers preserved."
     },
     {
       "path": "src/stream_core/engine/relay_lease_client.py",
@@ -1875,7 +2289,25 @@
       "decision": "adapted",
       "before_sha256": null,
       "source_sha256": "71670dcfa37267ba4d32b8945a6fb7776190dbfc1093236eab1bd82374471c0a",
-      "public_sha256": "71670dcfa37267ba4d32b8945a6fb7776190dbfc1093236eab1bd82374471c0a"
+      "public_sha256": "4ba977bd245649728c850c110517397727dd24b47e1f25915e6f329a76892504",
+      "prior_public_sha256": "71670dcfa37267ba4d32b8945a6fb7776190dbfc1093236eab1bd82374471c0a",
+      "localization": "English prose; control structures and machine identifiers preserved."
+    },
+    {
+      "path": "src/stream_core/notifications/cli_adapter.py",
+      "source_role": "public-localization",
+      "decision": "English prose and bounded Unicode data exceptions",
+      "before_sha256": "17f96d6672c6019e36cc43f34c3c7b102b603eef5a67b8bcd8d306919ad79ddd",
+      "source_sha256": null,
+      "public_sha256": "7f86d0c742b6718caa6eb7d1d01fd44b773375753bc4e2371d0e48da603daa6f"
+    },
+    {
+      "path": "src/stream_core/notifications/connectivity_correlation.py",
+      "source_role": "public-localization",
+      "decision": "English prose and bounded Unicode data exceptions",
+      "before_sha256": "0ffd47a9ad3e0400d0c1edd675732be5a0ed6c332e7d19569db4fefbc63feedd",
+      "source_sha256": null,
+      "public_sha256": "d6a670cf1ad8e7177030308642d1fd9e2c9ec1d9e8943dee9d78a8251a9da53a"
     },
     {
       "path": "src/stream_core/notifications/incidents.py",
@@ -1883,7 +2315,25 @@
       "decision": "adapted",
       "before_sha256": "9d13000b13e49fe1588cec2333948f8c790fa2c3b7006ca0e264f2cf612c42f1",
       "source_sha256": "3096bfd3e78e238408c2943bbcce22103618a5cacd3d80bb14be424366524d70",
-      "public_sha256": "3096bfd3e78e238408c2943bbcce22103618a5cacd3d80bb14be424366524d70"
+      "public_sha256": "29068d15becd9d0df908c4c2095e77451a8c3c995ffeec4283e2434a4c2a67cd",
+      "prior_public_sha256": "3096bfd3e78e238408c2943bbcce22103618a5cacd3d80bb14be424366524d70",
+      "localization": "English prose; control structures and machine identifiers preserved."
+    },
+    {
+      "path": "src/stream_core/notifications/renderer.py",
+      "source_role": "public-localization",
+      "decision": "English prose and bounded Unicode data exceptions",
+      "before_sha256": "9f53c130d71a55e2569392013a9bcbfd4c07afabbcc121032633a91964f79091",
+      "source_sha256": null,
+      "public_sha256": "c292f4d317a38a2e2fa78be8a155ba07ee777509454f6e30c2c4bf469c646a4f"
+    },
+    {
+      "path": "src/stream_core/notifications/status_loop.py",
+      "source_role": "public-localization",
+      "decision": "English prose and bounded Unicode data exceptions",
+      "before_sha256": "3ed318edb00f27873619f9d1ae6125dd4c79056a3de082c489fb88024da32df0",
+      "source_sha256": null,
+      "public_sha256": "5fbfef066cb27696f1df5e7d25d2555fa29e6e82cf03b282f1a45d8d691c7da7"
     },
     {
       "path": "src/stream_core/notifications/upload_source.py",
@@ -1926,6 +2376,30 @@
       "public_sha256": "6810bacf4270f0ef072a4b8bbd3ea24e222aa23d88795c1ed145b28354b99703"
     },
     {
+      "path": "src/watchers/youtube_oauth/status.py",
+      "source_role": "public-localization",
+      "decision": "English prose and bounded Unicode data exceptions",
+      "before_sha256": "408d9db886eecff83616bd34d448e9e277f9a5c7b8c7e8f6f3812d1470af9368",
+      "source_sha256": null,
+      "public_sha256": "a68fa8471f5dfd26317e1edb6fb8b0fb116f56669992b6b3aedeaeb11fe0885b"
+    },
+    {
+      "path": "tests/test_auto_dj_rotation.py",
+      "source_role": "public-unicode-source",
+      "decision": "Preserve runtime Unicode behavior while using English-readable source.",
+      "before_sha256": "4eccf36ad39d095e4b7bb2bd1beb8e238beff00db80431440f50d3fdf430f505",
+      "source_sha256": null,
+      "public_sha256": "0d4ba06632e8f1774768a815905cbd1eacb1c110e2d17fefe4fa8f4223db13fc"
+    },
+    {
+      "path": "tests/test_cli_ops_commands.py",
+      "source_role": "public-localization",
+      "decision": "English prose and bounded Unicode data exceptions",
+      "before_sha256": "d53c0e2341dc6e0f2611c3a10802624ecfbcba5a6404f31ed19a9474558f740b",
+      "source_sha256": null,
+      "public_sha256": "2132f58f4513fca2c0ce0c3a3d14052001814c7d5a4bb26baf56c3e3fd2596f6"
+    },
+    {
       "path": "tests/test_delivery_pipeline.py",
       "source_role": "development-stream-tests",
       "decision": "adapted",
@@ -1939,7 +2413,25 @@
       "decision": "separate-media-publication-and-disabled-recovery-contract-in-README",
       "before_sha256": "c9321f12e2b229df6bcf28ea819768445e3facb4dcbf2c99a9ac3800bb80659c",
       "source_sha256": null,
-      "public_sha256": "ad687380f09c8a9fb2642a991732247c0a40a804df9838b2c4a1f5b9fa7fd070"
+      "public_sha256": "965a898c7dc7cc16d1296539a1e7ea655ee3fd4c2e75ce7517a9d778db8570b6",
+      "before_unicode_source_sha256": "ad687380f09c8a9fb2642a991732247c0a40a804df9838b2c4a1f5b9fa7fd070",
+      "unicode_source_change": "English authored text; Unicode fixture values preserved with explicit escapes."
+    },
+    {
+      "path": "tests/test_overlay_precipitation_state.py",
+      "source_role": "public-unicode-source",
+      "decision": "Preserve runtime Unicode behavior while using English-readable source.",
+      "before_sha256": "a48d65a46cf491ede3481c1e6e867f5c760567f56d2ceddc14ebf4ae0bae9ce1",
+      "source_sha256": null,
+      "public_sha256": "de98466529201db0625aaea3ea88066fe6986bea3109bed89fc7296d079c5c1d"
+    },
+    {
+      "path": "tests/test_public_language_policy.py",
+      "source_role": "public-localization",
+      "decision": "English prose and bounded Unicode data exceptions",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "0b97f7927737211a5a763d8134002d630862aea9965f352af0de09ffbf45be33"
     },
     {
       "path": "tests/test_public_publisher_build.py",
@@ -1979,7 +2471,9 @@
       "decision": "adapted",
       "before_sha256": null,
       "source_sha256": "31203c2a2e5ccc158b37a7403101cb71eedb68c7acf6df2930e784f4b43e702c",
-      "public_sha256": "31203c2a2e5ccc158b37a7403101cb71eedb68c7acf6df2930e784f4b43e702c"
+      "public_sha256": "a11b27ffafdfeefd7bd0055d8d919ae9c9a6a1e59437451fbf33c9cafb49e727",
+      "prior_public_sha256": "31203c2a2e5ccc158b37a7403101cb71eedb68c7acf6df2930e784f4b43e702c",
+      "localization": "English prose; control structures and machine identifiers preserved."
     },
     {
       "path": "tests/test_relay_lease.py",
@@ -1987,7 +2481,9 @@
       "decision": "adapted",
       "before_sha256": null,
       "source_sha256": "5b5b8906e9d28e98e75fd28fb4a1f717ab6eb38936e95e4f3b7495386495de2c",
-      "public_sha256": "5b5b8906e9d28e98e75fd28fb4a1f717ab6eb38936e95e4f3b7495386495de2c"
+      "public_sha256": "e8d611ef2ae382304c88c064d22dadd45e20892157bf9ecf21fcd9cf2df9889a",
+      "prior_public_sha256": "5b5b8906e9d28e98e75fd28fb4a1f717ab6eb38936e95e4f3b7495386495de2c",
+      "localization": "English prose; control structures and machine identifiers preserved."
     },
     {
       "path": "tests/test_route_network_observer.py",
@@ -1995,7 +2491,9 @@
       "decision": "adapted",
       "before_sha256": null,
       "source_sha256": "0269097940792e13723ea385438ffa640ff6c20ba247a4e144385cdc1ba15b0e",
-      "public_sha256": "0269097940792e13723ea385438ffa640ff6c20ba247a4e144385cdc1ba15b0e"
+      "public_sha256": "86bedcb2797544ded23e4e91541bdf325023b057716b0c855ffbd76f9d5c34f7",
+      "prior_public_sha256": "0269097940792e13723ea385438ffa640ff6c20ba247a4e144385cdc1ba15b0e",
+      "localization": "English prose; control structures and machine identifiers preserved."
     },
     {
       "path": "tests/test_twitch_daily.py",
@@ -2003,7 +2501,9 @@
       "decision": "adapted",
       "before_sha256": null,
       "source_sha256": "41bd76aaf9b3da867a638101805ef18244988cb431c70ead3378441a97952262",
-      "public_sha256": "41bd76aaf9b3da867a638101805ef18244988cb431c70ead3378441a97952262"
+      "public_sha256": "cea298bff7f347a60e6815c212739ab4ea67b673f31769eee91d533474b512a6",
+      "prior_public_sha256": "41bd76aaf9b3da867a638101805ef18244988cb431c70ead3378441a97952262",
+      "localization": "English prose; control structures and machine identifiers preserved."
     },
     {
       "path": "tests/test_twitch_session.py",
@@ -2022,68 +2522,136 @@
       "public_sha256": "da6513c0ab04e59b8b3494fca87716d2de6290dfc4a435c8ffe2a006915437f9"
     },
     {
+      "path": "docs/hardware-selection.md",
+      "source_role": "public-documentation",
+      "decision": "English hardware selection retrospective; operator history, verified specifications, historical measurements, and untested options separated.",
+      "before_sha256": null,
+      "source_sha256": "fa63925672898c7afe5e3a70ae57173e46985694011bd808aeccb28850af4bde",
+      "public_sha256": "79d2205f0fbf0bf3631ea52be4c781140281e75bbdbf9d90e5c81d736463713f"
+    },
+    {
+      "path": "publication/hardware-selection-20261014.json",
+      "source_role": "public-documentation-record",
+      "decision": "Provenance and bounded verification for the hardware selection retrospective.",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "d4e05f7ff80173c4edbd7cbca929ec12f948dddfbf56f865506e005a637578e8"
+    },
+    {
+      "path": "monitoring-v4/deploy/systemd/stream-v4-twitch-sli.service",
+      "source_role": "public-resilience-candidate",
+      "decision": "Missing-data resilience with preserved public bindings; local validation only.",
+      "before_sha256": null,
+      "source_sha256": "de1a599d6dd8f6e810a14c47bbc705a6ac102652a2edb9c7789fb80f0a0e5e6d",
+      "public_sha256": "20b42d1a748e8e5e319a170eb67bf6ddc4fd1c031b91ec7470a7155825fa7638"
+    },
+    {
+      "path": "ops/public-publisher/site/public/assets/sli-20261014-resilient.js",
+      "source_role": "public-resilience-candidate",
+      "decision": "Missing-data resilience with preserved public bindings; local validation only.",
+      "before_sha256": null,
+      "source_sha256": "e7b26d47a0e2f8d8432f266df8e03c6531a0d1aec47e5b572f25cc21b0086248",
+      "public_sha256": "e7b26d47a0e2f8d8432f266df8e03c6531a0d1aec47e5b572f25cc21b0086248"
+    },
+    {
+      "path": "ops/public-publisher/site/tests/twitch-sli-20261014.html",
+      "source_role": "public-resilience-candidate",
+      "decision": "Missing-data resilience with preserved public bindings; local validation only.",
+      "before_sha256": null,
+      "source_sha256": "21236f5c75f1673c892484275ed55a86c20dfbed1f2a7c36933667ebedec77ab",
+      "public_sha256": "21236f5c75f1673c892484275ed55a86c20dfbed1f2a7c36933667ebedec77ab"
+    },
+    {
+      "path": "docs/v3/twitch-sli-resilience.md",
+      "source_role": "public-resilience-record",
+      "decision": "Candidate checks and subsequent live recovery recorded separately; history and failed outcomes preserved.",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "c03c15975b3aba691ee2ce2074f3040c9b43069b66a446b0dab2ebca5d5e78e3",
+      "pre_live_recovery_record_sha256": "6189272c67db2ada7de3b1c8ef2bc433e3a6fc091783093a68e4eb7aa5a70bc6",
+      "twitch_sli_resilience": "Scoped private collector and public UI recovery verified; historical SLO and native failure recovery remain unqualified."
+    },
+    {
+      "path": "publication/twitch-sli-resilience-20261014.json",
+      "source_role": "public-candidate-validation-record",
+      "decision": "Candidate preparation and explicit deployment hold.",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "97be3f32dbef6a0d689b4f3e6009324bf5a93855046c17d373f23aeb18865c9a",
+      "pre_pi_port_reconciled_record_sha256": "db36ba423bb7abd70d136fd90d7a5ba217d8abbe7733dd828c3ebb25d9acf964",
+      "digest_reconciliation": "Existing Twitch recovery record content retained; source-map digest refreshed during Pi port validation."
+    },
+    {
       "path": "ops/public-publisher/site/scripts/collect_reliability.py",
       "source_role": "public-pi-publisher-port",
-      "decision": "Pi publisher source reconciliation with portable defaults and English documentation.",
       "before_sha256": "81b07550d545ed52f4baf574052a7e3b205b155f85f5efc7a337fa3b745884b1",
       "source_sha256": "c8851c006d75aa0bf27697524cb57b07cb4c3f316a1551824623cc3bdc303645",
-      "public_sha256": "9388ba7379c1242f7f6f2ec90e5dac1aef8ce4441af08689326b85fa501cff68"
+      "public_sha256": "9388ba7379c1242f7f6f2ec90e5dac1aef8ce4441af08689326b85fa501cff68",
+      "pi_publisher_source_port": "2026-10-14 source reconciliation; portable English code and retained public protections; no live changes.",
+      "decision": "Pi publisher source reconciliation, portable paths, English source guide, and mock-based validation."
     },
     {
       "path": "ops/public-publisher/status/collect_stream_v3_public.py",
       "source_role": "public-pi-publisher-port",
-      "decision": "Pi publisher source reconciliation with portable defaults and English documentation.",
       "before_sha256": "d26183a3cef74e0613df595f4178e8f0f3a7152173d5f6555f2e4982ce9b3add",
       "source_sha256": "8f52a02a979e79a7c9ab188d12bef402ff23a4e02fe7238149cdd00fba557c02",
-      "public_sha256": "8f52a02a979e79a7c9ab188d12bef402ff23a4e02fe7238149cdd00fba557c02"
+      "public_sha256": "8f52a02a979e79a7c9ab188d12bef402ff23a4e02fe7238149cdd00fba557c02",
+      "pi_publisher_source_port": "2026-10-14 source reconciliation; portable English code and retained public protections; no live changes.",
+      "decision": "Pi publisher source reconciliation, portable paths, English source guide, and mock-based validation."
     },
     {
       "path": "tests/test_public_reliability_collector.py",
       "source_role": "public-pi-publisher-port",
-      "decision": "Pi publisher source reconciliation with portable defaults and English documentation.",
       "before_sha256": "5dafe0a636cb8eb41f941a2f1ad35068b3fb054fd210ff8f3f9735f941e1eb7f",
       "source_sha256": "eeda05269af3504d584eccf1a275cd04ba6f2f82026e919fd1d2adc9ffd0905d",
-      "public_sha256": "50600497eee0d2b2fda33d07e41c2c86b870d639f1b45a8c1b89be6d7975480e"
+      "public_sha256": "50600497eee0d2b2fda33d07e41c2c86b870d639f1b45a8c1b89be6d7975480e",
+      "pi_publisher_source_port": "2026-10-14 source reconciliation; portable English code and retained public protections; no live changes.",
+      "decision": "Pi publisher source reconciliation, portable paths, English source guide, and mock-based validation."
     },
     {
       "path": "tests/test_public_map_collector.py",
       "source_role": "public-pi-publisher-port",
-      "decision": "Pi publisher source reconciliation with portable defaults and English documentation.",
       "before_sha256": "26156d58535da0f2cc29547c22704fc7d003fc260bd916d0356f3143067a7c21",
       "source_sha256": null,
-      "public_sha256": "ecbef4f1147e7547ed06bae7e16843babec653a61118bf86a24967bf618d9954"
+      "public_sha256": "ecbef4f1147e7547ed06bae7e16843babec653a61118bf86a24967bf618d9954",
+      "pi_publisher_source_port": "2026-10-14 source reconciliation; portable English code and retained public protections; no live changes.",
+      "decision": "Pi publisher source reconciliation, portable paths, English source guide, and mock-based validation."
     },
     {
       "path": "ops/public-publisher/site/README.md",
       "source_role": "public-pi-publisher-port",
-      "decision": "Pi publisher source reconciliation with portable defaults and English documentation.",
       "before_sha256": null,
       "source_sha256": null,
-      "public_sha256": "a880b9130ace2049cb9b57c03e7cd813b5f537fd47b5bb0e3982063a38454995"
+      "public_sha256": "a880b9130ace2049cb9b57c03e7cd813b5f537fd47b5bb0e3982063a38454995",
+      "pi_publisher_source_port": "2026-10-14 source reconciliation; portable English code and retained public protections; no live changes.",
+      "decision": "Pi publisher source reconciliation, portable paths, English source guide, and mock-based validation."
     },
     {
       "path": "docs/v3/pi-publisher-source-port-2026-10-14.md",
       "source_role": "public-pi-publisher-port",
-      "decision": "Pi publisher source reconciliation with portable defaults and English documentation.",
       "before_sha256": null,
       "source_sha256": null,
-      "public_sha256": "a6b895472f8eec6fb1214e85a36a6de35bdd101f09a400703397ca5f6a6c3dd2"
+      "public_sha256": "a6b895472f8eec6fb1214e85a36a6de35bdd101f09a400703397ca5f6a6c3dd2",
+      "pi_publisher_source_port": "2026-10-14 source reconciliation; portable English code and retained public protections; no live changes.",
+      "decision": "Pi publisher source reconciliation, portable paths, English source guide, and mock-based validation."
     },
     {
       "path": "publication/pi-publisher-source-port-20261014.json",
       "source_role": "public-pi-publisher-port",
-      "decision": "Pi publisher source reconciliation with portable defaults and English documentation.",
       "before_sha256": null,
       "source_sha256": null,
-      "public_sha256": "48c3b06aeae3d90cc58ab869c33234aed9f525853c23d739ef329465a54a2cdb"
+      "public_sha256": "48c3b06aeae3d90cc58ab869c33234aed9f525853c23d739ef329465a54a2cdb",
+      "pi_publisher_source_port": "2026-10-14 source reconciliation; portable English code and retained public protections; no live changes.",
+      "decision": "Pi publisher source reconciliation, portable paths, English source guide, and mock-based validation."
     },
     {
       "path": "ops/public-publisher/site/systemd/stream-v3-public-publisher.env.example",
       "source_role": "public-pi-publisher-port",
-      "decision": "Pi publisher source reconciliation with portable defaults and English documentation.",
       "before_sha256": "09ee5602761e86922bdc7d3e5d8053643c9ab3f2648da4180338fd8e37d7d18e",
       "source_sha256": null,
-      "public_sha256": "503b2276e213e6750e80cb53fb9e95b4f97f903f2f8a15d238b054fdc9f2b4f6"
+      "public_sha256": "503b2276e213e6750e80cb53fb9e95b4f97f903f2f8a15d238b054fdc9f2b4f6",
+      "pi_publisher_source_port": "2026-10-14 source reconciliation; portable English code and retained public protections; no live changes.",
+      "decision": "Pi publisher source reconciliation, portable paths, English source guide, and mock-based validation."
     }
   ],
   "omissions": [
@@ -2140,12 +2708,46 @@
   ],
   "evidence_checkpoint_cutoff_jst": "2026-10-14T00:04:57+09:00",
   "documentation_audience": "hiring and technical reviewers",
+  "localization": {
+    "date_jst": "2026-10-14",
+    "record": "publication/language-localization-20261014.json",
+    "prior_manifest": "publication/history/source-map-before-english-20261014.json",
+    "source_cutoff_unchanged": true
+  },
+  "graph_display": {
+    "record": "publication/graph-display-20261014.json",
+    "deployment_performed": false
+  },
+  "english_source_port": {
+    "record": "publication/public-port-english-20261014.json",
+    "authored_japanese_literals_remaining": 0
+  },
+  "hardware_selection": {
+    "record": "publication/hardware-selection-20261014.json",
+    "record_date_jst": "2026-10-14",
+    "original_source_cutoff_unchanged": true,
+    "runtime_changed": false
+  },
+  "twitch_sli_resilience": {
+    "status": "LIVE_COLLECTION_AND_PUBLIC_UI_RECOVERED",
+    "production_applied": true,
+    "original_source_cutoff_unchanged": true,
+    "record": "publication/twitch-sli-resilience-20261014.json",
+    "public_site_deployed": true,
+    "historical_slo_qualified": false,
+    "verified_at_jst": "2026-10-14T15:36:51+09:00",
+    "public_configurable_collector_deployed": false
+  },
   "pi_publisher_source_port": {
     "record": "publication/pi-publisher-source-port-20261014.json",
-    "scope": "Pi publisher source changes over d1292354024ea6ae7cd642181b15d2ee98708283",
-    "unrelated_worktree_changes_included": false,
+    "scope": "public-checkout-only",
+    "source_files_audited": 36,
+    "portable_tests_passed": 51,
     "deployment_performed": false,
-    "commit_prepared": true,
-    "push_performed": false
+    "remote_mutation_performed": false,
+    "commit_or_push_performed": false,
+    "original_source_cutoff_unchanged": true,
+    "status": "PUBLIC_SOURCE_PORT_VERIFIED",
+    "validated_at_jst": "2026-10-14T16:06:07.557548+09:00"
   }
 }

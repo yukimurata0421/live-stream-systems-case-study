@@ -70,11 +70,11 @@ def _report(summary: dict[str, Any], manifest: dict[str, Any]) -> str:
     sources = manifest["source_sha256"]
     return f"""# CRA Harness run {summary["run_id"]}
 
-## 結論
+## Findings
 
 Trust gate: **{summary["trust_gate"]}**
 
-本runはtest-onlyの`FakePhysicalAdapter`だけを使用し、signal/process/Pod/Deployment/networkへのproduction操作は0件です。
+This run uses only the test-only FakePhysicalAdapter; production signal/process/Pod/Deployment/network operations were zero.
 
 ## Revision / Environment
 
@@ -85,7 +85,7 @@ Trust gate: **{summary["trust_gate"]}**
 - Host: {environment["os"]}, kernel {environment["kernel"]}, {environment["architecture"]}
 - Protocol / policy: {manifest["protocol_revision"]} / {manifest["policy_revision"]}
 
-## 実行範囲
+## Execution scope
 
 - deterministic: {counts["deterministic"]}
 - randomized: {counts["randomized"]} (seed={manifest["random_seed"]})
@@ -94,13 +94,13 @@ Trust gate: **{summary["trust_gate"]}**
 - harness pytest items: {counts["harness_pytest_items"]}
 - all scenarios: {summary["scenario_count"]}
 
-## 分類
+## Classification
 
 ```json
 {json.dumps(classes, ensure_ascii=False, indent=2, sort_keys=True)}
 ```
 
-## 信頼条件
+## Trust conditions
 
 - negative control detection: {summary["negative_control_detection"]["detected"]}/{summary["negative_control_detection"]["total"]}
 - evidence completeness: {summary["evidence_complete"]}
@@ -110,11 +110,11 @@ Trust gate: **{summary["trust_gate"]}**
 
 ## Major findings
 
-- PASS={classes["PASS"]}、SUT_FAILURE={classes["SUT_FAILURE"]}、HARNESS_FAILURE={classes["HARNESS_FAILURE"]}。
-- Missing/ambiguous: MISSING_EVIDENCE={classes["MISSING_EVIDENCE"]}, UNKNOWN_AMBIGUOUS={classes["UNKNOWN_AMBIGUOUS"]}。
-- Expected injected: {classes["EXPECTED_INJECTED_FAILURE"]}、unsupported={classes["UNSUPPORTED_CONDITION"]}。
-- Environment failure={classes["ENVIRONMENT_FAILURE"]}、safety failure={classes["SAFETY_GATE_FAILURE"]}。
-- 初回run v1のmanifest Git identity defectを検出し、v1を失効、修正後の本runで再検証した。
+- PASS={classes["PASS"]}, SUT_FAILURE={classes["SUT_FAILURE"]}, HARNESS_FAILURE={classes["HARNESS_FAILURE"]}.
+- Missing/ambiguous: MISSING_EVIDENCE={classes["MISSING_EVIDENCE"]}, UNKNOWN_AMBIGUOUS={classes["UNKNOWN_AMBIGUOUS"]}.
+- Expected injected: {classes["EXPECTED_INJECTED_FAILURE"]}, unsupported={classes["UNSUPPORTED_CONDITION"]}.
+- Environment failure={classes["ENVIRONMENT_FAILURE"]}, safety failure={classes["SAFETY_GATE_FAILURE"]}.
+- Detected a manifest Git identity defect in the initial v1 run, invalidated v1, and revalidated this run after correction.
 
 ## New regression fixtures
 
@@ -130,10 +130,10 @@ Trust gate: **{summary["trust_gate"]}**
 - `docs/engineering/records/2026-08-23_05_manifest_git_identity.md`
 - `docs/engineering/records/2026-08-23_06_manifest_start_order.md`
 
-## 限界
+## Limitations
 
-これはPhase 1〜4のfake/shadow実装とHarness自体の検証です。
-Phase 5、実LAN、実credential、実process、Pod、Deployment、配信系への操作は行っていません。
+This validates the Phase 1-4 fake/shadow implementation and the harness itself.
+No Phase 5, real LAN, real credential, real process, Pod, Deployment, or streaming operations were performed.
 """
 
 

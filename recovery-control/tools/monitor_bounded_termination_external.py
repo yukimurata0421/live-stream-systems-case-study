@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Read-only arena oracle: aggregate healthyだけでなくfresh OAuth ingestと映像を確認する。"""
+"""Read-only arena oracle: verify fresh OAuth ingest and video in addition to aggregate health."""
 
 from __future__ import annotations
 

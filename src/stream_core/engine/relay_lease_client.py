@@ -1,4 +1,4 @@
-"""承認済みの送信についてfresh mediaに束縛した有限leaseを更新する。"""
+"""Renew finite leases bound to fresh media for authorized publishing."""
 from __future__ import annotations
 
 import hashlib
@@ -78,7 +78,7 @@ class RelayLeaseClient:
                 "sequence": sequence, "input_sequence": state["input_sequence"], "issued_at": now,
                 "expires_at": min(now + 10, grant_expiry), "grant_expires_at": grant_expiry, "route": "PRIMARY"}
         encoded = json.dumps(body, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()
-        # ACK喪失時も、発行した最長期限を保持する。
+        # Retain the maximum issued expiry even when an ACK is lost.
         self.maximum_issued_expiry = max(self.maximum_issued_expiry, body["expires_at"])
         signature = hmac.new(self.key, encoded, hashlib.sha256).hexdigest()
         result = self.request("/lease", {"lease": body, "signature": signature})
@@ -100,7 +100,7 @@ class RelayLeaseClient:
                     self.blocked = True
                     self.emit("relay_lease_renewal_stopped", exception_type=type(error).__name__,
                               maximum_issued_expiry=self.maximum_issued_expiry)
-                    # own media pipeを閉じる。独立のsignal/restart pathを作らない。
+                    # Close the owned media pipe without creating an independent signal or restart path.
                     self.pipeline.stop_pump()
                     return
         self.thread = threading.Thread(target=renew, name="finite-relay-lease", daemon=True)
@@ -114,7 +114,7 @@ class RelayLeaseClient:
                 raise RuntimeError("RELAY_LEASE_THREAD_STOP_UNKNOWN")
 
     def stop_receipt(self):
-        """更新threadを止め、同じrelay instanceのnative停止を要求する。"""
+        """Stop the renewal thread and request native shutdown of the same relay instance."""
         self.close()
         result = self.request("/stop", {"instance": self.values["relay_instance"]})
         if (result.get("halted") is not True or result.get("process_exit_observed") is not True

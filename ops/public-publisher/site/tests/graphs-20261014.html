@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><title>Public graph display checks</title>
+<script src="../public/assets/graphs-core-20261014.js"></script>
+<h1>Public graph display checks</h1><p id="result" data-status="RUNNING">Running</p>
+<script>
+try {
+
+const out=[], assert=(name,ok)=>{if(!ok)throw new Error(name);out.push(name);};
+const now=10000, good={schema:'stream-v3-prometheus-public.v1',generated_at:now,items:['ingest_issue','youtube_issue','same_url_issue'].map(id=>({id,status:'ok',value:0}))};
+const relay={schema:'stream.relay_public.v1',generated_at:now,observed_at:new Date(now*1000).toISOString(),status:'OBSERVED',source_fresh:true,relay:{status:'RUNNING'},input:{status:'FLOWING',mbps:3},destinations:{youtube:{status:'FLOWING',mbps:3},twitch:{status:'FLOWING',mbps:3}}};
+const check=(r,p=good)=>TokyoGraphs.delivery(r,p,now);
+assert('primary relay shows standby direct path',check(relay).direct==='STANDBY');
+const failed=structuredClone(relay); failed.input.status='DISCONNECTED';failed.destinations.youtube.status='DISCONNECTED';
+assert('failed relay plus healthy YouTube infers direct path',check(failed).direct==='INFERRED');
+assert('inference wording preserves uncertainty',check(failed).note.includes('inferred')&&check(failed).note.includes('not published'));
+assert('missing relay never proves fallback',check(null).direct==='UNKNOWN');
+assert('stale relay never proves fallback',check({...failed,generated_at:now-181}).direct==='UNKNOWN');
+assert('future relay never proves fallback',check({...failed,generated_at:now+1}).direct==='UNKNOWN');
+assert('stale source timestamp never proves fallback',check({...failed,observed_at:new Date((now-181)*1000).toISOString()}).direct==='UNKNOWN');
+assert('missing YouTube observations never prove fallback',check(failed,null).direct!=='INFERRED');
+assert('stale YouTube never proves fallback',check(failed,{...good,generated_at:now-181}).direct!=='INFERRED');
+assert('incoherent windows never prove fallback',check(failed,{...good,generated_at:now-91}).direct!=='INFERRED');
+assert('missing ingest metric never proves fallback',check(failed,{...good,items:good.items.slice(1)}).direct!=='INFERRED');
+assert('unavailable observations never masquerade as a healthy zero',check(failed,{...good,items:good.items.map(x=>({...x,value:null}))}).direct!=='INFERRED');
+const daily=structuredClone(relay);daily.destinations.twitch={status:'DISCONNECTED',mbps:0};daily.daily={planned_break:true};
+assert('Twitch renewal does not imply YouTube fallback',check(daily).direct==='STANDBY'&&check(daily).links.twitch.status==='DISCONNECTED');
+assert('relay output progress prevents conflicting direct inference',check({...failed,destinations:relay.destinations}).direct!=='INFERRED');
+const opts={step:60,window:300,end:300};
+let g=TokyoGraphs.series([{ts:0,value:1},{ts:60,value:2},{ts:240,value:3},{ts:300,value:4}],opts);
+assert('timestamp spacing is retained',g.markers[1].x===24&&g.markers[2].x===96);
+assert('unreported intervals break the line',g.path.split('M').length===3&&g.gaps===1);
+g=TokyoGraphs.series([{ts:0,value:0},{ts:60,value:null},{ts:120,value:1}],{step:60});
+assert('null is missing while real zero remains an observation',g.samples===2&&g.path.split('M').length===3);
+g=TokyoGraphs.series([{ts:0,value:1},{ts:60,value:NaN},{ts:120,value:2}],{step:60});
+assert('nonfinite values break the line',g.samples===2&&g.path.split('M').length===3);
+g=TokyoGraphs.series([{ts:0,value:5},{ts:60,value:5}],{step:60});
+assert('constant signals are centered',g.markers.every(p=>p.y===19));
+g=TokyoGraphs.series([{ts:0,value:1},{ts:60,value:2},{ts:60,value:3},{ts:120,value:4}],{step:60});
+assert('contradictory duplicates are not plotted as known',g.samples===2&&g.path.split('M').length===3);
+assert('missing timestamp does not fabricate chart position',TokyoGraphs.series([{ts:null,value:1},{ts:60,value:2}]).samples===0);
+assert('future points outside the window are excluded',TokyoGraphs.series([{ts:0,value:1},{ts:60,value:2},{ts:120,value:3}],{end:60,window:60,step:60}).samples===2);
+document.getElementById('result').textContent='PASS: '+out.length+' assertions';document.getElementById('result').dataset.status='PASS';
+} catch (error) {document.getElementById("result").textContent="FAIL: "+error.message;document.getElementById("result").dataset.status="FAIL";throw error;}
+</script></html>

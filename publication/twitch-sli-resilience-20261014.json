@@ -1,0 +1,108 @@
+{
+  "schema": "stream.twitch_sli_resilience_candidate.v1",
+  "prepared_at_jst": "2026-10-14T15:16:57.749218+09:00",
+  "status": "LIVE_COLLECTION_AND_PUBLIC_UI_RECOVERED",
+  "production_applied": true,
+  "public_site_deployed": true,
+  "commit_or_push_performed": false,
+  "reason_for_hold": "Preparation was held after a managed host-contract change; a fresh task subsequently verified and applied the scoped repair.",
+  "preserved": [
+    "source timestamps and history start",
+    "unknown/missing minutes and failed renewal outcomes",
+    "configured public account/revision binding",
+    "existing provider and delivery services",
+    "original source-map lineage and cutoff"
+  ],
+  "candidate_checks": {
+    "development_sli_tests": 25,
+    "standalone_public_sli_tests": 25,
+    "integrated_public_sli_tests": 25,
+    "public_artifact_tests": 4,
+    "browser_fixture_assertions": 11,
+    "unit_syntax": "PASS",
+    "publication_and_language_checks": "PASS",
+    "documentation_and_public_artifact_tests": 21,
+    "owned_secret_findings": 0,
+    "owned_hash_link_and_whitespace_issues": 0
+  },
+  "unobserved": [
+    "native watchdog expiry and restart-limit behavior",
+    "failure-triggered restart and recovery",
+    "continuous viewer reception",
+    "long-term soak",
+    "historical SLO qualification"
+  ],
+  "files": [
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/twitch_sli.py",
+      "before_sha256": "6495cf95221045c5b61fcd3da91f67960477edccfabe95045dd4d3b5ffaed51c",
+      "source_sha256": "73b20ff8e16c7d63b72018a34c77f945a2322f85122647d87155ded20dfab608",
+      "public_sha256": "867319076851eae4850d3d57166520a34fbc8816ee33d6581135dfeea25d6218"
+    },
+    {
+      "path": "monitoring-v4/tests/test_twitch_sli.py",
+      "before_sha256": "c5aa04babecdaad7a7be108a70f9095bc5791b8a364eea739d9ac0735e447533",
+      "source_sha256": "cc73310ca1aa5e7ce292057f82b67cd39314b9065f1eb6e5954b45598b750f98",
+      "public_sha256": "c172b6ef5c0ec74bb4f42d208df0c0ca7c8c57789fd5bac773aab92f27049c61"
+    },
+    {
+      "path": "monitoring-v4/deploy/systemd/stream-v4-twitch-sli.service",
+      "before_sha256": null,
+      "source_sha256": "de1a599d6dd8f6e810a14c47bbc705a6ac102652a2edb9c7789fb80f0a0e5e6d",
+      "public_sha256": "20b42d1a748e8e5e319a170eb67bf6ddc4fd1c031b91ec7470a7155825fa7638"
+    },
+    {
+      "path": "ops/public-publisher/site/public/assets/sli-20261014-resilient.js",
+      "before_sha256": null,
+      "source_sha256": "e7b26d47a0e2f8d8432f266df8e03c6531a0d1aec47e5b572f25cc21b0086248",
+      "public_sha256": "e7b26d47a0e2f8d8432f266df8e03c6531a0d1aec47e5b572f25cc21b0086248"
+    },
+    {
+      "path": "ops/public-publisher/site/public/index.html",
+      "before_sha256": "86762c0461a6249d1d652160906ad02ef8340f1b74f99c399e3a6253f19caed0",
+      "source_sha256": "d172c74b90c3bad262b95fe6354041dbca0eb93c95c5958205e55ce3153f8598",
+      "public_sha256": "d172c74b90c3bad262b95fe6354041dbca0eb93c95c5958205e55ce3153f8598"
+    },
+    {
+      "path": "ops/public-publisher/site/tests/twitch-sli-20261014.html",
+      "before_sha256": null,
+      "source_sha256": "21236f5c75f1673c892484275ed55a86c20dfbed1f2a7c36933667ebedec77ab",
+      "public_sha256": "21236f5c75f1673c892484275ed55a86c20dfbed1f2a7c36933667ebedec77ab"
+    },
+    {
+      "path": "docs/v3/twitch-sli-resilience.md",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "c03c15975b3aba691ee2ce2074f3040c9b43069b66a446b0dab2ebca5d5e78e3"
+    },
+    {
+      "path": "docs/00_INDEX.md",
+      "before_sha256": "d643a0c496a20ef3556383e96075a4cf2113b5baca7f0d23264d762c52dd6b35",
+      "source_sha256": null,
+      "public_sha256": "1a57bd86d9466793daecec2756b29cd2ca24cad934a2dfd795a231e098a230e8"
+    }
+  ],
+  "validated_at_jst": "2026-10-14T15:18:48.693626+09:00",
+  "historical_slo_qualified": false,
+  "applied_at_jst": "2026-10-14T15:27:55+09:00",
+  "public_ui_applied_at_jst": "2026-10-14T15:29:45+09:00",
+  "live_verified_at_jst": "2026-10-14T15:36:51+09:00",
+  "live_checks": {
+    "three_collection_cycles": "PASS",
+    "public_and_metrics_progress": "PASS",
+    "service_restarts": 0,
+    "previous_minute_rows_preserved": 2026,
+    "minute_rows_at_verification": 2056,
+    "history_start_preserved": true,
+    "failed_daily_renewal_preserved": true,
+    "sqlite_quick_check": "ok",
+    "origin_and_domain_json_age_below_seconds": 180,
+    "desktop_and_mobile_cards": 4,
+    "hourly_history_bars": 24,
+    "window_controls": "PASS",
+    "provider_observations": "LIVE",
+    "separate_output_counters": "ADVANCING",
+    "private_collector_binding_deployed": true,
+    "public_configurable_collector_deployed": false
+  }
+}

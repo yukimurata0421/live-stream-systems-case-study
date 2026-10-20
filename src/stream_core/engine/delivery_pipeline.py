@@ -1,6 +1,6 @@
-"""既存engineが所有する有限MPEG-TS bufferと単一remux sender。
+"""A bounded MPEG-TS buffer and a single remux sender owned by the existing engine.
 
-経路policyや独立restart loopを持たない。senderのPopenと停止は既存ownerが行う。
+The existing owner starts and stops the sender; this module adds no route policy or independent restart loop.
 """
 from __future__ import annotations
 

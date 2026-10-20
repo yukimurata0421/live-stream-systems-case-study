@@ -2,9 +2,9 @@
   "$schema": "../contracts/evidence_lineage.v1.schema.json",
   "schema": "cra.evidence_lineage.v1",
   "status": "CURRENT_STATE_SPEC",
-  "purpose": "Dellの配信SUTからarenaのfacts-only投影、cra-01のNO_ACTION runtime、証拠保存とsoak oracleまでを、identity・freshness・restart domainごとに追跡する正本マップ",
+  "purpose": "Canonical map tracing identity, freshness, and restart domains from the Dell streaming SUT through arena facts-only projection, the cra-01 NO_ACTION runtime, evidence retention, and the soak oracle",
   "boundaries": {
-    "canonical_scope": "リポジトリ内の現行構造、契約、責務、failure domain。実環境の現在値は含めない。",
+    "canonical_scope": "Current repository structure, contracts, responsibilities, and failure domains; excludes current live-environment values.",
     "excluded_current_values": [
       "running release and source commit",
       "epoch id and timestamps",
@@ -3548,8 +3548,8 @@
   "failure_modes": [
     {
       "id": "failure.owner_child_lifecycle",
-      "label": "owner・FFmpeg・補助child lifecycleの順序競合",
-      "trigger": "child終了、未回収、空cmdline、PID再利用またはsuccessor観測がcollector pollと交差する",
+      "label": "Ordering races between owner, FFmpeg, and helper child lifecycles",
+      "trigger": "Collector polling overlaps child exit, unreaped children, empty cmdline, PID reuse, or successor observations",
       "affected_nodes": [
         "dell.host",
         "dell.deployment",
@@ -3617,8 +3617,8 @@
     },
     {
       "id": "failure.rtmps_session_ack_stall",
-      "label": "general WANはUPだがRTMPS sessionのACKが停止してFFmpegが交代する障害",
-      "trigger": "同一runtimeでbytes_ackedが進まず送信圧力が残り、継続確認またはFFmpeg generation交代が起きる",
+      "label": "RTMPS session ACK stall and FFmpeg replacement while general WAN remains UP",
+      "trigger": "Within the same runtime, bytes_acked stops advancing while send pressure remains, followed by persistence confirmation or FFmpeg generation replacement",
       "affected_nodes": [
         "dell.ffmpeg",
         "dell.tcp_stall_collector",
@@ -3696,8 +3696,8 @@
     },
     {
       "id": "failure.ffmpeg_session_loss",
-      "label": "flat ACKを観測できない急なFFmpeg session喪失と同一runtime内child交代",
-      "trigger": "最後のvalid targetに続いてSOURCE_GENERATION_INVALIDまたはSOURCE_NOT_RATE_ELIGIBLEとなり、45秒以内に同一parent runtimeでFFmpeg identityが交代する",
+      "label": "Abrupt FFmpeg session loss without observable flat ACK, followed by child replacement within the same runtime",
+      "trigger": "The last valid target is followed by SOURCE_GENERATION_INVALID or SOURCE_NOT_RATE_ELIGIBLE, then FFmpeg identity changes within 45 seconds in the same parent runtime",
       "affected_nodes": [
         "dell.ffmpeg",
         "dell.tcp_stall_collector",
@@ -3767,8 +3767,8 @@
     },
     {
       "id": "failure.full_wan_outage",
-      "label": "Dell FULL_WAN断と復旧",
-      "trigger": "独立anchor全失敗をdurable episodeとして記録し、その後に同一streamのACKとplatform復旧を確認する",
+      "label": "Dell FULL_WAN outage and recovery",
+      "trigger": "Record failure of all independent anchors as a durable episode, then confirm ACK progress and platform recovery for the same stream",
       "affected_nodes": [
         "dell.host",
         "dell.recovery_observer",
@@ -3839,8 +3839,8 @@
     },
     {
       "id": "failure.upstream_oauth_observation",
-      "label": "stream_v3 OAuth upstream観測元の失敗または欠測",
-      "trigger": "liveBroadcasts/listまたはliveStreams/listの取得失敗、retry上限、認証・transport異常によりOAuth probe evidenceが成立しない",
+      "label": "Failure or missing observations from the stream_v3 OAuth upstream source",
+      "trigger": "OAuth probe evidence is unavailable because liveBroadcasts/list or liveStreams/list fetches fail, retries are exhausted, or authentication/transport fails",
       "affected_nodes": [
         "arena.oauth_source",
         "arena.recovery_observer",
@@ -3885,8 +3885,8 @@
     },
     {
       "id": "failure.observation_source_or_transport",
-      "label": "Monitoring・署名source・cross-host transportの欠損またはstale",
-      "trigger": "source、署名、freshness、sequence、mTLS relayまたはhost-status chainのいずれかが不成立になる",
+      "label": "Missing or stale monitoring, signed sources, or cross-host transport",
+      "trigger": "Source, signature, freshness, sequence, mTLS relay, or the host-status chain fails validation",
       "affected_nodes": [
         "arena.host",
         "dell.monitoring_publisher",
@@ -3987,8 +3987,8 @@
     },
     {
       "id": "failure.soak_harness_or_oracle",
-      "label": "append-only履歴・state・full replay・保存gate間の不整合",
-      "trigger": "sample chain、committed prefix、config、clock、saved gate/watchdog binding、起動直後の容量外挿、遅延署名packetのsource時刻・可視化区間・論理順序が一致しない",
+      "label": "Inconsistency between append-only history, state, full replay, and saved gates",
+      "trigger": "Mismatch in sample chain, committed prefix, config, clock, saved gate/watchdog binding, post-start capacity extrapolation, or source time, visibility window, and logical order of delayed signed packets",
       "affected_nodes": [
         "cra.host",
         "cra.recovery_observer",
@@ -4137,8 +4137,8 @@
     },
     {
       "id": "failure.cra_control_safety",
-      "label": "NO_ACTION、SQLite action ledger、delivery/effect fenceの安全性違反",
-      "trigger": "deliveryが有効、action関連5テーブルが増加、effect attemptが増加、またはDB整合性を証明できない",
+      "label": "Safety violation in NO_ACTION, the SQLite action ledger, or the delivery/effect fence",
+      "trigger": "Delivery is enabled, any of the five action tables grows, effect attempts increase, or database integrity cannot be proven",
       "affected_nodes": [
         "cra.host",
         "cra.runtime",
@@ -4199,8 +4199,8 @@
     },
     {
       "id": "failure.cutover_reboot_persistence",
-      "label": "旧観測unitの次boot復帰または新unitのenable漏れ",
-      "trigger": "旧generationがenabledのまま、または新generationがactiveかつenabledでない状態でcutoverを完了する",
+      "label": "Old observation unit returns at boot or the new unit was not enabled",
+      "trigger": "Cutover completes while the old generation remains enabled or the new generation is not both active and enabled",
       "affected_nodes": [
         "dell.tcp_stall_collector",
         "dell.recovery_observer",

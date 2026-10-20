@@ -91,7 +91,7 @@ def correlate(
             f"suppressed_derivatives={','.join(suppressed) or 'none'}"
         ),
         recovery_type="connectivity_restore_no_runtime_restart",
-        follow_up="carrier、default route、DNS、RTMPS TCPの順に回復を確認し、その後map/viewerを再評価する",
+        follow_up="Verify recovery of carrier, default route, DNS, and RTMPS TCP in that order, then reassess the map and viewer",
         observed_ts=started_ts,
         repeat_sec=600,
     )

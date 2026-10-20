@@ -1,4 +1,4 @@
-"""署名付きの有限operator grant。CRA policyや自動Failoverを持たない。"""
+"""Signed, finite operator grants without CRA policy or automatic failover."""
 from __future__ import annotations
 
 import hashlib
@@ -59,7 +59,7 @@ def admit(body: dict, signature: str, *, key: bytes, relay_instance: str, highwa
         raise LeaseRejected("LEASE_EXPIRED_OR_CLOCK_UNBOUND")
     if not 0 < grant - issued <= 86400:
         raise LeaseRejected("LEASE_GRANT_TOO_LONG")
-    # 継続承認でも各送信許可はleaseそのものの短い期限に限る。
+    # Continuous authorization still limits each publishing permission to its short lease.
     if continuous and grant != expires:
         raise LeaseRejected("CONTINUOUS_GRANT_NOT_LEASE_BOUND")
     if previous is not None:
@@ -71,5 +71,5 @@ def admit(body: dict, signature: str, *, key: bytes, relay_instance: str, highwa
             raise LeaseRejected("LEASE_IDENTITY_CHANGED_WITHOUT_STOP")
         if body["input_sequence"] <= old["input_sequence"]:
             raise LeaseRejected("LEASE_SOURCE_NOT_PROGRESSING")
-    # Future issue時刻によってelapsed deadlineを延長しない。
+    # A future issue time must not extend the elapsed deadline.
     return Lease(dict(body), elapsed + min(15, expires - wall))

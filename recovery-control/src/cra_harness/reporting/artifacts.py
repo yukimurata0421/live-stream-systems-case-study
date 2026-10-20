@@ -84,7 +84,7 @@ class ArtifactWriter:
             self.run_dir / "regressions" / "index.json",
             {
                 "registry_sha256": registry_hash,
-                "promotion_rule": "再現可能な探索caseを、由来・seed・最小fixture・期待不変条件付きでdeterministic registryへ昇格する",
+                "promotion_rule": "Promote reproducible exploratory cases into the deterministic registry with provenance, seed, minimal fixture, and expected invariants",
                 "promoted_in_this_run": [
                     {
                         "regression_id": "REG-HARNESS-2026-08-23-001",

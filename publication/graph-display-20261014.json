@@ -1,0 +1,54 @@
+{
+  "schema": "stream.public_graph_display.v1",
+  "prepared_at_jst": "2026-10-14T13:17:44.617746+09:00",
+  "scope": "Public website delivery diagram and trend presentation only",
+  "deployment_performed": false,
+  "deployment_status": "HELD_NEW_TASK_REQUIRED_AFTER_HOST_CONTRACT_CHANGE",
+  "commit_or_push_performed": false,
+  "runtime_route_switch_performed": false,
+  "public_route_selection_available": false,
+  "direct_route_presentation": "INFERRED only under consistent fresh public relay and YouTube observations; direct bitrate is not measured",
+  "validation": {
+    "browser_assertions_passed": 25,
+    "standalone_core_assertions_passed": 22,
+    "rendered_fixture_cases": [
+      "Relay input observed",
+      "Direct path inferred"
+    ],
+    "mobile_viewport_width": 390,
+    "mobile_horizontal_overflow": false,
+    "production_fault_injection": false
+  },
+  "files": [
+    {
+      "path": "ops/public-publisher/site/public/index.html",
+      "before_sha256": "cfadf662a3455f92df0f7ad67f767a2835285aebe9d2068a3b8c8ce3ab4888a9",
+      "candidate_sha256": "86762c0461a6249d1d652160906ad02ef8340f1b74f99c399e3a6253f19caed0"
+    },
+    {
+      "path": "ops/public-publisher/site/public/assets/graphs-core-20261014.js",
+      "before_sha256": null,
+      "candidate_sha256": "836a9caf98142c076263b99adaf36386ce46e28438331e060daae950138b8091"
+    },
+    {
+      "path": "ops/public-publisher/site/public/assets/graphs-20261014.css",
+      "before_sha256": null,
+      "candidate_sha256": "0cda403b0270b1d43b97f2fe845afa60bc63d2f846f4f9d4c6e8d6aa3f6178f7"
+    },
+    {
+      "path": "ops/public-publisher/site/public/assets/site-20261014-graphs.js",
+      "before_sha256": null,
+      "candidate_sha256": "0fa08439eec78775fba1405ee215d2d305a3bd84fd8c2c8d43ab462d89e9d92f"
+    },
+    {
+      "path": "ops/public-publisher/site/public/assets/operations-20261014.js",
+      "before_sha256": null,
+      "candidate_sha256": "7fda4314ff758937aab06ec9277a08cb9bc2dc261c96a20750f43a68c1b77317"
+    },
+    {
+      "path": "ops/public-publisher/site/tests/graphs-20261014.html",
+      "before_sha256": null,
+      "candidate_sha256": "fd18168cc395d977228e1f51217a8aae39237e14c381e7f5188eea32d46c9ed3"
+    }
+  ]
+}

@@ -10,14 +10,14 @@
     {
       "path": "docs/50_ops_logs/2026-08-12_03_runtime_refactor_audit_and_stabilization.md",
       "sections": [
-        "Defect 5: PostgreSQL probe churnとDB startup coupling",
+        "Defect 5: PostgreSQL probe churn and DB startup coupling",
         "Revision ledger"
       ]
     },
     {
       "path": "docs/50_ops_logs/2026-08-14_04_youtube_api_collector_deployment_and_gate_reset.md",
       "sections": [
-        "23:43 JST continuity再確認"
+        "23:43 JST continuity recheck"
       ]
     },
     {

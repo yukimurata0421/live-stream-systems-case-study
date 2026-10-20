@@ -3,11 +3,15 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import os
 import signal
+import socket
 import sqlite3
+import sys
 import threading
 import time
-from datetime import datetime, timezone
+import traceback
+from datetime import datetime, timedelta, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.request import build_opener, ProxyHandler
@@ -23,12 +27,17 @@ DEFINITIONS = (
 )
 LATEST = {}
 LOCK = threading.Lock()
+SOURCE_STATUS = {}
 
 
 def stamp(value):
+    if not isinstance(value, str) or not 1 <= len(value) <= 64:
+        raise ValueError('TIMESTAMP_REQUIRED')
     result = datetime.fromisoformat(value.replace('Z', '+00:00'))
     if result.tzinfo is None: raise ValueError('TIMEZONE_REQUIRED')
-    return result.timestamp()
+    value = result.timestamp()
+    if not math.isfinite(value): raise ValueError('TIMESTAMP_NOT_FINITE')
+    return value
 
 
 def iso(value): return datetime.fromtimestamp(value, timezone.utc).isoformat()
@@ -37,6 +46,7 @@ def iso(value): return datetime.fromtimestamp(value, timezone.utc).isoformat()
 def api_sample(raw, now, binding=None):
     """A failed API attempt is measurable; an untrusted source is not."""
     try:
+        if type(raw) is not dict or type(now) not in (int, float) or not math.isfinite(now): return None
         if (not isinstance(binding,dict) or raw['schema'] != 'monitoring_v4.twitch_api_evidence.v1'
                 or raw['source_host_id'] != 'arena-monitoring-facts'
                 or raw['source_boot_id'] != Path('/proc/sys/kernel/random/boot_id').read_text().strip()
@@ -54,9 +64,12 @@ def api_sample(raw, now, binding=None):
 
 def relay_sample(raw, now):
     try:
+        if type(raw) is not dict or type(now) not in (int, float) or not math.isfinite(now): return None
+        if raw['schema'] != 'stream.relay_public.v1' or raw['source_fresh'] is not True: return None
         observed = stamp(raw['observed_at'])
-        if raw['schema'] != 'stream.relay_public.v1' or raw['source_fresh'] is not True or not 0 <= now-observed <= 180: return None
+        if not 0 <= now-observed <= 180: return None
         state = raw['destinations']['twitch']['status']
+        if not isinstance(state, str): return None
         return {'observed': observed, 'flow': 'GOOD' if state == 'FLOWING' else 'BAD' if state in ('STALLED', 'DISCONNECTED') else 'UNKNOWN'}
     except (KeyError, TypeError, ValueError, OverflowError): return None
 
@@ -92,6 +105,11 @@ class History:
         self.db.execute('INSERT OR REPLACE INTO minutes VALUES (?,?,?,?)', (minute, kind, value, observed))
 
     def tick(self, now, api=None, relay=None):
+        # A failed cycle must not leave a partially committed observation.
+        with self.db:
+            self._tick(now, api, relay)
+
+    def _tick(self, now, api=None, relay=None):
         last = self.meta('last_api')
         # 00:00 JST is 15:00 UTC. Register only renewals whose due instant was observed by this history.
         first_due = int((self.started-54000)//86400)*86400+54000
@@ -122,7 +140,6 @@ class History:
             self.db.execute('INSERT OR REPLACE INTO meta VALUES (?,?)', ('last_api', json.dumps(api)))
         self.db.execute('DELETE FROM minutes WHERE minute<?', (int(now//60)-35*1440,))
         self.db.execute('DELETE FROM renewals WHERE due<?', (now-35*86400,))
-        self.db.commit()
 
     def counts(self, kind, start, end):
         found = dict(self.db.execute('SELECT state,COUNT(*) FROM minutes WHERE kind=? AND minute>=? AND minute<? GROUP BY state', (kind,start,end)))
@@ -196,32 +213,88 @@ class Handler(BaseHTTPRequestHandler):
     def log_message(self,*args): pass
 
 
+def log_event(event, **fields):
+    """Log fixed diagnostic fields, never source payloads or exception messages."""
+    value = {'event': event, 'recorded_at_jst': datetime.now(timezone(timedelta(hours=9))).isoformat()}
+    value.update(fields)
+    print(json.dumps(value, allow_nan=False), file=sys.stderr, flush=True)
+
+
+def source_status(source, status):
+    if SOURCE_STATUS.get(source) != status:
+        SOURCE_STATUS[source] = status
+        log_event('source_status_changed', source=source, status=status)
+
+
+def notify(message):
+    """Support the service watchdog without adding delivery/control effects."""
+    address = os.environ.get('NOTIFY_SOCKET')
+    if not address: return False
+    if address.startswith('@'): address = '\0' + address[1:]
+    with socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM) as channel:
+        channel.settimeout(1)
+        channel.connect(address)
+        channel.sendall(message.encode('ascii'))
+    return True
+
+
+def collect_once(history, opener, now, source=SOURCE, binding=None):
+    api = relay = None
+    try:
+        with source.open('rb') as handle: raw = handle.read(65537)
+        if len(raw) > 65536: raise ValueError('SOURCE_SIZE')
+        api = api_sample(json.loads(raw), now, binding)
+    except (OSError, ValueError): pass
+    source_status('api', 'unavailable' if api is None else 'observed_failure' if api['api'] == 'BAD' else 'observed')
+    try:
+        with opener.open('http://127.0.0.1:9116/public', timeout=3) as response: raw = response.read(16385)
+        if len(raw) > 16384: raise ValueError('SOURCE_SIZE')
+        relay = relay_sample(json.loads(raw), now)
+    except (OSError, ValueError): pass
+    source_status('relay', 'unavailable' if relay is None else 'observed')
+    history.tick(now, api, relay)
+    return history.public(time.time())
+
+
 def main():
     parser=argparse.ArgumentParser();parser.add_argument('--state',type=Path,required=True);parser.add_argument('--binding',type=Path,required=True);args=parser.parse_args()
-    if args.binding.stat().st_size>16384: raise ValueError('BINDING_TOO_LARGE')
-    binding=json.loads(args.binding.read_text())
-    args.state.mkdir(mode=0o700,exist_ok=True)
-    history=History(args.state/'history.sqlite3',time.time());stopped=threading.Event()
+    stopped=threading.Event()
     signal.signal(signal.SIGTERM,lambda *_:stopped.set());signal.signal(signal.SIGINT,lambda *_:stopped.set())
-    server=ThreadingHTTPServer(('127.0.0.1',9117),Handler);server.daemon_threads=True
-    threading.Thread(target=server.serve_forever,daemon=True).start()
-    opener=build_opener(ProxyHandler({}))
-    while not stopped.is_set():
-        now=time.time();api=relay=None
-        try:
-            if SOURCE.stat().st_size>65536: raise ValueError()
-            api=api_sample(json.loads(SOURCE.read_text()),now,binding)
-        except (OSError,ValueError): pass
-        try:
-            with opener.open('http://127.0.0.1:9116/public',timeout=3) as r: raw=r.read(16385)
-            if len(raw)>16384: raise ValueError()
-            relay=relay_sample(json.loads(raw),now)
-        except (OSError,ValueError): pass
-        history.tick(now,api,relay)
-        value=history.public(time.time())
-        with LOCK: LATEST.clear();LATEST.update(value)
-        stopped.wait(15)
-    server.shutdown();server.server_close();history.db.close()
+    history = server = worker = None
+    phase = 'startup'
+    try:
+        with args.binding.open('rb') as handle: raw = handle.read(16385)
+        if len(raw) > 16384: raise ValueError('BINDING_TOO_LARGE')
+        binding = json.loads(raw)
+        if type(binding) is not dict or not binding.get('user_id') or not binding.get('collector_revision'): raise ValueError('BINDING_REQUIRED')
+        args.state.mkdir(mode=0o700,exist_ok=True)
+        history=History(args.state/'history.sqlite3',time.time())
+        server=ThreadingHTTPServer(('127.0.0.1',9117),Handler);server.daemon_threads=True
+        worker=threading.Thread(target=server.serve_forever,daemon=True);worker.start()
+        opener=build_opener(ProxyHandler({}));ready=False
+        log_event('collector_started')
+        while not stopped.is_set():
+            phase = 'collection'
+            if not worker.is_alive(): raise RuntimeError('PUBLIC_SERVER_STOPPED')
+            value = collect_once(history, opener, time.time(), binding=binding)
+            with LOCK: LATEST.clear();LATEST.update(value)
+            phase = 'watchdog'
+            notify('WATCHDOG=1' if ready else 'READY=1\nWATCHDOG=1')
+            ready=True
+            stopped.wait(15)
+        log_event('collector_stopped')
+        return 0
+    except Exception as error:
+        with LOCK: LATEST.clear()
+        frames = [{'file': Path(frame.filename).name, 'line': frame.lineno, 'function': frame.name}
+                  for frame in traceback.extract_tb(error.__traceback__)]
+        log_event('collector_failed', phase=phase, exception_class=type(error).__name__, frames=frames)
+        return 1
+    finally:
+        if server:
+            if worker and worker.is_alive(): server.shutdown()
+            server.server_close()
+        if history: history.db.close()
 
 
-if __name__=='__main__': main()
+if __name__=='__main__': raise SystemExit(main())

@@ -1,0 +1,8 @@
+{
+  "schema": "stream.public_language_policy.v1",
+  "public_language": "English",
+  "scope": "Public comments, docstrings, documentation, notifications, and generated reports.",
+  "exception_rule": "Exact file and content hashes permit reviewed Unicode input data only. Python comments and docstrings are never exempt.",
+  "unicode_data_exceptions": [],
+  "authored_unicode_data": "Authored multilingual fixtures and character ranges use Unicode escapes while preserving runtime values."
+}

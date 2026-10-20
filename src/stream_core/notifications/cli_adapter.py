@@ -250,7 +250,7 @@ def maintenance_notification_incident(ctx: NotifyCliContext, now_ts: int, state_
             f"notify_timer={ctx.notify_timer}"
         ),
         recovery_type="human_maintenance_resume_required",
-        follow_up="作業完了後は stream m off を実行し、stream m status と health-summary を確認する",
+        follow_up="After completing maintenance, run stream m off, then check stream m status and health-summary",
         observed_ts=started_ts,
     )
     item["_first_seen_ts"] = started_ts
