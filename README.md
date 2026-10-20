@@ -13,8 +13,10 @@
 ## 30-Second Summary
 
 I built and operate a continuous aircraft-map stream on a home network.
-It combines live aircraft data, weather, and music, then sends video to YouTube
-and Twitch through an Oracle Cloud Infrastructure (OCI) relay.
+It combines live aircraft data, weather, and music, then uploads one video feed
+to an Oracle Cloud Infrastructure (OCI) relay that forwards it to YouTube and
+Twitch. If the relay path fails, the home host adds a direct YouTube backup
+upload by itself and removes it once the relay has recovered.
 
 The engineering challenge is keeping the stream recoverable when the network,
 encoder, monitoring, or cloud relay fails. This repository shows the code,
@@ -44,6 +46,8 @@ See [the dated evidence and counting method](docs/28-day-same-url-sli-case-study
 | Diagnose faults across several layers | Network stalls, a watchdog that rejected a new relay port, and stale public-cache incidents. |
 | Correct recovery without hiding failed attempts | A Twitch renewal initially disrupted YouTube; the corrected bounded exercise was verified separately. |
 | Recognize when testing has not proved safety | The qualification harness failed to produce its results; native qualification remains unverified. |
+| Simplify when verification outgrows delivery | A signed-lease route with 104 qualification runs never reached unattended operation; a smaller self-healing route replaced it the same morning. |
+| Exercise recovery on purpose | Stopping the relay during a live broadcast started the fallback in 52 seconds and returned to one upload without an operator; the broadcast did not end. |
 
 The [incident stories](docs/operational-case-studies.md) explain what happened,
 what changed, what was checked, and what remains unknown.
@@ -52,17 +56,17 @@ what changed, what was checked, and what remains unknown.
 
 ### Video delivery
 
-The observed primary route uses one encoding producer and one network sender.
 Dell mirrors aircraft data through readsb / modified tar1090, renders the map,
-and mixes music. OCI forwards the resulting stream to each provider separately.
+mixes music, and encodes once. The home uplink carries one feed; OCI does the
+fan-out. A second upload exists only while the relay path is failing.
 
 ```mermaid
 flowchart TB
     SOURCE["Aircraft data: HP ProDesk / Airspy / readsb"] --> MEDIA["Dell: map + music + GPU encoder (NVENC)"]
-    MEDIA --> SEND["Dell: bounded buffer + One FFmpeg remux sender"]
-    SEND -->|"encrypted SSH tunnel"| OCI["OCI relay"]
-    OCI --> YT["YouTube"]
+    MEDIA -->|"RTMPS over a private tunnel"| OCI["OCI relay: MediaMTX + keeper"]
+    OCI --> YT["YouTube primary"]
     OCI --> TW["Twitch"]
+    MEDIA -.->|"fallback only: 30 s relay failure to start, 300 s health to stop"| YTB["YouTube backup ingest"]
 ```
 
 ### Public status
@@ -86,11 +90,14 @@ that owns a process. Monitoring supplies facts; CRA (Central Restart Authority)
 handles policy and authorization; Dell owns the exact media-process effect.
 Raspberry Pi only publishes status. In the included policy,
 `production_behavior_change_authorized=false`: this code does not enable a
-live CRA command path or automatic failover.
+live CRA command path.
 
-The [runtime contract](docs/v3/current-runtime-contract.md) and
-[OCI delivery design](docs/v3/oci-relay-and-twitch.md) contain the detailed
-ownership and transport rules.
+The media route's fallback is deliberately outside CRA. It uses restart loops
+and one controller with fixed thresholds, so it keeps working when monitoring
+or authorization is unavailable. The [runtime contract](docs/v3/current-runtime-contract.md),
+[self-healing fan-out](docs/v3/self-healing-oci-fanout.md), and
+[decision record](docs/v3/oci-route-simplification-decision.md) contain the
+detailed rules and trade-offs.
 
 ## Key Design Decisions
 
@@ -111,8 +118,10 @@ older availability ratios or prove uninterrupted video/audio. Current warnings,
 missing measurements, and actual delivery faults are treated separately.
 
 The OCI/Twitch path has observed live reception and a corrected manual renewal.
-Complete native failure qualification, long-term reception soak, and automatic
-failover are not established. Production credentials, raw logs, and databases
+Automatic fallback was exercised once, by stopping the relay service; tunnel
+loss, a relay-host outage, provider-side failures, and the first keeper-driven
+Twitch renewal were not exercised. Native failure qualification and long-term
+reception soak are not established. Production credentials, raw logs, and databases
 are excluded from this repository. The [scorecard](docs/operational-scorecard.md)
 keeps measured results, source tests, and remaining gaps separate.
 

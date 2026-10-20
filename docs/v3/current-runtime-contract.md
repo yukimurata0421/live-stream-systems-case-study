@@ -28,20 +28,24 @@ ProDesk readsb -> Beast feed to Dell `delivery-host:30104` -> Dell readsb ->
 Dell modified tar1090 ADS-B JSON -> sanitized proxy -> `stream_v3` MapLibre
 browser rendering.
 
-## Primary Media Route: 2026-10-13 Source Cutoff
+## Primary Media Route: 2026-10-20
 
-Dell owns the NVENC encoding producer, bounded MPEG-TS buffer, and one remux
-sender. The primary sender reaches OCI through an SSH tunnel. OCI owns the
-finite-lease/fresh-input guard and independent YouTube/Twitch forwarding.
-Twitch has a separate durable daily-session owner; its planned break must not
-reset YouTube forwarding. Local loopback ACK is not proof of remote reception.
+Dell's main sender uploads one RTMPS feed over a private tunnel to MediaMTX on
+OCI, which forwards it to YouTube and Twitch. MediaMTX restarts on failure. An
+OCI keeper re-creates a forward that has failed for 30 seconds and renews the
+Twitch session at 00:00 JST without touching the YouTube forward. A Dell
+controller starts a direct upload to the YouTube backup ingest after 30 seconds
+of relay failure and stops it after 300 seconds of relay health; that fallback
+is the only automatic route action. Moving bytes, provider LIVE state, and
+playable media remain separate evidence.
 
-Read [OCI relay and Twitch](oci-relay-and-twitch.md),
-[route network observation](route-network-observation.md), and
-[Twitch renewal](twitch-session-renewal.md) for current code, historical exercise,
-and explicit qualification limits. The source includes a manually authorized,
-fenced route-transition protocol; automatic failover remains disabled.
-Public policy still supplies no executable production authority.
+Read the [self-healing fan-out](self-healing-oci-fanout.md) for the drill and
+limits, and the [decision record](oci-route-simplification-decision.md) for why
+the signed-lease route with its fenced route-transition protocol was retired.
+[OCI relay and Twitch](oci-relay-and-twitch.md) and
+[Twitch renewal](twitch-session-renewal.md) keep the 2026-10-13 design and
+exercise. The CRA policy in this repository still supplies no executable
+production authority.
 
 ## Delivery Owner
 

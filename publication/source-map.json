@@ -28,10 +28,11 @@
     {
       "path": "README.md",
       "source_role": "public-documentation",
-      "decision": "separate-observed-media-publication-and-disabled-recovery-with-readable-diagrams",
-      "before_sha256": "b0279c90420eb0ad66eefcf4515439de0e606922f2196e115b6017ce05d1fce7",
+      "decision": "curated-current-contract-and-dated-evidence",
+      "before_sha256": "4299ac9fd3b7c6606e9d95bfdbe8640f698fd3809f2424d305aa4dbc565bef27",
       "source_sha256": null,
-      "public_sha256": "4299ac9fd3b7c6606e9d95bfdbe8640f698fd3809f2424d305aa4dbc565bef27"
+      "public_sha256": "2090746f317ca6b2c9b83f7165e2cdfab5ec62a3bff5bafef4db0e4016b6741d",
+      "port_date_jst": "2026-10-20"
     },
     {
       "path": "docs/00_INDEX.md",
@@ -76,9 +77,10 @@
       "path": "docs/architecture.md",
       "source_role": "public-documentation",
       "decision": "curated-current-contract-and-dated-evidence",
-      "before_sha256": "6885cd4d0021e50fe1da8b7ced88138a77169dc44e4f27d64d87e559e88a5a93",
+      "before_sha256": "72c4e8e290ff138602494fd6e4eead5bb76730d1981199f382d3d01452e3f5bc",
       "source_sha256": null,
-      "public_sha256": "72c4e8e290ff138602494fd6e4eead5bb76730d1981199f382d3d01452e3f5bc"
+      "public_sha256": "02d839416dbfef239f49ae052d5650ba4f92abcbf5b8ab9d429e31f94c8803a2",
+      "port_date_jst": "2026-10-20"
     },
     {
       "path": "docs/executive-summary.md",
@@ -109,28 +111,31 @@
     {
       "path": "docs/operational-case-studies.md",
       "source_role": "public-documentation",
-      "decision": "hiring-reader-summary-and-retained-operational-evidence",
-      "before_sha256": null,
+      "decision": "curated-current-contract-and-dated-evidence",
+      "before_sha256": "ef434bdce8efbb763645393e0ae4b1d333d6616535963bb6356dec2ef14ec3a6",
       "source_sha256": null,
-      "public_sha256": "ef434bdce8efbb763645393e0ae4b1d333d6616535963bb6356dec2ef14ec3a6"
+      "public_sha256": "0f4ceba397e905159b9a9c30b9997e2f5ddd4acab7770216ffd4f0c8100d9367",
+      "port_date_jst": "2026-10-20"
     },
     {
       "path": "docs/operational-scorecard.md",
       "source_role": "public-documentation",
       "decision": "curated-current-contract-and-dated-evidence",
-      "before_sha256": "40ba0da4d47bf076c68905dbbd20b694d58fcf4967de44e4e6c4a0e4bfe93910",
+      "before_sha256": "040910c83389a4c72724e9b954475967a17cf17881b793c663f34c05c1fa24d9",
       "source_sha256": null,
-      "public_sha256": "040910c83389a4c72724e9b954475967a17cf17881b793c663f34c05c1fa24d9"
+      "public_sha256": "d69bffa8ffe202ffcf96e8eca4bf9126344947315ffe69673849d3a5587d6f9b",
+      "port_date_jst": "2026-10-20"
     },
     {
       "path": "docs/physical-topology.md",
       "source_role": "public-documentation",
       "decision": "curated-current-contract-and-dated-evidence",
-      "before_sha256": "fe6fc5119357610803a289633db8f640f0b943a1588038b58387dfb0d31521d8",
+      "before_sha256": "662e0dffdab3676c67d92113fc139df29c4b8597dad39d13ba8719930da53d3b",
       "source_sha256": null,
-      "public_sha256": "662e0dffdab3676c67d92113fc139df29c4b8597dad39d13ba8719930da53d3b",
+      "public_sha256": "89aad23a743b650a3456320c831d6b049d72f62053a8ac338ff63dcf1e7d2700",
       "pre_hardware_selection_sha256": "2d89baec37ff20dead286090d0b49ba133c681088cb5f58ba52791c2939f04fb",
-      "hardware_selection_change": "Link the dated hardware selection retrospective from existing reviewer and topology routes."
+      "hardware_selection_change": "Link the dated hardware selection retrospective from existing reviewer and topology routes.",
+      "port_date_jst": "2026-10-20"
     },
     {
       "path": "docs/public-language-policy.md",
@@ -154,9 +159,10 @@
       "path": "docs/runtime-contract.md",
       "source_role": "public-documentation",
       "decision": "curated-current-contract-and-dated-evidence",
-      "before_sha256": "e26b5a9ed9e8b042eea3d3fb0ab64db15563d877135883989d9878ede92be47b",
+      "before_sha256": "8412df27e45a2af9f936bdd64a637464ff7a408fec09903e1b63749fe5b92e16",
       "source_sha256": null,
-      "public_sha256": "8412df27e45a2af9f936bdd64a637464ff7a408fec09903e1b63749fe5b92e16"
+      "public_sha256": "765d5a2e71023b4bf0e29f7cd6cc2c8ee7be63172dc5506117887694ccf76252",
+      "port_date_jst": "2026-10-20"
     },
     {
       "path": "docs/test-strategy-and-safety-boundary.md",
@@ -179,9 +185,10 @@
       "path": "docs/v3/current-runtime-contract.md",
       "source_role": "public-documentation",
       "decision": "curated-current-contract-and-dated-evidence",
-      "before_sha256": "57e09cb75fcedc5512610866da1beb44142c30c1194b8ea4b9d2c3b88809149c",
+      "before_sha256": "b482b6b869e0c47092402c0e0563faecfc71d57e008124ad2bc16d157d9507b0",
       "source_sha256": null,
-      "public_sha256": "b482b6b869e0c47092402c0e0563faecfc71d57e008124ad2bc16d157d9507b0"
+      "public_sha256": "f5de54acc521f14d12c284eb4bd32c4eb242d9dfa90e1e99d5c81f7ca0e42517",
+      "port_date_jst": "2026-10-20"
     },
     {
       "path": "docs/v3/oci-relay-and-twitch.md",
@@ -2419,12 +2426,13 @@
     {
       "path": "tests/test_docs_structure.py",
       "source_role": "public-validation",
-      "decision": "separate-media-publication-and-disabled-recovery-contract-in-README",
-      "before_sha256": "c9321f12e2b229df6bcf28ea819768445e3facb4dcbf2c99a9ac3800bb80659c",
+      "decision": "docs-test-follows-current-route-diagram",
+      "before_sha256": "965a898c7dc7cc16d1296539a1e7ea655ee3fd4c2e75ce7517a9d778db8570b6",
       "source_sha256": null,
-      "public_sha256": "965a898c7dc7cc16d1296539a1e7ea655ee3fd4c2e75ce7517a9d778db8570b6",
+      "public_sha256": "c2478fad72d41ae4616ffca11e78f476a59408557864503a90e760b334268220",
       "before_unicode_source_sha256": "ad687380f09c8a9fb2642a991732247c0a40a804df9838b2c4a1f5b9fa7fd070",
-      "unicode_source_change": "English authored text; Unicode fixture values preserved with explicit escapes."
+      "unicode_source_change": "English authored text; Unicode fixture values preserved with explicit escapes.",
+      "port_date_jst": "2026-10-20"
     },
     {
       "path": "tests/test_overlay_precipitation_state.py",

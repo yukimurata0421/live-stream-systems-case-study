@@ -26,10 +26,12 @@ public static status site. Its evidence concerns operating discipline and
 bounded recovery. It does not establish a commercial service's SLO, multi-tenant
 scale, or recovery from disk loss and power failure.
 
-No production authority is enabled by the public source. Monitoring, CRA, and
-Dell effect ownership remain distinct; there is no live effect or completed
-production-soak claim from the publication checks. Native qualification and
-automatic failover remain unestablished.
+The public CRA policy enables no production authority. Monitoring, CRA, and
+Dell effect ownership remain distinct, and the publication checks make no live
+effect or production-soak claim. Separately, the media route since 2026-10-20
+has one automatic action: a direct YouTube fallback upload while the OCI relay
+path fails. One drill with a stopped relay service exercised it; other relay
+failure modes, long-term soak, and native qualification remain unestablished.
 
 ## Detailed Reference
 

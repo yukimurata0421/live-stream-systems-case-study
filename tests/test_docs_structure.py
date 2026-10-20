@@ -352,7 +352,7 @@ class PublicDocsStructureTests(unittest.TestCase):
     def test_readme_mermaid_preserves_plane_ownership(self) -> None:
         text = read(README)
         media, publication = MERMAID_BLOCK_RE.findall(text)
-        for owner in ("HP ProDesk", "Dell", "NVENC", "One FFmpeg remux sender", "OCI", "YouTube", "Twitch"):
+        for owner in ("HP ProDesk", "Dell", "NVENC", "RTMPS over a private tunnel", "OCI", "YouTube", "Twitch", "fallback only"):
             with self.subTest(media_owner=owner):
                 self.assertIn(owner, media)
         for owner in ("Grafana", "Prometheus", "Loki", "Pi-local Grafana proxy", "arena-server", "snapshot collectors", "GCS", "Cloudflare"):
