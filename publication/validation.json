@@ -409,5 +409,62 @@
     "subsequent_failed_run": "https://github.com/yukimurata0421/live-stream-systems-case-study/actions/runs/38446157254",
     "full_local_native_suite_performed": false,
     "full_ci_after_correction": "pending"
+  },
+  "monitoring_release_metadata_fix_20261020": {
+    "recorded_at_jst": "2026-10-20T18:12:55+09:00",
+    "base_public_commit": "29e49548499dc4676f132e394a3fa59e23c5be19",
+    "failed_ci_run": "https://github.com/yukimurata0421/live-stream-systems-case-study/actions/runs/39396551996",
+    "failed_ci_job": "monitoring-v4-check",
+    "ci_result_before": {
+      "passed": 457,
+      "failed": 6,
+      "skipped": 6
+    },
+    "cause": "publication/language-policy.json was added in bc19e7b, but publication was missing from the release source top-level allowlist.",
+    "local_reproduction_before": {
+      "passed": 2,
+      "failed": 6,
+      "suite": "tests/test_release_preparation.py"
+    },
+    "new_regressions_before": {
+      "passed": 1,
+      "failed": 1,
+      "subtests_passed": 3
+    },
+    "change": "Admit publication as source metadata; retain full-tree snapshot binding, read-only release modes, symlink rejection, generated-artifact rejection, and unknown top-level rejection.",
+    "local_runtime": {
+      "python": "3.14.4",
+      "pytest": "9.0.3"
+    },
+    "checks": {
+      "release_preparation": {
+        "passed": 10,
+        "failed": 0,
+        "subtests_passed": 3
+      },
+      "monitoring_full_suite": {
+        "passed": 465,
+        "failed": 0,
+        "skipped": 6,
+        "subtests_passed": 168,
+        "elapsed_sec": 20.77
+      },
+      "public_docs": {
+        "passed": 17,
+        "failed": 0,
+        "subtests_passed": 607
+      },
+      "public_port_digests": "PASS",
+      "public_language": "PASS",
+      "monitoring_public_snapshot": "PASS"
+    },
+    "source_map_sha256": "bed872b84ec69c681a2de845e8f57a67ee5a7b9018bc5533274852dfab84572b",
+    "other_ci_jobs_at_base_commit": {
+      "snapshot-check": "success",
+      "recovery-control-check": "success"
+    },
+    "production_mutation": false,
+    "commit_or_push_performed": false,
+    "ci_rerun_performed": false
   }
 }

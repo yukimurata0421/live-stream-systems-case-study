@@ -50,6 +50,7 @@ ALLOWED_TOP_LEVEL = frozenset(
         "deploy",
         "docs",
         "ops",
+        "publication",
         "pyproject.toml",
         "requirements",
         "src",

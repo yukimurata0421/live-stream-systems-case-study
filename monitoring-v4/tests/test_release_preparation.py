@@ -57,6 +57,60 @@ def _snapshot(source: Path) -> str:
 
 
 class ImmutableReleasePreparationTests(unittest.TestCase):
+    def test_publication_metadata_is_frozen_and_snapshot_bound(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = _copy_snapshot(root / "source")
+            metadata = source / "publication/release-provenance.json"
+            metadata.parent.mkdir(exist_ok=True)
+            metadata.write_text('{"revision": "reviewed"}\n', encoding="utf-8")
+            expected_snapshot = _snapshot(source)
+            base = root / "releases"
+            base.mkdir()
+
+            identity, prepared = _prepare(source, base, 111)
+            copied = prepared / metadata.relative_to(source)
+            self.assertEqual(copied.read_bytes(), metadata.read_bytes())
+            self.assertEqual(stat.S_IMODE(copied.stat().st_mode), 0o444)
+            release.validate_release(
+                release=prepared,
+                expected_identity=identity,
+                expected_snapshot_sha256=expected_snapshot,
+                app_image=f"stream-monitoring-v4:{identity}",
+                app_image_id=APP_IMAGE_ID,
+            )
+
+            copied.chmod(0o644)
+            copied.write_text('{"revision": "changed"}\n', encoding="utf-8")
+            copied.chmod(0o444)
+            self.assertEqual(content_identity(prepared), identity)
+            with self.assertRaisesRegex(RuntimeError, "snapshot does not match"):
+                release.validate_release(
+                    release=prepared,
+                    expected_identity=identity,
+                    expected_snapshot_sha256=expected_snapshot,
+                    app_image=f"stream-monitoring-v4:{identity}",
+                    app_image_id=APP_IMAGE_ID,
+                )
+
+    def test_publication_metadata_does_not_bypass_tree_guards(self) -> None:
+        for defect in ("generated", "symlink", "unexpected"):
+            with self.subTest(defect=defect), tempfile.TemporaryDirectory() as td:
+                source = _copy_snapshot(Path(td) / "source")
+                publication = source / "publication"
+                publication.mkdir(exist_ok=True)
+                if defect == "generated":
+                    (publication / "__pycache__").mkdir()
+                    error = "generated artifact"
+                elif defect == "symlink":
+                    (publication / "linked.json").symlink_to(source / "README.md")
+                    error = "safely|symlink|single-link"
+                else:
+                    (source / "unexpected-publication").mkdir()
+                    error = "unexpected top-level"
+                with self.assertRaisesRegex(RuntimeError, error):
+                    tree_records(source, require_source_layout=True)
+
     def test_source_tree_work_bounds_fail_before_copy(self) -> None:
         with tempfile.TemporaryDirectory() as td:
             source = _copy_snapshot(Path(td) / "source")

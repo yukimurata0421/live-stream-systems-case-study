@@ -274,7 +274,7 @@
       "decision": "adapted-for-integrated-publication-links",
       "before_sha256": "ff883e9ddb62f167bc602fbaf1f81bd1ca64ac2177079f90019d5c5d6a482490",
       "source_sha256": null,
-      "public_sha256": "7139fbd035e4d03c07b066d2a3186ca4b79f8e3aa40471d6a97b2b66224efd66",
+      "public_sha256": "242712b3e2308ac26799ce788cc9549785a838baf6425b0468e81fca2a9b3f36",
       "prior_public_sha256": "704efa4cef3cdba565902fe1414f2b3a59d2877eda257053f4e2629204b1bb1c",
       "localization": "English prose; control structures and machine identifiers preserved.",
       "before_unicode_source_sha256": "ca48ca415191a13b321cb7ef2d982c82d42dc583a8f2710935c1a8978109831a",
@@ -2860,6 +2860,24 @@
       "public_sha256": "f47db24cb0923d814f2d586327c1562b4e15939001f608d2e17cf7459d5bfaaf",
       "port_date_jst": "2026-10-20",
       "documentation_restructure": "New single page for volatile state."
+    },
+    {
+      "path": "monitoring-v4/ops/release/model.py",
+      "source_role": "public-release-validation",
+      "decision": "admit-publication-metadata-with-existing-tree-guards",
+      "before_sha256": "bea5cef83738c4a6e153cffad414e98ffcb6babd8df0a3a0b3f2e56ef129f8d7",
+      "source_sha256": null,
+      "public_sha256": "84b32e1581383eae8662ef7601dea327d74864244f614747b0b83f2afdea1d34",
+      "port_date_jst": "2026-10-20"
+    },
+    {
+      "path": "monitoring-v4/tests/test_release_preparation.py",
+      "source_role": "public-tests",
+      "decision": "verify-metadata-freezing-snapshot-binding-and-rejection-guards",
+      "before_sha256": "ae98f5c87b3302e52a3d97bacd24f42afaa2b9255f89b9c3b12531c10de128dd",
+      "source_sha256": null,
+      "public_sha256": "d7c1535cbaa341f6e5ac72152cb92abbe88e2763fb785c0b0a16d164e9cd8b95",
+      "port_date_jst": "2026-10-20"
     }
   ],
   "omissions": [

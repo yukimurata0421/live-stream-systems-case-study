@@ -84,6 +84,12 @@ the deployment contract; no corresponding values are present.
 
 ## Validation gate
 
+Release source snapshots include the public metadata under `publication/`.
+That metadata is copied into the read-only release and bound to its full-tree
+SHA-256. It receives the same symlink, generated-artifact, and size checks as
+other source files; admitting this directory does not allow arbitrary top-level
+entries.
+
 The assembled history is accepted only after all of the following succeed:
 
 - `python3 -m pytest -q tests` with the declared `.[test]` dependencies;
