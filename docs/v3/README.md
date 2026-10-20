@@ -33,6 +33,7 @@ contracts below are optional follow-up reading.
 - Evidence and SLI:
   - `sli-and-dashboard.md`
   - `rolling-sli-error-budget-feedback.md`
+  - `public-status-page-2026-10-20.md`
   - `public-status-snapshot.md`
   - `public-publisher-boundary.md`
   - `operational-reliability-and-external-evidence.md`

@@ -37,9 +37,9 @@
       "path": "docs/00_INDEX.md",
       "source_role": "public-documentation",
       "decision": "curated-current-contract-and-dated-evidence",
-      "before_sha256": "a0f536dc3cbef641b2b07ac50a801d947ca02b48086d88dbfd41f90f1f35ae63",
+      "before_sha256": "571ea8638c46839d0c8e78ba1848ef073a0e53bb84faaf29302aad11501debe1",
       "source_sha256": null,
-      "public_sha256": "571ea8638c46839d0c8e78ba1848ef073a0e53bb84faaf29302aad11501debe1",
+      "public_sha256": "164ca8e502558a02f9511c03546759eb40cd785138ee6b38be0a77b7a4eeefb1",
       "prior_public_sha256": "e32ab253e63bfe09d4ec42a5fc1594a2025b8bd859cab754ee1558798c0391dc",
       "localization": "English prose; control structures and machine identifiers preserved.",
       "pre_graph_display_sha256": "6a87a495eb3698b1a49e053ffcc109b28d94a59e9dd29cb3399a62279e196d3d",
@@ -170,9 +170,9 @@
       "path": "docs/v3/README.md",
       "source_role": "public-documentation",
       "decision": "curated-current-contract-and-dated-evidence",
-      "before_sha256": "10238259517cd876b837f7651576cf2f1d3af649e6d45c2921cbc12e4adbdbe1",
+      "before_sha256": "dd4346854fbe0edcd0dd7c987d0e1453a3aae83b2208721a1f292be16ed628ef",
       "source_sha256": null,
-      "public_sha256": "dd4346854fbe0edcd0dd7c987d0e1453a3aae83b2208721a1f292be16ed628ef",
+      "public_sha256": "dcfe05a46a0ac536e58a7822e4a8c34a55bd45b0836a4a3fa11e4ceff45008d3",
       "port_date_jst": "2026-10-20"
     },
     {
@@ -653,13 +653,14 @@
       "path": "ops/public-publisher/site/public/index.html",
       "source_role": "development-public-ui",
       "decision": "adapted",
-      "before_sha256": "b746d811c61fa5a7cf7fc46b7e4681a1f58764cc7b79427b3f756ee547552d63",
-      "source_sha256": "d172c74b90c3bad262b95fe6354041dbca0eb93c95c5958205e55ce3153f8598",
-      "public_sha256": "d172c74b90c3bad262b95fe6354041dbca0eb93c95c5958205e55ce3153f8598",
+      "before_sha256": "d172c74b90c3bad262b95fe6354041dbca0eb93c95c5958205e55ce3153f8598",
+      "source_sha256": "ed663bf37c47d048373df39b0f9dc9a9175b6385cb76a32fd9a12b8852fc252f",
+      "public_sha256": "ed663bf37c47d048373df39b0f9dc9a9175b6385cb76a32fd9a12b8852fc252f",
       "pre_graph_display_sha256": "cfadf662a3455f92df0f7ad67f767a2835285aebe9d2068a3b8c8ce3ab4888a9",
       "graph_display_change": "Observed link arrows, explicit direct-path inference, and timestamp-preserving charts.",
       "pre_twitch_sli_resilience_sha256": "86762c0461a6249d1d652160906ad02ef8340f1b74f99c399e3a6253f19caed0",
-      "twitch_sli_resilience": "Locally checked candidate only; production application held for fresh task."
+      "twitch_sli_resilience": "Locally checked candidate only; production application held for fresh task.",
+      "port_date_jst": "2026-10-20"
     },
     {
       "path": "ops/public-publisher/site/scripts/build_public.py",
@@ -696,13 +697,14 @@
     },
     {
       "path": "ops/public-publisher/site/scripts/push_to_gcs.py",
-      "source_role": "development-public-ui",
-      "decision": "Pi publisher source reconciliation, portable paths, English source guide, and mock-based validation.",
-      "before_sha256": "5378112b4043be6f281279db02402b1274006d86cfc333800807423b9160c5d6",
-      "source_sha256": "83a2b329123bf7f24e8e502b1e73e887d09c66424f019b1b0f1abe062c7559b7",
-      "public_sha256": "46fea0718b2e4ff11a8928af96753d68f37cb77329f7e20d6934da81dc092abd",
+      "source_role": "public-pi-publisher-port",
+      "decision": "public-allowlist-for-versioned-assets",
+      "before_sha256": "46fea0718b2e4ff11a8928af96753d68f37cb77329f7e20d6934da81dc092abd",
+      "source_sha256": null,
+      "public_sha256": "87ae86f56dbe7c43b94246e8d93486e4bef21f8a5c74b5011e210c611065e8c2",
       "pre_pi_publisher_source_port_sha256": "83a2b329123bf7f24e8e502b1e73e887d09c66424f019b1b0f1abe062c7559b7",
-      "pi_publisher_source_port": "2026-10-14 source reconciliation; portable English code and retained public protections; no live changes."
+      "pi_publisher_source_port": "2026-10-14 source reconciliation; portable English code and retained public protections; no live changes.",
+      "port_date_jst": "2026-10-20"
     },
     {
       "path": "ops/public-publisher/site/tests/graphs-20261014.html",
@@ -2784,6 +2786,33 @@
       "before_sha256": null,
       "source_sha256": "dc84c58c70a4a1a6ea5464b2efd5e38735ad116b805d000af8b9824181ae0b5e",
       "public_sha256": "a32e9ecc5df0ac03cc971e7187b5bf873f57d4c7ad98b58cd5cea43280abfeef",
+      "port_date_jst": "2026-10-20"
+    },
+    {
+      "path": "ops/public-publisher/site/public/assets/ops-20261020.css",
+      "source_role": "development-public-ui",
+      "decision": "adapted",
+      "before_sha256": null,
+      "source_sha256": "f7548bb45614775757c5af8f23255022026240e9031a4ec3d069b986cf1eeda7",
+      "public_sha256": "f7548bb45614775757c5af8f23255022026240e9031a4ec3d069b986cf1eeda7",
+      "port_date_jst": "2026-10-20"
+    },
+    {
+      "path": "ops/public-publisher/site/public/assets/ops-20261020.js",
+      "source_role": "development-public-ui",
+      "decision": "adapted",
+      "before_sha256": null,
+      "source_sha256": "6551633bf34efafc83b5fff1d79125ada08ba0182f5035ff4d7e9bc897b42a6c",
+      "public_sha256": "6551633bf34efafc83b5fff1d79125ada08ba0182f5035ff4d7e9bc897b42a6c",
+      "port_date_jst": "2026-10-20"
+    },
+    {
+      "path": "docs/v3/public-status-page-2026-10-20.md",
+      "source_role": "public-documentation",
+      "decision": "curated-current-contract-and-dated-evidence",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "913baaa7e851130ec2f9f7000f1e531a185064f4858b49ce27693e43d3b8aaf8",
       "port_date_jst": "2026-10-20"
     }
   ],

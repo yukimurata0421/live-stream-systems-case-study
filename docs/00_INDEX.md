@@ -58,6 +58,7 @@ Use the rest of this page as a reference catalog.
 ## Reliability Evidence
 
 - `v3/twitch-sli-resilience.md`: [Twitch collector resilience and visible missing-data states](v3/twitch-sli-resilience.md).
+- `v3/public-status-page-2026-10-20.md`: [status page redesign around current state, 24-hour trends, and targets](v3/public-status-page-2026-10-20.md).
 - `v3/public-diagram-and-trend-display.md`: [Observed links, inferred direct delivery, and missing chart data](v3/public-diagram-and-trend-display.md).
 
 - `sli-methodology.md`

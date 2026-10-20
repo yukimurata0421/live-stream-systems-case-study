@@ -54,6 +54,8 @@ ALLOWED_FILES = (
     "assets/site-20261014-graphs.js",
     "assets/operations-20261014.js",
     "assets/sli-20261014-resilient.js",
+    "assets/ops-20261020.css",
+    "assets/ops-20261020.js",
 )
 REQUIRED_JSON = ("stream-v3-prometheus.json", "stream-v3-loki.json", "reliability-indicators.json")
 MAXIMUM_FILE_BYTES = 8 * 1024 * 1024
