@@ -89,24 +89,11 @@ same-URL, quota, and stale-cache gates that must pass before destructive
 YouTube actions are allowed.
 
 `ops/monitoring/` contains the Prometheus, Loki, Grafana, and Alloy
-configuration used to present this evidence. It is an observability display and
-retention stack. The retained ProDesk guard/request path remains visible for
-migration review; the current contract routes facts-only evidence through
-Monitoring v4 to CRA and does not grant the display stack recovery authority.
-
-In the retained production topology this monitoring backend remains on HP
-ProDesk, alongside the k3s `stream-v3-control` and `stream-v3-observer`
-observability workloads. Raspberry Pi has an nginx `/grafana/` proxy to HP
-ProDesk Grafana. The public snapshot collector runs on Raspberry Pi, queries
-allowlisted Prometheus/Loki evidence through the Pi-local
-`http://127.0.0.1:8088/grafana` datasource proxy path, pushes static
-JSON/assets outbound to GCS, and Cloudflare serves `yukimurata0421.dev`. The
-GCS/Cloudflare edge is used to keep public status reads off the home uplink.
-ProDesk does not push this evidence to the Pi. The collector initiates HTTP
-GETs, Pi nginx proxies them to `monitoring-host:3000/grafana`, and Grafana returns
-datasource JSON over that same proxy path.
-Non-static operational access is outside the static `yukimurata0421.dev` status
-path and is not named as a public endpoint here.
+configuration used to present this evidence. It is a display and retention
+stack running on `arena-server` (HP ProDesk) and has no recovery authority.
+The Raspberry Pi pulls allowlisted evidence from it and publishes a static
+snapshot; the path is described once in
+[architecture](architecture.md#public-status-path).
 
 The public status site at <https://yukimurata0421.dev/> is a separate,
 sanitized evidence surface. It shows a static GCS + Cloudflare snapshot with

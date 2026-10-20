@@ -1,13 +1,13 @@
 # Decisions
 
-## Retained Delivery / Observability Split
+## Delivery / Observability Split
 
 Status: accepted
 
-The retained v3 deployment puts video, audio, FFmpeg, AutoDJ, k3s runtime, and
-local protection on Dell. The HP ProDesk observability side also runs k3s for
-`stream-v3-control` and `stream-v3-observer`, and owns monitoring, SLI,
-notification, and legacy staged recovery surfaces.
+The v3 deployment puts video, audio, FFmpeg, AutoDJ, k3s runtime, and local
+protection on Dell. The HP ProDesk (`arena-server`) runs the monitor service
+and the Prometheus/Loki/Grafana stack, and owns monitoring, SLI, notification,
+and the guarded restart gates.
 
 The HP ProDesk also hosts the physical ADS-B RF ingest chain: Airspy USB,
 `airspy_adsb`, and ProDesk-side readsb. The Dell workstation receives that feed

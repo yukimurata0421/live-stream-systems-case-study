@@ -53,7 +53,7 @@ The measured v2 baseline that established this classification is summarized in
 evidence for the method, not a current v3 uptime statement.
 
 The
-[`historical 28-day review and 127-day continuity checkpoint`](../28-day-same-url-sli-case-study.md)
+[`historical 28-day review and continuity checkpoints`](../same-url-continuity-evidence.md)
 keeps its original regime-bounded ratios separate from the later exact-identity
 ledger. Neither artifact is retroactively reinterpreted through a newer schema.
 

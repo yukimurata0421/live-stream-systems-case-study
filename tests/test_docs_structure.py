@@ -61,19 +61,19 @@ class PublicDocsStructureTests(unittest.TestCase):
         required = (
             README,
             DOCS / "00_INDEX.md",
-            DOCS / "executive-summary.md",
+            DOCS / "current-status.md",
             DOCS / "hiring-reviewer-guide.md",
             DOCS / "operational-scorecard.md",
             DOCS / "implementation-review-map.md",
             DOCS / "architecture.md",
-            DOCS / "physical-topology.md",
             DOCS / "runtime-contract.md",
             DOCS / "sli-methodology.md",
-            DOCS / "28-day-same-url-sli-case-study.md",
+            DOCS / "same-url-continuity-evidence.md",
             DOCS / "test-strategy-and-safety-boundary.md",
             DOCS / "public-release.md",
             DOCS / "v3" / "README.md",
-            DOCS / "v3" / "current-runtime-contract.md",
+            DOCS / "v3" / "self-healing-oci-fanout.md",
+            DOCS / "v3" / "oci-route-simplification-decision.md",
             DOCS / "v3" / "public-status-snapshot.md",
             DOCS / "v3" / "rolling-sli-error-budget-feedback.md",
             DOCS / "v3" / "tcp-stall-case-study.md",
@@ -156,6 +156,7 @@ class PublicDocsStructureTests(unittest.TestCase):
                 "docs/hiring-reviewer-guide.md",
                 "docs/operational-scorecard.md",
                 "docs/implementation-review-map.md",
+                "docs/current-status.md",
             },
         )
 
@@ -188,7 +189,7 @@ class PublicDocsStructureTests(unittest.TestCase):
         self.assertFalse(checkpoint["production_mutation"])
         self.assertIn("uninterrupted frame delivery", evidence_snapshot)
 
-        case_study = read(DOCS / "28-day-same-url-sli-case-study.md")
+        case_study = read(DOCS / "same-url-continuity-evidence.md")
         self.assertIn("At-Least-160-Day Continuity Checkpoint", case_study)
         self.assertIn("160 days, 13 hours, 28 minutes, 40 seconds", case_study)
         self.assertIn("140 / 140", case_study)
@@ -201,24 +202,28 @@ class PublicDocsStructureTests(unittest.TestCase):
         self.assertRegex(case_study, r"public CRA policy\s+remains production-disabled")
         self.assertNotIn("The next SLO view should use rolling 30 days", case_study)
 
-    def test_current_docs_separate_retained_topology_from_current_authority(self) -> None:
+    def test_current_docs_separate_production_recovery_from_cra(self) -> None:
         runtime = read(DOCS / "runtime-contract.md")
-        physical = read(DOCS / "physical-topology.md")
-        current = read(DOCS / "v3" / "current-runtime-contract.md")
+        architecture = read(DOCS / "architecture.md")
+        status = read(DOCS / "current-status.md")
         taxonomy = read(DOCS / "v3" / "failure-taxonomy.md")
         notifications = read(DOCS / "v3" / "notification-and-auto-recovery.md")
         encoder = read(DOCS / "v3" / "encoder-upload-case-study.md")
         connectivity = read(DOCS / "v3" / "connectivity-aware-delivery-recovery.md")
 
-        for text in (runtime, physical, current):
-            self.assertIn("retained", text.lower())
+        for text in (runtime, architecture):
+            self.assertIn("arena-server", text)
             self.assertIn("cra-01", text)
 
-        self.assertIn("Current Cross-Host Recovery Contract", runtime)
+        self.assertIn("HP ProDesk `arena-server`", architecture)
+        self.assertIn("## Who Can Act On What", architecture)
+        self.assertIn("production_behavior_change_authorized=false", architecture)
+        self.assertIn("## Guarded Restart Gates", runtime)
+        self.assertIn("CRA Contract (Production-Disabled)", runtime)
         self.assertIn("one exact, target-wide fenced FFmpeg-child effect", runtime)
-        self.assertIn("production-disabled", runtime)
-        self.assertIn("not proof", physical)
-        self.assertIn("not proof of live deployment", current)
+        self.assertRegex(status, r"Last updated: \d{4}-\d{2}-\d{2}")
+        for heading in ("## Not Yet Observed", "## Deliberately Disabled"):
+            self.assertIn(heading, status)
         self.assertIn("Four-container Pod not `4/4 Running`", taxonomy)
         self.assertNotIn("Pod not `3/3 Running`", taxonomy)
         self.assertIn("`network_down` suppresses repeated child launches", notifications)
@@ -305,7 +310,7 @@ class PublicDocsStructureTests(unittest.TestCase):
 
         scorecard = read(DOCS / "operational-scorecard.md")
         self.assertIn(
-            "Central Restart Authority | Tested / documented / not deployed",
+            "Central Restart Authority | Tested / documented / production-disabled",
             scorecard,
         )
         self.assertIn("No production authority is enabled", scorecard)
@@ -360,7 +365,7 @@ class PublicDocsStructureTests(unittest.TestCase):
                 self.assertIn(owner, publication)
         self.assertNotIn("cra-01", media + publication)
         self.assertIn("production_behavior_change_authorized=false", text)
-        self.assertIn("Recovery source contract", text)
+        self.assertIn("CRA (Central Restart Authority)", text)
 
     def test_public_docs_preserve_private_public_boundary(self) -> None:
         forbidden = (
@@ -386,7 +391,6 @@ class PublicDocsStructureTests(unittest.TestCase):
         required_modified_tar1090_docs = {
             README,
             DOCS / "architecture.md",
-            DOCS / "physical-topology.md",
             DOCS / "runtime-contract.md",
         }
         for path in markdown_files():

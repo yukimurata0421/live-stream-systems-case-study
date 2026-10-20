@@ -6,6 +6,14 @@ contracts, and operational decisions without publishing runtime data or secrets.
 
 ## OCI And Twitch Source Update
 
+The [2026-10-20 port record](v3/public-source-port-2026-10-20.md) describes the
+current relay, keeper, local YouTube fallback, and monitoring source. Start with
+the [current route](v3/self-healing-oci-fanout.md) for OCI selection and behavior,
+and the [decision](v3/oci-route-simplification-decision.md) for the unfinished
+design it replaced. Porting these files did not deploy them.
+
+The following describes the earlier source update retained as history.
+
 The [2026-10-13 port record](v3/public-source-port-2026-10-13.md) and
 [hashed source map](../publication/source-map.json) describe the incremental
 update. Core delivery/relay/lease/session code, configured read-only provider

@@ -1,61 +1,30 @@
 # Runtime Contract
 
-Since 2026-10-20 JST the primary media route uploads one Dell feed over a
-private tunnel to an OCI relay, which forwards it to YouTube and Twitch. Only
-while the relay path fails does Dell add a direct upload to the YouTube backup
-ingest, and it stops that upload after five minutes of relay health. The
-home-host source and static-publication descriptions below remain relevant;
-direct Dell-to-YouTube media diagrams describe the earlier route. See the
-[self-healing fan-out](v3/self-healing-oci-fanout.md) and
-[why the signed-lease route was retired](v3/oci-route-simplification-decision.md).
+This page defines what the delivery and monitoring runtimes contain and which
+settings they must keep. Hosts and data paths are described once in
+[architecture](architecture.md); the media route's health conditions and
+thresholds are in the [route record](v3/self-healing-oci-fanout.md).
 
-`stream_v3` treats streaming as a delivery-plane workload and monitoring as a
-separate observability-plane workload. This page distinguishes the retained v3
-deployment topology from the newer cross-host recovery authority contract.
+## Delivery Runtime (Dell)
 
-The retained production deployment evidence has three home hosts and five
-logical roles: HP ProDesk `monitoring-host` owns the
-Airspy/`airspy_adsb`/readsb source role and the k3s observability/control role;
-the Dell workstation `delivery-host` owns Dell-side readsb, a modified tar1090
-ADS-B endpoint, and the k3s delivery role; Raspberry Pi `publisher-host` owns
-the public snapshot publisher role. Public presentation is a reduced static
-snapshot pushed outbound from Raspberry Pi to GCS and served through Cloudflare
-so public reads do not consume home uplink bandwidth.
+The k3s Deployment `stream-v3-runtime` contains four containers:
 
-The production ADS-B data path is:
+| Container | Responsibility |
+| --- | --- |
+| `stream-engine` | Xvfb, Chromium, custom MapLibre rendering and overlay capture, PulseAudio sink, FFmpeg NVENC encoding, RTMPS upload to the OCI relay |
+| `precipitation-fetcher` | JMA analysis-only precipitation with a bounded last-known-good state |
+| `auto-dj` | Playback and now-playing metadata |
+| `fast-recovery-loop` | Local observation, connectivity protection, and FFmpeg-child recovery every 10 seconds |
 
-```text
-Airspy USB on HP ProDesk
-  -> airspy_adsb
-  -> readsb on HP ProDesk
-  -> Beast feed to Dell delivery-host:30104
-  -> readsb on Dell workstation
-  -> Dell modified tar1090 HTTP endpoint
-  -> sanitized ADS-B JSON proxy
-  -> stream_v3 MapLibre rendering and overlay
-```
+The runtime reads aircraft data from the Dell modified tar1090 endpoint through
+a sanitizing proxy. It does not manage the Airspy device.
 
-## Delivery Plane
+A separate Deployment, `stream-v3-youtube-backup`, runs only during fallback
+and recovery confirmation. It renders its own map and audio and encodes with
+`libx264`; it does not reuse the main encoder's output, and GPU sharing is not
+implemented.
 
-The delivery plane runs the live output path:
-
-- `stream-v3-runtime` k3s deployment
-- `stream-engine`, `precipitation-fetcher`, `auto-dj`, and
-  `fast-recovery-loop` containers
-- custom MapLibre rendering and overlay capture
-- JMA analysis-only precipitation with bounded last-known-good state
-- PulseAudio sink and monitor source
-- AutoDJ playback and now-playing metadata
-- FFmpeg RTMPS ingest
-- NVIDIA NVENC H.264 encoding
-- local fast-recovery observation and connectivity-protection loop
-
-The delivery runtime consumes ADS-B aircraft/source data through the modified
-tar1090 upstream contract. It does not manage the Airspy device directly. The
-viewer-facing map is the repository-owned MapLibre renderer; the modified
-tar1090 endpoint remains the local source and fallback/probe boundary.
-
-The production-oriented encoder target is:
+### Encoder
 
 ```text
 VIDEO_ENCODER=h264_nvenc
@@ -69,117 +38,94 @@ AUDIO_BITRATE=192k
 AUDIO_SAMPLE_RATE=48000
 ```
 
-This is the current v3 runtime target. It is intentionally different from the
-earlier v2 implementation, but it preserves the low-bandwidth lineage that moved
-from 5fps/3500k/audio192k to 4fps/3400k/audio192k, then adopted
-5fps/3400k/audio192k in v3 after a 4fps, 5fps, and 10fps upload/health trial.
+The profile keeps the low-bandwidth lineage from v2: 5fps/3500k/audio192k,
+then 4fps/3400k/audio192k, then 5fps/3400k/audio192k after a 4, 5, and 10 fps
+trial showed that 5 fps stayed under the upload ceiling with a smaller quality
+trade-off than 10 fps ([tuning record](v3/encoder-fps-tuning-2026-05-31.md)).
 
-CPU encoding is retained only as a fallback and local debug path.
+### Audio
 
-## Retained V3 Observability Plane
-
-The earlier v3 observability plane owns health classification and retains the
-legacy request path:
-
-- `stream-v3-control` k3s deployment for the monitor loop
-- `stream-v3-observer` k3s deployment and service for the exporter
-- YouTube video resolver
-- YouTube watchdog
-- read-only YouTube Data API, OAuth, and public watch-page probes
-- stream watchdog
-- k3s runtime, state-file, and log evidence collection
-- subsystem status summary
-- legacy recovery orchestrator migration surface
-- notification status loop
-- Prometheus exporter
-- read-only 60-second map runtime probe
-- read-only 300-second public viewer frame probe
-- `ops/monitoring` Prometheus, Loki, Grafana, and Alloy configuration for
-  evidence presentation
-- staged remote recovery request tooling retained for migration review
-
-These components do not define the current cross-host authority contract.
-Monitoring evidence cannot directly own or signal the FFmpeg process.
-
-The map probe correlates Pod/container state, render heartbeat, browser/WebGL,
-weather, GPU, NVENC, and RTMP evidence. The viewer probe independently captures
-a small frame from the selected public YouTube video and tracks black/freeze
-and consecutive failure evidence. Internal Prometheus metrics are authoritative;
-the reduced public dashboard is presentation, not a recovery input.
-
-Discord receives the broad operational incident stream. Slack receives
-critical and delivery/GPU/RTMPS incident families immediately, and other
-sustained incidents after the configured minimum active period. Probe failures
-alone do not mutate the runtime.
-
-## Current Cross-Host Recovery Contract
-
-| Role | Current public source responsibility | Explicit limit |
-| --- | --- | --- |
-| `arena-server` Monitoring v4 | Observation, current state, incident/parity evidence, notification intents, and signed facts-only projection. | No policy, command, final verdict, or process signaling. |
-| `cra-01` CRA | Policy, budget, cooldown, authorization, command lifecycle, reconciliation, and final verification. | No raw-source ownership or direct process signaling. |
-| Dell delivery | Signed local facts and one exact, target-wide fenced FFmpeg-child effect. | No action selection or escalation to container, Pod, Deployment, or host restart. |
-| Raspberry Pi | Allowlisted static publication. | No internal database, incident judgment, credential, or control feedback. |
-
-Host, boot, Pod, container, FFmpeg generation, and PID identity must agree
-before an effect is admitted. An ambiguous response becomes
-`OUTCOME_UNKNOWN`; it is reconciled and is not retried automatically under a
-new request ID. The public policy remains production-disabled, so source and
-Harness tests do not establish a live deployment or effect.
-
-## Public Status Publication
-
-Prometheus, Loki, Alloy, Grafana, and the v3 exporter remain private on HP
-ProDesk in the retained production topology. The ProDesk-side observability/control
-workloads run under k3s; Raspberry Pi runs an nginx `/grafana/`
-proxy to HP ProDesk Grafana for collector access and existing operator
-shortcuts. The Pi-side collector reads public-safe Prometheus/Loki evidence via
-`http://127.0.0.1:8088/grafana`, writes static JSON/assets, pushes them
-outbound to GCS, and Cloudflare serves the `yukimurata0421.dev` public domain.
-The GCS/Cloudflare path exists to terminate public status traffic at the static
-edge and avoid turning the home network into a public read path.
-This is a Pi-initiated pull path, not a ProDesk push path: Pi nginx forwards the
-collector request to `monitoring-host:3000/grafana`, and the datasource JSON
-response returns to the Pi collector over the same HTTP proxy path.
-Non-static operational access is outside the `yukimurata0421.dev` static
-snapshot path and is not named as a public endpoint here.
-
-## Legacy And Public Safety Gates
-
-The retained v3 mutation surfaces are guarded by explicit flags and supervisor
-mode:
+PulseAudio runs with shared memory disabled in the container to avoid
+container-specific `memblock` assertion failures:
 
 ```text
-STREAM_V3_MODE=streaming
-STREAM_V3_CUTOVER_ENABLE=1
-STREAM_K8S_DRY_RUN=0
-TEST_MODE=0
+--disable-shm=yes
+--enable-memfd=no
 ```
 
-Shadow mode keeps `TEST_MODE=1`, `STREAM_K8S_DRY_RUN=1`, and
-`STREAM_V3_CUTOVER_ENABLE=0`.
+## Monitoring Runtime (arena-server)
 
-`src/stream_v2/recovery_orchestrator/gate.py` intentionally reports
-`shadow_budget_not_enforced` and `shadow_cooldown_not_enforced` in shadow
-plans. Shadow mode must explain what would happen without mutating restart
-history, consuming budget, or extending cooldown. Legacy production
-enforcement lives in the mutating recovery paths:
+The monitor service `stream-v3-arena-monitor` runs
+`stream_v3.control_loop --mode monitor` from a fixed release directory. It
+contains:
 
-- `src/watchers/fast_recovery.py` enforces restart-induced downtime budgets,
-  block events, and sustained-emergency overrides for local delivery recovery.
+- YouTube video resolver and watchdog, using read-only YouTube Data API,
+  OAuth, and public watch-page evidence;
+- stream watchdog and subsystem status;
+- k3s runtime, state-file, and log evidence collection;
+- the notification loop, which is the single periodic notification writer;
+- SLI summaries and the Prometheus exporter;
+- a 60-second map runtime probe and a 300-second public viewer frame probe.
+
+Prometheus, Loki, Grafana, and Alloy (`ops/monitoring/`) present this evidence.
+The `deploy/k3s/v3-control` and `deploy/k3s/v3-observer` manifests package the
+same loop for k3s; production runs it as the service above.
+
+The map probe correlates Pod and container state, render heartbeat,
+browser/WebGL, weather, GPU, NVENC, and RTMP evidence. The viewer probe captures
+a small frame from the public YouTube video and tracks black, freeze, and
+consecutive-failure evidence. Probe failures alone do not change the runtime.
+
+Discord receives the broad incident stream. Slack receives critical and
+delivery, GPU, and RTMPS incidents immediately, and other incidents after the
+configured minimum active period.
+
+## Guarded Restart Gates
+
+The monitor can request a restart of the delivery runtime only through these
+gates:
+
 - `src/watchers/youtube_health.py` and `src/watchers/decision/action_gate.py`
   enforce restart budgets, cooldown, budget-release reconfirmation, and
-  emergency override evidence before YouTube-oriented recovery actions.
-- Production mutation also requires the explicit mode and dry-run flags above.
+  emergency-override evidence.
+- After fast recovery replaces an FFmpeg child, a briefly unavailable
+  Deployment is a convergence wait, not a restart trigger. Only 180 seconds of
+  continuous unavailability reaches the restart gate.
 - GPU preflight, the host boot ID, Pod UID, and current-boot establishment
-  marker must agree before rollout-style recovery is allowed.
+  marker must agree before a rollout-style restart.
+- Replacement-broadcast creation is disabled; a broadcast that really ends is
+  recreated by hand.
 
-Those gates remain useful migration defenses, but they do not grant current
-CRA authority. The current contract is narrower: one centrally authorized,
-exact fenced FFmpeg-child effect with no automatic escalation.
+Inside the Pod, `src/watchers/fast_recovery.py` enforces restart-induced
+downtime budgets, block events, and sustained-emergency overrides for the
+FFmpeg child.
 
-## State Boundary
+Mutation requires explicit mode flags. Shadow mode keeps `TEST_MODE=1`,
+`STREAM_K8S_DRY_RUN=1`, and `STREAM_V3_CUTOVER_ENABLE=0`; its plans report
+`shadow_budget_not_enforced` and `shadow_cooldown_not_enforced`
+(`src/stream_v2/recovery_orchestrator/gate.py`) so that a dry run never
+consumes budget or extends cooldown.
 
-Runtime state lives under `.state/` or `/state` in deployment contexts. It is
-not part of the public repository. State files include now-playing metadata,
-runtime heartbeats, watchdog summaries, SLI outputs, and recovery action plans.
+## CRA Contract (Production-Disabled)
+
+The CRA source defines a narrower recovery path. It is production-disabled and
+the current media route does not use it.
+
+| Role | Responsibility in the CRA source | Limit |
+| --- | --- | --- |
+| `arena-server` Monitoring v4 | Observation, current state, incident and parity evidence, notification intents, signed facts-only projection | No policy, command, final verdict, or process signaling |
+| `cra-01` CRA | Policy, budget, cooldown, authorization, command lifecycle, reconciliation, final verification | No raw-source ownership or direct process signaling |
+| Dell delivery | Signed local facts and one exact, target-wide fenced FFmpeg-child effect | No action selection or escalation to container, Pod, Deployment, or host restart |
+| Raspberry Pi | Allowlisted static publication | No database, incident judgment, credential, or control feedback |
+
+Host, boot, Pod, container, FFmpeg generation, and PID identity must agree
+before an effect is admitted. An ambiguous response becomes `OUTCOME_UNKNOWN`
+and is reconciled instead of retried under a new request ID. Source and Harness
+tests do not establish a live deployment or effect.
+
+## State
+
+Runtime state lives under `.state/` or `/state` and is not part of the public
+repository. It includes now-playing metadata, heartbeats, watchdog summaries,
+SLI outputs, and recovery action plans. The
+[state and evidence contract](v3/runtime-state-and-evidence.md) defines the files.

@@ -13,10 +13,11 @@ evidence windows, not current service-health guarantees.
 | Corrected one Twitch renewal exercise | New Twitch session, sampled video/audio, preserved YouTube handler after the correction. | The first exercise failed; later scheduled renewals and long reception soak are separate. |
 | Repaired current warnings and public freshness | Recent raw/monitoring agreement and fresh public snapshots after cache expiry. | Historical gaps and formal UNKNOWN results were preserved. |
 | Public source checks | Focused and component checks in [validation](../publication/validation.json). | Source tests do not establish production activation or native qualification. |
-| Native qualification remains unverified | Harness result artifacts were not recovered. | Missing results are not treated as either a product failure or a pass. |
+| October 13 qualification campaign remained unverified | Harness result artifacts were not recovered. | This campaign is separate from the later migration-system runs; missing results are not a pass. |
+| One automatic fallback and return drill | Fallback started 52 seconds after a manual relay stop; it later stopped after sustained relay health. | The operator restarted the relay. Other failure modes and frame-level continuity were not tested. |
 
 Read [the incident stories](operational-case-studies.md) for symptoms, actions,
-verification, and limits. Read [the continuity note](28-day-same-url-sli-case-study.md)
+verification, and limits. Read [the continuity note](same-url-continuity-evidence.md)
 for exact dates and counting periods.
 
 ## Scope Calibration
@@ -26,18 +27,17 @@ public static status site. Its evidence concerns operating discipline and
 bounded recovery. It does not establish a commercial service's SLO, multi-tenant
 scale, or recovery from disk loss and power failure.
 
-The public CRA policy enables no production authority. Monitoring, CRA, and
-Dell effect ownership remain distinct, and the publication checks make no live
-effect or production-soak claim. Separately, the media route since 2026-10-20
-has one automatic action: a direct YouTube fallback upload while the OCI relay
-path fails. One drill with a stopped relay service exercised it; other relay
-failure modes, long-term soak, and native qualification remain unestablished.
+Production recovery uses local, bounded actors: in-Pod fast recovery, the
+relay's own restart, the forward keeper, the fallback controller, and guarded
+restart requests from the monitor. The public CRA policy enables no production
+authority. One drill with a stopped relay service exercised the fallback;
+the remaining unobserved items are listed in
+[current status](current-status.md).
 
 ## Detailed Reference
 
-The following table includes retained measurements, source tests, and documented
-procedures from different dates. Follow each evidence link before applying a
-historical result to the current OCI route.
+The tables below separate components that govern the current system from
+dated evidence gathered earlier.
 
 ## Status Legend
 
@@ -62,31 +62,41 @@ without freezing their prose or section layout.
 
 ## Scorecard
 
+### Current Components
+
 | Area | Status | Public evidence | Residual risk |
 | --- | --- | --- | --- |
-| Same-watch-URL preservation | Measured / tested | `docs/28-day-same-url-sli-case-study.md`, `docs/v3/youtube-lifecycle-safety.md`, resolver freshness tests | The October 14 checkpoint spans at least 160 days of URL observation and has `140 / 140` later-ledger checkpoint dates. The September `127-day / 107-date` record is retained as history. Neither establishes uninterrupted frames; the exact V2-to-V3 authority handoff was not logged separately. |
-| Legacy guarded recovery surfaces | Tested / migration evidence | `ops/scripts/v3_shadow_acceptance.py`, `tests/test_v3_shadow_acceptance.py`, `src/stream_v2/recovery_orchestrator/gate.py` | These guards remain valuable, but they are not the current CRA authority path and public tests do not perform live mutation. |
+| Same-watch-URL preservation | Measured / tested | `docs/same-url-continuity-evidence.md`, `docs/v3/youtube-lifecycle-safety.md`, resolver freshness tests | The October 14 checkpoint spans at least 160 days of URL observation and has `140 / 140` later-ledger checkpoint dates. The September `127-day / 107-date` record is retained as history. Neither establishes uninterrupted frames; the exact V2-to-V3 authority handoff was not logged separately. |
+| Guarded restart gates | Tested | `src/watchers/decision/action_gate.py`, `src/watchers/youtube_health.py`, `ops/scripts/v3_shadow_acceptance.py`, `tests/test_v3_shadow_acceptance.py`, `src/stream_v2/recovery_orchestrator/gate.py` | These gates govern the arena-server monitor's restart requests in production. Public tests do not perform live mutation. |
 | Scoped recovery authority | Tested / documented | `docs/v3/scoped-recovery-authority.md`, `src/stream_core/runtime_boundary_entrypoint.py`, `tests/test_fast_recovery_runtime_boundary.py` | Public tests use test-owned child processes; they do not enable authority or restart a live FFmpeg process. |
-| Central Restart Authority | Tested / documented / not deployed | `recovery-control/docs/why-cra.md`, `recovery-control/docs/architecture.md`, `recovery-control/docs/harness-trust.md`, `recovery-control/tests/` | No production authority is enabled in the public snapshot; it makes no live effect or completed production-soak claim. |
-| Monitoring v4 arena evidence plane | Tested / documented / not deployed from this snapshot | `monitoring-v4/src/`, `monitoring-v4/tests/`, `monitoring-v4/docs/architecture.md`, `monitoring-v4/docs/status.md` | Public tests cover evidence reduction, storage, parity, and notification intents; they do not prove the subtree is the live arena release or grant recovery authority. |
+| Central Restart Authority | Tested / documented / production-disabled | `recovery-control/docs/why-cra.md`, `recovery-control/docs/architecture.md`, `recovery-control/docs/harness-trust.md`, `recovery-control/tests/` | No production authority is enabled, and the media route does not use CRA; the snapshot makes no live effect or completed production-soak claim. |
+| Monitoring v4 arena evidence plane | Tested / documented / partly in production | `monitoring-v4/src/`, `monitoring-v4/tests/`, `monitoring-v4/docs/architecture.md`, `monitoring-v4/docs/status.md` | The relay observer and public relay projection run in production as read-only components. The other phases remain gated by `monitoring-v4/docs/status.md`, and no part grants recovery authority. |
 | Public CI safety | Tested | `.github/workflows/public-snapshot-check.yml`, `docs/test-strategy-and-safety-boundary.md` | CI proves snapshot safety, not production liveness. |
 | k3s manifest and shadow behavior | Tested | `ops/scripts/validate_k3s_manifests.py`, `ops/scripts/v3_shadow_acceptance.py`, `tests/test_v3_k3s_preflight.py` | Does not prove production `kubectl apply` on the real cluster. |
 | Public status snapshot boundary | Documented | `docs/v3/public-status-snapshot.md`, <https://yukimurata0421.dev/> | The public site is a current sanitized snapshot, not a substitute for retained SLI windows or raw private observability. |
 | Public publisher source boundary | Tested / documented | `ops/public-publisher/`, `docs/v3/public-publisher-boundary.md`, publisher tests | The repository validates redaction, last-good, and command construction; it does not upload a real object or prove the live timer is using this source. |
-| Rolling SLI feedback | Documented | `docs/v3/rolling-sli-error-budget-feedback.md`, `docs/v3/sli-and-dashboard.md` | Rolling 24h/7d/available-30d windows are operator feedback. They do not replace the 14-day baseline or 28-day same-URL case study. |
-| Durable reliability and external evidence | Tested / documented | `docs/v3/operational-reliability-and-external-evidence.md`, operational reliability and external evidence tests | The public repository proves evidence classification and alert boundaries, not current GCP check health or a live deployment. |
 | Observability self-check / dashboard `No data` boundary | Tested / documented | `docs/v3/observability-plane-self-check.md`, `ops/scripts/stream_v3_health_snapshot.py`, `ops/scripts/stream_v3_monitoring_watchdog.py`, `tests/test_stream_v3_health_snapshot.py`, `tests/test_stream_v3_monitoring_watchdog.py` | Snapshot fallback and watchdog metrics preserve visibility; they are not new uptime claims. |
 | Compliance and licensing boundary | Documented | `docs/compliance-and-licensing-boundary.md`, `docs/v3/music-provider-and-loudness-contract.md`, `docs/security-and-secrets.md`, `docs/public-release.md` | The repository traces the Floracore permission condition into credit and activation controls, but does not publish or independently prove the private correspondence. This remains an operator risk posture, not legal advice; laws, platform rules, and provider terms can change. |
+| Gateway observation safety | Measured / documented | `docs/v3/connectivity-aware-delivery-recovery.md`, `docs/v3/failure-taxonomy.md` | A systemd sandbox once caused a false-negative route observation until `AF_NETLINK` was allowed. The public schema still cannot always distinguish route-command error from a missing gateway, so ambiguous samples must not authorize recovery. |
+| YouTube lifecycle mutation safety | Tested / documented | `docs/v3/youtube-lifecycle-safety.md`, cache freshness tests, broadcast selection tests | Real YouTube mutation remains outside public CI. |
+
+### Earlier v3 Evidence (Dated)
+
+These rows record measurements and tests from before the 2026-10-20 route.
+Follow each link before applying a result to the current route.
+
+| Area | Status | Public evidence | Residual risk |
+| --- | --- | --- | --- |
+| Rolling SLI feedback | Documented | `docs/v3/rolling-sli-error-budget-feedback.md`, `docs/v3/sli-and-dashboard.md` | Rolling 24h/7d/available-30d windows are operator feedback. They do not replace the 14-day baseline or 28-day same-URL case study. |
+| Durable reliability and external evidence | Tested / documented | `docs/v3/operational-reliability-and-external-evidence.md`, operational reliability and external evidence tests | The public repository proves evidence classification and alert boundaries, not current GCP check health or a live deployment. |
 | Fast-recovery restart classifier replay | Tested / measured by replay | `docs/v3/fast-recovery-classifier-replay.md`, `tests/test_sli_pipeline_rotation.py`, `tests/test_subsystems.py` | Replay proves current classifier coverage over retained events, not past executor intent or live production execution. |
 | Encoder and upload contract | Measured / tested; source-time deployment not claimed | `docs/v3/encoder-upload-case-study.md`, `docs/v3/encoder-fps-tuning-2026-05-31.md`, `docs/runtime-contract.md`, source-time TCP sample tests | The July 28 temporary 2500k incident was corrected to the normal 5fps/3400k contract. The first source-time rollout was rejected and rolled back; the corrected candidate passed local and passive-shadow checks but was not deployed at the retained checkpoint. Older logs remain uncorrected, and short trials do not replace long-window YouTube input monitoring. |
-| Gateway observation safety | Measured / documented | `docs/v3/connectivity-aware-delivery-recovery.md`, `docs/v3/failure-taxonomy.md` | A systemd sandbox once caused a false-negative route observation until `AF_NETLINK` was allowed. The public schema still cannot always distinguish route-command error from a missing gateway, so ambiguous samples must not authorize recovery. |
 | Track-free renderer isolated soak | Measured / tested / documented | `docs/v3/map-production-cutover-case-study.md`, `docs/v3/map-rendering-and-monitoring.md`, map and precipitation tests | The accepted 24-hour window measured the isolated browser and renderer, not audio, RTMPS upload, or YouTube playback. |
 | Renderer NVENC soak | Measured / tested / documented | `docs/v3/map-production-cutover-case-study.md`, `docs/v3/encoder-upload-case-study.md`, encoder contract tests | The one-hour encode used a local null muxer and was video-only; it was not production delivery evidence. |
 | Renderer production cutover | Measured / tested / documented | `docs/v3/map-production-cutover-case-study.md`, `docs/v3/map-rendering-and-monitoring.md`, runtime and map contract tests | The accepted production observation was one hour. Viewer probes and expanded alerting were later follow-ups, and long-window SLI review remains separate. |
 | Map mobile-legibility proposal | Locally measured / tested / not deployed | `docs/v3/map-mobile-legibility-review.md`, map and overlay contract tests | Aggregate luma and scaled-frame review support the proposal; no live rollout or universal phone-text readability is claimed. |
 | Upload budget | Measured / documented | `docs/v3/encoder-upload-case-study.md`, `docs/v3/sli-and-dashboard.md` | NVENC CBR runs closer to the 5.0 Mbps warning ceiling than the v2 CPU path. |
 | TCP stall root-cause split | Measured / tested / documented | `docs/v3/tcp-stall-case-study.md`, `docs/v3/tcp-stall-resolution-depth.md`, observer scripts, `tests/test_wan_observer_scripts.py` | Public repo keeps the observer code, but excludes raw private JSONL samples, exact public IPs, real CPE logs, generated packet metadata, and packet captures. |
-| YouTube lifecycle mutation safety | Tested / documented | `docs/v3/youtube-lifecycle-safety.md`, cache freshness tests, broadcast selection tests | Real YouTube mutation remains outside public CI. |
 | Visual correctness | Documented / tested by components | `docs/v3/visual-audio-health-model.md`, stream watchdog tests | Viewer-visible defect seconds are not directly measured in the public baseline. |
 | Audio correctness | Documented / tested by components | `docs/v3/visual-audio-health-model.md`, Pulse/audio tests | Track transitions can create noisy low-energy samples and require staged interpretation. |
 | Memory guard | Documented / tested by components | `docs/v3/memory-guard-case-study.md`, memory/resource tests | Short Xvfb peaks can still be hard to capture if they happen between observations. |

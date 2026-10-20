@@ -90,7 +90,7 @@ path can be more damaging than a short, well-classified delivery incident.
 - `ops/scripts/validate_k3s_manifests.py` validates manifest structure.
 - `ops/scripts/v3_shadow_acceptance.py` validates shadow behavior and action
   blockers.
-- `docs/runtime-contract.md` and `docs/v3/current-runtime-contract.md` define
+- `docs/runtime-contract.md` defines
   the current runtime and encoder contract.
 - `docs/test-strategy-and-safety-boundary.md` defines public CI and live
   smoke-test boundaries.

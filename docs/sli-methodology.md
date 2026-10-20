@@ -119,7 +119,7 @@ classified objectives, with denominators, windows, and explicit unknowns."
 ## 28-Day Follow-Up
 
 The public follow-up is in
-[`28-day-same-url-sli-case-study.md`](28-day-same-url-sli-case-study.md). It
+[`same-url-continuity-evidence.md`](same-url-continuity-evidence.md). It
 preserves the fixed 28-day same-watch-URL review and separately records a later
 127-day exact-identity ledger endpoint. The important result was not a single
 uptime number: the public URL identity survived without a selected replacement

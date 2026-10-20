@@ -1,0 +1,39 @@
+{
+  "schema": "stream.public_docs_restructure.v1",
+  "date_jst": "2026-10-20",
+  "base_public_commit": "da351c5c3d538950d7b3e7d9e0ac629c2ce2d151",
+  "built_on_uncommitted_documentation_review": true,
+  "purpose": "Give readers one reading guide, one description of the current system, and one page for volatile state; correct the monitoring-host description and the fallback-aware watchdog status.",
+  "corrections": [
+    "arena-server is the HP ProDesk; production monitoring runs there as the stream-v3-arena-monitor service, not as the k3s stream-v3-control workload.",
+    "The arena-server monitor can request guarded runtime restarts; documentation no longer describes those gates as migration-only surfaces.",
+    "The YouTube watchdog counts an established fallback-Pod connection as local delivery since 2026-10-20 14:16 JST; not yet observed during a real fallback.",
+    "Monitoring v4 relay observer and public projection run in production as read-only components.",
+    "CRA status is production-disabled rather than a deployment statement."
+  ],
+  "merged": {
+    "docs/physical-topology.md": "docs/architecture.md",
+    "docs/v3/current-runtime-contract.md": "docs/runtime-contract.md",
+    "docs/executive-summary.md": "README.md and docs/hiring-reviewer-guide.md",
+    "docs/v3/open-followups.md": "docs/current-status.md"
+  },
+  "renamed": {
+    "docs/28-day-same-url-sli-case-study.md": "docs/same-url-continuity-evidence.md"
+  },
+  "added": [
+    "docs/current-status.md"
+  ],
+  "structure": [
+    "docs/README.md is the only reading-order page; docs/00_INDEX.md is a described catalog grouped by topic.",
+    "Volatile items (recent changes, unobserved behavior, disabled features) live only in docs/current-status.md.",
+    "The scorecard detail table is split into current components and dated earlier evidence."
+  ],
+  "not_changed": [
+    "recovery-control/ and monitoring-v4/ documents",
+    "dated case studies other than link and host-name corrections",
+    "the watchdog code change itself, which remains outside this public snapshot"
+  ],
+  "deployment_performed": false,
+  "runtime_changed": false,
+  "commit_or_push_performed": false
+}

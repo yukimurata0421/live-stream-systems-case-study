@@ -137,7 +137,7 @@ delivery require different checks.
 
 ## 6. The Qualification Harness Did Not Produce A Valid Result
 
-**Problem.** A native qualification campaign failed before it could establish
+**Problem.** The October 13 native qualification campaign failed before it could establish
 the intended safety result. The first reserved attempt could not start its
 container because of a logging configuration error. The second reached an
 isolated container, but its temporary-filesystem artifacts could not be
@@ -149,7 +149,7 @@ attempt was started. The record did not infer a product defect or a pass from
 the container's existence or its timeout.
 
 **Result and limit.** The expected JUnit, summary, baseline, and negative-control
-results were unavailable. Native qualification remained unverified. Later
+results were unavailable. That campaign's native qualification remained unverified. Later
 successful live reception and ordinary source tests did not supply those
 missing results retroactively.
 
@@ -159,35 +159,39 @@ and preserve the difference between missing evidence and a successful check.
 [Qualification boundary](v3/public-source-port-2026-10-13.md) ·
 [Test strategy](test-strategy-and-safety-boundary.md)
 
-## 7. A Safer Design That Never Reached Production Was Retired
+## 7. An Unfinished Migration And Recovery Design Was Replaced
 
-**Problem.** After the October 13 relay worked, the next goal was to make the
-route change itself fully automated and provably safe: signed leases, a
-central route authority, typed commands between three hosts, and native
-qualification before each production step. Six days later the route was still
-not enabled automatically. By the evening of October 19 there had been 104
-qualification runs, 58 of them failed, and many failures were in fixtures,
-isolation mounts, and preflight checks rather than in forwarding media.
+**Problem.** The goal was to add Twitch without sacrificing YouTube or running
+two permanent home uploads. After the October 13 relay delivered media, the
+implementation grew into a different migration and recovery system: signed
+leases, a central route authority, typed commands between three hosts, and
+native qualification before production steps. The complete path remained
+unfinished; it was not simply awaiting production activation. By the evening
+of October 19 there had been 104 qualification runs, 58 failed and 46 passed.
+Repeated fixes to fixtures, isolation mounts, and preflight checks added work
+without completing the operator's delivery and recovery goal.
 
 **Trigger.** At 06:31 JST on October 20 a short network interruption ended the
 one-shot backup sender started through that process, and it did not reconnect.
 The main sender recovered by itself in five seconds. The safety component had
 weaker recovery than the component it protected.
 
-**Response.** The operator restated the goal as unattended, self-recovering
-delivery within a narrow home uplink. The route first returned to the October 13
-relay that had already run in production, then moved to a smaller design:
+**Response.** The operator returned the work to the original priority: preserve
+YouTube while adding another platform within the home uplink. The route first
+returned to the earlier relay, then moved to a smaller design:
 MediaMTX with `Restart=always`, a keeper that re-creates failed forwards and
 renews Twitch, and one controller that starts a direct YouTube backup upload
 after 30 seconds of relay failure and stops it after 300 seconds of health.
 
-**Result and limit.** The new route went live at 08:43 JST with one upload. The
-decision gave up lease fencing and central authorization for this route; those
-properties were not shown to be wrong, only too costly for this system. See
+**Result and limit.** The new route went live at 08:43 JST with one upload.
+The previous migration and recovery system had not achieved the intended
+behavior. Its replacement removed lease fencing and central authorization for
+this route, with the trade-offs recorded in
 [the decision record](v3/oci-route-simplification-decision.md).
 
-**What it demonstrates.** Notice when the verification apparatus grows faster
-than delivery, and choose the simplest mechanism that meets the actual goal.
+**What it demonstrates.** Reconsider the structure when repeated patches add
+states and verification work without completing the main path. Partial
+operation of an earlier component does not establish the replacement system.
 
 ## 8. Stopping The Relay On Purpose
 
@@ -199,14 +203,17 @@ YouTube reported the broadcast live and healthy while the fallback sent. The
 relay was started again after about two minutes; the main sender reconnected
 within seven seconds, Twitch came back with a new session, and the fallback
 stopped itself after 300 seconds of relay health. The broadcast did not end,
-and data stopped reaching YouTube for about 65 seconds. No operator action was
-needed after the stop and start.
+and the recorded gap in data reaching YouTube was about 65 seconds. The operator
+stopped and restarted the relay; fallback control and sender reconnection were
+automatic. Frame-level continuity was not measured.
 
 **What it found.** The YouTube watchdog on the monitoring host counted only the
 main sender and confirmed an incident while the fallback was sending. Because
 it could create a replacement broadcast, a longer outage could have replaced the
-live one. Replacement creation was disabled; teaching the watchdog about the
-fallback remains open. Only a stopped relay service was exercised.
+live one. Replacement creation was disabled the same morning. That afternoon the
+watchdog was changed to count an established fallback connection as local
+delivery; it has not yet been observed during a real fallback. Only a stopped
+relay service was exercised.
 
 **What it demonstrates.** Exercise recovery deliberately, and check what every
 other automation does during the failure, not only the component under test.

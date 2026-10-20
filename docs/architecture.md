@@ -1,164 +1,128 @@
 # Architecture
 
-Since 2026-10-20 JST the primary media route uploads one Dell feed over a
-private tunnel to an OCI relay, which forwards it to YouTube and Twitch. Only
-while the relay path fails does Dell add a direct upload to the YouTube backup
-ingest, and it stops that upload after five minutes of relay health. The
-home-host source and static-publication descriptions below remain relevant;
-direct Dell-to-YouTube media diagrams describe the earlier route. See the
-[self-healing fan-out](v3/self-healing-oci-fanout.md) and
-[why the signed-lease route was retired](v3/oci-route-simplification-decision.md).
+This page is the single description of the current hosts, data paths, and
+ownership boundaries. The [runtime contract](runtime-contract.md) holds the
+delivery settings, [evolution](evolution.md) holds the earlier topologies, and
+[current status](current-status.md) holds recent changes and unobserved items.
 
-`stream_v3` is the public source snapshot of the streaming platform. It is built around
-one principle: keep media delivery and operational observation separate, while
-also naming the ADS-B source chain as its own evidence boundary.
+The design keeps media delivery, observation, and public publication on
+separate owners, so a warning in one cannot silently become an action in
+another.
 
-## System Shape
+## Hosts And Roles
+
+| Host or edge | Role | Runs |
+| --- | --- | --- |
+| HP ProDesk `arena-server` | ADS-B reception and monitoring | Airspy USB receiver, `airspy_adsb`, readsb; the monitor service `stream-v3-arena-monitor` (YouTube resolver and watchdog, stream watchdog, notifications, SLI, exporter); Prometheus, Loki, and Grafana in a local k3s; relay observation over the private tunnel |
+| Dell workstation `delivery-host` | Video production and upload | Dell-side readsb and modified tar1090 endpoint; k3s `stream-v3-runtime` (map rendering, precipitation, PulseAudio, AutoDJ, FFmpeg/NVENC, fast recovery); the fallback Deployment and its controller |
+| OCI VM | Media fan-out | MediaMTX relay and the keeper that repairs forwards and renews Twitch |
+| Raspberry Pi `publisher-host` | Public status publisher | nginx `/grafana/` proxy to arena-server Grafana, snapshot collectors, static site build, outbound GCS upload |
+| GCS + Cloudflare | Public static edge | Serves <https://yukimurata0421.dev/> from uploaded static files |
+| `cra-01` | CRA design target | Central Restart Authority source; production authority is disabled, and it takes no part in the media route |
+
+Monitoring and ADS-B reception share the ProDesk; video production has the Dell
+to itself. The [hardware selection](hardware-selection.md) explains why.
+
+## Media Path
 
 ```text
-Airspy USB on HP ProDesk
-  -> airspy_adsb
-  -> readsb on HP ProDesk
-  -> readsb on Dell workstation
-  -> Dell modified tar1090 HTTP endpoint
+Airspy USB (arena-server)
+  -> airspy_adsb -> readsb (arena-server)
+  -> Beast feed to Dell delivery-host:30104
+  -> readsb -> modified tar1090 HTTP endpoint (Dell)
   -> sanitized ADS-B JSON proxy
   -> stream_v3 MapLibre rendering and overlay
   -> PulseAudio + AutoDJ
   -> FFmpeg / NVIDIA NVENC
-  -> YouTube RTMPS
+  -> RTMPS over a private tunnel
+  -> OCI MediaMTX relay
+       -> YouTube primary ingest
+       -> Twitch ingest
 
-retained v3 runtime evidence
-  -> HP ProDesk observability services
-  -> YouTube Data API / OAuth / public watch-page probes
-  -> k3s runtime, state, and log evidence
-  -> watchdogs
-  -> subsystem classification
-  -> SLI summaries
-  -> ops/monitoring evidence presentation
-  -> legacy staged recovery request
-
-public status publication
-  -> Raspberry Pi collector initiates HTTP GET
-  -> Pi-local /grafana/ proxy
-  -> HP ProDesk Grafana datasource proxy
-  -> HP ProDesk Prometheus/Loki
-  -> datasource JSON response returns to Raspberry Pi collector
-  -> outbound upload to GCS
-  -> Cloudflare
-  -> yukimurata0421.dev
+fallback and recovery confirmation only
+  Dell fallback Pod: separate map/audio workload + CPU encoder
+  -> direct RTMPS to the same broadcast's YouTube backup ingest
 ```
 
-## Physical Topology
+The fallback bypasses OCI but shares the Dell host, home power, and home
+uplink with the main sender. The [route record](v3/self-healing-oci-fanout.md)
+defines when it starts and stops.
 
-The historical public data path is split across three home hosts plus a public
-static edge. The current recovery-control contract additionally names
-`arena-server` and `cra-01`; this repository does not infer their deployment
-state from the older topology record.
+The viewer-facing map is the repository-owned MapLibre renderer, not the
+upstream tar1090 page. `src/stream_core/overlay_server.py` proxies ADS-B JSON,
+map and terrain tiles, precipitation assets, and render readiness, and removes
+receiver location fields. The k3s manifests do not manage the Airspy device or
+readsb.
 
-- HP ProDesk `monitoring-host` source role: Airspy USB receiver, `airspy_adsb`,
-  and ProDesk-side readsb.
-- HP ProDesk `monitoring-host` k3s observability role: `stream-v3-control`,
-  `stream-v3-observer`, YouTube monitoring, watchdogs, SLI, notifications,
-  Prometheus exporter, staged recovery requests, and the
-  Prometheus/Loki/Alloy/Grafana evidence stack.
-- Dell workstation `delivery-host` local ADS-B mirror role: Dell-side readsb and
-  modified tar1090 ADS-B HTTP endpoint.
-- Dell workstation `delivery-host` delivery role: k3s `stream-v3-runtime`,
-  custom MapLibre rendering, analysis-only precipitation, PulseAudio, AutoDJ,
-  FFmpeg, NVENC, and local fast recovery.
-- Raspberry Pi `publisher-host` public publisher role: nginx `:8088`
-  `/grafana/` proxy to HP ProDesk Grafana, public-safe snapshot collection,
-  static site build, and outbound GCS push.
-- GCS + Cloudflare public edge role: serve sanitized static status snapshots
-  uploaded outbound from Raspberry Pi, offloading public reads away from the
-  home uplink without exposing Grafana, Prometheus, Loki, raw logs,
-  credentials, or the home network.
+## Public Status Path
 
-This split is part of the architecture, not just a deployment detail. It keeps
-the GPU/media delivery host focused on real-time output, keeps long-lived
-monitoring state away from the delivery workload, and keeps the Airspy/readsb
-source chain distinguishable from delivery failures.
+```text
+Pi collector -- HTTP GET --> Pi-local /grafana/ proxy --> arena-server Grafana
+             <-- datasource JSON (Prometheus / Loki) --
+Pi collector -- relay and Twitch observations, read-only pull --> arena-server
+Pi -> filtered static files -> outbound upload -> GCS -> Cloudflare -> yukimurata0421.dev
+```
 
-## Plane Split
+The Pi initiates every request; arena-server never pushes to it. Public readers
+reach only the static edge, so they do not load the home uplink and cannot
+reach Grafana, Prometheus, Loki, raw logs, credentials, or the home network.
+Non-static operational access is outside this path and is not named here. The
+[publisher boundary](v3/public-publisher-boundary.md) lists what is allowed
+into the snapshot.
 
-Delivery-plane components are optimized for keeping video and audio alive.
-Observability-plane components are optimized for retaining evidence and
-explaining faults. They do not own the current recovery authorization decision.
+## Who Can Act On What
 
-The retained HP ProDesk observability implementation runs
-`stream_v3.control_loop --mode monitor`
-as the k3s `stream-v3-control` workload. That monitor mode runs the YouTube
-video resolver, YouTube watchdog, stream watchdog, notification status loop,
-subsystem status summary, legacy recovery orchestrator, and shadow SLI tasks.
-It pulls read-only YouTube Data API, OAuth, public watch-page, k3s runtime,
-state-file, and log evidence. These retained components explain the migration
-surface; they do not override the current CRA authority contract below.
+| Actor | Can change | Cannot change |
+| --- | --- | --- |
+| Fast recovery inside the Dell Pod | The FFmpeg child of its own Pod | Pods, Deployments, or the relay |
+| Kubernetes on Dell | Restarts a failed container or Pod | Anything on OCI |
+| Fallback controller on Dell | Scales only `stream-v3-youtube-backup` between 0 and 1 | The main Pod or the relay |
+| Keeper on OCI | Re-creates a failed forward; renews the Twitch forward | The YouTube forward during renewal; anything at home |
+| Monitor on arena-server | Requests a guarded runtime restart (budget, cooldown, 180-second convergence wait) | The FFmpeg process directly; replacement broadcasts (disabled) |
+| Raspberry Pi | Its own static output | Anything else; it receives no control feedback |
+| CRA on `cra-01` | Nothing in production | Its policy keeps `production_behavior_change_authorized=false` |
 
-The current contract routes Monitoring facts through arena-server to cra-01.
-CRA owns policy, budget, cooldown, authorization, command lifecycle, and final
-verification. Dell can execute only an exact fenced FFmpeg-child command and
-must not escalate an absent child to a broader restart. Raspberry Pi remains a
-one-way publisher with no control feedback.
+The route's self-healing pieces (keeper and fallback controller) use fixed
+thresholds and do not depend on the monitor, so they keep working when
+monitoring is down. The guarded restart gates are described in the
+[runtime contract](runtime-contract.md#guarded-restart-gates).
 
-`ops/monitoring/` defines Prometheus, Loki, Grafana, and Alloy as a
-host-local evidence and presentation stack. It is not a third delivery plane and
-does not own FFmpeg or k3s recovery directly. In the retained production
-topology, that monitoring backend runs on HP ProDesk alongside the ProDesk k3s
-observability workloads. Raspberry Pi uses the Pi-local
-`/grafana/` proxy to collect allowlisted evidence from the ProDesk Grafana
-datasource proxy. The data transfer is pull-based: the Pi collector initiates
-HTTP GETs to `127.0.0.1:8088/grafana`, Pi nginx proxies those requests to
-`monitoring-host:3000/grafana`, and the datasource JSON response returns to the Pi
-collector. The Pi then pushes a reduced static snapshot to GCS for Cloudflare to
-serve at `yukimurata0421.dev`. That static edge is used to avoid spending home
-uplink bandwidth on public status reads. Non-static operational access is
-outside this public static publication path and is not named as a public
-endpoint here.
+### CRA design
 
-## Source Boundary
+CRA is a stricter recovery design kept in the source: monitoring publishes
+facts only, `cra-01` owns policy, budget, cooldown, authorization, and command
+lifecycle, and Dell executes at most one exact fenced FFmpeg-child effect.
+`OUTCOME_UNKNOWN` blocks automatic retry until reconciliation. It is not enabled
+in production, and the current route does not use it; the
+[decision record](v3/oci-route-simplification-decision.md) explains why. Read
+[scoped recovery authority](v3/scoped-recovery-authority.md) and the
+[recovery-control README](../recovery-control/README.md) for the design.
 
-The Airspy/readsb source path is not managed by the k3s manifests in this public
-snapshot. The delivery runtime consumes `aircraft.json`, receiver metadata,
-and range evidence from the Dell readsb / modified tar1090 endpoint through a
-sanitizing local proxy. The viewer-facing page is the repository-owned
-MapLibre renderer, not the upstream tar1090 page.
+## Failure Domains
 
-The production ADS-B handoff is ProDesk readsb Beast output to Dell
-`delivery-host:30104`, where Dell readsb expands it into the local map endpoint
-used by the k3s delivery runtime.
+| Domain | Examples | Usual owner |
+| --- | --- | --- |
+| RF and source | Airspy, `airspy_adsb`, readsb freshness on either host | arena-server, Dell readsb |
+| Map and source data | tar1090 endpoint, tiles, precipitation, browser render heartbeat | Dell runtime |
+| Media runtime | Browser, PulseAudio, AutoDJ, FFmpeg, NVENC | Dell runtime |
+| Cloud media route | Private tunnel, relay host, a provider forward | Relay, keeper, fallback controller |
+| Home network | WAN or carrier interruption | Not recoverable by any host; diagnosed by [route observation](v3/tcp-stall-case-study.md) |
+| Observation | Stale evidence, exporter timeouts, monitoring drift | arena-server |
+| Publication | Stale snapshot, cache policy | Raspberry Pi |
 
-`src/stream_core/overlay_server.py` proxies ADS-B JSON, map/terrain tiles,
-processed precipitation assets, and render-readiness state. Report-only checks
-validate both the rendered overlay and the upstream readsb / modified tar1090
-path without giving either probe direct recovery authority.
+A failure in one domain does not establish a failure in another. That is why a
+source or monitoring warning is not treated as a stream-restart condition.
 
-## Deployment Model
+## Deployment Layout
 
-The k3s manifests are intentionally shadow-first:
-
-- `deploy/k3s/shadow`: validates the workload with local capture and dry-run
-  recovery behavior.
-- `deploy/k3s/streaming`: enables the `stream_v3` delivery plane for live
-  streaming on the Dell workstation.
-- `deploy/k3s/v3-control`: runs the ProDesk-side observability monitor loop.
-- `deploy/k3s/v3-observer`: exports v3 runtime state for scraping from the
-  ProDesk-side observability k3s role.
-- `deploy/k3s/v3-reports`: scheduled report jobs.
-- `deploy/k3s/v2-state-mirror`: optional read-only state mirror for migration.
-
-## Recovery Model
-
-The current model is staged across distinct authorities:
-
-1. collect evidence;
-2. classify the subsystem state;
-3. publish facts-only Monitoring evidence from arena-server;
-4. let cra-01 apply policy, budget, cooldown, authorization, and command
-   lifecycle rules;
-5. execute at most one exact fenced FFmpeg-child effect on Dell; and
-6. return durable result/evidence to CRA for final verification or explicit
-   uncertainty.
-
-The older direct arena/k3s scripts remain reviewable migration surfaces, not
-the current authority contract. See
-[scoped recovery authority](v3/scoped-recovery-authority.md).
+| Path | Purpose |
+| --- | --- |
+| `deploy/k3s/streaming` | Live delivery overlay for the Dell runtime |
+| `deploy/k3s/shadow` | Shadow validation with local capture and dry-run recovery |
+| `deploy/k3s/youtube-backup` | Fallback Deployment, normally zero replicas |
+| `deploy/k3s/v3-control`, `deploy/k3s/v3-observer` | k3s packaging of the monitor loop and exporter; production runs the same loop as the arena-server service |
+| `deploy/k3s/v3-reports` | Scheduled report jobs |
+| `deploy/k3s/v2-state-mirror` | Optional read-only state mirror used during migration |
+| `ops/selfheal/` | Keeper, fallback controller, and example units |
+| `ops/monitoring/` | Prometheus, Loki, Grafana, and Alloy configuration |
+| `ops/public-publisher/` | Pi collectors, site, and uploader |

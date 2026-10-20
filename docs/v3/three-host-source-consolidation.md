@@ -68,5 +68,5 @@ publisher timer, or the public site have changed.
 - Operational evidence: [`operational-reliability-and-external-evidence.md`](operational-reliability-and-external-evidence.md)
 - Publisher boundary: [`public-publisher-boundary.md`](public-publisher-boundary.md)
 - Map readability proposal: [`map-mobile-legibility-review.md`](map-mobile-legibility-review.md)
-- Runtime ownership: [`current-runtime-contract.md`](current-runtime-contract.md)
+- Runtime ownership: [`runtime-contract.md`](../runtime-contract.md)
 - Public release exclusions: [`../public-release.md`](../public-release.md)

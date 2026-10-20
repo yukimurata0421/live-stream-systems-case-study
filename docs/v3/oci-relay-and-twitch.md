@@ -2,10 +2,10 @@
 
 > Superseded on 2026-10-20: production now uses the
 > [self-healing fan-out](self-healing-oci-fanout.md), and the signed-lease route
-> below was stopped. See [why it was retired](oci-route-simplification-decision.md).
+> below was stopped. See [why the unfinished recovery design was replaced](oci-route-simplification-decision.md).
 > This page remains the record of the 2026-10-13 design and its evidence.
 
-## Current source and observed deployment
+## Observed Route And Source: 2026-10-13
 
 The delivery path observed on 2026-10-13 JST uses one Dell encoder and one
 network sender. OCI receives that input and forwards it independently to

@@ -25,8 +25,8 @@ It does not say that every frame was delivered without interruption.
 
 ### Backend Or Infrastructure Reviewer
 
-Read the [five-minute executive summary](executive-summary.md), then the
-[watchdog or stale-cache incident](operational-case-studies.md). Use the
+Read [architecture](architecture.md) for the hosts and who can act on what,
+then the [watchdog or stale-cache incident](operational-case-studies.md). Use the
 [implementation review map](implementation-review-map.md) to inspect one
 relevant code path and its tests.
 
@@ -44,10 +44,11 @@ matters for the interview:
 | --- | --- |
 | How were compute, cooling, cost, and migration risk weighed? | [Hardware selection](hardware-selection.md). |
 | How was network failure distinguished from provider failure? | [TCP stall case study](v3/tcp-stall-case-study.md). |
-| Why split observation from recovery authorization? | [CRA rationale](../recovery-control/docs/why-cra.md) and [CRA architecture](../recovery-control/docs/architecture.md). |
+| How does the media route recover, and why without central authorization? | [Self-healing OCI fan-out](v3/self-healing-oci-fanout.md) and [decision record](v3/oci-route-simplification-decision.md). |
+| Why split observation from recovery authorization (design study, not enabled)? | [CRA rationale](../recovery-control/docs/why-cra.md) and [CRA architecture](../recovery-control/docs/architecture.md). |
 | What prevents uncertain actions from being retried? | [Harness and effect evidence](../recovery-control/docs/harness-trust.md). |
 | Who owns incident and measurement state? | [Monitoring architecture](../monitoring-v4/docs/architecture.md). |
-| Why are the uptime and URL-continuity claims different? | [Dated continuity evidence](28-day-same-url-sli-case-study.md). |
+| Why are the uptime and URL-continuity claims different? | [Dated continuity evidence](same-url-continuity-evidence.md). |
 
 Choose one failure to explore in depth. The record includes operational failures,
 a failed test harness, and corrected observations; these have different meanings.
@@ -63,5 +64,5 @@ a failed test harness, and corrected observations; these have different meanings
 | Communication | A short result has a traceable technical explanation behind it. |
 
 For source validation, run the local commands in the
-[documentation guide](README.md). The [full catalog](00_INDEX.md) is a reference,
-not an interview reading assignment.
+[documentation guide](README.md). [Current status](current-status.md) separates
+what was verified recently from what has not been observed yet.

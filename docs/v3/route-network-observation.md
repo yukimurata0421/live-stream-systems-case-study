@@ -1,5 +1,11 @@
 # Route Network Observation And Baselines
 
+> This page records the 2026-10-13 diagnostic design and its SSH-tunnel socket
+> assumptions. For the route introduced on 2026-10-20, read the
+> [current OCI delivery record](self-healing-oci-fanout.md). The earlier local
+> socket assumptions and throughput baseline are not a calibrated baseline for
+> the replacement route.
+
 ## Why the OCI route needs a new baseline
 
 The primary route changed the meaning of the sender socket: Dell ACK progress

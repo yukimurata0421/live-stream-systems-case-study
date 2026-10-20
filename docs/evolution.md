@@ -39,9 +39,10 @@ still competed for the same host resources and process namespace.
 
 ## v3: k3s Runtime With Split Planes
 
-`stream_v3` moves both v3 planes into explicit k3s roles: the Dell workstation
-owns the delivery workload, and the HP ProDesk owns the observability/control
-workloads.
+`stream_v3` moves delivery into an explicit k3s workload on the Dell
+workstation, and the HP ProDesk (`arena-server`) owns observation and control.
+The monitor loop has k3s manifests (`stream-v3-control`, `stream-v3-observer`);
+in production it runs as the `stream-v3-arena-monitor` service.
 
 The v3 migration is not a rewrite that discards v2 safety. The delivery runtime
 moved, but the v2 design constraints remain: preserve the YouTube watch URL,
@@ -66,8 +67,7 @@ Delivery plane:
 
 Observability plane:
 
-- ProDesk-side `stream-v3-control`
-- ProDesk-side `stream-v3-observer`
+- monitor loop and exporter on the ProDesk
 - YouTube resolver and monitor
 - read-only YouTube Data API, OAuth, and public watch-page probes
 - stream watchdog
@@ -79,7 +79,7 @@ Observability plane:
 - remote recovery requests into the k3s workload
 - Raspberry Pi public snapshot publication to GCS + Cloudflare, with public
   reads offloaded away from the home uplink and Prometheus, Loki, Grafana, and
-  raw logs still private on HP ProDesk
+  raw logs kept private on the ProDesk
 
 The retained split reduced recovery blast radius: delivery could focus on
 producing video and audio, while the monitoring layer retained state,
@@ -105,3 +105,15 @@ The current public source therefore separates the next control path:
 This applies transaction ideas locally to intent, outbox, admission, and effect
 fences; it is not distributed ACID. The public implementation and Harness are
 reviewable, but production authority and a completed live soak are not claimed.
+
+## October 2026: OCI Fan-Out And A Smaller Recovery Design
+
+Adding Twitch had to preserve the YouTube broadcast without a permanent second
+upload on the home uplink. On 2026-10-13 one Dell feed began going to an OCI
+relay that forwarded it to both platforms. The route was then wrapped in signed
+leases, a central route authority, and native qualification. After 104
+qualification runs that design was still incomplete, and on 2026-10-20 it was
+replaced by a restart-always relay, a forward keeper, and one fallback
+controller. The [decision record](v3/oci-route-simplification-decision.md)
+explains the trade-off and the [route record](v3/self-healing-oci-fanout.md)
+describes the result.

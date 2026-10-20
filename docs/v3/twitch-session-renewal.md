@@ -1,6 +1,11 @@
 # Twitch Session Renewal
 
-## Contract
+> Historical design and exercise: 2026-10-13 JST. This daily owner was replaced
+> on 2026-10-20 by the keeper in the
+> [current OCI route](self-healing-oci-fanout.md#daily-twitch-renewal).
+> The manual exercise below does not verify the replacement keeper's renewal.
+
+## Historical Contract
 
 The daily owner renews Twitch at 00:00 JST while preserving YouTube forwarding.
 It stops only the bound Twitch writer, waits at least 120 seconds with fresh

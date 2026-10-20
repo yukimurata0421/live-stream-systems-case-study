@@ -104,7 +104,7 @@ kubectl apply -k deploy/k3s/shadow
 ```
 
 `base/configmap-shadow.yaml` keeps `TEST_MODE=1`. Do not switch it off until the
-current runtime contract in `docs/v3/current-runtime-contract.md`, the ownership
+current runtime contract in `docs/runtime-contract.md`, the ownership
 decisions in `docs/v3/decisions.md`, and the staged recovery notes in
 `docs/v3/runbooks.md` are satisfied.
 
@@ -155,8 +155,9 @@ recovery sidecar at `V3_FAST_RECOVERY_INTERVAL_SEC=10`. It switches
 `stream-v3-secrets` Secret with `STREAM_KEY` before applying it; otherwise the
 stream engine cannot resolve a production RTMPS URL.
 
-The HP ProDesk observability host owns the monitoring plane through k3s
-`stream-v3-control` and `stream-v3-observer`. Those workloads cover
+The monitoring plane runs on the HP ProDesk (`arena-server`) as the
+`stream-v3-arena-monitor` service. The `stream-v3-control` and
+`stream-v3-observer` manifests package the same loop for k3s. It covers
 `youtube_video_resolver`, `youtube_monitor`, `map_runtime_probe`,
 `viewer_synthetic_probe`, `stream_watchdog`, `notify_status`,
 `subsystems_status`, `recovery_orchestrator`, and the exporter.

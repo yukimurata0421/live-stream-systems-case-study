@@ -8,7 +8,7 @@ The hardware followed the constraint at each stage: receiver processing,
 competition with video encoding, cooling uncertainty, home uplink capacity,
 and the cost of interrupting a working stream. The resulting system uses a
 ProDesk for reception and observation, a Dell workstation for video production,
-and a Pi for public status publication. See [physical topology](physical-topology.md)
+and a Pi for public status publication. See [architecture](architecture.md)
 for component responsibilities.
 
 ## Why Reception Moved From Pi to ProDesk
@@ -103,7 +103,7 @@ The Pi's publication to GCS and Cloudflare moves public status reads off the
 home uplink. OCI fanout addresses the cost of sending media separately to
 YouTube and Twitch. These solve different constraints; static publication is
 not a video relay, and a shared relay adds a dependency. Recovery deployment
-and qualification are covered by the [OCI delivery record](v3/oci-relay-and-twitch.md),
+and its limits are covered by the [current OCI delivery record](v3/self-healing-oci-fanout.md),
 not established by this hardware retrospective.
 
 ## Maintenance Cost and Remaining Options
