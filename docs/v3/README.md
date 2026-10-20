@@ -23,7 +23,8 @@ contracts below are optional follow-up reading.
 - [OCI relay and Twitch](oci-relay-and-twitch.md) (2026-10-13 design, superseded)
 - [Route network observation and baselines](route-network-observation.md)
 - [Twitch session renewal](twitch-session-renewal.md)
-- [Public source-port record](public-source-port-2026-10-13.md)
+- [Public source-port record, 2026-10-20](public-source-port-2026-10-20.md)
+- [Public source-port record, 2026-10-13](public-source-port-2026-10-13.md)
 
 ## Documents
 

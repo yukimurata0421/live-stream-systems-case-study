@@ -1,0 +1,46 @@
+{
+  "schema": "stream.public_port_record.v1",
+  "port_date_jst": "2026-10-20",
+  "scope": "Self-healing OCI fan-out, relay observation and Twitch alert delivery, public status page redesign, and current-route documentation.",
+  "source_lineage": {
+    "stream_development_branch": "oci-consolidation-20261020",
+    "stream_development_head": "2ca2053abd86335cc81ba253d73557561e1d2d8c",
+    "monitoring_development_branch": "twitch-relay-observability-20261020",
+    "monitoring_development_head": "cd77ebeab362dc954f65caf9146650fd187fd2ea",
+    "development_worktrees_dirty": true
+  },
+  "adaptations": [
+    "Japanese comments, docstrings, and notification text rewritten in English; decision logic unchanged.",
+    "Relay API address and Twitch broadcaster ID are required configuration instead of built-in defaults.",
+    "Systemd units published as examples with placeholders for tunnel addresses and the Twitch account.",
+    "Fallback Deployment uses a generic image tag and neutral host paths.",
+    "Relay observer reports a generic host identifier."
+  ],
+  "omissions": [
+    {"path": "ops/selfheal/*.sh", "reason": "host installers that embed private addresses and host layout"},
+    {"path": "ops/relay/route_*.py and qualification_*.py from 2026-10-14..19", "reason": "retired signed-lease route introduction and private qualification machinery; summarized in the decision record"},
+    {"path": "ops/scripts/plan_b_*.sh", "reason": "one-time private recovery steps"},
+    {"path": "ops/public-publisher/site/public/classic.html", "reason": "transition copy of the previous page on the live site"},
+    {"path": "live Deployment snapshot of stream-v3-runtime", "reason": "private host state"}
+  ],
+  "deployment_performed": false,
+  "remote_mutation_performed": false,
+  "commit_performed": true,
+  "push_performed": false,
+  "checks": {
+    "stream_and_publisher_suite": {"passed": 1240, "skipped": 9},
+    "monitoring_suite_integrated": {"passed": 457, "failed": 6, "skipped": 6, "failed_cause": "pre-existing: release tree check rejects the top-level publication directory; also fails at 2952e68"},
+    "monitoring_suite_standalone": {"passed": 457, "failed": 6, "skipped": 6, "failed_cause": "same pre-existing release tree check"},
+    "public_language": "PASS",
+    "public_port_digests": "PASS",
+    "k3s_manifests": "PASS",
+    "standalone_public_snapshot": "PASS"
+  },
+  "unobserved": [
+    "first keeper-driven Twitch renewal (2026-10-21 00:00 JST)",
+    "fallback upload rate during a real fallback",
+    "Discord delivery of a real Twitch alert",
+    "tunnel loss, relay host outage, provider-side failure",
+    "long-term soak"
+  ]
+}

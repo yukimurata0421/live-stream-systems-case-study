@@ -38,9 +38,9 @@
       "path": "docs/00_INDEX.md",
       "source_role": "public-documentation",
       "decision": "curated-current-contract-and-dated-evidence",
-      "before_sha256": "571ea8638c46839d0c8e78ba1848ef073a0e53bb84faaf29302aad11501debe1",
+      "before_sha256": "164ca8e502558a02f9511c03546759eb40cd785138ee6b38be0a77b7a4eeefb1",
       "source_sha256": null,
-      "public_sha256": "164ca8e502558a02f9511c03546759eb40cd785138ee6b38be0a77b7a4eeefb1",
+      "public_sha256": "0e6f4989883dc98c520ebc1179f7d8cba4eb8408ead302ba4c553a432af0092b",
       "prior_public_sha256": "e32ab253e63bfe09d4ec42a5fc1594a2025b8bd859cab754ee1558798c0391dc",
       "localization": "English prose; control structures and machine identifiers preserved.",
       "pre_graph_display_sha256": "6a87a495eb3698b1a49e053ffcc109b28d94a59e9dd29cb3399a62279e196d3d",
@@ -176,9 +176,9 @@
       "path": "docs/v3/README.md",
       "source_role": "public-documentation",
       "decision": "curated-current-contract-and-dated-evidence",
-      "before_sha256": "dd4346854fbe0edcd0dd7c987d0e1453a3aae83b2208721a1f292be16ed628ef",
+      "before_sha256": "dcfe05a46a0ac536e58a7822e4a8c34a55bd45b0836a4a3fa11e4ceff45008d3",
       "source_sha256": null,
-      "public_sha256": "dcfe05a46a0ac536e58a7822e4a8c34a55bd45b0836a4a3fa11e4ceff45008d3",
+      "public_sha256": "61d1ff1b3c829d65596d543dba21b6519a021220b284b5460fedb2fbbd9dbf6b",
       "port_date_jst": "2026-10-20"
     },
     {
@@ -2822,6 +2822,24 @@
       "source_sha256": null,
       "public_sha256": "913baaa7e851130ec2f9f7000f1e531a185064f4858b49ce27693e43d3b8aaf8",
       "port_date_jst": "2026-10-20"
+    },
+    {
+      "path": "docs/v3/public-source-port-2026-10-20.md",
+      "source_role": "public-documentation",
+      "decision": "curated-current-contract-and-dated-evidence",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "817cb49661abea0c6e9a9fe556a2772300940e48a12e4026b74315b8b108aa55",
+      "port_date_jst": "2026-10-20"
+    },
+    {
+      "path": "publication/selfheal-fanout-port-20261020.json",
+      "source_role": "public-documentation",
+      "decision": "curated-current-contract-and-dated-evidence",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "f75da4630327260c186e15db7f65e267225a204f2b7a5936ddeedd3b0928cd17",
+      "port_date_jst": "2026-10-20"
     }
   ],
   "omissions": [
@@ -2919,5 +2937,11 @@
     "original_source_cutoff_unchanged": true,
     "status": "PUBLIC_SOURCE_PORT_VERIFIED",
     "validated_at_jst": "2026-10-14T16:06:07.557548+09:00"
+  },
+  "selfheal_fanout_port": {
+    "record": "publication/selfheal-fanout-port-20261020.json",
+    "port_date_jst": "2026-10-20",
+    "deployment_performed": false,
+    "original_source_cutoff_unchanged": true
   }
 }

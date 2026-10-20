@@ -197,6 +197,42 @@
       "scope": "three public checkouts",
       "recorded_at_jst": "2026-10-14T00:42:43.439666+09:00",
       "validation_scope": "preceding source port"
+    },
+    {
+      "check": "stream-and-publisher-public-suite",
+      "status": "PASS",
+      "passed": 1240,
+      "skipped": 9,
+      "recorded_at_jst": "2026-10-20T13:30:00+09:00",
+      "validation_scope": "2026-10-20 self-healing port"
+    },
+    {
+      "check": "monitoring-public-suite",
+      "status": "FAIL_PREEXISTING",
+      "passed": 457,
+      "failed": 6,
+      "skipped": 6,
+      "failure": "release tree check rejects top-level publication directory; reproduced at 2952e68 before this port",
+      "recorded_at_jst": "2026-10-20T13:30:00+09:00",
+      "validation_scope": "2026-10-20 self-healing port"
+    },
+    {
+      "check": "public-language",
+      "status": "PASS",
+      "recorded_at_jst": "2026-10-20T13:30:00+09:00",
+      "validation_scope": "2026-10-20 self-healing port"
+    },
+    {
+      "check": "public-port-digests",
+      "status": "PASS",
+      "recorded_at_jst": "2026-10-20T13:30:00+09:00",
+      "validation_scope": "2026-10-20 self-healing port"
+    },
+    {
+      "check": "k3s-manifests",
+      "status": "PASS",
+      "recorded_at_jst": "2026-10-20T13:30:00+09:00",
+      "validation_scope": "2026-10-20 self-healing port"
     }
   ],
   "observations_during_validation": {
