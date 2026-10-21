@@ -1,0 +1,11 @@
+[Unit]
+Description=Long-poll Dell OCI-monitor observation with bounded wait
+
+[Timer]
+OnBootSec=30
+OnUnitInactiveSec=1
+AccuracySec=1
+Unit=stream-v3-oci-monitor-pull.service
+
+[Install]
+WantedBy=timers.target

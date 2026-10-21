@@ -1,6 +1,6 @@
 # Current Status
 
-Last updated: 2026-10-20 15:00 JST.
+Last updated: 2026-10-22 JST.
 
 This is the only page that records state expected to change soon: what was
 changed recently, what has not been observed yet, and what is deliberately
@@ -25,6 +25,20 @@ defines the components and thresholds.
 | 11:56-12:21 | Main sender switched to RTMPS on the relay; readiness and TCP-sampling port lists updated. | Upload samples of 3.57 and 3.63 Mbps returned. |
 | 14:16 | The YouTube watchdog counts an established fallback-Pod connection as local delivery while the main Pod is not sending. | After restart, `local_ok=true` and no incident with the fallback at zero replicas. Not yet observed during a real fallback. The code change is not part of this public snapshot. |
 
+## Clock Monitor And Backup Source Update (2026-10-22 JST)
+
+The operated return-feed observer was updated to continuous reception and
+ten-second JST/UTC verification. A dated normal window confirmed ten of ten
+cycles, and stopped/blocked monitor reception passed an isolated primary-output
+exercise. The [source-port record](v3/public-source-port-2026-10-22.md) gives the
+measurements, failed attempts, adaptations and local checks.
+
+The public example adds no production deployment, alert policy, recovery action
+or public-player acquisition. Its native relay and provider evidence remains
+separate from returned-frame health. OCI restore assets and the updated monitor
+image/source were retained privately; only portable code and procedures are
+included here.
+
 ## Not Yet Observed
 
 - A completed keeper-driven Twitch renewal. The first one, at 2026-10-21
@@ -42,6 +56,13 @@ defines the components and thresholds.
   drop: the earlier 4.88 Mbps included about 34% TLS framing on the direct
   connection, and media is about 3.6 Mbps on both routes.
 - Long-term soak of the current route.
+- Twenty-four-hour clock/OCR quality, worst-case two-input performance within
+  the observer limit, and the updated observer during a real fallback.
+- A new-VM bootstrap and live relay recovery from the saved OCI bundle.
+- Public-player frame continuity or end-to-end platform delay from returned
+  relay/fallback clocks. Public-player automated acquisition remains on hold
+  pending applicable terms or permission. No new clock-derived paging threshold
+  is enabled.
 
 ## Deliberately Disabled
 

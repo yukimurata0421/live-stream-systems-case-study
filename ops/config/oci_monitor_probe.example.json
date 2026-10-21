@@ -1,0 +1,32 @@
+{
+  "source_url": "rtmps://OCI_PRIVATE_RELAY_IP:1936/relay",
+  "source_identity": "REPLACE_WITH_SHA256_OF_PINNED_CA_FILE",
+  "ca_file": "/key/oci-relay.crt",
+  "key_file": "/key/sample.key",
+  "dell_boot_id": "REPLACE_WITH_CURRENT_DELL_BOOT_ID",
+  "roi": [
+    0.019,
+    0.968,
+    0.04,
+    0.022
+  ],
+  "fallback_udp_port": 8767,
+  "fallback_roi": [
+    0.019,
+    0.968,
+    0.04,
+    0.022
+  ],
+  "utc_roi": [
+    0.081,
+    0.968,
+    0.04,
+    0.022
+  ],
+  "fallback_utc_roi": [
+    0.081,
+    0.968,
+    0.04,
+    0.022
+  ]
+}

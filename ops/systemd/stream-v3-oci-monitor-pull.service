@@ -1,0 +1,29 @@
+[Unit]
+Description=Read-only Dell OCI-monitor snapshot and heartbeat import
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=stream-monitor
+Group=stream-monitor
+Environment=PYTHONPATH=/opt/stream-v3-oci-monitor-observer/src
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStartPre=+/usr/bin/python3 -B /opt/stream-v3-oci-monitor-observer/native_facts.py
+ExecStart=/usr/bin/python3 /opt/stream-v3-oci-monitor-observer/pull.py --config /etc/stream-v3-oci-monitor/observer.json --ram-root /run/stream-v3-oci-monitor --state-file /var/lib/stream-v3-oci-monitor/observation.json
+StateDirectory=stream-v3-oci-monitor
+StateDirectoryMode=0700
+RuntimeDirectory=stream-v3-oci-monitor
+RuntimeDirectoryMode=0700
+RuntimeDirectoryPreserve=yes
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=yes
+ReadWritePaths=/var/lib/stream-v3-oci-monitor
+Nice=19
+CPUQuota=20%
+MemoryMax=128M
+TasksMax=32
+TimeoutStartSec=25
+KillMode=control-group

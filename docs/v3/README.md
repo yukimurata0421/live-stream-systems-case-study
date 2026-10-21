@@ -11,6 +11,9 @@ The pages most readers need from this folder:
   2026-10-20.
 - [Replacing an unfinished OCI recovery design](oci-route-simplification-decision.md):
   why the route was simplified.
+- [Return-feed clock monitor](relay-clock-monitor.md): clock, native-forward and
+  observer-quality facts; [OCI files-only restore](oci-backup-and-restore.md):
+  encrypted backup and offline placement.
 - [TCP stall case study](tcp-stall-case-study.md): diagnosing a home-network
   fault without replacing the broadcast.
 - [YouTube lifecycle safety](youtube-lifecycle-safety.md): what must be true

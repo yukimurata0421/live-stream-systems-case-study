@@ -31,10 +31,12 @@
       "decision": "curated-current-contract-and-dated-evidence",
       "before_sha256": "4299ac9fd3b7c6606e9d95bfdbe8640f698fd3809f2424d305aa4dbc565bef27",
       "source_sha256": null,
-      "public_sha256": "17944eca94f4e5e731786aa5820a9e519d73e9ec25ba45fd771d5c1828db102b",
+      "public_sha256": "0830bf706ecc208062c706ebbdd22f2924f5ff8d99253a00485ed952b37dd927",
       "port_date_jst": "2026-10-20",
       "pre_documentation_restructure_sha256": "00b596e75b50eaedbd3bed4ebc79e71d882e7049e72516aec95dfc0860ed015e",
-      "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json."
+      "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json.",
+      "pre_clock_monitor_public_sha256": "17944eca94f4e5e731786aa5820a9e519d73e9ec25ba45fd771d5c1828db102b",
+      "clock_monitor_port": "2026-10-22 selected return-feed monitor / OCI files-only backup port; existing changes retained."
     },
     {
       "path": "docs/00_INDEX.md",
@@ -42,7 +44,7 @@
       "decision": "curated-current-contract-and-dated-evidence",
       "before_sha256": "164ca8e502558a02f9511c03546759eb40cd785138ee6b38be0a77b7a4eeefb1",
       "source_sha256": null,
-      "public_sha256": "c4d59eabef48c302df0d72b7ae0d6a6216f99e199f98e4c9c0a0b92631516c13",
+      "public_sha256": "3f4714f0288f375903e122691c2d4cfd79220b990a861ea4197e43be731209a3",
       "prior_public_sha256": "e32ab253e63bfe09d4ec42a5fc1594a2025b8bd859cab754ee1558798c0391dc",
       "localization": "English prose; control structures and machine identifiers preserved.",
       "pre_graph_display_sha256": "6a87a495eb3698b1a49e053ffcc109b28d94a59e9dd29cb3399a62279e196d3d",
@@ -57,7 +59,9 @@
       "pi_publisher_source_port": "2026-10-14 source reconciliation; portable English code and retained public protections; no live changes.",
       "port_date_jst": "2026-10-20",
       "pre_documentation_restructure_sha256": "3d45a66068211ff9944ba891a0017e9189c71daa1b0b4945ae1970f8c2b5c045",
-      "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json."
+      "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json.",
+      "pre_clock_monitor_public_sha256": "c4d59eabef48c302df0d72b7ae0d6a6216f99e199f98e4c9c0a0b92631516c13",
+      "clock_monitor_port": "2026-10-22 selected return-feed monitor / OCI files-only backup port; existing changes retained."
     },
     {
       "path": "docs/same-url-continuity-evidence.md",
@@ -74,11 +78,13 @@
       "decision": "curated-current-contract-and-dated-evidence",
       "before_sha256": "4f201bd8f2e2d7953c5400677a7e52d0dbe56bd801cff883ab8650b6cb3cb31b",
       "source_sha256": null,
-      "public_sha256": "e0342ca1c38c3fa879d39e428ea9fadda4e46ba8d1650315bf447ebcfc3abbf5",
+      "public_sha256": "568b27bc95c95fafb356f040c85508dc2686265c87376a0fd49b3ee542751ceb",
       "pre_hardware_selection_sha256": "e1fcb50d004b1acf7c7c79d457c62952161d199e9727f7619bb7fce5cd1ae260",
       "hardware_selection_change": "Link the dated hardware selection retrospective from existing reviewer and topology routes.",
       "pre_documentation_restructure_sha256": "3a14b689ef3c2c1307a39e2f2f40e6267e2bbc507ae430f846d373c2f667b197",
-      "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json."
+      "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json.",
+      "pre_clock_monitor_public_sha256": "e0342ca1c38c3fa879d39e428ea9fadda4e46ba8d1650315bf447ebcfc3abbf5",
+      "clock_monitor_port": "2026-10-22 selected return-feed monitor / OCI files-only backup port; existing changes retained."
     },
     {
       "path": "docs/architecture.md",
@@ -86,10 +92,12 @@
       "decision": "curated-current-contract-and-dated-evidence",
       "before_sha256": "72c4e8e290ff138602494fd6e4eead5bb76730d1981199f382d3d01452e3f5bc",
       "source_sha256": null,
-      "public_sha256": "be72378ef63e1cf256d7369929042ef1d4e5a38256b25f170ef5ba61934bc69d",
+      "public_sha256": "2d353d7cdf20f700c04f35db64adc43e4e4082b35874e88538cd906904c1973a",
       "port_date_jst": "2026-10-20",
       "pre_documentation_restructure_sha256": "5ae4f928c8d5f77be2e827787230606ffbf1e4d7c97d62b9d3afe0bf43048e93",
-      "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json."
+      "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json.",
+      "pre_clock_monitor_public_sha256": "be72378ef63e1cf256d7369929042ef1d4e5a38256b25f170ef5ba61934bc69d",
+      "clock_monitor_port": "2026-10-22 selected return-feed monitor / OCI files-only backup port; existing changes retained."
     },
     {
       "path": "docs/hiring-reviewer-guide.md",
@@ -109,9 +117,11 @@
       "decision": "curated-current-contract-and-dated-evidence",
       "before_sha256": "9d7e059e049ee9d82d5678489e7b5ab476992a0a697ce21fde7557f51e772cd3",
       "source_sha256": null,
-      "public_sha256": "e61fbc6732027df3a0eb7832e3e28ab37e0914bda85305f3127caa2b64260a53",
+      "public_sha256": "d88b0cbe714c8b977d27627342b5712ff902b69351d8ce1696f7ff3a4df3bffd",
       "pre_documentation_restructure_sha256": "dce4f788e0479398c6718742c679da57bc203509c7ea7e83fa93c477d8c6dfa4",
-      "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json."
+      "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json.",
+      "pre_clock_monitor_public_sha256": "e61fbc6732027df3a0eb7832e3e28ab37e0914bda85305f3127caa2b64260a53",
+      "clock_monitor_port": "2026-10-22 selected return-feed monitor / OCI files-only backup port; existing changes retained."
     },
     {
       "path": "docs/operational-case-studies.md",
@@ -130,10 +140,12 @@
       "decision": "curated-current-contract-and-dated-evidence",
       "before_sha256": "040910c83389a4c72724e9b954475967a17cf17881b793c663f34c05c1fa24d9",
       "source_sha256": null,
-      "public_sha256": "fcb424e8e164b331a4499971557c497f9a8e74aecf023682e2abbd42c796fdc8",
+      "public_sha256": "43cf38222db06bcfb4e31e343283be8073426ea13da3779fbf8bba15ef3d21e2",
       "port_date_jst": "2026-10-20",
       "pre_documentation_restructure_sha256": "43b380c296bd113148adb6547477510fd2b6fb7f18a00534784320bfdf266013",
-      "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json."
+      "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json.",
+      "pre_clock_monitor_public_sha256": "fcb424e8e164b331a4499971557c497f9a8e74aecf023682e2abbd42c796fdc8",
+      "clock_monitor_port": "2026-10-22 selected return-feed monitor / OCI files-only backup port; existing changes retained."
     },
     {
       "path": "docs/public-language-policy.md",
@@ -159,10 +171,12 @@
       "decision": "curated-current-contract-and-dated-evidence",
       "before_sha256": "8412df27e45a2af9f936bdd64a637464ff7a408fec09903e1b63749fe5b92e16",
       "source_sha256": null,
-      "public_sha256": "d6f089ac8cb312df387fdd5a63502f77e402dcab489da344a5fbf6b81d3fd86a",
+      "public_sha256": "371723464dd5e6e2fdfebf710221dc3dc642c2008fa096f1265c18e9cca2019f",
       "port_date_jst": "2026-10-20",
       "pre_documentation_restructure_sha256": "b284f3bfe336d1eb81b49ce6039e5e1445cc17069f5ee3235ffcee796b3232a8",
-      "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json."
+      "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json.",
+      "pre_clock_monitor_public_sha256": "d6f089ac8cb312df387fdd5a63502f77e402dcab489da344a5fbf6b81d3fd86a",
+      "clock_monitor_port": "2026-10-22 selected return-feed monitor / OCI files-only backup port; existing changes retained."
     },
     {
       "path": "docs/test-strategy-and-safety-boundary.md",
@@ -178,10 +192,12 @@
       "decision": "curated-current-contract-and-dated-evidence",
       "before_sha256": "dcfe05a46a0ac536e58a7822e4a8c34a55bd45b0836a4a3fa11e4ceff45008d3",
       "source_sha256": null,
-      "public_sha256": "6409e2179144180bba49fd874a2762583699138e36201f1793d7968bd0dd2aa2",
+      "public_sha256": "4fd2f7e79cad25b52f5ff05d1fe22b208a6d80a10f77879d307a6659c8b4ead6",
       "port_date_jst": "2026-10-20",
       "pre_documentation_restructure_sha256": "05aaa171c0ae1542019467073dd5058d7301e5d83eec70c9d39b20d6c8d12c68",
-      "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json."
+      "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json.",
+      "pre_clock_monitor_public_sha256": "6409e2179144180bba49fd874a2762583699138e36201f1793d7968bd0dd2aa2",
+      "clock_monitor_port": "2026-10-22 selected return-feed monitor / OCI files-only backup port; existing changes retained."
     },
     {
       "path": "docs/v3/oci-relay-and-twitch.md",
@@ -2859,10 +2875,12 @@
       "decision": "curated-current-contract-and-dated-evidence",
       "before_sha256": "040eac29174151f51e473f7f85e4aa23ff994be0079b3d4c011623b6ec7864ca",
       "source_sha256": null,
-      "public_sha256": "00cf8c173ff747d8ba3b4661cc86bcefad2611a905096455031387768686d93a",
+      "public_sha256": "b633c89f2dac529ff23e1bd46a6132dad2be300e9c5229d8b6389cfe2ce82a66",
       "port_date_jst": "2026-10-20",
       "documentation_restructure": "New single page for volatile state.",
-      "pre_twitch_observation_public_sha256": "040eac29174151f51e473f7f85e4aa23ff994be0079b3d4c011623b6ec7864ca"
+      "pre_twitch_observation_public_sha256": "040eac29174151f51e473f7f85e4aa23ff994be0079b3d4c011623b6ec7864ca",
+      "pre_clock_monitor_public_sha256": "00cf8c173ff747d8ba3b4661cc86bcefad2611a905096455031387768686d93a",
+      "clock_monitor_port": "2026-10-22 selected return-feed monitor / OCI files-only backup port; existing changes retained."
     },
     {
       "path": "monitoring-v4/ops/release/model.py",
@@ -2908,6 +2926,342 @@
       "source_sha256": "705b5fa0af4ad1bb34bd07e3611c016ce8f6cad934ae5f275f5e24ae7032a923",
       "public_sha256": "ff56e25780157cd258b569256668b200e52f6a4c87c1f803e346589ae5562b28",
       "port_date_jst": "2026-10-20"
+    },
+    {
+      "path": "deploy/k3s/oci-monitor-probe/Containerfile",
+      "before_sha256": null,
+      "source_sha256": "2adab58cf9507083b255193746af4fd97c7634a074572f975bd3fb4f88c1c704",
+      "public_sha256": "2adab58cf9507083b255193746af4fd97c7634a074572f975bd3fb4f88c1c704",
+      "source_role": "public-deployment-example",
+      "decision": "English prose; generic relay identity and operator configuration; algorithm and safety limits retained.",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "deploy/k3s/oci-monitor-probe/deployment.yaml",
+      "before_sha256": null,
+      "source_sha256": "162931fc3f3bd6d14c4bd94ee0c3f2de36873bf6ec5c3ce3d7c9a6483c7de9ef",
+      "public_sha256": "162931fc3f3bd6d14c4bd94ee0c3f2de36873bf6ec5c3ce3d7c9a6483c7de9ef",
+      "source_role": "public-deployment-example",
+      "decision": "English prose; generic relay identity and operator configuration; algorithm and safety limits retained.",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "deploy/k3s/oci-monitor-probe/fallback-service.yaml",
+      "before_sha256": null,
+      "source_sha256": "a2043ca591c65b55abc872666cf3c6d9dc0f3e4ad016c8f8eb912d795c8a841a",
+      "public_sha256": "a2043ca591c65b55abc872666cf3c6d9dc0f3e4ad016c8f8eb912d795c8a841a",
+      "source_role": "public-deployment-example",
+      "decision": "English prose; generic relay identity and operator configuration; algorithm and safety limits retained.",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "deploy/k3s/oci-monitor-probe/networkpolicy.yaml",
+      "before_sha256": null,
+      "source_sha256": "959994fba6f5a050abf67ffddcddc622c03facb4bc743e6da04e184b3acd7041",
+      "public_sha256": "959994fba6f5a050abf67ffddcddc622c03facb4bc743e6da04e184b3acd7041",
+      "source_role": "public-deployment-example",
+      "decision": "English prose; generic relay identity and operator configuration; algorithm and safety limits retained.",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "docs/observability.md",
+      "source_role": "public-documentation",
+      "before_sha256": "66ab195158854e1ddbe4ba06dd63fce3442079021b33d759dc9e2f434ec93f2e",
+      "pre_twitch_observation_public_sha256": "66ab195158854e1ddbe4ba06dd63fce3442079021b33d759dc9e2f434ec93f2e",
+      "public_sha256": "7b65e59884dcf9246cf8ec5614f6f58df535fe6566ffa3526cd1e9d3d7628829",
+      "source_sha256": null,
+      "port_date_jst": "2026-10-21",
+      "decision": "Twitch observation and OCI-aware notifications; public bindings and English text retained",
+      "pre_clock_monitor_public_sha256": "bd88394af5b0c4b2b6b5115f77a10e6002b13fe621a7c57287b05ea1fab79090",
+      "clock_monitor_port": "2026-10-22 selected return-feed monitor / OCI files-only backup port; existing changes retained."
+    },
+    {
+      "path": "docs/v3/oci-backup-and-restore.md",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "e4650e70ba94ea96e49ded2bd9b1ae741dbe04271862715109c035fe4aed65b6",
+      "source_role": "public-documentation",
+      "decision": "Curated English public documentation/configuration or a public-binding regression; no live deployment.",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "docs/v3/public-source-port-2026-10-22.md",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "9bf06b46c9e0e50863284de97a69683b7f7779cb9b710c8ce031980944ef1d2b",
+      "source_role": "public-documentation",
+      "decision": "Curated English public documentation/configuration or a public-binding regression; no live deployment.",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "docs/v3/relay-clock-monitor.md",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "9f8bf66dc1d3dbae5d9c69a2bac56d197535169aef465d2f21e0fc41001753be",
+      "source_role": "public-documentation",
+      "decision": "Curated English public documentation/configuration or a public-binding regression; no live deployment.",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "ops/config/oci_backup_source.example.json",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "dd1e77f46111d906537f23c9e0101543b647583da0c98d6685d9db446a52f1e6",
+      "source_role": "public-adaptation",
+      "decision": "Curated English public documentation/configuration or a public-binding regression; no live deployment.",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "ops/config/oci_monitor_observer.example.json",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "7f1729f4de330e6f7af938fea442d331c89c321839c515da80e1762c1434fbd1",
+      "source_role": "public-adaptation",
+      "decision": "Curated English public documentation/configuration or a public-binding regression; no live deployment.",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "ops/config/oci_monitor_probe.example.json",
+      "before_sha256": null,
+      "source_sha256": "e3886c2bc30346a344bc2e47ea827ba89d2f1165eea47dc07de29aa0c45bab0b",
+      "public_sha256": "e3886c2bc30346a344bc2e47ea827ba89d2f1165eea47dc07de29aa0c45bab0b",
+      "source_role": "public-deployment-example",
+      "decision": "English prose; generic relay identity and operator configuration; algorithm and safety limits retained.",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "ops/oci-backup/README.md",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "55809e70d6740cfe2fac621c29b4c76e5ac6958cc2578ed06209e49a75266ec0",
+      "source_role": "public-documentation",
+      "decision": "Curated English public documentation/configuration or a public-binding regression; no live deployment.",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "ops/oci-backup/bundle.py",
+      "before_sha256": null,
+      "source_sha256": "b24d224a986823351f5f5b69f0dcf0c9421f17fd7ac757c3c3fb9da051445ff3",
+      "public_sha256": "6a48375f0fad8904b215a4b3f676a1f7ed819a6292b09761bde03a4d703f2e9e",
+      "source_role": "public-adapted-code",
+      "decision": "English prose; generic relay identity and operator configuration; algorithm and safety limits retained.",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "ops/oci-backup/collect.py",
+      "before_sha256": null,
+      "source_sha256": "36cd9af225140a7a565eac1c55792a36e8713b9c249c1f3d42edccf2046ec1d9",
+      "public_sha256": "82258e8c962c6169fcdb8cd7a858f0a926513804b76af54b6959ef90b5da2cb8",
+      "source_role": "public-adapted-code",
+      "decision": "English prose; generic relay identity and operator configuration; algorithm and safety limits retained.",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "ops/oci-monitor/clock_review_isolation_fixture.py",
+      "before_sha256": null,
+      "source_sha256": "dc1011a65b01b3c0b4f0199c5481fb57b4eb92b72de684a814b8200eae812600",
+      "public_sha256": "b058784f45262a6f764f37fded5a19e3b271e0f77ef78d0e5f4213b907189494",
+      "source_role": "public-adapted-code",
+      "decision": "English prose; generic relay identity and operator configuration; algorithm and safety limits retained.",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "ops/scripts/stream_v3_oci_monitor_exporter_overlay.py",
+      "before_sha256": null,
+      "source_sha256": "082483137888cdb0e0dcb5a4ad6dfdd828f01e5c86de351328f20f89324355ed",
+      "public_sha256": "ad866eb3c1fb85e27c480fba8ecc2a38e10e6cd6ccbfbbf7d2e6569519be65f2",
+      "source_role": "public-adapted-code",
+      "decision": "English prose; generic relay identity and operator configuration; algorithm and safety limits retained.",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "ops/scripts/stream_v3_oci_monitor_native_facts.py",
+      "before_sha256": null,
+      "source_sha256": "34637ab73c3861fb80aa3be3eed2bfa6feb219a7ecf34d8f2325c4654bc97e11",
+      "public_sha256": "93b841bb6c1df2b0977f10b66c9943af6711442bc557b4a9b0b5999370281f49",
+      "source_role": "public-adapted-code",
+      "decision": "English prose; generic relay identity and operator configuration; algorithm and safety limits retained.",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "ops/scripts/stream_v3_oci_monitor_pull.py",
+      "before_sha256": null,
+      "source_sha256": "53bbb9641e95e37fc26aaa7310c33583e6fab1f0d57de422062bb92ee3db524a",
+      "public_sha256": "746aa3000635b78934246efc29ca24580d0e0278e6e2619b87b31161d9625a27",
+      "source_role": "public-adapted-code",
+      "decision": "English prose; generic relay identity and operator configuration; algorithm and safety limits retained.",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "ops/scripts/stream_v3_prometheus_exporter.py",
+      "before_sha256": "ec64855f4e88302ac5152ff4ce4f08e0fabaea9b1c6060f559eaf9915775d34e",
+      "source_sha256": null,
+      "public_sha256": "90f13120181e53186d4c7d102a8a70513e746e8e027ca89b0f7f59d842ab2168",
+      "source_role": "public-adaptation",
+      "decision": "Curated English public documentation/configuration or a public-binding regression; no live deployment.",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "ops/systemd/stream-v3-oci-monitor-pull.service",
+      "before_sha256": null,
+      "source_sha256": "4badcb41265b188332f83eed5b854a6debb2aafc7c9438b06985a9cf60de17f1",
+      "public_sha256": "76ab555ae24e709a4826f15a8fb1363a3fc66b4890ab210a2febce38a39fb895",
+      "source_role": "public-deployment-example",
+      "decision": "English prose; generic relay identity and operator configuration; algorithm and safety limits retained.",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "ops/systemd/stream-v3-oci-monitor-pull.timer",
+      "before_sha256": null,
+      "source_sha256": "05a3a780b8d65ca24955fee9744ce4fc61038969d763d5108e3e2c722977fe83",
+      "public_sha256": "05a3a780b8d65ca24955fee9744ce4fc61038969d763d5108e3e2c722977fe83",
+      "source_role": "public-deployment-example",
+      "decision": "English prose; generic relay identity and operator configuration; algorithm and safety limits retained.",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "src/stream_v3/fallback_monitor.py",
+      "before_sha256": null,
+      "source_sha256": "3a17223062139c601759be367c0d3c012dc1c4186bd729ef03dd49b999b6137c",
+      "public_sha256": "57735beda0d41b8aee4ee027eb004a86beba5222344046ad1abbc0dad6ab8516",
+      "source_role": "public-adapted-code",
+      "decision": "English prose; generic relay identity and operator configuration; algorithm and safety limits retained.",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "src/stream_v3/frame_receiver.py",
+      "before_sha256": null,
+      "source_sha256": "eb390dbc81dfc3d6e39929ae0b184170e2120a1f98de92b28ccf209e85616e7c",
+      "public_sha256": "fe9e166772417770431b8fc28c6720f5382865f7c97fa94bd297096ef8e6411a",
+      "source_role": "public-adapted-code",
+      "decision": "English prose; generic relay identity and operator configuration; algorithm and safety limits retained.",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "src/stream_v3/monitor_facts.py",
+      "before_sha256": null,
+      "source_sha256": "c8dcda1926da25f41bf12dd2acd9363bb9e34c2afe373f64a03d9955b9e3c71f",
+      "public_sha256": "e91b60f54a0f7045ca19ec71d554e813a01ba92c7980b786c5df75a4eab3a3e4",
+      "source_role": "public-adapted-code",
+      "decision": "English prose; generic relay identity and operator configuration; algorithm and safety limits retained.",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "src/stream_v3/oci_monitor_metrics.py",
+      "before_sha256": null,
+      "source_sha256": "0929baa9beac47c4b1d118c05c117787f1dd400fdf52c97a4af649a052bcf7f5",
+      "public_sha256": "8950de47a4aa1e93222ccec0333bee4915690282934c8a18b0ecc76232f69589",
+      "source_role": "public-adapted-code",
+      "decision": "English prose; generic relay identity and operator configuration; algorithm and safety limits retained.",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "src/stream_v3/oci_monitor_probe.py",
+      "before_sha256": null,
+      "source_sha256": "fe5f2299907e14a33f89ab889465a56527851254cf0951037082764beadcedf9",
+      "public_sha256": "02d6bd3cc27bb109ede9048588409004bbbbd4d70467b15b5b3801c5cf2005bd",
+      "source_role": "public-adapted-code",
+      "decision": "English prose; generic relay identity and operator configuration; algorithm and safety limits retained.",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "src/stream_v3/verified_clock.py",
+      "before_sha256": null,
+      "source_sha256": "d971f474539e462a9238645f5e882cbc02010953ba2ee83488a586f09b825bbf",
+      "public_sha256": "ca3e0939004f54c8e96100dd6018ad91e083d0bb7504b694c03588cdbd40b19f",
+      "source_role": "public-adapted-code",
+      "decision": "English prose; generic relay identity and operator configuration; algorithm and safety limits retained.",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "src/stream_v3/viewer_clock.py",
+      "before_sha256": null,
+      "source_sha256": "0d400d644b39761b65f86edac17a1d95e2fb0445c68b74ac17ad3e1a29a5eea6",
+      "public_sha256": "0d400d644b39761b65f86edac17a1d95e2fb0445c68b74ac17ad3e1a29a5eea6",
+      "source_role": "public-adapted-code",
+      "decision": "English prose; generic relay identity and operator configuration; algorithm and safety limits retained.",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "src/stream_v3/viewer_clock_capture.py",
+      "before_sha256": null,
+      "source_sha256": "6e8bef5937dba19e79b5ec66e722f929c8afa900fc6186637f097af9aa3140b4",
+      "public_sha256": "6e8bef5937dba19e79b5ec66e722f929c8afa900fc6186637f097af9aa3140b4",
+      "source_role": "public-adapted-code",
+      "decision": "English prose; generic relay identity and operator configuration; algorithm and safety limits retained.",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "src/stream_v3/viewer_clock_worker.py",
+      "before_sha256": null,
+      "source_sha256": "d499f7ecb77d28b7c05dadfce6cf12ed2d6be50962a0e96d03060f512abe34b4",
+      "public_sha256": "58fa4a77da5b0136d32144776cd81eba7560201867e971692300a2c656a5f5e3",
+      "source_role": "public-adapted-code",
+      "decision": "English prose; generic relay identity and operator configuration; algorithm and safety limits retained.",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "tests/test_clock_exporter_cache.py",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "8f62bce62e5df119ee6b5bef90d2aac08dcf22df354483c7fadd81d181b15782",
+      "source_role": "public-adaptation",
+      "decision": "Curated English public documentation/configuration or a public-binding regression; no live deployment.",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "tests/test_frame_receiver.py",
+      "before_sha256": null,
+      "source_sha256": "fdb0f4c87328ac9c8eed21443e7d133362748b68acc5174945f1162df8863a27",
+      "public_sha256": "fdb0f4c87328ac9c8eed21443e7d133362748b68acc5174945f1162df8863a27",
+      "source_role": "public-adapted-code",
+      "decision": "English prose; generic relay identity and operator configuration; algorithm and safety limits retained.",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "tests/test_monitor_facts.py",
+      "before_sha256": null,
+      "source_sha256": "ef199a8e08c915d21e5bea51d9226223a9923f733d209eb88533730451775589",
+      "public_sha256": "5a8ca26dacb3fdabc489dc3154d921af4571ba8043a735a00da632ad490153f9",
+      "source_role": "public-adapted-code",
+      "decision": "English prose; generic relay identity and operator configuration; algorithm and safety limits retained.",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "tests/test_oci_backup.py",
+      "before_sha256": null,
+      "source_sha256": "5563278a9655ea011cca913a636e68bcbf8a0e7d624d6b417d4c2e7b5d1f8d38",
+      "public_sha256": "5563278a9655ea011cca913a636e68bcbf8a0e7d624d6b417d4c2e7b5d1f8d38",
+      "source_role": "public-adapted-code",
+      "decision": "English prose; generic relay identity and operator configuration; algorithm and safety limits retained.",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "tests/test_oci_backup_source_identity.py",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "46739914f95b632398b88e1c61b52db83be346fd0d23d2c926315b60509129b4",
+      "source_role": "public-adaptation",
+      "decision": "Curated English public documentation/configuration or a public-binding regression; no live deployment.",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "tests/test_oci_monitor_probe.py",
+      "before_sha256": null,
+      "source_sha256": "f56d56e38a1140d1916d3b82bbb8b6cdfb2ed668ac5ca1375d105e3cb3a72139",
+      "public_sha256": "f56d56e38a1140d1916d3b82bbb8b6cdfb2ed668ac5ca1375d105e3cb3a72139",
+      "source_role": "public-adapted-code",
+      "decision": "English prose; generic relay identity and operator configuration; algorithm and safety limits retained.",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "tests/test_verified_clock.py",
+      "before_sha256": null,
+      "source_sha256": "5ebbc56ecd98ba62900202cc71b549ea08e87cc9aa2ef69a7427c1d745309c8e",
+      "public_sha256": "5ebbc56ecd98ba62900202cc71b549ea08e87cc9aa2ef69a7427c1d745309c8e",
+      "source_role": "public-adapted-code",
+      "decision": "English prose; generic relay identity and operator configuration; algorithm and safety limits retained.",
+      "port_date_jst": "2026-10-22"
     }
   ],
   "omissions": [
@@ -3023,5 +3377,13 @@
     "date_jst": "2026-10-20",
     "deployment_performed": false,
     "runtime_changed": false
+  },
+  "clock_monitor_port": {
+    "date_jst": "2026-10-22",
+    "record": "publication/clock-monitor-port-20261022.json",
+    "source_commit": "5a62aa4caa7e9af91125162d5b5f987e5a760487",
+    "deployment_performed": false,
+    "commit_or_push_performed": true,
+    "push_performed": false
   }
 }

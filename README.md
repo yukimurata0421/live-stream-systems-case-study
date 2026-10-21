@@ -75,7 +75,9 @@ flowchart TB
 
 The [OCI delivery record](docs/v3/self-healing-oci-fanout.md) explains the
 Tokyo OKE capacity attempt, the choice of a VM, and the fallback conditions.
-Both home senders still depend on the Dell host and home uplink.
+Both home senders still depend on the Dell host and home uplink. A separate
+[clock monitor](docs/v3/relay-clock-monitor.md) checks returned relay/fallback
+video and keeps that evidence distinct from public-player reception.
 
 ### Public status
 

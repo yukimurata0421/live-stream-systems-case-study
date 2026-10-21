@@ -1,0 +1,11 @@
+{
+  "ssh_host": "delivery-host",
+  "key_file": "/etc/stream-v3-oci-monitor/sample.key",
+  "source_identity": "REPLACE_WITH_PINNED_CA_SHA256",
+  "observer_deployment_uid": "REPLACE_WITH_CURRENT_OBSERVER_DEPLOYMENT_UID",
+  "worker_revision": "OPTIONAL_DIAGNOSTIC_BASELINE",
+  "observer_image": "OPTIONAL_DIAGNOSTIC_IMAGE_BASELINE",
+  "fallback_deployment_uid": "REPLACE_WITH_CURRENT_BACKUP_DEPLOYMENT_UID",
+  "fallback_template_revision": "OPTIONAL_DIAGNOSTIC_TEMPLATE_BASELINE",
+  "fallback_tap_revision": "REPLACE_WITH_IMMUTABLE_TAP_MODULE_SHA256"
+}

@@ -15,6 +15,9 @@ start.
 
 ## Current System
 
+- `v3/relay-clock-monitor.md`: [returned video, paired OCR, native evidence and bounded observer state](v3/relay-clock-monitor.md).
+- `v3/oci-backup-and-restore.md`: [encrypted relay backup, offline verification and files-only restore](v3/oci-backup-and-restore.md).
+
 - `architecture.md`: [hosts, data paths, who can act on what, failure domains](architecture.md).
 - `runtime-contract.md`: [delivery and monitoring runtimes, encoder, restart gates](runtime-contract.md).
 - `v3/self-healing-oci-fanout.md`: [the media route since 2026-10-20, its thresholds, and the relay-stop drill](v3/self-healing-oci-fanout.md).
@@ -88,6 +91,8 @@ start.
   in production; the rest is not enabled.
 
 ## Publication Records
+
+- `v3/public-source-port-2026-10-22.md`: [clock-monitor review, dated evidence and public source adaptations](v3/public-source-port-2026-10-22.md).
 
 - `v3/public-source-port-2026-10-20.md`: [self-healing route port](v3/public-source-port-2026-10-20.md).
 - `v3/public-source-port-2026-10-13.md`: [OCI, Twitch, and route evidence port](v3/public-source-port-2026-10-13.md).

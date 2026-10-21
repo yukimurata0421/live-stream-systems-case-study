@@ -1,0 +1,4 @@
+{
+  "host_id": "relay-host",
+  "machine_id_sha256": "REPLACE_WITH_SOURCE_MACHINE_ID_FILE_SHA256"
+}

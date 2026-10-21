@@ -1,0 +1,104 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stream-v3-oci-monitor-probe
+  namespace: stream-v3
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: stream-v3-oci-monitor-probe
+  template:
+    metadata:
+      labels:
+        app: stream-v3-oci-monitor-probe
+    spec:
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      terminationGracePeriodSeconds: 15
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        fsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: observer
+          image: stream-v3-oci-monitor-probe:local
+          imagePullPolicy: Never
+          args: ["--config", "/config/probe.json", "--ram-root", "/ram", "--host", "0.0.0.0", "--port", "8766"]
+          ports:
+            - name: fallback
+              containerPort: 8767
+              protocol: UDP
+            - name: observer
+              containerPort: 8766
+              hostPort: 8766
+              hostIP: 127.0.0.1
+          env:
+            - name: POD_UID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.uid
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+              ephemeral-storage: 64Mi
+          volumeMounts:
+            - name: ram
+              mountPath: /ram
+            - name: temporary
+              mountPath: /tmp
+            - name: config
+              mountPath: /config
+              readOnly: true
+            - name: observation-key
+              mountPath: /key
+              readOnly: true
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: 8766
+            periodSeconds: 5
+            failureThreshold: 12
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8766
+            periodSeconds: 15
+            timeoutSeconds: 3
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8766
+            periodSeconds: 10
+            timeoutSeconds: 3
+      volumes:
+        - name: ram
+          emptyDir:
+            medium: Memory
+            sizeLimit: 32Mi
+        - name: temporary
+          emptyDir:
+            medium: Memory
+            sizeLimit: 16Mi
+        - name: config
+          configMap:
+            name: stream-v3-oci-monitor-probe
+        - name: observation-key
+          secret:
+            secretName: stream-v3-oci-monitor-observation
+            defaultMode: 0440

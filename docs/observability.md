@@ -60,6 +60,23 @@ Missing optional state is not exported as `0`. For example, absent ADS-B,
 audio, SLO, cgroup, or stream-watchdog detail files should remove the metric
 series or fall back to subsystem evidence; they must not create a false OK.
 
+## Returned Clock And Observer Quality
+
+The [return-feed clock monitor](v3/relay-clock-monitor.md) adds image/clock facts
+for the OCI relay and direct fallback sender. It does not establish public
+YouTube/Twitch reception. Existing native per-destination state/bytes remain
+separate evidence. `stream_v3_oci_monitor_clock_advancing` and the corresponding
+fallback metric require paired OCR progression and fresh runtime/source binding.
+`stream_v3_monitor_probe_*` reports scope, native flow, delay validity, freeze
+coverage, failure class, source freshness and configuration diagnostics.
+
+Display age is measured at complete decoded-frame arrival and includes decoder
+and queue delay. Missing observations do not count as observed freeze time.
+Importer cycle deduplication protects sample denominators; collector failures
+have a separate history. The new metrics refresh on every scrape while the
+existing expensive exporter cache retains its cadence. These facts add no new
+notification route or recovery authority.
+
 ## Dashboards
 
 Dashboard state should separate current failures from historical degradation.

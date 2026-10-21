@@ -14,7 +14,7 @@ another.
 | Host or edge | Role | Runs |
 | --- | --- | --- |
 | HP ProDesk `arena-server` | ADS-B reception and monitoring | Airspy USB receiver, `airspy_adsb`, readsb; the monitor service `stream-v3-arena-monitor` (YouTube resolver and watchdog, stream watchdog, notifications, SLI, exporter); Prometheus, Loki, and Grafana in a local k3s; relay observation over the private tunnel |
-| Dell workstation `delivery-host` | Video production and upload | Dell-side readsb and modified tar1090 endpoint; k3s `stream-v3-runtime` (map rendering, precipitation, PulseAudio, AutoDJ, FFmpeg/NVENC, fast recovery); the fallback Deployment and its controller |
+| Dell workstation `delivery-host` | Video production and upload | Dell-side readsb and modified tar1090 endpoint; k3s `stream-v3-runtime` (map rendering, precipitation, PulseAudio, AutoDJ, FFmpeg/NVENC, fast recovery); the fallback Deployment and its controller; an independent RAM return-feed observer |
 | OCI VM | Media fan-out | MediaMTX relay and the keeper that repairs forwards and renews Twitch |
 | Raspberry Pi `publisher-host` | Public status publisher | nginx `/grafana/` proxy to arena-server Grafana, snapshot collectors, static site build, outbound GCS upload |
 | GCS + Cloudflare | Public static edge | Serves <https://yukimurata0421.dev/> from uploaded static files |
@@ -54,6 +54,22 @@ map and terrain tiles, precipitation assets, and render readiness, and removes
 receiver location fields. The k3s manifests do not manage the Airspy device or
 readsb.
 
+## Clock Observation Path
+
+The OCI relay has a third read branch to a separate Dell monitor Deployment.
+That branch observes the common relay output, alongside the independent native
+YouTube/Twitch forward counters already collected by arena-server. During direct
+fallback, a secondary tee/FIFO output of the backup encoder reaches the same
+Dell monitor through a bounded UDP receiver. It adds no second encode.
+
+The observer returns signed RAM snapshots, clock facts and heartbeat over the
+existing read-only SSH path to ProDesk. ProDesk binds the source and current
+runtime, deduplicates cycles, joins existing native relay facts and exports
+observation metrics. Neither the image worker nor this importer can restart a
+sender, scale a Deployment, switch a route or request a recovery action.
+The [clock contract](v3/relay-clock-monitor.md) separates returned video,
+per-destination byte progress, observation quality and public reception.
+
 ## Public Status Path
 
 ```text
@@ -78,6 +94,7 @@ into the snapshot.
 | Kubernetes on Dell | Restarts a failed container or Pod | Anything on OCI |
 | Fallback controller on Dell | Scales only `stream-v3-youtube-backup` between 0 and 1 | The main Pod or the relay |
 | Keeper on OCI | Re-creates a failed forward; renews the Twitch forward | The YouTube forward during renewal; anything at home |
+| Clock observer on Dell / its importer on arena-server | Their bounded RAM snapshots, independent observation state and metrics | Senders, routes, replicas, provider lifecycle or recovery effects |
 | Monitor on arena-server | Requests a guarded runtime restart (budget, cooldown, 180-second convergence wait) | The FFmpeg process directly; replacement broadcasts (disabled) |
 | Raspberry Pi | Its own static output | Anything else; it receives no control feedback |
 | CRA on `cra-01` | Nothing in production | Its policy keeps `production_behavior_change_authorized=false` |

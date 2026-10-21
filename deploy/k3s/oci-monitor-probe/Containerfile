@@ -1,0 +1,9 @@
+FROM debian:bookworm-slim
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 python3-pil ffmpeg tesseract-ocr tesseract-ocr-eng ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+COPY --chown=65532:65532 src/stream_v3 /app/stream_v3
+ENV PYTHONPATH=/app PYTHONDONTWRITEBYTECODE=1 OMP_THREAD_LIMIT=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1
+USER 65532:65532
+ENTRYPOINT ["python3", "-m", "stream_v3.oci_monitor_probe"]

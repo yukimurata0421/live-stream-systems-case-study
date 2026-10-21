@@ -21,6 +21,7 @@ if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
 from stream_core.k8s_gpu_guard import summarize_runtime_gpu
+from stream_v3.oci_monitor_metrics import write_metrics as write_oci_monitor_metrics
 from stream_core.common.youtube_input_quality import (
     DEFAULT_INPUT_QUALITY_MAX_AGE_SEC,
     classify_input_quality_sample,
@@ -111,13 +112,23 @@ class MetricsCache:
     def get(self) -> tuple[str, str]:
         now = time.monotonic()
         if self._payload and now - self._updated < self.ttl_sec:
-            return self._render(now), self._error
+            return self._render_with_clock(now), self._error
         with self._lock:
             now = time.monotonic()
             if self._payload and now - self._updated < self.ttl_sec:
-                return self._render(now), self._error
+                return self._render_with_clock(now), self._error
             self._refresh()
-            return self._render(time.monotonic()), self._error
+            return self._render_with_clock(time.monotonic()), self._error
+
+    def _render_with_clock(self, now: float) -> str:
+        # Preserve the legacy collector cache; these small observations have a 10 s cadence.
+        payload = self._render(now)
+        prefixes = ("stream_v3_oci_monitor_", "stream_v3_youtube_fallback_monitor_", "stream_v3_monitor_probe_")
+        retained = [line for line in payload.splitlines()
+                    if not line.removeprefix("# HELP ").removeprefix("# TYPE ").startswith(prefixes)]
+        writer = MetricWriter()
+        write_oci_monitor_metrics(writer, read_json(self.state_root / "oci_monitor" / "observation.json"), now=time.time())
+        return "\n".join(retained) + "\n" + writer.render()
 
     def _refresh(self) -> None:
         started = time.monotonic()
@@ -1099,6 +1110,7 @@ def build_metrics(
     write_external_blackbox_metrics(writer, external_blackbox, now=now)
     write_map_runtime_metrics(writer, map_runtime, now=now)
     write_viewer_synthetic_metrics(writer, viewer_synthetic, now=now)
+    write_oci_monitor_metrics(writer, read_json(state_root / "oci_monitor" / "observation.json"), now=now)
     writer.metric("stream_v3_health_snapshot_used", 1 if health_snapshot_used else 0, help_text="Health summary snapshot used flag.")
     writer.metric("stream_v3_health_snapshot_age_seconds", health_snapshot_age, help_text="Health summary snapshot age seconds.")
     writer.metric(

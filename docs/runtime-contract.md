@@ -24,6 +24,17 @@ and recovery confirmation. It renders its own map and audio and encodes with
 `libx264`; it does not reuse the main encoder's output, and GPU sharing is not
 implemented.
 
+### Return-Feed Observer
+
+The independent `stream-v3-oci-monitor-probe` Deployment observes the common OCI
+relay and, when present, the backup encoder's secondary output. It has one
+replica, no GPU or recovery rights, bounded memory-backed images, and 500m CPU /
+512 MiB memory limits. Continuous receivers feed ten-second paired JST/UTC OCR.
+The [clock contract](v3/relay-clock-monitor.md) defines state, source binding,
+missing-data semantics and display-age metrics; the [architecture](architecture.md#clock-observation-path)
+defines the paths. Generic manifests require operator configuration and an
+immutable image before use.
+
 ### Encoder
 
 ```text

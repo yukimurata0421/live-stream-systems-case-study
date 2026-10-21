@@ -9,6 +9,8 @@ code path and regression tests. It does not require a complete repository tour.
 | Interview question | Implementation and checks |
 | --- | --- |
 | How does the current OCI route start and stop the YouTube fallback? | [Fallback controller](../ops/selfheal/fallback_controller.py), [keeper](../ops/selfheal/forward_keeper.py), and [tests](../tests/test_selfheal.py). Start with the [current route and drill](v3/self-healing-oci-fanout.md). |
+| How are clock progress, capture failure and public reception kept separate? | [Paired-clock analyzer](../src/stream_v3/verified_clock.py), [receiver](../src/stream_v3/frame_receiver.py), [native reduction](../src/stream_v3/monitor_facts.py), and [tests](../tests/test_oci_monitor_probe.py). See the [clock contract](v3/relay-clock-monitor.md). |
+| How can a restore stop at verified file placement? | [Bundle tool](../ops/oci-backup/bundle.py) and [negative tests](../tests/test_oci_backup.py); [restore procedure](v3/oci-backup-and-restore.md). |
 | How does the sender differ from the encoder? | [Delivery pipeline](../src/stream_core/engine/delivery_pipeline.py) and [tests](../tests/test_delivery_pipeline.py). |
 | What prevented replay in the retained fenced route design? | [Runtime fence](../recovery-control/src/runtime_boundary/server.py) and [route tests](../recovery-control/tests/runtime_boundary/test_stream_route_fence.py). This is separate from the current local fallback. |
 | How was YouTube checked during the October 13 manual Twitch renewal? | [Historical session reducer](../ops/relay/twitch_session.py), [adapter](../ops/relay/twitch_daily.py), and [tests](../tests/test_twitch_daily.py). The October 20 keeper is a different implementation. |
