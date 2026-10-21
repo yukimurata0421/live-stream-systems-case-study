@@ -132,6 +132,25 @@ class FakeMediaMTX:
             self.forward = [dict(d) for d in target]
 
 
+class KeeperApiTests(unittest.TestCase):
+    def test_config_changes_are_sent_as_patch_and_reads_as_get(self):
+        import forward_keeper
+        from unittest import mock
+        seen = []
+        class Reply:
+            def __init__(self, raw): self.raw = raw
+            def read(self): return self.raw
+            def __enter__(self): return self
+            def __exit__(self, *a): return False
+        def urlopen(req, timeout):
+            seen.append((req.get_method(), req.full_url))
+            return Reply(b'{}')
+        with mock.patch.object(forward_keeper.urllib.request, 'urlopen', side_effect=urlopen):
+            forward_keeper.api('/v3/config/paths/patch/relay', {'forward': [YT]})
+            forward_keeper.api('/v3/config/paths/get/relay')
+        self.assertEqual([m for m, _ in seen], ['PATCH', 'GET'])
+
+
 class ReconcileTests(unittest.TestCase):
     def test_in_sync_sends_nothing(self):
         m = FakeMediaMTX([YT, TW])

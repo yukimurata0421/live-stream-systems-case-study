@@ -27,7 +27,11 @@ defines the components and thresholds.
 
 ## Not Yet Observed
 
-- The first keeper-driven Twitch renewal (scheduled 2026-10-21 00:00 JST).
+- A completed keeper-driven Twitch renewal. The first one, at 2026-10-21
+  00:00 JST, did nothing: the keeper sent its forward change as POST, which
+  MediaMTX's config API rejects with 404, and it recorded the date anyway. The
+  keeper now sends PATCH and confirms changes by reading the configuration
+  back. The next renewal is due 2026-10-22 00:00 JST.
 - Delivery of a real Twitch alert to Discord.
 - A prolonged relay-host stop that releases the cloud host allocation, and
   provider-side failures. A stopped relay service, tunnel loss, and a

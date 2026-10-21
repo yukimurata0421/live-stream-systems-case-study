@@ -104,8 +104,16 @@ monitoring host treats a Twitch OFFLINE as planned only within 360 seconds of
 that time and only while a renewal is in progress, so the reported time must
 not move to the next day mid-renewal.
 
-Whether the first keeper-driven renewal has been observed is tracked in
-[current status](../current-status.md).
+The first keeper-driven renewal, at 2026-10-21 00:00 JST, did not happen. The
+keeper sent its forward change as POST; MediaMTX's config API accepts only
+PATCH and answered 404, so the Twitch forward stayed in place, while the keeper
+still recorded the day as renewed. The same mistake meant forward healing had
+never applied either. It was found that evening from the public renewal row,
+which showed no completed renewal. A PATCH with the current forward list was
+then accepted and left both forwarding handlers unchanged, and the keeper was
+switched to PATCH. Together with the per-cycle reconciliation added that
+morning, a failed change is now retried instead of being recorded as done.
+Later renewals are tracked in [current status](../current-status.md).
 
 ## Drill: stopping the relay (2026-10-20 08:55 to 09:03 JST)
 

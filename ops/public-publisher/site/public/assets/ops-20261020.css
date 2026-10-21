@@ -156,7 +156,7 @@ section { margin-top: 32px; }
 .gap-bar { position: relative; height: 10px; min-width: 140px; background: var(--grid); border-radius: 5px; }
 .gap-bar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 5px; background: var(--series); }
 .gap-bar b { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--ink); }
-.gap-bar u { position: absolute; top: 50%; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; background: var(--surface, #fff); border: 2px solid var(--series); box-sizing: border-box; }
+.gap-bar u { position: absolute; z-index: 2; top: 50%; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; background: var(--surface, #fff); border: 2.5px solid var(--ink); box-shadow: 0 0 0 2px var(--surface, #fff); box-sizing: border-box; }
 .rel-table small.recent, .rel-table small.scale { display: block; font-size: 11px; color: var(--muted, inherit); font-weight: 400; }
 .rel-table small.scale { margin-top: 3px; }
 .state { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; white-space: nowrap; }

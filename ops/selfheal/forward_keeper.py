@@ -156,7 +156,10 @@ def reconcile(read_config, patch, target: list) -> str:
 
 def api(path: str, body: dict | None = None):
     data = None if body is None else json.dumps(body).encode()
-    req = urllib.request.Request(API + path, data=data, headers={'Content-Type': 'application/json'})
+    # MediaMTX's config patch endpoint accepts only PATCH (POST returns 404). Until 2026-10-21 the keeper sent POST,
+    # so none of its forward changes had applied.
+    req = urllib.request.Request(API + path, data=data, headers={'Content-Type': 'application/json'},
+                                 method='GET' if body is None else 'PATCH')
     with urllib.request.urlopen(req, timeout=3) as r:
         raw = r.read()
     return json.loads(raw) if raw else {}

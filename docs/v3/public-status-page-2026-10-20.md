@@ -81,6 +81,16 @@ the bar, and a bar starts below 90% (in 10-point steps) when a value is lower.
 The daily renewal row lists ok, failed, and unknown renewals. The collector
 publishes the 24-hour value as `recent_24h`; it stays null when unavailable.
 
+## Making the 24-hour ring readable (2026-10-21)
+
+When the 24-hour value was below the 7-day value, its ring sat inside the blue
+bar and looked like a small white dot. The ring now has a dark outline above
+the bar and a tooltip, the column header names bar, ring, and target line, and
+the status adds the 24-hour gap when the last day is further below target than
+the week. A bar now starts one 10-point step below its lowest value, after a
+Twitch value of 20.2% on a 20-100% scale left its bar empty. A renewal row with
+no completed result shows "no result yet" rather than "below target".
+
 ## Limits
 
 Checks were visual, in a browser, in light and dark themes and at a narrow

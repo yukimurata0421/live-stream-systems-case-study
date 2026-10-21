@@ -653,9 +653,9 @@
       "path": "ops/public-publisher/site/public/index.html",
       "source_role": "development-public-ui",
       "decision": "adapted",
-      "before_sha256": "3ddb11b4a8fdbd463d9ca304a1a16248bd56a53df00b309ea97304fcf6c53368",
-      "source_sha256": "c973cf759460ed3c823ccf9c2f07ddb9dafd607a1607266cc7c3d11c3ec924de",
-      "public_sha256": "c973cf759460ed3c823ccf9c2f07ddb9dafd607a1607266cc7c3d11c3ec924de",
+      "before_sha256": "c973cf759460ed3c823ccf9c2f07ddb9dafd607a1607266cc7c3d11c3ec924de",
+      "source_sha256": "5fb12a55fd3a7a65e081890b2808b5e1e70fddec5d5a5a5092092a814c4f5f64",
+      "public_sha256": "5fb12a55fd3a7a65e081890b2808b5e1e70fddec5d5a5a5092092a814c4f5f64",
       "pre_graph_display_sha256": "cfadf662a3455f92df0f7ad67f767a2835285aebe9d2068a3b8c8ce3ab4888a9",
       "graph_display_change": "Observed link arrows, explicit direct-path inference, and timestamp-preserving charts.",
       "pre_twitch_sli_resilience_sha256": "86762c0461a6249d1d652160906ad02ef8340f1b74f99c399e3a6253f19caed0",
@@ -2673,9 +2673,9 @@
       "path": "ops/selfheal/forward_keeper.py",
       "source_role": "development-selfheal",
       "decision": "adapted-english-and-portable-bindings",
-      "before_sha256": "d8e48172f49ccbdcd9007b58407e2594ee17865ed46f20f2a317e4391938b2a3",
-      "source_sha256": "5e4fa16ba209a0a275641a582e34fbe0e2e57787837b6eff90638b010c9971eb",
-      "public_sha256": "ba734ee453dc2cff98c2343ff1918f3eee5c3e05a05acbb376b88f6aba0af3a3",
+      "before_sha256": "ba734ee453dc2cff98c2343ff1918f3eee5c3e05a05acbb376b88f6aba0af3a3",
+      "source_sha256": "f4afc344c30edc18c0dfc99c4050a9910d54b0a87fa137a8da4e3bc328db5a6a",
+      "public_sha256": "561c98220da97e75e7ca661e63dc246c7db7087b075b98c1f14e3f42615784e5",
       "port_date_jst": "2026-10-20"
     },
     {
@@ -2691,9 +2691,9 @@
       "path": "tests/test_selfheal.py",
       "source_role": "development-selfheal",
       "decision": "adapted-english-and-portable-bindings",
-      "before_sha256": "1577e9029d95ea7230c567f636f4888d30b4128af23a7d58d945d60e7d15ec36",
-      "source_sha256": "b6cf3c4e2442ddc206a1b2187ab9626b40837d9e604b85ce678dc70a3793034c",
-      "public_sha256": "95bf33c048a1c4f7a13e8fb9c9d81ca6c61f4ff8e140598eddcf3c25a35addc3",
+      "before_sha256": "95bf33c048a1c4f7a13e8fb9c9d81ca6c61f4ff8e140598eddcf3c25a35addc3",
+      "source_sha256": "c938b9253fd4be3ab0f1d697c949a3e7d56934ff5168747f5aee2454d6635519",
+      "public_sha256": "87612c834e46a2d9c3bed58a81383ecdbbf40c5d84e578a7a1d22c695736cdcb",
       "port_date_jst": "2026-10-20"
     },
     {
@@ -2736,9 +2736,9 @@
       "path": "docs/v3/self-healing-oci-fanout.md",
       "source_role": "public-documentation",
       "decision": "curated-current-contract-and-dated-evidence",
-      "before_sha256": "a3648bd40ca9bf425468870bdf68641cb6d9c18539cdf94bf8e6b314e60cc38d",
+      "before_sha256": "c1c35d2ab8686f7d7ccfa10ac15c325be78560dc0d71fa87e60a9a4c33749c9a",
       "source_sha256": null,
-      "public_sha256": "c1c35d2ab8686f7d7ccfa10ac15c325be78560dc0d71fa87e60a9a4c33749c9a",
+      "public_sha256": "5d96a625690da59907c871ed065a0e293ae40fdacba81070446195c7302db124",
       "port_date_jst": "2026-10-20",
       "pre_documentation_restructure_sha256": "6ff062e19bdb420d125e2559e7f0f647f960374cf35794f18be82db7ce190be4",
       "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json."
@@ -2803,27 +2803,27 @@
       "path": "ops/public-publisher/site/public/assets/ops-20261020.css",
       "source_role": "development-public-ui",
       "decision": "adapted",
-      "before_sha256": "f7548bb45614775757c5af8f23255022026240e9031a4ec3d069b986cf1eeda7",
-      "source_sha256": "bab0d1b52ad3a7ad696a333d27c57c8e439bad9c2e05349373fa5025f50521d4",
-      "public_sha256": "bab0d1b52ad3a7ad696a333d27c57c8e439bad9c2e05349373fa5025f50521d4",
+      "before_sha256": "bab0d1b52ad3a7ad696a333d27c57c8e439bad9c2e05349373fa5025f50521d4",
+      "source_sha256": "9b4737034691f9fcb340a82c03da7860dbf2a2e8cfeba83452acdd004525c0cd",
+      "public_sha256": "9b4737034691f9fcb340a82c03da7860dbf2a2e8cfeba83452acdd004525c0cd",
       "port_date_jst": "2026-10-20"
     },
     {
       "path": "ops/public-publisher/site/public/assets/ops-20261020.js",
       "source_role": "development-public-ui",
       "decision": "adapted",
-      "before_sha256": "11b96b5909aef92ca09f8b275242148c3bd236613a1214601e28e92a38984759",
-      "source_sha256": "2e553bcf4f20f8864e3319acfae4a8512ad62cbc076af1f0e2ef8f7f23a5c74f",
-      "public_sha256": "2e553bcf4f20f8864e3319acfae4a8512ad62cbc076af1f0e2ef8f7f23a5c74f",
+      "before_sha256": "2e553bcf4f20f8864e3319acfae4a8512ad62cbc076af1f0e2ef8f7f23a5c74f",
+      "source_sha256": "82667f7728e1a5b71a00bb4a728cdc9a5cb589a53491233c5cc278e697deb1b2",
+      "public_sha256": "82667f7728e1a5b71a00bb4a728cdc9a5cb589a53491233c5cc278e697deb1b2",
       "port_date_jst": "2026-10-20"
     },
     {
       "path": "docs/v3/public-status-page-2026-10-20.md",
       "source_role": "public-documentation",
       "decision": "curated-current-contract-and-dated-evidence",
-      "before_sha256": "183f4649377a2cd5dcd05c013a0188c65407011b06e66124b62ae2776003871b",
+      "before_sha256": "f6f5e44fd84e2037bf66d1e03675cfc503d9c2c64fad41b5d4422fb66e7c5f0a",
       "source_sha256": null,
-      "public_sha256": "f6f5e44fd84e2037bf66d1e03675cfc503d9c2c64fad41b5d4422fb66e7c5f0a",
+      "public_sha256": "cc027bcf18be8b3210c8a9a9c9abf483865163fb9a9808d830e63c223279038b",
       "port_date_jst": "2026-10-20"
     },
     {
@@ -2857,11 +2857,12 @@
       "path": "docs/current-status.md",
       "source_role": "public-documentation",
       "decision": "curated-current-contract-and-dated-evidence",
-      "before_sha256": "a2a10f7458e1d08ae78244cf4787ed96e3f71e853cd48ccfc2b7ddde860f67c4",
+      "before_sha256": "040eac29174151f51e473f7f85e4aa23ff994be0079b3d4c011623b6ec7864ca",
       "source_sha256": null,
-      "public_sha256": "040eac29174151f51e473f7f85e4aa23ff994be0079b3d4c011623b6ec7864ca",
+      "public_sha256": "00cf8c173ff747d8ba3b4661cc86bcefad2611a905096455031387768686d93a",
       "port_date_jst": "2026-10-20",
-      "documentation_restructure": "New single page for volatile state."
+      "documentation_restructure": "New single page for volatile state.",
+      "pre_twitch_observation_public_sha256": "040eac29174151f51e473f7f85e4aa23ff994be0079b3d4c011623b6ec7864ca"
     },
     {
       "path": "monitoring-v4/ops/release/model.py",
