@@ -139,6 +139,49 @@ as local delivery while the main Pod is not sending. That change has been
 checked only with the fallback at zero replicas; see
 [current status](../current-status.md).
 
+## Drills: tunnel loss and relay-host reset (2026-10-21)
+
+Two more failure modes were exercised during the live broadcast. Before each,
+the state of all three hosts was recorded; afterwards the same checks were
+repeated and matched apart from timestamps, rates, and the relay's boot time.
+
+**Tunnel loss.** The tunnel's UDP traffic between the encoder host and the
+relay was dropped with a firewall rule for 180 seconds, then the rule was
+removed.
+
+| Time (JST) | Observation |
+| --- | --- |
+| 09:42:11 | Tunnel traffic dropped. |
+| 09:42:24 | The controller sees the relay path as unhealthy (13 s). |
+| 09:43:09 | The controller starts the fallback (58 s). |
+| 09:44:55 | The YouTube watchdog counts the fallback connection as local delivery: status ok, broadcast health good, no incident. |
+| 09:45 | The public projection measures the fallback upload at 4.865 Mbps. |
+| 09:45:12 | Tunnel traffic restored. |
+| 09:45:19 | The main sender reconnects to the relay (7 s). |
+| 09:50:54 | The fallback stops itself, 305 s after the controller saw the relay healthy again. |
+
+**Relay-host reset.** The relay VM was power-cycled through the cloud API
+(a reset, which keeps the host allocation; a longer stop that releases it was
+not exercised).
+
+| Time (JST) | Observation |
+| --- | --- |
+| 09:52:26 | VM reset requested. |
+| 09:52:45 | The controller sees the relay path as unhealthy (19 s). |
+| 09:53:31 | The controller starts the fallback (65 s). |
+| 09:54:04 | The VM is running again; the OS booted at 09:54:12. |
+| 09:54:42 | Tunnel, MediaMTX, and keeper start on boot. The keeper keeps the day's renewal date, so it does not start an unplanned renewal. |
+| 09:54:58 | The main sender reconnects and the relay receives input again. |
+| 10:00:30 | The fallback stops itself, 304 s after the relay was healthy again. |
+
+In both drills the YouTube broadcast stayed on the same video ID and returned
+to live, active, and good, and Twitch returned to LIVE. From local
+observations, data stopped reaching YouTube for about 70 seconds each time,
+between the failure and the fallback's first sends; this was not measured on
+the YouTube side. Before the reset, the keeper's state file was made to be
+written atomically and to be ignored if unreadable, so that a power loss
+during a write cannot stop the keeper from starting.
+
 ## Upload measurement after the route change
 
 After the route change, the public upload bitrate stayed at its last value
@@ -211,7 +254,7 @@ An external review raised three points, all confirmed and changed the same day.
 | A forward is `forwarding` and its bytes advance | The relay is sending to that provider. | It does not show that the provider accepted decodable media. |
 | YouTube API live / active / good | The provider reports a healthy broadcast. | Frame-level continuity for viewers is not measured. |
 | Twitch Helix LIVE with a new session ID | A new Twitch session exists after renewal. | It does not show delivered audio or video. |
-| One drill on 2026-10-20 | Automatic fallback and return work for a stopped relay service. | Tunnel loss, a relay host outage, and a provider-side failure were not exercised. |
+| Drills on 2026-10-20 and 2026-10-21 | Automatic fallback and return work for a stopped relay service, tunnel loss, and a relay-host reset. | A prolonged relay-host stop and provider-side failures were not exercised; the YouTube-side gap was not measured. |
 
 Items not yet observed, including whether MediaMTX reconnects a dropped forward
 without the keeper, are listed in [current status](../current-status.md).

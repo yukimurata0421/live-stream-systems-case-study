@@ -2673,9 +2673,9 @@
       "path": "ops/selfheal/forward_keeper.py",
       "source_role": "development-selfheal",
       "decision": "adapted-english-and-portable-bindings",
-      "before_sha256": "d3eed0d8c4d28abd911e2f99f96bdfb3520a37a76965721e10c5e9b2dd02a1b8",
-      "source_sha256": "8b56d266d0be369333d7baf721e37cb826846ad792b8697df526623b1bbf53a8",
-      "public_sha256": "d8e48172f49ccbdcd9007b58407e2594ee17865ed46f20f2a317e4391938b2a3",
+      "before_sha256": "d8e48172f49ccbdcd9007b58407e2594ee17865ed46f20f2a317e4391938b2a3",
+      "source_sha256": "5e4fa16ba209a0a275641a582e34fbe0e2e57787837b6eff90638b010c9971eb",
+      "public_sha256": "ba734ee453dc2cff98c2343ff1918f3eee5c3e05a05acbb376b88f6aba0af3a3",
       "port_date_jst": "2026-10-20"
     },
     {
@@ -2736,9 +2736,9 @@
       "path": "docs/v3/self-healing-oci-fanout.md",
       "source_role": "public-documentation",
       "decision": "curated-current-contract-and-dated-evidence",
-      "before_sha256": "e09e97cee9f0eb327c57e89e361f2c894b4fee9c307fa1c376e0bfb338fea3d9",
+      "before_sha256": "a3648bd40ca9bf425468870bdf68641cb6d9c18539cdf94bf8e6b314e60cc38d",
       "source_sha256": null,
-      "public_sha256": "a3648bd40ca9bf425468870bdf68641cb6d9c18539cdf94bf8e6b314e60cc38d",
+      "public_sha256": "c1c35d2ab8686f7d7ccfa10ac15c325be78560dc0d71fa87e60a9a4c33749c9a",
       "port_date_jst": "2026-10-20",
       "pre_documentation_restructure_sha256": "6ff062e19bdb420d125e2559e7f0f647f960374cf35794f18be82db7ce190be4",
       "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json."
@@ -2747,9 +2747,9 @@
       "path": "docs/v3/oci-route-simplification-decision.md",
       "source_role": "public-documentation",
       "decision": "curated-current-contract-and-dated-evidence",
-      "before_sha256": null,
+      "before_sha256": "af8fee12b02482003f87c5fa89baf173a6f71a709c856934163284bceb3ba177",
       "source_sha256": null,
-      "public_sha256": "af8fee12b02482003f87c5fa89baf173a6f71a709c856934163284bceb3ba177",
+      "public_sha256": "e64a5188f657cdd851fdab3b1133eee66671d67eb44b8ed318bef5e52b5a4a1e",
       "port_date_jst": "2026-10-20"
     },
     {
@@ -2857,9 +2857,9 @@
       "path": "docs/current-status.md",
       "source_role": "public-documentation",
       "decision": "curated-current-contract-and-dated-evidence",
-      "before_sha256": "f47db24cb0923d814f2d586327c1562b4e15939001f608d2e17cf7459d5bfaaf",
+      "before_sha256": "a2a10f7458e1d08ae78244cf4787ed96e3f71e853cd48ccfc2b7ddde860f67c4",
       "source_sha256": null,
-      "public_sha256": "a2a10f7458e1d08ae78244cf4787ed96e3f71e853cd48ccfc2b7ddde860f67c4",
+      "public_sha256": "040eac29174151f51e473f7f85e4aa23ff994be0079b3d4c011623b6ec7864ca",
       "port_date_jst": "2026-10-20",
       "documentation_restructure": "New single page for volatile state."
     },

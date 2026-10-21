@@ -87,8 +87,9 @@ scopes, and the retained evidence for the earlier design, are unchanged.
 
 ## What this does not show
 
-One drill exercised a stopped relay service. Tunnel loss, a relay host outage,
-and provider-side failures were not exercised. The first keeper-driven Twitch
+Drills on 2026-10-20 and 2026-10-21 exercised a stopped relay service, tunnel
+loss, and a relay-host reset. A prolonged relay-host stop and provider-side
+failures were not exercised. The first keeper-driven Twitch
 renewal had not yet run when this decision was recorded. The decision replaced
 an unfinished system whose complexity and repeated verification work had
 prevented it from meeting the operational goal. The replacement still needs

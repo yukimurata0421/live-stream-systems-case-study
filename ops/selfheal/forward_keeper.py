@@ -201,8 +201,13 @@ def main():
     helix = Helix(json.loads((creds / 'api.json').read_text()), user_id)
     state_file = Path(os.environ.get('STATE_DIRECTORY', '/tmp')) / 'keeper.json'
     keeper = Keeper(destinations)
-    if state_file.exists():
-        saved = json.loads(state_file.read_text())
+    try:
+        saved = json.loads(state_file.read_text()) if state_file.exists() else {}
+    except (OSError, ValueError):
+        # A state file cut short by a power loss must not keep the keeper from starting.
+        log('keeper_state_unreadable')
+        saved = {}
+    if saved:
         keeper.last_renewal_date = saved.get('last_renewal_date', '')
         if saved.get('phase') in ('WAIT_OFFLINE', 'VERIFY'):
             # Restarted mid-renewal: put Twitch back (via the reconciliation below) and verify from there.
@@ -238,7 +243,9 @@ def main():
         if result != 'in_sync':
             log('forward_reconcile', result=result, phase=keeper.phase, count=len(target), healed=keeper.removed is not None,
                 twitch=twitch['status'], stream_id=twitch.get('stream_id', ''))
-        state_file.write_text(json.dumps(keeper.to_state()))
+        tmp = state_file.with_suffix('.tmp')
+        tmp.write_text(json.dumps(keeper.to_state()))
+        os.replace(tmp, state_file)
         time.sleep(5)
 
 

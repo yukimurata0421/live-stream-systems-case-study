@@ -28,11 +28,10 @@ defines the components and thresholds.
 ## Not Yet Observed
 
 - The first keeper-driven Twitch renewal (scheduled 2026-10-21 00:00 JST).
-- The fallback upload rate and the watchdog's fallback recognition during a
-  real fallback.
 - Delivery of a real Twitch alert to Discord.
-- Relay failure modes other than a stopped service: tunnel loss, relay-host
-  outage, and provider-side failure.
+- A prolonged relay-host stop that releases the cloud host allocation, and
+  provider-side failures. A stopped relay service, tunnel loss, and a
+  relay-host reset were exercised on 2026-10-20 and 2026-10-21.
 - Whether MediaMTX reconnects a dropped forward without the keeper.
 - Why YouTube has intermittently reported `bitrateLow` warnings since the
   route change. Captures on 2026-10-21 showed that delivered media did not
