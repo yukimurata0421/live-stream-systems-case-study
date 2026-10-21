@@ -129,6 +129,31 @@ class Keeper:
         return {'phase': self.phase, 'last_renewal_date': self.last_renewal_date, 'old_stream_id': self.old_stream_id}
 
 
+def configured_dests(path_config) -> list | None:
+    """Destinations of the path's forward list, in order. None if the shape is unexpected."""
+    forward = path_config.get('forward') if isinstance(path_config, dict) else None
+    if not isinstance(forward, list):
+        return None
+    return [str((f or {}).get('dest') or '') for f in forward]
+
+
+def reconcile(read_config, patch, target: list) -> str:
+    """Bring MediaMTX's actual forward config to target, then read it back to confirm.
+
+    'in_sync' (nothing to do), 'patched' (changed and confirmed), 'unconfirmed' (still different after the
+    patch), or 'failed' (the patch request failed). Anything but the first two is retried next cycle. Keeper
+    state is the desired state; the actual state is compared on every cycle.
+    """
+    want = [d['dest'] for d in target]
+    if configured_dests(read_config()) == want:
+        return 'in_sync'
+    try:
+        patch(target)
+    except Exception:
+        return 'failed'
+    return 'patched' if configured_dests(read_config()) == want else 'unconfirmed'
+
+
 def api(path: str, body: dict | None = None):
     data = None if body is None else json.dumps(body).encode()
     req = urllib.request.Request(API + path, data=data, headers={'Content-Type': 'application/json'})
@@ -180,9 +205,8 @@ def main():
         saved = json.loads(state_file.read_text())
         keeper.last_renewal_date = saved.get('last_renewal_date', '')
         if saved.get('phase') in ('WAIT_OFFLINE', 'VERIFY'):
-            # Restarted mid-renewal: put Twitch back and verify from there.
+            # Restarted mid-renewal: put Twitch back (via the reconciliation below) and verify from there.
             keeper.phase, keeper.phase_at, keeper.old_stream_id = 'VERIFY', time.monotonic(), saved.get('old_stream_id', '')
-            api(f'/v3/config/paths/patch/{PATH}', {'forward': keeper.apply(keeper.desired())})
     log('keeper_started', forwards=len(destinations), last_renewal_date=keeper.last_renewal_date)
     next_helix, twitch = 0.0, {'status': 'UNKNOWN', 'stream_id': '', 'started_at': None}
     while True:
@@ -200,14 +224,20 @@ def main():
             next_helix = now + (10 if keeper.phase != 'IDLE' else 60)
         change = keeper.renewal(now, datetime.now(timezone.utc), ready, twitch)
         if change is None and keeper.phase == 'IDLE':
-            change = keeper.heal(now, ready, items)
-        if change is not None:
-            try:
-                api(f'/v3/config/paths/patch/{PATH}', {'forward': change})
-                log('forward_patched', phase=keeper.phase, count=len(change), healed=keeper.removed is not None,
-                    twitch=twitch['status'], stream_id=twitch.get('stream_id', ''))
-            except Exception as error:
-                log('forward_patch_failed', error=type(error).__name__)
+            keeper.heal(now, ready, items)
+        elif keeper.removed is not None:
+            # A forward removed for healing must not stay removed once a renewal starts.
+            keeper.removed = None
+        target = keeper.desired()
+        try:
+            result = reconcile(lambda: api(f'/v3/config/paths/get/{PATH}'),
+                               lambda t: api(f'/v3/config/paths/patch/{PATH}', {'forward': t}), target)
+        except Exception as error:
+            result = 'unreadable'
+            log('forward_config_unreadable', error=type(error).__name__)
+        if result != 'in_sync':
+            log('forward_reconcile', result=result, phase=keeper.phase, count=len(target), healed=keeper.removed is not None,
+                twitch=twitch['status'], stream_id=twitch.get('stream_id', ''))
         state_file.write_text(json.dumps(keeper.to_state()))
         time.sleep(5)
 

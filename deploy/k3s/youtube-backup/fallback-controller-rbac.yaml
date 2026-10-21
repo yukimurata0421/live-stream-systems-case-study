@@ -1,0 +1,46 @@
+# Least privilege for the encoder host's fallback controller (2026-10-21).
+# It may only get and scale the one fallback Deployment: no other Deployment, Pod, exec, or Secret.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: stream-v3-fallback-controller
+  namespace: stream-v3
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: stream-v3-fallback-controller
+  namespace: stream-v3
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    resourceNames: ["stream-v3-youtube-backup"]
+    verbs: ["get"]
+  - apiGroups: ["apps"]
+    resources: ["deployments/scale"]
+    resourceNames: ["stream-v3-youtube-backup"]
+    verbs: ["get", "patch", "update"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: stream-v3-fallback-controller
+  namespace: stream-v3
+subjects:
+  - kind: ServiceAccount
+    name: stream-v3-fallback-controller
+    namespace: stream-v3
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: stream-v3-fallback-controller
+---
+# Long-lived token for the resident controller; it carries only this ServiceAccount's permissions.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: stream-v3-fallback-controller-token
+  namespace: stream-v3
+  annotations:
+    kubernetes.io/service-account.name: stream-v3-fallback-controller
+type: kubernetes.io/service-account-token

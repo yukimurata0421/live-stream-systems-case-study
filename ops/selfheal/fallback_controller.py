@@ -9,15 +9,13 @@ it start a fallback Deployment that sends directly to the YouTube backup ingest.
 - After 30 seconds of continuous failure, the fallback is scaled 0 -> 1.
 - While the fallback runs, 300 seconds of continuous relay health scale it 1 -> 0 (back to one upload).
 It does not depend on the monitoring host. The fallback stops only after continuous health.
-While the fallback runs, the TCP bytes_acked of its ffmpeg are sampled and written to the Deployment
-annotation `stream-v3.io/fallback-upload`, which the public projection reads. Annotating a Deployment
-does not restart its Pods.
+Its only Kubernetes permissions are getting and scaling the fallback Deployment (since 2026-10-21); the
+fallback upload rate is sampled by the public relay projection on the monitoring host instead.
 """
 from __future__ import annotations
 
 import json
 import os
-import re
 import subprocess
 import sys
 import time
@@ -105,34 +103,6 @@ def observe() -> dict | None:
                                                  'outbound': int(yt.get('outboundBytes') or 0)}}
 
 
-ANNOTATION = 'stream-v3.io/fallback-upload'
-
-
-def upload_rate(previous: dict | None, current: dict | None) -> float | None:
-    """Mbps from two samples of the same Pod; None after a Pod change or a counter reset."""
-    if not previous or not current or previous['pod'] != current['pod']:
-        return None
-    seconds = current['at'] - previous['at']
-    delta = current['bytes'] - previous['bytes']
-    if seconds <= 0 or delta < 0:
-        return None
-    return round(delta * 8 / seconds / 1e6, 3)
-
-
-def fallback_sample() -> dict | None:
-    """Bytes acknowledged on the fallback ffmpeg's :443 connection, or None."""
-    try:
-        pod = kubectl('get', 'pod', '-l', 'app.kubernetes.io/name=' + FALLBACK, '--field-selector=status.phase=Running',
-                      '-o', 'jsonpath={.items[0].metadata.name}').strip()
-        if not pod:
-            return None
-        out = kubectl('exec', pod, '-c', 'stream-engine', '--', 'ss', '-tni', 'state', 'established', '( dport = :443 )')
-        acked = [int(x) for x in re.findall(r'bytes_acked:(\d+)', out)]
-        return {'pod': pod, 'bytes': max(acked), 'at': time.monotonic()} if acked else None
-    except Exception:
-        return None
-
-
 def kubectl(*args: str) -> str:
     return subprocess.run(['kubectl', '-n', NAMESPACE, *args], capture_output=True, text=True, timeout=20, check=True).stdout
 
@@ -154,8 +124,6 @@ def main():
     c = Controller()
     log('controller_started', fallback=FALLBACK, start_after=START_AFTER, stop_after=STOP_AFTER)
     previous_health = None
-    last_sample = None
-    annotated = None
     while True:
         now = time.monotonic()
         ok = c.healthy(observe())
@@ -171,24 +139,6 @@ def main():
                 log('fallback_' + action.lower(), replicas=target)
             except Exception as error:
                 log('fallback_scale_failed', action=action, error=type(error).__name__)
-        # Publish the fallback upload rate while it runs; remove the annotation when stopped.
-        if current and current >= 1:
-            sample = fallback_sample()
-            mbps = upload_rate(last_sample, sample)
-            last_sample = sample or last_sample
-            value = json.dumps({'mbps': mbps, 'observed_at': datetime.now(timezone.utc).isoformat()})
-            try:
-                kubectl('annotate', 'deploy', FALLBACK, '--overwrite', f'{ANNOTATION}={value}')
-                annotated = True
-            except Exception as error:
-                log('fallback_annotate_failed', error=type(error).__name__)
-        elif annotated is not False:
-            last_sample = None
-            try:
-                kubectl('annotate', 'deploy', FALLBACK, f'{ANNOTATION}-')
-                annotated = False
-            except Exception:
-                pass
         time.sleep(INTERVAL)
 
 

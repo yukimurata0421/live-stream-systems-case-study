@@ -1,17 +1,30 @@
-# Example unit for the encoder host. It scales the fallback Deployment; it needs kubectl access to the namespace.
+# Example unit for the encoder host. The kubeconfig holds a token for the ServiceAccount in fallback-controller-rbac.yaml.
 [Unit]
-Description=Start/stop direct YouTube fallback from relay path health (self-healing)
+Description=Start/stop direct YouTube fallback from OCI path health (self-healing)
 After=k3s.service wg-quick@wg-stream.service network-online.target
 StartLimitIntervalSec=0
 [Service]
 Type=simple
-Environment=KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+# No root and no cluster-admin kubeconfig: the ServiceAccount stream-v3-fallback-controller may only scale the fallback Deployment.
+DynamicUser=yes
+LoadCredential=kubeconfig:/etc/stream-v3-fallback-controller/kubeconfig
+Environment=KUBECONFIG=%d/kubeconfig
+Environment=HOME=/tmp
 Environment=OCI_MEDIAMTX_API=http://<relay-tunnel-address>:9997
 Environment=FALLBACK_DEPLOYMENT=stream-v3-youtube-backup
 ExecStart=/usr/bin/python3 -B /usr/local/libexec/stream-v3-fallback-controller.py
 Restart=always
 RestartSec=5
 CPUQuota=10%
-MemoryMax=64M
+MemoryMax=128M
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
 [Install]
 WantedBy=multi-user.target

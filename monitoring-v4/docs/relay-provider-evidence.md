@@ -40,9 +40,11 @@ Twitch renewal is in progress it reports that renewal's 00:00 JST as
 window; otherwise it reports the next 00:00 JST.
 
 `relay_public.py` adds `fallback`: whether the direct YouTube fallback is
-desired and ready, and, while it runs, its upload rate from a Deployment
-annotation no older than 120 seconds. Missing or stale values are null; the
-relay artifact is still printed.
+desired and ready, and, while it runs, its upload rate. Since 2026-10-21 it
+samples the fallback FFmpeg's acknowledged bytes itself and compares them with
+the previous call; a Pod change, counter reset, or interval outside 5 to 600
+seconds gives null. Missing values are null; the relay artifact is still
+printed.
 
 `twitch_alert_notify.py` reads firing Twitch alerts from the local Prometheus
 API and posts one Discord message when an alert starts, one per hour while it

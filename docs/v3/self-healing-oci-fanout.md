@@ -171,11 +171,37 @@ uplink. YouTube has reported intermittent `bitrateLow` warnings since the route
 change, which a drop in delivered media cannot explain; that cause is still
 open.
 
-While the fallback runs, the controller samples the fallback FFmpeg's
-acknowledged bytes every 15 seconds and writes the rate to a Deployment
-annotation. The public projection reads it and the status page shows both
-uploads and their total. This path has unit tests; its observation during a
-real fallback is tracked in [current status](../current-status.md).
+While the fallback runs, the public relay projection on the monitoring host
+samples the fallback FFmpeg's acknowledged bytes on each call and derives the
+rate from the previous call; the status page shows both uploads and their
+total. Until 2026-10-21 the controller sampled the rate itself and wrote it to a
+Deployment annotation, which needed exec permission it no longer has. This path
+has unit tests; its observation during a real fallback is tracked in
+[current status](../current-status.md).
+
+## Least privilege and confirmed state (2026-10-21)
+
+An external review raised three points, all confirmed and changed the same day.
+
+- The controller ran as root with the k3s admin kubeconfig, although its code
+  only scales one Deployment. It now runs as a systemd dynamic user with a
+  ServiceAccount whose Role allows only getting and scaling
+  `stream-v3-youtube-backup` by name
+  ([RBAC](../../deploy/k3s/youtube-backup/fallback-controller-rbac.yaml)).
+  Permission checks showed those two allowed and other Deployments, exec,
+  Secrets, and Pod deletion denied, and a real scale of the main Deployment was
+  refused.
+- The keeper advanced its own state before a forward change succeeded and
+  continued after a failed request. It now compares MediaMTX's actual forward
+  configuration with its desired list on every cycle, sends a change only on a
+  mismatch, and reads the configuration back to confirm it. A failed, ignored,
+  empty, partial, or malformed configuration is corrected on the next cycle.
+- The public fallback state is read on the monitoring host, while the fallback
+  Deployment runs on the encoder host's cluster. The monitoring host's
+  kubeconfig targets that cluster with a namespace-scoped ServiceAccount, so
+  the state comes from the right place. That account can still patch any
+  Deployment and exec into any Pod in the namespace, which is broader than
+  observation needs; narrowing it is open.
 
 ## Evidence boundaries
 

@@ -5,8 +5,8 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "ops/selfheal"))
-from fallback_controller import Controller, START_AFTER, STOP_AFTER, upload_rate, youtube_item  # noqa: E402
-from forward_keeper import Keeper, OFFLINE_MAX, OFFLINE_MIN, VERIFY_MAX, AGE_LIMIT  # noqa: E402
+from fallback_controller import Controller, START_AFTER, STOP_AFTER, youtube_item  # noqa: E402
+from forward_keeper import Keeper, OFFLINE_MAX, OFFLINE_MIN, VERIFY_MAX, AGE_LIMIT, reconcile  # noqa: E402
 
 YT = {'dest': 'rtmps://a.rtmps.youtube.com:443/live2#k'}
 TW = {'dest': 'rtmps://ingest.global-contribute.live-video.net:443/app#k'}
@@ -70,21 +70,6 @@ class FallbackTests(unittest.TestCase):
         self.assertIsNone(c.decide(1000, c.healthy(None), None))
 
 
-class FallbackUploadTests(unittest.TestCase):
-    def test_rate_from_two_samples_of_the_same_pod(self):
-        a = {'pod': 'p1', 'bytes': 0, 'at': 100.0}
-        b = {'pod': 'p1', 'bytes': 7_500_000, 'at': 115.0}
-        self.assertEqual(upload_rate(a, b), 4.0)
-
-    def test_no_rate_when_pod_changed_counter_reset_or_missing(self):
-        a = {'pod': 'p1', 'bytes': 5_000_000, 'at': 100.0}
-        self.assertIsNone(upload_rate(a, {'pod': 'p2', 'bytes': 9_000_000, 'at': 115.0}))
-        self.assertIsNone(upload_rate(a, {'pod': 'p1', 'bytes': 1_000, 'at': 115.0}))
-        self.assertIsNone(upload_rate(None, a))
-        self.assertIsNone(upload_rate(a, None))
-        self.assertIsNone(upload_rate(a, {'pod': 'p1', 'bytes': 6_000_000, 'at': 100.0}))
-
-
 class ProviderIdentityTests(unittest.TestCase):
     def test_youtube_is_found_by_host_wherever_it_sits(self):
         yt, tw = {'pos': 2, 'conf': YT}, {'pos': 1, 'conf': TW}
@@ -129,6 +114,52 @@ class HealTests(unittest.TestCase):
         k = Keeper([YT, TW])
         self.assertIsNone(k.heal(0, True, [{'pos': 1, 'state': 'idle'}, {'pos': 2, 'state': 'idle', 'conf': {'dest': 'rtmps://x/y'}}]))
         self.assertEqual(k.bad_since, {})
+
+
+class FakeMediaMTX:
+    """A MediaMTX stand-in holding only the forward config; it can fail or ignore a patch."""
+    def __init__(self, forward, *, fail=False, ignore=False):
+        self.forward, self.fail, self.ignore, self.patches = forward, fail, ignore, 0
+
+    def read(self):
+        return {'name': 'relay', 'forward': self.forward}
+
+    def patch(self, target):
+        self.patches += 1
+        if self.fail:
+            raise OSError('patch failed')
+        if not self.ignore:
+            self.forward = [dict(d) for d in target]
+
+
+class ReconcileTests(unittest.TestCase):
+    def test_in_sync_sends_nothing(self):
+        m = FakeMediaMTX([YT, TW])
+        self.assertEqual(reconcile(m.read, m.patch, [YT, TW]), 'in_sync')
+        self.assertEqual(m.patches, 0)
+
+    def test_patch_is_confirmed_by_reading_back(self):
+        m = FakeMediaMTX([YT, TW])
+        self.assertEqual(reconcile(m.read, m.patch, [YT]), 'patched')
+        self.assertEqual(m.forward, [YT])
+
+    def test_failed_patch_is_retried_on_the_next_cycle(self):
+        m = FakeMediaMTX([YT, TW], fail=True)
+        self.assertEqual(reconcile(m.read, m.patch, [YT]), 'failed')
+        self.assertEqual(m.forward, [YT, TW])          # nothing was actually removed
+        m.fail = False
+        self.assertEqual(reconcile(m.read, m.patch, [YT]), 'patched')
+
+    def test_accepted_but_not_applied_patch_is_unconfirmed(self):
+        m = FakeMediaMTX([YT, TW], ignore=True)
+        self.assertEqual(reconcile(m.read, m.patch, [YT]), 'unconfirmed')
+
+    def test_empty_missing_or_malformed_forward_lists_are_restored(self):
+        for actual in ([], [TW], [TW, YT], None, [{'dest': ''}]):
+            with self.subTest(actual=actual):
+                m = FakeMediaMTX(actual)
+                self.assertEqual(reconcile(m.read, m.patch, [YT, TW]), 'patched')
+                self.assertEqual(m.forward, [YT, TW])
 
 
 class RenewalTests(unittest.TestCase):

@@ -284,9 +284,9 @@
       "path": "monitoring-v4/docs/relay-provider-evidence.md",
       "source_role": "public-documentation",
       "decision": "curated-current-contract-and-dated-evidence",
-      "before_sha256": "a88f9c9761e54ae04ce5ab866766ac3ca392a1b41e23f31e8648b332b1798559",
+      "before_sha256": "2e03f832008b632eedc4a537c8e6917d396e96e5846497a4d84d62d7389c86c3",
       "source_sha256": null,
-      "public_sha256": "2e03f832008b632eedc4a537c8e6917d396e96e5846497a4d84d62d7389c86c3",
+      "public_sha256": "4f1722ee298a7343f5e4d137eab208b4e7ad760a35228167a3352b4423b8d144",
       "port_date_jst": "2026-10-20"
     },
     {
@@ -384,9 +384,9 @@
       "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/relay_public.py",
       "source_role": "development-monitoring",
       "decision": "adapted-english-and-portable-bindings",
-      "before_sha256": "cb28453cf6022fca2d5587c43cd98ebf1d52c0d8c4a2bc93414cda510322bcbb",
-      "source_sha256": "7bf4b88a339327e70cf08a4a941d8e1505c39c85746ed03338c2ee476931bea0",
-      "public_sha256": "3d8a5bc22f58331fc4b09e06ac43be012a27ca2961e2cd6b3b2bad943978df61",
+      "before_sha256": "3d8a5bc22f58331fc4b09e06ac43be012a27ca2961e2cd6b3b2bad943978df61",
+      "source_sha256": "ea7c30e2501192d3bf30e30ce2cd64c72db77430caf25882cab0274666032e36",
+      "public_sha256": "51d92cc5a5193aaa8b6a5af13c42b7afb3a19d607b8e97105598f0126d1c4066",
       "port_date_jst": "2026-10-20"
     },
     {
@@ -2673,27 +2673,27 @@
       "path": "ops/selfheal/forward_keeper.py",
       "source_role": "development-selfheal",
       "decision": "adapted-english-and-portable-bindings",
-      "before_sha256": "09f3479ebe4e5dc28db4aea61a56fa4d6be6fd9e41d41ebbb50ab3a11aebde90",
-      "source_sha256": "17a3f1495eeb66b79e9350e652f384366ea06cc0f28c2630b544e843d76631c7",
-      "public_sha256": "d3eed0d8c4d28abd911e2f99f96bdfb3520a37a76965721e10c5e9b2dd02a1b8",
+      "before_sha256": "d3eed0d8c4d28abd911e2f99f96bdfb3520a37a76965721e10c5e9b2dd02a1b8",
+      "source_sha256": "8b56d266d0be369333d7baf721e37cb826846ad792b8697df526623b1bbf53a8",
+      "public_sha256": "d8e48172f49ccbdcd9007b58407e2594ee17865ed46f20f2a317e4391938b2a3",
       "port_date_jst": "2026-10-20"
     },
     {
       "path": "ops/selfheal/fallback_controller.py",
       "source_role": "development-selfheal",
       "decision": "adapted-english-and-portable-bindings",
-      "before_sha256": "ddc5cfbe9e0b9df1b673a661fc27e7303c711cd1c3c174c34d6d24ed87eecbad",
-      "source_sha256": "05db27f34cb2ee62580c0b0edc1adf044023ae0803fc7044a7dd10f83a0e7c3e",
-      "public_sha256": "76b14c36c8cbd36e31bdcde67019b162df7ca33b44d604eb655a656449dcb1f4",
+      "before_sha256": "76b14c36c8cbd36e31bdcde67019b162df7ca33b44d604eb655a656449dcb1f4",
+      "source_sha256": "11ad7ae9532f17fe52a7bf101ebf14ec693328d17bff9cfac9e1937f26e9b0f8",
+      "public_sha256": "db9dbc93ffd953ae45c949153f66826f51916ea0661bde9adfd3659c53236cd4",
       "port_date_jst": "2026-10-20"
     },
     {
       "path": "tests/test_selfheal.py",
       "source_role": "development-selfheal",
       "decision": "adapted-english-and-portable-bindings",
-      "before_sha256": "f0208021f35052359cc77f64ff31648cf74c33e67559431f9aeac980c7b3a9e6",
-      "source_sha256": "1f71f09e5a084d3dfab50a576429ac184e2030de0bcad3864c5a3e138b5c9c87",
-      "public_sha256": "1577e9029d95ea7230c567f636f4888d30b4128af23a7d58d945d60e7d15ec36",
+      "before_sha256": "1577e9029d95ea7230c567f636f4888d30b4128af23a7d58d945d60e7d15ec36",
+      "source_sha256": "b6cf3c4e2442ddc206a1b2187ab9626b40837d9e604b85ce678dc70a3793034c",
+      "public_sha256": "95bf33c048a1c4f7a13e8fb9c9d81ca6c61f4ff8e140598eddcf3c25a35addc3",
       "port_date_jst": "2026-10-20"
     },
     {
@@ -2727,18 +2727,18 @@
       "path": "ops/selfheal/systemd/stream-v3-fallback-controller.service",
       "source_role": "development-selfheal",
       "decision": "adapted-english-and-portable-bindings",
-      "before_sha256": null,
-      "source_sha256": "327fcb2926ab0d4c6cce17090be62a96ebe4ca405429759ce0096d808584b953",
-      "public_sha256": "7f40f57fb9004b12971719f0cbc0a4248b7f86995021beb8b896fec02f1ee7e0",
+      "before_sha256": "7f40f57fb9004b12971719f0cbc0a4248b7f86995021beb8b896fec02f1ee7e0",
+      "source_sha256": "9a843169a855dbf9b248986a41682c25d4ce9b6d3785582193ce5e9ef922ec39",
+      "public_sha256": "6916469ea22cb649269f8dbc2482eecfe390dc18fea32d4e7801f7f429171232",
       "port_date_jst": "2026-10-20"
     },
     {
       "path": "docs/v3/self-healing-oci-fanout.md",
       "source_role": "public-documentation",
       "decision": "curated-current-contract-and-dated-evidence",
-      "before_sha256": "48d29358844e168562269cc89c40934c5b66c3a45470ae3b55862c298e378094",
+      "before_sha256": "e09e97cee9f0eb327c57e89e361f2c894b4fee9c307fa1c376e0bfb338fea3d9",
       "source_sha256": null,
-      "public_sha256": "e09e97cee9f0eb327c57e89e361f2c894b4fee9c307fa1c376e0bfb338fea3d9",
+      "public_sha256": "a3648bd40ca9bf425468870bdf68641cb6d9c18539cdf94bf8e6b314e60cc38d",
       "port_date_jst": "2026-10-20",
       "pre_documentation_restructure_sha256": "6ff062e19bdb420d125e2559e7f0f647f960374cf35794f18be82db7ce190be4",
       "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json."
@@ -2888,6 +2888,24 @@
       "before_sha256": "db1d239fa9b46d20aabc42ee5fce9fc6e2676df4108634b63ddcbd064c04df0f",
       "source_sha256": null,
       "public_sha256": "c1bc9753087d91372b53bcee9fa46cdc2fb8daedc44934aa62f6eb261992f924",
+      "port_date_jst": "2026-10-20"
+    },
+    {
+      "path": "deploy/k3s/youtube-backup/fallback-controller-rbac.yaml",
+      "source_role": "development-selfheal",
+      "decision": "adapted-english-and-portable-bindings",
+      "before_sha256": null,
+      "source_sha256": "8ae2c4fe82aae1390f578525dc25f3535894addd8cc250756a3d7f64a069868f",
+      "public_sha256": "73bfd301988b29c42eb3bb457516c0b485b465eb3ebd062c3009886130501a48",
+      "port_date_jst": "2026-10-20"
+    },
+    {
+      "path": "monitoring-v4/tests/test_relay_public.py",
+      "source_role": "development-monitoring",
+      "decision": "adapted-english-and-portable-bindings",
+      "before_sha256": "96214409162670614f1d90388ef89229fa3a3d328a6398e3d68b5984c7de5235",
+      "source_sha256": "705b5fa0af4ad1bb34bd07e3611c016ce8f6cad934ae5f275f5e24ae7032a923",
+      "public_sha256": "ff56e25780157cd258b569256668b200e52f6a4c87c1f803e346589ae5562b28",
       "port_date_jst": "2026-10-20"
     }
   ],
