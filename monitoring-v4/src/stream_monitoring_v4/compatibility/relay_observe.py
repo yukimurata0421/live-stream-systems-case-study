@@ -11,6 +11,7 @@ import subprocess
 import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from urllib.parse import urlsplit
 from urllib.request import build_opener, ProxyHandler
 
 API = 'http://127.0.0.1:9997'
@@ -32,6 +33,15 @@ def api(path):
 def counters():
     values = [int(x) for x in Path('/proc/stat').read_text().splitlines()[0].split()[1:9]]
     return sum(values), values[3]+values[4]
+
+
+def provider(item):
+    host = urlsplit(str((item.get('conf') or {}).get('dest') or '')).hostname or ''
+    if host == 'youtube.com' or host.endswith('.youtube.com'):
+        return 'youtube'
+    if host.endswith('.live-video.net') or host.endswith('.twitch.tv'):
+        return 'twitch'
+    return None
 
 
 def renewal_time(now, phase):
@@ -68,8 +78,10 @@ def observe():
         result['input'] = {'available': True, 'ready': path['ready'] is True, 'bytes': inbound,
                            'connection_id': path['source']['id'] if path.get('source') else None}
         rows = api('/v3/paths/forward-dests/list?path=relay')['items']
-        for pos, name in [(1, 'youtube'), (2, 'twitch')]:
-            matches = [x for x in rows if x['pos'] == pos]
+        for name in ('youtube', 'twitch'):
+            # Match by destination host, not position: positions shift when the keeper removes a forward.
+            # The destination itself is never emitted.
+            matches = [x for x in rows if provider(x) == name]
             if len(matches) != 1:
                 continue
             x = matches[0]

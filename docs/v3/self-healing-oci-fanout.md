@@ -68,6 +68,13 @@ while its outbound counter advances. An unreachable API or a missing sample
 counts as unhealthy. The controller only stops the fallback after continuous
 health; it never stops it because an observation is missing.
 
+The YouTube forward is identified by the host of its own destination, not by
+its position in the forward list. Until 2026-10-21 the controller, keeper, and
+observer took position 1 as YouTube. While the keeper had removed a failing
+YouTube forward, Twitch moved to position 1, and its advancing counters could be
+read as YouTube health and delay the fallback. A missing or duplicated YouTube
+forward now counts as unhealthy.
+
 The monitoring host is not in this control loop. If monitoring is down, the
 relay, keeper, and fallback controller still act on their own observations.
 

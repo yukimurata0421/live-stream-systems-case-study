@@ -375,9 +375,9 @@
       "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/relay_observe.py",
       "source_role": "development-monitoring",
       "decision": "adapted-english-and-portable-bindings",
-      "before_sha256": "f62c2292d4f517af5db2367d6d2c96b50f00f5054af388299a2a50d04bc79b64",
-      "source_sha256": "b63021b478e460b97119b389a2364a064eefc650e9e738b3a255dedbb1914015",
-      "public_sha256": "13aeda4786d302d4f2c973acedf59d74c71d05f7ac45db3bcfd3db21fed6eb3d",
+      "before_sha256": "13aeda4786d302d4f2c973acedf59d74c71d05f7ac45db3bcfd3db21fed6eb3d",
+      "source_sha256": "39fd5905bff5372642ce64ba98a00d5f8ca5ccf051f8bbb784fbb685a583a652",
+      "public_sha256": "0e2849c4ec687497a6ab00dd53874ddb58e91b05b6215592d6df83c66392c960",
       "port_date_jst": "2026-10-20"
     },
     {
@@ -2673,27 +2673,27 @@
       "path": "ops/selfheal/forward_keeper.py",
       "source_role": "development-selfheal",
       "decision": "adapted-english-and-portable-bindings",
-      "before_sha256": null,
-      "source_sha256": "33255f6fd3631f5024221b8cb2948384ccdb5a83f7fae878e0c56e7680f08708",
-      "public_sha256": "09f3479ebe4e5dc28db4aea61a56fa4d6be6fd9e41d41ebbb50ab3a11aebde90",
+      "before_sha256": "09f3479ebe4e5dc28db4aea61a56fa4d6be6fd9e41d41ebbb50ab3a11aebde90",
+      "source_sha256": "17a3f1495eeb66b79e9350e652f384366ea06cc0f28c2630b544e843d76631c7",
+      "public_sha256": "d3eed0d8c4d28abd911e2f99f96bdfb3520a37a76965721e10c5e9b2dd02a1b8",
       "port_date_jst": "2026-10-20"
     },
     {
       "path": "ops/selfheal/fallback_controller.py",
       "source_role": "development-selfheal",
       "decision": "adapted-english-and-portable-bindings",
-      "before_sha256": null,
-      "source_sha256": "d9e92d5c7180bcd1d80f70d1f75d0b13dd71ab3812c0c81631243c317c565ddc",
-      "public_sha256": "ddc5cfbe9e0b9df1b673a661fc27e7303c711cd1c3c174c34d6d24ed87eecbad",
+      "before_sha256": "ddc5cfbe9e0b9df1b673a661fc27e7303c711cd1c3c174c34d6d24ed87eecbad",
+      "source_sha256": "05db27f34cb2ee62580c0b0edc1adf044023ae0803fc7044a7dd10f83a0e7c3e",
+      "public_sha256": "76b14c36c8cbd36e31bdcde67019b162df7ca33b44d604eb655a656449dcb1f4",
       "port_date_jst": "2026-10-20"
     },
     {
       "path": "tests/test_selfheal.py",
       "source_role": "development-selfheal",
       "decision": "adapted-english-and-portable-bindings",
-      "before_sha256": null,
-      "source_sha256": "14619564de00155ca1a2ad8047d15833ed58aabeb03a8d1c61f233157828af3f",
-      "public_sha256": "f0208021f35052359cc77f64ff31648cf74c33e67559431f9aeac980c7b3a9e6",
+      "before_sha256": "f0208021f35052359cc77f64ff31648cf74c33e67559431f9aeac980c7b3a9e6",
+      "source_sha256": "1f71f09e5a084d3dfab50a576429ac184e2030de0bcad3864c5a3e138b5c9c87",
+      "public_sha256": "1577e9029d95ea7230c567f636f4888d30b4128af23a7d58d945d60e7d15ec36",
       "port_date_jst": "2026-10-20"
     },
     {
@@ -2736,9 +2736,9 @@
       "path": "docs/v3/self-healing-oci-fanout.md",
       "source_role": "public-documentation",
       "decision": "curated-current-contract-and-dated-evidence",
-      "before_sha256": "dbcc507a4abc4f11ee2de44989e824b316ec23ab67a93f27a8dd601042204249",
+      "before_sha256": "48d29358844e168562269cc89c40934c5b66c3a45470ae3b55862c298e378094",
       "source_sha256": null,
-      "public_sha256": "48d29358844e168562269cc89c40934c5b66c3a45470ae3b55862c298e378094",
+      "public_sha256": "e09e97cee9f0eb327c57e89e361f2c894b4fee9c307fa1c376e0bfb338fea3d9",
       "port_date_jst": "2026-10-20",
       "pre_documentation_restructure_sha256": "6ff062e19bdb420d125e2559e7f0f647f960374cf35794f18be82db7ce190be4",
       "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json."
@@ -2785,9 +2785,9 @@
       "path": "monitoring-v4/tests/test_relay_observe.py",
       "source_role": "development-monitoring",
       "decision": "adapted-english-and-portable-bindings",
-      "before_sha256": null,
+      "before_sha256": "14cfd3988b630a1abb522dbde855b06b672cb3f563803a37574364aee881743c",
       "source_sha256": null,
-      "public_sha256": "14cfd3988b630a1abb522dbde855b06b672cb3f563803a37574364aee881743c",
+      "public_sha256": "592beff9b3bca18f4c45a2eec16b3007bedbb2a86ee38a2ff4420af209a3b4ff",
       "port_date_jst": "2026-10-20"
     },
     {

@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "ops/selfheal"))
-from fallback_controller import Controller, START_AFTER, STOP_AFTER, upload_rate  # noqa: E402
+from fallback_controller import Controller, START_AFTER, STOP_AFTER, upload_rate, youtube_item  # noqa: E402
 from forward_keeper import Keeper, OFFLINE_MAX, OFFLINE_MIN, VERIFY_MAX, AGE_LIMIT  # noqa: E402
 
 YT = {'dest': 'rtmps://a.rtmps.youtube.com:443/live2#k'}
@@ -85,10 +85,25 @@ class FallbackUploadTests(unittest.TestCase):
         self.assertIsNone(upload_rate(a, {'pod': 'p1', 'bytes': 6_000_000, 'at': 100.0}))
 
 
+class ProviderIdentityTests(unittest.TestCase):
+    def test_youtube_is_found_by_host_wherever_it_sits(self):
+        yt, tw = {'pos': 2, 'conf': YT}, {'pos': 1, 'conf': TW}
+        self.assertIs(youtube_item([tw, yt]), yt)
+
+    def test_twitch_in_first_position_is_not_taken_for_youtube(self):
+        self.assertIsNone(youtube_item([{'pos': 1, 'state': 'forwarding', 'outboundBytes': 9, 'conf': TW}]))
+
+    def test_missing_or_ambiguous_youtube_is_unknown(self):
+        self.assertIsNone(youtube_item([{'pos': 1}]))
+        self.assertIsNone(youtube_item([{'pos': 1, 'conf': YT}, {'pos': 2, 'conf': YT}]))
+        self.assertIsNone(youtube_item([{'pos': 1, 'conf': {'dest': 'rtmps://evil.example/youtube.com#k'}}]))
+
+
+
 class HealTests(unittest.TestCase):
     def test_removes_failing_destination_then_restores_it(self):
         k = Keeper([YT, TW])
-        bad = [{'pos': 1, 'state': 'forwarding'}, {'pos': 2, 'state': 'idle', 'lastError': 'x'}]
+        bad = [{'pos': 1, 'state': 'forwarding', 'conf': YT}, {'pos': 2, 'state': 'idle', 'lastError': 'x', 'conf': TW}]
         self.assertIsNone(k.heal(0, True, bad))
         self.assertEqual(k.heal(30, True, bad), [YT])
         self.assertEqual(k.heal(35, True, []), [YT, TW])
@@ -99,8 +114,21 @@ class HealTests(unittest.TestCase):
 
     def test_no_input_is_not_a_forward_failure(self):
         k = Keeper([YT, TW])
-        self.assertIsNone(k.heal(0, False, [{'pos': 1, 'state': 'idle'}]))
-        self.assertIsNone(k.heal(100, False, [{'pos': 1, 'state': 'idle'}]))
+        self.assertIsNone(k.heal(0, False, [{'pos': 1, 'state': 'idle', 'conf': YT}]))
+        self.assertIsNone(k.heal(100, False, [{'pos': 1, 'state': 'idle', 'conf': YT}]))
+
+    def test_destination_is_matched_by_its_own_dest_not_by_position(self):
+        # Right after YouTube is removed, Twitch sits at pos 1; its failure must not count against YouTube.
+        k = Keeper([YT, TW])
+        shifted = [{'pos': 1, 'state': 'idle', 'lastError': 'x', 'conf': TW}]
+        k.heal(0, True, shifted)
+        self.assertEqual(set(k.bad_since), {TW['dest']})
+        self.assertEqual(k.heal(30, True, shifted), [YT])
+
+    def test_items_without_a_configured_dest_are_ignored(self):
+        k = Keeper([YT, TW])
+        self.assertIsNone(k.heal(0, True, [{'pos': 1, 'state': 'idle'}, {'pos': 2, 'state': 'idle', 'conf': {'dest': 'rtmps://x/y'}}]))
+        self.assertEqual(k.bad_since, {})
 
 
 class RenewalTests(unittest.TestCase):

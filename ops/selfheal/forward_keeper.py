@@ -75,12 +75,12 @@ class Keeper:
         if not ready:
             self.bad_since.clear()
             return None
+        configured = {d['dest'] for d in self.destinations}
         for item in items:
-            # forward-dests items carry no URL; map them to the applied list by 1-based pos.
-            pos = item.get('pos')
-            if not isinstance(pos, int) or not 1 <= pos <= len(self.current):
+            # Match each item by its own destination (conf.dest); positions shift after a forward is removed.
+            dest = (item.get('conf') or {}).get('dest')
+            if dest not in configured:
                 continue
-            dest = self.current[pos - 1]['dest']
             ok = item.get('state') == 'forwarding' and not item.get('lastError')
             if ok:
                 self.bad_since.pop(dest, None)

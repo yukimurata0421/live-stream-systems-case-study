@@ -21,6 +21,7 @@ import re
 import subprocess
 import sys
 import time
+import urllib.parse
 import urllib.request
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -73,13 +74,32 @@ def get(path: str):
         return json.load(r)
 
 
+def provider(item: dict) -> str | None:
+    """Provider of a forward item from its destination host. The destination (with its key) is never returned or logged."""
+    host = urllib.parse.urlsplit(str((item.get('conf') or {}).get('dest') or '')).hostname or ''
+    if host == 'youtube.com' or host.endswith('.youtube.com'):
+        return 'youtube'
+    if host.endswith('.live-video.net') or host.endswith('.twitch.tv'):
+        return 'twitch'
+    return None
+
+
+def youtube_item(items: list) -> dict | None:
+    """The YouTube forward if exactly one exists. List position is not used.
+
+    When the keeper removes a failing forward, the remaining one shifts to pos 1.
+    """
+    matches = [i for i in items if provider(i) == 'youtube']
+    return matches[0] if len(matches) == 1 else None
+
+
 def observe() -> dict | None:
     try:
         path = get('/v3/paths/get/relay')
         items = get('/v3/paths/forward-dests/list?path=relay').get('items', [])
     except Exception:
         return None
-    yt = next((i for i in items if i.get('pos') == 1), None)  # forward 1 = YouTube primary
+    yt = youtube_item(items)
     return {'ready': bool(path.get('ready')), 'bytes_received': int(path.get('bytesReceived') or path.get('inboundBytes') or 0),
             'youtube': None if yt is None else {'state': yt.get('state'), 'error': bool(yt.get('lastError')),
                                                  'outbound': int(yt.get('outboundBytes') or 0)}}
