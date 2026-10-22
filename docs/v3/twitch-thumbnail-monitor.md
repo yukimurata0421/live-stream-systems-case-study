@@ -78,8 +78,8 @@ the existing OCR enlargement. At least one original reading must already have
 confidence 70; every parseable original value, including a low-confidence one,
 must remain unchanged. An originally inconsistent nine-hour pair is never
 repaired by choosing transformed results. Both retry confidences must still be
-at least 70. The 15-second cycle deadline and at most eight OCR calls apply. UTC maps to the
-nearest day; future or regressing readings remain uncertain. A persisted numeric
+at least 70. The 15-second cycle deadline and at most eight OCR calls apply.
+UTC maps to the nearest day; future or regressing readings remain uncertain. A persisted numeric
 anchor survives capture/OCR errors and worker restart. It is not a saved image.
 
 | Result | Meaning |
@@ -186,7 +186,7 @@ name and are not installed by copying this checkout.
 ```bash
 PYTHONDONTWRITEBYTECODE=1 OMP_THREAD_LIMIT=1 python3 -m pytest -q -p no:cacheprovider \
   tests/test_twitch_thumbnail.py tests/test_twitch_thumbnail_evidence.py \
-+  tests/test_clock_observation_alerts.py
+  tests/test_clock_observation_alerts.py
 promtool test rules ops/monitoring/prometheus/tests/twitch_thumbnail.yml
 ```
 

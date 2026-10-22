@@ -44,7 +44,8 @@
       "same_failure_ids": true,
       "cause": "Five tests require untracked probe/ADSB helper scripts absent from committed HEAD; one expects legacy v2 support absent from the frozen exporter. These files are outside this port."
     },
-    "initial_command_correction": "The API-compatibility test exists only in the public repository. A private command included that absent path and collected no tests; it was corrected without source changes."
+    "initial_command_correction": "The API-compatibility test exists only in the public repository. A private command included that absent path and collected no tests; it was corrected without source changes.",
+    "public_documented_pytest_command": "84 passed in 1.34s"
   },
   "files": [
     {
@@ -107,7 +108,7 @@
       "path": "docs/v3/twitch-thumbnail-monitor.md",
       "before_sha256": "a941e0189515220a31aa989ab6f0290290183dcfb269a4d8de68e6661f668f88",
       "source_sha256": null,
-      "public_sha256": "e1799ededfebf67525624871b82025858356b6bf9946372b23ff79205349f9e8",
+      "public_sha256": "12f99afa78a4f80bff590fe6298d32f5e755c56ab80007ada1797b0c2046cabe",
       "source_role": "public-documentation-or-configuration",
       "decision": "Additional conservative OCR, bounded ROI evidence and diagnostics; existing public bindings; source port only."
     },
