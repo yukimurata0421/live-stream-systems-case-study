@@ -362,10 +362,12 @@
     {
       "path": "monitoring-v4/pyproject.toml",
       "source_role": "public-ci",
-      "decision": "declare-mixed-test-runner-dependency",
+      "decision": "Declare schema test dependency and retain the five clock observation warnings in the monitored surface.",
       "before_sha256": "c8e84afbe38c2f976fd8e501154fa234ac18a2a91261885afab202f27d742432",
       "source_sha256": null,
-      "public_sha256": "dc4ced58a94a6009dbc77c9c654406617e8633065fc6dc0f2f29b8aa03b07ccb"
+      "public_sha256": "3505908dfb73a9cd26ff78cc86a8a18b9f796c7e98d6b3c6909be4c710efc89e",
+      "pre_monitoring_ci_repair_public_sha256": "dc4ced58a94a6009dbc77c9c654406617e8633065fc6dc0f2f29b8aa03b07ccb",
+      "port_date_jst": "2026-10-22"
     },
     {
       "path": "monitoring-v4/src/stream_contracts/monitoring_v4/__init__.py",
@@ -3653,6 +3655,26 @@
       "port_date_jst": "2026-10-22",
       "pre_clock_documentation_review_public_sha256": null,
       "clock_documentation_review": "2026-10-22 observation-layer table, clock case study and current-status consolidation; no code or runtime change."
+    },
+    {
+      "path": "monitoring-v4/config/monitoring_v4_legacy_surface_contract.json",
+      "source_role": "public-ci",
+      "source_sha256": null,
+      "before_sha256": "de409abff3c3c7b1eb1bfd1c1e109162fb3293095cce8399f518592ccc79ceb0",
+      "pre_monitoring_ci_repair_public_sha256": "de409abff3c3c7b1eb1bfd1c1e109162fb3293095cce8399f518592ccc79ceb0",
+      "public_sha256": "46623169298d3c1092edb12cd08109a2542d91ce76afafceeb93c5341e77f7e4",
+      "decision": "Declare schema test dependency and retain the five clock observation warnings in the monitored surface.",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "monitoring-v4/tests/test_legacy_surface_inventory.py",
+      "source_role": "public-ci",
+      "source_sha256": null,
+      "before_sha256": "365ba61545cf22f474d5a59b3004b6f1007d0cc5aca053008aae400b9fb772bf",
+      "pre_monitoring_ci_repair_public_sha256": "365ba61545cf22f474d5a59b3004b6f1007d0cc5aca053008aae400b9fb772bf",
+      "public_sha256": "54421f909a3591bc4aa481dc1046519fc37006db0a4d7aea6e5c394ca4038189",
+      "decision": "Declare schema test dependency and retain the five clock observation warnings in the monitored surface.",
+      "port_date_jst": "2026-10-22"
     }
   ],
   "omissions": [
@@ -3819,5 +3841,23 @@
     "date_jst": "2026-10-22",
     "deployment_performed": false,
     "runtime_changed": false
+  },
+  "monitoring_ci_repair": {
+    "date_jst": "2026-10-22",
+    "base_public_commit": "413af7e73ac72a5d686d9eb822807cd70e7b5d95",
+    "failed_run": "https://github.com/yukimurata0421/live-stream-systems-case-study/actions/runs/39719259975",
+    "causes": [
+      "Five clock observation warnings were absent from the retained v3 alert inventory.",
+      "Monitoring v4 test extras did not install jsonschema for the diagnostic evidence schema test."
+    ],
+    "validation": {
+      "local_python": "3.14.4",
+      "monitoring_tests_passed": 505,
+      "monitoring_tests_skipped": 6,
+      "skips": "Existing opt-in PostgreSQL integration tests.",
+      "local_initial_failure": "The first local full run had one adapter rejection. The isolated fixture and full rerun passed; no runtime scheduler code changed."
+    },
+    "production_changed": false,
+    "runtime_code_changed": false
   }
 }

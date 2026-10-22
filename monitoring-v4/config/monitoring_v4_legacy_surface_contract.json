@@ -55,7 +55,12 @@
       "StreamV3ViewerSyntheticSampleMissingOrStale",
       "StreamV3ViewerSyntheticVisualFailure",
       "StreamV3YouTubeApiBurnRateActive",
-      "StreamV3YouTubeWatchdogUnhealthy"
+      "StreamV3YouTubeWatchdogUnhealthy",
+      "TwitchThumbnailObservationUnavailable",
+      "TwitchThumbnailStale",
+      "TwitchThumbnailWorkerUnavailable",
+      "ViewerClockObservationUnavailable",
+      "ViewerClockObserverUnavailable"
     ],
     "diagnostic_only": [],
     "retired": []

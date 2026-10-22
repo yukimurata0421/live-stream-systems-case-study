@@ -37,11 +37,11 @@ class LegacySurfaceInventoryTests(unittest.TestCase):
             ),
         )
 
-        self.assertTrue(report["static_ok"])
+        self.assertTrue(report["static_ok"], report)
         self.assertFalse(report["cutover_ready"])
-        self.assertEqual(report["alert_count"], 37)
+        self.assertEqual(report["alert_count"], 42)
         self.assertEqual(report["incident_template_count"], 30)
-        self.assertEqual(report["retained_v3_count"], 67)
+        self.assertEqual(report["retained_v3_count"], 72)
         self.assertEqual(report["missing_alerts"], [])
         self.assertEqual(report["unexpected_alerts"], [])
         self.assertEqual(report["missing_incident_templates"], [])
