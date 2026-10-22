@@ -939,10 +939,10 @@
     {
       "path": "recovery-control/README.md",
       "source_role": "public-documentation",
-      "decision": "add local reflex update and port-record link with subproject-relative paths",
-      "before_sha256": "56351763a942b4269fbd3864c885322ea8086e23ff29bb5e2aa3539c0cb7982e",
+      "decision": "state the 2026-10-22 local reflex revision against the earlier CRA rationale",
+      "before_sha256": "08e41df8bece7eace8ddf3b6f01f30cc03451b045bd8b7cbe2fca4c6407bd378",
       "source_sha256": null,
-      "public_sha256": "08e41df8bece7eace8ddf3b6f01f30cc03451b045bd8b7cbe2fca4c6407bd378",
+      "public_sha256": "1921fec43be14f8d43f3a58ea37c04f3b4750cfa362b84b229a8348c2931b1aa",
       "port_date_jst": "2026-10-22"
     },
     {
@@ -972,10 +972,10 @@
     {
       "path": "recovery-control/docs/00_INDEX.md",
       "source_role": "public-documentation",
-      "decision": "add index entry",
-      "before_sha256": "d53819f010f58f3fbcbb5f758ce68cb2d9f5c335c25c0cc0752920f065406394",
+      "decision": "state the 2026-10-22 local reflex revision against the earlier CRA rationale",
+      "before_sha256": "308d1be005d42e8bba37ef4c542272e6b700a5c0d84ec2a187526e8951550919",
       "source_sha256": null,
-      "public_sha256": "308d1be005d42e8bba37ef4c542272e6b700a5c0d84ec2a187526e8951550919",
+      "public_sha256": "6957eb9499bba90552c1b9f986ec80dfe05813d45c862524fa16edf6ece95e47",
       "prior_public_sha256": "c936259ad68b3d3802caac9deb84f893ba453c5129650a4485522eb2afe8da98",
       "localization": "English prose; control structures and machine identifiers preserved.",
       "before_unicode_source_sha256": "78957f166d15b800f5c88e8ef691af40e4642ef50c8d0df5520891325366ba92",
@@ -2829,10 +2829,10 @@
     {
       "path": "docs/design-decisions-for-review.md",
       "source_role": "public-documentation",
-      "decision": "curated-current-contract-and-dated-evidence",
-      "before_sha256": "01eff163ba4de9480c1a8b8fe740b98751b7e751dac0b71f375360e8b4265c41",
+      "decision": "state the 2026-10-22 local reflex revision against the earlier CRA rationale",
+      "before_sha256": "3d53842818d5b5f7edf48217b9e9d47ca07918644f151ddf519ee492a3a0e238",
       "source_sha256": null,
-      "public_sha256": "3d53842818d5b5f7edf48217b9e9d47ca07918644f151ddf519ee492a3a0e238",
+      "public_sha256": "6dd313e4db16182f4d2194963fdea1841da5ad9bc1fe45b8ddb5806df6766e1b",
       "port_date_jst": "2026-10-22",
       "pre_documentation_restructure_sha256": "fdda563dc1d60d8b4bae0097ddf03f65e09ca4e594e397af5976808af0f57403",
       "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json."
@@ -3755,10 +3755,10 @@
     {
       "path": "docs/evolution.md",
       "source_role": "public-documentation",
-      "decision": "curated-current-contract-and-dated-evidence",
-      "before_sha256": "c1393fdb6b14c710ecbe859b0762a643f0ea973c1e3f00d32d6fccc24e99f6d7",
+      "decision": "state the 2026-10-22 local reflex revision against the earlier CRA rationale",
+      "before_sha256": "76684f663fce64e7b136f02e5c5ba64ba30e8bbd3e64549a5efe035170cee9e6",
       "source_sha256": null,
-      "public_sha256": "76684f663fce64e7b136f02e5c5ba64ba30e8bbd3e64549a5efe035170cee9e6",
+      "public_sha256": "1c835c6c98f4e8d7773eb17b2be79fc7d8c64db4c08a90983eb77e6d46c26566",
       "port_date_jst": "2026-10-22"
     },
     {
@@ -3773,10 +3773,10 @@
     {
       "path": "recovery-control/docs/architecture.md",
       "source_role": "public-documentation",
-      "decision": "point the local-fallback section at the reflex path",
-      "before_sha256": "9b4eb5710cbe5dc838fa85761ca06c1450e00f746ec82e237ac020dbd0927af9",
+      "decision": "state the 2026-10-22 local reflex revision against the earlier CRA rationale",
+      "before_sha256": "1308063c0be5ccc5d05b9c69feb3b0a840941f7aec229390beb303ad2b1455eb",
       "source_sha256": null,
-      "public_sha256": "1308063c0be5ccc5d05b9c69feb3b0a840941f7aec229390beb303ad2b1455eb",
+      "public_sha256": "312532774291d007b82e0b7f49b643bc65037c36a3e65cf0258c193061a2cbe1",
       "port_date_jst": "2026-10-22"
     },
     {
@@ -4032,6 +4032,15 @@
       "port_date_jst": "2026-10-22"
     },
     {
+      "path": "recovery-control/docs/why-cra.md",
+      "source_role": "public-documentation",
+      "decision": "state the 2026-10-22 local reflex revision against the earlier CRA rationale",
+      "before_sha256": "7dcd7566b104c91086f3b2f8ea992dd7a938d3711ce247d793199ac8a7b64ff3",
+      "source_sha256": null,
+      "public_sha256": "68f4207b500883d6b2033061b2b3110b63dbd41210470a21e5493659f2a39717",
+      "port_date_jst": "2026-10-22"
+    },
+    {
       "path": "src/stream_v3/twitch_thumbnail_evidence.py",
       "before_sha256": null,
       "source_sha256": "9cd2fdc4c880f2352f6fde2d79c86ea1c4fbc3960c4e6a310e9e7f4b5a4d95d1",
@@ -4250,6 +4259,13 @@
     "source_commit": "947d899eec2dbedf7949f9cfb98afc9db7d34338",
     "deployment_performed": false,
     "push_performed": false
+  },
+  "cra_reflex_documentation_review": {
+    "date_jst": "2026-10-22",
+    "base_public_commit": "f4d6392c136174395ba35825bc6198d5130061bd",
+    "scope": "Documentation only: state that the local reflex path revises the per-action central authorization rationale, and which CRA design is current.",
+    "runtime_changed": false,
+    "deployment_performed": false
   },
   "thumbnail_evidence_port": {
     "date_jst": "2026-10-22",

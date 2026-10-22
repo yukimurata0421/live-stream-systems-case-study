@@ -100,6 +100,22 @@ generation, expired authority, an occupied fence, and unresolved prior effect.
 - Restarting a Pod, container, or host would widen the failure domain beyond
   the exact FFmpeg child the evidence identified.
 
+## 2026-10-22 revision
+
+The rejected alternative above is autonomous local recovery with its own policy
+and budget. The [local reflex path](local-reflex-authority.md) is narrower:
+Dell decides each FFmpeg-child restart, but only under a policy version signed
+by cra-01, within budget and cooldown limits that policy sets, and with an
+append-only audit that cra-01 verifies afterward. Policy and verification stay
+central; per-action approval moves to Dell.
+
+Per-action central approval also required Dell to act alone during LAN loss.
+Two deciders then needed a lease, an authority epoch, and journal handback to
+trade places safely, and that machinery never completed a qualified soak. The
+generation fence, the no-retry rule after an unknown outcome, and exact-target
+admission are unchanged. Cross-host incident evidence is no longer an input to
+the restart decision; it remains available for verification.
+
 ## What the design claims
 
 The repository implements the contracts needed to make duplicate decisions
@@ -115,5 +131,6 @@ makes the service highly available. Those require separately bound live
 release, runtime, external-health, and operational evidence.
 
 Continue with [the three-host architecture](architecture.md),
+[the local reflex path](local-reflex-authority.md),
 [the safety model](safety-model.md), and
 [the harness trust model](harness-trust.md).

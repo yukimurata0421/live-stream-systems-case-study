@@ -1,5 +1,9 @@
 # Three-Host Recovery Architecture
 
+This is the retained three-host design. FFmpeg TCP-stall recovery now follows
+the [local reflex path](local-reflex-authority.md), which keeps the decision on
+Dell under signed central policy.
+
 ## Goal
 
 The control plane reduces recovery time without allowing one monitoring

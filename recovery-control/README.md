@@ -5,6 +5,12 @@ self-built 24/7 YouTube Live system. It separates
 monitoring facts, central authorization, and the physical FFmpeg effect across
 three failure domains.
 
+Two designs are retained. The three-host design below routes every restart
+through central authorization. The 2026-10-22
+[local reflex path](docs/local-reflex-authority.md) is the current direction for
+FFmpeg TCP-stall recovery: Dell decides under a policy signed by cra-01, and
+cra-01 verifies the audit afterward. Neither performs production restarts.
+
 The public snapshot is designed for architecture and reliability review. It
 does not contain production credentials, runtime state, databases, host logs,
 packet captures, or an enabled production action path.

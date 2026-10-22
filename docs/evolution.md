@@ -118,3 +118,10 @@ replaced by a restart-always relay, a forward keeper, and one fallback
 controller. The [decision record](v3/oci-route-simplification-decision.md)
 explains the trade-off and the [route record](v3/self-healing-oci-fanout.md)
 describes the result.
+
+The same simplification reached FFmpeg-child recovery on 2026-10-22. CRA's
+per-action approval on cra-01 had needed a local fallback mode and authority
+handback for LAN loss. The
+[local reflex path](../recovery-control/docs/local-reflex-authority.md) keeps
+the decision on Dell under a policy signed by cra-01 and limits central work to
+policy and after-the-fact verification. It runs only in `dry_run`.

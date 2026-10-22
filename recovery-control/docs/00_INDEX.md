@@ -1,7 +1,7 @@
 # Documentation Index
 
 - [`why-cra.md`](why-cra.md): observed duplicate decisions, transactional recovery rationale, and claim limits.
-- [`architecture.md`](architecture.md): three-host ownership and data flow.
+- [`architecture.md`](architecture.md): retained three-host ownership and data flow.
 - [`safety-model.md`](safety-model.md): authorization, fencing, and no-action boundaries.
 - [`harness-trust.md`](harness-trust.md): SUT, observer, oracle, and harness trust gates.
 - [`harness-engineering-draft.md`](harness-engineering-draft.md): current test architecture, evidence, classification, and freeze draft.
