@@ -873,10 +873,11 @@
     {
       "path": "ops/scripts/validate_public_port.py",
       "source_role": "public-validation",
-      "decision": "hashed-source-and-portability-check",
-      "before_sha256": null,
+      "decision": "scan every tracked or new file for the private workspace path against a reasoned allowlist",
+      "before_sha256": "12b0443c3cde3796d076d1b056e6ade6d06e5a12cc6b711c9b7bda25720604d6",
       "source_sha256": null,
-      "public_sha256": "12b0443c3cde3796d076d1b056e6ade6d06e5a12cc6b711c9b7bda25720604d6"
+      "public_sha256": "ab2039196052bad4809f26976773f4577fb8c9009548c76203d4ce0f55eae0cd",
+      "port_date_jst": "2026-10-22"
     },
     {
       "path": "publication/continuity-checkpoint.json",
@@ -4102,6 +4103,204 @@
       "source_sha256": null,
       "public_sha256": "aba5f5dda0249e60b1cd23811943db680dd3e47e30a8137bf0508291b9f6113a",
       "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "configs/production.env.example",
+      "source_role": "public-deployment-example",
+      "decision": "replace private workspace paths with /srv placeholders",
+      "before_sha256": "fbfa1f76317a54e91b45a45b8520ef720474e48149ef6fa2de9478107fa289ca",
+      "source_sha256": null,
+      "public_sha256": "c2124264082ec1bdf24bb3a0409e4342f87b1a20f5a3183c28d629cae09efe85",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "ops/logrotate/adsb-streamnew",
+      "source_role": "public-deployment-example",
+      "decision": "replace private workspace paths with /srv placeholders",
+      "before_sha256": "271727c00e2617f2a7369f87a87b8f9f205dc124829d75f21f5aa8b0a8f251e5",
+      "source_sha256": null,
+      "public_sha256": "cf5bb04660793e4a96c9b7561c87daf285c5dbca0599818c8b5bd07c23345442",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "ops/monitoring/docker-compose.yml",
+      "source_role": "public-deployment-example",
+      "decision": "replace private workspace paths with /srv placeholders",
+      "before_sha256": "71e5364ea73d86df220adfd963b80db470b3144603bd2a5abbc8f5582eb6c77b",
+      "source_sha256": null,
+      "public_sha256": "08f5f4a902e4563ca03a1e567d9a5cef85e79424adf1a23f0effaba716e954da",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "ops/systemd/adsb-streamnew-adsb-source-probe.service",
+      "source_role": "public-deployment-example",
+      "decision": "replace private workspace paths with /srv placeholders",
+      "before_sha256": "c77b738f36221f99fe2f951e7d0349f7bf7af2f8a7efc51b0d8e1ba7e994f76d",
+      "source_sha256": null,
+      "public_sha256": "66bf5e5f91773e6d36aa3bf4c8e6a956303aa84bc8d0ca3ed3cd89676558169b",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "ops/systemd/adsb-streamnew-auto-dj.service",
+      "source_role": "public-deployment-example",
+      "decision": "replace private workspace paths with /srv placeholders",
+      "before_sha256": "60938ea88ca1db9fdd5ba09faf376d012057b5e3a5bca1e86cbca644079e41ea",
+      "source_sha256": null,
+      "public_sha256": "e118fe430e497a34e9966b9a48f4b0f4aef7eb60dd28453171fa5df5d7b4f995",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "ops/systemd/adsb-streamnew-fast-recovery.env.example",
+      "source_role": "public-deployment-example",
+      "decision": "replace private workspace paths with /srv placeholders",
+      "before_sha256": "3ebfee955d38973208000602a4141971f9f3ddeab1fc11d52b96b970a2eebbff",
+      "source_sha256": null,
+      "public_sha256": "67dc3b898f7b9a8c9cbaae2a9d96ab023dab22829759c9f25576b0d7a4504d19",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "ops/systemd/adsb-streamnew-fast-recovery.service",
+      "source_role": "public-deployment-example",
+      "decision": "replace private workspace paths with /srv placeholders",
+      "before_sha256": "393d6734e1baeb56be4ee95aca2b70b1ec611f0aeb7a6a1c4ce976f47021c8c6",
+      "source_sha256": null,
+      "public_sha256": "839671aaed88b027caf14c70892d25b17143aa8de07cdce9a67095cabfdb0dda",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "ops/systemd/adsb-streamnew-memory-status.service",
+      "source_role": "public-deployment-example",
+      "decision": "replace private workspace paths with /srv placeholders",
+      "before_sha256": "117dd13a887f58016b599b8f649a679bc792143f2c79252cb306cf1582249b3f",
+      "source_sha256": null,
+      "public_sha256": "ae4076cf1be03098b8cd505d57b1884a194850e8f03395158f340f4619fd456c",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "ops/systemd/adsb-streamnew-recovery-orchestrator.service",
+      "source_role": "public-deployment-example",
+      "decision": "replace private workspace paths with /srv placeholders",
+      "before_sha256": "dfee0e9e040af3f82f7c73c907510fc1d61fb414a7e5311f846f2fef1fb9ebad",
+      "source_sha256": null,
+      "public_sha256": "cc3c93de36dd945681aa4fa12370a1b15e5de0a3f596b65d7e99d6b6f5378bc3",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "ops/systemd/adsb-streamnew-resource-memory.service",
+      "source_role": "public-deployment-example",
+      "decision": "replace private workspace paths with /srv placeholders",
+      "before_sha256": "2b9450aff3ccb31cb20fcf27b9a3a00d799f4ee25acdfb99640db109ce838072",
+      "source_sha256": null,
+      "public_sha256": "c6ff13f0f4881dc5a4420619a2d5e922c9ffffcca1b9ede53f812cdeb27d6853",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "ops/systemd/adsb-streamnew-subsystems-status.service",
+      "source_role": "public-deployment-example",
+      "decision": "replace private workspace paths with /srv placeholders",
+      "before_sha256": "7455f95521512df01585b111897c9309c89f7f5f65c934633791c7a12b3c2767",
+      "source_sha256": null,
+      "public_sha256": "f86e50f1aeb55e9eb118006eb5971d0f8c008aaaabeeb0f7e7bfa88cb50fff27",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "ops/systemd/adsb-streamnew-watchdog.service",
+      "source_role": "public-deployment-example",
+      "decision": "replace private workspace paths with /srv placeholders",
+      "before_sha256": "4c4b07227afa6cfd467973964a18ac07bb8216471757082f0c8cb0556660f299",
+      "source_sha256": null,
+      "public_sha256": "ec7b2a4976142fc9fc2cd2ab005fea0fa5b85bfd5c9656b0fa0c7fca311f5b7b",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "ops/systemd/adsb-streamnew-youtube-api-cost-open-day-report.service",
+      "source_role": "public-deployment-example",
+      "decision": "replace private workspace paths with /srv placeholders",
+      "before_sha256": "19985ad331d28c016889c22bc48a045a3c74a5baa23edd3b258935f1d82ddbfc",
+      "source_sha256": null,
+      "public_sha256": "84ebdd239678d1f4980ca65c8bf63567ba7c92763ab32e9e9a198a1c3b65855a",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "ops/systemd/adsb-streamnew-youtube-api-cost-report.service",
+      "source_role": "public-deployment-example",
+      "decision": "replace private workspace paths with /srv placeholders",
+      "before_sha256": "d2b0567c5e80383b82d27dd56214238f3a28f839c5f760a2e1629fa1efcc97a3",
+      "source_sha256": null,
+      "public_sha256": "fe63a55573e8a29214030f27fcfb8021dae285905484f8de8711f6305295375e",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "ops/systemd/adsb-streamnew-youtube-monitor.env.example",
+      "source_role": "public-deployment-example",
+      "decision": "replace private workspace paths with /srv placeholders",
+      "before_sha256": "4227367771c666a7b2243423846ad5106b4a49bce7dd73726f9abaa0c94eacdd",
+      "source_sha256": null,
+      "public_sha256": "0519da97edd27b94159ca9c4e25c0805124de18471c9482b28de737a5ae85cd7",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "ops/systemd/adsb-streamnew-youtube-monitor.service",
+      "source_role": "public-deployment-example",
+      "decision": "replace private workspace paths with /srv placeholders",
+      "before_sha256": "984b74e3fd4b0bee456d7bd848804fc9f6acac349bc96e80c006970e1d15d417",
+      "source_sha256": null,
+      "public_sha256": "32935ef13125b66ea7f311094b1cf6e9bbcf54912b0290996a719ead59e1d236",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "ops/systemd/adsb-streamnew-youtube-stream.service",
+      "source_role": "public-deployment-example",
+      "decision": "replace private workspace paths with /srv placeholders",
+      "before_sha256": "489751e363749293ae2fdd40e7a331388c3b02b3774a0a8b52c662113d732e05",
+      "source_sha256": null,
+      "public_sha256": "1dd1a34d74f7aa8a3250af2baf0a4c5fd47c154714b495adccbebc1e4b2c41d8",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "ops/systemd/adsb-streamnew-youtube-video-resolver.service",
+      "source_role": "public-deployment-example",
+      "decision": "replace private workspace paths with /srv placeholders",
+      "before_sha256": "e17e23e590954db68009c200812e3f1e101cee5c8e3a9206a311c7af04867628",
+      "source_sha256": null,
+      "public_sha256": "0a755247dbea4bc3ff587c9ec273abef81e39056d417e84f6fbe99658ed0d7b9",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "ops/systemd/adsb-streamnew.env.example",
+      "source_role": "public-deployment-example",
+      "decision": "replace private workspace paths with /srv placeholders",
+      "before_sha256": "a4a260e79fe7ca09c68def43bff2a9169923ded02c42577b2eef96381c6f9e45",
+      "source_sha256": null,
+      "public_sha256": "1909668c7802117202dba332a58f131e32d05660b4cd16d7dcf8cb18befa32b4",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "tests/test_env_sync.py",
+      "source_role": "public-validation",
+      "decision": "expect the placeholder synced env path",
+      "before_sha256": "c7fe2f5e752e90e807ebc07cb9287b5ae4c83dc01919943367d566ff0834fc1b",
+      "source_sha256": null,
+      "public_sha256": "adae7fb13b86d0ffa30eb8bacb24f947a37c02308afbdf7eac023afccd34b18a",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "publication/private-path-allowlist.json",
+      "source_role": "public-validation",
+      "decision": "reasoned allowlist for remaining private workspace paths",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "7c5152664587e7e3a43bb7b8dad0c9cb876efea88f1cf755454673c46c6a1c1d",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "tests/test_public_private_paths.py",
+      "source_role": "public-validation",
+      "decision": "negative controls for the private workspace path scan",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "4a3f2d65697a8b9d25cf19cf6916c4257289c6afe08b1087c43681348a01ea07",
+      "port_date_jst": "2026-10-22"
     }
   ],
   "omissions": [
@@ -4160,7 +4359,8 @@
     "publication/thumbnail-ocr-rollout-20261022.json",
     "publication/clock-docs-review-20261022.json",
     "publication/cra-reflex-port-20261022.json",
-    "publication/thumbnail-evidence-port-20261022.json"
+    "publication/thumbnail-evidence-port-20261022.json",
+    "publication/private-path-allowlist.json"
   ],
   "evidence_checkpoint_cutoff_jst": "2026-10-14T00:04:57+09:00",
   "documentation_audience": "hiring and technical reviewers",
@@ -4320,6 +4520,13 @@
   "architecture_diagram_review": {
     "date_jst": "2026-10-22",
     "scope": "Documentation only: one diagram per question (overview, content production, media path, clock observation); container layout checked against the production overlay. Private home paths in three k3s manifests replaced with placeholders.",
+    "runtime_changed": false,
+    "deployment_performed": false
+  },
+  "private_path_cleanup": {
+    "date_jst": "2026-10-22",
+    "scope": "Text examples (env examples, systemd units, logrotate, monitoring compose) use /srv placeholders; the port check scans every tracked file for the private workspace path against a reasoned allowlist.",
+    "remaining": "Code defaults listed in publication/private-path-allowlist.json; User/Group service accounts are not part of this change.",
     "runtime_changed": false,
     "deployment_performed": false
   }

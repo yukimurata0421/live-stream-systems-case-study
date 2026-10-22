@@ -7,7 +7,7 @@ Wants=network-online.target
 Type=oneshot
 User=yuki
 Group=yuki
-EnvironmentFile=-/home/yuki/projects/stream_v2/.state/env/adsb-streamnew-fast-recovery.env
+EnvironmentFile=-/srv/stream_v2/.state/env/adsb-streamnew-fast-recovery.env
 Environment=WATCHDOG_SYSTEMCTL_USE_SUDO=1
-Environment=PYTHONPATH=/home/yuki/projects/stream_v2/src
-ExecStart=/home/yuki/projects/stream_v2/venv/bin/python3 /home/yuki/projects/stream_v2/src/watchers/fast_recovery.py
+Environment=PYTHONPATH=/srv/stream_v2/src
+ExecStart=/srv/stream_v2/venv/bin/python3 /srv/stream_v2/src/watchers/fast_recovery.py

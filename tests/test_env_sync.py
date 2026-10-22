@@ -63,13 +63,13 @@ class EnvSyncTests(unittest.TestCase):
                 self.assertNotIn("EnvironmentFile=-/etc/default/adsb-streamnew", env_lines)
                 if path.name == "adsb-streamnew-notify.service":
                     self.assertIn("EnvironmentFile=-/etc/default/adsb-streamnew-notify", env_lines)
-                    self.assertNotIn("EnvironmentFile=-/home/yuki/projects/stream_v2/.state/env/adsb-streamnew.env", env_lines)
+                    self.assertNotIn("EnvironmentFile=-/srv/stream_v2/.state/env/adsb-streamnew.env", env_lines)
                     continue
                 if "EnvironmentFile=-/etc/default/stream-v3-observability-monitor" in env_lines:
                     continue
                 if env_lines:
                     self.assertTrue(
-                        any("/home/yuki/projects/stream_v2/.state/env/" in line for line in env_lines),
+                        any("/srv/stream_v2/.state/env/" in line for line in env_lines),
                         env_lines,
                     )
 

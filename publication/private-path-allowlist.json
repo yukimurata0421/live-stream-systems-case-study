@@ -1,0 +1,70 @@
+{
+  "schema": "stream.public_private_path_allowlist.v1",
+  "rule": "Every tracked file containing the private workspace path must be listed here with a reason. An entry whose file no longer contains the path is reported as stale.",
+  "entries": [
+    {
+      "path": "ops/scripts/backfill_prometheus_stream_v2.py",
+      "reason": "Code default that still names the original workspace; replacing it changes runtime behavior and is a separate change."
+    },
+    {
+      "path": "ops/scripts/benchmark_pre_ffmpeg_wait.py",
+      "reason": "Code default that still names the original workspace; replacing it changes runtime behavior and is a separate change."
+    },
+    {
+      "path": "ops/scripts/benchmark_pre_ffmpeg_wait_100.py",
+      "reason": "Code default that still names the original workspace; replacing it changes runtime behavior and is a separate change."
+    },
+    {
+      "path": "ops/scripts/review_monitoring_env.sh",
+      "reason": "Code default that still names the original workspace; replacing it changes runtime behavior and is a separate change."
+    },
+    {
+      "path": "ops/scripts/sync_stream_env_to_v2.py",
+      "reason": "Code default that still names the original workspace; replacing it changes runtime behavior and is a separate change."
+    },
+    {
+      "path": "src/stream_v2/config.py",
+      "reason": "Code default that still names the original workspace; replacing it changes runtime behavior and is a separate change."
+    },
+    {
+      "path": "src/watchers/stream_watchdog.py",
+      "reason": "Code default that still names the original workspace; replacing it changes runtime behavior and is a separate change."
+    },
+    {
+      "path": "tests/production_contract/test_stream_app_root_contract.py",
+      "reason": "Test asserts that the private workspace path is absent."
+    },
+    {
+      "path": "tests/production_contract/test_subsystem_stream_contract.py",
+      "reason": "Test compares against the legacy source root that the subsystem must not depend on."
+    },
+    {
+      "path": "tests/test_docs_structure.py",
+      "reason": "Test asserts that the private workspace path is absent."
+    },
+    {
+      "path": "tests/test_env_sync.py",
+      "reason": "Test input reproduces a legacy env file that the sync tool must rewrite."
+    },
+    {
+      "path": "tests/test_gpu_startup_gate.py",
+      "reason": "Test asserts that the private workspace path is absent."
+    },
+    {
+      "path": "tests/test_local_runtime.py",
+      "reason": "Test asserts that the private workspace path is absent."
+    },
+    {
+      "path": "tests/test_nvidia_driver_update_check.py",
+      "reason": "Test asserts that the private workspace path is absent."
+    },
+    {
+      "path": "tests/test_stream_v3_bootstrap.py",
+      "reason": "Test asserts that the private workspace path is absent."
+    },
+    {
+      "path": "tests/test_stream_v3_viewer_synthetic_probe.py",
+      "reason": "Test asserts that the private workspace path is absent."
+    }
+  ]
+}

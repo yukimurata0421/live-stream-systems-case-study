@@ -23,8 +23,8 @@ services:
     volumes:
       - ./alloy/config.alloy:/etc/alloy/config.alloy:ro
       - ./alloy/data:/var/lib/alloy
-      - /home/yuki/projects/stream_v3:/stream_v3:ro
-      - /home/yuki/projects/stream_v2:/stream_v2:ro
+      - /srv/stream_v3:/stream_v3:ro
+      - /srv/stream_v2:/stream_v2:ro
       - /var/log:/host/var/log:ro
     depends_on:
       - loki

@@ -6,8 +6,8 @@ After=adsb-streamnew-auto-dj.service adsb-streamnew-youtube-stream.service
 Type=oneshot
 User=yuki
 Group=yuki
-EnvironmentFile=-/home/yuki/projects/stream_v2/.state/env/adsb-streamnew.env
+EnvironmentFile=-/srv/stream_v2/.state/env/adsb-streamnew.env
 Environment=XDG_RUNTIME_DIR=/run/user/1000
 Environment=WATCHDOG_SYSTEMCTL_USE_SUDO=1
-Environment=PYTHONPATH=/home/yuki/projects/stream_v2/src
-ExecStart=/home/yuki/projects/stream_v2/venv/bin/python3 /home/yuki/projects/stream_v2/src/watchers/stream_watchdog.py
+Environment=PYTHONPATH=/srv/stream_v2/src
+ExecStart=/srv/stream_v2/venv/bin/python3 /srv/stream_v2/src/watchers/stream_watchdog.py
