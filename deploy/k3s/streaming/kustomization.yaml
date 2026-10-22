@@ -53,7 +53,7 @@ patches:
         value:
           name: music
           hostPath:
-            path: /home/yuki/projects/stream_v3/ncs_music
+            path: /srv/stream_v3/ncs_music
             type: Directory
       - op: remove
         path: /spec/template/spec/containers/2

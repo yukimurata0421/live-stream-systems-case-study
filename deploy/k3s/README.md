@@ -80,6 +80,8 @@ directly.
 Local v3 uses the repository-local `ncs_music/time_tags` tree.
 The k3s runtime mounts the same asset shape at `/music/time_tags` through `stream-v3-music`.
 Keep the audio files out of Git and provision the PVC from the copied `ncs_music/` tree before enabling AutoDJ in a real Pod.
+The `streaming` and `local` overlays mount the music through a `hostPath`; `/srv/stream_v3/ncs_music` is a placeholder for the host's own music directory.
+The shadow ConfigMap's `STREAM_V2_MIRROR_SOURCE` is likewise a placeholder user, host and path.
 
 ## Prepare secrets
 

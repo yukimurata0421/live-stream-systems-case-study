@@ -21,7 +21,7 @@ data:
   STREAM_RUNTIME_LOG_DIR: /state/logs
   STREAM_V2_STATE_ROOT: /state
   STREAM_V2_SOURCE_STATE_ROOT: /source-v2-readonly
-  STREAM_V2_MIRROR_SOURCE: yuki@current-stream-host:/home/yuki/projects/stream_v2/.state/adsb-streamnew-v2/
+  STREAM_V2_MIRROR_SOURCE: stream@current-stream-host:/srv/stream_v2/.state/adsb-streamnew-v2/
   STREAM_V2_MIRROR_SSH_OPTS: "-o StrictHostKeyChecking=yes -o UserKnownHostsFile=/root/.ssh/known_hosts"
   TEST_MODE: "1"
   TEST_OUTPUT: file

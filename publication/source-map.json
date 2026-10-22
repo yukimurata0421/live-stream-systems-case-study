@@ -105,12 +105,12 @@
     },
     {
       "path": "docs/architecture.md",
-      "source_role": "public-documentation-or-regression",
-      "decision": "English prose and reviewed public bindings; no live deployment, publisher/UI changes or concurrent review patch.",
-      "before_sha256": "2d353d7cdf20f700c04f35db64adc43e4e4082b35874e88538cd906904c1973a",
+      "source_role": "public-documentation",
+      "decision": "split data flow into overview, content production, media and observation diagrams",
+      "before_sha256": "d043f22d1e4ac2801a8bd727a466d347c8c7727036760cd8ae74656a48a2cd7b",
       "source_sha256": null,
-      "public_sha256": "d043f22d1e4ac2801a8bd727a466d347c8c7727036760cd8ae74656a48a2cd7b",
-      "port_date_jst": "2026-10-20",
+      "public_sha256": "dec00dac9bee4c9e594770fe5300eeae24783584face7f9847d7ce174746c29b",
+      "port_date_jst": "2026-10-22",
       "pre_documentation_restructure_sha256": "5ae4f928c8d5f77be2e827787230606ffbf1e4d7c97d62b9d3afe0bf43048e93",
       "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json.",
       "pre_clock_monitor_public_sha256": "be72378ef63e1cf256d7369929042ef1d4e5a38256b25f170ef5ba61934bc69d",
@@ -4066,6 +4066,42 @@
       "source_role": "public-documentation-or-configuration",
       "decision": "Additional conservative OCR, bounded ROI evidence and diagnostics; existing public bindings; source port only; restructured for readability without changing facts",
       "thumbnail_evidence_port": "2026-10-22 conservative OCR, bounded evidence, ROI comparison and diagnostics."
+    },
+    {
+      "path": "deploy/k3s/streaming/kustomization.yaml",
+      "source_role": "public-deployment-example",
+      "decision": "replace private home paths with placeholders",
+      "before_sha256": "064ed4aa04daa0252932aea2e5bee9cf9079f048baee8d0ea5c4512273ba73e6",
+      "source_sha256": null,
+      "public_sha256": "1d933bf66010dd393b773a83c01254fdb7e730ed2ef277ee6af8ec87325f0724",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "deploy/k3s/local/kustomization.yaml",
+      "source_role": "public-deployment-example",
+      "decision": "replace private home paths with placeholders",
+      "before_sha256": "3b1175b2b25dfb208192d75845a1d08dab527a95517655c795e28d819ce1a3c7",
+      "source_sha256": null,
+      "public_sha256": "94797c28b8749ecbf215a44ec35f52227d9d08ef4ebdf6c436f627a2b62ed1ac",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "deploy/k3s/base/configmap-shadow.yaml",
+      "source_role": "public-deployment-example",
+      "decision": "replace private home paths with placeholders",
+      "before_sha256": "0f0cf5ce766ff9995720d1ab225d1df917b5dde9e7a4063c060140540bbbc6de",
+      "source_sha256": null,
+      "public_sha256": "063a1100a630cca4bdba8fb0ac85cc5302adcec8ff9b2ddd8057867d2717d6eb",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "deploy/k3s/README.md",
+      "source_role": "public-documentation",
+      "decision": "explain the placeholder paths",
+      "before_sha256": "bf337f8293ed36e25cff2e66c53e9b45b76e37ea42af834d12cd7bc8ec33375c",
+      "source_sha256": null,
+      "public_sha256": "aba5f5dda0249e60b1cd23811943db680dd3e47e30a8137bf0508291b9f6113a",
+      "port_date_jst": "2026-10-22"
     }
   ],
   "omissions": [
@@ -4278,6 +4314,12 @@
   "thumbnail_evidence_documentation_review": {
     "date_jst": "2026-10-22",
     "scope": "Documentation only: reorder the OCR/evidence follow-up into source, cause, changes, operated evidence and limits; list the contract's OCR passes; group the index entry with its sibling records.",
+    "runtime_changed": false,
+    "deployment_performed": false
+  },
+  "architecture_diagram_review": {
+    "date_jst": "2026-10-22",
+    "scope": "Documentation only: one diagram per question (overview, content production, media path, clock observation); container layout checked against the production overlay. Private home paths in three k3s manifests replaced with placeholders.",
     "runtime_changed": false,
     "deployment_performed": false
   }

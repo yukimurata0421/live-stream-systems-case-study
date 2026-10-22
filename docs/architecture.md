@@ -23,38 +23,141 @@ another.
 Monitoring and ADS-B reception share the ProDesk; video production has the Dell
 to itself. The [hardware selection](hardware-selection.md) explains why.
 
+## Overview
+
+Each diagram below answers one question. Boxes are hosts; solid arrows carry
+media or source data; dashed arrows carry observation data or a standby path.
+Arrows show data direction, and a label names the initiator when the receiver
+pulls.
+
+```mermaid
+flowchart LR
+    subgraph ARENA["arena-server (HP ProDesk)"]
+        RX["ADS-B reception"]
+        MON["Monitoring: collectors, clock importers, Prometheus / Loki / Grafana, notifications"]
+    end
+    subgraph DELL["Dell delivery-host"]
+        PROD["stream-v3-runtime Pod: map, weather, music, encoder"]
+        PROBE["Clock observer Deployment"]
+        FB["Fallback Pod (standby)"]
+    end
+    subgraph OCI["OCI VM"]
+        RELAY["MediaMTX relay + keeper"]
+    end
+    PLAT["YouTube / Twitch"]
+    PUB["Raspberry Pi -> GCS + Cloudflare"]
+    RX -->|"aircraft data"| PROD
+    PROD -->|"RTMPS"| RELAY --> PLAT
+    FB -. "fallback only" .-> PLAT
+    RELAY -. "return feed" .-> PROBE
+    PROBE -. "clock facts, pulled by arena-server" .-> MON
+    RELAY -. "forward counters" .-> MON
+    PLAT -. "API status, thumbnails" .-> MON
+    MON -. "pulled by the Pi" .-> PUB
+```
+
+[Content production](#content-production) shows how the inputs become one
+picture and one audio stream, [media path](#media-path) shows delivery,
+[clock observation path](#clock-observation-path) shows what is watched, and
+[public status path](#public-status-path) shows publication.
+
+## Content Production
+
+Three inputs are processed separately inside the Dell Pod and merge only in the
+browser frame and the PulseAudio sink that FFmpeg captures.
+
+```mermaid
+flowchart LR
+    ADSB["arena-server: Airspy -> airspy_adsb -> readsb"]
+    JMA["JMA analysis-only precipitation tiles"]
+    MUSIC["Music library volume"]
+    subgraph POD["Dell: stream-v3-runtime Pod"]
+        subgraph PRECIPC["precipitation-fetcher"]
+            PRECIP["fetch and process tiles; keep the last good set"]
+        end
+        subgraph DJC["auto-dj"]
+            DJ["track playback"]
+        end
+        subgraph ENGINE["stream-engine"]
+            RSB["Dell readsb -> modified tar1090 aircraft.json"]
+            OVL["overlay_server: aircraft JSON without receiver location, map and terrain tiles, processed weather, now playing"]
+            BROWSER["Chromium on Xvfb: MapLibre map, aircraft, precipitation, now playing"]
+            PULSE["PulseAudio sink stream_v3_sink"]
+            FF["FFmpeg: x11grab video + pulse audio -> NVENC"]
+        end
+    end
+    ADSB -->|"Beast feed :30104"| RSB --> OVL
+    JMA --> PRECIP -->|"state volume"| OVL
+    MUSIC --> DJ
+    DJ -->|"audio"| PULSE
+    DJ -->|"now_playing.json"| OVL
+    OVL --> BROWSER
+    BROWSER -->|"video frame"| FF
+    PULSE -->|"monitor source"| FF
+    FF -->|"RTMPS"| OUT["media path"]
+```
+
+Music therefore reaches the stream twice: as audio through PulseAudio and as the
+on-screen track name. Precipitation is a degradable layer; the browser hides it
+after the stale interval while delivery continues. The viewer-facing map is the
+repository-owned MapLibre renderer, not the upstream tar1090 page.
+`src/stream_core/overlay_server.py` serves the ADS-B JSON, map and terrain
+tiles, precipitation assets, now-playing data and render readiness. The k3s
+manifests do not manage the Airspy device or readsb.
+
+The production overlay `deploy/k3s/streaming` runs four containers:
+`stream-engine`, `precipitation-fetcher`, `auto-dj` and `fast-recovery-loop`.
+The base `deploy/k3s/v3-runtime` manifest used for shadow validation has a
+`network-observer` container instead; the overlay removes it and adds the
+recovery loop.
+
 ## Media Path
 
-```text
-Airspy USB (arena-server)
-  -> airspy_adsb -> readsb (arena-server)
-  -> Beast feed to Dell delivery-host:30104
-  -> readsb -> modified tar1090 HTTP endpoint (Dell)
-  -> sanitized ADS-B JSON proxy
-  -> stream_v3 MapLibre rendering and overlay
-  -> PulseAudio + AutoDJ
-  -> FFmpeg / NVIDIA NVENC
-  -> RTMPS over a private tunnel
-  -> OCI MediaMTX relay
-       -> YouTube primary ingest
-       -> Twitch ingest
-
-fallback and recovery confirmation only
-  Dell fallback Pod: separate map/audio workload + CPU encoder
-  -> direct RTMPS to the same broadcast's YouTube backup ingest
+```mermaid
+flowchart LR
+    FF["Dell main Pod: FFmpeg / NVENC"] -->|"RTMPS over a private tunnel"| MTX["OCI MediaMTX relay"]
+    MTX --> YT["YouTube primary ingest"]
+    MTX --> TW["Twitch ingest"]
+    FB["Dell fallback Pod: separate map/audio workload + CPU encoder"] -. "fallback and recovery confirmation only" .-> YTB["YouTube backup ingest"]
 ```
 
 The fallback bypasses OCI but shares the Dell host, home power, and home
 uplink with the main sender. The [route record](v3/self-healing-oci-fanout.md)
 defines when it starts and stops.
 
-The viewer-facing map is the repository-owned MapLibre renderer, not the
-upstream tar1090 page. `src/stream_core/overlay_server.py` proxies ADS-B JSON,
-map and terrain tiles, precipitation assets, and render readiness, and removes
-receiver location fields. The k3s manifests do not manage the Airspy device or
-readsb.
-
 ## Clock Observation Path
+
+```mermaid
+flowchart LR
+    subgraph OCI["OCI VM"]
+        MTX["MediaMTX relay"]
+    end
+    subgraph DELL["Dell delivery-host"]
+        FBENC["Fallback encoder, when running"]
+        PROBE["stream-v3-oci-monitor-probe: latest decoded frame -> JST/UTC clock OCR"]
+    end
+    PLAT["YouTube / Twitch"]
+    subgraph ARENA["arena-server"]
+        IMP["Clock importer: bind source, deduplicate, join native facts"]
+        NAT["Relay observer: per-destination forward counters"]
+        API["Provider API collectors"]
+        THUMB["Thumbnail worker: Twitch image -> JST/UTC clock OCR"]
+        PROM["Metrics and logs: Prometheus, Loki, Grafana"]
+        ALERT["Warning rules -> notification loop"]
+    end
+    MTX -->|"third read branch"| PROBE
+    FBENC -. "secondary UDP output" .-> PROBE
+    PROBE -->|"signed snapshots, pulled over read-only SSH"| IMP
+    MTX -->|"forward counters over the private tunnel"| NAT
+    PLAT -->|"stream status"| API
+    API -->|"thumbnail URL via tmpfs"| THUMB
+    PLAT -->|"thumbnail image"| THUMB
+    IMP --> PROM
+    NAT --> PROM
+    API --> PROM
+    THUMB --> PROM
+    PROM --> ALERT
+```
 
 The OCI relay has a third read branch to a separate Dell monitor Deployment.
 That branch observes the common relay output, alongside the independent native
@@ -76,6 +179,11 @@ its URL into tmpfs; the worker fetches a bounded image once per minute, keeps
 ordinary images in RAM and joins paired-clock results with the existing API and
 native facts. Its scope is a provider thumbnail, not public-player reception.
 It adds no work to the Dell media path or OCI relay and has no recovery authority.
+
+What each of these layers can and cannot establish is defined once in
+[observability](observability.md#video-observation-layers). Warning rules feed
+the existing notification loop; none of these observation paths can act on
+delivery.
 
 ## Public Status Path
 
@@ -120,7 +228,10 @@ lifecycle, and Dell executes at most one exact fenced FFmpeg-child effect.
 in production, and the current route does not use it; the
 [decision record](v3/oci-route-simplification-decision.md) explains why. Read
 [scoped recovery authority](v3/scoped-recovery-authority.md) and the
-[recovery-control README](../recovery-control/README.md) for the design.
+[recovery-control README](../recovery-control/README.md) for the design. A
+smaller [local reflex path](../recovery-control/docs/local-reflex-authority.md)
+keeps the restart decision on Dell under a policy signed by `cra-01`; it runs
+only in `dry_run` and sends no restart requests.
 
 ## Failure Domains
 
