@@ -7,9 +7,12 @@
   "producer_generation": 3,
   "stop_file": "/etc/cra-agent/STOP",
   "status_path": "/run/cra-agent/status.json",
-  "ingest_host": "replace-with-relay-ingest-address",
-  "ingest_port": 1935,
-  "public_hosts": ["1.1.1.1", "8.8.8.8"],
+  "ingest_host": "127.0.0.1",
+  "ingest_port": 1936,
+  "public_hosts": [
+    "1.1.1.1",
+    "8.8.8.8"
+  ],
   "interval_sec": 2.0,
   "observation_max_age_sec": 3.0,
   "central": {
@@ -17,5 +20,15 @@
     "policy_public_key": "replace-with-cra-central-policy-public-key",
     "agent_key_path": "/etc/cra-agent/agent.key",
     "sync_interval_sec": 30
+  },
+  "ingest_endpoints": {
+    "PRIMARY": {
+      "host": "127.0.0.1",
+      "port": 443
+    },
+    "FALLBACK": {
+      "host": "127.0.0.1",
+      "port": 1936
+    }
   }
 }

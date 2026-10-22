@@ -211,6 +211,7 @@ def test_hourly_limit(harness: Harness, tmp_path: Path) -> None:
     [
         (Network(gateway_ok=False, public_ok_count=0, ingest_ok=False), "NETWORK_DOWN"),
         (Network(gateway_ok=True, public_ok_count=2, ingest_ok=False), "INGEST_UNREACHABLE"),
+        (Network(gateway_ok=True, public_ok_count=2, ingest_ok=True, timed_out=True), "NETWORK_PROBE_TIMEOUT"),
     ],
 )
 def test_non_local_failures_never_restart(harness: Harness, tmp_path: Path, network: Network, blocker: str) -> None:
@@ -258,9 +259,11 @@ def test_enforce_verification_recovered(harness: Harness, tmp_path: Path) -> Non
     use_policy(harness, tmp_path)
     stall(harness)
     harness.pod.new_generation()
+    harness.pod.uptime = 0
+    harness.tick(stalled=False)
     harness.tick(stalled=False)
     row = harness.agent.store.db.execute("SELECT verify_result FROM actions").fetchone()
-    assert row[0] == "RECOVERED"
+    assert row[0] == "DELIVERY_RESUMED"
 
 
 def test_enforce_verification_not_recovered(harness: Harness, tmp_path: Path) -> None:
@@ -306,3 +309,53 @@ def test_once_does_not_create_state(tmp_path: Path, monkeypatch, capsys) -> None
     assert agent_mod.main(["once", "--config", str(tmp_path / "agent.json")]) == 0
     assert "OBSERVATION_MISSING" in capsys.readouterr().out
     assert not (tmp_path / "state").exists() and not (tmp_path / "run").exists()
+
+
+def test_verified_recovery_closes_the_executor_fence(harness: Harness, tmp_path: Path) -> None:
+    use_policy(harness, tmp_path)
+    stall(harness)
+    request_id = harness.executor.requests[0]["request_id"]
+    scope = {
+        "effect_scope_id": "scope-1",
+        "owner_request_id": request_id,
+        "owner_request_digest": "digest-1",
+        "state": "EFFECT_OBSERVED_AWAITING_VERIFICATION",
+        "identity": {"ffmpeg_pid": 4242},
+    }
+    harness.agent.unresolved_reader = lambda _socket: [scope]
+    harness.executor.response = {"ok": True, "state": "RECONCILED_EFFECT_OBSERVED"}
+    harness.pod.in_flight = 1
+    harness.pod.new_generation()
+    harness.pod.uptime = 0
+    harness.tick(stalled=False)
+    harness.tick(stalled=False)
+    harness.clock.advance(30)
+    harness.tick(stalled=False)
+    sent = [r for r in harness.executor.requests if r["schema_version"] == "runtime.effect_reconciliation_request.v1"]
+    assert len(sent) == 1
+    assert sent[0]["owner_request_id"] == request_id and sent[0]["resolution"] == "EFFECT_OBSERVED"
+    assert sent[0]["evidence"]["transport"]["tcp_probe_ok"] is True
+    for _ in range(5):  # done: never resent
+        harness.clock.advance(30)
+        harness.tick(stalled=False)
+    assert len([r for r in harness.executor.requests if r["schema_version"].endswith("reconciliation_request.v1")]) == 1
+
+
+def test_fence_of_an_unknown_outcome_is_left_for_an_operator(harness: Harness, tmp_path: Path) -> None:
+    use_policy(harness, tmp_path)
+    harness.executor.response = TimeoutError("lost")
+    stall(harness)
+    scope = {
+        "effect_scope_id": "s",
+        "owner_request_id": harness.executor.requests[0]["request_id"],
+        "owner_request_digest": "d",
+        "state": "OUTCOME_UNKNOWN",
+        "identity": {},
+    }
+    harness.agent.unresolved_reader = lambda _socket: [scope]
+    harness.pod.in_flight = 1
+    harness.pod.new_generation()
+    for _ in range(40):
+        harness.clock.advance(5)
+        harness.tick(stalled=False)
+    assert not [r for r in harness.executor.requests if r["schema_version"].endswith("reconciliation_request.v1")]

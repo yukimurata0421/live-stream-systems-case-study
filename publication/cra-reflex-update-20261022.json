@@ -1,0 +1,63 @@
+{
+  "schema": "stream.public_port_record.v1",
+  "port_date_jst": "2026-10-22",
+  "scope": "CRA local reflex update: acknowledgement stall criterion and replay tool, minimal enforce path on typed v2, Executor fence reconciliation, ledger authority handover tool, signed audit acknowledgements.",
+  "source_lineage": {
+    "recovery_reflex_development_head": "b7bd3d0c88cdb7b7036e9cb5132458d8d9fea010",
+    "development_worktree_dirty": false,
+    "prior_public_head": "f87a576926606a2706d0409fecc8e8d2a844e4bd"
+  },
+  "adaptations": [
+    "src/cra and the two tools are byte-identical to the development head.",
+    "Tests use repository-root imports and this repository's runtime_boundary instead of a sibling checkout; one long literal line carries a line-length exemption.",
+    "The agent example adds per-route ingest endpoints (loopback); the cra-01 address and key are placeholders."
+  ],
+  "omissions": [
+    {
+      "path": "tools/build_runtime_candidate.py, deploy/runtime/base-manifest.json, tests/test_runtime_candidate.py",
+      "reason": "Pod-side transport binding candidate is frozen and the manifest pins the production image"
+    },
+    {
+      "path": "deploy/controller/",
+      "reason": "host-specific patch record for the retiring fast-recovery controller"
+    },
+    {
+      "path": "deploy/contract/",
+      "reason": "host contract amendment draft for the delivery host; summarized as a boundary in the design record"
+    },
+    {
+      "path": "docs/ and docs/records/ (development)",
+      "reason": "Japanese operational records with host identities; summarized in English"
+    }
+  ],
+  "deployment_performed": false,
+  "remote_mutation_performed": false,
+  "commit_performed": true,
+  "push_performed": false,
+  "operated_state": {
+    "observed_at_jst": "2026-10-22T23:44:23+09:00",
+    "mode": "dry_run",
+    "agent_release_matches_development_commit": "d2b39b8 (later commits are typing and formatting only)",
+    "executor_path_reachable": false,
+    "confirmed_stalls": 0,
+    "executor_authority": "independent-controller/2, unresolved 0"
+  },
+  "checks": {
+    "reflex_tests": {
+      "passed": 146
+    },
+    "ruff": "PASS",
+    "mypy_strict_cra": "PASS",
+    "recovery_control_public_suite": {
+      "passed": 3372
+    },
+    "stream_public_suite": {
+      "passed": 1407,
+      "skipped": 9
+    }
+  },
+  "unobserved": [
+    "a confirmed stall under the acknowledgement criterion at the live two-second interval",
+    "authority handover and enforce mode in production"
+  ]
+}

@@ -2940,11 +2940,11 @@
     },
     {
       "path": "docs/current-status.md",
-      "source_role": "public-documentation-or-configuration",
-      "decision": "Additional conservative OCR, bounded ROI evidence and diagnostics; existing public bindings; source port only.",
-      "before_sha256": "5ccbec1abbb353dc7bb072282516a0f1c758312d4449503f4f2cc437c396ae84",
+      "source_role": "public-documentation",
+      "decision": "record the stall-criterion change and the production controller's criterion",
+      "before_sha256": "70261cd78b777c09597633df85e5379ba87634c981145723714ebd4eca60ec40",
       "source_sha256": null,
-      "public_sha256": "70261cd78b777c09597633df85e5379ba87634c981145723714ebd4eca60ec40",
+      "public_sha256": "b3ef7422407e0ff110cbbe8d80a67945e466f14fb43bbf472c93ca8b8103233d",
       "port_date_jst": "2026-10-22",
       "documentation_restructure": "New single page for volatile state.",
       "pre_twitch_observation_public_sha256": "040eac29174151f51e473f7f85e4aa23ff994be0079b3d4c011623b6ec7864ca",
@@ -3783,19 +3783,19 @@
     {
       "path": "recovery-control/docs/local-reflex-authority.md",
       "source_role": "public-documentation",
-      "decision": "curated English design summary of the private README and rollout notes",
-      "before_sha256": null,
+      "decision": "document the acknowledgement stall criterion, the replay, fence reconciliation and authority handover",
+      "before_sha256": "c1c04061e1ec23222e732712f64ed9bd5d836ea07eebc94535d05b8e894df2ed",
       "source_sha256": null,
-      "public_sha256": "c1c04061e1ec23222e732712f64ed9bd5d836ea07eebc94535d05b8e894df2ed",
+      "public_sha256": "af1ed32e7867436f9b63c84423c68226bff1b487158d050982b0241367bdca72",
       "port_date_jst": "2026-10-22"
     },
     {
       "path": "recovery-control/ops/systemd/cra-agent.example.json",
-      "source_role": "reflex-ops-example",
-      "decision": "replace private addresses and keys with placeholders",
-      "before_sha256": null,
-      "source_sha256": "4795105de122584835496627046dbf221170d5305d0710a1531c291e55e31625",
-      "public_sha256": "b21cdee423ab9117d086ffd8a6bcc01a2a6374af43efcc874bc6dc1fb294894a",
+      "source_role": "reflex-source",
+      "decision": "per-route ingest endpoints added; cra-01 address and key are placeholders",
+      "before_sha256": "b21cdee423ab9117d086ffd8a6bcc01a2a6374af43efcc874bc6dc1fb294894a",
+      "source_sha256": "fd867fe82f9b60fbd69b92e29b39eb8a29943f91769c5b1c2e90e412f72a4551",
+      "public_sha256": "c1cbc1d91783932753c03c88cd419a80c7256e8fefb493208a698ad6202ae5ff",
       "port_date_jst": "2026-10-22"
     },
     {
@@ -3864,10 +3864,10 @@
     {
       "path": "recovery-control/src/cra/agent.py",
       "source_role": "reflex-source",
-      "decision": "reformatted and linted under this repository's ruff and strict mypy settings; no behavior change",
-      "before_sha256": null,
-      "source_sha256": "b179415fbec91ec8341b45fce1f43a70f129e0f6a6a77bacbec28c10d39d0501",
-      "public_sha256": "8737f1be3157770a8842500b66c1e863a8f050edf6c6a80178c30965ca4e87e9",
+      "decision": "verbatim",
+      "before_sha256": "8737f1be3157770a8842500b66c1e863a8f050edf6c6a80178c30965ca4e87e9",
+      "source_sha256": "af7229bc79a8e63593a0226c951992f0583ad9c5035f8df2743216f1ff8dfcfe",
+      "public_sha256": "af7229bc79a8e63593a0226c951992f0583ad9c5035f8df2743216f1ff8dfcfe",
       "port_date_jst": "2026-10-22"
     },
     {
@@ -3882,64 +3882,64 @@
     {
       "path": "recovery-control/src/cra/central/cli.py",
       "source_role": "reflex-source",
-      "decision": "reformatted and linted under this repository's ruff and strict mypy settings; no behavior change",
-      "before_sha256": null,
-      "source_sha256": "566f1152b23f2288a641816406da2a97e79ae10460bf210807aba869e17e3219",
-      "public_sha256": "d3e50e778c3b83193581c49d902a106fd080e8bdf52c636d41cd74c2644032f7",
+      "decision": "verbatim",
+      "before_sha256": "d3e50e778c3b83193581c49d902a106fd080e8bdf52c636d41cd74c2644032f7",
+      "source_sha256": "0d75d4b040c6dcdf6e6a326de81ccaf22fdf76ca1cf51f042abb2628504d2d99",
+      "public_sha256": "0d75d4b040c6dcdf6e6a326de81ccaf22fdf76ca1cf51f042abb2628504d2d99",
       "port_date_jst": "2026-10-22"
     },
     {
       "path": "recovery-control/src/cra/central/server.py",
       "source_role": "reflex-source",
       "decision": "verbatim",
-      "before_sha256": null,
-      "source_sha256": "19d6d9e2cce2f036bc9997b3051c0283d07a9b74ee61d93bf6f44c47ba3f4c09",
-      "public_sha256": "19d6d9e2cce2f036bc9997b3051c0283d07a9b74ee61d93bf6f44c47ba3f4c09",
+      "before_sha256": "19d6d9e2cce2f036bc9997b3051c0283d07a9b74ee61d93bf6f44c47ba3f4c09",
+      "source_sha256": "77c1ae41234636083d514ec4501fb8a8fc052718e47cb1d0ee9fde5633f2a169",
+      "public_sha256": "77c1ae41234636083d514ec4501fb8a8fc052718e47cb1d0ee9fde5633f2a169",
       "port_date_jst": "2026-10-22"
     },
     {
       "path": "recovery-control/src/cra/central/store.py",
       "source_role": "reflex-source",
       "decision": "verbatim",
-      "before_sha256": null,
-      "source_sha256": "4bca8dc039f557b5f36039e9d797ec40ab6605532921501b3b827e4f3f121644",
-      "public_sha256": "4bca8dc039f557b5f36039e9d797ec40ab6605532921501b3b827e4f3f121644",
+      "before_sha256": "4bca8dc039f557b5f36039e9d797ec40ab6605532921501b3b827e4f3f121644",
+      "source_sha256": "b14d85e4058fc65b9f78cdaa5d2095452d77a7d0b3b7e1769d92973009458330",
+      "public_sha256": "b14d85e4058fc65b9f78cdaa5d2095452d77a7d0b3b7e1769d92973009458330",
       "port_date_jst": "2026-10-22"
     },
     {
       "path": "recovery-control/src/cra/central/verify.py",
       "source_role": "reflex-source",
-      "decision": "reformatted and linted under this repository's ruff and strict mypy settings; no behavior change",
-      "before_sha256": null,
-      "source_sha256": "7b22a929c89b612338b40ede61cfbb1accf0acf17ae0784dc043c39ad312d6ce",
-      "public_sha256": "e7149c029d453fdcc7ae3683d135dc7992c86c1eee90e494126ecab839118e56",
+      "decision": "verbatim",
+      "before_sha256": "e7149c029d453fdcc7ae3683d135dc7992c86c1eee90e494126ecab839118e56",
+      "source_sha256": "65fa7fa85912b2e7ed220eff9f827462805037f8a277a901992a249dcde966f2",
+      "public_sha256": "65fa7fa85912b2e7ed220eff9f827462805037f8a277a901992a249dcde966f2",
       "port_date_jst": "2026-10-22"
     },
     {
       "path": "recovery-control/src/cra/decide.py",
       "source_role": "reflex-source",
-      "decision": "reformatted and linted under this repository's ruff and strict mypy settings; no behavior change",
-      "before_sha256": null,
-      "source_sha256": "3ba1fd9f8c615ddd0965f19cbe3f2c8740548dd727b6e995a8f83a02e9d42ea7",
-      "public_sha256": "b50aad72f8155be6f5a297e0db3948116fd5549d6b0f5f9df861d10b8d42a815",
+      "decision": "verbatim",
+      "before_sha256": "b50aad72f8155be6f5a297e0db3948116fd5549d6b0f5f9df861d10b8d42a815",
+      "source_sha256": "3181d8ccb1a590085386353f98284d217bfed11ddf0e0af6907d703a7254d1ad",
+      "public_sha256": "3181d8ccb1a590085386353f98284d217bfed11ddf0e0af6907d703a7254d1ad",
       "port_date_jst": "2026-10-22"
     },
     {
       "path": "recovery-control/src/cra/effect.py",
       "source_role": "reflex-source",
-      "decision": "reformatted and linted under this repository's ruff and strict mypy settings; no behavior change",
-      "before_sha256": null,
-      "source_sha256": "c46bb3ebb5e435ae921cb831a0ea742ed03ff58675275a0fafbef2566ac857b3",
-      "public_sha256": "f13bc31c6586486c6ab4454edea26149a088f292cfdd8f3ff2a6a0319962b65b",
+      "decision": "verbatim",
+      "before_sha256": "f13bc31c6586486c6ab4454edea26149a088f292cfdd8f3ff2a6a0319962b65b",
+      "source_sha256": "059f16aacc2719247bd54396782d70e563eee1704c29f8d19215edc52721f110",
+      "public_sha256": "059f16aacc2719247bd54396782d70e563eee1704c29f8d19215edc52721f110",
       "port_date_jst": "2026-10-22"
     },
     {
       "path": "recovery-control/src/cra/observe.py",
       "source_role": "reflex-source",
-      "decision": "reformatted and linted under this repository's ruff and strict mypy settings; no behavior change",
-      "before_sha256": null,
-      "source_sha256": "13a98925f33e58fbf7ca3e6e3805d2312ad0a77c90f3b3e240acb557d74b959e",
-      "public_sha256": "d0b194dc3f070165118c78b7ac4d0c5de5f7b27b341fbfc058b5137d2b1c765b",
+      "decision": "verbatim",
+      "before_sha256": "d0b194dc3f070165118c78b7ac4d0c5de5f7b27b341fbfc058b5137d2b1c765b",
+      "source_sha256": "ff69faa43ef367e9b72558545c69d7d42bb26f2c9842a5a025135bd694045d38",
+      "public_sha256": "ff69faa43ef367e9b72558545c69d7d42bb26f2c9842a5a025135bd694045d38",
       "port_date_jst": "2026-10-22"
     },
     {
@@ -3963,19 +3963,19 @@
     {
       "path": "recovery-control/src/cra/store.py",
       "source_role": "reflex-source",
-      "decision": "reformatted and linted under this repository's ruff and strict mypy settings; no behavior change",
-      "before_sha256": null,
-      "source_sha256": "4494e29f1bfb1d5edfbbfd526e7d2acd6fe0234f18af4d4d80252d83027dcc5c",
-      "public_sha256": "f92e3fff67fcf626bb0ecc84ef3bd1e865d9fe4f3933c84d8f1676fac03f886d",
+      "decision": "verbatim",
+      "before_sha256": "f92e3fff67fcf626bb0ecc84ef3bd1e865d9fe4f3933c84d8f1676fac03f886d",
+      "source_sha256": "c5c07117907c439db04003b7d03e3120a7f8414a5626f21ffa1745dc017a4b07",
+      "public_sha256": "c5c07117907c439db04003b7d03e3120a7f8414a5626f21ffa1745dc017a4b07",
       "port_date_jst": "2026-10-22"
     },
     {
       "path": "recovery-control/src/cra/sync.py",
       "source_role": "reflex-source",
       "decision": "verbatim",
-      "before_sha256": null,
-      "source_sha256": "630b11b80408e6f44168ce8ec95a4d7ba7fd7dcf4c662f4177e17894e23d3127",
-      "public_sha256": "630b11b80408e6f44168ce8ec95a4d7ba7fd7dcf4c662f4177e17894e23d3127",
+      "before_sha256": "630b11b80408e6f44168ce8ec95a4d7ba7fd7dcf4c662f4177e17894e23d3127",
+      "source_sha256": "1bcc03d74ae81ddd53dc3956aa04df84d37dff209a002a337bf14f7c759794f7",
+      "public_sha256": "1bcc03d74ae81ddd53dc3956aa04df84d37dff209a002a337bf14f7c759794f7",
       "port_date_jst": "2026-10-22"
     },
     {
@@ -3989,38 +3989,38 @@
     },
     {
       "path": "recovery-control/tests/reflex/support.py",
-      "source_role": "reflex-test",
-      "decision": "split shared fakes from fixtures; documentation-range ingest address",
-      "before_sha256": null,
-      "source_sha256": "998ea1e0188de0f1cb0f2de01841d236a894896526f998f0a8277c3bfa204c95",
-      "public_sha256": "a52878cfed7c1e613c9abb68dceed12d63700d63269040f91d77e182ddb86a44",
+      "source_role": "reflex-source",
+      "decision": "repository-root test imports; in-repository runtime_boundary instead of a sibling checkout",
+      "before_sha256": "a52878cfed7c1e613c9abb68dceed12d63700d63269040f91d77e182ddb86a44",
+      "source_sha256": "2f249570b81766302d057ee64ec1453a3946aa1343fefdecbb4f74219b0bb93a",
+      "public_sha256": "7856cb99ba95350e953c059b424ff85a68fb8ccbdc23e33e196326387caeb2f0",
       "port_date_jst": "2026-10-22"
     },
     {
       "path": "recovery-control/tests/reflex/test_reflex_agent.py",
-      "source_role": "reflex-test",
-      "decision": "repository-root test imports; reformatted under this repository's ruff settings",
-      "before_sha256": null,
-      "source_sha256": "66546b04eb5dec6de1e5891c1095777b4135a343989ea9ca52a2f9db8c1dc20f",
-      "public_sha256": "be7f1233e3ba353972611fb38a41c6a5da2d0c9f19e70c5651ea958c24aa0213",
+      "source_role": "reflex-source",
+      "decision": "repository-root test imports; in-repository runtime_boundary instead of a sibling checkout",
+      "before_sha256": "be7f1233e3ba353972611fb38a41c6a5da2d0c9f19e70c5651ea958c24aa0213",
+      "source_sha256": "765d028fedd7c5eb0713ade0862d5b649e992069e3b955b7e07b74aa9d2c820b",
+      "public_sha256": "53e3d5f06095d0239fa9595bacb1ac70d7f2d7aae06cf188bbfa340e3cd86e21",
       "port_date_jst": "2026-10-22"
     },
     {
       "path": "recovery-control/tests/reflex/test_reflex_central.py",
-      "source_role": "reflex-test",
-      "decision": "repository-root test imports; reformatted under this repository's ruff settings",
-      "before_sha256": null,
-      "source_sha256": "0259a5ee78c63407e164c2abf328b935c0c65888694b390f579b36d52ef215b0",
-      "public_sha256": "61bf139959a7b784a1b225c4c098e070c188578c1eab5f58003f6f73e46b092f",
+      "source_role": "reflex-source",
+      "decision": "repository-root test imports; in-repository runtime_boundary instead of a sibling checkout",
+      "before_sha256": "61bf139959a7b784a1b225c4c098e070c188578c1eab5f58003f6f73e46b092f",
+      "source_sha256": "8e25ab017843d5651f77efb86f25ff8b1b5ce99fb94defb56f29eea6d76803d8",
+      "public_sha256": "55714ef9d26a0820813332f376ac4d460af0b3a933fd34cc9b35f3fb88fd5a41",
       "port_date_jst": "2026-10-22"
     },
     {
       "path": "recovery-control/tests/reflex/test_reflex_executor_compat.py",
-      "source_role": "reflex-test",
-      "decision": "import executor from this repository instead of a sibling checkout",
-      "before_sha256": null,
-      "source_sha256": "643c047b9bb9b5c78b7c5542cb60cc1d62c3e1fb52434fbda6799f9f140081df",
-      "public_sha256": "146210aa129acf68993914eaa9f40c8e209efa26611252ef617f7f76de6183f4",
+      "source_role": "reflex-source",
+      "decision": "repository-root test imports; in-repository runtime_boundary instead of a sibling checkout",
+      "before_sha256": "146210aa129acf68993914eaa9f40c8e209efa26611252ef617f7f76de6183f4",
+      "source_sha256": "a9f7fd25c7b91e2b41b91944ede7c063176d543491ae0fa6e21288520a15052e",
+      "public_sha256": "bbe4a50f723eba8357222d3f51f3bb28d0cc82f99824b3b29900e3c36caec23d",
       "port_date_jst": "2026-10-22"
     },
     {
@@ -4301,6 +4301,114 @@
       "source_sha256": null,
       "public_sha256": "4a3f2d65697a8b9d25cf19cf6916c4257289c6afe08b1087c43681348a01ea07",
       "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "recovery-control/src/cra/audit_ack.py",
+      "source_role": "reflex-source",
+      "decision": "verbatim",
+      "before_sha256": null,
+      "source_sha256": "f01dae68d217a674087de36434674c98367c72913522ca8a6aae802cef7170d7",
+      "public_sha256": "f01dae68d217a674087de36434674c98367c72913522ca8a6aae802cef7170d7",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "recovery-control/src/cra/recovery.py",
+      "source_role": "reflex-source",
+      "decision": "verbatim",
+      "before_sha256": null,
+      "source_sha256": "58a3485d36d80f4f73beab853e1065b666fa1a20fdc208d7e7b9ee50077ef1cf",
+      "public_sha256": "58a3485d36d80f4f73beab853e1065b666fa1a20fdc208d7e7b9ee50077ef1cf",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "recovery-control/src/cra/runtime_binding.py",
+      "source_role": "reflex-source",
+      "decision": "verbatim",
+      "before_sha256": null,
+      "source_sha256": "4808c0e487b306ddeaad3e0da956afd733b60b250b8e152029bfcdd638cd18ea",
+      "public_sha256": "4808c0e487b306ddeaad3e0da956afd733b60b250b8e152029bfcdd638cd18ea",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "recovery-control/tests/reflex/test_reflex_audit_ack.py",
+      "source_role": "reflex-source",
+      "decision": "repository-root test imports; in-repository runtime_boundary instead of a sibling checkout",
+      "before_sha256": null,
+      "source_sha256": "1249ef58c8f59f5680f1bc3779c85e9c8f413e936895bc4c392a296aa753b3c1",
+      "public_sha256": "4ff1e96d3d1872f5eb5bfccabd76e12c3fb25acee346275c88aa3047e970d3fa",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "recovery-control/tests/reflex/test_reflex_executor_authority.py",
+      "source_role": "reflex-source",
+      "decision": "repository-root test imports; in-repository runtime_boundary instead of a sibling checkout",
+      "before_sha256": null,
+      "source_sha256": "9dc42287650b8ee702a2499e5d949855fafdf154f5bfca477898fef076487a90",
+      "public_sha256": "7be4cfe4ecbd0baaebd60959f32328cf108a2536fc290c2858a7543685c26915",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "recovery-control/tests/reflex/test_reflex_executor_fence_reconciliation.py",
+      "source_role": "reflex-source",
+      "decision": "repository-root test imports; in-repository runtime_boundary instead of a sibling checkout",
+      "before_sha256": null,
+      "source_sha256": "f7d257920e6e6ea5f73e818e4a9ae2d279547e3d8f720da972406d8ddd67043c",
+      "public_sha256": "4382fd8da4d80b1f623f8e805bb79037ffd749c36519cfb89a5c95b4694e2eb2",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "recovery-control/tests/reflex/test_reflex_minimal_enforce.py",
+      "source_role": "reflex-source",
+      "decision": "repository-root test imports; in-repository runtime_boundary instead of a sibling checkout",
+      "before_sha256": null,
+      "source_sha256": "717e8c4f43d42f30c159e76d8224849a331e7e6becca93dc7e051d0ccc019dc4",
+      "public_sha256": "1e13149a672488901d27e6a6ac403668af5c86f4efbfa95ca4d0002d686c7f40",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "recovery-control/tests/reflex/test_reflex_regressions.py",
+      "source_role": "reflex-source",
+      "decision": "repository-root test imports; in-repository runtime_boundary instead of a sibling checkout",
+      "before_sha256": null,
+      "source_sha256": "bc9343aab802ada2c0ae2668c98d64b1f35c7dc10a85173264cbfcb8087254cb",
+      "public_sha256": "030348c95a5345256c7cfc90dc4eaac9db0bb4b6a637d7de588889696304fd20",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "recovery-control/tests/reflex/test_reflex_runtime_binding.py",
+      "source_role": "reflex-source",
+      "decision": "repository-root test imports; in-repository runtime_boundary instead of a sibling checkout",
+      "before_sha256": null,
+      "source_sha256": "ad0190c0e556d2cfee87ff6e128875332391d2377474af4528641038ec5e00ee",
+      "public_sha256": "89695fbc006aa3d725c8f9746d9f86ccca023cf1515d97026e2c0a58cff6188a",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "recovery-control/tests/reflex/test_reflex_stall_criterion.py",
+      "source_role": "reflex-source",
+      "decision": "repository-root test imports; in-repository runtime_boundary instead of a sibling checkout",
+      "before_sha256": null,
+      "source_sha256": "7b0f427958d0175d10c48977079777f166c96107eb4c066babec9f42b6b7018f",
+      "public_sha256": "7b0f427958d0175d10c48977079777f166c96107eb4c066babec9f42b6b7018f",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "recovery-control/tools/executor_authority.py",
+      "source_role": "reflex-source",
+      "decision": "verbatim",
+      "before_sha256": null,
+      "source_sha256": "df1134e788c5e51041964b4995830ccf062cc6da4948b0b958d7f578e98bd401",
+      "public_sha256": "df1134e788c5e51041964b4995830ccf062cc6da4948b0b958d7f578e98bd401",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "recovery-control/tools/replay_tcp_samples.py",
+      "source_role": "reflex-source",
+      "decision": "verbatim",
+      "before_sha256": null,
+      "source_sha256": "a1644cdc7bd640d0e9c5233ec2ea67154ea132087619bae7b2a1339904444cd3",
+      "public_sha256": "a1644cdc7bd640d0e9c5233ec2ea67154ea132087619bae7b2a1339904444cd3",
+      "port_date_jst": "2026-10-22"
     }
   ],
   "omissions": [
@@ -4360,7 +4468,8 @@
     "publication/clock-docs-review-20261022.json",
     "publication/cra-reflex-port-20261022.json",
     "publication/thumbnail-evidence-port-20261022.json",
-    "publication/private-path-allowlist.json"
+    "publication/private-path-allowlist.json",
+    "publication/cra-reflex-update-20261022.json"
   ],
   "evidence_checkpoint_cutoff_jst": "2026-10-14T00:04:57+09:00",
   "documentation_audience": "hiring and technical reviewers",
@@ -4529,5 +4638,12 @@
     "remaining": "Code defaults listed in publication/private-path-allowlist.json; User/Group service accounts are not part of this change.",
     "runtime_changed": false,
     "deployment_performed": false
+  },
+  "cra_reflex_update": {
+    "date_jst": "2026-10-22",
+    "record": "publication/cra-reflex-update-20261022.json",
+    "source_commit": "b7bd3d0c88cdb7b7036e9cb5132458d8d9fea010",
+    "deployment_performed": false,
+    "push_performed": false
   }
 }

@@ -7,13 +7,17 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 
-from cra import signing
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+
+from cra import audit_ack, signing
 from cra.central.store import CentralStore
 
 MAX_BODY = 4 << 20
 
 
-def make_handler(store: CentralStore, policy_path: Path, agent_keys: dict[str, str]) -> type[BaseHTTPRequestHandler]:
+def make_handler(
+    store: CentralStore, policy_path: Path, agent_keys: dict[str, str], ack_key: Ed25519PrivateKey
+) -> type[BaseHTTPRequestHandler]:
     class Handler(BaseHTTPRequestHandler):
         server_version = "cra-central/1"
 
@@ -62,7 +66,7 @@ def make_handler(store: CentralStore, policy_path: Path, agent_keys: dict[str, s
             except (KeyError, TypeError, ValueError):
                 self._reply(400, {"error": "RECORD_INVALID"})
                 return
-            self._reply(200, {"acked_seq": acked})
+            self._reply(200, audit_ack.sign_ack(ack_key, body, acked))
 
         def log_message(self, format: str, *args: Any) -> None:
             if not (args and str(args[1]) == "200"):
@@ -71,8 +75,8 @@ def make_handler(store: CentralStore, policy_path: Path, agent_keys: dict[str, s
     return Handler
 
 
-def serve(store: CentralStore, policy_path: Path, agent_keys: dict[str, str], host: str, port: int) -> None:
-    server = ThreadingHTTPServer((host, port), make_handler(store, policy_path, agent_keys))
+def serve(store: CentralStore, policy_path: Path, agent_keys: dict[str, str], host: str, port: int, *, ack_key: Ed25519PrivateKey) -> None:
+    server = ThreadingHTTPServer((host, port), make_handler(store, policy_path, agent_keys, ack_key))
     try:
         server.serve_forever()
     finally:

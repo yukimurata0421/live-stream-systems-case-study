@@ -42,7 +42,9 @@ class Central:
         self.envelope_path.write_text(json.dumps(envelope))
 
     def start(self) -> None:
-        self.httpd = ThreadingHTTPServer(("127.0.0.1", self.port), make_handler(self.store, self.envelope_path, self.agents))
+        self.httpd = ThreadingHTTPServer(
+            ("127.0.0.1", self.port), make_handler(self.store, self.envelope_path, self.agents, self.policy_key)
+        )
         self.port = self.httpd.server_address[1]
         threading.Thread(target=self.httpd.serve_forever, daemon=True).start()
 
@@ -201,13 +203,15 @@ def test_verify_clean_run_from_real_agent(tmp_path: Path, central: Central) -> N
     for _ in range(6):
         h.tick(stalled=True)
     h.pod.new_generation()
+    h.pod.uptime = 0
+    h.tick(stalled=False)
     h.tick(stalled=False)
     sync.cycle(h.clock())
     report = verify(central.store.audit_records(), central.store.policies(), now=h.clock())
     assert report["violations"] == []
     summary = next(iter(report["summary"].values()))
     assert summary["actions_by_mode"] == {"enforce": 1}
-    assert summary["verification_results"] == {"RECOVERED": 1}
+    assert summary["verification_results"] == {"DELIVERY_RESUMED": 1}
 
 
 def test_verify_detects_duplicate_generation_action() -> None:

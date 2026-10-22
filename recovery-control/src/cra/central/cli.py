@@ -57,6 +57,7 @@ def cmd_serve(args: argparse.Namespace) -> int:
         config["agents"],
         config.get("listen", "0.0.0.0"),
         int(config.get("port", 8790)),
+        ack_key=signing.load_private_key(config["policy_key_path"]),
     )
     return 0
 
@@ -64,7 +65,11 @@ def cmd_serve(args: argparse.Namespace) -> int:
 def cmd_verify(args: argparse.Namespace) -> int:
     config = _config(args.config)
     store = CentralStore(config["db_path"])
-    report = verify(store.audit_records(args.agent), store.policies(), now=datetime.now(UTC))
+    expected = {args.agent} if args.agent else set(config["agents"])
+    report = verify(store.audit_records(args.agent), store.policies(), now=datetime.now(UTC), expected_agents=expected)
+    report["audit_integrity"] = store.integrity(args.agent)
+    if report["audit_integrity"]["missing_seq_count"] or report["audit_integrity"]["unresolved_gaps"]:
+        report["violations"].append({"code": "I9_AUDIT_GAP", "detail": report["audit_integrity"]})
     report["conflicting_records"] = store.conflict_count()
     print(json.dumps(report, indent=1, ensure_ascii=False))
     return 1 if report["violations"] or report["conflicting_records"] else 0

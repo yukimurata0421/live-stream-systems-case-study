@@ -4,6 +4,7 @@ except by adopting a newer signed policy. Failure only delays policy updates and
 from __future__ import annotations
 
 import json
+import secrets
 import urllib.error
 import urllib.request
 from datetime import datetime
@@ -11,8 +12,8 @@ from typing import Any
 
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
+from cra import audit_ack, signing
 from cra import policy as policy_mod
-from cra import signing
 from cra.store import AgentStore
 
 POLICY_KEY = "policy_envelope"
@@ -89,11 +90,14 @@ class CentralSync:
         records = self.store.read_audit(acked, self.batch)
         if not records:
             return acked
-        body = {"agent_id": self.agent_id, "instance_id": self.store.instance_id, "records": records}
+        body = {
+            "agent_id": self.agent_id,
+            "instance_id": self.store.instance_id,
+            "records": records,
+            "nonce": secrets.token_hex(16),
+        }
         response = self._http("POST", "/v1/audit", {"body": body, "signature": signing.sign(self.agent_key, body)})
-        new_acked = response.get("acked_seq") if isinstance(response, dict) else None
-        if type(new_acked) is not int or not acked <= new_acked <= records[-1]["seq"]:
-            raise ValueError("ACK_INVALID")
+        new_acked = audit_ack.verify_ack(self.policy_public_key, response, body, previous=acked)
         if new_acked != acked:
             self.store.put(ACKED_KEY, str(new_acked))
         return new_acked

@@ -154,6 +154,31 @@ class AgentStore:
             )
             self._append(db, now, "action_verified", {"action_id": action_id, "result": result, **detail})
 
+    def reconcile_observed_action(self, now: datetime, action_id: int, response: dict[str, Any]) -> None:
+        """Preserve the original UNKNOWN audit and append the bound Executor's terminal evidence."""
+        with self._tx() as db:
+            changed = db.execute(
+                "UPDATE actions SET state='EFFECT_OBSERVED', response=? WHERE id=? AND state='OUTCOME_UNKNOWN'",
+                (json.dumps(response, sort_keys=True), action_id),
+            ).rowcount
+            if changed:
+                self._append(
+                    db,
+                    now,
+                    "action_reconciled",
+                    {
+                        "action_id": action_id,
+                        "previous_state": "OUTCOME_UNKNOWN",
+                        "state": "EFFECT_OBSERVED",
+                        "response": response,
+                    },
+                )
+
+    def resumed_enforce_actions(self) -> list[sqlite3.Row]:
+        return self.db.execute(
+            "SELECT id, request_id FROM actions WHERE mode = 'enforce' AND verify_result = 'DELIVERY_RESUMED' ORDER BY id"
+        ).fetchall()
+
     def unverified_actions(self) -> list[sqlite3.Row]:
         return self.db.execute("SELECT * FROM actions WHERE verify_result IS NULL ORDER BY id").fetchall()
 

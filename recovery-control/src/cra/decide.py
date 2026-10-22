@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
+from typing import Any
 
-from cra.observe import Network, Observation
+from cra.observe import Network, Observation, TcpMetrics
 from cra.policy import Policy
 
 RESTART = "RESTART"
@@ -17,37 +18,63 @@ NONE = "NONE"
 class StallTracker:
     """Counts consecutive stalled samples of one FFmpeg generation.
 
-    A sample only counts when the observation sequence advanced (distinct evidence) and
-    bytes_sent did not move since the previous sample of the same generation.
+    A sample only counts when the observation sequence advanced (distinct evidence), the
+    peer acknowledged nothing since the previous sample of the same transport, and data is
+    still waiting (notsent or unacked at or above the policy threshold). Retransmissions and
+    probes keep bytes_sent moving during a real stall, so bytes_sent is only the fallback when
+    a publisher does not report bytes_acked; that fallback also requires lastsnd.
     """
 
     generation_key: str = ""
     last_sequence: int = 0
     last_bytes_sent: int = -1
+    last_bytes_acked: int | None = None
     streak: int = 0
+    last_observed_at: datetime | None = None
+    identity: tuple[Any, ...] = ()
+    criteria: tuple[int, ...] = ()
 
-    def update(self, obs: Observation, policy: Policy) -> tuple[bool, int]:
+    def reset(self) -> None:
+        self.__dict__.update(vars(StallTracker()))
+
+    def update(self, obs: Observation, policy: Policy, *, max_gap_sec: float = 5.0) -> tuple[bool, int]:
         """Return (stalled_now, streak)."""
-        if obs.generation_key != self.generation_key or obs.sequence < self.last_sequence:
+        criteria = (policy.stall_lastsnd_ms, policy.stall_notsent_bytes, policy.stall_unacked, policy.stall_confirm_samples)
+        gap = (obs.observed_at - self.last_observed_at).total_seconds() if self.last_observed_at else 0
+        if (
+            obs.transport_identity != self.identity
+            or obs.sequence < self.last_sequence
+            or gap < 0
+            or gap > max_gap_sec
+            or criteria != self.criteria
+        ):
             self.generation_key = obs.generation_key
+            self.identity = obs.transport_identity
+            self.criteria = criteria
+            self.last_observed_at = obs.observed_at
             self.last_sequence = obs.sequence
             self.last_bytes_sent = obs.tcp.bytes_sent if obs.tcp else -1
+            self.last_bytes_acked = obs.tcp.bytes_acked if obs.tcp else None
             self.streak = 0
             return False, 0
         if obs.sequence == self.last_sequence:
             return self.streak > 0, self.streak
         tcp = obs.tcp
-        stalled = (
-            tcp is not None
-            and self.last_bytes_sent >= 0
-            and tcp.bytes_sent == self.last_bytes_sent
-            and tcp.lastsnd_ms >= policy.stall_lastsnd_ms
-            and (tcp.notsent >= policy.stall_notsent_bytes or tcp.unacked >= policy.stall_unacked)
-        )
+        stalled = tcp is not None and stall_sample(tcp, self.last_bytes_sent, self.last_bytes_acked, policy)
         self.last_sequence = obs.sequence
+        self.last_observed_at = obs.observed_at
         self.last_bytes_sent = tcp.bytes_sent if tcp else -1
+        self.last_bytes_acked = tcp.bytes_acked if tcp else None
         self.streak = self.streak + 1 if stalled else 0
         return stalled, self.streak
+
+
+def stall_sample(tcp: TcpMetrics, last_bytes_sent: int, last_bytes_acked: int | None, policy: Policy) -> bool:
+    """One stalled interval: nothing acknowledged while data is still queued."""
+    pressure = tcp.notsent >= policy.stall_notsent_bytes or tcp.unacked >= policy.stall_unacked
+    if tcp.bytes_acked is not None and last_bytes_acked is not None:
+        return pressure and tcp.bytes_acked == last_bytes_acked
+    return pressure and last_bytes_sent >= 0 and tcp.bytes_sent == last_bytes_sent and tcp.lastsnd_ms >= policy.stall_lastsnd_ms
 
 
 @dataclass(frozen=True)
@@ -85,12 +112,18 @@ def decide(
 ) -> Decision:
     """`network` is None when probes were skipped because no stall is confirmed."""
     if stall_streak < policy.stall_confirm_samples:
+        if not obs.ffmpeg_running or not obs.ffmpeg_generation or not obs.pod_uid:
+            return Decision(NONE, "FFMPEG_NOT_RUNNING")
+        if not obs.target_valid:
+            return Decision(NONE, "TARGET_UNAVAILABLE")
         reason = "STALL_UNCONFIRMED" if stall_streak else ("NO_TCP_METRICS" if obs.tcp is None else "HEALTHY")
         return Decision(NONE, reason)
 
     blockers: list[str] = []
     if network is None:
         blockers.append("NETWORK_NOT_PROBED")
+    elif network.timed_out:
+        blockers.append("NETWORK_PROBE_TIMEOUT")
     elif network.network_down:
         blockers.append("NETWORK_DOWN")
     elif not network.ingest_ok:
@@ -117,7 +150,13 @@ def decide(
         blockers.append("MODE_OFF")
     if policy.mode == "enforce" and (obs.active_producer_id != producer_id or obs.active_producer_generation != producer_generation):
         blockers.append("NOT_EXECUTOR_AUTHORITY")
-
+    if policy.mode == "enforce" and (
+        not obs.executor_instance_id
+        or not obs.raw.get("delivery_route")
+        or type(obs.raw.get("delivery_route_generation")) is not int
+        or obs.raw["delivery_route_generation"] < 1
+    ):
+        blockers.append("RUNTIME_CONTEXT_UNAVAILABLE")
     if blockers:
         return Decision(NONE, "STALL_CONFIRMED", tuple(blockers))
     return Decision(RESTART if policy.mode == "enforce" else WOULD_RESTART, "STALL_CONFIRMED")

@@ -105,6 +105,12 @@ stalls and would-restart decisions but has no path to the Effect Executor.
 cra-01 collects the audit log and checks it hourly. No stall has been confirmed
 yet. See the [design record](../recovery-control/docs/local-reflex-authority.md).
 
+At about 23:30 JST the agent switched to judging stalls by acknowledgement
+progress, after a replay of recorded samples showed that the earlier
+`bytes_sent` criterion missed the 06:31 JST stall. The production fast-recovery
+controller still uses a `bytes_sent` criterion of the same kind, so it can miss
+an acknowledgement stall until the agent takes over in `enforce`.
+
 ## Deliberately Disabled
 
 - CRA production authority (`production_behavior_change_authorized=false`).
