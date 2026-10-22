@@ -3,23 +3,23 @@ groups:
     interval: 30s
     rules:
       - alert: TwitchThumbnailObservationUnavailable
-        expr: (stream_v3_twitch_thumbnail_seconds_since_last_valid_observation{job="stream_v3_clock_observer"} > 300) and on(job, instance, target, scope) (stream_v3_twitch_thumbnail_api_live{job="stream_v3_clock_observer"} == 1)
+        expr: (stream_v3_twitch_thumbnail_seconds_since_last_valid_observation{job="stream_v3_clock_observer"} > 300) and on(job, instance, target, scope) (stream_v3_twitch_thumbnail_api_live{job="stream_v3_clock_observer"} == 1) and on(job, instance, target, scope) (stream_v3_twitch_thumbnail_startup_grace_remaining_seconds{job="stream_v3_clock_observer"} == 0)
         labels:
           severity: warning
           component: twitch-thumbnail
         annotations:
           summary: Twitch API reports LIVE but thumbnail clock observation is unavailable
       - alert: TwitchThumbnailWorkerUnavailable
-        expr: stream_v3_twitch_thumbnail_seconds_since_last_cycle{job="stream_v3_clock_observer"} > 300
+        expr: (stream_v3_twitch_thumbnail_seconds_since_last_cycle{job="stream_v3_clock_observer"} > 300) or absent_over_time(stream_v3_twitch_thumbnail_seconds_since_last_cycle{job="stream_v3_clock_observer",instance="127.0.0.1:9108",target="twitch_thumbnail",scope="twitch_provider_thumbnail"}[10m])
         labels:
           severity: warning
           component: twitch-thumbnail
         annotations:
-          summary: Twitch thumbnail worker has not published for over five minutes
+          summary: Twitch thumbnail publication is over five minutes old or its metric is absent for ten minutes
       - alert: TwitchThumbnailStale
-        expr: (stream_v3_twitch_thumbnail_frame_age_seconds{job="stream_v3_clock_observer"} > 600) and on(job, instance, target, scope) (stream_v3_twitch_thumbnail_clock_verified{job="stream_v3_clock_observer"} == 1)
+        expr: (stream_v3_twitch_thumbnail_frame_age_seconds{job="stream_v3_clock_observer"} > 840) and on(job, instance, target, scope) (stream_v3_twitch_thumbnail_clock_verified{job="stream_v3_clock_observer"} == 1)
         labels:
           severity: warning
           component: twitch-thumbnail
         annotations:
-          summary: Twitch thumbnail clock is over ten minutes old; public video playback is unverified
+          summary: Twitch thumbnail clock is over fourteen minutes old; public video playback is unverified

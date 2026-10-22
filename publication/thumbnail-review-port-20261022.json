@@ -1,0 +1,172 @@
+{
+  "schema": "stream.public_port_record.v1",
+  "port_date_jst": "2026-10-22",
+  "scope": "Thumbnail stream rollover, observation/publication loss, explicit waits, unit consistency and conservative OCR retry.",
+  "base_public_commit": "ea3ee8c6162cd4a95e6698da333f976190f52bc1",
+  "source_commits": [
+    "c27f0ee0af1f9e7ff19676c6a7e5eb224d408f71"
+  ],
+  "development_commit": "57318bd1c4c50c67590f7c9dd0120ca74cb3d5a1",
+  "source_selection": "Explicit reviewed source and an allowlisted dependency closure; protected parallel edits are excluded.",
+  "private_deployment_performed_by_this_port": false,
+  "public_example_deployment_performed": false,
+  "push_performed": false,
+  "checks": {
+    "related_pytest": {
+      "passed": 112,
+      "failed": 0,
+      "subtests_passed": 707
+    },
+    "prometheus_rule_tests": "PASS; viewer_clock and twitch_thumbnail",
+    "public_source_map": "PASS; zero mismatches in the selected commit candidate",
+    "public_language": "PASS; 1809 text files and one retained Unicode-data exception",
+    "documentation": "PASS; related documentation/link/catalog tests included",
+    "selected_secret_scan": "PASS; private paths/addresses/keys checked by the source-map validator; selected changes separately scanned",
+    "protected_parallel_work": "Excluded from candidate and commit; source-map entries retained"
+  },
+  "files": [
+    {
+      "path": "ops/monitoring/prometheus/rules/twitch_thumbnail.yml",
+      "before_sha256": "5cd4fde142556c19664bbe8b08826390d90584c28c7de00db62bd789b54b31cd",
+      "source_sha256": "7281ba4e556f223d239870554a3b9d8138ffd2972877348957f7b5546a580aa5",
+      "public_sha256": "7281ba4e556f223d239870554a3b9d8138ffd2972877348957f7b5546a580aa5",
+      "source_role": "public-source-adaptation",
+      "decision": "Review fixes, English prose and existing public bindings; no deployment or unrelated working-copy edits."
+    },
+    {
+      "path": "ops/monitoring/prometheus/tests/twitch_thumbnail.yml",
+      "before_sha256": "5b7cc18e8bede3379a0a804275f35272f572c5344964f2b419093bb022f661d8",
+      "source_sha256": "fc7defc66bdd610079758101a4d52484f961a2c9fdedbe135b1977cdb276703e",
+      "public_sha256": "fc7defc66bdd610079758101a4d52484f961a2c9fdedbe135b1977cdb276703e",
+      "source_role": "public-source-adaptation",
+      "decision": "Review fixes, English prose and existing public bindings; no deployment or unrelated working-copy edits."
+    },
+    {
+      "path": "ops/scripts/stream_v3_clock_alert_notify.py",
+      "before_sha256": "4d14a430511e6f100ba46bc7fbe2a6242e070a4f5cec36ffbc049591325801f7",
+      "source_sha256": "90a86d77a3bc7da31a5e685499dc7ae79572148d66d3a7ccc423b744f8910c9b",
+      "public_sha256": "1b29d820fe3a3caacdaf415b0fa6a423f89a20e7f56142728e34658a81043a9d",
+      "source_role": "public-source-adaptation",
+      "decision": "Review fixes, English prose and existing public bindings; no deployment or unrelated working-copy edits."
+    },
+    {
+      "path": "ops/scripts/stream_v3_oci_monitor_exporter_overlay.py",
+      "before_sha256": "f96019b548f2866bc3606c7ba0e4ba380de9951fe0ecb5bdea39ba7701efd9df",
+      "source_sha256": "848da939d0c2edeb9917926c8f0f53bcded997bd78e5ff8ce5d04b5ee49fa1dd",
+      "public_sha256": "c02bc63a9be50a14dc018e2c070690dfadd5308dbdaf0c64eea14f403dfae414",
+      "source_role": "public-source-adaptation",
+      "decision": "Review fixes, English prose and existing public bindings; no deployment or unrelated working-copy edits."
+    },
+    {
+      "path": "ops/systemd/stream-v3-twitch-thumbnail.service",
+      "before_sha256": "dcc4fea9792f2f3ac3b2f4725b8b438e1c9db4460546ae983d9245c86fe5654b",
+      "source_sha256": "1fd900ecf290d7422925673a0769076ea516d55693c03825436415a34619e75a",
+      "public_sha256": "91959219de608358e89927b53370b250a40e76ee0efde407a4e3b3a7776f02e2",
+      "source_role": "public-source-adaptation",
+      "decision": "Review fixes, English prose and existing public bindings; no deployment or unrelated working-copy edits."
+    },
+    {
+      "path": "src/stream_v3/twitch_thumbnail.py",
+      "before_sha256": "355649aa69299e591079582144cd2c9e01ae93cc741dbdc6f2e0d6cfc306d730",
+      "source_sha256": "f19c8389742b2a076fa49d042e61d916fdccc6878f9bcae2d924ff4f098e67ce",
+      "public_sha256": "c720c2c193ee5a6752a9104d58478135296c98db1412b755552beefc172759ef",
+      "source_role": "public-source-adaptation",
+      "decision": "Review fixes, English prose and existing public bindings; no deployment or unrelated working-copy edits."
+    },
+    {
+      "path": "src/stream_v3/twitch_thumbnail_metrics.py",
+      "before_sha256": "d824eb6e20a9236509cb91d20c91f1b36055e469312b596c46cd52bde43ee105",
+      "source_sha256": "4b8086e4ada0f667a56b71cb13197b9b2bc6f9d9345c8e369d5f6151bf1dd47b",
+      "public_sha256": "66aeff09e88b66b30d513fa17cc560d222786484587f4a6745fd68ec7ba9425b",
+      "source_role": "public-source-adaptation",
+      "decision": "Review fixes, English prose and existing public bindings; no deployment or unrelated working-copy edits."
+    },
+    {
+      "path": "src/stream_v3/twitch_thumbnail_worker.py",
+      "before_sha256": "dbb368d44d7294115c14d84cd5013421593177182fcb5c416f3d14b960bc5cac",
+      "source_sha256": "6bbb8d76436cfc4e9cc1b402ee08bd159c2475d07b48ac8f3916e30be555dfae",
+      "public_sha256": "c8a2c94ba934da373b484cb6feeefb5c8bc06ffd6a83053491fdc813c0c61cb2",
+      "source_role": "public-source-adaptation",
+      "decision": "Review fixes, English prose and existing public bindings; no deployment or unrelated working-copy edits."
+    },
+    {
+      "path": "tests/test_clock_observation_alerts.py",
+      "before_sha256": "8939ef68b524eb0a9ae6777421a41028584e9953e5f13bdd569f09b958e54ea5",
+      "source_sha256": "f2f50da8a779c84fe6216562003851701d0e56548d57629da26712dae553165d",
+      "public_sha256": "729b8f9e5c3c7052130d556dde4727bcb40d9070646b20f0b38cf4733ac3fe54",
+      "source_role": "public-source-adaptation",
+      "decision": "Review fixes, English prose and existing public bindings; no deployment or unrelated working-copy edits."
+    },
+    {
+      "path": "tests/test_twitch_thumbnail.py",
+      "before_sha256": "5f63fb73846046c183ef5585db6410b3641532a194a6064883b6711a395a6f49",
+      "source_sha256": "ac082248e6a972b6e2120a6e08a7157e1e81011d10d7778a95e11d444e39fd77",
+      "public_sha256": "ac082248e6a972b6e2120a6e08a7157e1e81011d10d7778a95e11d444e39fd77",
+      "source_role": "public-source-adaptation",
+      "decision": "Review fixes, English prose and existing public bindings; no deployment or unrelated working-copy edits."
+    },
+    {
+      "path": "ops/config/twitch_thumbnail.example.json",
+      "before_sha256": "54584badd1a82c5346f575a3c34ec8bc80d80d8b171bf455d856af207c3a933c",
+      "source_sha256": "c59fc8e08693e87af6e88e0245e0aad8c1d987e5fed8c266e4814662f965189c",
+      "public_sha256": "c59fc8e08693e87af6e88e0245e0aad8c1d987e5fed8c266e4814662f965189c",
+      "source_role": "public-source-adaptation",
+      "decision": "Review fixes, English prose and existing public bindings; no deployment or unrelated working-copy edits."
+    },
+    {
+      "path": "docs/v3/twitch-thumbnail-monitor.md",
+      "before_sha256": "4e1557062b137358c8ea048a378b171d32bd24785b4b0259f59647c8b062110f",
+      "source_sha256": null,
+      "public_sha256": "0f3f80233f5fd6c20a306e97cacb5c4f9e8e4c69960629f339363e89299c3252",
+      "source_role": "public-documentation-or-regression",
+      "decision": "Review fixes, English prose and existing public bindings; no deployment or unrelated working-copy edits."
+    },
+    {
+      "path": "docs/v3/public-source-port-2026-10-22-thumbnail-review.md",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "867b47458a7c22d3344e4bfa68c1384716903bc41d833d46b7a44e048711c7d5",
+      "source_role": "public-documentation-or-regression",
+      "decision": "Review fixes, English prose and existing public bindings; no deployment or unrelated working-copy edits."
+    },
+    {
+      "path": "docs/current-status.md",
+      "before_sha256": "fc04fe5c2e6937be3fd269d3bd636d44bf4e39dd05de95497936624fb5a63efc",
+      "source_sha256": null,
+      "public_sha256": "209f0cd2d8adc0144f39a214c5f4ccf6c0a99378c3292bca720f453defc6f06f",
+      "source_role": "public-documentation-or-regression",
+      "decision": "Review fixes, English prose and existing public bindings; no deployment or unrelated working-copy edits."
+    },
+    {
+      "path": "docs/00_INDEX.md",
+      "before_sha256": "6cf7bf2af188f52029afb5c5460c0dbf027488303b12a60bf0753a37664bf36c",
+      "source_sha256": null,
+      "public_sha256": "94cbeda85d7c05469854effe996cdd8c48b5db06b303e4ae0785a78e7cf48070",
+      "source_role": "public-documentation-or-regression",
+      "decision": "Review fixes, English prose and existing public bindings; no deployment or unrelated working-copy edits."
+    }
+  ],
+  "protected_parallel_files": [
+    "monitoring-v4/src/stream_monitoring_v4/compatibility/twitch_sli.py",
+    "monitoring-v4/tests/test_twitch_sli.py",
+    "ops/public-publisher/site/public/assets/ops-20261020.js",
+    "ops/public-publisher/site/tests/twitch-history-20261022.html"
+  ],
+  "validation_boundary": "The selected commit candidate uses the committed versions of protected parallel files. Their live working copies and source-map entries are unchanged.",
+  "preserved": [
+    "Existing independent Twitch SLI and public-history work.",
+    "Existing API source, payload, cadence, backoff and normal request count.",
+    "Existing public host bindings and the expensive legacy exporter cache.",
+    "Existing delivery, notification transport, SLO and recovery authority."
+  ],
+  "omissions": [
+    "Private addresses, accounts, host settings, credentials and raw evidence.",
+    "Images, state/history databases, caches, venvs, binary dependencies and deployment receipts."
+  ],
+  "unobserved": [
+    "Real daily stream rollover after this review.",
+    "Twenty-four-hour thumbnail/OCR quality.",
+    "Public player, CDN and audio E2E health.",
+    "New warning receiver-side delivery."
+  ]
+}

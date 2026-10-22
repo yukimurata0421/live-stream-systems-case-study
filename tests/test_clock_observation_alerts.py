@@ -70,7 +70,7 @@ def test_thumbnail_recovery_does_not_change_relay_recovery_proof(monkeypatch):
     assert proof['observer']==990 and proof['twitch_thumbnail']==900
     alert={'state':'firing','labels':{'alertname':'TwitchThumbnailStale','target':'twitch_thumbnail'}}
     messages,state=module.plan_clock([alert],{},1000,repeat_sec=3600,recovery={})
-    assert len(messages)==1 and 'ten minutes' in messages[0]['content'] and 'Viewer-side video playback is unverified' in messages[0]['content']
+    assert len(messages)==1 and 'fourteen minutes' in messages[0]['content'] and 'Viewer-side video playback is unverified' in messages[0]['content']
 
 
 @pytest.mark.parametrize('change',['fresh','expiry','pod','boot','peer','not_ready'])

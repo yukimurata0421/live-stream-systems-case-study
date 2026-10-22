@@ -1,5 +1,5 @@
 [Unit]
-Description=Read-only Twitch thumbnail clock observation on arena-server
+Description=Read-only Twitch thumbnail clock observation on the monitoring host
 After=network-online.target stream-v4-twitch-api-collector.service
 Wants=network-online.target
 
@@ -12,7 +12,9 @@ Environment=PYTHONDONTWRITEBYTECODE=1
 Environment=OMP_THREAD_LIMIT=1
 Environment=OMP_NUM_THREADS=1
 Environment=OPENBLAS_NUM_THREADS=1
-ExecStart=REPLACE_WITH_REVIEWED_RELEASE_COMMAND
+Environment=PYTHONPATH=/opt/stream-v3-twitch-thumbnail/current/src
+Environment=LD_LIBRARY_PATH=/opt/stream-v3-twitch-thumbnail/current/runtime/lib
+ExecStart=/opt/stream-v3-twitch-thumbnail/current/venv/bin/python3 -m stream_v3.twitch_thumbnail_worker --config /etc/stream-v3-twitch-thumbnail/config.json --state-root /var/lib/stream-v3-twitch-thumbnail
 StateDirectory=stream-v3-twitch-thumbnail
 StateDirectoryMode=0750
 RuntimeDirectory=stream-v3-twitch-thumbnail

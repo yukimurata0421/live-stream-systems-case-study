@@ -94,6 +94,7 @@ start.
 ## Publication Records
 
 - `v3/public-source-port-2026-10-22-thumbnail.md`: [thumbnail monitoring and return-reader quality corrections](v3/public-source-port-2026-10-22-thumbnail.md).
+- `v3/public-source-port-2026-10-22-thumbnail-review.md`: [stream rollover, missing metrics, OCR retry and source-only validation](v3/public-source-port-2026-10-22-thumbnail-review.md).
 - `v3/public-source-port-2026-10-22.md`: [clock-monitor review, dated evidence and public source adaptations](v3/public-source-port-2026-10-22.md).
 
 - `v3/public-source-port-2026-10-20.md`: [self-healing route port](v3/public-source-port-2026-10-20.md).

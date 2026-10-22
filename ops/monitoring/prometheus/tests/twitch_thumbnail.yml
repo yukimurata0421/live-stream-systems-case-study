@@ -2,7 +2,7 @@ rule_files:
 - ../rules/twitch_thumbnail.yml
 evaluation_interval: 30s
 tests:
-- name: cached frames under ten minutes remain normal
+- name: one missed refresh is tolerated until fourteen minutes
   interval: 30s
   input_series:
   - series: stream_v3_twitch_thumbnail_api_live{job="stream_v3_clock_observer",instance="127.0.0.1:9108",target="twitch_thumbnail",scope="twitch_provider_thumbnail"}
@@ -16,10 +16,10 @@ tests:
   - series: stream_v3_twitch_thumbnail_seconds_since_last_cycle{job="stream_v3_clock_observer",instance="127.0.0.1:9108",target="twitch_thumbnail",scope="twitch_provider_thumbnail"}
     values: 0+0x30
   alert_rule_test:
-  - eval_time: 10m
+  - eval_time: 14m
     alertname: TwitchThumbnailStale
     exp_alerts: []
-  - eval_time: 10m30s
+  - eval_time: 14m30s
     alertname: TwitchThumbnailStale
     exp_alerts:
     - exp_labels:
@@ -31,7 +31,7 @@ tests:
         severity: warning
         component: twitch-thumbnail
       exp_annotations:
-        summary: Twitch thumbnail clock is over ten minutes old; public video playback
+        summary: Twitch thumbnail clock is over fourteen minutes old; public video playback
           is unverified
 - name: TwitchThumbnailObservationUnavailable
   interval: 30s
@@ -40,6 +40,8 @@ tests:
     values: 0+30x30
   - series: stream_v3_twitch_thumbnail_api_live{job="stream_v3_clock_observer",instance="127.0.0.1:9108",target="twitch_thumbnail",scope="twitch_provider_thumbnail"}
     values: 1+0x30
+  - series: stream_v3_twitch_thumbnail_startup_grace_remaining_seconds{job="stream_v3_clock_observer",instance="127.0.0.1:9108",target="twitch_thumbnail",scope="twitch_provider_thumbnail"}
+    values: 0+0x30
   alert_rule_test:
   - eval_time: 5m
     alertname: TwitchThumbnailObservationUnavailable
@@ -80,7 +82,7 @@ tests:
         severity: warning
         component: twitch-thumbnail
       exp_annotations:
-        summary: Twitch thumbnail worker has not published for over five minutes
+        summary: Twitch thumbnail publication is over five minutes old or its metric is absent for ten minutes
 - name: API offline or unknown does not become thumbnail failure
   interval: 30s
   input_series:
@@ -88,7 +90,55 @@ tests:
     values: 0+0x30
   - series: stream_v3_twitch_thumbnail_seconds_since_last_valid_observation{job="stream_v3_clock_observer",instance="127.0.0.1:9108",target="twitch_thumbnail",scope="twitch_provider_thumbnail"}
     values: 1000+30x30
+  - series: stream_v3_twitch_thumbnail_startup_grace_remaining_seconds{job="stream_v3_clock_observer",instance="127.0.0.1:9108",target="twitch_thumbnail",scope="twitch_provider_thumbnail"}
+    values: 0+0x30
   alert_rule_test:
   - eval_time: 10m
     alertname: TwitchThumbnailObservationUnavailable
     exp_alerts: []
+- name: new stream gets at most twelve minutes to replace the old thumbnail
+  interval: 30s
+  input_series:
+  - series: stream_v3_twitch_thumbnail_seconds_since_last_valid_observation{job="stream_v3_clock_observer",instance="127.0.0.1:9108",target="twitch_thumbnail",scope="twitch_provider_thumbnail"}
+    values: 0+30x30
+  - series: stream_v3_twitch_thumbnail_api_live{job="stream_v3_clock_observer",instance="127.0.0.1:9108",target="twitch_thumbnail",scope="twitch_provider_thumbnail"}
+    values: 1+0x30
+  - series: stream_v3_twitch_thumbnail_startup_grace_remaining_seconds{job="stream_v3_clock_observer",instance="127.0.0.1:9108",target="twitch_thumbnail",scope="twitch_provider_thumbnail"}
+    values: 720-30x24 0+0x6
+  alert_rule_test:
+  - eval_time: 11m30s
+    alertname: TwitchThumbnailObservationUnavailable
+    exp_alerts: []
+  - eval_time: 12m
+    alertname: TwitchThumbnailObservationUnavailable
+    exp_alerts:
+    - exp_labels:
+        job: stream_v3_clock_observer
+        instance: 127.0.0.1:9108
+        target: twitch_thumbnail
+        scope: twitch_provider_thumbnail
+        severity: warning
+        component: twitch-thumbnail
+      exp_annotations:
+        summary: Twitch API reports LIVE but thumbnail clock observation is unavailable
+- name: total disappearance of the metric cannot silence worker warnings
+  interval: 30s
+  input_series:
+  - series: stream_v3_twitch_thumbnail_seconds_since_last_cycle{job="stream_v3_clock_observer",instance="127.0.0.1:9108",target="twitch_thumbnail",scope="twitch_provider_thumbnail"}
+    values: 0+0x4 stale _x24
+  alert_rule_test:
+  - eval_time: 11m30s
+    alertname: TwitchThumbnailWorkerUnavailable
+    exp_alerts: []
+  - eval_time: 12m
+    alertname: TwitchThumbnailWorkerUnavailable
+    exp_alerts:
+    - exp_labels:
+        job: stream_v3_clock_observer
+        instance: 127.0.0.1:9108
+        target: twitch_thumbnail
+        scope: twitch_provider_thumbnail
+        severity: warning
+        component: twitch-thumbnail
+      exp_annotations:
+        summary: Twitch thumbnail publication is over five minutes old or its metric is absent for ten minutes

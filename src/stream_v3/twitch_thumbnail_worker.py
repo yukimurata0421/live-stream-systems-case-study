@@ -58,14 +58,31 @@ class Worker:
              'last_valid_observation_at_utc':self.previous.get('last_valid_observation_at_utc'),
              'monitoring_started_at_utc':self.previous.get('monitoring_started_at_utc') or utc_timestamp(now),
              'observation_required_since_utc':self.previous.get('observation_required_since_utc'),
+             'active_stream_id':self.previous.get('active_stream_id') or self.previous.get('stream_id') or self.analyzer.verified.get('stream_id'),
+             'startup_grace_started_at_utc':self.previous.get('startup_grace_started_at_utc'),
+             'capture_attempted':False,
+             'ocr_attempted':False,'ocr_binary_retried':False,
              'last_request_at_utc':self.previous.get('last_request_at_utc'),
              'next_fetch_not_before_utc':self.previous.get('next_fetch_not_before_utc')}
+        analysis_started=False
         try:
             api=load_json(self.config['api_file'])
             row['api_live']=api_status(api,self.config,now=now)
             if row['api_live'] is not None:row['api_collected_at_utc']=api['collected_at']
             if row['api_live'] is False:row['observation_required_since_utc']=None
             elif row['api_live'] is True and not row['observation_required_since_utc']:row['observation_required_since_utc']=utc_timestamp(now)
+            identity=api.get('stream_id')
+            if row['api_live'] is True and isinstance(identity,str) and identity:
+                if identity!=row['active_stream_id']:
+                    # Channel thumbnail URLs survive stream changes. Never send
+                    # the old stream's ETag before obtaining this stream's body.
+                    self.http.etag=None;self.http.cache_url=None
+                    row.update(active_stream_id=identity,observation_required_since_utc=utc_timestamp(now),
+                               startup_grace_started_at_utc=None)
+                if row['startup_grace_started_at_utc'] is None:
+                    started_at=epoch(api.get('started_at'))
+                    # Restarting a worker on an old stream grants no new grace.
+                    row['startup_grace_started_at_utc']=utc_timestamp(min(now,started_at) if started_at is not None else now)
             source=load_json(self.config['source_file'])
             source=validate_source(source,api,self.config,now=now)
             if source is None:
@@ -74,25 +91,33 @@ class Worker:
                 row.update(api_live=True,api_collected_at_utc=source['collected_at'])
                 cooldown=epoch(row.get('next_fetch_not_before_utc')) or 0
                 last=epoch(row.get('last_request_at_utc')) or 0
-                if now<max(cooldown,last+60):raise ProbeError('thumbnail_retry_after')
-                row['last_request_at_utc']=utc_timestamp(now)
-                url=image_url(source['thumbnail_url'],source['user_login'],1920,1080)
-                body,metadata=self.http.get(url,deadline=started+8)
-                forward=native_forward(time.time()) or {}
-                result=self.analyzer.observe(body,source,lambda image:self.ocr.read(image,deadline=min(started+15,time.monotonic()+2)),
-                                             now=time.time(),forward_flowing=forward.get('flowing'))
-                row.update(result,**metadata,forward_observed_at_utc=forward.get('observed_at_utc'))
-                if not row.get('ocr_verified'):
-                    # A transient OCR deadline must not turn all later requests
-                    # into 304 responses with an unverified cache entry.
-                    self.http.etag=None
-                del body
+                if now<max(cooldown,last+60):
+                    waiting='WAITING_RETRY' if now<cooldown else 'WAITING_POLL'
+                    row.update(clock_state=waiting,freshness_state=waiting,
+                               reason='thumbnail_provider_backoff' if now<cooldown else 'thumbnail_poll_interval')
+                else:
+                    row.update(last_request_at_utc=utc_timestamp(now),capture_attempted=True)
+                    url=image_url(source['thumbnail_url'],source['user_login'],1920,1080)
+                    body,metadata=self.http.get(url,deadline=started+8)
+                    forward=native_forward(time.time()) or {}
+                    analysis_started=True
+                    result=self.analyzer.observe(body,source,lambda image:self.ocr.read(image,deadline=min(started+15,time.monotonic()+2)),
+                                                 now=time.time(),forward_flowing=forward.get('flowing'))
+                    row.update(result,**metadata,forward_observed_at_utc=forward.get('observed_at_utc'))
+                    del body
         except ProbeError as error:
             row['reason']=str(error)
             retry=getattr(self.http,'retry_at',0)-time.monotonic()
             if retry>0:row['next_fetch_not_before_utc']=utc_timestamp(time.time()+retry)
         except (OSError,ValueError,TypeError,KeyError):row['reason']='thumbnail_source_or_storage_unavailable'
         except Exception:row['reason']='thumbnail_analysis_failed'
+        row.update(self.analyzer.ocr_counters)
+        if analysis_started:row.update(self.analyzer.ocr_activity)
+        if not row.get('ocr_verified') and row['clock_state'] not in ('WAITING_NEW_STREAM_THUMBNAIL','WAITING_POLL','WAITING_RETRY'):
+            # Include exceptions from observe/decode: a 304 cannot repair a
+            # missing or unverified cached frame.
+            self.http.etag=None
+        row['stream_clock_observed']=bool(row.get('active_stream_id') and self.analyzer.verified.get('stream_id')==row['active_stream_id'])
         row.update(checked_at_utc=utc_timestamp(time.time()),cycle=self.cycle,platform='twitch_thumbnail',
                    duration_seconds=round(time.monotonic()-started,3),normal_image_storage='memory')
         # Keep a numeric anchor across transient source/capture/OCR failures.

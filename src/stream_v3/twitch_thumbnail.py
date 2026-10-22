@@ -17,6 +17,7 @@ from .verified_clock import VerifiedClockAnalyzer,VerifiedClockConfig
 
 SCHEMA='stream_v3.twitch_thumbnail_observation.v1'
 SCOPE='twitch_provider_thumbnail'
+STALE_AFTER_SECONDS=840
 
 
 def epoch(value):
@@ -133,8 +134,12 @@ class ThumbnailAnalyzer:
         self.previous=previous if isinstance(previous,dict) else {};self.rois=None
         self.verified=self.previous.get('last_verified',{})
         if self.previous.get('ocr_verified') is True:self.verified=self.previous
+        self.ocr_counters={key:self.previous[key] if type(self.previous.get(key)) is int and self.previous[key]>=0 else 0
+                           for key in ('ocr_observations_total','ocr_binary_retries_total')}
+        self.ocr_activity={'ocr_attempted':False,'ocr_binary_retried':False}
 
     def remember(self,row):
+        row.update(self.ocr_counters,**self.ocr_activity)
         if row.get('ocr_verified') is True:
             self.verified={k:v for k,v in row.items() if k!='last_verified'}
         row['last_verified']={k:v for k,v in self.verified.items() if k!='last_verified'}
@@ -142,6 +147,7 @@ class ThumbnailAnalyzer:
         return row
 
     def observe(self,body,source,ocr,*,now,forward_flowing=None):
+        self.ocr_activity={'ocr_attempted':False,'ocr_binary_retried':False}
         previous=self.previous;identity=source['stream_id'];same=previous.get('stream_id')==identity
         row={'schema':SCHEMA,'target':'twitch_thumbnail','scope':SCOPE,'checked_at_utc':utc_timestamp(now),
              'api_collected_at_utc':source['collected_at'],'api_live':True,'stream_id':identity,
@@ -154,7 +160,8 @@ class ThumbnailAnalyzer:
         duplicate=same and digest is not None and digest==previous.get('image_sha256')
         if body is None and not duplicate:raise ProbeError('thumbnail_cache_unavailable')
         row.update(image_sha256=digest,image_duplicate=duplicate)
-        if duplicate and previous.get('ocr_verified') is True:
+        cached_clock=previous.get('ocr_verified') is True or previous.get('clock_state')=='WAITING_NEW_STREAM_THUMBNAIL'
+        if duplicate and cached_clock:
             if self.rois is None and body is not None:self.rois,_=decode_rois(body,self.config)
             for key in ('ocr_jst','ocr_utc','ocr_confidence_jst','ocr_confidence_utc','display_clock_at_utc','width','height','clock_pair_consistent'):
                 row[key]=previous.get(key)
@@ -162,7 +169,22 @@ class ThumbnailAnalyzer:
         else:
             if body is None:raise ProbeError('thumbnail_cache_unverified')
             self.rois,(row['width'],row['height'])=decode_rois(body,self.config)
+            self.ocr_activity['ocr_attempted']=True
+            self.ocr_counters['ocr_observations_total']+=1
             jst,utc,retried,consistent=self.pair._read_pair(*self.rois,ocr)
+            # JPEG anti-aliasing can lower confidence even when both clocks
+            # agree. One binary pass must preserve those exact readings and
+            # meet the original confidence threshold; it is not a new vote.
+            left,right=jst.seconds(0),utc.seconds(0)
+            if not consistent and left is not None and right is not None and (left-right)%86400==9*3600:
+                self.ocr_activity['ocr_binary_retried']=True
+                self.ocr_counters['ocr_binary_retries_total']+=1
+                try:
+                    alternate=[ocr(GrayImage(image.width,image.height,bytes(255 if v>=128 else 0 for v in image.pixels))) for image in self.rois]
+                    if (alternate[0].text==jst.text and alternate[1].text==utc.text
+                            and alternate[0].seconds(70) is not None and alternate[1].seconds(70) is not None):
+                        jst,utc=alternate;consistent=True
+                except Exception:pass
             row.update(ocr_jst=jst.text,ocr_utc=utc.text,ocr_confidence_jst=jst.confidence,ocr_confidence_utc=utc.confidence,
                        clock_pair_consistent=consistent,ocr_retried=retried)
             if not consistent:return self.remember(row)
@@ -173,8 +195,14 @@ class ThumbnailAnalyzer:
                 stamp=epoch(self.verified.get('display_clock_at_utc'))
             row['display_clock_at_utc']=utc_timestamp(stamp)
         started=epoch(source.get('started_at'))
-        if stamp is None or not -2<=now-stamp or started is None or stamp<started-30:
+        if stamp is None or not -2<=now-stamp or started is None:
             row.update(reason='thumbnail_clock_or_stream_binding_uncertain');return self.remember(row)
+        if stamp<started-30:
+            if self.verified.get('stream_id')!=identity:
+                row.update(clock_state='WAITING_NEW_STREAM_THUMBNAIL',freshness_state='WAITING_NEW_STREAM_THUMBNAIL',
+                           reason='thumbnail_previous_stream_frame')
+            else:row.update(reason='thumbnail_clock_or_stream_binding_uncertain')
+            return self.remember(row)
         before=epoch(self.verified.get('display_clock_at_utc')) if self.verified.get('stream_id')==identity else None
         if before is not None and stamp<before:
             row.update(reason='thumbnail_clock_regressed');return self.remember(row)
@@ -187,6 +215,6 @@ class ThumbnailAnalyzer:
         if unique:row['unique_samples_total']+=1
         if progressed:row['last_progress_at_utc']=utc_timestamp(now)
         age=max(0.,now-stamp)
-        row['freshness_state']='FRESH' if age<=360 else 'AGING' if age<=600 else 'STALE_CORRELATED' if age>900 and forward_flowing is True else 'STALE_SUSPECT'
+        row['freshness_state']='FRESH' if age<=360 else 'AGING' if age<=STALE_AFTER_SECONDS else 'STALE_CORRELATED' if age>900 and forward_flowing is True else 'STALE_SUSPECT'
         row['recovery_unixtime']=now if age<=360 else 0.
         return self.remember(row)

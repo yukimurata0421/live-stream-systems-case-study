@@ -48,14 +48,16 @@ def plan_clock(alerts,state,now,*,repeat_sec,recovery):
         labels=alert.get('labels') or {};name=labels.get('alertname');target=labels.get('target','observer')
         if name not in NAMES or alert.get('state')!='firing' or target not in TITLES:continue
         key=name+'[target='+target+']';prior=state.get(key)
-        title='Twitch thumbnail clock is over ten minutes old' if name=='TwitchThumbnailStale' else TITLES[target]
+        title='Twitch thumbnail clock is over fourteen minutes old' if name=='TwitchThumbnailStale' else TITLES[target]
         if prior is None or now-prior['last_sent']>=repeat_sec:
             content=(
                 '[warning] '+title+'\nNo valid clock observation or observer status for over five minutes.'
                 '\nScope: delivery-host -> OCI relay -> delivery-host, or the direct-upload monitoring branch. Public-side reception is unverified.'
                 '\nCheck delivery using the existing sender and API observations.')
             if target=='twitch_thumbnail':
-                meaning='The clock in the official thumbnail is over ten minutes old.' if name=='TwitchThumbnailStale' else 'No official thumbnail clock observation or observer status for over five minutes.'
+                meaning=('The clock in the official thumbnail is over fourteen minutes old.' if name=='TwitchThumbnailStale'
+                         else 'Observer publication is over five minutes old or its metric has been absent for ten minutes.' if name=='TwitchThumbnailWorkerUnavailable'
+                         else 'No valid official thumbnail clock observation for over five minutes. The first clock of a new stream has a startup allowance of at most twelve minutes.')
                 content='[warning] '+title+'\n'+meaning+'\nScope: the Twitch API thumbnail image. Viewer-side video playback is unverified.Check delivery using the existing sender and API observations.'
             messages.append({'key':key,'channel':'discord','content':content})
             current[key]={'name':name,'target':target,'title':title,'since':prior['since'] if prior else now,'last_sent':now,'channel':'discord'}

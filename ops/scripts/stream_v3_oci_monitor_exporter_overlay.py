@@ -32,10 +32,9 @@ def main():
         thumbnail_module=importlib.util.module_from_spec(thumbnail_spec);thumbnail_spec.loader.exec_module(thumbnail_module)
         thumbnail_writer=thumbnail_module.write_metrics
     original = module.MetricsCache.get
-    thumbnail_last_cycle=time.time()
+    thumbnail_publication=thumbnail_module.PublicationReader(started_at=time.time()) if thumbnail_writer else None
 
     def combined(cache):
-        nonlocal thumbnail_last_cycle
         payload,error = original(cache)
         try:
             path = Path(os.environ["OCI_MONITOR_OBSERVATION_FILE"])
@@ -47,15 +46,9 @@ def main():
         writer=module.MetricWriter()
         write_metrics(writer, observation, now=time.time())
         if thumbnail_writer:
-            try:
-                path=Path(os.environ['TWITCH_THUMBNAIL_OBSERVATION_FILE'])
-                if path.stat().st_size>65536:raise ValueError('thumbnail_observation_too_large')
-                thumbnail=json.loads(path.read_text())
-            except (OSError,ValueError):thumbnail={}
-            if thumbnail.get('schema')=='stream_v3.twitch_thumbnail_observation.v1':
-                checked=thumbnail_module.age(thumbnail.get('checked_at_utc'),time.time())
-                if checked is not None:thumbnail_last_cycle=time.time()-checked
-            thumbnail_writer(writer,thumbnail,now=time.time(),last_cycle_epoch=thumbnail_last_cycle)
+            now=time.time()
+            thumbnail=thumbnail_publication.read(os.environ['TWITCH_THUMBNAIL_OBSERVATION_FILE'],now=now)
+            thumbnail_writer(writer,thumbnail,now=now,last_cycle_epoch=thumbnail_publication.last_cycle_epoch)
         prefixes=('stream_v3_oci_monitor_','stream_v3_youtube_fallback_monitor_','stream_v3_monitor_probe_','stream_v3_twitch_thumbnail_')
         # Keep the existing collector cache; refresh only this small RAM-state projection.
         lines=[line for line in payload.splitlines() if not line.removeprefix('# HELP ').removeprefix('# TYPE ').startswith(prefixes)]

@@ -41,6 +41,12 @@ paired confidence check. Every different image gets OCR; identical images reuse
 the verified reading. A different JPEG with the same clock is not a new sample.
 No real-time cadence test is applied to five-minute provider images.
 
+The thumbnail URL is channel-scoped and can survive a stream-ID change. Clear
+the old ETag as soon as fresh API evidence identifies a new stream, even before
+the RAM sidecar is available. Fetch the body first; a known pre-stream image can
+then remain in the explicit waiting state across 304 responses. Clear the ETag
+also when decode/analysis fails without a reusable clock cache.
+
 Normal full images are processed in memory and discarded. Only small clock
 regions remain in RAM. Numeric state and a 1 MiB x 2 history are retained on disk.
 An abnormal episode may retain small ROI evidence, capped at 8 MiB and seven days.
@@ -52,8 +58,13 @@ independent of the delivery host and has no recovery privileges.
 ## Clock, Freshness And Warning Semantics
 
 JST and UTC readings require confidence at least 70 and a nine-hour offset.
-One alternate-contrast read is allowed. UTC maps to the nearest day; future,
-regressing or previous-stream readings remain uncertain. A persisted numeric
+One alternate-contrast read is allowed. If both original readings already have
+the correct nine-hour relationship but confidence is too low, one additional
+binary-threshold-128 pass is allowed. Both values must exactly match the original
+readings and both confidences must meet the same threshold of 70. Different
+readings never win by voting; transformed copies are not independent evidence.
+The cycle deadline and a maximum of six OCR calls still apply. UTC maps to the
+nearest day; future or regressing readings remain uncertain. A persisted numeric
 anchor survives capture/OCR errors and worker restart. It is not a saved image.
 
 | Result | Meaning |
@@ -61,11 +72,13 @@ anchor survives capture/OCR errors and worker restart. It is not a saved image.
 | `CLOCK_OBSERVED` | First accepted paired reading for this stream. |
 | `ADVANCING_CONFIRMED` | A later distinct clock value was accepted. |
 | `UNCHANGED` | Same provider sample; normal between refreshes. |
+| `WAITING_NEW_STREAM_THUMBNAIL` | Only a pre-stream image is available before this stream's first accepted clock. No fault images are retained for this wait. |
+| `WAITING_POLL` / `WAITING_RETRY` | Normal poll spacing or provider Retry-After; no capture was attempted. |
 | `OCR_UNCERTAIN` | Confidence, date or clock binding did not establish a reading. |
 | `SOURCE_OFFLINE` | Fresh API evidence explicitly says OFFLINE. |
 | `UNKNOWN` | Source, HTTP, resource or publication failure. |
 
-Image age up to 360 seconds is `FRESH`; up to 600 is `AGING`. Older images are
+Image age up to 360 seconds is `FRESH`; up to 840 is `AGING`. Older images are
 `STALE_SUSPECT`. Above 900 seconds with fresh native-forward progress, the
 diagnostic becomes `STALE_CORRELATED`. That is a disagreement, not proof of a
 stopped public video stream. These are initial thresholds, not a measured SLO.
@@ -77,7 +90,22 @@ hide a thumbnail gap when the original API evidence still reports LIVE.
 
 The [warning rules](../../ops/monitoring/prometheus/rules/twitch_thumbnail.yml)
 cover five minutes without a valid observation while API LIVE, five minutes
-without worker publication, and a verified image clock older than ten minutes.
+without worker publication, ten minutes with the publication metric absent, and
+a verified image clock older than fourteen minutes. The 840-second threshold
+allows one missed six-minute image refresh plus poll timing; it is provisional.
+
+Only the first valid clock of a new stream receives a startup allowance of at
+most 720 seconds from the API's `started_at`. If no start time is available, the
+first LIVE observation becomes the persisted origin. Restart, API UNKNOWN and
+capture failures do not extend it. A first accepted clock ends the allowance;
+later observation gaps use the ordinary 300-second rule. Worker publication
+failures receive no stream-start allowance.
+
+Unreadable, missing, malformed, non-object or oversized state leaves the last
+publication timestamp intact in the exporter. It exports `state_readable=0`
+and the increasing age; an exporter that has never read state starts its timer
+at startup. An `absent_over_time` rule covers total metric disappearance. The
+fixed job/instance selector in that rule must match the configured scrape target.
 They reuse the [existing notification loop](../../ops/scripts/stream_v3_clock_alert_notify.py)
 and require two distinct fresh observations for a recovery message. They add no
 Critical classification, SLO denominator, recovery action or notification service.
@@ -85,9 +113,14 @@ Critical classification, SLO denominator, recovery action or notification servic
 ## Configuration And Credential-Free Checks
 
 Start from the [configuration example](../../ops/config/twitch_thumbnail.example.json).
-Replace the account and runtime paths, calibrate the ROIs and supply a reviewed
-immutable release command in the service template. The template deliberately
-contains no production release, account, credentials or automatic installer.
+Replace the example account, calibrate the ROIs and prepare the immutable
+runtime release. The repository service file is the canonical unit: its command,
+Python path, libraries and the example OCR configuration use the root-owned
+`/opt/stream-v3-twitch-thumbnail/current` symlink. That symlink selects a release
+containing source, a venv, OCR runtime/data and a manifest. Install the unit
+unchanged and switch the symlink atomically after validation. Copying this
+checkout does not install the unit, select a release or enable a service. The
+example contains no production account, credentials or automatic installer.
 The source adapter uses `TWITCH_API_BASELINE` for the root-owned collector and
 `TWITCH_THUMBNAIL_SOURCE_FILE` for the tmpfs sidecar. Preserve the collector's
 existing arguments, service credentials and `monitoring_v4.twitch_api_evidence.v1`
@@ -109,3 +142,5 @@ no provider requests, send no notifications and change no delivery services.
 The [dated port record](public-source-port-2026-10-22-thumbnail.md) separates
 operated evidence from public-source tests; [current status](../current-status.md)
 owns unobserved behavior and later changes.
+
+The [review follow-up](public-source-port-2026-10-22-thumbnail-review.md) records stream-rollover, missing-metric and OCR retry validation for the updated source.

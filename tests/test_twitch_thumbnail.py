@@ -70,8 +70,10 @@ def test_duplicate_5_minute_images_are_normal_and_not_new_samples():
     def no_ocr(_):raise AssertionError('duplicate must reuse verified reading')
     duplicate=analyzer.observe(None,target(now+60),no_ocr,now=now+60)
     assert duplicate['freshness_state']=='FRESH' and duplicate['unique_samples_total']==1 and not duplicate['unique_sample']
-    warning=analyzer.observe(None,target(now+600),no_ocr,now=now+600)
-    assert warning['freshness_state']=='STALE_SUSPECT' and warning['frame_age_seconds']==700
+    waiting=analyzer.observe(None,target(now+600),no_ocr,now=now+600)
+    assert waiting['freshness_state']=='AGING' and waiting['frame_age_seconds']==700
+    warning=analyzer.observe(None,target(now+780),no_ocr,now=now+780)
+    assert warning['freshness_state']=='STALE_SUSPECT' and warning['frame_age_seconds']==880
     correlated=analyzer.observe(None,target(now+900),no_ocr,now=now+900,forward_flowing=True)
     assert correlated['freshness_state']=='STALE_CORRELATED'
 
@@ -107,7 +109,7 @@ def test_utc_midnight_and_identical_image_after_24_hours():
     assert row['frame_age_seconds']==86510 and row['unique_samples_total']==2
 
 
-def test_future_clock_and_previous_stream_thumbnail_are_uncertain():
+def test_future_clock_is_uncertain_but_previous_stream_thumbnail_is_waiting():
     from stream_v3.twitch_thumbnail import ThumbnailAnalyzer
     from stream_v3.viewer_clock import utc_timestamp
     now=1700000000
@@ -115,7 +117,7 @@ def test_future_clock_and_previous_stream_thumbnail_are_uncertain():
     assert not future['ocr_verified']
     source={**target(now),'started_at':utc_timestamp(now-10)}
     old=ThumbnailAnalyzer({}).observe(thumbnail_body(),source,reading(now-100),now=now)
-    assert not old['ocr_verified']
+    assert not old['ocr_verified'] and old['clock_state']=='WAITING_NEW_STREAM_THUMBNAIL'
 
 
 @pytest.mark.parametrize('mismatch',['sequence','source_boot_id','stream_id','user_login','collected_at'])
@@ -178,3 +180,215 @@ def test_missing_ram_mirror_is_visible_while_the_existing_api_reports_live(tmp_p
     row=worker.once()
     assert row['api_live'] is True and row['capture_ok'] is False and row['clock_state']=='UNKNOWN'
     assert row['api_collected_at_utc']==utc_timestamp(now)
+
+
+def thumbnail_worker_fixture(tmp_path,monkeypatch):
+    import stream_v3.twitch_thumbnail_worker as module
+    from stream_v3.viewer_clock import utc_timestamp
+    clock=[1700000000.]
+    monkeypatch.setattr(module.time,'time',lambda:clock[0]);monkeypatch.setattr(module,'native_forward',lambda _:None)
+    config={'api_file':str(tmp_path/'api.json'),'source_file':str(tmp_path/'source.json'),
+            'boot_id':'boot','user_id':'id','user_login':'fixture'}
+    def publish(stream='first',started=None):
+        now=clock[0]
+        api={'schema':'monitoring_v4.twitch_api_evidence.v1','source_host_id':'arena-monitoring-facts','source_boot_id':'boot',
+             'collector_instance':'instance','collector_revision':'revision','sequence':int(now),'user_id':'id','user_login':'fixture',
+             'stream_id':stream,'started_at':utc_timestamp(now-10000 if started is None else started),'probe_status':'ok',
+             'provider_state':'LIVE','collected_at':utc_timestamp(now),'valid_until':utc_timestamp(now+180)}
+        Path(config['api_file']).write_text(json.dumps(api))
+        Path(config['source_file']).write_text(json.dumps({**api,'schema':'stream_v3.twitch_thumbnail_source.v1',
+            'thumbnail_status':'available','thumbnail_url':'https://static-cdn.jtvnw.net/previews-ttv/live_user_fixture-{width}x{height}.jpg'}))
+    class HTTP:
+        etag=None;cache_url=None;retry_at=0
+        body=thumbnail_body();calls=[]
+        def get(self,url,**kwargs):
+            self.calls.append((self.etag,self.cache_url));self.etag='fixture-etag';self.cache_url=url
+            return self.body,{'http_status':304 if self.body is None else 200,'download_bytes':len(self.body or b'')}
+    http=HTTP();http.calls=[]
+    ocr=types.SimpleNamespace(read=None)
+    worker=module.Worker(config,tmp_path/'worker',http=http,ocr=ocr)
+    return module,worker,http,ocr,clock,publish
+
+
+def test_jst_midnight_stream_change_discards_etag_then_waits_without_evidence(tmp_path,monkeypatch):
+    module,worker,http,ocr,clock,publish=thumbnail_worker_fixture(tmp_path,monkeypatch)
+    clock[0]=datetime(2026,10,22,14,59,50,tzinfo=timezone.utc).timestamp()
+    start=clock[0];read=reading(start-100);ocr.read=lambda image,**kwargs:read(image)
+    publish();assert worker.once()['ocr_verified']
+    clock[0]+=60;publish('second',start+50);read=reading(start-100)
+    row=worker.once()
+    assert http.calls[-1]==(None,None)
+    assert row['clock_state']=='WAITING_NEW_STREAM_THUMBNAIL' and not row['ocr_verified']
+    assert row['startup_grace_started_at_utc']==module.utc_timestamp(start+50)
+    assert not row['stream_clock_observed'] and row['unique_samples_total']==1
+    http.body=None;clock[0]+=60;publish('second',start+50)
+    ocr.read=lambda *_a,**_k:pytest.fail('304 of the known old frame must not need OCR')
+    row=worker.once()
+    assert row['clock_state']=='WAITING_NEW_STREAM_THUMBNAIL' and http.calls[-1][0]=='fixture-etag'
+    assert not list((tmp_path/'worker/evidence').rglob('*.pgm'))
+    clock[0]=start+480;publish('second',start+50);http.body=thumbnail_body(129)
+    read=reading(start+400);ocr.read=lambda image,**kwargs:read(image)
+    row=worker.once()
+    assert row['clock_state']=='CLOCK_OBSERVED' and row['stream_clock_observed'] and row['unique_samples_total']==2
+    from stream_v3.twitch_thumbnail_metrics import write_metrics
+    values={}
+    class Writer:
+        def metric(self,name,value,**kwargs):values[name]=value
+    write_metrics(Writer(),row,now=clock[0])
+    assert values['stream_v3_twitch_thumbnail_startup_grace_remaining_seconds']==0
+
+
+def test_stream_startup_grace_survives_restart_and_api_unknown_without_being_extended(tmp_path,monkeypatch):
+    from stream_v3.twitch_thumbnail_metrics import write_metrics
+    module,worker,http,ocr,clock,publish=thumbnail_worker_fixture(tmp_path,monkeypatch)
+    start=clock[0];publish('new',start);Path(worker.config['source_file']).unlink()
+    row=worker.once();assert row['startup_grace_started_at_utc']==module.utc_timestamp(start)
+    clock[0]=start+400;publish('new',start);Path(worker.config['source_file']).unlink()
+    restarted=module.Worker(worker.config,worker.root,http=http,ocr=ocr);row=restarted.once()
+    values={}
+    class Writer:
+        def metric(self,name,value,**kwargs):values[name]=value
+    write_metrics(Writer(),row,now=clock[0])
+    assert values['stream_v3_twitch_thumbnail_startup_grace_remaining_seconds']==320
+    Path(worker.config['api_file']).unlink();clock[0]=start+500;unknown=restarted.once()
+    assert unknown['startup_grace_started_at_utc']==module.utc_timestamp(start)
+    clock[0]=start+721;publish('new',start);Path(worker.config['source_file']).unlink();row=restarted.once()
+    write_metrics(Writer(),row,now=clock[0])
+    assert values['stream_v3_twitch_thumbnail_startup_grace_remaining_seconds']==0
+    assert values['stream_v3_twitch_thumbnail_seconds_since_last_valid_observation']==721
+
+
+@pytest.mark.parametrize('provider_backoff',[False,True])
+def test_normal_poll_wait_and_provider_backoff_are_explicit_not_unknown(tmp_path,monkeypatch,provider_backoff):
+    module,worker,http,ocr,clock,publish=thumbnail_worker_fixture(tmp_path,monkeypatch)
+    publish();worker.previous['last_request_at_utc']=module.utc_timestamp(clock[0]-10)
+    if provider_backoff:worker.previous['next_fetch_not_before_utc']=module.utc_timestamp(clock[0]+500)
+    row=worker.once()
+    assert row['clock_state']==('WAITING_RETRY' if provider_backoff else 'WAITING_POLL')
+    assert row['capture_attempted'] is False and not http.calls
+    assert not row.get('evidence_id')
+
+
+def test_exception_after_http_does_not_leave_a_poisoned_304_cache(tmp_path,monkeypatch):
+    from stream_v3.viewer_clock_capture import ProbeError
+    module,worker,http,ocr,clock,publish=thumbnail_worker_fixture(tmp_path,monkeypatch)
+    publish()
+    def missing(*_a,**_k):raise ProbeError('thumbnail_cache_unavailable')
+    worker.analyzer.observe=missing;row=worker.once()
+    assert row['clock_state']=='UNKNOWN' and http.etag is None and len(http.calls)==1
+
+
+@pytest.mark.parametrize('bad_content',[None,'[]','null','not json','x'*65537])
+def test_unreadable_or_invalid_publication_still_exports_worker_age(tmp_path,bad_content):
+    from stream_v3.twitch_thumbnail_metrics import PublicationReader,write_metrics
+    from stream_v3.viewer_clock import utc_timestamp
+    reader=PublicationReader(started_at=990);path=tmp_path/'state.json'
+    path.write_text(json.dumps({'schema':'stream_v3.twitch_thumbnail_observation.v1','checked_at_utc':utc_timestamp(1000)}))
+    assert reader.read(path,now=1000)
+    if bad_content is None:path.unlink()
+    else:path.write_text(bad_content)
+    row=reader.read(path,now=1400);assert row=={}
+    values={}
+    class Writer:
+        def metric(self,name,value,**kwargs):values[name]=value
+    write_metrics(Writer(),row,now=1400,last_cycle_epoch=reader.last_cycle_epoch)
+    assert values['stream_v3_twitch_thumbnail_seconds_since_last_cycle']==400
+    assert values['stream_v3_twitch_thumbnail_state_readable']==0
+    assert values['stream_v3_twitch_thumbnail_clock_verified']==0
+    first_read=PublicationReader(started_at=1000);assert first_read.read(path,now=1400)=={}
+    assert first_read.last_cycle_epoch==1000
+
+
+@pytest.mark.parametrize('frame_age,expected',[(600,'AGING'),(720,'AGING'),(840,'AGING'),(841,'STALE_SUSPECT')])
+def test_one_missed_provider_refresh_does_not_become_stale(frame_age,expected):
+    from stream_v3.twitch_thumbnail import ThumbnailAnalyzer
+    analyzer=ThumbnailAnalyzer({});now=1700000000
+    row=analyzer.observe(thumbnail_body(),target(now),reading(now-frame_age),now=now)
+    assert row['freshness_state']==expected
+
+
+@pytest.mark.parametrize('binary_case',['same','different','low_confidence'])
+def test_binary_retry_requires_the_same_two_clock_values_and_original_confidence(binary_case):
+    from stream_v3.twitch_thumbnail import ThumbnailAnalyzer
+    from stream_v3.viewer_clock import ClockReading
+    now=1700000000;stamp=now-100
+    jst=datetime.fromtimestamp(stamp+9*3600,timezone.utc).strftime('%H:%M:%S')
+    utc=datetime.fromtimestamp(stamp,timezone.utc).strftime('%H:%M:%S')
+    other=datetime.fromtimestamp(stamp+60,timezone.utc).strftime('%H:%M:%S')
+    results=iter([ClockReading(jst,95),ClockReading(utc,58),ClockReading(jst,95),ClockReading(utc,58),
+                  ClockReading(jst,95),ClockReading(other if binary_case=='different' else utc,68 if binary_case=='low_confidence' else 95)])
+    images=[]
+    def ocr(image):images.append(image);return next(results)
+    row=ThumbnailAnalyzer({}).observe(thumbnail_body(),target(now),ocr,now=now)
+    assert len(images)==6 and set(images[-1].pixels)<={0,255} and row['ocr_binary_retried']
+    assert row['ocr_verified'] is (binary_case=='same')
+    assert row['ocr_attempted'] and row['ocr_observations_total']==row['ocr_binary_retries_total']==1
+
+
+def binary_reading(stamp):
+    from stream_v3.viewer_clock import ClockReading
+    jst=datetime.fromtimestamp(stamp+9*3600,timezone.utc).strftime('%H:%M:%S')
+    utc=datetime.fromtimestamp(stamp,timezone.utc).strftime('%H:%M:%S')
+    values=iter([ClockReading(jst,95),ClockReading(utc,58),ClockReading(jst,95),ClockReading(utc,58),
+                 ClockReading(jst,95),ClockReading(utc,95)])
+    return lambda _:next(values)
+
+
+def test_retry_rate_excludes_cached_images_and_keeps_counters_after_restart():
+    from stream_v3.twitch_thumbnail import ThumbnailAnalyzer
+    now=1700000000;analyzer=ThumbnailAnalyzer({})
+    first=analyzer.observe(thumbnail_body(),target(now),binary_reading(now-100),now=now)
+    assert first['ocr_verified'] and first['ocr_observations_total']==first['ocr_binary_retries_total']==1
+    def no_ocr(_):pytest.fail('a cached image is not another OCR observation or retry')
+    duplicate=analyzer.observe(None,target(now+60),no_ocr,now=now+60)
+    assert not duplicate['ocr_attempted'] and not duplicate['ocr_binary_retried']
+    assert duplicate['ocr_observations_total']==duplicate['ocr_binary_retries_total']==1
+    restarted=ThumbnailAnalyzer({},json.loads(json.dumps(duplicate)))
+    duplicate=restarted.observe(thumbnail_body(),target(now+120),no_ocr,now=now+120)
+    assert duplicate['ocr_observations_total']==duplicate['ocr_binary_retries_total']==1
+    row=restarted.observe(thumbnail_body(129),target(now+180),reading(now+80),now=now+180)
+    assert row['ocr_attempted'] and not row['ocr_binary_retried']
+    assert row['ocr_observations_total']==2 and row['ocr_binary_retries_total']==1
+
+
+def test_worker_keeps_retry_counters_through_capture_failure_and_restart(tmp_path,monkeypatch):
+    from stream_v3.viewer_clock_capture import ProbeError
+    module,worker,http,ocr,clock,publish=thumbnail_worker_fixture(tmp_path,monkeypatch)
+    read=binary_reading(clock[0]-100);ocr.read=lambda image,**_kwargs:read(image)
+    publish();first=worker.once();assert first['ocr_binary_retries_total']==1
+    original_get=http.get
+    def failure(*_args,**_kwargs):raise ProbeError('thumbnail_transport_failed')
+    http.get=failure;clock[0]+=60;publish();failed=worker.once()
+    assert failed['ocr_observations_total']==failed['ocr_binary_retries_total']==1
+    assert not failed['ocr_attempted'] and not failed['ocr_binary_retried']
+    http.get=original_get;http.body=thumbnail_body(129);clock[0]+=60;publish()
+    read=reading(clock[0]-100)
+    restarted=module.Worker(worker.config,worker.root,http=http,ocr=ocr);row=restarted.once()
+    assert row['ocr_verified'] and row['ocr_observations_total']==2 and row['ocr_binary_retries_total']==1
+    history=[json.loads(line) for line in (worker.root/'viewer_clock_history.jsonl').read_text().splitlines()]
+    assert [(r['ocr_attempted'],r['ocr_binary_retried']) for r in history]==[(True,True),(False,False),(True,False)]
+
+
+def test_failed_ocr_is_in_the_denominator_without_becoming_a_binary_retry(tmp_path,monkeypatch):
+    module,worker,http,ocr,clock,publish=thumbnail_worker_fixture(tmp_path,monkeypatch)
+    def broken(*_args,**_kwargs):raise RuntimeError('fixture OCR failure')
+    ocr.read=broken;publish();row=worker.once()
+    assert row['clock_state']=='OCR_UNCERTAIN' and row['ocr_attempted']
+    assert row['ocr_observations_total']==1 and row['ocr_binary_retries_total']==0
+    assert not row['ocr_binary_retried']
+
+
+def test_retry_metrics_are_counters_and_scrapes_do_not_recount_cached_results():
+    from stream_v3.twitch_thumbnail_metrics import write_metrics
+    from stream_v3.viewer_clock import utc_timestamp
+    values={}
+    class Writer:
+        def metric(self,name,value,**kwargs):values[name]=(value,kwargs)
+    row={'schema':'stream_v3.twitch_thumbnail_observation.v1','checked_at_utc':utc_timestamp(1000),
+         'ocr_attempted':False,'ocr_binary_retried':True,'ocr_observations_total':5,'ocr_binary_retries_total':2}
+    write_metrics(Writer(),row,now=1000);write_metrics(Writer(),row,now=1001)
+    for suffix,count in [('ocr_observations_total',5),('ocr_binary_retries_total',2)]:
+        value,options=values['stream_v3_twitch_thumbnail_'+suffix]
+        assert value==count and options['metric_type']=='counter'
+        assert options['labels']=={'target':'twitch_thumbnail','scope':'twitch_provider_thumbnail'}
+    assert values['stream_v3_twitch_thumbnail_ocr_binary_retried'][0]==0

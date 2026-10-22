@@ -3,8 +3,8 @@
   "source_file": "/run/stream-v4-twitch-api/thumbnail_source.json",
   "user_id": "100000001",
   "user_login": "example_channel",
-  "tesseract": "/usr/bin/tesseract",
-  "tessdata_dir": "/usr/share/tesseract-ocr/5/tessdata",
+  "tesseract": "/opt/stream-v3-twitch-thumbnail/current/runtime/bin/tesseract",
+  "tessdata_dir": "/opt/stream-v3-twitch-thumbnail/current/runtime/tessdata",
   "jst_roi": [
     0.019,
     0.968,

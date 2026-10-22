@@ -41,13 +41,18 @@ included here.
 
 ## Thumbnail Observation Snapshot (2026-10-22 JST)
 
-For the operated thumbnail monitor described by the
-[dated source port](v3/public-source-port-2026-10-22-thumbnail.md), a short window
-confirmed four clock progressions across five provider images. The selected
-source is commit `740bcc00`; a concurrent daily-rollover/startup-grace and
-threshold review is outside this snapshot. The public example has not been
-deployed. The [thumbnail contract](v3/twitch-thumbnail-monitor.md) describes this
-version's initial warning thresholds and provider-image scope.
+The [initial source port](v3/public-source-port-2026-10-22-thumbnail.md) covered a
+short operated window with four clock progressions across five provider images.
+The [review follow-up](v3/public-source-port-2026-10-22-thumbnail-review.md) now
+selects source `c27f0ee0af1f`: stream-change cache invalidation, a bounded
+twelve-minute startup allowance, a fourteen-minute stale-image warning, missing
+publication/metric checks, explicit waits and a conservative OCR retry. The
+[thumbnail contract](v3/twitch-thumbnail-monitor.md) owns the current semantics.
+
+Operated capture/OCR and warning state were checked at 11:22 JST. The public
+example has not been deployed, and the next real daily stream rollover is still
+unobserved. This source port neither changes independent publisher/SLI work nor
+turns provider thumbnails into public-player E2E evidence.
 
 ## Not Yet Observed
 
