@@ -28,10 +28,10 @@
     {
       "path": "README.md",
       "source_role": "public-documentation",
-      "decision": "link the 2026-10-22 CRA local reflex port",
-      "before_sha256": "7cfa7e5041474594c65b3e13419c089f79b22eb86a9732f0cfdc2fbe8a4e947c",
+      "decision": "replace the stream screenshot with the 2026-10-22 view and caption it",
+      "before_sha256": "eb41954a9599768a69ddfc8f41df92d6c5af0160657d73d7f71eba4b0cc8ed4e",
       "source_sha256": null,
-      "public_sha256": "eb41954a9599768a69ddfc8f41df92d6c5af0160657d73d7f71eba4b0cc8ed4e",
+      "public_sha256": "e1b3e7931d93c1abd957de6d2fe097b716caaad984852bc2a0d3f7b511c678ec",
       "port_date_jst": "2026-10-22",
       "pre_documentation_restructure_sha256": "00b596e75b50eaedbd3bed4ebc79e71d882e7049e72516aec95dfc0860ed015e",
       "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json.",

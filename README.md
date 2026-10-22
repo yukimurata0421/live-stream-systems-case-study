@@ -4,7 +4,10 @@
 [![Python >=3.10](https://img.shields.io/badge/python-%3E%3D3.10-3776AB.svg)](pyproject.toml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-[![Aircraft map rendered by this system](docs/assets/live-stream-screenshot.png)](https://www.youtube.com/@yukimurata0421/live)
+[![Live aircraft map with prefecture labels and distinct city and airport markers](docs/assets/live-stream-screenshot.png)](https://www.youtube.com/@yukimurata0421/live)
+
+*Stream view captured on 2026-10-22 (JST), showing prefecture labels and distinct
+city and airport markers.*
 
 **Watch:** [YouTube](https://www.youtube.com/@yukimurata0421/live) ·
 [Twitch](https://www.twitch.tv/tokyoflighttracker) ·
