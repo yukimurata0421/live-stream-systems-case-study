@@ -4,6 +4,7 @@ import argparse
 import json
 import math
 import os
+import re
 import signal
 import socket
 import sqlite3
@@ -22,12 +23,13 @@ SOURCE = Path('/var/lib/stream-v4-twitch-api/twitch_api_evidence.json')
 WINDOWS = (('24h', 1440), ('7d', 10080))
 DEFINITIONS = (
     ('provider_live', 'Twitch LIVE availability', 'Helix Get Streams: LIVE / known provider observations.', 99.0),
-    ('api_measurement', 'API measurement coverage', 'Successful fresh Helix observations / all expected minutes.', 99.0),
+    ('api_measurement', 'API observation availability', 'Successful fresh Helix observation minutes / all expected minutes; includes collection gaps.', 99.0),
     ('relay_flow', 'Twitch relay continuity', 'OCI forward counter progressing / known relay observations.', 99.0),
 )
 LATEST = {}
 LOCK = threading.Lock()
 SOURCE_STATUS = {}
+API_BINDING = {}
 
 
 def stamp(value):
@@ -196,10 +198,39 @@ def metrics(value):
     for window in value['windows']:
         for m in window['metrics']:
             labels = '{sli="'+m['id']+'",window="'+window['id']+'"}'
-            for key in ('value_percent','conservative_percent','coverage_percent','target_percent','bad_minutes','unknown_minutes','missing_minutes','good_events','bad_events','unknown_events','pending_events'):
+            for key in ('value_percent','conservative_percent','coverage_percent','target_percent','good_minutes','bad_minutes','unknown_minutes','missing_minutes','good_events','bad_events','unknown_events','pending_events'):
                 if m.get(key) is not None: lines.append('stream_v4_twitch_sli_'+key+labels+' '+str(m[key]))
             lines.append('stream_v4_twitch_sli_assessed'+labels+' '+('1' if m['assessment'] in ('MET','BREACHED') else '0'))
+            if m['id'] == 'api_measurement':
+                known = m['good_minutes'] + m['bad_minutes']
+                if known:
+                    lines.append('stream_v4_twitch_api_observed_success_percent{window="'+window['id']+'"} '+str(100*m['good_minutes']/known))
     return '\n'.join(lines)+'\n'
+
+
+def api_diagnostic_metrics(now, source=SOURCE, binding=None):
+    """Expose the trusted collector's diagnostics through the existing scrape.
+
+    JSON and text are published separately. Reject mismatched generations and
+    stale/untrusted facts instead of exporting stale quota or success values.
+    """
+    unavailable = 'stream_v4_twitch_api_diagnostics_available 0\n'
+    try:
+        with source.open('rb') as handle: raw = handle.read(65537)
+        if len(raw) > 65536: return unavailable
+        sample = api_sample(json.loads(raw), now, binding)
+        if sample is None: return unavailable
+        with source.with_name('twitch_api.prom').open('rb') as handle: raw = handle.read(65537)
+        if len(raw) > 65536: return unavailable
+        text = raw.decode('ascii')
+        marker = 'stream_v4_twitch_api_collected_unixtime '+str(sample['observed'])
+        if marker not in text.splitlines(): return unavailable
+        for line in text.splitlines():
+            if line.startswith('#') or not line: continue
+            if not re.fullmatch(r'stream_v4_twitch_(?:api|provider)_[a-z_]+(?:\{[a-z_]+="[A-Za-z_]+"\})? [0-9.eE+\-]+', line): return unavailable
+            if not math.isfinite(float(line.rsplit(' ', 1)[1])): return unavailable
+        return 'stream_v4_twitch_api_diagnostics_available 1\n' + text
+    except (OSError, UnicodeError, ValueError, TypeError): return unavailable
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -207,7 +238,7 @@ class Handler(BaseHTTPRequestHandler):
         with LOCK: value = dict(LATEST)
         if self.path not in ('/public','/metrics') or not value: self.send_error(404);return
         if time.time()-stamp(value['generated_at'])>180: self.send_error(503);return
-        body = (json.dumps(value,allow_nan=False) if self.path=='/public' else metrics(value)).encode()
+        body = (json.dumps(value,allow_nan=False) if self.path=='/public' else metrics(value)+api_diagnostic_metrics(time.time(), binding=API_BINDING)).encode()
         self.send_response(200);self.send_header('Content-Type','application/json' if self.path=='/public' else 'text/plain; version=0.0.4')
         self.send_header('Content-Length',str(len(body)));self.end_headers();self.wfile.write(body)
     def log_message(self,*args): pass
@@ -267,6 +298,7 @@ def main():
         if len(raw) > 16384: raise ValueError('BINDING_TOO_LARGE')
         binding = json.loads(raw)
         if type(binding) is not dict or not binding.get('user_id') or not binding.get('collector_revision'): raise ValueError('BINDING_REQUIRED')
+        API_BINDING.clear();API_BINDING.update(binding)
         args.state.mkdir(mode=0o700,exist_ok=True)
         history=History(args.state/'history.sqlite3',time.time())
         server=ThreadingHTTPServer(('127.0.0.1',9117),Handler);server.daemon_threads=True

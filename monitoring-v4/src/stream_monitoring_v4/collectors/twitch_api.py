@@ -28,12 +28,57 @@ TOKEN_URL = "https://id.twitch.tv/oauth2/token"
 VALIDATE_URL = "https://id.twitch.tv/oauth2/validate"
 USERS_URL = "https://api.twitch.tv/helix/users"
 STREAMS_URL = "https://api.twitch.tv/helix/streams"
+STAGES = ("credentials", "oauth", "validate", "users", "streams")
+RESULTS = ("ok", "timeout", "network", "rate_limited", "auth", "upstream",
+           "credentials", "response", "target", "clock", "collector")
 
 
 class ProbeError(Exception):
-    def __init__(self, reason: str, status: int = 0, retry_after: float = 0):
+    def __init__(self, reason: str, status: int = 0, retry_after: float = 0, *, rate_limit=None):
         super().__init__(reason)
         self.reason, self.status, self.retry_after = reason, status, retry_after
+        self.rate_limit = rate_limit or {}
+
+
+def rate_limit_fields(headers):
+    """Retain only numeric quota metadata, never arbitrary response headers."""
+    fields = {}
+    for key, value in headers.items():
+        name = {"ratelimit-remaining": "remaining", "ratelimit-limit": "limit",
+                "ratelimit-reset": "reset"}.get(key.lower())
+        if name:
+            try:
+                number = int(value)
+                if 0 <= number <= 10**12:
+                    fields[name] = number
+            except (TypeError, ValueError):
+                pass
+    return fields
+
+
+def error_category(reason, status=0):
+    if status == 429: return "rate_limited"
+    if status in (401, 403) or reason.endswith(("app_token_required", "token_expiring")): return "auth"
+    if status >= 500: return "upstream"
+    if reason.startswith("credentials_"): return "credentials"
+    for suffix, category in (("timeout", "timeout"), ("network", "network"),
+                             ("target_mismatch", "target"), ("clock_jump", "clock")):
+        if reason.endswith(suffix): return category
+    if "response_" in reason or "redirect_" in reason: return "response"
+    return "collector"
+
+
+def next_poll_deadline(anchor, now, interval, failures=0, retry_after=0):
+    """Stay on the original monotonic grid; skip missed slots without catch-up.
+
+    An isolated transient failure keeps the next grid slot. Consecutive failures
+    back off; provider Retry-After is always a lower bound.
+    """
+    backoff = min(900, interval * 2 ** min(failures - 2, 4)) if failures >= 2 else 0
+    earliest = now + max(backoff, retry_after)
+    slots = max(0, math.ceil((earliest - anchor) / interval))
+    due = anchor + slots * interval
+    return due if due > now else due + interval
 
 
 class NoRedirect(HTTPRedirectHandler):
@@ -82,13 +127,16 @@ def request_json(url: str, headers: dict, body: bytes | None, timeout: float):
             return value, dict(response.headers)
     except HTTPError as exc:
         status, delay = exc.code, retry_delay(exc.headers, time.time())
+        quota = rate_limit_fields(exc.headers)
         exc.close()
         reason = ("auth" if status in (401, 403) else "rate_limited" if status == 429
                   else "upstream" if status >= 500 else "http")
-        raise ProbeError(reason, status, delay) from None
+        raise ProbeError(reason, status, delay, rate_limit=quota) from None
     except (TimeoutError, socket.timeout):
         raise ProbeError("timeout") from None
-    except (URLError, OSError):
+    except URLError as exc:
+        raise ProbeError("timeout" if isinstance(exc.reason, (TimeoutError, socket.timeout)) else "network") from None
+    except OSError:
         raise ProbeError("network") from None
     except (ValueError, UnicodeError):
         raise ProbeError("response_invalid") from None
@@ -137,15 +185,29 @@ class TwitchCollector:
         self.instance, self.sequence, self.last_success = uuid.uuid4().hex, 0, None
         self.revision = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
         self.boot = Path("/proc/sys/kernel/random/boot_id").read_text().strip()
+        self.probe_counts = {result: 0 for result in RESULTS}
+        self.request_counts = {stage: 0 for stage in STAGES[1:]}
+        self.request_seconds = {stage: 0.0 for stage in STAGES[1:]}
 
     def _request(self, url, headers, body=None):
         self.request_count += 1
-        value, headers = self.transport(url, headers, body, self.timeout)
+        started = self.monotonic()
+        status, result = 0, "collector"
         try:
-            self.remaining = max(0, int(headers.get("Ratelimit-Remaining", "")))
-        except (TypeError, ValueError):
-            pass
-        return value
+            value, headers = self.transport(url, headers, body, self.timeout)
+            status, result = 200, "ok"
+            self.quota.update(rate_limit_fields(headers))
+            return value
+        except ProbeError as exc:
+            status, result = exc.status, error_category(exc.reason, exc.status)
+            self.quota.update(exc.rate_limit)
+            raise
+        finally:
+            elapsed = max(0.0, self.monotonic() - started)
+            self.request_counts[self.stage] += 1
+            self.request_seconds[self.stage] += elapsed
+            self.request_stats.append({"stage": self.stage, "http_status": status,
+                                       "result": result, "duration_seconds": elapsed})
 
     def _authenticate(self):
         mono = self.monotonic()
@@ -186,10 +248,11 @@ class TwitchCollector:
             self.expires, self.validated = self.monotonic() + expiry, self.monotonic()
         return {"Authorization": "Bearer " + self.token, "Client-Id": self.client_id}
 
-    def collect(self) -> dict:
+    def collect(self, *, scheduled_at=None) -> dict:
         started, mono = self.wall(), self.monotonic()
         self.sequence += 1
-        self.request_count, self.remaining, self.stage = 0, None, "credentials"
+        self.request_count, self.quota, self.stage = 0, {}, "credentials"
+        self.request_stats = []
         payload = {"schema": SCHEMA, "source_host_id": "arena-monitoring-facts", "source_boot_id": self.boot,
                    "collector_revision": self.revision, "collector_instance": self.instance, "sequence": self.sequence,
                    "user_id": self.user_id, "user_login": self.login, "request_started_at": utc(started),
@@ -222,9 +285,17 @@ class TwitchCollector:
             # Only a fixed code is published; provider bodies and traceback may contain secrets.
             payload["error_reason"] = "collector_error"
         finished = self.wall()
+        category = "ok" if payload["probe_status"] == "ok" else error_category(payload["error_reason"], payload["http_status"])
+        self.probe_counts[category] += 1
         payload.update(collected_at=utc(finished), valid_until=utc(finished + self.ttl),
                        freshness_ttl_sec=self.ttl, last_success_at=self.last_success,
-                       api_request_count=self.request_count, rate_limit_remaining=self.remaining)
+                       api_request_count=self.request_count, rate_limit_remaining=self.quota.get("remaining"),
+                       rate_limit_limit=self.quota.get("limit"), rate_limit_reset=self.quota.get("reset"),
+                       error_category="" if category == "ok" else category, request_stage=self.stage,
+                       probe_duration_seconds=max(0.0, self.monotonic() - mono),
+                       schedule_lag_seconds=max(0.0, mono - scheduled_at) if scheduled_at is not None else 0.0,
+                       request_stats=self.request_stats, probe_counts=dict(self.probe_counts),
+                       request_counts=dict(self.request_counts), request_seconds=dict(self.request_seconds))
         return payload
 
 
@@ -249,11 +320,28 @@ def metrics(payload: dict) -> str:
               "stream_v4_twitch_api_freshness_ttl_seconds": payload["freshness_ttl_sec"],
               "stream_v4_twitch_api_probe_ok": int(payload["probe_status"] == "ok"),
               "stream_v4_twitch_api_http_status": payload["http_status"],
-              "stream_v4_twitch_api_requests": payload["api_request_count"]}
+              "stream_v4_twitch_api_requests": payload["api_request_count"],
+              "stream_v4_twitch_api_probe_duration_seconds": payload["probe_duration_seconds"],
+              "stream_v4_twitch_api_schedule_lag_seconds": payload["schedule_lag_seconds"],
+              "stream_v4_twitch_api_retry_after_seconds": payload["retry_after_sec"]}
+    for field, metric in (("remaining", "remaining"), ("limit", "limit"), ("reset", "reset_unixtime")):
+        value = payload.get("rate_limit_" + field)
+        if value is not None: values["stream_v4_twitch_api_rate_limit_" + metric] = value
     for name, value in values.items():
         lines.extend(["# TYPE " + name + " gauge", name + " " + str(value)])
     for state in ("LIVE", "OFFLINE", "UNKNOWN"):
         lines.append('stream_v4_twitch_provider_state{state="' + state + '"} ' + str(int(payload["provider_state"] == state)))
+    lines.append("# TYPE stream_v4_twitch_api_probes_total counter")
+    for result in RESULTS:
+        lines.append(f'stream_v4_twitch_api_probes_total{{result="{result}"}} {payload["probe_counts"][result]}')
+    lines.append("# TYPE stream_v4_twitch_api_requests_total counter")
+    lines.append("# TYPE stream_v4_twitch_api_request_duration_seconds summary")
+    for stage in STAGES[1:]:
+        labels = '{stage="' + stage + '"}'
+        count = payload["request_counts"][stage]
+        lines.extend([f'stream_v4_twitch_api_requests_total{labels} {count}',
+                      f'stream_v4_twitch_api_request_duration_seconds_count{labels} {count}',
+                      f'stream_v4_twitch_api_request_duration_seconds_sum{labels} {payload["request_seconds"][stage]}'])
     return "\n".join(lines) + "\n"
 
 
@@ -285,16 +373,19 @@ def main(argv=None) -> int:
     signal.signal(signal.SIGTERM, stop)
     signal.signal(signal.SIGINT, stop)
     failures = 0
+    scheduled = time.monotonic()
+    # Mid-slot sampling leaves room for normal latency before the next UTC minute.
+    anchor = scheduled + (args.interval_sec / 2 - time.time() % args.interval_sec) % args.interval_sec
     while not stopping:
-        payload = collector.collect()
+        payload = collector.collect(scheduled_at=scheduled)
         atomic_write(output / "twitch_api_evidence.json", json.dumps(payload, sort_keys=True, allow_nan=False) + "\n")
         atomic_write(output / "twitch_api.prom", metrics(payload))
-        print(json.dumps({k: payload[k] for k in ("collected_at", "sequence", "probe_status", "provider_state", "error_reason", "api_request_count")}), flush=True)
+        print(json.dumps({k: payload[k] for k in ("request_started_at", "collected_at", "sequence", "probe_status", "provider_state", "error_reason", "error_category", "request_stage", "http_status", "api_request_count", "probe_duration_seconds", "schedule_lag_seconds", "rate_limit_remaining", "rate_limit_limit", "retry_after_sec", "request_stats")}), flush=True)
         if args.once:
             return 0 if payload["probe_status"] == "ok" else 1
         failures = 0 if payload["probe_status"] == "ok" else failures + 1
-        delay = max(min(900, args.interval_sec * 2 ** min(max(0, failures - 1), 4)), payload["retry_after_sec"])
-        deadline = time.monotonic() + delay
+        deadline = next_poll_deadline(anchor, time.monotonic(), args.interval_sec, failures, payload["retry_after_sec"])
+        scheduled = deadline
         while not stopping and time.monotonic() < deadline:
             time.sleep(min(0.5, deadline - time.monotonic()))
     return 0

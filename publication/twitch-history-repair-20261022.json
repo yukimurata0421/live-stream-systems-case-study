@@ -1,0 +1,131 @@
+{
+  "schema": "stream.public_port_record.v1",
+  "port_date_jst": "2026-10-22",
+  "scope": "Restore published Twitch history compatibility, reject stale history in the operations UI, and retain the next polling slot after an isolated API failure.",
+  "base_public_commit": "b4232112d3b1b9ce1cd24897940cbecb98986c14",
+  "changes": [
+    "Accept exactly the current and previous API indicator wording while preserving strict public fields, targets, counts, and timestamps.",
+    "Hide stale/future/unavailable Twitch history and reliability success values; show the last update.",
+    "Keep the next scheduled slot after an isolated failure; consecutive failures back off and Retry-After always applies.",
+    "Exercise the actual SLI producer and publisher validator together."
+  ],
+  "preserved": [
+    "Existing measurement definitions, denominators, targets, and failed/unknown/missing history.",
+    "The five-second API request timeout, no catch-up, and no retry within a probe.",
+    "Existing media delivery and critical/recovery Slack and warning Discord notification routes.",
+    "Public operator-supplied account and collector-revision bindings."
+  ],
+  "checks": {
+    "private_related_tests": {
+      "passed": 98,
+      "subtests_passed": 31
+    },
+    "public_monitoring_suite": {
+      "passed": 503,
+      "skipped": 6,
+      "subtests_passed": 176
+    },
+    "public_publisher_tests": {
+      "passed": 29,
+      "subtests_passed": 6
+    },
+    "chromium_freshness_regression_checks": 10,
+    "render_errors": 0,
+    "owned_secret_scan": "PASS",
+    "public_language": "PASS",
+    "snapshot_boundary": "PASS",
+    "source_map_digests": "PASS",
+    "adapted_collector_fixture_tests": {
+      "passed": 34
+    }
+  },
+  "private_deployment_performed": true,
+  "public_example_deployment_performed": false,
+  "public_site_observations": {
+    "history_stopped_at_jst": "2026-10-21T17:34:18+09:00",
+    "browser_observed_24_hour_bars": 24,
+    "browser_observed_live_percent": 99.9,
+    "browser_observed_update_jst": "2026-10-22T09:30:00+09:00",
+    "json_window_end_jst": "2026-10-22T09:30:00+09:00",
+    "consecutive_window_ends_jst": [
+      "2026-10-22T09:29:00+09:00",
+      "2026-10-22T09:30:00+09:00"
+    ],
+    "origin_and_site_body_hash_match": true
+  },
+  "notification_observations": {
+    "notification_process_preserved": true,
+    "discord_state_change_messages_during_reader_update": 2,
+    "critical_path_notification_tested": false
+  },
+  "unobserved": [
+    "Long-term API timeout reduction.",
+    "A naturally occurring isolated timeout followed by the new next-slot behavior.",
+    "Continuous decoded viewer video/audio reception."
+  ],
+  "omissions": [
+    "Private installers, receipts, state, history databases, raw logs, credentials, and private account/release allowlists."
+  ],
+  "commit_performed": false,
+  "push_performed": false,
+  "files": [
+    {
+      "path": "ops/public-publisher/site/scripts/collect_twitch_sli.py",
+      "before_sha256": "40cfb4a332834956648df34d698afc1cfce5c82dfeb7382b23d13c6d1b1b9055",
+      "source_sha256": "3f40765a50b2494e1af47a4803dc2083e7c7e4bd576ca4849f7e2a1d3966f12d",
+      "public_sha256": "3f40765a50b2494e1af47a4803dc2083e7c7e4bd576ca4849f7e2a1d3966f12d"
+    },
+    {
+      "path": "ops/public-publisher/site/public/assets/ops-20261020.js",
+      "before_sha256": "82667f7728e1a5b71a00bb4a728cdc9a5cb589a53491233c5cc278e697deb1b2",
+      "source_sha256": "333c1a4e572938df14f66df5c75708b8eac8c26d9ccfb5b125c7631896c4a2c7",
+      "public_sha256": "333c1a4e572938df14f66df5c75708b8eac8c26d9ccfb5b125c7631896c4a2c7"
+    },
+    {
+      "path": "ops/public-publisher/site/tests/twitch-history-20261022.html",
+      "before_sha256": null,
+      "source_sha256": "2fe2bd4ee4bb970cf91031fdc2597f0f277d335bf5fb25747dc8c6081b01d941",
+      "public_sha256": "2fe2bd4ee4bb970cf91031fdc2597f0f277d335bf5fb25747dc8c6081b01d941"
+    },
+    {
+      "path": "tests/test_public_twitch_sli.py",
+      "before_sha256": "04407508558d588b24c5b5614c1901bc481e788b9bab2007c12838694b4861a8",
+      "source_sha256": "d26d75b3d1b918a42fa2da2eb15920a6153cb993d479a218a054e9e077fda70e",
+      "public_sha256": "d26d75b3d1b918a42fa2da2eb15920a6153cb993d479a218a054e9e077fda70e"
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/collectors/twitch_api.py",
+      "before_sha256": "82ac1425f2766cbf413b32379233723c54f4bc18b2826fb41120cc3e7df247a2",
+      "source_sha256": "b4cfea23f5b14a02ca6a866cbf33e7017ab027cd4df8f19146495c2c15f96010",
+      "public_sha256": "b4cfea23f5b14a02ca6a866cbf33e7017ab027cd4df8f19146495c2c15f96010"
+    },
+    {
+      "path": "monitoring-v4/tests/test_twitch_api_collector.py",
+      "before_sha256": "cb7a54a1481560a09c3421edf13d25f6c6179cfd952df42609a7604750c28eb5",
+      "source_sha256": "f9a41af26bedb0a59759af5ecfad7abd61b6ee78135e84a45a028de218eaca6b",
+      "public_sha256": "c712169b46d8bbc86076f9a9c1b1482e0f004f2a3b305d628930e783035f669f"
+    },
+    {
+      "path": "monitoring-v4/tests/test_twitch_sli_public_contract.py",
+      "before_sha256": null,
+      "source_sha256": "3b7366dfbf9cfbbf932ff01421bceae9c6aaa8e9ac9209bdf5ff46bcdcf03fa5",
+      "public_sha256": "3b7366dfbf9cfbbf932ff01421bceae9c6aaa8e9ac9209bdf5ff46bcdcf03fa5"
+    },
+    {
+      "path": "docs/v3/public-status-page-2026-10-20.md",
+      "before_sha256": "cc027bcf18be8b3210c8a9a9c9abf483865163fb9a9808d830e63c223279038b",
+      "source_sha256": null,
+      "public_sha256": "5846ae45c3c2ffb6c593732c7e7bd0df35daa6f26d1967a0c1b8e41a6885214b"
+    },
+    {
+      "path": "monitoring-v4/docs/relay-provider-evidence.md",
+      "before_sha256": "760f8e2058eb7d7b9246eaf452a1ee4198a5b55b49a98e25c323ffe65ff00dc5",
+      "source_sha256": null,
+      "public_sha256": "baf0da6af54d3ab82d4e983fe17a9a0d14352ef446554a9d6e178402a56e89b3"
+    }
+  ],
+  "adaptations": [
+    "Retain synthetic public account/login/stream identities.",
+    "Keep operator-supplied public account/revision bindings instead of private reader pin lists."
+  ]
+}

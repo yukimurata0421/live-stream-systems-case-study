@@ -1,0 +1,76 @@
+groups:
+  - name: twitch-relay-observation
+    interval: 60s
+    rules:
+      - alert: RelayObserverUnavailable
+        expr: up{job="stream_v4_relay_observer"} == 0
+        for: 3m
+        labels:
+          severity: warning
+          component: relay-observer
+        annotations:
+          summary: Relay monitoring endpoint is unavailable
+      - alert: RelayObservationUnavailable
+        expr: stream_v4_relay_observation_ok == 0 or time() - stream_v4_relay_collected_unixtime > 180
+        for: 3m
+        labels:
+          severity: warning
+          component: relay-vm
+        annotations:
+          summary: OCI relay observation is unavailable or stale
+      - alert: TwitchObservationUnavailable
+        expr: stream_v4_twitch_delivery_state{state="API_UNAVAILABLE"} == 1
+        for: 3m
+        labels:
+          severity: warning
+          component: twitch-api
+        annotations:
+          summary: OCI input and Twitch output progress, but API observation is unavailable
+      - alert: TwitchDeliveryObservationUnavailable
+        expr: max without(state) (stream_v4_twitch_delivery_state{state=~"OCI_UNAVAILABLE|PATH_UNCONFIRMED"}) == 1 or up{job="stream_v4_relay_observer"} == 0
+        for: 3m
+        labels:
+          severity: warning
+          component: twitch-delivery
+        annotations:
+          summary: The mandatory OCI path cannot be assessed; delivery recovery is unconfirmed
+      - alert: TwitchUnexpectedOffline
+        expr: stream_v4_twitch_delivery_state{state="PROVIDER_OFFLINE"} == 1
+        for: 3m
+        labels:
+          severity: warning
+          component: twitch
+        annotations:
+          summary: OCI input and Twitch output progress, but the fresh API reports OFFLINE
+      - alert: YouTubeRelayNotProgressing
+        expr: (stream_v4_relay_destination_flowing{provider="youtube"} == 0) and on() (stream_v4_relay_observation_ok == 1)
+        for: 3m
+        labels:
+          severity: warning
+          component: youtube-relay
+        annotations:
+          summary: YouTube relay output is not progressing
+      - alert: TwitchRelayNotProgressing
+        expr: stream_v4_twitch_delivery_path_interrupted == 1
+        for: 3m
+        labels:
+          severity: critical
+          component: twitch-relay
+        annotations:
+          summary: Twitch's mandatory OCI relay, input, or output is interrupted
+      - alert: RelayMemoryPressure
+        expr: stream_v4_relay_vm_memory_percent >= 90
+        for: 5m
+        labels:
+          severity: warning
+          component: relay-vm
+        annotations:
+          summary: Relay VM memory usage is high
+      - alert: RelayDiskSpaceLow
+        expr: stream_v4_relay_vm_disk_free_percent <= 10
+        for: 5m
+        labels:
+          severity: warning
+          component: relay-vm
+        annotations:
+          summary: Relay VM disk free space is low

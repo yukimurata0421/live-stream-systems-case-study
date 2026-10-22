@@ -37,6 +37,10 @@
   };
   const mbps = v => finite(v) ? `${v.toFixed(2)} Mbps` : "not measured";
   const pct = (v, d = 2) => finite(v) ? `${v.toFixed(d)}%` : "—";
+  const sliFresh = (d, t = now()) => {
+    const age = t - toSec(d.tsli?.generated_at);
+    return d.tsli?.schema === "stream.twitch_sli_public.v1" && finite(age) && age >= 0 && age <= FRESH_WARN;
+  };
   const worst = states => states.reduce((a, b) => (RANK[b] ?? 1) > (RANK[a] ?? 1) ? b : a, "good");
 
   /* ---------- tooltip ---------- */
@@ -245,10 +249,14 @@
     };
 
     // Twitch LIVE by hour
-    const tl = (m.d.tsli?.timeline || []).map(b => ({...b, s: toSec(b.start_at)})).filter(b => finite(b.s) && b.s + 3600 > t0);
+    const current = sliFresh(m.d, m.t), updated = toSec(m.d.tsli?.generated_at);
+    const timelineLabel = current ? `by hour · updated ${jst(updated)} JST`
+      : finite(updated) ? `Updates stopped · last ${jst(updated, {day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit"})} JST`
+      : "History unavailable";
+    const tl = (current ? m.d.tsli?.timeline || [] : []).map(b => ({...b, s: toSec(b.start_at)})).filter(b => finite(b.s) && b.s + 3600 > t0);
     let good = 0, bad = 0;
     for (const b of tl) { good += b.good || 0; bad += b.bad || 0; }
-    lane("Twitch live", "by hour", good + bad ? pct(100 * good / (good + bad), 1) : "—", (svg, h) => {
+    lane("Twitch live", timelineLabel, good + bad ? pct(100 * good / (good + bad), 1) : "—", (svg, h) => {
       for (const b of tl) {
         const known = (b.good || 0) + (b.bad || 0);
         const st = !known ? "unknown" : b.bad === 0 ? "good" : b.bad > 30 ? "critical" : "warning";
@@ -342,18 +350,19 @@
     }
     const week = (d.tsli?.windows || []).find(w => w.id === "7d");
     const day = (d.tsli?.windows || []).find(w => w.id === "24h");
+    const stale = !sliFresh(d);
     for (const mt of week?.metrics || []) {
       if (!["provider_live", "daily_renewal"].includes(mt.id)) continue;
       const collecting = mt.assessment === "COLLECTING";
       const noResult = !finite(mt.value_percent);
       const ok = finite(mt.value_percent) && finite(mt.target_percent) && mt.value_percent >= mt.target_percent;
       const recent = (day?.metrics || []).find(x => x.id === mt.id)?.value_percent;
-      rows.push({name: mt.label, window: "rolling 7d", value: pct(mt.value_percent, 1), pctValue: mt.value_percent,
-        recent: mt.id === "provider_live" && finite(recent) ? recent : null, target: mt.target_percent,
-        sub: mt.id === "daily_renewal" && finite(mt.expected_events)
+      rows.push({name: mt.label, window: "rolling 7d", value: pct(stale ? null : mt.value_percent, 1), pctValue: stale ? null : mt.value_percent,
+        recent: !stale && mt.id === "provider_live" && finite(recent) ? recent : null, target: mt.target_percent,
+        sub: !stale && mt.id === "daily_renewal" && finite(mt.expected_events)
           ? `${mt.good_events ?? 0} ok · ${mt.bad_events ?? 0} failed · ${mt.unknown_events ?? 0} unknown` : null,
-        state: collecting || noResult ? "unknown" : ok ? "good" : "serious",
-        label: noResult ? "no result yet" : collecting ? (finite(mt.coverage_percent) ? `collecting data (coverage ${pct(mt.coverage_percent, 0)})` : "collecting data") : ok ? "meets target" : "below target",
+        state: stale || collecting || noResult ? "unknown" : ok ? "good" : "serious",
+        label: stale ? "updates stopped" : noResult ? "no result yet" : collecting ? (finite(mt.coverage_percent) ? `collecting data (coverage ${pct(mt.coverage_percent, 0)})` : "collecting data") : ok ? "meets target" : "below target",
         facts: Object.entries(mt).filter(([k, v]) => /minutes$|events$|percent$/.test(k) && finite(v)).map(([k, v]) => ({label: k.replaceAll("_", " "), value: v})),
         note: mt.definition});
     }

@@ -18,6 +18,9 @@ of truth or a supported monitoring product.
 The 2026-10-13 source port adds configured read-only relay/API/reception
 collectors and separate public SLI projections. See
 [relay and provider evidence](docs/relay-provider-evidence.md).
+The 2026-10-21 update adds fixed-cadence API collection, failure/quota diagnostics,
+and OCI-aware Twitch notification decisions with verified-observation recovery
+gates. The public examples retain configured account/revision bindings.
 The milestone measurements below predate this update; they are historical
 validation results, not current deployment or elapsed-time qualification.
 
@@ -47,10 +50,12 @@ its PostgreSQL/k3s subsystem:
 - a read-only, build/source-revision-bound soak checkpoint evaluator that never
   counts evidence before its declared epoch.
 
-It deliberately does **not** contain a real Discord or Slack provider, a
-production notification writer, a Dell runtime executor, or Raspberry Pi
-internals. Passing tests does not complete the seven-day source-coverage gate
-or the fourteen-day semantic-parity gate.
+The shadow path uses recording/scripted notification providers. A separate
+compatibility notifier supports operator-configured Slack and Discord webhooks;
+credentials and enabled production writers are excluded. This package contains
+no Dell runtime executor or Raspberry Pi internals. Passing tests does not
+complete the seven-day source-coverage gate or the fourteen-day semantic-parity
+gate.
 
 The committed private implementation lineage through
 `8f2c1aa03b8d3805d8a4c1d51a3c432b0e59657f` is represented by the sanitized

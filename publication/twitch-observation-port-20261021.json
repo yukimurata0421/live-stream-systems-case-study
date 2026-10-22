@@ -1,0 +1,213 @@
+{
+  "schema": "stream.public_port_record.v1",
+  "port_date_jst": "2026-10-21",
+  "scope": "Fixed-cadence Twitch API collection, diagnostic metrics, OCI-aware notification decisions, recovery confirmation, and daily historical-SLO reminders.",
+  "base_public_commit": "7a23d306b6717e2a03a84cb77d7b9f86f62e7354",
+  "source_lineage": {
+    "monitoring_development_head": "2e64d4337ae32569f0ae633708e0b8fac8a6a122",
+    "monitoring_development_branch": "twitch-relay-observability-20261020",
+    "worktree_source_hashes_are_authoritative": true
+  },
+  "adaptations": [
+    "Keep explicit public account/revision bindings and the generic relay-host identifier.",
+    "Publish English notification text and use synthetic account fixtures.",
+    "Expose collector diagnostics through the existing SLI metrics endpoint using the configured binding.",
+    "Keep the strict public JSON shape; use a separate local endpoint for notification assessment.",
+    "Retain the existing compact public schema layout."
+  ],
+  "preserved": [
+    "Existing API SLI denominator, targets, source timestamps, failed/unknown/missing history, and start time.",
+    "Failure backoff, provider Retry-After, no catch-up requests, and fixed error categories.",
+    "OCI input/output and API evidence remain distinct from decoded viewer reception.",
+    "Three-minute critical confirmation and two fresh, distinct recovery observations.",
+    "Channel-bound acknowledgement state and configured webhook credentials outside the repository.",
+    "Daily reminders for historical SLOs are independent from immediate current-path/API alerts."
+  ],
+  "omissions": [
+    "Private host installers, one-off deployment helpers, receipts, logs, and history databases.",
+    "Private account/release allowlists and credentials.",
+    "Private operational runbooks; public-facing explanations are adapted into the existing documents.",
+    "twitch_public.py needs no private hash-pin update because the public adapter already requires a configured revision."
+  ],
+  "deployment_performed": false,
+  "remote_mutation_performed": false,
+  "external_notification_sent": false,
+  "commit_performed": false,
+  "push_performed": false,
+  "checks": {
+    "focused_monitoring_tests": {
+      "passed": 99,
+      "subtests_passed": 27,
+      "validation_scope": "Initial source port before the daily-reminder follow-up; see notification_cadence_followup for current validation."
+    },
+    "monitoring_full_suite": {
+      "passed": 501,
+      "skipped": 6,
+      "subtests_passed": 176
+    },
+    "stream_and_publisher_suite": {
+      "passed": 1250,
+      "skipped": 9,
+      "subtests_passed": 845
+    },
+    "owned_secret_scan": "PASS",
+    "public_language": "PASS",
+    "public_snapshot_boundary": "PASS",
+    "source_map_digests": "PASS",
+    "source_behavior_parity": "PASS",
+    "prometheus_rules": "Byte-identical to the reviewed source; fixture retained. No local promtool binary was available."
+  },
+  "unobserved": [
+    "Deployment of this configurable public example.",
+    "Real critical/recovery webhook delivery from this public checkout.",
+    "Long-term SLO recovery, soak, and continuous viewer reception."
+  ],
+  "files": [
+    {
+      "path": "monitoring-v4/deploy/systemd/stream-v4-twitch-alert-notify.service",
+      "before_sha256": "a32e9ecc5df0ac03cc971e7187b5bf873f57d4c7ad98b58cd5cea43280abfeef",
+      "source_sha256": "8d20265002a23e57f433e23842f907bbc220c335f667fbf6a69b28c5d6f26c98",
+      "public_sha256": "dd5624c14ea25d3c16666babfc094ca2672ee66545d5286e8543ec33ad70a24c",
+      "pre_daily_reminder_sha256": "79ff13f2f08e6a8fc7d4707bfb1fe987debb69cbe7b9d0ddf90c716439734806"
+    },
+    {
+      "path": "monitoring-v4/src/stream_contracts/monitoring_v4/schema/twitch_api_evidence.v1.json",
+      "before_sha256": "388fe38f5c2eaedac5e3247d3b9a8e3348adc9453439c57b59f220c74f2765de",
+      "source_sha256": "4d2cff32841b456c138f74d8fc853d0b930fee3954ebf0e38066f0225bf10edb",
+      "public_sha256": "ccdeeed5181c9c22aa3487184c0a7e210eb8cd908b6b38e717e5743d4defae19"
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/collectors/twitch_api.py",
+      "before_sha256": "af3e63b2a45810ef81bd6567c5ca41ee9e54d3e437cae4b997900e044fa9a578",
+      "source_sha256": "82ac1425f2766cbf413b32379233723c54f4bc18b2826fb41120cc3e7df247a2",
+      "public_sha256": "82ac1425f2766cbf413b32379233723c54f4bc18b2826fb41120cc3e7df247a2"
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/relay_monitor.py",
+      "before_sha256": "011b774181b6ef7f6137e14631a8e4f6fea6e28009a2303c047f77609cd7c50d",
+      "source_sha256": "2e82dedd8e485d4b9ff016f0b41035ce57d5cbf1044ed410b20c6cda305d2e31",
+      "public_sha256": "89f4685f1e984b2d8ff1717b466a6b793a046ba65345333790e9c9b1a53ab14a"
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/twitch_alert_notify.py",
+      "before_sha256": "975734669111c3d64a85f1d95983d19b7f5d076befcbe51ebd369599746e7a03",
+      "source_sha256": "a2775eb4335d0641a586f1cb74a73d775ae652da2974182c075ec56d790ced6e",
+      "public_sha256": "6fe8317ea778bfdeaaced4815422b7de17d82219379dd624831823654d0ff035",
+      "pre_daily_reminder_sha256": "fdbad0e950af8f82ea903d8e8508db03abd44355f7a34865698f21200e638ed1"
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/twitch_sli.py",
+      "before_sha256": "867319076851eae4850d3d57166520a34fbc8816ee33d6581135dfeea25d6218",
+      "source_sha256": "9bcf09759f9946a689e1a9330853f298cf6ac842a88853073c74c04ab0714590",
+      "public_sha256": "8bc0436de110717b0dc4013261779f8988bfa2a3e2415ea223b7d007fff5992a"
+    },
+    {
+      "path": "monitoring-v4/tests/test_relay_monitor.py",
+      "before_sha256": "69819a1f72fa08b7bc952a69c9e80c42fee3f27b8bc46d1a476399365bef0075",
+      "source_sha256": "59fd9f5127a0d03a8cfbfb9c9c6781bededaef1c3b1c2462901533133d9abaa4",
+      "public_sha256": "4b4056f8eefcc99c995d4d63d363428602b9deef5ae40b577bec0256a9d6abee"
+    },
+    {
+      "path": "monitoring-v4/tests/test_twitch_alert_notify.py",
+      "before_sha256": "beb21a3171439c36798a4b995cc8c4b4a36dc7f59a5abf1fda1ea985fdbbfe5a",
+      "source_sha256": "868661660744acba245000d26760ffa1b65244d6fc690f55fa0196bb0414b891",
+      "public_sha256": "d7f56704a6b7ebc440aa2fc79d725d2db4857607f0533f069fae121d0a37e633",
+      "pre_daily_reminder_sha256": "5622b008bf194b2fbc7304665b90f758c55fa6db7a07cac4f3ce77f7fb4cbfbf"
+    },
+    {
+      "path": "monitoring-v4/tests/test_twitch_api_collector.py",
+      "before_sha256": "b6c70ef61b5bc8f39bd5831714604a4a2677d438e7d563a2e9d83d2c55d1c109",
+      "source_sha256": "afaa6769b678f8e22c8b92801c14715c1e34ab76d94e450068c5bb26a28eaa59",
+      "public_sha256": "cb7a54a1481560a09c3421edf13d25f6c6179cfd952df42609a7604750c28eb5"
+    },
+    {
+      "path": "monitoring-v4/deploy/prometheus/relay_observer.rules.yml",
+      "before_sha256": null,
+      "source_sha256": "2f4eff6ab7b724f81cfbeaccb6ec46912585a08755e5a2a991903325ddff7303",
+      "public_sha256": "2f4eff6ab7b724f81cfbeaccb6ec46912585a08755e5a2a991903325ddff7303"
+    },
+    {
+      "path": "monitoring-v4/deploy/prometheus/twitch_sli.rules.yml",
+      "before_sha256": null,
+      "source_sha256": "048604882efe12e590d53044cf04cac9aed2554b5aaed82918dcc6c3fef424ad",
+      "public_sha256": "048604882efe12e590d53044cf04cac9aed2554b5aaed82918dcc6c3fef424ad"
+    },
+    {
+      "path": "monitoring-v4/tests/fixtures/monitoring_v4/twitch_delivery_alerts.test.yml",
+      "before_sha256": null,
+      "source_sha256": "fcad1aa6faae0186e7986de40880553cf3a47a1be0b3237e6bfe27a30449f6f5",
+      "public_sha256": "fcad1aa6faae0186e7986de40880553cf3a47a1be0b3237e6bfe27a30449f6f5"
+    },
+    {
+      "path": "monitoring-v4/tests/test_twitch_api_diagnostics.py",
+      "before_sha256": null,
+      "source_sha256": "91d386c8341f4b3cbf8a2be9628eade3fa1f7ec8dd20bba40bbb30e9c88edbca",
+      "public_sha256": "829a674b2ac6587e21f517237dcd87887ca185214af1d574dbcea92d04e6b2bc"
+    },
+    {
+      "path": "monitoring-v4/README.md",
+      "before_sha256": "ed3bb73f94d1501428678e0128eeef4988e6df6e622bf09414b1e282c58cd7ff",
+      "source_sha256": null,
+      "public_sha256": "209603e882c772be3cfa5772783c19c6fbeece5b95526fe3bc0ba18abdaa6b20"
+    },
+    {
+      "path": "monitoring-v4/docs/relay-provider-evidence.md",
+      "before_sha256": "4f1722ee298a7343f5e4d137eab208b4e7ad760a35228167a3352b4423b8d144",
+      "source_sha256": null,
+      "public_sha256": "760f8e2058eb7d7b9246eaf452a1ee4198a5b55b49a98e25c323ffe65ff00dc5",
+      "pre_daily_reminder_sha256": "2eaba9a578c7a6ccb705550c3d9c38fa5e068545570eaa776af38cc093dceb56"
+    },
+    {
+      "path": "docs/observability.md",
+      "before_sha256": "66ab195158854e1ddbe4ba06dd63fce3442079021b33d759dc9e2f434ec93f2e",
+      "source_sha256": null,
+      "public_sha256": "bd88394af5b0c4b2b6b5115f77a10e6002b13fe621a7c57287b05ea1fab79090"
+    },
+    {
+      "path": "docs/current-status.md",
+      "before_sha256": "040eac29174151f51e473f7f85e4aa23ff994be0079b3d4c011623b6ec7864ca",
+      "source_sha256": null,
+      "public_sha256": "3b5b82889be94b03b4c49335bd780b864ca78cf8e33a5f3d9cb7d564a9389631"
+    },
+    {
+      "path": "docs/00_INDEX.md",
+      "before_sha256": "c4d59eabef48c302df0d72b7ae0d6a6216f99e199f98e4c9c0a0b92631516c13",
+      "source_sha256": null,
+      "public_sha256": "8c41adb3cc394410f6d37c738e8d87c6133361a90cde7e21297c464e000791a9"
+    }
+  ],
+  "notification_cadence_followup": {
+    "date_jst": "2026-10-21",
+    "historical_slo_repeat_sec": 86400,
+    "current_failure_repeat_sec": 3600,
+    "immediate_events": [
+      "Initial firing alert",
+      "Severity or combined OCI/API assessment changes",
+      "Resolution"
+    ],
+    "preserved": [
+      "Original incident and acknowledged notification times across an upgrade",
+      "Three-minute confirmation and 30-second notification loop for current path/API failures",
+      "Slack critical/recovery and Discord warning routes",
+      "Failed/missing SLI history and per-alert delivery acknowledgements"
+    ],
+    "checks": {
+      "private_related_tests": {
+        "passed": 58,
+        "subtests_passed": 31
+      },
+      "public_monitoring_suite": {
+        "passed": 501,
+        "skipped": 6,
+        "subtests_passed": 176
+      },
+      "public_language": "PASS",
+      "owned_secret_scan": "PASS",
+      "source_map_digests": "PASS"
+    },
+    "public_example_deployed": false,
+    "real_notification_delivery_tested": false,
+    "natural_24_hour_reminder_observed": false,
+    "public_head_at_validation": "f95bad5b61b2e0caa3f4d55a2dcb2b41da85c72c"
+  }
+}

@@ -22,6 +22,26 @@ def fixture():
     return v
 
 class PublicSliTests(unittest.TestCase):
+    def test_current_and_previous_api_wording_are_accepted_without_changing_counts(self):
+        now=pub.timestamp(fixture()['generated_at'])+1
+        for text in [
+            ('API observation availability','Successful fresh Helix observation minutes / all expected minutes; includes collection gaps.',99.0),
+            ('API measurement coverage','Successful fresh Helix observations / all expected minutes.',99.0),
+        ]:
+            with self.subTest(label=text[0]):
+                v=fixture()
+                for w in v['windows']:
+                    m=w['metrics'][1];m['label'],m['definition'],m['target_percent']=text
+                self.assertIs(pub.validate(v,now),v)
+
+    def test_api_wording_compatibility_does_not_allow_unknown_or_mixed_definitions(self):
+        now=pub.timestamp(fixture()['generated_at'])+1
+        for field,value in [('label','unexpected'),('definition','unexpected'),('target_percent',98.0),
+                            ('label','API measurement coverage')]:
+            with self.subTest(field=field,value=value):
+                v=fixture();v['windows'][0]['metrics'][1][field]=value
+                with self.assertRaises(ValueError):pub.validate(v,now)
+
     def test_projection_accepts_unknown_and_rejects_private_nested_fields(self):
         now=pub.timestamp(fixture()['generated_at'])+1
         self.assertIsNone(pub.validate(fixture(),now)['windows'][0]['metrics'][0]['value_percent'])

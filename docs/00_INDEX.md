@@ -23,7 +23,7 @@ start.
 - `v3/self-healing-oci-fanout.md`: [the media route since 2026-10-20, its thresholds, and the relay-stop drill](v3/self-healing-oci-fanout.md).
 - `v3/oci-route-simplification-decision.md`: [why the unfinished recovery design was replaced](v3/oci-route-simplification-decision.md).
 - `hardware-selection.md`: [why each host, CPU, and GPU was chosen](hardware-selection.md).
-- `observability.md`: [the questions monitoring answers and how evidence is kept](observability.md).
+- `observability.md`: [monitoring signals, OCI-aware Twitch assessment, and evidence boundaries](observability.md).
 - `v3/runtime-state-and-evidence.md`: [runtime state files and their meaning](v3/runtime-state-and-evidence.md).
 - `v3/map-rendering-and-monitoring.md`: [map renderer, precipitation, probes, and alert routing](v3/map-rendering-and-monitoring.md).
 - `v3/music-provider-and-loudness-contract.md`: [music provider permissions, credit, and loudness](v3/music-provider-and-loudness-contract.md).

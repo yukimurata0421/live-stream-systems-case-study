@@ -78,5 +78,85 @@ class RelayMonitorTests(unittest.TestCase):
         text=monitor.metrics(v);self.assertIn('provider="youtube"',text)
         self.assertNotIn('fixture-machine',text)
 
+    def test_delivery_combines_required_oci_path_with_api(self):
+        self.assertEqual(self.project()['twitch_delivery']['state'], 'HEALTHY')
+        self.api['probe_status']='unknown';self.api['provider_state']='UNKNOWN'
+        self.assertEqual(self.project()['twitch_delivery']['state'], 'API_UNAVAILABLE')
+        self.raw['input']['ready']=False
+        self.assertEqual(self.project()['twitch_delivery']['state'], 'OCI_INPUT_STOPPED')
+        self.raw['relay']['active']=False
+        self.assertEqual(self.project()['twitch_delivery']['state'], 'OCI_RELAY_STOPPED')
+
+    def test_api_live_cannot_hide_output_stall_or_unconfirmed_counters(self):
+        self.raw['destinations']['twitch']['bytes']=500000
+        self.assertEqual(self.project()['twitch_delivery']['state'], 'TWITCH_OUTPUT_STOPPED')
+        self.raw['destinations']['twitch']['id']='replacement'
+        v=self.project()
+        self.assertEqual(v['twitch_delivery']['state'], 'PATH_UNCONFIRMED')
+        self.assertFalse(v['twitch_delivery']['path_interrupted'])
+        self.assertFalse(v['twitch_delivery']['recovery_confirmed'])
+
+    def test_offline_with_progressing_oci_is_a_mismatch_and_stale_oci_is_unknown(self):
+        self.api['provider_state']='OFFLINE'
+        self.assertEqual(self.project()['twitch_delivery']['state'], 'PROVIDER_OFFLINE')
+        self.raw['observed_at']=self.date(self.now-181)
+        self.assertEqual(self.project()['twitch_delivery']['state'], 'OCI_UNAVAILABLE')
+
+    def test_daily_window_does_not_mask_oci_input_or_relay_failure(self):
+        self.raw['daily'].update(state='WAIT_OFFLINE',next_renewal_at=self.date(self.now-30))
+        self.raw['destinations']['twitch']['state']='idle';self.api['provider_state']='OFFLINE'
+        self.assertEqual(self.project()['twitch_delivery']['state'],'PLANNED_RENEWAL')
+        self.raw['input']['ready']=False
+        self.assertEqual(self.project()['twitch_delivery']['state'],'OCI_INPUT_STOPPED')
+        self.raw['relay']['active']=False
+        self.assertEqual(self.project()['twitch_delivery']['state'],'OCI_RELAY_STOPPED')
+
+    def test_skewed_api_and_get_time_expiration_cannot_prove_recovery(self):
+        self.api['collected_at']=self.date(self.now-100)
+        v=self.project()
+        self.assertEqual(v['twitch_delivery']['state'],'API_UNAVAILABLE')
+        self.api['collected_at']=self.date(self.now);v=self.project()
+        self.assertEqual(monitor.twitch_delivery(v,self.now+181)['state'],'OCI_UNAVAILABLE')
+        from unittest.mock import patch
+        with patch.object(monitor.time,'time',return_value=self.now):
+            text=monitor.metrics(v)
+        self.assertIn('stream_v4_twitch_delivery_state{state="HEALTHY"} 1',text)
+        self.assertIn('stream_v4_twitch_delivery_path_interrupted 0.0',text)
+
+    def test_malformed_or_missing_identity_is_unknown_not_interrupted(self):
+        self.raw['relay']['active']=None
+        self.assertEqual(self.project()['twitch_delivery']['state'],'OCI_UNAVAILABLE')
+        self.raw['relay']['active']=True
+        self.raw['destinations']['twitch']['state']='unexpected'
+        self.assertEqual(self.project()['twitch_delivery']['state'],'PATH_UNCONFIRMED')
+        self.raw['destinations']['twitch']['state']='forwarding'
+        self.raw['input']['connection_id']=None;self.before['input']['connection_id']=None
+        self.assertEqual(self.project()['twitch_delivery']['state'],'PATH_UNCONFIRMED')
+
+    def test_public_schema_is_preserved_and_verdict_uses_a_separate_local_endpoint(self):
+        import json
+        import threading
+        from http.client import HTTPConnection
+        from unittest.mock import patch
+        from http.server import ThreadingHTTPServer
+        with patch.object(monitor,'LATEST',self.project()), patch.object(monitor.time,'time',return_value=self.now):
+            server=ThreadingHTTPServer(('127.0.0.1',0),monitor.Handler)
+            worker=threading.Thread(target=server.serve_forever,daemon=True);worker.start()
+            try:
+                conn=HTTPConnection('127.0.0.1',server.server_port,timeout=2)
+                conn.request('GET','/public');public=json.loads(conn.getresponse().read())
+                conn.request('GET','/twitch-delivery');internal=json.loads(conn.getresponse().read())
+                conn.close()
+                self.assertNotIn('twitch_delivery',public)
+                self.assertEqual(internal['twitch_delivery']['state'],'HEALTHY')
+                self.assertEqual(set(internal)-{'twitch_delivery'},set(public))
+            finally:server.shutdown();server.server_close();worker.join(timeout=2)
+
+    def test_malformed_timestamp_is_unavailable_without_crashing_observer(self):
+        for value in (None,123,False,'2026-10-21T08:00:00'):
+            with self.subTest(value=value):
+                self.raw['observed_at']=value
+                self.assertEqual(self.project()['twitch_delivery']['state'],'OCI_UNAVAILABLE')
+
 
 if __name__=='__main__':unittest.main()

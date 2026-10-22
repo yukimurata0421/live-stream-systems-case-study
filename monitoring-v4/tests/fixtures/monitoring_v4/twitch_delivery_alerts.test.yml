@@ -1,0 +1,74 @@
+rule_files:
+  - ../../../deploy/prometheus/relay_observer.rules.yml
+evaluation_interval: 1m
+tests:
+  - name: API failure with OCI progress stays a Discord warning
+    interval: 1m
+    input_series:
+      - series: stream_v4_twitch_delivery_state{state="API_UNAVAILABLE"}
+        values: '1x8'
+      - series: stream_v4_twitch_delivery_path_interrupted
+        values: '0x8'
+    alert_rule_test:
+      - eval_time: 4m
+        alertname: TwitchObservationUnavailable
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              component: twitch-api
+              state: API_UNAVAILABLE
+            exp_annotations:
+              summary: OCI input and Twitch output progress, but API observation is unavailable
+      - eval_time: 4m
+        alertname: TwitchRelayNotProgressing
+        exp_alerts: []
+  - name: OCI interruption requires three minutes and has stable incident identity
+    interval: 1m
+    input_series:
+      - series: stream_v4_twitch_delivery_path_interrupted
+        values: '1x8'
+    alert_rule_test:
+      - eval_time: 2m
+        alertname: TwitchRelayNotProgressing
+        exp_alerts: []
+      - eval_time: 4m
+        alertname: TwitchRelayNotProgressing
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              component: twitch-relay
+            exp_annotations:
+              summary: Twitch's mandatory OCI relay, input, or output is interrupted
+  - name: Missing OCI observations do not mean confirmed interruption
+    interval: 1m
+    input_series:
+      - series: stream_v4_twitch_delivery_state{state="OCI_UNAVAILABLE"}
+        values: '1x8'
+      - series: stream_v4_twitch_delivery_path_interrupted
+        values: '0x8'
+    alert_rule_test:
+      - eval_time: 4m
+        alertname: TwitchRelayNotProgressing
+        exp_alerts: []
+      - eval_time: 4m
+        alertname: TwitchDeliveryObservationUnavailable
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              component: twitch-delivery
+            exp_annotations:
+              summary: The mandatory OCI path cannot be assessed; delivery recovery is unconfirmed
+  - name: Bounded daily renewal does not become an unexpected outage
+    interval: 1m
+    input_series:
+      - series: stream_v4_twitch_delivery_state{state="PLANNED_RENEWAL"}
+        values: '1x8'
+      - series: stream_v4_twitch_delivery_path_interrupted
+        values: '0x8'
+    alert_rule_test:
+      - eval_time: 4m
+        alertname: TwitchRelayNotProgressing
+        exp_alerts: []
+      - eval_time: 4m
+        alertname: TwitchUnexpectedOffline
+        exp_alerts: []

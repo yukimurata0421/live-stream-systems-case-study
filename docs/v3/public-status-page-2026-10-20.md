@@ -91,6 +91,27 @@ the week. A bar now starts one 10-point step below its lowest value, after a
 Twitch value of 20.2% on a 20-100% scale left its bar empty. A renewal row with
 no completed result shows "no result yet" rather than "below target".
 
+## Twitch history publication repair (2026-10-22)
+
+The monitoring source continued collecting while the published Twitch history
+stopped updating. The publisher compared the API indicator's label and definition
+with exact older text and rejected the entire snapshot after that text changed.
+It now accepts the two reviewed wordings during an upgrade or rollback, while
+retaining the strict field, target, count, and freshness checks. A regression
+test passes the real SLI producer's output through the public validator.
+
+The 24-hour lane and Twitch reliability rows now hide old success values when
+the snapshot is over 180 seconds old, has a future timestamp, or is unavailable.
+The lane states that updates stopped and shows the last update time. Fresh data
+resumes the display without reloading. The browser regression fixture is
+[`twitch-history-20261022.html`](../../ops/public-publisher/site/tests/twitch-history-20261022.html).
+
+An isolated API failure also keeps the next scheduled polling slot rather than
+adding another missing minute. Consecutive failures still back off and provider
+Retry-After always applies. No historical failure or missing minute is erased.
+The [source-port record](../../publication/twitch-history-repair-20261022.json)
+separates public source checks from private deployment and public observations.
+
 ## Limits
 
 Checks were visual, in a browser, in light and dark themes and at a narrow

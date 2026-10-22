@@ -11,9 +11,12 @@ from pathlib import Path
 PUBLIC=Path(__file__).resolve().parents[1]/'public'
 DEFINITIONS={
  'provider_live':('Twitch LIVE availability','Helix Get Streams: LIVE / known provider observations.',99.0),
- 'api_measurement':('API measurement coverage','Successful fresh Helix observations / all expected minutes.',99.0),
+ 'api_measurement':('API observation availability','Successful fresh Helix observation minutes / all expected minutes; includes collection gaps.',99.0),
  'relay_flow':('Twitch relay continuity','OCI forward counter progressing / known relay observations.',99.0),
  'daily_renewal':('Daily session renewal','OFFLINE → new LIVE stream ID and start time, within 600 s of 00:00 JST.',100.0)}
+# Accept the exact prior wording during an upgrade or rollback; arbitrary text is rejected.
+API_DEFINITIONS={DEFINITIONS['api_measurement'],
+ ('API measurement coverage','Successful fresh Helix observations / all expected minutes.',99.0)}
 
 def keys(v,wanted):
     if type(v) is not dict or set(v)!=set(wanted):raise ValueError('UNEXPECTED_PUBLIC_FIELD')
@@ -44,7 +47,8 @@ def validate(v,now):
             base=['id','label','definition','target_percent','value_percent','assessment']
             extra=['good_events','bad_events','unknown_events','pending_events','expected_events'] if kind=='daily_renewal' else ['conservative_percent','coverage_percent','good_minutes','bad_minutes','unknown_minutes','missing_minutes','expected_minutes','error_budget_minutes','confirmed_budget_used_percent']
             keys(m,base+extra)
-            if m['id']!=kind or (m['label'],m['definition'],m['target_percent'])!=DEFINITIONS[kind] or m['assessment'] not in ['COLLECTING','UNKNOWN','MET','BREACHED','NO_DUE']:raise ValueError()
+            definitions=API_DEFINITIONS if kind=='api_measurement' else {DEFINITIONS[kind]}
+            if m['id']!=kind or (m['label'],m['definition'],m['target_percent']) not in definitions or m['assessment'] not in ['COLLECTING','UNKNOWN','MET','BREACHED','NO_DUE']:raise ValueError()
             number(m['value_percent'],100,True)
             if kind=='daily_renewal':
                 for k in extra:count(m[k],8)

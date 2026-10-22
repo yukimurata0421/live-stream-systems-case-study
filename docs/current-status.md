@@ -63,6 +63,19 @@ included here.
   relay/fallback clocks. Public-player automated acquisition remains on hold
   pending applicable terms or permission. No new clock-derived paging threshold
   is enabled.
+- Critical and recovery delivery through the OCI-aware Twitch notifier. Its
+  public source tests use synthetic inputs and mocked webhooks.
+
+## Twitch Observation Source Update (2026-10-21 JST)
+
+The public Monitoring v4 example now includes fixed-cadence API collection,
+failure/quota diagnostics, and notification decisions that combine OCI input,
+Twitch output, and API observations. Critical path failures use Slack; observation
+warnings use Discord. Recovery waits for two distinct fresh path/LIVE
+observations. Historical API SLO failures and missing minutes remain intact.
+See the [implementation notes](../monitoring-v4/docs/relay-provider-evidence.md)
+and [source-port validation record](../publication/twitch-observation-port-20261021.json).
+This port applies no public example to production and sends no notifications.
 
 ## Deliberately Disabled
 

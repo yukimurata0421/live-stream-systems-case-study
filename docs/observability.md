@@ -60,6 +60,14 @@ Missing optional state is not exported as `0`. For example, absent ADS-B,
 audio, SLO, cgroup, or stream-watchdog detail files should remove the metric
 series or fall back to subsystem evidence; they must not create a false OK.
 
+Twitch's required OCI path is assessed from relay state, input and output
+counter progress, and fresh API observations. An API timeout with advancing OCI
+counters is observation degradation; an explicit path interruption is a separate
+critical condition. The derived telemetry feeds notification decisions, while
+raw signals remain available for diagnosis. See the Monitoring v4
+[relay/provider evidence](../monitoring-v4/docs/relay-provider-evidence.md#oci-aware-notification-decisions)
+for cadence, metric definitions, channel routing, and recovery confirmation.
+
 ## Returned Clock And Observer Quality
 
 The [return-feed clock monitor](v3/relay-clock-monitor.md) adds image/clock facts

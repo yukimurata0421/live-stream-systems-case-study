@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><title>Twitch history freshness regression</title>
+<body>
+<button id="refresh">Refresh fixture</button>
+<div id="status"><span id="statusIcon"></span><span id="statusTitle"></span><ul id="statusReasons"></ul><span id="statusUpdated"></span></div>
+<div id="ytBadge"></div><div id="ytValue"></div><dl id="ytFacts"></dl>
+<div id="twBadge"></div><div id="twValue"></div><dl id="twFacts"></dl>
+<div id="routeBadge"></div><div id="routeValue"></div><div id="routeNote"></div><dl id="routeFacts"></dl>
+<svg id="pathSvg"></svg><div id="timeline"></div><div id="tooltip" hidden></div>
+<table><tbody id="relRows"></tbody></table><div id="relStamp"></div>
+<ul id="incidentList"></ul><div id="recChart"></div><div id="recTotal"></div><div id="recBreakdown"></div>
+<div id="checkGroups"></div><div id="checksSummary"></div><pre id="result">RUNNING</pre>
+<script>
+let clock = Date.now(); Date.now = () => clock;
+const stamp = ms => new Date(ms).toISOString();
+const metric = {id: "provider_live", label: "Twitch LIVE availability", definition: "Synthetic fixture.", target_percent: 99, value_percent: 100, assessment: "MET"};
+const fixture = {schema: "stream.twitch_sli_public.v1", generated_at: stamp(clock),
+  windows: ["24h", "7d"].map(id => ({id, metrics: [metric]})),
+  timeline: Array.from({length: 24}, (_, i) => ({start_at: stamp(clock - (24 - i) * 3600000), good: 60, bad: 0, unknown: 0, missing: 0}))};
+let response = fixture;
+window.fetch = async url => ({ok: true, json: async () => String(url).includes("twitch-sli.json") ? response : {}});
+window.fixtureErrors = [];
+const originalError = console.error;
+console.error = (...args) => { window.fixtureErrors.push(args.map(String).join(" ")); originalError(...args); };
+</script>
+<script src="../public/assets/ops-20261020.js"></script>
+<script>
+const pause = () => new Promise(resolve => setTimeout(resolve, 30)), tests = [];
+function check(name, pass) { if (!pass) throw new Error(name); tests.push(name); }
+const lane = () => document.querySelector("#timeline .lane");
+const bars = () => lane().querySelectorAll("svg rect").length;
+async function refresh(value) { response = value; document.getElementById("refresh").click(); await pause(); }
+(async () => {
+  await pause();
+  check("fresh history has 24 hourly bars", bars() === 24);
+  check("fresh history shows its measured rate", lane().querySelector(".lane-value").textContent === "100.0%");
+  await refresh({...fixture, generated_at: stamp(clock - 181000)});
+  check("stale history hides old bars and success rate", bars() === 0 && !lane().querySelector(".lane-value").textContent.includes("%"));
+  check("stale history states the last update", lane().textContent.includes("Updates stopped") && lane().textContent.includes("JST"));
+  check("stale reliability is unknown", document.querySelector("#relRows .state").textContent === "updates stopped");
+  await refresh({...fixture, generated_at: stamp(clock + 30000)});
+  check("future timestamp cannot establish freshness", bars() === 0);
+  await refresh(null);
+  check("missing history is explicit", bars() === 0 && lane().textContent.includes("History unavailable"));
+  await refresh(fixture);
+  check("recovery resumes without reloading the page", bars() === 24 && lane().textContent.includes("updated"));
+  clock += 181000; await refresh(fixture);
+  check("cached history ages out on refresh", bars() === 0);
+  check("all sections render without errors", window.fixtureErrors.length === 0);
+  document.getElementById("result").textContent = JSON.stringify({status: "PASS", tests});
+})().catch(error => document.getElementById("result").textContent = JSON.stringify({status: "FAIL", error: error.message, tests}));
+</script>
+</body></html>

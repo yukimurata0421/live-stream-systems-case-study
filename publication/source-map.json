@@ -41,10 +41,10 @@
     {
       "path": "docs/00_INDEX.md",
       "source_role": "public-documentation",
-      "decision": "curated-current-contract-and-dated-evidence",
+      "decision": "Twitch observation and OCI-aware notifications; public bindings and English text retained",
       "before_sha256": "164ca8e502558a02f9511c03546759eb40cd785138ee6b38be0a77b7a4eeefb1",
       "source_sha256": null,
-      "public_sha256": "3f4714f0288f375903e122691c2d4cfd79220b990a861ea4197e43be731209a3",
+      "public_sha256": "fd1f9349b84427f1d7d62186b9996e06efae80ad624fd378ab8da822335777fb",
       "prior_public_sha256": "e32ab253e63bfe09d4ec42a5fc1594a2025b8bd859cab754ee1558798c0391dc",
       "localization": "English prose; control structures and machine identifiers preserved.",
       "pre_graph_display_sha256": "6a87a495eb3698b1a49e053ffcc109b28d94a59e9dd29cb3399a62279e196d3d",
@@ -57,10 +57,11 @@
       "twitch_sli_resilience": "Locally checked candidate only; production application held for fresh task.",
       "pre_pi_publisher_source_port_sha256": "1a57bd86d9466793daecec2756b29cd2ca24cad934a2dfd795a231e098a230e8",
       "pi_publisher_source_port": "2026-10-14 source reconciliation; portable English code and retained public protections; no live changes.",
-      "port_date_jst": "2026-10-20",
+      "port_date_jst": "2026-10-21",
       "pre_documentation_restructure_sha256": "3d45a66068211ff9944ba891a0017e9189c71daa1b0b4945ae1970f8c2b5c045",
       "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json.",
-      "pre_clock_monitor_public_sha256": "c4d59eabef48c302df0d72b7ae0d6a6216f99e199f98e4c9c0a0b92631516c13",
+      "pre_twitch_observation_public_sha256": "c4d59eabef48c302df0d72b7ae0d6a6216f99e199f98e4c9c0a0b92631516c13",
+      "pre_clock_monitor_public_sha256": "8c41adb3cc394410f6d37c738e8d87c6133361a90cde7e21297c464e000791a9",
       "clock_monitor_port": "2026-10-22 selected return-feed monitor / OCI files-only backup port; existing changes retained."
     },
     {
@@ -269,10 +270,12 @@
     {
       "path": "monitoring-v4/README.md",
       "source_role": "public-documentation",
-      "decision": "curated-current-contract-and-dated-evidence",
+      "decision": "Twitch observation and OCI-aware notifications; public bindings and English text retained",
       "before_sha256": "474b906aef2d61b33adc34cbe1a1eb86cfc88a0142e881af85f3b23f4f7fdc70",
       "source_sha256": null,
-      "public_sha256": "ed3bb73f94d1501428678e0128eeef4988e6df6e622bf09414b1e282c58cd7ff"
+      "public_sha256": "209603e882c772be3cfa5772783c19c6fbeece5b95526fe3bc0ba18abdaa6b20",
+      "pre_twitch_observation_public_sha256": "ed3bb73f94d1501428678e0128eeef4988e6df6e622bf09414b1e282c58cd7ff",
+      "port_date_jst": "2026-10-21"
     },
     {
       "path": "monitoring-v4/docs/public-language-policy.md",
@@ -299,11 +302,14 @@
     {
       "path": "monitoring-v4/docs/relay-provider-evidence.md",
       "source_role": "public-documentation",
-      "decision": "curated-current-contract-and-dated-evidence",
+      "decision": "Twitch public history compatibility, freshness and isolated-failure polling repair",
       "before_sha256": "2e03f832008b632eedc4a537c8e6917d396e96e5846497a4d84d62d7389c86c3",
       "source_sha256": null,
-      "public_sha256": "4f1722ee298a7343f5e4d137eab208b4e7ad760a35228167a3352b4423b8d144",
-      "port_date_jst": "2026-10-20"
+      "public_sha256": "baf0da6af54d3ab82d4e983fe17a9a0d14352ef446554a9d6e178402a56e89b3",
+      "port_date_jst": "2026-10-22",
+      "pre_twitch_observation_public_sha256": "4f1722ee298a7343f5e4d137eab208b4e7ad760a35228167a3352b4423b8d144",
+      "pre_daily_reminder_public_sha256": "2eaba9a578c7a6ccb705550c3d9c38fa5e068545570eaa776af38cc093dceb56",
+      "pre_twitch_history_repair_public_sha256": "760f8e2058eb7d7b9246eaf452a1ee4198a5b55b49a98e25c323ffe65ff00dc5"
     },
     {
       "path": "monitoring-v4/docs/status.md",
@@ -366,26 +372,33 @@
     {
       "path": "monitoring-v4/src/stream_contracts/monitoring_v4/schema/twitch_api_evidence.v1.json",
       "source_role": "development-monitoring",
-      "decision": "adapted",
+      "decision": "Twitch observation and OCI-aware notifications; public bindings and English text retained",
       "before_sha256": null,
-      "source_sha256": "388fe38f5c2eaedac5e3247d3b9a8e3348adc9453439c57b59f220c74f2765de",
-      "public_sha256": "388fe38f5c2eaedac5e3247d3b9a8e3348adc9453439c57b59f220c74f2765de"
+      "source_sha256": "4d2cff32841b456c138f74d8fc853d0b930fee3954ebf0e38066f0225bf10edb",
+      "public_sha256": "ccdeeed5181c9c22aa3487184c0a7e210eb8cd908b6b38e717e5743d4defae19",
+      "pre_twitch_observation_public_sha256": "388fe38f5c2eaedac5e3247d3b9a8e3348adc9453439c57b59f220c74f2765de",
+      "port_date_jst": "2026-10-21"
     },
     {
       "path": "monitoring-v4/src/stream_monitoring_v4/collectors/twitch_api.py",
       "source_role": "development-monitoring",
-      "decision": "adapted",
+      "decision": "Twitch public history compatibility, freshness and isolated-failure polling repair",
       "before_sha256": null,
-      "source_sha256": "af3e63b2a45810ef81bd6567c5ca41ee9e54d3e437cae4b997900e044fa9a578",
-      "public_sha256": "af3e63b2a45810ef81bd6567c5ca41ee9e54d3e437cae4b997900e044fa9a578"
+      "source_sha256": "b4cfea23f5b14a02ca6a866cbf33e7017ab027cd4df8f19146495c2c15f96010",
+      "public_sha256": "b4cfea23f5b14a02ca6a866cbf33e7017ab027cd4df8f19146495c2c15f96010",
+      "pre_twitch_observation_public_sha256": "af3e63b2a45810ef81bd6567c5ca41ee9e54d3e437cae4b997900e044fa9a578",
+      "port_date_jst": "2026-10-22",
+      "pre_twitch_history_repair_public_sha256": "82ac1425f2766cbf413b32379233723c54f4bc18b2826fb41120cc3e7df247a2"
     },
     {
       "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/relay_monitor.py",
       "source_role": "development-monitoring",
-      "decision": "configured-public-evidence-binding",
+      "decision": "Twitch observation and OCI-aware notifications; public bindings and English text retained",
       "before_sha256": null,
-      "source_sha256": "2b4cb10acb29678752154cb26b3ea26aa0ac39294f37f0912fb0f74e26484b11",
-      "public_sha256": "011b774181b6ef7f6137e14631a8e4f6fea6e28009a2303c047f77609cd7c50d"
+      "source_sha256": "2e82dedd8e485d4b9ff016f0b41035ce57d5cbf1044ed410b20c6cda305d2e31",
+      "public_sha256": "89f4685f1e984b2d8ff1717b466a6b793a046ba65345333790e9c9b1a53ab14a",
+      "pre_twitch_observation_public_sha256": "011b774181b6ef7f6137e14631a8e4f6fea6e28009a2303c047f77609cd7c50d",
+      "port_date_jst": "2026-10-21"
     },
     {
       "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/relay_observe.py",
@@ -416,12 +429,14 @@
     {
       "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/twitch_sli.py",
       "source_role": "development-monitoring",
-      "decision": "configured-public-evidence-binding",
+      "decision": "Twitch observation and OCI-aware notifications; public bindings and English text retained",
       "before_sha256": null,
-      "source_sha256": "73b20ff8e16c7d63b72018a34c77f945a2322f85122647d87155ded20dfab608",
-      "public_sha256": "867319076851eae4850d3d57166520a34fbc8816ee33d6581135dfeea25d6218",
+      "source_sha256": "9bcf09759f9946a689e1a9330853f298cf6ac842a88853073c74c04ab0714590",
+      "public_sha256": "8bc0436de110717b0dc4013261779f8988bfa2a3e2415ea223b7d007fff5992a",
       "pre_twitch_sli_resilience_sha256": "6495cf95221045c5b61fcd3da91f67960477edccfabe95045dd4d3b5ffaed51c",
-      "twitch_sli_resilience": "Locally checked candidate only; production application held for fresh task."
+      "twitch_sli_resilience": "Locally checked candidate only; production application held for fresh task.",
+      "pre_twitch_observation_public_sha256": "867319076851eae4850d3d57166520a34fbc8816ee33d6581135dfeea25d6218",
+      "port_date_jst": "2026-10-21"
     },
     {
       "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/twitch_sli_public.py",
@@ -466,10 +481,12 @@
     {
       "path": "monitoring-v4/tests/test_relay_monitor.py",
       "source_role": "development-monitoring-tests",
-      "decision": "configured-public-evidence-binding",
+      "decision": "Twitch observation and OCI-aware notifications; public bindings and English text retained",
       "before_sha256": null,
-      "source_sha256": "5df3252efd40c9c0f3dfeed4adcaa6c4b306b96aa070c0324bf05e2c13ebe6b6",
-      "public_sha256": "69819a1f72fa08b7bc952a69c9e80c42fee3f27b8bc46d1a476399365bef0075"
+      "source_sha256": "59fd9f5127a0d03a8cfbfb9c9c6781bededaef1c3b1c2462901533133d9abaa4",
+      "public_sha256": "4b4056f8eefcc99c995d4d63d363428602b9deef5ae40b577bec0256a9d6abee",
+      "pre_twitch_observation_public_sha256": "69819a1f72fa08b7bc952a69c9e80c42fee3f27b8bc46d1a476399365bef0075",
+      "port_date_jst": "2026-10-21"
     },
     {
       "path": "monitoring-v4/tests/test_runtime_lifecycle.py",
@@ -482,10 +499,13 @@
     {
       "path": "monitoring-v4/tests/test_twitch_api_collector.py",
       "source_role": "development-monitoring-tests",
-      "decision": "adapted",
+      "decision": "Twitch public history compatibility, freshness and isolated-failure polling repair",
       "before_sha256": null,
-      "source_sha256": "b6c70ef61b5bc8f39bd5831714604a4a2677d438e7d563a2e9d83d2c55d1c109",
-      "public_sha256": "b6c70ef61b5bc8f39bd5831714604a4a2677d438e7d563a2e9d83d2c55d1c109"
+      "source_sha256": "f9a41af26bedb0a59759af5ecfad7abd61b6ee78135e84a45a028de218eaca6b",
+      "public_sha256": "c712169b46d8bbc86076f9a9c1b1482e0f004f2a3b305d628930e783035f669f",
+      "pre_twitch_observation_public_sha256": "b6c70ef61b5bc8f39bd5831714604a4a2677d438e7d563a2e9d83d2c55d1c109",
+      "port_date_jst": "2026-10-22",
+      "pre_twitch_history_repair_public_sha256": "cb7a54a1481560a09c3421edf13d25f6c6179cfd952df42609a7604750c28eb5"
     },
     {
       "path": "monitoring-v4/tests/test_twitch_public.py",
@@ -706,10 +726,12 @@
     {
       "path": "ops/public-publisher/site/scripts/collect_twitch_sli.py",
       "source_role": "development-public-ui",
-      "decision": "adapted",
+      "decision": "Twitch public history compatibility, freshness and isolated-failure polling repair",
       "before_sha256": null,
-      "source_sha256": "40cfb4a332834956648df34d698afc1cfce5c82dfeb7382b23d13c6d1b1b9055",
-      "public_sha256": "40cfb4a332834956648df34d698afc1cfce5c82dfeb7382b23d13c6d1b1b9055"
+      "source_sha256": "3f40765a50b2494e1af47a4803dc2083e7c7e4bd576ca4849f7e2a1d3966f12d",
+      "public_sha256": "3f40765a50b2494e1af47a4803dc2083e7c7e4bd576ca4849f7e2a1d3966f12d",
+      "pre_twitch_history_repair_public_sha256": "40cfb4a332834956648df34d698afc1cfce5c82dfeb7382b23d13c6d1b1b9055",
+      "port_date_jst": "2026-10-22"
     },
     {
       "path": "ops/public-publisher/site/scripts/push_to_gcs.py",
@@ -2488,10 +2510,12 @@
     {
       "path": "tests/test_public_twitch_sli.py",
       "source_role": "development-public-ui-tests",
-      "decision": "adapted",
+      "decision": "Twitch public history compatibility, freshness and isolated-failure polling repair",
       "before_sha256": null,
-      "source_sha256": "04407508558d588b24c5b5614c1901bc481e788b9bab2007c12838694b4861a8",
-      "public_sha256": "04407508558d588b24c5b5614c1901bc481e788b9bab2007c12838694b4861a8"
+      "source_sha256": "d26d75b3d1b918a42fa2da2eb15920a6153cb993d479a218a054e9e077fda70e",
+      "public_sha256": "d26d75b3d1b918a42fa2da2eb15920a6153cb993d479a218a054e9e077fda70e",
+      "pre_twitch_history_repair_public_sha256": "04407508558d588b24c5b5614c1901bc481e788b9bab2007c12838694b4861a8",
+      "port_date_jst": "2026-10-22"
     },
     {
       "path": "tests/test_relay_continuation.py",
@@ -2782,20 +2806,24 @@
     {
       "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/twitch_alert_notify.py",
       "source_role": "development-monitoring",
-      "decision": "adapted-english-and-portable-bindings",
+      "decision": "Twitch observation and OCI-aware notifications; public bindings and English text retained",
       "before_sha256": null,
-      "source_sha256": "fd5f598eadee98df04a31a8d98022295fe9099ec27f1d3c610c0f127e535ed33",
-      "public_sha256": "975734669111c3d64a85f1d95983d19b7f5d076befcbe51ebd369599746e7a03",
-      "port_date_jst": "2026-10-20"
+      "source_sha256": "a2775eb4335d0641a586f1cb74a73d775ae652da2974182c075ec56d790ced6e",
+      "public_sha256": "6fe8317ea778bfdeaaced4815422b7de17d82219379dd624831823654d0ff035",
+      "port_date_jst": "2026-10-21",
+      "pre_twitch_observation_public_sha256": "975734669111c3d64a85f1d95983d19b7f5d076befcbe51ebd369599746e7a03",
+      "pre_daily_reminder_public_sha256": "fdbad0e950af8f82ea903d8e8508db03abd44355f7a34865698f21200e638ed1"
     },
     {
       "path": "monitoring-v4/tests/test_twitch_alert_notify.py",
       "source_role": "development-monitoring",
-      "decision": "adapted-english-and-portable-bindings",
+      "decision": "Twitch observation and OCI-aware notifications; public bindings and English text retained",
       "before_sha256": null,
-      "source_sha256": "dc35982c6645c118f036e24d88ff699e8ab8a20e5f67270ac637f350549b10ed",
-      "public_sha256": "beb21a3171439c36798a4b995cc8c4b4a36dc7f59a5abf1fda1ea985fdbbfe5a",
-      "port_date_jst": "2026-10-20"
+      "source_sha256": "868661660744acba245000d26760ffa1b65244d6fc690f55fa0196bb0414b891",
+      "public_sha256": "d7f56704a6b7ebc440aa2fc79d725d2db4857607f0533f069fae121d0a37e633",
+      "port_date_jst": "2026-10-21",
+      "pre_twitch_observation_public_sha256": "beb21a3171439c36798a4b995cc8c4b4a36dc7f59a5abf1fda1ea985fdbbfe5a",
+      "pre_daily_reminder_public_sha256": "5622b008bf194b2fbc7304665b90f758c55fa6db7a07cac4f3ce77f7fb4cbfbf"
     },
     {
       "path": "monitoring-v4/tests/test_relay_observe.py",
@@ -2809,11 +2837,13 @@
     {
       "path": "monitoring-v4/deploy/systemd/stream-v4-twitch-alert-notify.service",
       "source_role": "development-monitoring",
-      "decision": "adapted-english-and-portable-bindings",
+      "decision": "Twitch observation and OCI-aware notifications; public bindings and English text retained",
       "before_sha256": null,
-      "source_sha256": "dc84c58c70a4a1a6ea5464b2efd5e38735ad116b805d000af8b9824181ae0b5e",
-      "public_sha256": "a32e9ecc5df0ac03cc971e7187b5bf873f57d4c7ad98b58cd5cea43280abfeef",
-      "port_date_jst": "2026-10-20"
+      "source_sha256": "8d20265002a23e57f433e23842f907bbc220c335f667fbf6a69b28c5d6f26c98",
+      "public_sha256": "dd5624c14ea25d3c16666babfc094ca2672ee66545d5286e8543ec33ad70a24c",
+      "port_date_jst": "2026-10-21",
+      "pre_twitch_observation_public_sha256": "a32e9ecc5df0ac03cc971e7187b5bf873f57d4c7ad98b58cd5cea43280abfeef",
+      "pre_daily_reminder_public_sha256": "79ff13f2f08e6a8fc7d4707bfb1fe987debb69cbe7b9d0ddf90c716439734806"
     },
     {
       "path": "ops/public-publisher/site/public/assets/ops-20261020.css",
@@ -2827,20 +2857,22 @@
     {
       "path": "ops/public-publisher/site/public/assets/ops-20261020.js",
       "source_role": "development-public-ui",
-      "decision": "adapted",
+      "decision": "Twitch public history compatibility, freshness and isolated-failure polling repair",
       "before_sha256": "2e553bcf4f20f8864e3319acfae4a8512ad62cbc076af1f0e2ef8f7f23a5c74f",
-      "source_sha256": "82667f7728e1a5b71a00bb4a728cdc9a5cb589a53491233c5cc278e697deb1b2",
-      "public_sha256": "82667f7728e1a5b71a00bb4a728cdc9a5cb589a53491233c5cc278e697deb1b2",
-      "port_date_jst": "2026-10-20"
+      "source_sha256": "333c1a4e572938df14f66df5c75708b8eac8c26d9ccfb5b125c7631896c4a2c7",
+      "public_sha256": "333c1a4e572938df14f66df5c75708b8eac8c26d9ccfb5b125c7631896c4a2c7",
+      "port_date_jst": "2026-10-22",
+      "pre_twitch_history_repair_public_sha256": "82667f7728e1a5b71a00bb4a728cdc9a5cb589a53491233c5cc278e697deb1b2"
     },
     {
       "path": "docs/v3/public-status-page-2026-10-20.md",
       "source_role": "public-documentation",
-      "decision": "curated-current-contract-and-dated-evidence",
+      "decision": "Twitch public history compatibility, freshness and isolated-failure polling repair",
       "before_sha256": "f6f5e44fd84e2037bf66d1e03675cfc503d9c2c64fad41b5d4422fb66e7c5f0a",
       "source_sha256": null,
-      "public_sha256": "cc027bcf18be8b3210c8a9a9c9abf483865163fb9a9808d830e63c223279038b",
-      "port_date_jst": "2026-10-20"
+      "public_sha256": "5846ae45c3c2ffb6c593732c7e7bd0df35daa6f26d1967a0c1b8e41a6885214b",
+      "port_date_jst": "2026-10-22",
+      "pre_twitch_history_repair_public_sha256": "cc027bcf18be8b3210c8a9a9c9abf483865163fb9a9808d830e63c223279038b"
     },
     {
       "path": "docs/v3/public-source-port-2026-10-20.md",
@@ -2873,13 +2905,13 @@
       "path": "docs/current-status.md",
       "source_role": "public-documentation",
       "decision": "curated-current-contract-and-dated-evidence",
-      "before_sha256": "040eac29174151f51e473f7f85e4aa23ff994be0079b3d4c011623b6ec7864ca",
+      "before_sha256": "3b5b82889be94b03b4c49335bd780b864ca78cf8e33a5f3d9cb7d564a9389631",
       "source_sha256": null,
-      "public_sha256": "b633c89f2dac529ff23e1bd46a6132dad2be300e9c5229d8b6389cfe2ce82a66",
+      "public_sha256": "6ad341e3fe02aaa577bfabc49e7211a328bae6cf16a48c0a9b5c9dd104a42d3a",
       "port_date_jst": "2026-10-20",
       "documentation_restructure": "New single page for volatile state.",
       "pre_twitch_observation_public_sha256": "040eac29174151f51e473f7f85e4aa23ff994be0079b3d4c011623b6ec7864ca",
-      "pre_clock_monitor_public_sha256": "00cf8c173ff747d8ba3b4661cc86bcefad2611a905096455031387768686d93a",
+      "pre_clock_monitor_public_sha256": "33263da6f88e0f7719830898ada90abd2a7e89c391a9684fdd7b604517bc020f",
       "clock_monitor_port": "2026-10-22 selected return-feed monitor / OCI files-only backup port; existing changes retained."
     },
     {
@@ -2928,6 +2960,68 @@
       "port_date_jst": "2026-10-20"
     },
     {
+      "path": "monitoring-v4/deploy/prometheus/relay_observer.rules.yml",
+      "source_role": "development-monitoring",
+      "before_sha256": null,
+      "pre_twitch_observation_public_sha256": null,
+      "public_sha256": "2f4eff6ab7b724f81cfbeaccb6ec46912585a08755e5a2a991903325ddff7303",
+      "source_sha256": "2f4eff6ab7b724f81cfbeaccb6ec46912585a08755e5a2a991903325ddff7303",
+      "port_date_jst": "2026-10-21",
+      "decision": "Twitch observation and OCI-aware notifications; public bindings and English text retained"
+    },
+    {
+      "path": "monitoring-v4/deploy/prometheus/twitch_sli.rules.yml",
+      "source_role": "development-monitoring",
+      "before_sha256": null,
+      "pre_twitch_observation_public_sha256": null,
+      "public_sha256": "048604882efe12e590d53044cf04cac9aed2554b5aaed82918dcc6c3fef424ad",
+      "source_sha256": "048604882efe12e590d53044cf04cac9aed2554b5aaed82918dcc6c3fef424ad",
+      "port_date_jst": "2026-10-21",
+      "decision": "Twitch observation and OCI-aware notifications; public bindings and English text retained"
+    },
+    {
+      "path": "monitoring-v4/tests/fixtures/monitoring_v4/twitch_delivery_alerts.test.yml",
+      "source_role": "development-monitoring",
+      "before_sha256": null,
+      "pre_twitch_observation_public_sha256": null,
+      "public_sha256": "fcad1aa6faae0186e7986de40880553cf3a47a1be0b3237e6bfe27a30449f6f5",
+      "source_sha256": "fcad1aa6faae0186e7986de40880553cf3a47a1be0b3237e6bfe27a30449f6f5",
+      "port_date_jst": "2026-10-21",
+      "decision": "Twitch observation and OCI-aware notifications; public bindings and English text retained"
+    },
+    {
+      "path": "monitoring-v4/tests/test_twitch_api_diagnostics.py",
+      "source_role": "development-monitoring",
+      "before_sha256": null,
+      "pre_twitch_observation_public_sha256": null,
+      "public_sha256": "829a674b2ac6587e21f517237dcd87887ca185214af1d574dbcea92d04e6b2bc",
+      "source_sha256": "91d386c8341f4b3cbf8a2be9628eade3fa1f7ec8dd20bba40bbb30e9c88edbca",
+      "port_date_jst": "2026-10-21",
+      "decision": "Twitch observation and OCI-aware notifications; public bindings and English text retained"
+    },
+    {
+      "path": "docs/observability.md",
+      "source_role": "public-documentation",
+      "before_sha256": "66ab195158854e1ddbe4ba06dd63fce3442079021b33d759dc9e2f434ec93f2e",
+      "pre_twitch_observation_public_sha256": "66ab195158854e1ddbe4ba06dd63fce3442079021b33d759dc9e2f434ec93f2e",
+      "public_sha256": "11334a65c761a119a04864c05446e1f99166b9b97ddf017fc1a4be354f20f02b",
+      "source_sha256": null,
+      "port_date_jst": "2026-10-21",
+      "decision": "Twitch observation and OCI-aware notifications; public bindings and English text retained",
+      "pre_clock_monitor_public_sha256": "bd88394af5b0c4b2b6b5115f77a10e6002b13fe621a7c57287b05ea1fab79090",
+      "clock_monitor_port": "2026-10-22 selected return-feed monitor / OCI files-only backup port; existing changes retained."
+    },
+    {
+      "path": "publication/twitch-observation-port-20261021.json",
+      "source_role": "public-documentation",
+      "before_sha256": null,
+      "pre_twitch_observation_public_sha256": null,
+      "public_sha256": "64b95c713d6f568da88f5f81e5ffbc8b949b733c687c577be49246de7a6a503a",
+      "source_sha256": null,
+      "port_date_jst": "2026-10-21",
+      "decision": "Twitch observation and OCI-aware notifications; public bindings and English text retained"
+    },
+    {
       "path": "deploy/k3s/oci-monitor-probe/Containerfile",
       "before_sha256": null,
       "source_sha256": "2adab58cf9507083b255193746af4fd97c7634a074572f975bd3fb4f88c1c704",
@@ -2962,18 +3056,6 @@
       "source_role": "public-deployment-example",
       "decision": "English prose; generic relay identity and operator configuration; algorithm and safety limits retained.",
       "port_date_jst": "2026-10-22"
-    },
-    {
-      "path": "docs/observability.md",
-      "source_role": "public-documentation",
-      "before_sha256": "66ab195158854e1ddbe4ba06dd63fce3442079021b33d759dc9e2f434ec93f2e",
-      "pre_twitch_observation_public_sha256": "66ab195158854e1ddbe4ba06dd63fce3442079021b33d759dc9e2f434ec93f2e",
-      "public_sha256": "7b65e59884dcf9246cf8ec5614f6f58df535fe6566ffa3526cd1e9d3d7628829",
-      "source_sha256": null,
-      "port_date_jst": "2026-10-21",
-      "decision": "Twitch observation and OCI-aware notifications; public bindings and English text retained",
-      "pre_clock_monitor_public_sha256": "bd88394af5b0c4b2b6b5115f77a10e6002b13fe621a7c57287b05ea1fab79090",
-      "clock_monitor_port": "2026-10-22 selected return-feed monitor / OCI files-only backup port; existing changes retained."
     },
     {
       "path": "docs/v3/oci-backup-and-restore.md",
@@ -3262,6 +3344,36 @@
       "source_role": "public-adapted-code",
       "decision": "English prose; generic relay identity and operator configuration; algorithm and safety limits retained.",
       "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "ops/public-publisher/site/tests/twitch-history-20261022.html",
+      "source_role": "development-public-ui",
+      "before_sha256": null,
+      "pre_twitch_history_repair_public_sha256": null,
+      "public_sha256": "2fe2bd4ee4bb970cf91031fdc2597f0f277d335bf5fb25747dc8c6081b01d941",
+      "source_sha256": "2fe2bd4ee4bb970cf91031fdc2597f0f277d335bf5fb25747dc8c6081b01d941",
+      "port_date_jst": "2026-10-22",
+      "decision": "Twitch public history compatibility, freshness and isolated-failure polling repair"
+    },
+    {
+      "path": "monitoring-v4/tests/test_twitch_sli_public_contract.py",
+      "source_role": "development-monitoring",
+      "before_sha256": null,
+      "pre_twitch_history_repair_public_sha256": null,
+      "public_sha256": "3b7366dfbf9cfbbf932ff01421bceae9c6aaa8e9ac9209bdf5ff46bcdcf03fa5",
+      "source_sha256": "3b7366dfbf9cfbbf932ff01421bceae9c6aaa8e9ac9209bdf5ff46bcdcf03fa5",
+      "port_date_jst": "2026-10-22",
+      "decision": "Twitch public history compatibility, freshness and isolated-failure polling repair"
+    },
+    {
+      "path": "publication/twitch-history-repair-20261022.json",
+      "source_role": "public-documentation",
+      "before_sha256": null,
+      "pre_twitch_history_repair_public_sha256": null,
+      "public_sha256": "e9c0104dc964796548d9279dc380b0e3ce5d65477694bce3895dab3632b1cdc4",
+      "source_sha256": null,
+      "port_date_jst": "2026-10-22",
+      "decision": "Twitch public history compatibility, freshness and isolated-failure polling repair"
     }
   ],
   "omissions": [
@@ -3378,6 +3490,12 @@
     "deployment_performed": false,
     "runtime_changed": false
   },
+  "twitch_observation_port": {
+    "date_jst": "2026-10-21",
+    "record": "publication/twitch-observation-port-20261021.json",
+    "deployment_performed": false,
+    "commit_or_push_performed": false
+  },
   "clock_monitor_port": {
     "date_jst": "2026-10-22",
     "record": "publication/clock-monitor-port-20261022.json",
@@ -3385,5 +3503,12 @@
     "deployment_performed": false,
     "commit_or_push_performed": true,
     "push_performed": false
+  },
+  "twitch_history_repair": {
+    "date_jst": "2026-10-22",
+    "record": "publication/twitch-history-repair-20261022.json",
+    "public_example_deployed": false,
+    "private_site_observed": true,
+    "commit_or_push_performed": false
   }
 }

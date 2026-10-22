@@ -27,7 +27,17 @@
     "http_status": {"type": "integer", "minimum": 0, "maximum": 599},
     "retry_after_sec": {"type": "number", "minimum": 0, "maximum": 86400},
     "api_request_count": {"type": "integer", "minimum": 0, "maximum": 4},
-    "rate_limit_remaining": {"type": ["integer", "null"], "minimum": 0}
+    "rate_limit_remaining": {"type": ["integer", "null"], "minimum": 0},
+    "error_category": {"enum": ["", "timeout", "network", "rate_limited", "auth", "upstream", "credentials", "response", "target", "clock", "collector"]},
+    "request_stage": {"enum": ["credentials", "oauth", "validate", "users", "streams"]},
+    "probe_duration_seconds": {"type": "number", "minimum": 0},
+    "schedule_lag_seconds": {"type": "number", "minimum": 0},
+    "rate_limit_limit": {"type": ["integer", "null"], "minimum": 0},
+    "rate_limit_reset": {"type": ["integer", "null"], "minimum": 0},
+    "request_stats": {"type": "array", "maxItems": 4, "items": {"type": "object", "additionalProperties": false, "required": ["stage", "http_status", "result", "duration_seconds"], "properties": {"stage": {"enum": ["oauth", "validate", "users", "streams"]}, "http_status": {"type": "integer", "minimum": 0, "maximum": 599}, "result": {"enum": ["ok", "timeout", "network", "rate_limited", "auth", "upstream", "credentials", "response", "target", "clock", "collector"]}, "duration_seconds": {"type": "number", "minimum": 0}}}},
+    "probe_counts": {"type": "object", "additionalProperties": false, "properties": {"ok": {"type": "integer", "minimum": 0}, "timeout": {"type": "integer", "minimum": 0}, "network": {"type": "integer", "minimum": 0}, "rate_limited": {"type": "integer", "minimum": 0}, "auth": {"type": "integer", "minimum": 0}, "upstream": {"type": "integer", "minimum": 0}, "credentials": {"type": "integer", "minimum": 0}, "response": {"type": "integer", "minimum": 0}, "target": {"type": "integer", "minimum": 0}, "clock": {"type": "integer", "minimum": 0}, "collector": {"type": "integer", "minimum": 0}}, "required": ["ok", "timeout", "network", "rate_limited", "auth", "upstream", "credentials", "response", "target", "clock", "collector"]},
+    "request_counts": {"type": "object", "additionalProperties": false, "properties": {"oauth": {"type": "integer", "minimum": 0}, "validate": {"type": "integer", "minimum": 0}, "users": {"type": "integer", "minimum": 0}, "streams": {"type": "integer", "minimum": 0}}, "required": ["oauth", "validate", "users", "streams"]},
+    "request_seconds": {"type": "object", "additionalProperties": false, "properties": {"oauth": {"type": "number", "minimum": 0}, "validate": {"type": "number", "minimum": 0}, "users": {"type": "number", "minimum": 0}, "streams": {"type": "number", "minimum": 0}}, "required": ["oauth", "validate", "users", "streams"]}
   },
   "allOf": [
     {"if": {"properties": {"probe_status": {"const": "unknown"}}}, "then": {"properties": {"provider_state": {"const": "UNKNOWN"}, "stream_id": {"type": "null"}, "started_at": {"type": "null"}, "viewer_count": {"type": "null"}}}},
