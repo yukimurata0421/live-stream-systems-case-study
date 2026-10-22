@@ -1,0 +1,10 @@
+{
+  "db_path": "/var/lib/cra-central/central.db",
+  "policy_envelope_path": "/var/lib/cra-central/policy.signed.json",
+  "policy_key_path": "/etc/cra-central/policy.key",
+  "listen": "replace-with-cra-01-private-listener-address",
+  "port": 8790,
+  "agents": {
+    "dell-stream-runtime": "replace-with-dell-agent-public-key"
+  }
+}

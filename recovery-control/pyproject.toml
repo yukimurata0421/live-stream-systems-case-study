@@ -66,6 +66,8 @@ maintenance-shadow = "maintenance_shadow.service:main"
 maintenance-shadow-control = "maintenance_shadow.control:main"
 cra-evidence-binding-harness = "cra_harness.runner.evidence_binding:main"
 cra-p2-disabled-harness = "cra_harness.runner.p2_disabled:main"
+cra-agent = "cra.agent:main"
+cra-central = "cra.central.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -87,6 +89,7 @@ select = ["E", "F", "I", "UP", "B", "SIM"]
 python_version = "3.11"
 strict = true
 packages = [
+  "cra",
   "cra_dell_recovery",
   "cra_authority",
   "dell_recovery_agent",

@@ -6,6 +6,11 @@ cutoffs. The current [selected-file source map](../../publication/source-map.jso
 and [local validation](../../publication/validation.json) record this later port;
 they do not establish a production deployment or formal qualification.
 
+The 2026-10-22 port adds the [local reflex authority](local-reflex-authority.md)
+source. Its [port record](../../publication/cra-reflex-port-20261022.json) records
+the development source identity and public adaptations; it does not establish a
+deployment.
+
 Recorded: 2026-09-10 JST
 
 Status: sanitized snapshot integrated under `recovery-control/` in the public

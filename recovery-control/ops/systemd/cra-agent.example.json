@@ -1,0 +1,21 @@
+{
+  "agent_id": "dell-stream-runtime",
+  "db_path": "/var/lib/cra-agent/agent.db",
+  "observation_path": "/run/stream-v3-control/runtime-observation.json",
+  "executor_socket": "/run/stream-v3-control/effect.sock",
+  "producer_id": "cra-agent",
+  "producer_generation": 3,
+  "stop_file": "/etc/cra-agent/STOP",
+  "status_path": "/run/cra-agent/status.json",
+  "ingest_host": "replace-with-relay-ingest-address",
+  "ingest_port": 1935,
+  "public_hosts": ["1.1.1.1", "8.8.8.8"],
+  "interval_sec": 2.0,
+  "observation_max_age_sec": 3.0,
+  "central": {
+    "url": "http://cra-01:8790",
+    "policy_public_key": "replace-with-cra-central-policy-public-key",
+    "agent_key_path": "/etc/cra-agent/agent.key",
+    "sync_interval_sec": 30
+  }
+}

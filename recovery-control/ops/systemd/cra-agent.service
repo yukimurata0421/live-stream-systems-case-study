@@ -1,0 +1,28 @@
+[Unit]
+Description=CRA agent: local FFmpeg TCP-stall recovery (reflex loop)
+After=network-online.target k3s.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+# The in-Pod Effect Executor only accepts peers with uid 0 or the stream-recovery uid.
+User=stream-recovery
+Group=stream-recovery
+Environment=PYTHONPATH=/opt/cra/current/src
+ExecStart=/usr/bin/python3 -m cra.agent run --config /etc/cra-agent/agent.json
+Restart=always
+RestartSec=5
+StateDirectory=cra-agent
+RuntimeDirectory=cra-agent
+RuntimeDirectoryPreserve=yes
+ReadOnlyPaths=/run/stream-v3-control
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+NoNewPrivileges=true
+CapabilityBoundingSet=
+MemoryMax=128M
+TasksMax=16
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,23 @@
+[Unit]
+Description=CRA central: policy distribution and audit intake
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=cra-central
+Group=cra-central
+Environment=PYTHONPATH=/opt/cra/current/src
+ExecStart=/usr/bin/python3 -m cra.central.cli serve --config /etc/cra-central/central.json
+Restart=always
+RestartSec=5
+StateDirectory=cra-central
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+NoNewPrivileges=true
+CapabilityBoundingSet=
+MemoryMax=256M
+
+[Install]
+WantedBy=multi-user.target

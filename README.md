@@ -110,7 +110,10 @@ recovery design study that separates facts, authorization, and one fenced effect
 sets `production_behavior_change_authorized=false`; it is not enabled, and the
 media route does not use it. The
 [decision record](docs/v3/oci-route-simplification-decision.md) explains why the
-route was simplified instead.
+route was simplified instead. A smaller CRA
+[local reflex path](recovery-control/docs/local-reflex-authority.md), added on
+2026-10-22, keeps the restart decision on Dell under a policy signed by cra-01;
+it runs only in `dry_run` and sends no restart requests.
 
 ## Key Design Decisions
 

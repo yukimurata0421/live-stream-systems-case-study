@@ -10,6 +10,7 @@
 - [`public-release.md`](public-release.md): provenance, exclusions, and claim limits.
 - [`source-provenance.json`](source-provenance.json): machine-readable source identity.
 - [`current-evidence-and-route-source.md`](current-evidence-and-route-source.md): current evidence, reconciliation, route-fence source, and qualification boundaries.
+- [`local-reflex-authority.md`](local-reflex-authority.md): local reflex restart path, signed policy, audit verification, and boundaries.
 
 ## Public source language
 

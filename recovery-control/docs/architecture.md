@@ -50,6 +50,10 @@ allow Dell to push arbitrary truth into the central database. cra-01 pulls the
 signed local journal, imports it exactly once, reconciles uncertainty, and only
 then installs a new central authority epoch.
 
+The 2026-10-22 [local reflex path](local-reflex-authority.md) avoids this mode
+switch for FFmpeg TCP-stall recovery by keeping the decision on Dell under
+signed central policy.
+
 ## Integration boundaries
 
 - `stream_v3` owns delivery media and the exact FFmpeg child lifecycle.

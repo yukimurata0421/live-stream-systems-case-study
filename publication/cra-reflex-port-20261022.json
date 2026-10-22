@@ -1,0 +1,55 @@
+{
+  "schema": "stream.public_port_record.v1",
+  "port_date_jst": "2026-10-22",
+  "scope": "CRA local reflex path under recovery-control: Dell agent, cra-01 signed policy and audit verification, tests, inert ops examples, and documentation.",
+  "source_lineage": {
+    "recovery_reflex_development_head": "947d899eec2dbedf7949f9cfb98afc9db7d34338",
+    "development_worktree_dirty": false,
+    "prior_public_head": "754e25e7917f653090cd32e17aabb66924b9d0eb"
+  },
+  "adaptations": [
+    "Code reformatted and linted under the recovery-control ruff and strict mypy settings; decision logic unchanged.",
+    "Tests import the in-repository Effect Executor instead of a sibling checkout, and use repository-root test imports.",
+    "Private addresses, keys, and documentation paths in configuration examples replaced with placeholders.",
+    "Japanese development README and rollout runbook summarized as an English design record."
+  ],
+  "omissions": [
+    {
+      "path": "deploy/install.sh",
+      "reason": "private host install workflow"
+    },
+    {
+      "path": "docs/rollout.md",
+      "reason": "private rollout runbook with host addresses; its boundaries are summarized in the design record"
+    }
+  ],
+  "deployment_performed": false,
+  "remote_mutation_performed": false,
+  "commit_performed": true,
+  "push_performed": false,
+  "operated_state": {
+    "observed_at_jst": "2026-10-22T16:46:16+09:00",
+    "mode": "dry_run",
+    "agent_running_since_jst": "2026-10-22T15:17:00+09:00",
+    "executor_path_reachable": false,
+    "confirmed_stalls": 0,
+    "verification_violations": 0
+  },
+  "checks": {
+    "public_language": "PASS",
+    "public_port_digests": "PASS",
+    "recovery_control_public_snapshot": "PASS",
+    "recovery_control_ruff_and_strict_mypy": "PASS",
+    "stream_public_suite": {
+      "passed": 1369,
+      "skipped": 9
+    },
+    "recovery_control_public_suite": {
+      "passed": 3279
+    }
+  },
+  "unobserved": [
+    "a confirmed stall under the dry_run policy",
+    "Executor authority handoff and enforce mode"
+  ]
+}

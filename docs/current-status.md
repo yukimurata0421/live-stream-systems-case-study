@@ -96,9 +96,18 @@ See the [implementation notes](../monitoring-v4/docs/relay-provider-evidence.md)
 and [source-port validation record](../publication/twitch-observation-port-20261021.json).
 This port applies no public example to production and sends no notifications.
 
+## CRA Local Reflex (2026-10-22 JST)
+
+Since 15:17 JST, a CRA agent on Dell evaluates the managed FFmpeg child every
+two seconds under a `dry_run` policy signed by cra-01. It records confirmed
+stalls and would-restart decisions but has no path to the Effect Executor.
+cra-01 collects the audit log and checks it hourly. No stall has been confirmed
+yet. See the [design record](../recovery-control/docs/local-reflex-authority.md).
+
 ## Deliberately Disabled
 
 - CRA production authority (`production_behavior_change_authorized=false`).
+  The local reflex agent runs only in `dry_run`.
 - Automatic replacement-broadcast creation by the YouTube watchdog.
 - Runtime and recovery authority in Monitoring v4. Its relay observer and
   public projection run in production as read-only components.

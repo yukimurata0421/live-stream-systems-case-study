@@ -88,6 +88,7 @@ start.
 - [Why CRA exists](../recovery-control/docs/why-cra.md), [CRA architecture](../recovery-control/docs/architecture.md),
   [safety model](../recovery-control/docs/safety-model.md), [harness trust](../recovery-control/docs/harness-trust.md),
   and the [recovery-control catalog](../recovery-control/docs/00_INDEX.md).
+- [CRA local reflex path](../recovery-control/docs/local-reflex-authority.md): local restart decision under signed central policy, audit verification, `dry_run` only.
 - [Monitoring v4 README](../monitoring-v4/README.md), [architecture](../monitoring-v4/docs/architecture.md),
   and [implementation status](../monitoring-v4/docs/status.md). Its relay observer and public projection run
   in production; the rest is not enabled.

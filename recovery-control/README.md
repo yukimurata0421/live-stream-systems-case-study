@@ -50,6 +50,14 @@ See [current evidence and route source](docs/current-evidence-and-route-source.m
 The port does not enable production delivery, automatic failover, or broader
 runtime recovery; qualification remains a separate evidence gate.
 
+## Local Reflex Update
+
+The 2026-10-22 public port adds a local reflex path for FFmpeg TCP-stall
+recovery. Dell decides under a policy signed by cra-01, and cra-01 verifies the
+append-only audit afterward, so LAN loss needs no fallback mode. See
+[local reflex authority](docs/local-reflex-authority.md). The included policy
+example is `dry_run`; the port does not enable production restarts.
+
 ## Current source posture
 
 The included policy declares:
@@ -84,6 +92,7 @@ reconciliation.
 
 | Path | Purpose |
 | --- | --- |
+| `src/cra/` | Local reflex agent and signed-policy and audit-verification service. |
 | `src/cra_authority/` | Central policy, command, outbox, and verification logic. |
 | `src/monitoring_projection/` | arena-server read-only facts adapter and signed projection. |
 | `src/dell_recovery_agent/` | Dell observation, authority, lease, and reconciliation boundary. |
@@ -136,7 +145,9 @@ design record is split into [harness engineering](docs/harness-engineering-draft
 The original sanitized snapshot used private source commit
 `fb7ffa3d96c4cf23637d72a5cbc6f65fac4d008c`. The 2026-10-13 port adds selected
 later source, including uncommitted development changes, with public adaptations
-recorded in [the source map](../publication/source-map.json). Private Git history,
+recorded in [the source map](../publication/source-map.json). The 2026-10-22
+local reflex port is recorded in
+[its port record](../publication/cra-reflex-port-20261022.json). Private Git history,
 credentials, operational records, raw live evidence, and generated runtime
 artifacts remain excluded. See [public release notes](docs/public-release.md).
 

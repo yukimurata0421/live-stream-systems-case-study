@@ -27,12 +27,12 @@
     },
     {
       "path": "README.md",
-      "source_role": "public-documentation-or-regression",
-      "decision": "English prose and reviewed public bindings; no live deployment, publisher/UI changes or concurrent review patch.",
-      "before_sha256": "0830bf706ecc208062c706ebbdd22f2924f5ff8d99253a00485ed952b37dd927",
+      "source_role": "public-documentation",
+      "decision": "link the 2026-10-22 CRA local reflex port",
+      "before_sha256": "7cfa7e5041474594c65b3e13419c089f79b22eb86a9732f0cfdc2fbe8a4e947c",
       "source_sha256": null,
-      "public_sha256": "7cfa7e5041474594c65b3e13419c089f79b22eb86a9732f0cfdc2fbe8a4e947c",
-      "port_date_jst": "2026-10-20",
+      "public_sha256": "eb41954a9599768a69ddfc8f41df92d6c5af0160657d73d7f71eba4b0cc8ed4e",
+      "port_date_jst": "2026-10-22",
       "pre_documentation_restructure_sha256": "00b596e75b50eaedbd3bed4ebc79e71d882e7049e72516aec95dfc0860ed015e",
       "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json.",
       "pre_clock_monitor_public_sha256": "17944eca94f4e5e731786aa5820a9e519d73e9ec25ba45fd771d5c1828db102b",
@@ -42,11 +42,11 @@
     },
     {
       "path": "docs/00_INDEX.md",
-      "source_role": "public-documentation-or-regression",
-      "decision": "Review fixes, English prose and existing public bindings; no deployment or unrelated working-copy edits.",
-      "before_sha256": "6cf7bf2af188f52029afb5c5460c0dbf027488303b12a60bf0753a37664bf36c",
+      "source_role": "public-documentation",
+      "decision": "link the 2026-10-22 CRA local reflex port",
+      "before_sha256": "56cb15aeeab03a5ddfe3541c7eaf265241e194d46047421e6afccecf7cc83481",
       "source_sha256": null,
-      "public_sha256": "56cb15aeeab03a5ddfe3541c7eaf265241e194d46047421e6afccecf7cc83481",
+      "public_sha256": "46652547b62aca56b33dcf06c4d20b1f48684dac76fd952896b58cbf80f30bca",
       "prior_public_sha256": "e32ab253e63bfe09d4ec42a5fc1594a2025b8bd859cab754ee1558798c0391dc",
       "localization": "English prose; control structures and machine identifiers preserved.",
       "pre_graph_display_sha256": "6a87a495eb3698b1a49e053ffcc109b28d94a59e9dd29cb3399a62279e196d3d",
@@ -59,7 +59,7 @@
       "twitch_sli_resilience": "Locally checked candidate only; production application held for fresh task.",
       "pre_pi_publisher_source_port_sha256": "1a57bd86d9466793daecec2756b29cd2ca24cad934a2dfd795a231e098a230e8",
       "pi_publisher_source_port": "2026-10-14 source reconciliation; portable English code and retained public protections; no live changes.",
-      "port_date_jst": "2026-10-21",
+      "port_date_jst": "2026-10-22",
       "pre_documentation_restructure_sha256": "3d45a66068211ff9944ba891a0017e9189c71daa1b0b4945ae1970f8c2b5c045",
       "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json.",
       "pre_twitch_observation_public_sha256": "c4d59eabef48c302df0d72b7ae0d6a6216f99e199f98e4c9c0a0b92631516c13",
@@ -938,10 +938,11 @@
     {
       "path": "recovery-control/README.md",
       "source_role": "public-documentation",
-      "decision": "adapted-for-integrated-publication-links",
-      "before_sha256": "ec2047c9fa7cb49067f423a519d97d34a3f126eb8f5c2c69c5253df484072b85",
+      "decision": "add local reflex update and port-record link with subproject-relative paths",
+      "before_sha256": "56351763a942b4269fbd3864c885322ea8086e23ff29bb5e2aa3539c0cb7982e",
       "source_sha256": null,
-      "public_sha256": "56351763a942b4269fbd3864c885322ea8086e23ff29bb5e2aa3539c0cb7982e"
+      "public_sha256": "08e41df8bece7eace8ddf3b6f01f30cc03451b045bd8b7cbe2fca4c6407bd378",
+      "port_date_jst": "2026-10-22"
     },
     {
       "path": "recovery-control/contracts/cra_no_action_soak/resilient_host_status.v4.schema.json",
@@ -970,14 +971,15 @@
     {
       "path": "recovery-control/docs/00_INDEX.md",
       "source_role": "public-documentation",
-      "decision": "current-component-index-and-publication-boundary",
-      "before_sha256": "1a194326d95942bd3f9c457b7307062a05193c69107c9ca78014f6ef4b246363",
+      "decision": "add index entry",
+      "before_sha256": "d53819f010f58f3fbcbb5f758ce68cb2d9f5c335c25c0cc0752920f065406394",
       "source_sha256": null,
-      "public_sha256": "d53819f010f58f3fbcbb5f758ce68cb2d9f5c335c25c0cc0752920f065406394",
+      "public_sha256": "308d1be005d42e8bba37ef4c542272e6b700a5c0d84ec2a187526e8951550919",
       "prior_public_sha256": "c936259ad68b3d3802caac9deb84f893ba453c5129650a4485522eb2afe8da98",
       "localization": "English prose; control structures and machine identifiers preserved.",
       "before_unicode_source_sha256": "78957f166d15b800f5c88e8ef691af40e4642ef50c8d0df5520891325366ba92",
-      "unicode_source_change": "English authored text; Unicode fixture values preserved with explicit escapes."
+      "unicode_source_change": "English authored text; Unicode fixture values preserved with explicit escapes.",
+      "port_date_jst": "2026-10-22"
     },
     {
       "path": "recovery-control/docs/current-evidence-and-route-source.md",
@@ -1000,10 +1002,11 @@
     {
       "path": "recovery-control/docs/public-release.md",
       "source_role": "public-documentation",
-      "decision": "adapted-for-integrated-publication-links",
-      "before_sha256": "b1f86ad87ca38b158c49c51de8a6842676bc05bfe548e01731ce922017108292",
+      "decision": "add local reflex update and port-record link with subproject-relative paths",
+      "before_sha256": "5ed93083d143769daba3b6736386d8ae089f0ce66a194e3ca6f4b1836fa4cca4",
       "source_sha256": null,
-      "public_sha256": "5ed93083d143769daba3b6736386d8ae089f0ce66a194e3ca6f4b1836fa4cca4"
+      "public_sha256": "ad7d73953ad4bc86ec8b916ebc74229a988a8a6f239186616dec5be70ab00c27",
+      "port_date_jst": "2026-10-22"
     },
     {
       "path": "recovery-control/harness/contracts/change_impact_review.v1.json",
@@ -1235,11 +1238,12 @@
     },
     {
       "path": "recovery-control/pyproject.toml",
-      "source_role": "public-ci-correction",
-      "decision": "complete-source-bound-public-release-inputs",
-      "before_sha256": "be04e9dd1b9e67e8f83352a861269baf5b6f25a88cc072a2803ea8a27bc1acbd",
-      "source_sha256": "9620ef85c926f8e68b96a9adb63f6057d834a0c8ad4f07c827f768a5c0d89ad3",
-      "public_sha256": "9620ef85c926f8e68b96a9adb63f6057d834a0c8ad4f07c827f768a5c0d89ad3"
+      "source_role": "public-packaging",
+      "decision": "add cra-agent and cra-central entry points and include cra in strict mypy",
+      "before_sha256": "9620ef85c926f8e68b96a9adb63f6057d834a0c8ad4f07c827f768a5c0d89ad3",
+      "source_sha256": null,
+      "public_sha256": "34ba76cd8ef50c618cc62fe185b2d71bebdb91227f4f1d2fd610d4bd258d8e28",
+      "port_date_jst": "2026-10-22"
     },
     {
       "path": "recovery-control/src/cra_authority/archive_integrity.py",
@@ -2935,10 +2939,10 @@
     {
       "path": "docs/current-status.md",
       "source_role": "public-documentation",
-      "decision": "curated-current-contract-and-dated-evidence",
-      "before_sha256": "2970d1c5d8f6cda4d0d0a016317de7663f8f14daf5d9cb9575dce1cf58f84f7b",
+      "decision": "link the 2026-10-22 CRA local reflex port",
+      "before_sha256": "02db2988ecaabcd5e072adc3ce425485c2983f54f8b882128818dc83068f5974",
       "source_sha256": null,
-      "public_sha256": "02db2988ecaabcd5e072adc3ce425485c2983f54f8b882128818dc83068f5974",
+      "public_sha256": "5ccbec1abbb353dc7bb072282516a0f1c758312d4449503f4f2cc437c396ae84",
       "port_date_jst": "2026-10-22",
       "documentation_restructure": "New single page for volatile state.",
       "pre_twitch_observation_public_sha256": "040eac29174151f51e473f7f85e4aa23ff994be0079b3d4c011623b6ec7864ca",
@@ -3757,6 +3761,267 @@
       "source_sha256": null,
       "public_sha256": "83821f2adb46ccd10c85464c65817fa5c9b2d12c754e1cd05f302e669f2f3246",
       "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "recovery-control/docs/architecture.md",
+      "source_role": "public-documentation",
+      "decision": "point the local-fallback section at the reflex path",
+      "before_sha256": "9b4eb5710cbe5dc838fa85761ca06c1450e00f746ec82e237ac020dbd0927af9",
+      "source_sha256": null,
+      "public_sha256": "1308063c0be5ccc5d05b9c69feb3b0a840941f7aec229390beb303ad2b1455eb",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "recovery-control/docs/local-reflex-authority.md",
+      "source_role": "public-documentation",
+      "decision": "curated English design summary of the private README and rollout notes",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "c1c04061e1ec23222e732712f64ed9bd5d836ea07eebc94535d05b8e894df2ed",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "recovery-control/ops/systemd/cra-agent.example.json",
+      "source_role": "reflex-ops-example",
+      "decision": "replace private addresses and keys with placeholders",
+      "before_sha256": null,
+      "source_sha256": "4795105de122584835496627046dbf221170d5305d0710a1531c291e55e31625",
+      "public_sha256": "b21cdee423ab9117d086ffd8a6bcc01a2a6374af43efcc874bc6dc1fb294894a",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "recovery-control/ops/systemd/cra-agent.service",
+      "source_role": "reflex-ops-example",
+      "decision": "drop private documentation path",
+      "before_sha256": null,
+      "source_sha256": "1608f2c846f86ed47be78ff254cfec0fab1e1f3f37f68bce0eff1229578ddf9c",
+      "public_sha256": "2faf58d999c111ebe5b83209115ddd51f2263ee02f6b090d30a5ec5f5a482922",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "recovery-control/ops/systemd/cra-central-verify.service",
+      "source_role": "reflex-ops-example",
+      "decision": "verbatim",
+      "before_sha256": null,
+      "source_sha256": "eb1e6e76ae6ea7ce95054cfbb22fa5f8bc7dedf26cc5b241e66a3541b3bb5727",
+      "public_sha256": "eb1e6e76ae6ea7ce95054cfbb22fa5f8bc7dedf26cc5b241e66a3541b3bb5727",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "recovery-control/ops/systemd/cra-central-verify.timer",
+      "source_role": "reflex-ops-example",
+      "decision": "verbatim",
+      "before_sha256": null,
+      "source_sha256": "b8a2776ed188cc3b60079252fe0af014dca4d0948e43f34d328b81a28c999a76",
+      "public_sha256": "b8a2776ed188cc3b60079252fe0af014dca4d0948e43f34d328b81a28c999a76",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "recovery-control/ops/systemd/cra-central.example.json",
+      "source_role": "reflex-ops-example",
+      "decision": "replace private addresses and keys with placeholders",
+      "before_sha256": null,
+      "source_sha256": "b96212c0991508f73515204d9cdf5fb7abe457448f3cf16dd20a4ea54a26cf3f",
+      "public_sha256": "ed25012b3f02b5ffea3dace2bf892ddfe44645cbf985383aa7f496b42651ea3c",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "recovery-control/ops/systemd/cra-central.service",
+      "source_role": "reflex-ops-example",
+      "decision": "drop private documentation path",
+      "before_sha256": null,
+      "source_sha256": "66ddb8376b1b608de8d4573c5057d4294f2cd1d2e410e7d00ff083c557d7cf9a",
+      "public_sha256": "c8e5925561eafaad9a87681efdd691732909f701566c910cf462e95a69954f78",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "recovery-control/policy/cra_reflex_policy_v1.dry_run.json",
+      "source_role": "reflex-ops-example",
+      "decision": "verbatim",
+      "before_sha256": null,
+      "source_sha256": "305a299f9ff6f9ca637c384a2256ad865b79486f4f79b13294a4f53f9f861275",
+      "public_sha256": "305a299f9ff6f9ca637c384a2256ad865b79486f4f79b13294a4f53f9f861275",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "recovery-control/src/cra/__init__.py",
+      "source_role": "reflex-source",
+      "decision": "verbatim",
+      "before_sha256": null,
+      "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "public_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "recovery-control/src/cra/agent.py",
+      "source_role": "reflex-source",
+      "decision": "reformatted and linted under this repository's ruff and strict mypy settings; no behavior change",
+      "before_sha256": null,
+      "source_sha256": "b179415fbec91ec8341b45fce1f43a70f129e0f6a6a77bacbec28c10d39d0501",
+      "public_sha256": "8737f1be3157770a8842500b66c1e863a8f050edf6c6a80178c30965ca4e87e9",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "recovery-control/src/cra/central/__init__.py",
+      "source_role": "reflex-source",
+      "decision": "verbatim",
+      "before_sha256": null,
+      "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "public_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "recovery-control/src/cra/central/cli.py",
+      "source_role": "reflex-source",
+      "decision": "reformatted and linted under this repository's ruff and strict mypy settings; no behavior change",
+      "before_sha256": null,
+      "source_sha256": "566f1152b23f2288a641816406da2a97e79ae10460bf210807aba869e17e3219",
+      "public_sha256": "d3e50e778c3b83193581c49d902a106fd080e8bdf52c636d41cd74c2644032f7",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "recovery-control/src/cra/central/server.py",
+      "source_role": "reflex-source",
+      "decision": "verbatim",
+      "before_sha256": null,
+      "source_sha256": "19d6d9e2cce2f036bc9997b3051c0283d07a9b74ee61d93bf6f44c47ba3f4c09",
+      "public_sha256": "19d6d9e2cce2f036bc9997b3051c0283d07a9b74ee61d93bf6f44c47ba3f4c09",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "recovery-control/src/cra/central/store.py",
+      "source_role": "reflex-source",
+      "decision": "verbatim",
+      "before_sha256": null,
+      "source_sha256": "4bca8dc039f557b5f36039e9d797ec40ab6605532921501b3b827e4f3f121644",
+      "public_sha256": "4bca8dc039f557b5f36039e9d797ec40ab6605532921501b3b827e4f3f121644",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "recovery-control/src/cra/central/verify.py",
+      "source_role": "reflex-source",
+      "decision": "reformatted and linted under this repository's ruff and strict mypy settings; no behavior change",
+      "before_sha256": null,
+      "source_sha256": "7b22a929c89b612338b40ede61cfbb1accf0acf17ae0784dc043c39ad312d6ce",
+      "public_sha256": "e7149c029d453fdcc7ae3683d135dc7992c86c1eee90e494126ecab839118e56",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "recovery-control/src/cra/decide.py",
+      "source_role": "reflex-source",
+      "decision": "reformatted and linted under this repository's ruff and strict mypy settings; no behavior change",
+      "before_sha256": null,
+      "source_sha256": "3ba1fd9f8c615ddd0965f19cbe3f2c8740548dd727b6e995a8f83a02e9d42ea7",
+      "public_sha256": "b50aad72f8155be6f5a297e0db3948116fd5549d6b0f5f9df861d10b8d42a815",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "recovery-control/src/cra/effect.py",
+      "source_role": "reflex-source",
+      "decision": "reformatted and linted under this repository's ruff and strict mypy settings; no behavior change",
+      "before_sha256": null,
+      "source_sha256": "c46bb3ebb5e435ae921cb831a0ea742ed03ff58675275a0fafbef2566ac857b3",
+      "public_sha256": "f13bc31c6586486c6ab4454edea26149a088f292cfdd8f3ff2a6a0319962b65b",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "recovery-control/src/cra/observe.py",
+      "source_role": "reflex-source",
+      "decision": "reformatted and linted under this repository's ruff and strict mypy settings; no behavior change",
+      "before_sha256": null,
+      "source_sha256": "13a98925f33e58fbf7ca3e6e3805d2312ad0a77c90f3b3e240acb557d74b959e",
+      "public_sha256": "d0b194dc3f070165118c78b7ac4d0c5de5f7b27b341fbfc058b5137d2b1c765b",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "recovery-control/src/cra/policy.py",
+      "source_role": "reflex-source",
+      "decision": "verbatim",
+      "before_sha256": null,
+      "source_sha256": "54ecc6d02dd660db422eceffcdfc849ccac09b5958ec48169e6d0ee1dbc73775",
+      "public_sha256": "54ecc6d02dd660db422eceffcdfc849ccac09b5958ec48169e6d0ee1dbc73775",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "recovery-control/src/cra/signing.py",
+      "source_role": "reflex-source",
+      "decision": "verbatim",
+      "before_sha256": null,
+      "source_sha256": "ddb07a6b4f06f89e19ad65e486579117498bfd761fc489435a6da1e1799fa6d9",
+      "public_sha256": "ddb07a6b4f06f89e19ad65e486579117498bfd761fc489435a6da1e1799fa6d9",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "recovery-control/src/cra/store.py",
+      "source_role": "reflex-source",
+      "decision": "reformatted and linted under this repository's ruff and strict mypy settings; no behavior change",
+      "before_sha256": null,
+      "source_sha256": "4494e29f1bfb1d5edfbbfd526e7d2acd6fe0234f18af4d4d80252d83027dcc5c",
+      "public_sha256": "f92e3fff67fcf626bb0ecc84ef3bd1e865d9fe4f3933c84d8f1676fac03f886d",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "recovery-control/src/cra/sync.py",
+      "source_role": "reflex-source",
+      "decision": "verbatim",
+      "before_sha256": null,
+      "source_sha256": "630b11b80408e6f44168ce8ec95a4d7ba7fd7dcf4c662f4177e17894e23d3127",
+      "public_sha256": "630b11b80408e6f44168ce8ec95a4d7ba7fd7dcf4c662f4177e17894e23d3127",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "recovery-control/tests/reflex/conftest.py",
+      "source_role": "reflex-test",
+      "decision": "split shared fakes from fixtures; repository-root test imports",
+      "before_sha256": null,
+      "source_sha256": "998ea1e0188de0f1cb0f2de01841d236a894896526f998f0a8277c3bfa204c95",
+      "public_sha256": "9b159e5d9a53f1806c1019cff57fd7bb2c3f6e22f8c505e58b977a5bd00e22a7",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "recovery-control/tests/reflex/support.py",
+      "source_role": "reflex-test",
+      "decision": "split shared fakes from fixtures; documentation-range ingest address",
+      "before_sha256": null,
+      "source_sha256": "998ea1e0188de0f1cb0f2de01841d236a894896526f998f0a8277c3bfa204c95",
+      "public_sha256": "a52878cfed7c1e613c9abb68dceed12d63700d63269040f91d77e182ddb86a44",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "recovery-control/tests/reflex/test_reflex_agent.py",
+      "source_role": "reflex-test",
+      "decision": "repository-root test imports; reformatted under this repository's ruff settings",
+      "before_sha256": null,
+      "source_sha256": "66546b04eb5dec6de1e5891c1095777b4135a343989ea9ca52a2f9db8c1dc20f",
+      "public_sha256": "be7f1233e3ba353972611fb38a41c6a5da2d0c9f19e70c5651ea958c24aa0213",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "recovery-control/tests/reflex/test_reflex_central.py",
+      "source_role": "reflex-test",
+      "decision": "repository-root test imports; reformatted under this repository's ruff settings",
+      "before_sha256": null,
+      "source_sha256": "0259a5ee78c63407e164c2abf328b935c0c65888694b390f579b36d52ef215b0",
+      "public_sha256": "61bf139959a7b784a1b225c4c098e070c188578c1eab5f58003f6f73e46b092f",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "recovery-control/tests/reflex/test_reflex_executor_compat.py",
+      "source_role": "reflex-test",
+      "decision": "import executor from this repository instead of a sibling checkout",
+      "before_sha256": null,
+      "source_sha256": "643c047b9bb9b5c78b7c5542cb60cc1d62c3e1fb52434fbda6799f9f140081df",
+      "public_sha256": "146210aa129acf68993914eaa9f40c8e209efa26611252ef617f7f76de6183f4",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "recovery-control/tests/reflex/test_reflex_policy.py",
+      "source_role": "reflex-test",
+      "decision": "verbatim",
+      "before_sha256": null,
+      "source_sha256": "4afb0f0afd6fe0f789702445666786a2bb35d103385a722db2d481cda3fd6292",
+      "public_sha256": "4afb0f0afd6fe0f789702445666786a2bb35d103385a722db2d481cda3fd6292",
+      "port_date_jst": "2026-10-22"
     }
   ],
   "omissions": [
@@ -3813,7 +4078,8 @@
     "publication/thumbnail-clock-port-20261022.json",
     "publication/thumbnail-review-port-20261022.json",
     "publication/thumbnail-ocr-rollout-20261022.json",
-    "publication/clock-docs-review-20261022.json"
+    "publication/clock-docs-review-20261022.json",
+    "publication/cra-reflex-port-20261022.json"
   ],
   "evidence_checkpoint_cutoff_jst": "2026-10-14T00:04:57+09:00",
   "documentation_audience": "hiring and technical reviewers",
@@ -3941,5 +4207,12 @@
     },
     "production_changed": false,
     "runtime_code_changed": false
+  },
+  "cra_reflex_port": {
+    "date_jst": "2026-10-22",
+    "record": "publication/cra-reflex-port-20261022.json",
+    "source_commit": "947d899eec2dbedf7949f9cfb98afc9db7d34338",
+    "deployment_performed": false,
+    "push_performed": false
   }
 }

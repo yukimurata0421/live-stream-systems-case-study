@@ -1,0 +1,9 @@
+[Unit]
+Description=Hourly CRA audit verification
+
+[Timer]
+OnBootSec=10min
+OnUnitActiveSec=1h
+
+[Install]
+WantedBy=timers.target

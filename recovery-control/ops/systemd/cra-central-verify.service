@@ -1,0 +1,13 @@
+[Unit]
+Description=CRA central: verify agent audit logs against the invariants
+
+[Service]
+Type=oneshot
+User=cra-central
+Group=cra-central
+Environment=PYTHONPATH=/opt/cra/current/src
+ExecStart=/bin/sh -c '/usr/bin/python3 -m cra.central.cli verify --config /etc/cra-central/central.json > /var/lib/cra-central/verify-latest.json.tmp; rc=$?; mv /var/lib/cra-central/verify-latest.json.tmp /var/lib/cra-central/verify-latest.json; exit $rc'
+StateDirectory=cra-central
+ProtectSystem=strict
+ProtectHome=true
+NoNewPrivileges=true

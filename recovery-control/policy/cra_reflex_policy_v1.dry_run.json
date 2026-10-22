@@ -1,0 +1,14 @@
+{
+  "schema": "cra.policy.v1",
+  "version": 1,
+  "mode": "dry_run",
+  "stall_confirm_samples": 5,
+  "stall_lastsnd_ms": 4000,
+  "stall_notsent_bytes": 8192,
+  "stall_unacked": 64,
+  "min_ffmpeg_uptime_sec": 20,
+  "cooldown_sec": 60,
+  "max_per_hour": 4,
+  "max_per_day": 12,
+  "verify_window_sec": 60
+}
