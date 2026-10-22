@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Use the backup argument builder and matching FFmpeg to isolate stopped and blocked monitor reception."""
+"""Isolate a stopped monitoring UDP receiver with the real backup builder and matching FFmpeg."""
 import importlib.util
 import json
 import os
@@ -12,7 +12,7 @@ from types import SimpleNamespace
 from urllib.request import urlopen
 
 from stream_v3.fallback_monitor import add_monitor_output
-from stream_v3.frame_receiver import ObservedTransportBuffer,FrameReceiver
+from stream_v3.frame_receiver import ObservedTransportBuffer,FrameReceiver,relay_args
 from stream_v3.verified_clock import VerifiedClockAnalyzer,VerifiedClockConfig
 from stream_v3.oci_monitor_probe import MonitorWorker
 
@@ -62,7 +62,7 @@ def main():
         spec=importlib.util.spec_from_file_location('actual_backup_builder','/fixture/ffmpeg_args.py')
         builder=importlib.util.module_from_spec(spec);spec.loader.exec_module(builder)
         cfg=SimpleNamespace(test_mode=False,use_fifo_recovery=False,rtmp_url='rtmp://127.0.0.1:11935/direct',
-                            video_bitrate='3400k',video_maxrate='3400k',video_bufsize='6800k',audio_bitrate='128k',
+                            video_bitrate='4000k',video_maxrate='4000k',video_bufsize='8000k',audio_bitrate='128k',
                             output_size='1920x1080',draw_mouse=0,frame_rate=5,video_size='1920x1080',
                             audio_queue_size=32,audio_filter='anull',video_encoder='libx264',video_preset='ultrafast',audio_sample_rate=48000)
         values=builder.build_ffmpeg_args(cfg,x11_input=':fixture',pulse_source='fixture',encoder_profile={})
@@ -70,9 +70,11 @@ def main():
         # Replace only the physical input devices; retain actual encoder/output options.
         values[i:j]=['-re','-f','lavfi','-i','testsrc2=s=1920x1080:r=5','-f','lavfi','-i','sine=frequency=440:sample_rate=48000']
         i=values.index('-filter_complex')+1
-        values[i]+=f',drawbox=x=30:y=1040:w=100:h=35:color=black:t=fill,drawtext=fontfile=/fixture/font.ttf:textfile={clock}:reload=1:x=40:y=1047:fontsize=14:fontcolor=white:box=1:boxcolor=black'
-        values[i]+=f',drawbox=x=150:y=1040:w=100:h=35:color=black:t=fill,drawtext=fontfile=/fixture/font.ttf:textfile={utc}:reload=1:x=160:y=1047:fontsize=14:fontcolor=white:box=1:boxcolor=black'
-        values=[*values[:-3],'-threads:v','1','-flvflags','aac_seq_header_detect',*values[-3:]]
+        values[i]+=f',drawbox=x=30:y=1040:w=100:h=35:color=black:t=fill,drawtext=fontfile=/fixture/font.ttf:textfile={clock}:reload=1:x=37:y=1047:fontsize=15:fontcolor=white:box=1:boxcolor=black'
+        values[i]+=f',drawbox=x=150:y=1040:w=100:h=35:color=black:t=fill,drawtext=fontfile=/fixture/font.ttf:textfile={utc}:reload=1:x=156:y=1047:fontsize=15:fontcolor=white:box=1:boxcolor=black'
+        # Current production encoder: 5 fps, GOP 10 (two seconds), 4000 kbit/s.
+        # CPU x264 replaces NVENC only inside this bounded fixture.
+        values=[*values[:-3],'-g','10','-keyint_min','10','-sc_threshold','0','-threads:v','1','-flvflags','aac_seq_header_detect',*values[-3:]]
         values=add_monitor_output(values,'udp://127.0.0.1:8767?pkt_size=1316&connect=0&buffer_size=65536')
         sender=spawn(values,'sender')
         for _ in range(80):
@@ -83,6 +85,15 @@ def main():
         else:raise RuntimeError('primary_input_unready')
         sender_pid=sender.pid
         phase('monitor_absent')
+        startups=[]
+        for offset in (0.,.3,.7,1.1,1.5,1.9):
+            time.sleep(offset);probe=FrameReceiver();t=time.monotonic()
+            try:
+                probe.start(relay_args({'source_url':'rtmp://127.0.0.1:11935/direct'}))
+                frame=probe.take(deadline=time.monotonic()+12)
+                startups.append({'offset_seconds':offset,'startup_seconds':round(time.monotonic()-t,3),'captured':bool(frame.content)})
+            finally:probe.close()
+        print(json.dumps({'event':'production_gop_startups','gop_frames':10,'fps':5,'startups':startups}),flush=True)
         receiver=ObservedTransportBuffer();receiver.start(host='127.0.0.1');phase('monitor_running')
         key=root/'key';key.write_bytes(b'x'*32)
         worker=MonitorWorker({'source_identity':'fixture','source_url':'rtmp://127.0.0.1:11935/direct','ca_file':'/no-ca',
@@ -103,6 +114,8 @@ def main():
         for target in ('oci_relay','youtube_fallback'):
             if sum(x['targets'][target]['clock_state']=='ADVANCING_CONFIRMED' for x in quality)<2:
                 raise RuntimeError('paired_clock_quality_failed:'+json.dumps([x['targets'][target] for x in quality]))
+            if sum(x['targets'][target].get('measurement_timing_valid') is True for x in quality)<2:
+                raise RuntimeError('frame_timing_quality_failed:'+json.dumps([x['targets'][target] for x in quality]))
         reader_pids={k:r.process.pid for k,r in worker.readers.items()}
         # Leave the UDP socket open but stop reading it. Kernel receive queue fills.
         receiver.stop.set();receiver.thread.join(timeout=1)
@@ -125,6 +138,7 @@ def main():
             print(json.dumps({'event':'clock_verification_failed','observation':clock_row}),flush=True)
             raise RuntimeError('fallback_clock_not_confirmed')
         print(json.dumps({'result':'PASS','scope':'isolated_actual_backup_builder_ffmpeg_5_1_9',
+                          'production_gop_frames':10,'production_fps':5,'startup_trials':startups,
                           'stages':stages,'seconds':round(time.monotonic()-started,3),'samples':samples,
                           'sender_pid_preserved':sender.pid==sender_pid and sender.poll() is None,
                           'primary_video_audio_decode':True,'paired_ocr_each_sample':True,'quality_states':{target:[x['targets'][target]['clock_state'] for x in quality] for target in ('oci_relay','youtube_fallback')},'continuous_reader_pids':reader_pids,

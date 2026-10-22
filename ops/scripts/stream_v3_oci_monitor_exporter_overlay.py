@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Preserve a pinned legacy exporter and append independently refreshed common-relay observations."""
+"""Retain the existing exporter baseline and append independent observation metrics."""
 import hashlib
 import importlib.util
 import json
@@ -24,9 +24,18 @@ def main():
     metrics = importlib.util.module_from_spec(metrics_spec)
     metrics_spec.loader.exec_module(metrics)
     write_metrics = metrics.write_metrics
+    thumbnail_writer=None
+    if os.environ.get('TWITCH_THUMBNAIL_OBSERVATION_FILE'):
+        thumbnail_path=Path(__file__).with_name('twitch_thumbnail_metrics.py')
+        if not thumbnail_path.is_file():thumbnail_path=Path(__file__).resolve().parents[2]/'src/stream_v3/twitch_thumbnail_metrics.py'
+        thumbnail_spec=importlib.util.spec_from_file_location('twitch_thumbnail_metrics',thumbnail_path)
+        thumbnail_module=importlib.util.module_from_spec(thumbnail_spec);thumbnail_spec.loader.exec_module(thumbnail_module)
+        thumbnail_writer=thumbnail_module.write_metrics
     original = module.MetricsCache.get
+    thumbnail_last_cycle=time.time()
 
     def combined(cache):
+        nonlocal thumbnail_last_cycle
         payload,error = original(cache)
         try:
             path = Path(os.environ["OCI_MONITOR_OBSERVATION_FILE"])
@@ -37,7 +46,17 @@ def main():
             observation = {}
         writer=module.MetricWriter()
         write_metrics(writer, observation, now=time.time())
-        prefixes=('stream_v3_oci_monitor_','stream_v3_youtube_fallback_monitor_','stream_v3_monitor_probe_')
+        if thumbnail_writer:
+            try:
+                path=Path(os.environ['TWITCH_THUMBNAIL_OBSERVATION_FILE'])
+                if path.stat().st_size>65536:raise ValueError('thumbnail_observation_too_large')
+                thumbnail=json.loads(path.read_text())
+            except (OSError,ValueError):thumbnail={}
+            if thumbnail.get('schema')=='stream_v3.twitch_thumbnail_observation.v1':
+                checked=thumbnail_module.age(thumbnail.get('checked_at_utc'),time.time())
+                if checked is not None:thumbnail_last_cycle=time.time()-checked
+            thumbnail_writer(writer,thumbnail,now=time.time(),last_cycle_epoch=thumbnail_last_cycle)
+        prefixes=('stream_v3_oci_monitor_','stream_v3_youtube_fallback_monitor_','stream_v3_monitor_probe_','stream_v3_twitch_thumbnail_')
         # Keep the existing collector cache; refresh only this small RAM-state projection.
         lines=[line for line in payload.splitlines() if not line.removeprefix('# HELP ').removeprefix('# TYPE ').startswith(prefixes)]
         return '\n'.join(lines)+'\n'+writer.render(),error

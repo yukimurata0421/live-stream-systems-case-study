@@ -1,4 +1,4 @@
-"""Combine existing native relay and image observations as facts, without control authority."""
+"""Combine native relay and image observations as facts without control authority."""
 from datetime import datetime
 import math
 
@@ -45,6 +45,14 @@ def native_facts(raw,previous,*,now):
 
 def classify(row,native,*,now,target):
     current=dict(row);fresh=age(row.get('checked_at_utc'),now)
+    frame_age=age(row.get('captured_at_utc'),now)
+    verified=(row.get('capture_ok') is True and frame_age is not None and frame_age<=30
+              and row.get('clock_state')=='ADVANCING_CONFIRMED'
+              and row.get('ocr_verified') is True and row.get('clock_pair_consistent') is True)
+    native_age=age(native.get('observed_at_utc'),now)
+    native_bad=(target=='oci_relay' and native.get('fresh') is True and native_age is not None and native_age<=90
+                and (native.get('relay_active') is False or ((native.get('input') or {}).get('available') is True
+                     and (native.get('input') or {}).get('ready') is False)))
     if target=='youtube_fallback' and row.get('expected_active') is False:
         state,reason='standby','fallback_inactive'
     elif fresh is None or fresh>30:
@@ -54,16 +62,16 @@ def classify(row,native,*,now,target):
     elif (row.get('capture_ok') is True and row.get('clock_state')=='STALLED_CONFIRMED'
           and row.get('ocr_verified') is True and row.get('clock_pair_consistent') is True):
         state,reason='target_bad','clock_stalled_confirmed'
+    elif verified and (not native_bad or frame_age<=native_age):
+        state,reason='target_good','verified_clock_advancing'
     elif target=='oci_relay' and native.get('fresh') and native.get('relay_active') is False:
         state,reason='target_bad','relay_not_running'
     elif target=='oci_relay' and native.get('fresh') and (native.get('input') or {}).get('available') is True and (native.get('input') or {}).get('ready') is False:
         state,reason='target_bad','relay_no_publisher'
-    elif (row.get('capture_ok') is True and row.get('clock_state')=='ADVANCING_CONFIRMED'
-          and row.get('ocr_verified') is True and row.get('clock_pair_consistent') is True):
-        state,reason='target_good','verified_clock_advancing'
     else:
         state='observation_unknown';reason=row.get('reason','frame_observation_unavailable')
     current.update(classification=state,classification_reason=reason)
     if target=='oci_relay' and native.get('fresh') and row.get('capture_ok') is False:
         current['internal_observation_disagreement']=(native.get('input') or {}).get('ready') is True and (native.get('input') or {}).get('flowing') is True
+    elif target=='oci_relay':current['internal_observation_disagreement']=bool(verified and native_bad)
     return current

@@ -22,3 +22,15 @@ def test_native_duplicates_resets_staleness_and_target_absence():
     assert classify(unknown,second,now=220,target='oci_relay')['classification']=='observation_unknown'
     absent=copy.deepcopy(second);absent['input']['ready']=False
     assert classify(unknown,absent,now=220,target='oci_relay')['classification']=='target_bad'
+
+
+def test_recovery_uses_observation_timestamps_not_native_priority():
+    row={'checked_at_utc':utc_timestamp(220),'captured_at_utc':utc_timestamp(218),'capture_ok':True,
+         'clock_state':'ADVANCING_CONFIRMED','ocr_verified':True,'clock_pair_consistent':True}
+    native=native_facts(raw(200),{},now=220);native['input']['ready']=False
+    recovered=classify(row,native,now=220,target='oci_relay')
+    assert recovered['classification']=='target_good' and recovered['internal_observation_disagreement']
+    newer={**native,'observed_at_utc':utc_timestamp(219)}
+    assert classify(row,newer,now=220,target='oci_relay')['classification']=='target_bad'
+    stale={**row,'captured_at_utc':utc_timestamp(180)}
+    assert classify(stale,native,now=220,target='oci_relay')['classification']!='target_good'

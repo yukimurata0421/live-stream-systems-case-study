@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Import Dell RAM snapshots and heartbeat through fixed GET requests into independent observation state."""
+"""Import delivery-host RAM snapshots and heartbeat through fixed read-only GET requests."""
 import argparse
 import base64
 import hashlib
@@ -17,7 +17,7 @@ from stream_v3.viewer_clock_capture import ProcessRunner
 from stream_v3.viewer_clock_worker import EvidenceStore,append_history,atomic_bytes,json_bytes
 from stream_v3.monitor_facts import native_facts,classify
 
-REMOTE_READ="""import base64,json,urllib.request,urllib.parse,subprocess,hashlib,re,copy
+REMOTE_READ="""import base64,json,urllib.request,urllib.parse,subprocess,hashlib,re,copy,time
 from pathlib import Path
 opener=urllib.request.build_opener(urllib.request.ProxyHandler({}))
 query=urllib.parse.urlencode({'after_cycle':__AFTER_CYCLE__,'pod_uid':__POD_UID__,'wait':10})
@@ -28,8 +28,18 @@ def read(*args):
  r=subprocess.run(['sudo','-n','k3s','kubectl','-n','stream-v3',*args,'-o','json'],capture_output=True,timeout=2,check=True)
  if len(r.stdout)>512*1024:raise ValueError('status_too_large')
  return json.loads(r.stdout)
-runtime={'available':False};fallback={'available':False}
+boot=Path('/proc/sys/kernel/random/boot_id').read_text().strip()
+source=json.loads(payload)['state'];peer=source.get('targets',{}).get('youtube_fallback',{}).get('transport_peer_ip')
+cache=__RUNTIME_CACHE__
+cached_runtime=cache.get('observer_runtime',{})
+ready=(cached_runtime.get('available') is True and any(p.get('uid')==source.get('pod_uid') for p in cached_runtime.get('pods',[])))
+reuse=(0<=time.time()-cache.get('checked_epoch',0)<(60 if ready else 10) and cache.get('ssh_boot_id')==boot
+       and cache.get('pod_uid')==source.get('pod_uid') and cache.get('fallback_peer_ip')==peer)
+runtime=cache.get('observer_runtime',{}) if reuse else {'available':False}
+fallback=cache.get('fallback_status',{}) if reuse else {'available':False}
+checked=cache.get('checked_epoch') if reuse else time.time()
 try:
+ if reuse:raise StopIteration
  deployments=read('get','deploy','stream-v3-youtube-backup','stream-v3-oci-monitor-probe')['items']
  d=next(x for x in deployments if x['metadata']['name']=='stream-v3-youtube-backup')
  observer=next(x for x in deployments if x['metadata']['name']=='stream-v3-oci-monitor-probe')
@@ -69,8 +79,10 @@ try:
            'template_revision':hashlib.sha256(json.dumps(template,sort_keys=True,separators=(',',':')).encode()).hexdigest(),
            'tap_revision':hashlib.sha256(cm['data']['fallback_monitor.py'].encode()).hexdigest(),'pods':producer}
 except Exception:pass
-print(json.dumps({'signature':signature,'payload':base64.b64encode(payload).decode(),'ssh_boot_id':Path('/proc/sys/kernel/random/boot_id').read_text().strip(),
-                  'fallback_status':fallback,'observer_runtime':runtime}))
+cache={'checked_epoch':checked,'ssh_boot_id':boot,'pod_uid':source.get('pod_uid'),'fallback_peer_ip':peer,
+       'observer_runtime':runtime,'fallback_status':fallback}
+print(json.dumps({'signature':signature,'payload':base64.b64encode(payload).decode(),'ssh_boot_id':boot,
+                  'fallback_status':fallback,'observer_runtime':runtime,'runtime_cache':cache,'runtime_cache_reused':reuse}))
 """
 
 
@@ -105,7 +117,7 @@ def collect(config,ram_root,state_file):
         if not previous_state.get('pod_uid'):
             last=old.get('collector',{}).get('last_cycle_identity',[])
             if len(last)==3:previous_state={'source_boot_id':last[0],'pod_uid':last[1],'cycle':last[2]}
-        remote=REMOTE_READ.replace('__AFTER_CYCLE__',repr(int(previous_state.get('cycle',-1)))).replace('__POD_UID__',repr(str(previous_state.get('pod_uid',''))))
+        remote=REMOTE_READ.replace('__AFTER_CYCLE__',repr(int(previous_state.get('cycle',-1)))).replace('__POD_UID__',repr(str(previous_state.get('pod_uid','')))).replace('__RUNTIME_CACHE__',repr(old.get('runtime_cache',{})))
         result=ProcessRunner().run(['ssh','-o','BatchMode=yes','-o','StrictHostKeyChecking=yes','-o','ConnectTimeout=5','-o','ControlMaster=no','-o','ControlPath=none','-o','ControlPersist=no',config['ssh_host'],shlex.join(['python3','-c',remote])],deadline=time.monotonic()+22,max_stdout=6*1024*1024)
         if result.returncode:raise ValueError('dell_observer_unavailable')
         stage='bundle_signature'
@@ -113,6 +125,8 @@ def collect(config,ram_root,state_file):
         key=Path(config['key_file']).read_bytes()
         if len(key)!=32 or not hmac.compare_digest(envelope['signature'],hmac.new(key,b'oci-monitor-observation-v1\0'+raw,hashlib.sha256).hexdigest()):raise ValueError('observation_signature_invalid')
         bundle=json.loads(raw);state=bundle['state'];heartbeat=bundle['heartbeat']
+        bundle['runtime_cache']=envelope.get('runtime_cache',{})
+        bundle['runtime_cache_reused']=envelope.get('runtime_cache_reused') is True
         stage='observation_binding'
         if bundle['schema']!='stream_v3.oci_monitor_bundle.v1' or state['schema'] not in ('stream_v3.oci_monitor_probe.v1','stream_v3.oci_monitor_probe.v2'):raise ValueError('observation_schema_invalid')
         if state.get('source_identity')!=config['source_identity']:raise ValueError('observation_source_invalid')
@@ -145,6 +159,8 @@ def collect(config,ram_root,state_file):
                              'last_cycle_identity':identity,
                              'unique_observations_total':prior_collector.get('unique_observations_total',0)+int(not duplicate),
                              'duplicates_total':prior_collector.get('duplicates_total',0)+int(duplicate)}
+        quality=prior_collector.get('observation_quality',{})
+        bundle['collector']['observation_quality']={}
         try:
             native_path=ram_root/'relay-facts.json'
             if native_path.stat().st_size>65536:raise ValueError('native_facts_too_large')
@@ -157,6 +173,17 @@ def collect(config,ram_root,state_file):
                 row['source_binding_reason']='runtime_attestation_unavailable'
             state['targets'][target]=classify(row,bundle['native_delivery'],now=time.time(),target=target)
             if not row['source_binding_ok'] and row.get('expected_active') is not False:state['targets'][target]['classification']='observation_unknown'
+            now=time.time();prior=quality.get(target,{})
+            required=not (row.get('expected_active') is False and attested and compatible and row['source_binding_ok'])
+            since=prior.get('required_since_utc') if prior.get('required') is True else None
+            since=(since or utc_timestamp(now)) if required else None
+            last=prior.get('last_valid_at_utc')
+            if not required:last=None
+            sample_age=age(row.get('captured_at_utc'),now)
+            if (required and attested and compatible and row['source_binding_ok'] and row.get('capture_ok') is True
+                    and sample_age is not None and sample_age<=30 and row.get('clock_reading_valid') is True):
+                last=row['captured_at_utc']
+            bundle['collector']['observation_quality'][target]={'required':required,'required_since_utc':since,'last_valid_at_utc':last}
         store=EvidenceStore(state_file.parent/'evidence',platforms=tuple(sorted(expected)))
         for target,row in state['targets'].items():
             if not row.get('capture_ok'):continue
@@ -197,7 +224,12 @@ def collect(config,ram_root,state_file):
         for directory in directories.values():
             try:(ram_root/'capture'/directory/'latest.jpg').unlink(missing_ok=True)
             except OSError:pass
-        failure={'schema':'stream_v3.oci_monitor_bundle.v1','state':{'schema':'stream_v3.oci_monitor_probe.v2','checked_at_utc':utc_timestamp(time.time()),'targets':{target:{'platform':target,'clock_state':'UNKNOWN','capture_ok':False,'reason':'dell_observation_unavailable_or_invalid','error_stage':stage,'classification':'observation_unknown'} for target in expected}},'heartbeat':{},'collector':old.get('collector',{})}
+        collector=dict(old.get('collector',{}));quality=collector.setdefault('observation_quality',{})
+        for target in expected:
+            prior=quality.get(target,{})
+            # An unavailable status is not proof that the fallback is inactive.
+            quality[target]={**prior,'required':True,'required_since_utc':prior.get('required_since_utc') or utc_timestamp(time.time())}
+        failure={'schema':'stream_v3.oci_monitor_bundle.v1','state':{'schema':'stream_v3.oci_monitor_probe.v2','checked_at_utc':utc_timestamp(time.time()),'targets':{target:{'platform':target,'clock_state':'UNKNOWN','capture_ok':False,'reason':'dell_observation_unavailable_or_invalid','error_stage':stage,'classification':'observation_unknown'} for target in expected}},'heartbeat':{},'collector':collector,'runtime_cache':old.get('runtime_cache',{})}
         try:
             atomic_bytes(state_file,json_bytes(failure));errors=state_file.parent/'collector_failures';errors.mkdir(mode=0o700,exist_ok=True)
             append_history(errors,failure,max_bytes=1024*1024)

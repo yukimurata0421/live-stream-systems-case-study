@@ -15,6 +15,7 @@ start.
 
 ## Current System
 
+- `v3/twitch-thumbnail-monitor.md`: [provider-image clocks, API reuse, RAM processing and warning scope](v3/twitch-thumbnail-monitor.md).
 - `v3/relay-clock-monitor.md`: [returned video, paired OCR, native evidence and bounded observer state](v3/relay-clock-monitor.md).
 - `v3/oci-backup-and-restore.md`: [encrypted relay backup, offline verification and files-only restore](v3/oci-backup-and-restore.md).
 
@@ -92,6 +93,7 @@ start.
 
 ## Publication Records
 
+- `v3/public-source-port-2026-10-22-thumbnail.md`: [thumbnail monitoring and return-reader quality corrections](v3/public-source-port-2026-10-22-thumbnail.md).
 - `v3/public-source-port-2026-10-22.md`: [clock-monitor review, dated evidence and public source adaptations](v3/public-source-port-2026-10-22.md).
 
 - `v3/public-source-port-2026-10-20.md`: [self-healing route port](v3/public-source-port-2026-10-20.md).

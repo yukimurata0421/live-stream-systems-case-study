@@ -39,6 +39,11 @@ OCR has a separate finite deadline. Resource or acquisition failures remain
 `UNKNOWN`. Ordinary full-frame JPEGs stay in memory-backed storage, with two
 recent images per target. Abnormal evidence has capacity and retention limits.
 
+Initial stream probing allows five seconds and 5 MB, with bounded reconnect
+jitter to avoid repeatedly aligning a short probe with the same GOP phase.
+Missing codec parameters have a separate `capture_probe_failed` reason. Cumulative
+PTS versus monotonic drift can invalidate delay without claiming a stream fault.
+
 The fallback encoder keeps one primary synchronous output. Its secondary UDP
 output uses a 32-packet FIFO with drop-on-overflow and ignore-on-failure. The
 receiver keeps at most 4 MiB / six seconds and a 256-packet pipe-input queue.
@@ -55,7 +60,7 @@ accepted reading is cached rather than OCRed again.
 
 | Result | Meaning |
 | --- | --- |
-| `WARMUP` | No comparable accepted reading after startup or a reader-session change. |
+| `WARMUP` | No comparable accepted reading after startup or a source-identity change. A reader reconnect alone preserves the clock history. |
 | `ADVANCING_CONFIRMED` | Positive clock progress agrees with monotonic elapsed time within five seconds. |
 | `STALLED_SUSPECT` | Accepted paired readings contain the same clock value. |
 | `STALLED_CONFIRMED` | At least two equal-value comparisons and 60 seconds of observed freeze. |
@@ -123,7 +128,15 @@ series expose scope, classification, bounded reason/stage, native freshness,
 forward flow, freeze coverage, cadence error, delay quality and histogram,
 configuration change, and duplicate counters. `clock_advancing=1` requires a
 fresh capture, compatible runtime/source binding, and paired OCR progression.
-These are observation inputs; this worker adds no notification or recovery path.
+These are observation inputs. The independent monitoring-host integration adds
+`ViewerClockObservationUnavailable` after a required clock gap exceeds five
+minutes, and `ViewerClockObserverUnavailable` after observer availability or
+quality metrics are missing for five minutes. Fresh, bound fallback standby is
+excluded. It reuses the existing warning delivery loop; two distinct fresh
+observations are required to resolve a warning. No recovery path is added.
+
+The [Twitch thumbnail contract](twitch-thumbnail-monitor.md) adds a slower
+provider-image layer with separate age and refresh semantics.
 
 ## Configuration And Local Checks
 

@@ -78,6 +78,8 @@ Tokyo OKE capacity attempt, the choice of a VM, and the fallback conditions.
 Both home senders still depend on the Dell host and home uplink. A separate
 [clock monitor](docs/v3/relay-clock-monitor.md) checks returned relay/fallback
 video and keeps that evidence distinct from public-player reception.
+An independent [Twitch thumbnail monitor](docs/v3/twitch-thumbnail-monitor.md)
+adds provider-image clock checks on the monitoring host, using RAM for normal images.
 
 ### Public status
 

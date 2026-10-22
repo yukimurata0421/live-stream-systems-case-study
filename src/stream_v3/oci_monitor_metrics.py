@@ -1,4 +1,4 @@
-"""Expose separate frame, native-forward, and observer-quality facts without recovery or notification decisions."""
+"""Separate frame, native-forward and observer-quality facts without recovery decisions."""
 from datetime import datetime
 import math
 
@@ -6,6 +6,7 @@ STATES=('WARMUP','ADVANCING_PROBABLE','ADVANCING_CONFIRMED','STALLED_SUSPECT','S
 CLASSES=('target_good','target_bad','observation_unknown','standby')
 STAGES=('none','transport','decode','analysis','publication','binding','native','stale','standby')
 REASONS=set('capture_tls_failed capture_connect_failed capture_timeout capture_source_unavailable capture_decode_failed capture_starting capture_stream_ended capture_frame_stale capture_reader_io_error capture_executable_unavailable snapshot_io_error clock_pair_unreliable clock_cadence_drift clock_time_regressed clock_time_jump ocr_time_unchanged ocr_time_advanced comparison_unavailable fallback_inactive fallback_stream_not_observed fallback_status_unavailable fallback_producer_identity_changed fallback_producer_not_ready_or_ambiguous fallback_transport_producer_mismatch relay_not_running relay_no_publisher runtime_attestation_unavailable frame_observation_stale black_frame observer_analysis_or_resource_error roi_invalid_or_too_small'.split())
+REASONS.add('capture_probe_failed')
 
 
 def age(value,now):
@@ -29,7 +30,7 @@ def stage(row,fresh,bound):
     if row.get('error_stage')=='publication' or 'io_error' in reason:return 'publication'
     if row.get('capture_ok'):
         return 'analysis' if row.get('clock_state') in ('WARMUP','OCR_UNCERTAIN','UNKNOWN') else 'none'
-    if any(s in reason for s in ('decode','ppm','frame_format')):return 'decode'
+    if any(s in reason for s in ('decode','probe_failed','ppm','frame_format')):return 'decode'
     if any(s in reason for s in ('roi','ocr','analysis','resource')):return 'analysis'
     return 'transport'
 
@@ -97,8 +98,18 @@ def write_metrics(writer,observation,*,now):
             enabled=fresh and row.get(key) is True
             if key=='delay_valid':enabled=enabled and confirmed
             writer.metric('stream_v3_monitor_probe_'+suffix,int(enabled),labels=labels)
-        valid_age=age(row.get('last_valid_observation_at_utc') or state.get('started_at_utc'),now)
+        quality=obj(obj(obj(observation.get('collector')).get('observation_quality')).get(target))
+        required=not (fresh and bound and row.get('expected_active') is False)
+        writer.metric('stream_v3_monitor_probe_observation_required',int(required),labels=labels,help_text='Observation required; only fresh, bound fallback standby suppresses its warning.')
+        valid_age=age(quality.get('last_valid_at_utc') or quality.get('required_since_utc') or row.get('last_valid_observation_at_utc') or state.get('started_at_utc'),now)
+        if quality.get('required') is False and required:valid_age=checked_age
+        writer.metric('stream_v3_monitor_probe_quality_history_available',int(valid_age is not None),labels=labels)
         if valid_age is not None:writer.metric('stream_v3_monitor_probe_seconds_since_last_valid_observation',valid_age,labels=labels)
+        # Zero cannot resolve a warning. A timestamp is proof of observation,
+        # including a verified stopped clock, rather than delivery recovery.
+        reading=capture and row.get('clock_reading_valid') is True and row.get('clock_pair_consistent') is True
+        recovered_at=(now-sample_age) if reading else (now-checked_age) if not required and bound and fresh else 0.
+        writer.metric('stream_v3_monitor_probe_recovery_unixtime',recovered_at,labels=labels)
         delay=row.get('stream_delay_seconds')
         if confirmed and row.get('delay_valid') is True and number(delay):writer.metric('stream_v3_monitor_probe_stream_delay_seconds',delay,labels=labels,help_text='Display-clock age at full decoded-frame arrival; not network-only round-trip time.')
         for key,value in obj(row.get('observation_counters')).items():

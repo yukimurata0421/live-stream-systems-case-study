@@ -1,0 +1,22 @@
+groups:
+  - name: viewer-clock-observation
+    interval: 30s
+    rules:
+      - alert: ViewerClockObservationUnavailable
+        expr: (stream_v3_monitor_probe_seconds_since_last_valid_observation{job="stream_v3_clock_observer"} > 300) and on(job, instance, target, scope) (stream_v3_monitor_probe_observation_required{job="stream_v3_clock_observer"} == 1)
+        labels:
+          severity: warning
+          component: viewer-clock-observation
+        annotations:
+          summary: Required clock observation has been unavailable for over five minutes
+          description: This warning concerns the monitor return path and is not proof of public-platform delivery failure.
+      - alert: ViewerClockObserverUnavailable
+        expr: max((stream_v3_monitor_probe_quality_history_available{job="stream_v3_clock_observer"} == bool 0) or (up{job="stream_v3_clock_observer"} == bool 0) or absent(up{job="stream_v3_clock_observer"}) or absent(stream_v3_monitor_probe_quality_history_available{job="stream_v3_clock_observer"})) > 0
+        for: 5m
+        labels:
+          severity: warning
+          component: viewer-clock-observation
+          target: observer
+          scope: observer_exporter
+        annotations:
+          summary: Clock observer exporter or its quality history is unavailable

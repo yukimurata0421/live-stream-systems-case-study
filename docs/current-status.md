@@ -39,6 +39,16 @@ separate from returned-frame health. OCI restore assets and the updated monitor
 image/source were retained privately; only portable code and procedures are
 included here.
 
+## Thumbnail Observation Snapshot (2026-10-22 JST)
+
+For the operated thumbnail monitor described by the
+[dated source port](v3/public-source-port-2026-10-22-thumbnail.md), a short window
+confirmed four clock progressions across five provider images. The selected
+source is commit `740bcc00`; a concurrent daily-rollover/startup-grace and
+threshold review is outside this snapshot. The public example has not been
+deployed. The [thumbnail contract](v3/twitch-thumbnail-monitor.md) describes this
+version's initial warning thresholds and provider-image scope.
+
 ## Not Yet Observed
 
 - A completed keeper-driven Twitch renewal. The first one, at 2026-10-21
@@ -58,11 +68,15 @@ included here.
 - Long-term soak of the current route.
 - Twenty-four-hour clock/OCR quality, worst-case two-input performance within
   the observer limit, and the updated observer during a real fallback.
+- Twenty-four-hour thumbnail freshness/OCR quality, daily stream rollover and
+  actual delivery of the new observation-quality warnings.
 - A new-VM bootstrap and live relay recovery from the saved OCI bundle.
 - Public-player frame continuity or end-to-end platform delay from returned
   relay/fallback clocks. Public-player automated acquisition remains on hold
-  pending applicable terms or permission. No new clock-derived paging threshold
-  is enabled.
+  pending applicable terms or permission. The selected operated update connects
+  observation-quality warnings to the existing notification route; it adds no
+  clock-derived Critical or recovery threshold. Thumbnail checks do not require
+  automated player acquisition.
 - Critical and recovery delivery through the OCI-aware Twitch notifier. Its
   public source tests use synthetic inputs and mocked webhooks.
 

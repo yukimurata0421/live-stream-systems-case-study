@@ -1,0 +1,77 @@
+rule_files:
+- ../rules/viewer_clock.yml
+evaluation_interval: 30s
+tests:
+- interval: 30s
+  input_series:
+  - series: stream_v3_monitor_probe_seconds_since_last_valid_observation{job="stream_v3_clock_observer",instance="127.0.0.1:9108",target="oci_relay",scope="dell_oci_relay_dell"}
+    values: 0+30x20
+  - series: stream_v3_monitor_probe_observation_required{job="stream_v3_clock_observer",instance="127.0.0.1:9108",target="oci_relay",scope="dell_oci_relay_dell"}
+    values: 1+0x20
+  - &id001
+    series: stream_v3_monitor_probe_quality_history_available{job="stream_v3_clock_observer",instance="127.0.0.1:9108",target="oci_relay",scope="dell_oci_relay_dell"}
+    values: 1+0x20
+  - series: stream_v3_monitor_probe_seconds_since_last_valid_observation{job="stream_v3_clock_observer",instance="127.0.0.1:9108",target="youtube_fallback",scope="dell_backup_sender_dell"}
+    values: 0+30x20
+  - series: stream_v3_monitor_probe_observation_required{job="stream_v3_clock_observer",instance="127.0.0.1:9108",target="youtube_fallback",scope="dell_backup_sender_dell"}
+    values: 0+0x20
+  - &id002
+    series: stream_v3_monitor_probe_quality_history_available{job="stream_v3_clock_observer",instance="127.0.0.1:9108",target="youtube_fallback",scope="dell_backup_sender_dell"}
+    values: 1+0x20
+  - series: up{job="stream_v3_clock_observer",instance="127.0.0.1:9108"}
+    values: 1+0x20
+  name: unknown beyond 300 seconds and fallback standby
+  alert_rule_test:
+  - eval_time: 5m
+    alertname: ViewerClockObservationUnavailable
+    exp_alerts: []
+  - eval_time: 5m30s
+    alertname: ViewerClockObservationUnavailable
+    exp_alerts:
+    - exp_labels:
+        alertname: ViewerClockObservationUnavailable
+        job: stream_v3_clock_observer
+        instance: 127.0.0.1:9108
+        target: oci_relay
+        scope: dell_oci_relay_dell
+        severity: warning
+        component: viewer-clock-observation
+      exp_annotations:
+        summary: Required clock observation has been unavailable for over five minutes
+        description: This warning concerns the monitor return path and is not proof
+          of public-platform delivery failure.
+- name: exporter unavailable
+  interval: 30s
+  input_series:
+  - series: up{job="stream_v3_clock_observer",instance="127.0.0.1:9108"}
+    values: 0+0x20
+  - *id001
+  - *id002
+  alert_rule_test:
+  - eval_time: 4m30s
+    alertname: ViewerClockObserverUnavailable
+    exp_alerts: []
+  - eval_time: 5m
+    alertname: ViewerClockObserverUnavailable
+    exp_alerts:
+    - exp_labels: &id003
+        alertname: ViewerClockObserverUnavailable
+        target: observer
+        scope: observer_exporter
+        severity: warning
+        component: viewer-clock-observation
+      exp_annotations:
+        summary: Clock observer exporter or its quality history is unavailable
+- name: all series absent
+  interval: 30s
+  input_series: []
+  alert_rule_test:
+  - eval_time: 4m30s
+    alertname: ViewerClockObserverUnavailable
+    exp_alerts: []
+  - eval_time: 5m
+    alertname: ViewerClockObserverUnavailable
+    exp_alerts:
+    - exp_labels: *id003
+      exp_annotations:
+        summary: Clock observer exporter or its quality history is unavailable

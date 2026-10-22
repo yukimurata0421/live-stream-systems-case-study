@@ -14,6 +14,8 @@ The pages most readers need from this folder:
 - [Return-feed clock monitor](relay-clock-monitor.md): clock, native-forward and
   observer-quality facts; [OCI files-only restore](oci-backup-and-restore.md):
   encrypted backup and offline placement.
+- [Twitch thumbnail observation](twitch-thumbnail-monitor.md): slow provider-image
+  evidence beside the fast return branch; no player E2E claim.
 - [TCP stall case study](tcp-stall-case-study.md): diagnosing a home-network
   fault without replacing the broadcast.
 - [YouTube lifecycle safety](youtube-lifecycle-safety.md): what must be true

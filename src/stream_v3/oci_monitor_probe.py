@@ -1,4 +1,4 @@
-"""Read the OCI common relay through an independent third branch; public-player reception is separate."""
+"""Read the common OCI relay through an independent branch; public-player reception is separate."""
 from __future__ import annotations
 
 import argparse
@@ -109,7 +109,7 @@ class MonitorWorker:
 
     def _decoded(self,frame,identity,before):
         from .viewer_clock_capture import CommandResult
-        capture,jpeg=decoded_capture(CommandResult(0,frame.content,('Video: '+frame.codec).encode()),identity+':'+str(frame.session),before,
+        capture,jpeg=decoded_capture(CommandResult(0,frame.content,('Video: '+frame.codec).encode()),identity,before,
                                      received_epoch=frame.received_epoch,received_monotonic=frame.received_monotonic)
         return capture,jpeg,{'frame_received_at_utc':utc_timestamp(frame.received_epoch),'frame_pts_seconds':frame.pts,
                              'reader_session':frame.session,'reader_frame_sequence':frame.sequence,

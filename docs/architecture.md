@@ -70,6 +70,13 @@ sender, scale a Deployment, switch a route or request a recovery action.
 The [clock contract](v3/relay-clock-monitor.md) separates returned video,
 per-destination byte progress, observation quality and public reception.
 
+An independent [thumbnail worker](v3/twitch-thumbnail-monitor.md) runs entirely on
+arena-server. An adapter reuses the existing Get Streams response and mirrors
+its URL into tmpfs; the worker fetches a bounded image once per minute, keeps
+ordinary images in RAM and joins paired-clock results with the existing API and
+native facts. Its scope is a provider thumbnail, not public-player reception.
+It adds no work to the Dell media path or OCI relay and has no recovery authority.
+
 ## Public Status Path
 
 ```text

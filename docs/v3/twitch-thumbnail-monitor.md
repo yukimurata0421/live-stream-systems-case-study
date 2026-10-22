@@ -1,0 +1,111 @@
+# Twitch Thumbnail Clock Observation
+
+The thumbnail monitor runs on the monitoring host beside the existing relay,
+native-forward and Twitch API observers. It checks the clock inside a provider
+image. It does not establish that the public video player or audio is healthy.
+
+## Observation Boundary
+
+The official [Get Streams API](https://dev.twitch.tv/docs/api/reference/#get-streams)
+provides `thumbnail_url`, described as an image from a frame in the last five
+minutes. This does not specify an internal ingest/transform checkpoint or a
+strict refresh SLA. The fixed scope is `twitch_provider_thumbnail`, not an
+ingest-success or public-player E2E label. Image clock age is not live playback
+latency. In the dated operated window, new clock values appeared six minutes apart.
+
+| Observation | What it supports | What it does not support |
+| --- | --- | --- |
+| Returned relay/fallback clock | A clock advanced in the monitored return branch. | YouTube or Twitch reception. |
+| Native destination counters | Bytes progressed on a destination's sender. | Provider decoding or player playback. |
+| Twitch Get Streams | The API reported LIVE, OFFLINE or an unavailable observation. | Continuous decoded video. |
+| Twitch thumbnail clock | A paired JST/UTC clock was readable and changed between provider images. | Video CDN, player, audio or aircraft-data correctness. |
+
+## Acquisition And Resource Limits
+
+The [source adapter](../../ops/scripts/stream_v3_twitch_thumbnail_source.py)
+observes the existing collector's Get Streams response. It publishes the original
+API evidence first, unchanged, then mirrors the URL into a separate tmpfs file.
+There is no additional Helix request, HLS extraction, embedded player or browser.
+An add-on write failure does not change a successful API observation into failure.
+
+The [worker](../../src/stream_v3/twitch_thumbnail_worker.py) joins that RAM source
+to the API evidence using host/boot, collector instance/revision, sequence,
+channel/stream identity and timestamps. Only the API-supplied HTTPS template on
+the thumbnail host is accepted. Redirects, userinfo, queries and fragments are
+rejected. No fixed-channel or video-URL fallback is used.
+
+The worker fetches at most once per minute, uses conditional GET/ETag, honors
+Retry-After, and bounds response size to 2 MiB and JPEG dimensions to 1920x1080.
+The operated calibration selected 1080p because the 720p UTC clock failed the
+paired confidence check. Every different image gets OCR; identical images reuse
+the verified reading. A different JPEG with the same clock is not a new sample.
+No real-time cadence test is applied to five-minute provider images.
+
+Normal full images are processed in memory and discarded. Only small clock
+regions remain in RAM. Numeric state and a 1 MiB x 2 history are retained on disk.
+An abnormal episode may retain small ROI evidence, capped at 8 MiB and seven days.
+The [service template](../../ops/systemd/stream-v3-twitch-thumbnail.service) uses
+a separate non-root user, 0.2-core CPU quota, 256 MiB memory limit, no swap, a
+32 MiB temporary filesystem, no capabilities and process-group cleanup. It is
+independent of the delivery host and has no recovery privileges.
+
+## Clock, Freshness And Warning Semantics
+
+JST and UTC readings require confidence at least 70 and a nine-hour offset.
+One alternate-contrast read is allowed. UTC maps to the nearest day; future,
+regressing or previous-stream readings remain uncertain. A persisted numeric
+anchor survives capture/OCR errors and worker restart. It is not a saved image.
+
+| Result | Meaning |
+| --- | --- |
+| `CLOCK_OBSERVED` | First accepted paired reading for this stream. |
+| `ADVANCING_CONFIRMED` | A later distinct clock value was accepted. |
+| `UNCHANGED` | Same provider sample; normal between refreshes. |
+| `OCR_UNCERTAIN` | Confidence, date or clock binding did not establish a reading. |
+| `SOURCE_OFFLINE` | Fresh API evidence explicitly says OFFLINE. |
+| `UNKNOWN` | Source, HTTP, resource or publication failure. |
+
+Image age up to 360 seconds is `FRESH`; up to 600 is `AGING`. Older images are
+`STALE_SUSPECT`. Above 900 seconds with fresh native-forward progress, the
+diagnostic becomes `STALE_CORRELATED`. That is a disagreement, not proof of a
+stopped public video stream. These are initial thresholds, not a measured SLO.
+
+The [metrics](../../src/stream_v3/twitch_thumbnail_metrics.py) use the separate
+`stream_v3_twitch_thumbnail_` namespace and fixed target/scope labels. API, worker
+and native facts keep their own freshness limits. A missing RAM source cannot
+hide a thumbnail gap when the original API evidence still reports LIVE.
+
+The [warning rules](../../ops/monitoring/prometheus/rules/twitch_thumbnail.yml)
+cover five minutes without a valid observation while API LIVE, five minutes
+without worker publication, and a verified image clock older than ten minutes.
+They reuse the [existing notification loop](../../ops/scripts/stream_v3_clock_alert_notify.py)
+and require two distinct fresh observations for a recovery message. They add no
+Critical classification, SLO denominator, recovery action or notification service.
+
+## Configuration And Credential-Free Checks
+
+Start from the [configuration example](../../ops/config/twitch_thumbnail.example.json).
+Replace the account and runtime paths, calibrate the ROIs and supply a reviewed
+immutable release command in the service template. The template deliberately
+contains no production release, account, credentials or automatic installer.
+The source adapter uses `TWITCH_API_BASELINE` for the root-owned collector and
+`TWITCH_THUMBNAIL_SOURCE_FILE` for the tmpfs sidecar. Preserve the collector's
+existing arguments, service credentials and `monitoring_v4.twitch_api_evidence.v1`
+contract. Reconcile the adapter if that collector's CLI changes.
+
+The exporter overlay accepts `TWITCH_THUMBNAIL_OBSERVATION_FILE`; it keeps the
+legacy expensive cache while refreshing the small observation each scrape.
+Scrape the new namespace in the existing clock job. Rule examples use that job's
+name and are not installed by copying this checkout.
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 OMP_THREAD_LIMIT=1 python3 -m pytest -q -p no:cacheprovider \
+  tests/test_twitch_thumbnail.py tests/test_clock_observation_alerts.py
+promtool test rules ops/monitoring/prometheus/tests/twitch_thumbnail.yml
+```
+
+These tests use generated images, temporary files and mocked HTTP/OCR. They make
+no provider requests, send no notifications and change no delivery services.
+The [dated port record](public-source-port-2026-10-22-thumbnail.md) separates
+operated evidence from public-source tests; [current status](../current-status.md)
+owns unobserved behavior and later changes.

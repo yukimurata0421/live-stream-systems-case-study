@@ -8,6 +8,7 @@ code path and regression tests. It does not require a complete repository tour.
 
 | Interview question | Implementation and checks |
 | --- | --- |
+| How do provider images add evidence without overstating E2E health? | [API source adapter](../ops/scripts/stream_v3_twitch_thumbnail_source.py), [analyzer](../src/stream_v3/twitch_thumbnail.py), [tests](../tests/test_twitch_thumbnail.py) and [thumbnail contract](v3/twitch-thumbnail-monitor.md). |
 | How does the current OCI route start and stop the YouTube fallback? | [Fallback controller](../ops/selfheal/fallback_controller.py), [keeper](../ops/selfheal/forward_keeper.py), and [tests](../tests/test_selfheal.py). Start with the [current route and drill](v3/self-healing-oci-fanout.md). |
 | How are clock progress, capture failure and public reception kept separate? | [Paired-clock analyzer](../src/stream_v3/verified_clock.py), [receiver](../src/stream_v3/frame_receiver.py), [native reduction](../src/stream_v3/monitor_facts.py), and [tests](../tests/test_oci_monitor_probe.py). See the [clock contract](v3/relay-clock-monitor.md). |
 | How can a restore stop at verified file placement? | [Bundle tool](../ops/oci-backup/bundle.py) and [negative tests](../tests/test_oci_backup.py); [restore procedure](v3/oci-backup-and-restore.md). |

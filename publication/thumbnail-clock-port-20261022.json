@@ -1,0 +1,313 @@
+{
+  "schema": "stream.public_port_record.v1",
+  "port_date_jst": "2026-10-22",
+  "scope": "Twitch thumbnail observation beside relay/native/API facts and the preceding return-reader/quality warning correction.",
+  "base_public_commit": "5a787ee6888abd6885ba02f7fd2451dc9a3f2f24",
+  "source_commits": [
+    "9eb592461dde7896f147324993115455d68a9103",
+    "740bcc00423c4741ab1197c6401a431d87a60277"
+  ],
+  "source_selection": "Explicit committed snapshot; concurrent daily-rollover/startup-grace and threshold review is excluded.",
+  "private_deployment_performed_by_this_port": false,
+  "public_example_deployment_performed": false,
+  "push_performed": false,
+  "checks": {
+    "source_tests": {
+      "passed": 107,
+      "failed": 0
+    },
+    "documentation": "PASS; links, catalog and scope checked by the related suite",
+    "prometheus_rule_tests": "PASS; viewer_clock and twitch_thumbnail fixtures",
+    "public_source_map": "PASS",
+    "public_language": "PASS; 1835 text files, one retained upstream exception",
+    "owned_secret_scan": "PASS; selected source/docs only, private paths, addresses, credentials and runtime artifacts excluded",
+    "related_pytest": {
+      "passed": 107,
+      "subtests_passed": 700,
+      "failed": 0
+    }
+  },
+  "preserved": [
+    "Existing public Twitch history repair, API timeout/backoff and next-slot behavior.",
+    "Existing public publisher, UI and notification delivery baseline.",
+    "Public delivery-host/relay-host binding aliases, source trust checks and expensive exporter cache.",
+    "No Critical, SLO denominator or recovery authorization changes."
+  ],
+  "omissions": [
+    "Concurrent uncommitted thumbnail review changes.",
+    "Private host paths, account/release settings, credentials and raw evidence.",
+    "Full-frame images, history/state databases, dependency binaries, runtime bundles and deployment receipts."
+  ],
+  "unobserved": [
+    "Daily stream rollover in this selected version.",
+    "Twenty-four-hour OCR and thumbnail freshness quality.",
+    "Actual delivery of new warning notifications.",
+    "Video player, CDN and audio E2E correctness."
+  ],
+  "files": [
+    {
+      "path": "README.md",
+      "before_sha256": "0830bf706ecc208062c706ebbdd22f2924f5ff8d99253a00485ed952b37dd927",
+      "source_sha256": null,
+      "public_sha256": "7cfa7e5041474594c65b3e13419c089f79b22eb86a9732f0cfdc2fbe8a4e947c",
+      "source_role": "public-documentation-or-regression",
+      "decision": "English prose and reviewed public bindings; no live deployment, publisher/UI changes or concurrent review patch."
+    },
+    {
+      "path": "docs/00_INDEX.md",
+      "before_sha256": "fd1f9349b84427f1d7d62186b9996e06efae80ad624fd378ab8da822335777fb",
+      "source_sha256": null,
+      "public_sha256": "6cf7bf2af188f52029afb5c5460c0dbf027488303b12a60bf0753a37664bf36c",
+      "source_role": "public-documentation-or-regression",
+      "decision": "English prose and reviewed public bindings; no live deployment, publisher/UI changes or concurrent review patch."
+    },
+    {
+      "path": "docs/README.md",
+      "before_sha256": "568b27bc95c95fafb356f040c85508dc2686265c87376a0fd49b3ee542751ceb",
+      "source_sha256": null,
+      "public_sha256": "a0c9dcf62d61610b3aac2d7ad8d72d5f5977d43d4365ccafb9cb416033f715df",
+      "source_role": "public-documentation-or-regression",
+      "decision": "English prose and reviewed public bindings; no live deployment, publisher/UI changes or concurrent review patch."
+    },
+    {
+      "path": "docs/architecture.md",
+      "before_sha256": "2d353d7cdf20f700c04f35db64adc43e4e4082b35874e88538cd906904c1973a",
+      "source_sha256": null,
+      "public_sha256": "d043f22d1e4ac2801a8bd727a466d347c8c7727036760cd8ae74656a48a2cd7b",
+      "source_role": "public-documentation-or-regression",
+      "decision": "English prose and reviewed public bindings; no live deployment, publisher/UI changes or concurrent review patch."
+    },
+    {
+      "path": "docs/current-status.md",
+      "before_sha256": "6ad341e3fe02aaa577bfabc49e7211a328bae6cf16a48c0a9b5c9dd104a42d3a",
+      "source_sha256": null,
+      "public_sha256": "fc04fe5c2e6937be3fd269d3bd636d44bf4e39dd05de95497936624fb5a63efc",
+      "source_role": "public-documentation-or-regression",
+      "decision": "English prose and reviewed public bindings; no live deployment, publisher/UI changes or concurrent review patch."
+    },
+    {
+      "path": "docs/implementation-review-map.md",
+      "before_sha256": "d88b0cbe714c8b977d27627342b5712ff902b69351d8ce1696f7ff3a4df3bffd",
+      "source_sha256": null,
+      "public_sha256": "869f1b5b8fd8415e3b291f85f0ee46c1b5d750e9a65500b8424ea32db17b5906",
+      "source_role": "public-documentation-or-regression",
+      "decision": "English prose and reviewed public bindings; no live deployment, publisher/UI changes or concurrent review patch."
+    },
+    {
+      "path": "docs/v3/README.md",
+      "before_sha256": "4fd2f7e79cad25b52f5ff05d1fe22b208a6d80a10f77879d307a6659c8b4ead6",
+      "source_sha256": null,
+      "public_sha256": "7260dabcdd49d2080223952d24250bb56cf68e3f82b4ad1daa9f00fccee362ab",
+      "source_role": "public-documentation-or-regression",
+      "decision": "English prose and reviewed public bindings; no live deployment, publisher/UI changes or concurrent review patch."
+    },
+    {
+      "path": "docs/v3/public-source-port-2026-10-22-thumbnail.md",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "738d488ae2a19cf7d159e7082c14dfd859314413f3f2269533c9a3ccd31b6cf9",
+      "source_role": "public-documentation-or-regression",
+      "decision": "English prose and reviewed public bindings; no live deployment, publisher/UI changes or concurrent review patch."
+    },
+    {
+      "path": "docs/v3/relay-clock-monitor.md",
+      "before_sha256": "9f8bf66dc1d3dbae5d9c69a2bac56d197535169aef465d2f21e0fc41001753be",
+      "source_sha256": null,
+      "public_sha256": "bb5176c5c013212db5cfe787346c245c8f7670484292cbebdea0641bb7d8c9f2",
+      "source_role": "public-documentation-or-regression",
+      "decision": "English prose and reviewed public bindings; no live deployment, publisher/UI changes or concurrent review patch."
+    },
+    {
+      "path": "docs/v3/twitch-thumbnail-monitor.md",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "4e1557062b137358c8ea048a378b171d32bd24785b4b0259f59647c8b062110f",
+      "source_role": "public-documentation-or-regression",
+      "decision": "English prose and reviewed public bindings; no live deployment, publisher/UI changes or concurrent review patch."
+    },
+    {
+      "path": "ops/config/twitch_thumbnail.example.json",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "54584badd1a82c5346f575a3c34ec8bc80d80d8b171bf455d856af207c3a933c",
+      "source_role": "public-documentation-or-regression",
+      "decision": "English prose and reviewed public bindings; no live deployment, publisher/UI changes or concurrent review patch."
+    },
+    {
+      "path": "ops/monitoring/prometheus/rules/twitch_thumbnail.yml",
+      "before_sha256": null,
+      "source_sha256": "5cd4fde142556c19664bbe8b08826390d90584c28c7de00db62bd789b54b31cd",
+      "public_sha256": "5cd4fde142556c19664bbe8b08826390d90584c28c7de00db62bd789b54b31cd",
+      "source_role": "public-source-adaptation",
+      "decision": "English prose and reviewed public bindings; no live deployment, publisher/UI changes or concurrent review patch."
+    },
+    {
+      "path": "ops/monitoring/prometheus/rules/viewer_clock.yml",
+      "before_sha256": null,
+      "source_sha256": "c18c031fab7a60183cda1ca18ff55e4141308d50c10519ef436770981881e5b2",
+      "public_sha256": "c18c031fab7a60183cda1ca18ff55e4141308d50c10519ef436770981881e5b2",
+      "source_role": "public-source-adaptation",
+      "decision": "English prose and reviewed public bindings; no live deployment, publisher/UI changes or concurrent review patch."
+    },
+    {
+      "path": "ops/monitoring/prometheus/tests/twitch_thumbnail.yml",
+      "before_sha256": null,
+      "source_sha256": "5b7cc18e8bede3379a0a804275f35272f572c5344964f2b419093bb022f661d8",
+      "public_sha256": "5b7cc18e8bede3379a0a804275f35272f572c5344964f2b419093bb022f661d8",
+      "source_role": "public-source-adaptation",
+      "decision": "English prose and reviewed public bindings; no live deployment, publisher/UI changes or concurrent review patch."
+    },
+    {
+      "path": "ops/monitoring/prometheus/tests/viewer_clock.yml",
+      "before_sha256": null,
+      "source_sha256": "4d22109be55ac757634bdd260c5fe9a0484b2289dbb71b20ab23806cc197c6e7",
+      "public_sha256": "4d22109be55ac757634bdd260c5fe9a0484b2289dbb71b20ab23806cc197c6e7",
+      "source_role": "public-source-adaptation",
+      "decision": "English prose and reviewed public bindings; no live deployment, publisher/UI changes or concurrent review patch."
+    },
+    {
+      "path": "ops/oci-monitor/clock_review_isolation_fixture.py",
+      "before_sha256": "b058784f45262a6f764f37fded5a19e3b271e0f77ef78d0e5f4213b907189494",
+      "source_sha256": "2860e1d2ad2bf7ec194e2a7dd4a6bde9ebb6765ea7d749f1034bed2efffe721f",
+      "public_sha256": "a1e7d793833f7df121d0427bc57dfc4c2c1c292b50e0b74464b7a7ed5d66c19d",
+      "source_role": "public-source-adaptation",
+      "decision": "English prose and reviewed public bindings; no live deployment, publisher/UI changes or concurrent review patch."
+    },
+    {
+      "path": "ops/scripts/stream_v3_clock_alert_notify.py",
+      "before_sha256": null,
+      "source_sha256": "20588bdd935d34d72301e3cb1526af5ceac3507f1a325dfa21c800d795876d2e",
+      "public_sha256": "4d14a430511e6f100ba46bc7fbe2a6242e070a4f5cec36ffbc049591325801f7",
+      "source_role": "public-source-adaptation",
+      "decision": "English prose and reviewed public bindings; no live deployment, publisher/UI changes or concurrent review patch."
+    },
+    {
+      "path": "ops/scripts/stream_v3_oci_monitor_exporter_overlay.py",
+      "before_sha256": "ad866eb3c1fb85e27c480fba8ecc2a38e10e6cd6ccbfbbf7d2e6569519be65f2",
+      "source_sha256": "8aeb49181660a063f588d2f7b70378a5e37583b0ba7d3d407854c7613b580bbb",
+      "public_sha256": "f96019b548f2866bc3606c7ba0e4ba380de9951fe0ecb5bdea39ba7701efd9df",
+      "source_role": "public-source-adaptation",
+      "decision": "English prose and reviewed public bindings; no live deployment, publisher/UI changes or concurrent review patch."
+    },
+    {
+      "path": "ops/scripts/stream_v3_oci_monitor_pull.py",
+      "before_sha256": "746aa3000635b78934246efc29ca24580d0e0278e6e2619b87b31161d9625a27",
+      "source_sha256": "c4c21dca017ed5ae4920a7fa4228e3c662ef2b41cb9094f6a7e281e4e71f991c",
+      "public_sha256": "91f0d2220d963a878797a4fe69507de00e70996fc7484752bcaa6f6d33121245",
+      "source_role": "public-source-adaptation",
+      "decision": "English prose and reviewed public bindings; no live deployment, publisher/UI changes or concurrent review patch."
+    },
+    {
+      "path": "ops/scripts/stream_v3_twitch_thumbnail_source.py",
+      "before_sha256": null,
+      "source_sha256": "0d7c02944df2278500fd99d4202ec617af476ba7d49e9cc32693249d583930d3",
+      "public_sha256": "78cbd1b06dad4f8d776180be39948ced6256daced614111016cb073734491ebd",
+      "source_role": "public-source-adaptation",
+      "decision": "English prose and reviewed public bindings; no live deployment, publisher/UI changes or concurrent review patch."
+    },
+    {
+      "path": "ops/systemd/stream-v3-twitch-thumbnail.service",
+      "before_sha256": null,
+      "source_sha256": "dcc4fea9792f2f3ac3b2f4725b8b438e1c9db4460546ae983d9245c86fe5654b",
+      "public_sha256": "dcc4fea9792f2f3ac3b2f4725b8b438e1c9db4460546ae983d9245c86fe5654b",
+      "source_role": "public-source-adaptation",
+      "decision": "English prose and reviewed public bindings; no live deployment, publisher/UI changes or concurrent review patch."
+    },
+    {
+      "path": "src/stream_v3/frame_receiver.py",
+      "before_sha256": "fe9e166772417770431b8fc28c6720f5382865f7c97fa94bd297096ef8e6411a",
+      "source_sha256": "bb28bdceefd3d02d775180b56661172cb4dac4df879b5413719ab13f4e905708",
+      "public_sha256": "c1947264ca26e1adeefa8368398a21eda1ef3c90390318fe778d4d41a6412391",
+      "source_role": "public-source-adaptation",
+      "decision": "English prose and reviewed public bindings; no live deployment, publisher/UI changes or concurrent review patch."
+    },
+    {
+      "path": "src/stream_v3/monitor_facts.py",
+      "before_sha256": "e91b60f54a0f7045ca19ec71d554e813a01ba92c7980b786c5df75a4eab3a3e4",
+      "source_sha256": "558a57e8d8ebc15a5977d85a4046225df302b6393756d049af68a58100ca0859",
+      "public_sha256": "5a35987e1b8a1b1fbcbb221e6c760b9587dd1861b06890cf9933638368244364",
+      "source_role": "public-source-adaptation",
+      "decision": "English prose and reviewed public bindings; no live deployment, publisher/UI changes or concurrent review patch."
+    },
+    {
+      "path": "src/stream_v3/oci_monitor_metrics.py",
+      "before_sha256": "8950de47a4aa1e93222ccec0333bee4915690282934c8a18b0ecc76232f69589",
+      "source_sha256": "52c3c4a3e6bcd67fdaa76f9842b5280296268faedb70dbb345a27595564ef690",
+      "public_sha256": "07862aed8d0958e98a822ebaa1e829ad6b00dcd3cde1e6a13b7e763519536c1b",
+      "source_role": "public-source-adaptation",
+      "decision": "English prose and reviewed public bindings; no live deployment, publisher/UI changes or concurrent review patch."
+    },
+    {
+      "path": "src/stream_v3/oci_monitor_probe.py",
+      "before_sha256": "02d6bd3cc27bb109ede9048588409004bbbbd4d70467b15b5b3801c5cf2005bd",
+      "source_sha256": "ad23228f69c929b95c5ee8406da36af7b8508dd540905e157539043c30398f8c",
+      "public_sha256": "6a5f76a1558f116d63589be0553c0aa89c625436755a5fe4c9ac4204e553ed57",
+      "source_role": "public-source-adaptation",
+      "decision": "English prose and reviewed public bindings; no live deployment, publisher/UI changes or concurrent review patch."
+    },
+    {
+      "path": "src/stream_v3/twitch_thumbnail.py",
+      "before_sha256": null,
+      "source_sha256": "097e8f2abdfe71175447ca31b75c478eb66358b5a2ff716f032553469b4e2788",
+      "public_sha256": "355649aa69299e591079582144cd2c9e01ae93cc741dbdc6f2e0d6cfc306d730",
+      "source_role": "public-source-adaptation",
+      "decision": "English prose and reviewed public bindings; no live deployment, publisher/UI changes or concurrent review patch."
+    },
+    {
+      "path": "src/stream_v3/twitch_thumbnail_metrics.py",
+      "before_sha256": null,
+      "source_sha256": "04b80de8fba6e54552156e93f4a2a7c1383e180e9ff224c52de3ccc5c0e6802a",
+      "public_sha256": "d824eb6e20a9236509cb91d20c91f1b36055e469312b596c46cd52bde43ee105",
+      "source_role": "public-source-adaptation",
+      "decision": "English prose and reviewed public bindings; no live deployment, publisher/UI changes or concurrent review patch."
+    },
+    {
+      "path": "src/stream_v3/twitch_thumbnail_worker.py",
+      "before_sha256": null,
+      "source_sha256": "77037880eeec29a2998e3b665747ab7c38a4d4e6b7f6cb726a2b9c94112c6649",
+      "public_sha256": "dbb368d44d7294115c14d84cd5013421593177182fcb5c416f3d14b960bc5cac",
+      "source_role": "public-source-adaptation",
+      "decision": "English prose and reviewed public bindings; no live deployment, publisher/UI changes or concurrent review patch."
+    },
+    {
+      "path": "tests/test_clock_observation_alerts.py",
+      "before_sha256": null,
+      "source_sha256": "69fc92e3b6a959c897e737ad46d0917043afd3cdb98fd09eb683732f6a4d3c4a",
+      "public_sha256": "8939ef68b524eb0a9ae6777421a41028584e9953e5f13bdd569f09b958e54ea5",
+      "source_role": "public-source-adaptation",
+      "decision": "English prose and reviewed public bindings; no live deployment, publisher/UI changes or concurrent review patch."
+    },
+    {
+      "path": "tests/test_frame_receiver.py",
+      "before_sha256": "fdb0f4c87328ac9c8eed21443e7d133362748b68acc5174945f1162df8863a27",
+      "source_sha256": "484ea4edc022ea08d5990a3db0fa2ecd4d4204e5b201c7ad35fd18bf8cf7742f",
+      "public_sha256": "484ea4edc022ea08d5990a3db0fa2ecd4d4204e5b201c7ad35fd18bf8cf7742f",
+      "source_role": "public-source-adaptation",
+      "decision": "English prose and reviewed public bindings; no live deployment, publisher/UI changes or concurrent review patch."
+    },
+    {
+      "path": "tests/test_monitor_facts.py",
+      "before_sha256": "5a8ca26dacb3fdabc489dc3154d921af4571ba8043a735a00da632ad490153f9",
+      "source_sha256": "cfc6ae4c21519f72d6a9ae49af1e81091bd30ecdd3be2c4a4ace1dc2e03ee8d9",
+      "public_sha256": "a970ac084221841fc831cbc592374d62aa7d8c15f0d18e3448d03b1fdf07a21f",
+      "source_role": "public-source-adaptation",
+      "decision": "English prose and reviewed public bindings; no live deployment, publisher/UI changes or concurrent review patch."
+    },
+    {
+      "path": "tests/test_twitch_thumbnail.py",
+      "before_sha256": null,
+      "source_sha256": "5f63fb73846046c183ef5585db6410b3641532a194a6064883b6711a395a6f49",
+      "public_sha256": "5f63fb73846046c183ef5585db6410b3641532a194a6064883b6711a395a6f49",
+      "source_role": "public-source-adaptation",
+      "decision": "English prose and reviewed public bindings; no live deployment, publisher/UI changes or concurrent review patch."
+    },
+    {
+      "path": "tests/test_twitch_thumbnail_api_compatibility.py",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "af4375788ae4061f7afe2de9a82788e06900567332769c99ee1a5e55f7f00412",
+      "source_role": "public-documentation-or-regression",
+      "decision": "English prose and reviewed public bindings; no live deployment, publisher/UI changes or concurrent review patch."
+    }
+  ]
+}

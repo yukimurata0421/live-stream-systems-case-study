@@ -1,0 +1,25 @@
+groups:
+  - name: twitch-thumbnail-observation
+    interval: 30s
+    rules:
+      - alert: TwitchThumbnailObservationUnavailable
+        expr: (stream_v3_twitch_thumbnail_seconds_since_last_valid_observation{job="stream_v3_clock_observer"} > 300) and on(job, instance, target, scope) (stream_v3_twitch_thumbnail_api_live{job="stream_v3_clock_observer"} == 1)
+        labels:
+          severity: warning
+          component: twitch-thumbnail
+        annotations:
+          summary: Twitch API reports LIVE but thumbnail clock observation is unavailable
+      - alert: TwitchThumbnailWorkerUnavailable
+        expr: stream_v3_twitch_thumbnail_seconds_since_last_cycle{job="stream_v3_clock_observer"} > 300
+        labels:
+          severity: warning
+          component: twitch-thumbnail
+        annotations:
+          summary: Twitch thumbnail worker has not published for over five minutes
+      - alert: TwitchThumbnailStale
+        expr: (stream_v3_twitch_thumbnail_frame_age_seconds{job="stream_v3_clock_observer"} > 600) and on(job, instance, target, scope) (stream_v3_twitch_thumbnail_clock_verified{job="stream_v3_clock_observer"} == 1)
+        labels:
+          severity: warning
+          component: twitch-thumbnail
+        annotations:
+          summary: Twitch thumbnail clock is over ten minutes old; public video playback is unverified

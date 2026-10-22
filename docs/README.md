@@ -25,6 +25,7 @@ for a path that fits their role.
 | What was measured, tested, or left unknown? | [Scorecard](operational-scorecard.md). |
 | Where are the implementation and tests? | [Implementation review map](implementation-review-map.md). |
 | Is a moving clock proof of public playback? | [Return-feed clock monitor](v3/relay-clock-monitor.md). |
+| What can Twitch's provider image add? | [Thumbnail clock observation](v3/twitch-thumbnail-monitor.md), separate from player E2E. |
 | How can relay files be recovered without starting services? | [OCI backup and restore](v3/oci-backup-and-restore.md). |
 | How are network failure and missing evidence distinguished? | [TCP investigation](v3/tcp-stall-case-study.md). |
 | How does public status stay separate from control? | [Publisher boundary](v3/public-publisher-boundary.md). |
