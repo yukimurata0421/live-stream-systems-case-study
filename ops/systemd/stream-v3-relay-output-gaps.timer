@@ -1,0 +1,9 @@
+[Unit]
+Description=Record relay output clock gaps every 15 minutes (history keeps about an hour)
+
+[Timer]
+OnCalendar=*:0/15
+Persistent=true
+
+[Install]
+WantedBy=timers.target

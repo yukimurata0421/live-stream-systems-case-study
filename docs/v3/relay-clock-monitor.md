@@ -142,6 +142,15 @@ quality metrics are missing for five minutes. Fresh, bound fallback standby is
 excluded. It reuses the existing warning delivery loop; two distinct fresh
 observations are required to resolve a warning. No recovery path is added.
 
+The monitor's ten-second history rotates after about an hour. A small recorder
+([script](../../ops/scripts/relay_output_gap_recorder.py),
+[user timer](../../ops/systemd/stream-v3-relay-output-gaps.timer)) appends each span
+where frame capture itself failed between two verified clock readings, so daily
+interruptions remain comparable. A clock jump alone is not counted: after an
+interruption the live clock simply shows the current time, and a single OCR
+misread leaves the same spacing. The span estimates unseen relay output, not
+viewer playback; the reader shares the delivery host's WAN.
+
 This analyzer has no binary-threshold retry. Low UTC confidence on returned
 frames can raise the observation warning while frames and forward bytes continue;
 [current status](../current-status.md) tracks that open item. The

@@ -13,6 +13,7 @@ MODES = ("off", "dry_run", "enforce")
 # (name, minimum, maximum) for every integer field.
 _INT_FIELDS = (
     ("version", 0, 2**31),
+    ("stall_grace_sec", 0, 600),
     ("stall_confirm_samples", 2, 30),
     ("stall_lastsnd_ms", 1000, 600_000),
     ("stall_notsent_bytes", 1, 1 << 30),
@@ -23,6 +24,10 @@ _INT_FIELDS = (
     ("max_per_day", 0, 500),
     ("verify_window_sec", 10, 600),
 )
+
+
+# Added after v1 policies were signed; absent means the dataclass default.
+_OPTIONAL = frozenset({"stall_grace_sec"})
 
 
 class PolicyError(ValueError):
@@ -37,6 +42,9 @@ class Policy:
     stall_lastsnd_ms: int = 4000
     stall_notsent_bytes: int = 8192
     stall_unacked: int = 64
+    # The stream engine replaces a FFmpeg child whose connection died on its own (14-55 s after
+    # the stall began in the 2026-09/10 record). Acting earlier only races that self-recovery.
+    stall_grace_sec: int = 90
     min_ffmpeg_uptime_sec: int = 20
     cooldown_sec: int = 60
     max_per_hour: int = 4
@@ -62,6 +70,9 @@ def parse(value: Any) -> Policy:
         raise PolicyError("POLICY_MODE_INVALID")
     fields: dict[str, Any] = {"mode": value["mode"]}
     for name, minimum, maximum in _INT_FIELDS:
+        if name in _OPTIONAL and name not in value:
+            fields[name] = getattr(Policy, name)
+            continue
         item = value.get(name)
         if type(item) is not int or not minimum <= item <= maximum:
             raise PolicyError(f"POLICY_FIELD_INVALID:{name}")

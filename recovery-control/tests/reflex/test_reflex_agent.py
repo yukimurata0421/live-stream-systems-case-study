@@ -21,7 +21,7 @@ def use_policy(h: Harness, tmp_path: Path, **fields) -> Policy:
     """Install a validly signed cached policy, as if adopted from CRA."""
     key_path = tmp_path / f"policy-{len(list(tmp_path.glob('policy-*')))}.key"
     public = signing.generate_key(key_path)
-    policy = dataclasses.replace(Policy(), **{"version": 1, "mode": "enforce", **fields})
+    policy = dataclasses.replace(Policy(), **{"version": 1, "mode": "enforce", "stall_grace_sec": 0, **fields})
     envelope = policy_mod.sign_envelope(signing.load_private_key(key_path), policy)
     h.config = dataclasses.replace(
         h.config, central=CentralConfig(url="http://127.0.0.1:9", policy_public_key=public, agent_key_path=key_path)

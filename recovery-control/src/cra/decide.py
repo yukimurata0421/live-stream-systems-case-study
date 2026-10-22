@@ -30,6 +30,7 @@ class StallTracker:
     last_bytes_sent: int = -1
     last_bytes_acked: int | None = None
     streak: int = 0
+    stall_started_at: datetime | None = None  # previous sample time when the streak began
     last_observed_at: datetime | None = None
     identity: tuple[Any, ...] = ()
     criteria: tuple[int, ...] = ()
@@ -56,17 +57,29 @@ class StallTracker:
             self.last_bytes_sent = obs.tcp.bytes_sent if obs.tcp else -1
             self.last_bytes_acked = obs.tcp.bytes_acked if obs.tcp else None
             self.streak = 0
+            self.stall_started_at = None
             return False, 0
         if obs.sequence == self.last_sequence:
             return self.streak > 0, self.streak
         tcp = obs.tcp
         stalled = tcp is not None and stall_sample(tcp, self.last_bytes_sent, self.last_bytes_acked, policy)
+        if stalled and self.streak == 0:
+            self.stall_started_at = self.last_observed_at
+        elif not stalled:
+            self.stall_started_at = None
         self.last_sequence = obs.sequence
         self.last_observed_at = obs.observed_at
         self.last_bytes_sent = tcp.bytes_sent if tcp else -1
         self.last_bytes_acked = tcp.bytes_acked if tcp else None
         self.streak = self.streak + 1 if stalled else 0
         return stalled, self.streak
+
+
+def stall_duration(tracker: StallTracker, now: datetime) -> float:
+    """Seconds since the current stall began; 0 when there is none."""
+    if tracker.streak == 0 or tracker.stall_started_at is None:
+        return 0.0
+    return max(0.0, (now - tracker.stall_started_at).total_seconds())
 
 
 def stall_sample(tcp: TcpMetrics, last_bytes_sent: int, last_bytes_acked: int | None, policy: Policy) -> bool:
@@ -103,6 +116,7 @@ def decide(
     now: datetime,
     obs: Observation,
     stall_streak: int,
+    stall_duration_sec: float,
     network: Network | None,
     history: History,
     policy: Policy,
@@ -119,6 +133,10 @@ def decide(
         reason = "STALL_UNCONFIRMED" if stall_streak else ("NO_TCP_METRICS" if obs.tcp is None else "HEALTHY")
         return Decision(NONE, reason)
 
+    if stall_duration_sec < policy.stall_grace_sec:
+        # Confirmed, but the engine normally replaces a dead connection by itself within this window.
+        return Decision(NONE, "STALL_CONFIRMED", ("WITHIN_ENGINE_GRACE",))
+
     blockers: list[str] = []
     if network is None:
         blockers.append("NETWORK_NOT_PROBED")
@@ -132,6 +150,8 @@ def decide(
         blockers.append("FFMPEG_NOT_RUNNING")
     if not obs.target_valid:
         blockers.append("TARGET_UNAVAILABLE")
+    if obs.raw.get("runtime_lifecycle_state") not in (None, "FFMPEG_RUNNING"):
+        blockers.append("FFMPEG_NOT_IN_RUNNING_STATE")  # exiting or waiting to restart already
     if obs.ffmpeg_uptime_sec < policy.min_ffmpeg_uptime_sec:
         blockers.append("FFMPEG_TOO_YOUNG")
     if obs.in_flight_count != 0:

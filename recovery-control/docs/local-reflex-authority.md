@@ -74,6 +74,22 @@ another path, so whether they would have recovered on their own is unknown.
 The collector samples every five seconds; the replay confirms after two
 intervals to match the agent's five two-second samples.
 
+## Waiting for the engine
+
+In the same record, 40 of the 42 confirmed stalls fell between 06:28 and 06:36
+JST: the home WAN address is renumbered around that time each day, and the old
+connection never comes back. FFmpeg then exits on its own and the stream engine
+starts the next generation 5 s later, 14-55 s after the stall began. Acting at
+confirmation (about 10 s) would race that self-recovery every morning.
+
+A confirmed stall therefore stays `WITHIN_ENGINE_GRACE` until it has lasted
+`stall_grace_sec` (default 90 s; optional in v1 policies) on the same generation
+and connection. Network probing waits for the same point, and a FFmpeg that is
+already exiting or waiting to restart is left to the engine. Replaying the record
+with a 90 s grace yields no intervention candidates, so the agent is now insurance
+for a stall the engine does not resolve. Shortening the daily interruption itself
+is a delivery runtime question, not a reflex one.
+
 ## Executor fence and authority
 
 Requests stay on `runtime.typed_effect_request.v2`, so `enforce` needs no Pod

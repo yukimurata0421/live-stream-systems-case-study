@@ -111,6 +111,12 @@ progress, after a replay of recorded samples showed that the earlier
 controller still uses a `bytes_sent` criterion of the same kind, so it can miss
 an acknowledgement stall until the agent takes over in `enforce`.
 
+On 2026-10-23, most recorded stalls were traced to the daily WAN address
+renumbering around 06:30 JST, after which the stream engine recovers by itself.
+The agent now waits 90 s (signed policy v2, still `dry_run`) before a stall can
+become a restart candidate. A relay output recorder keeps each daily
+interruption; the first entry, at 06:31 JST, left 41 s of relay output unseen.
+
 ## Deliberately Disabled
 
 - CRA production authority (`production_behavior_change_authorized=false`).

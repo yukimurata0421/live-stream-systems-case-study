@@ -1,0 +1,10 @@
+[Unit]
+Description=Record gaps in the OCI relay output clock before the monitor history rotates
+
+# User unit on the monitoring host: it reads the relay clock monitor's history and writes only
+# its own append-only file. Install the script and adjust the paths before enabling.
+[Service]
+Type=oneshot
+Nice=19
+IOSchedulingClass=idle
+ExecStart=/usr/bin/python3 %h/.local/lib/stream-v3-relay-gaps/relay_output_gap_recorder.py --history-dir %h/projects/stream_v3/.state/arena-monitor/oci_monitor --output %h/.local/share/stream-v3-relay-gaps/gaps.jsonl

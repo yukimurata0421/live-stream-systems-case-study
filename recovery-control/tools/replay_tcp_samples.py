@@ -82,6 +82,7 @@ class Replay:
     open: Detection | None = None
     first_stalled_at: datetime | None = None
     detections: list[Detection] = field(default_factory=list)
+    candidates: list[Detection] = field(default_factory=list)  # still stalled after the grace window
 
     def step(self, obs: Observation) -> None:
         if self.open and obs.generation_key != self.open.generation_key:
@@ -105,17 +106,27 @@ class Replay:
                 self.first_stalled_at or obs.observed_at,
             )
             self.detections.append(self.open)
+        started = self.tracker.stall_started_at
+        if (
+            self.open
+            and stalled
+            and started is not None
+            and (obs.observed_at - started).total_seconds() >= self.policy.stall_grace_sec
+            and (not self.candidates or self.candidates[-1] is not self.open)
+        ):
+            self.candidates.append(self.open)
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="replay_tcp_samples")
     parser.add_argument("files", nargs="*", help="collector samples.jsonl files; stdin when omitted")
     parser.add_argument("--confirm", type=int, default=2)
+    parser.add_argument("--grace-sec", type=int, default=90, help="stall_grace_sec: when a confirmed stall becomes a candidate")
     parser.add_argument("--max-gap-sec", type=float, default=8.0)
     parser.add_argument("--window-sec", type=float, default=120.0)
     parser.add_argument("--lookback-sec", type=float, default=120.0, help="how far before a replacement a detection counts")
     args = parser.parse_args(argv)
-    policy = Policy(stall_confirm_samples=args.confirm)
+    policy = Policy(stall_confirm_samples=args.confirm, stall_grace_sec=args.grace_sec)
 
     replays = {name: Replay(name, policy, args.max_gap_sec, args.window_sec) for name in ("ack", "bytes_sent_only")}
     replacements: list[tuple[datetime, str, str]] = []
@@ -147,7 +158,9 @@ def main(argv: list[str] | None = None) -> int:
 
     for replay in replays.values():
         for detection in replay.detections:
-            print(json.dumps({"type": "detection", **detection.to_dict()}))
+            print(
+                json.dumps({"type": "detection", **detection.to_dict(), "grace_candidate": any(c is detection for c in replay.candidates)})
+            )
     matched = Counter()
     for at, before, after in replacements:
         hit = {
@@ -164,6 +177,7 @@ def main(argv: list[str] | None = None) -> int:
         "samples": counts["samples"],
         "samples_without_bytes_acked": counts["samples_without_bytes_acked"],
         "confirm_samples": args.confirm,
+        "grace_sec": args.grace_sec,
         "ffmpeg_replacements": len(replacements),
         "criteria": {
             name: {
@@ -171,6 +185,8 @@ def main(argv: list[str] | None = None) -> int:
                 "outcomes": dict(Counter(d.outcome for d in replay.detections)),
                 "replacements_detected_before": matched[name],
                 "detected_below_min_uptime": sum(d.uptime_sec < policy.min_ffmpeg_uptime_sec for d in replay.detections),
+                "grace_candidates": len(replay.candidates),
+                "grace_candidate_outcomes": dict(Counter(d.outcome for d in replay.candidates)),
             }
             for name, replay in replays.items()
         },

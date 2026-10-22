@@ -1,0 +1,48 @@
+{
+  "schema": "stream.public_port_record.v1",
+  "port_date_jst": "2026-10-23",
+  "scope": "CRA engine grace window and lifecycle guard; replay with grace; relay output interruption recorder.",
+  "source_lineage": {
+    "recovery_reflex_development_head": "602e8d8764e63941a2742c63f414745e829eb6fd",
+    "stream_development_commit": "15d31a3 (relay_output_gap_recorder only; other working changes in that checkout are not part of this port)",
+    "prior_public_head": "a051d1dc117449b7a0d9dce96bf87f5f0064497f"
+  },
+  "adaptations": [
+    "src/cra and tools are byte-identical to the development head; tests use repository-root imports.",
+    "The recorder and its test are verbatim; unit examples use home-relative paths.",
+    "The policy example shows stall_grace_sec explicitly."
+  ],
+  "omissions": [
+    {
+      "path": "development records (Japanese) and preserved evidence under the delivery host's state directory",
+      "reason": "host-specific operational evidence; summarized in English"
+    }
+  ],
+  "deployment_performed": false,
+  "remote_mutation_performed": false,
+  "commit_performed": true,
+  "push_performed": false,
+  "operated_state": {
+    "observed_at_jst": "2026-10-23",
+    "agent_and_central_release": "v4-dry-3f74a15ce2b7",
+    "policy": "v2 dry_run, stall_grace_sec 90",
+    "first_relay_output_interruption": "2026-10-23 06:31 JST, 41 s unseen"
+  },
+  "checks": {
+    "recovery_control_public_suite": {
+      "passed": 3380
+    },
+    "stream_public_suite": {
+      "passed": 1411,
+      "skipped": 9
+    },
+    "public_language": "PASS",
+    "public_port_digests": "PASS",
+    "mypy_strict_cra": "PASS",
+    "secret_scan": "PASS"
+  },
+  "unobserved": [
+    "a stall that outlives the grace window",
+    "the typical daily interruption length over several days"
+  ]
+}

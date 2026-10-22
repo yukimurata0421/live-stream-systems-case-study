@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any
 
 from cra import effect, signing
-from cra.decide import NONE, RESTART, WOULD_RESTART, Decision, History, StallTracker, decide
+from cra.decide import NONE, RESTART, WOULD_RESTART, Decision, History, StallTracker, decide, stall_duration
 from cra.observe import Endpoint, Network, Observation, Prober, read_observation
 from cra.policy import BUILTIN, Policy
 from cra.recovery import after_request, delivery_sample, sending_progress
@@ -180,7 +180,9 @@ class Agent:
         stalled, streak = self.tracker.update(obs, policy, max_gap_sec=self.config.interval_sec + self.config.observation_max_age_sec)
         self.counters.stalled_samples += int(stalled)
         endpoint = self.config.endpoint(obs)
-        network = self.prober.probe(endpoint) if endpoint is not None and streak >= policy.stall_confirm_samples else None
+        duration = stall_duration(self.tracker, obs.observed_at)
+        past_grace = streak >= policy.stall_confirm_samples and duration >= policy.stall_grace_sec
+        network = self.prober.probe(endpoint) if endpoint is not None and past_grace else None
         network_checked_at = self.clock()
         if network is not None:
             self.counters.confirmed += 1
@@ -189,6 +191,7 @@ class Agent:
             now=now,
             obs=obs,
             stall_streak=streak,
+            stall_duration_sec=duration,
             network=network,
             history=self.store.history(now=now, generation_key=obs.generation_key, mode=mode),
             policy=policy,
@@ -293,6 +296,7 @@ class Agent:
             now=now,
             obs=obs,
             stall_streak=min(streak, current_streak),
+            stall_duration_sec=stall_duration(self.tracker, obs.observed_at),
             network=network,
             history=history,
             policy=policy,

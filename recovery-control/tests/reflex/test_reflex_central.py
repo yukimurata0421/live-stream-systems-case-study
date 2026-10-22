@@ -61,7 +61,7 @@ class Central:
 @pytest.fixture
 def central(tmp_path: Path):
     c = Central(tmp_path)
-    c.publish(Policy(version=1, mode="dry_run"))
+    c.publish(Policy(stall_grace_sec=0, version=1, mode="dry_run"))
     c.start()
     yield c
     if c.httpd is not None:
@@ -90,7 +90,7 @@ def test_policy_adoption_and_audit_delivery(tmp_path: Path, central: Central) ->
     sync = connect(h, central)
     assert sync.cycle(h.clock()).startswith("ADOPTED")
     assert h.agent.policy().version == 1
-    central.publish(Policy(version=2, mode="enforce"))
+    central.publish(Policy(stall_grace_sec=0, version=2, mode="enforce"))
     sync.cycle(h.clock())
     assert h.agent.policy().mode == "enforce"
     for _ in range(6):
@@ -104,19 +104,23 @@ def test_policy_adoption_and_audit_delivery(tmp_path: Path, central: Central) ->
 def test_older_or_reused_policy_versions_are_rejected(tmp_path: Path, central: Central) -> None:
     h = Harness(tmp_path / "dell")
     sync = connect(h, central)
-    central.publish(Policy(version=5, mode="enforce"))
+    central.publish(Policy(stall_grace_sec=0, version=5, mode="enforce"))
     sync.cycle(h.clock())
-    central.envelope_path.write_text(json.dumps(policy_mod.sign_envelope(central.policy_key, Policy(version=4, mode="off"))))
+    central.envelope_path.write_text(
+        json.dumps(policy_mod.sign_envelope(central.policy_key, Policy(stall_grace_sec=0, version=4, mode="off")))
+    )
     assert sync.cycle(h.clock()).startswith("REJECTED")
-    central.envelope_path.write_text(json.dumps(policy_mod.sign_envelope(central.policy_key, Policy(version=5, mode="off"))))
+    central.envelope_path.write_text(
+        json.dumps(policy_mod.sign_envelope(central.policy_key, Policy(stall_grace_sec=0, version=5, mode="off")))
+    )
     assert sync.cycle(h.clock()).startswith("REJECTED")
-    assert h.agent.policy() == Policy(version=5, mode="enforce")
+    assert h.agent.policy() == Policy(stall_grace_sec=0, version=5, mode="enforce")
 
 
 def test_lan_outage_does_not_change_behaviour_and_backlog_drains(tmp_path: Path, central: Central) -> None:
     h = Harness(tmp_path / "dell")
     sync = connect(h, central)
-    central.publish(Policy(version=2, mode="enforce"))
+    central.publish(Policy(stall_grace_sec=0, version=2, mode="enforce"))
     sync.cycle(h.clock())
     central.stop()  # LAN down
     assert sync.cycle(h.clock()).startswith("ERROR")
@@ -192,13 +196,13 @@ def _reserved(seq: int, action_id: int, generation: str, minutes: float, *, mode
     )
 
 
-POLICIES = {2: {**Policy(version=2, mode="enforce").to_dict()}}
+POLICIES = {2: {**Policy(stall_grace_sec=0, version=2, mode="enforce").to_dict()}}
 
 
 def test_verify_clean_run_from_real_agent(tmp_path: Path, central: Central) -> None:
     h = Harness(tmp_path / "dell")
     sync = connect(h, central)
-    central.publish(Policy(version=2, mode="enforce", cooldown_sec=10))
+    central.publish(Policy(stall_grace_sec=0, version=2, mode="enforce", cooldown_sec=10))
     sync.cycle(h.clock())
     for _ in range(6):
         h.tick(stalled=True)
@@ -247,7 +251,7 @@ def test_verify_detects_policy_network_budget_and_result_gaps() -> None:
 
 
 def test_verify_flags_enforce_under_dry_run_policy() -> None:
-    policies = {2: Policy(version=2, mode="dry_run").to_dict()}
+    policies = {2: Policy(stall_grace_sec=0, version=2, mode="dry_run").to_dict()}
     records = [_reserved(1, 1, "pod/g1", 0), _record(2, "action_result", {"action_id": 1, "state": "EFFECT_OBSERVED"})]
     codes = [v["code"] for v in verify(records, policies, now=T0)["violations"]]
     assert codes == ["I7_ENFORCE_WITHOUT_ENFORCE_POLICY"]

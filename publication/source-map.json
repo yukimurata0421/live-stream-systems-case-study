@@ -2941,11 +2941,11 @@
     {
       "path": "docs/current-status.md",
       "source_role": "public-documentation",
-      "decision": "record the stall-criterion change and the production controller's criterion",
-      "before_sha256": "70261cd78b777c09597633df85e5379ba87634c981145723714ebd4eca60ec40",
+      "decision": "document the engine grace window and the relay output interruption record",
+      "before_sha256": "b3ef7422407e0ff110cbbe8d80a67945e466f14fb43bbf472c93ca8b8103233d",
       "source_sha256": null,
-      "public_sha256": "b3ef7422407e0ff110cbbe8d80a67945e466f14fb43bbf472c93ca8b8103233d",
-      "port_date_jst": "2026-10-22",
+      "public_sha256": "89fbe909237d7c3aa6478cb8db165f563f6c95e8b88daaeac024756f0b8def53",
+      "port_date_jst": "2026-10-23",
       "documentation_restructure": "New single page for volatile state.",
       "pre_twitch_observation_public_sha256": "040eac29174151f51e473f7f85e4aa23ff994be0079b3d4c011623b6ec7864ca",
       "pre_clock_monitor_public_sha256": "33263da6f88e0f7719830898ada90abd2a7e89c391a9684fdd7b604517bc020f",
@@ -3125,12 +3125,12 @@
     },
     {
       "path": "docs/v3/relay-clock-monitor.md",
-      "before_sha256": "9f8bf66dc1d3dbae5d9c69a2bac56d197535169aef465d2f21e0fc41001753be",
+      "before_sha256": "3adb3b9405fb0a8f9c6a3dfe1177b67b56a4dad6f64c1da243a925cbbe1b418c",
       "source_sha256": null,
-      "public_sha256": "3adb3b9405fb0a8f9c6a3dfe1177b67b56a4dad6f64c1da243a925cbbe1b418c",
-      "source_role": "public-documentation-or-regression",
-      "decision": "English prose and reviewed public bindings; no live deployment, publisher/UI changes or concurrent review patch.",
-      "port_date_jst": "2026-10-22",
+      "public_sha256": "49f0355b92173aea393199588e4c9bff592bfd97c1a40fc8d2680710a9648631",
+      "source_role": "public-documentation",
+      "decision": "document the engine grace window and the relay output interruption record",
+      "port_date_jst": "2026-10-23",
       "pre_thumbnail_clock_public_sha256": "9f8bf66dc1d3dbae5d9c69a2bac56d197535169aef465d2f21e0fc41001753be",
       "thumbnail_clock_port": "2026-10-22 committed source through 740bcc00; concurrent review excluded.",
       "pre_clock_documentation_review_public_sha256": "bb5176c5c013212db5cfe787346c245c8f7670484292cbebdea0641bb7d8c9f2",
@@ -3783,11 +3783,11 @@
     {
       "path": "recovery-control/docs/local-reflex-authority.md",
       "source_role": "public-documentation",
-      "decision": "document the acknowledgement stall criterion, the replay, fence reconciliation and authority handover",
-      "before_sha256": "c1c04061e1ec23222e732712f64ed9bd5d836ea07eebc94535d05b8e894df2ed",
+      "decision": "document the engine grace window and the relay output interruption record",
+      "before_sha256": "af1ed32e7867436f9b63c84423c68226bff1b487158d050982b0241367bdca72",
       "source_sha256": null,
-      "public_sha256": "af1ed32e7867436f9b63c84423c68226bff1b487158d050982b0241367bdca72",
-      "port_date_jst": "2026-10-22"
+      "public_sha256": "a4260eac4e610eab885f15705093e8583642af41c82089b456095bd6f9597b14",
+      "port_date_jst": "2026-10-23"
     },
     {
       "path": "recovery-control/ops/systemd/cra-agent.example.json",
@@ -3845,12 +3845,12 @@
     },
     {
       "path": "recovery-control/policy/cra_reflex_policy_v1.dry_run.json",
-      "source_role": "reflex-ops-example",
-      "decision": "verbatim",
-      "before_sha256": null,
-      "source_sha256": "305a299f9ff6f9ca637c384a2256ad865b79486f4f79b13294a4f53f9f861275",
-      "public_sha256": "305a299f9ff6f9ca637c384a2256ad865b79486f4f79b13294a4f53f9f861275",
-      "port_date_jst": "2026-10-22"
+      "source_role": "reflex-source",
+      "decision": "show stall_grace_sec explicitly",
+      "before_sha256": "305a299f9ff6f9ca637c384a2256ad865b79486f4f79b13294a4f53f9f861275",
+      "source_sha256": null,
+      "public_sha256": "2aef797fe1903d53b06112359e7031a60a2789037e8e1179c3e9a69b989cc3e8",
+      "port_date_jst": "2026-10-23"
     },
     {
       "path": "recovery-control/src/cra/__init__.py",
@@ -3865,10 +3865,10 @@
       "path": "recovery-control/src/cra/agent.py",
       "source_role": "reflex-source",
       "decision": "verbatim",
-      "before_sha256": "8737f1be3157770a8842500b66c1e863a8f050edf6c6a80178c30965ca4e87e9",
-      "source_sha256": "af7229bc79a8e63593a0226c951992f0583ad9c5035f8df2743216f1ff8dfcfe",
-      "public_sha256": "af7229bc79a8e63593a0226c951992f0583ad9c5035f8df2743216f1ff8dfcfe",
-      "port_date_jst": "2026-10-22"
+      "before_sha256": "af7229bc79a8e63593a0226c951992f0583ad9c5035f8df2743216f1ff8dfcfe",
+      "source_sha256": "293a1c36de018c945179350c1289e29deb796accad052e32adf285d6d02862c4",
+      "public_sha256": "293a1c36de018c945179350c1289e29deb796accad052e32adf285d6d02862c4",
+      "port_date_jst": "2026-10-23"
     },
     {
       "path": "recovery-control/src/cra/central/__init__.py",
@@ -3919,10 +3919,10 @@
       "path": "recovery-control/src/cra/decide.py",
       "source_role": "reflex-source",
       "decision": "verbatim",
-      "before_sha256": "b50aad72f8155be6f5a297e0db3948116fd5549d6b0f5f9df861d10b8d42a815",
-      "source_sha256": "3181d8ccb1a590085386353f98284d217bfed11ddf0e0af6907d703a7254d1ad",
-      "public_sha256": "3181d8ccb1a590085386353f98284d217bfed11ddf0e0af6907d703a7254d1ad",
-      "port_date_jst": "2026-10-22"
+      "before_sha256": "3181d8ccb1a590085386353f98284d217bfed11ddf0e0af6907d703a7254d1ad",
+      "source_sha256": "9d6ead2d181a2a679451fa46a3127cfc9fc64518529b71221cbbcd1b8dfb8f6b",
+      "public_sha256": "9d6ead2d181a2a679451fa46a3127cfc9fc64518529b71221cbbcd1b8dfb8f6b",
+      "port_date_jst": "2026-10-23"
     },
     {
       "path": "recovery-control/src/cra/effect.py",
@@ -3946,10 +3946,10 @@
       "path": "recovery-control/src/cra/policy.py",
       "source_role": "reflex-source",
       "decision": "verbatim",
-      "before_sha256": null,
-      "source_sha256": "54ecc6d02dd660db422eceffcdfc849ccac09b5958ec48169e6d0ee1dbc73775",
-      "public_sha256": "54ecc6d02dd660db422eceffcdfc849ccac09b5958ec48169e6d0ee1dbc73775",
-      "port_date_jst": "2026-10-22"
+      "before_sha256": "54ecc6d02dd660db422eceffcdfc849ccac09b5958ec48169e6d0ee1dbc73775",
+      "source_sha256": "ac6fdc293b74505278c76972b4fec4841ff4e43225d3e3d8a26cf9a02efd4881",
+      "public_sha256": "ac6fdc293b74505278c76972b4fec4841ff4e43225d3e3d8a26cf9a02efd4881",
+      "port_date_jst": "2026-10-23"
     },
     {
       "path": "recovery-control/src/cra/signing.py",
@@ -3980,12 +3980,12 @@
     },
     {
       "path": "recovery-control/tests/reflex/conftest.py",
-      "source_role": "reflex-test",
-      "decision": "split shared fakes from fixtures; repository-root test imports",
-      "before_sha256": null,
-      "source_sha256": "998ea1e0188de0f1cb0f2de01841d236a894896526f998f0a8277c3bfa204c95",
-      "public_sha256": "9b159e5d9a53f1806c1019cff57fd7bb2c3f6e22f8c505e58b977a5bd00e22a7",
-      "port_date_jst": "2026-10-22"
+      "source_role": "reflex-source",
+      "decision": "repository-root test imports; in-repository runtime_boundary",
+      "before_sha256": "9b159e5d9a53f1806c1019cff57fd7bb2c3f6e22f8c505e58b977a5bd00e22a7",
+      "source_sha256": "38723ac45ff1baef46845520da9c16cd00b0e18c92f9180a02b8e871d0c2354f",
+      "public_sha256": "ef78ac3281365e0ca2c6727aeca6c5bdca04ad79fd5b3d955f249d8223f0a0e7",
+      "port_date_jst": "2026-10-23"
     },
     {
       "path": "recovery-control/tests/reflex/support.py",
@@ -3999,20 +3999,20 @@
     {
       "path": "recovery-control/tests/reflex/test_reflex_agent.py",
       "source_role": "reflex-source",
-      "decision": "repository-root test imports; in-repository runtime_boundary instead of a sibling checkout",
-      "before_sha256": "be7f1233e3ba353972611fb38a41c6a5da2d0c9f19e70c5651ea958c24aa0213",
-      "source_sha256": "765d028fedd7c5eb0713ade0862d5b649e992069e3b955b7e07b74aa9d2c820b",
-      "public_sha256": "53e3d5f06095d0239fa9595bacb1ac70d7f2d7aae06cf188bbfa340e3cd86e21",
-      "port_date_jst": "2026-10-22"
+      "decision": "repository-root test imports; in-repository runtime_boundary",
+      "before_sha256": "53e3d5f06095d0239fa9595bacb1ac70d7f2d7aae06cf188bbfa340e3cd86e21",
+      "source_sha256": "7781ffddf22f476e3cc4f13c2618eb2a949615b8c305cf395ccea3fed63a5998",
+      "public_sha256": "df1848865afc5e567b1a16082d2c32facaa07ff4faa1bad3fac0cb2e1c1a017d",
+      "port_date_jst": "2026-10-23"
     },
     {
       "path": "recovery-control/tests/reflex/test_reflex_central.py",
       "source_role": "reflex-source",
-      "decision": "repository-root test imports; in-repository runtime_boundary instead of a sibling checkout",
-      "before_sha256": "61bf139959a7b784a1b225c4c098e070c188578c1eab5f58003f6f73e46b092f",
-      "source_sha256": "8e25ab017843d5651f77efb86f25ff8b1b5ce99fb94defb56f29eea6d76803d8",
-      "public_sha256": "55714ef9d26a0820813332f376ac4d460af0b3a933fd34cc9b35f3fb88fd5a41",
-      "port_date_jst": "2026-10-22"
+      "decision": "repository-root test imports; in-repository runtime_boundary",
+      "before_sha256": "55714ef9d26a0820813332f376ac4d460af0b3a933fd34cc9b35f3fb88fd5a41",
+      "source_sha256": "2f6cc4dad900f12fc5afe060aef87e1123db8353c8368abce86a327d68e9800c",
+      "public_sha256": "fd0f86dadc7dafc3158e29290743a72a6ebe35116c31d4b71d655bff9416afab",
+      "port_date_jst": "2026-10-23"
     },
     {
       "path": "recovery-control/tests/reflex/test_reflex_executor_compat.py",
@@ -4405,10 +4405,55 @@
       "path": "recovery-control/tools/replay_tcp_samples.py",
       "source_role": "reflex-source",
       "decision": "verbatim",
+      "before_sha256": "a1644cdc7bd640d0e9c5233ec2ea67154ea132087619bae7b2a1339904444cd3",
+      "source_sha256": "4a2a89539abd27588c49c60537ed0d99c51177f2923e4d042c5c403877a98517",
+      "public_sha256": "4a2a89539abd27588c49c60537ed0d99c51177f2923e4d042c5c403877a98517",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "ops/scripts/relay_output_gap_recorder.py",
+      "source_role": "reflex-source",
+      "decision": "verbatim",
       "before_sha256": null,
-      "source_sha256": "a1644cdc7bd640d0e9c5233ec2ea67154ea132087619bae7b2a1339904444cd3",
-      "public_sha256": "a1644cdc7bd640d0e9c5233ec2ea67154ea132087619bae7b2a1339904444cd3",
-      "port_date_jst": "2026-10-22"
+      "source_sha256": "1dfa225275980baf3317f47ec7d9a6711891cf3721a93d773161bcd7190ac046",
+      "public_sha256": "1dfa225275980baf3317f47ec7d9a6711891cf3721a93d773161bcd7190ac046",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "ops/systemd/stream-v3-relay-output-gaps.service",
+      "source_role": "reflex-source",
+      "decision": "user unit example for the monitoring host; home-relative paths",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "d70bdfcaf692916a4f7923ff44d9a1280b408d6f4cfaf843ea3ab20d41fb8c35",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "ops/systemd/stream-v3-relay-output-gaps.timer",
+      "source_role": "reflex-source",
+      "decision": "user unit example for the monitoring host; home-relative paths",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "11b7cd05cd8e366e84174b6ee165892a7586cf5f86a3911026015e8df020fcfa",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "recovery-control/tests/reflex/test_reflex_engine_grace.py",
+      "source_role": "reflex-source",
+      "decision": "repository-root test imports; in-repository runtime_boundary",
+      "before_sha256": null,
+      "source_sha256": "9de0f5907605292f939960fb1a58b879701eaf9180a76a6ded96606acc3d82f5",
+      "public_sha256": "d87151ddd4d3c4f7c490c7004441a922ea2a01346c6bf475c4114457fd37e5c7",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "tests/test_relay_output_gap_recorder.py",
+      "source_role": "reflex-source",
+      "decision": "verbatim",
+      "before_sha256": null,
+      "source_sha256": "3bc4ceea1e1d663bddd80daa60d891789258d07dce5dd75343eeae435fa81ff9",
+      "public_sha256": "3bc4ceea1e1d663bddd80daa60d891789258d07dce5dd75343eeae435fa81ff9",
+      "port_date_jst": "2026-10-23"
     }
   ],
   "omissions": [
@@ -4469,7 +4514,8 @@
     "publication/cra-reflex-port-20261022.json",
     "publication/thumbnail-evidence-port-20261022.json",
     "publication/private-path-allowlist.json",
-    "publication/cra-reflex-update-20261022.json"
+    "publication/cra-reflex-update-20261022.json",
+    "publication/cra-engine-grace-20261023.json"
   ],
   "evidence_checkpoint_cutoff_jst": "2026-10-14T00:04:57+09:00",
   "documentation_audience": "hiring and technical reviewers",
@@ -4643,6 +4689,12 @@
     "date_jst": "2026-10-22",
     "record": "publication/cra-reflex-update-20261022.json",
     "source_commit": "b7bd3d0c88cdb7b7036e9cb5132458d8d9fea010",
+    "deployment_performed": false,
+    "push_performed": false
+  },
+  "cra_engine_grace": {
+    "date_jst": "2026-10-23",
+    "record": "publication/cra-engine-grace-20261023.json",
     "deployment_performed": false,
     "push_performed": false
   }
