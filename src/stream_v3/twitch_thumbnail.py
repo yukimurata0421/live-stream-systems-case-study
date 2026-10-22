@@ -11,13 +11,32 @@ from urllib.error import HTTPError,URLError
 from urllib.parse import urlsplit
 from urllib.request import HTTPRedirectHandler,ProxyHandler,Request,build_opener
 
-from .viewer_clock import GrayImage,utc_timestamp
+from .viewer_clock import GrayImage,ClockReading,utc_timestamp
 from .viewer_clock_capture import ProbeError
 from .verified_clock import VerifiedClockAnalyzer,VerifiedClockConfig
 
 SCHEMA='stream_v3.twitch_thumbnail_observation.v1'
 SCOPE='twitch_provider_thumbnail'
 STALE_AFTER_SECONDS=840
+OCR_METHODS=('none','cached','original','contrast','binary','interpolation')
+OCR_FAILURES=('none','not_attempted','invalid_time','low_confidence','pair_mismatch','timeout','process_failed',
+              'transform_failed','value_changed','timestamp_binding','time_regressed','previous_stream')
+
+
+def clock_rois(config):
+    return {'jst':list(config.get('jst_roi',(.019,.968,.04,.022))),
+            'utc':list(config.get('utc_roi',(.0795,.968,.0415,.022)))}
+
+
+def pair_failure(readings):
+    errors={value.error for value in readings}
+    if errors.intersection(('deadline_exceeded','ocr_timeout')):return 'timeout'
+    if errors-{'','ocr_time_unreadable'}:return 'process_failed'
+    seconds=[value.seconds(0) for value in readings]
+    if any(value is None for value in seconds):return 'invalid_time'
+    if any(value.seconds(70) is None for value in readings):return 'low_confidence'
+    if (seconds[0]-seconds[1])%86400!=9*3600:return 'pair_mismatch'
+    return 'accepted'
 
 
 def epoch(value):
@@ -123,8 +142,8 @@ def decode_rois(body,config):
             image.load();size=image.size
             # Keep only the two small regions after this call.
             gray=GrayImage(image.width,image.height,image.convert('L').tobytes())
-            return (gray.crop(tuple(config.get('jst_roi',(.019,.968,.04,.022)))),
-                    gray.crop(tuple(config.get('utc_roi',(.081,.968,.04,.022))))),size
+            rois=clock_rois(config)
+            return (gray.crop(tuple(rois['jst'])),gray.crop(tuple(rois['utc']))),size
     except (OSError,ValueError):raise ProbeError('thumbnail_image_invalid') from None
 
 
@@ -135,10 +154,49 @@ class ThumbnailAnalyzer:
         self.verified=self.previous.get('last_verified',{})
         if self.previous.get('ocr_verified') is True:self.verified=self.previous
         self.ocr_counters={key:self.previous[key] if type(self.previous.get(key)) is int and self.previous[key]>=0 else 0
-                           for key in ('ocr_observations_total','ocr_binary_retries_total')}
-        self.ocr_activity={'ocr_attempted':False,'ocr_binary_retried':False}
+                           for key in ('ocr_observations_total','ocr_binary_retries_total','ocr_interpolation_retries_total',
+                                       'ocr_binary_accepted_total','ocr_interpolation_accepted_total',
+                                       'ocr_contrast_retries_total','ocr_contrast_accepted_total')}
+        self.ocr_activity={'ocr_attempted':False,'ocr_binary_retried':False,'ocr_interpolation_retried':False,'ocr_contrast_retried':False}
+        self.selected_method='none';self.stage_results={}
+
+    def _interpolation_retry(self,jst,utc,ocr):
+        readings=(jst,utc)
+        seconds=tuple(value.seconds(0) for value in readings)
+        # A retry needs an unchanged, confident clock as its anchor. Never
+        # resolve conflicting parseable readings by choosing another transform.
+        if (not any(value.seconds(70) is not None for value in readings)
+                or (all(value is not None for value in seconds) and (seconds[0]-seconds[1])%86400!=9*3600)):
+            return jst,utc,False,'not_attempted'
+        self.ocr_activity['ocr_interpolation_retried']=True
+        self.ocr_counters['ocr_interpolation_retries_total']+=1
+        try:
+            from PIL import Image
+            alternate=[]
+            for image in self.rois:
+                # Smooth JPEG stair steps before the OCR reader's nearest-
+                # neighbour enlargement; no digits are synthesized or repaired.
+                resized=Image.frombytes('L',(image.width,image.height),image.pixels).resize(
+                    (image.width*2,image.height*2),Image.Resampling.BILINEAR)
+                alternate.append(ocr(GrayImage(resized.width,resized.height,resized.tobytes())))
+            left,right=(value.seconds(70) for value in alternate)
+            unchanged=all(before is None or after.text==original.text
+                          for before,after,original in zip(seconds,alternate,readings))
+            if unchanged and left is not None and right is not None and (left-right)%86400==9*3600:
+                return *alternate,True,'accepted'
+            failure=pair_failure(alternate)
+            return jst,utc,False,'value_changed' if failure=='accepted' and not unchanged else failure
+        except Exception:return jst,utc,False,'transform_failed'
 
     def remember(self,row):
+        row['ocr_stage_results']=dict(self.stage_results)
+        if row.get('ocr_verified'):
+            row['ocr_method']=self.selected_method if self.ocr_activity['ocr_attempted'] else 'cached'
+            row['ocr_source_method']=self.selected_method if self.ocr_activity['ocr_attempted'] else self.previous.get('ocr_source_method','none')
+            row['ocr_failure_reason']='none'
+            if self.ocr_activity['ocr_attempted'] and self.selected_method in ('contrast','binary','interpolation'):
+                self.ocr_counters['ocr_'+self.selected_method+'_accepted_total']+=1
+        else:row['ocr_method']='none'
         row.update(self.ocr_counters,**self.ocr_activity)
         if row.get('ocr_verified') is True:
             self.verified={k:v for k,v in row.items() if k!='last_verified'}
@@ -147,11 +205,13 @@ class ThumbnailAnalyzer:
         return row
 
     def observe(self,body,source,ocr,*,now,forward_flowing=None):
-        self.ocr_activity={'ocr_attempted':False,'ocr_binary_retried':False}
+        self.ocr_activity={'ocr_attempted':False,'ocr_binary_retried':False,'ocr_interpolation_retried':False,'ocr_contrast_retried':False}
+        self.selected_method='none';self.stage_results={}
         previous=self.previous;identity=source['stream_id'];same=previous.get('stream_id')==identity
         row={'schema':SCHEMA,'target':'twitch_thumbnail','scope':SCOPE,'checked_at_utc':utc_timestamp(now),
              'api_collected_at_utc':source['collected_at'],'api_live':True,'stream_id':identity,
              'capture_ok':True,'ocr_verified':False,'clock_advancing':False,'clock_state':'OCR_UNCERTAIN',
+             'ocr_failure_reason':'not_attempted','clock_rois':clock_rois(self.config),
              'reason':'clock_pair_unreliable','unique_sample':False,'image_duplicate':False,
              'unique_samples_total':previous.get('unique_samples_total',0),'forward_flowing':forward_flowing,
              'last_progress_at_utc':previous.get('last_progress_at_utc') if same else None,
@@ -160,7 +220,7 @@ class ThumbnailAnalyzer:
         duplicate=same and digest is not None and digest==previous.get('image_sha256')
         if body is None and not duplicate:raise ProbeError('thumbnail_cache_unavailable')
         row.update(image_sha256=digest,image_duplicate=duplicate)
-        cached_clock=previous.get('ocr_verified') is True or previous.get('clock_state')=='WAITING_NEW_STREAM_THUMBNAIL'
+        cached_clock=(previous.get('ocr_verified') is True or previous.get('clock_state')=='WAITING_NEW_STREAM_THUMBNAIL') and previous.get('clock_rois')==row['clock_rois']
         if duplicate and cached_clock:
             if self.rois is None and body is not None:self.rois,_=decode_rois(body,self.config)
             for key in ('ocr_jst','ocr_utc','ocr_confidence_jst','ocr_confidence_utc','display_clock_at_utc','width','height','clock_pair_consistent'):
@@ -171,7 +231,24 @@ class ThumbnailAnalyzer:
             self.rois,(row['width'],row['height'])=decode_rois(body,self.config)
             self.ocr_activity['ocr_attempted']=True
             self.ocr_counters['ocr_observations_total']+=1
+            reads=[]
+            original_ocr=ocr
+            def tracked_ocr(image):
+                try:
+                    value=original_ocr(image)
+                    if not isinstance(value,ClockReading):value=ClockReading(error='ocr_failed')
+                except Exception as error:
+                    value=ClockReading(error='deadline_exceeded' if isinstance(error,TimeoutError) or isinstance(error,ProbeError) and str(error)=='deadline_exceeded' else 'ocr_failed')
+                reads.append(value)
+                return value
+            ocr=tracked_ocr
             jst,utc,retried,consistent=self.pair._read_pair(*self.rois,ocr)
+            self.stage_results['original']=pair_failure(reads[:2])
+            if retried:
+                self.stage_results['contrast']=pair_failure(reads[2:4])
+                self.ocr_activity['ocr_contrast_retried']=True
+                self.ocr_counters['ocr_contrast_retries_total']+=1
+            self.selected_method=('contrast' if retried else 'original') if consistent else 'none'
             # JPEG anti-aliasing can lower confidence even when both clocks
             # agree. One binary pass must preserve those exact readings and
             # meet the original confidence threshold; it is not a new vote.
@@ -184,10 +261,20 @@ class ThumbnailAnalyzer:
                     if (alternate[0].text==jst.text and alternate[1].text==utc.text
                             and alternate[0].seconds(70) is not None and alternate[1].seconds(70) is not None):
                         jst,utc=alternate;consistent=True
-                except Exception:pass
+                        self.selected_method='binary'
+                    failure=pair_failure(alternate)
+                    self.stage_results['binary']='accepted' if consistent else 'value_changed' if failure=='accepted' else failure
+                except Exception:self.stage_results['binary']='transform_failed'
+            if not consistent:
+                jst,utc,consistent,failure=self._interpolation_retry(jst,utc,ocr)
+                self.stage_results['interpolation']=failure
+                if consistent:self.selected_method='interpolation'
             row.update(ocr_jst=jst.text,ocr_utc=utc.text,ocr_confidence_jst=jst.confidence,ocr_confidence_utc=utc.confidence,
                        clock_pair_consistent=consistent,ocr_retried=retried)
-            if not consistent:return self.remember(row)
+            if not consistent:
+                failures=[value for value in self.stage_results.values() if value not in ('accepted','not_attempted')]
+                row['ocr_failure_reason']='timeout' if 'timeout' in failures else failures[-1] if failures else pair_failure((jst,utc))
+                return self.remember(row)
             seconds=utc.seconds(70);midnight=math.floor(now/86400)*86400
             stamp=min((midnight+seconds+x for x in (-86400,0,86400)),key=lambda x:abs(now-x))
             # A changed JPEG can still represent the same provider sample.
@@ -196,16 +283,16 @@ class ThumbnailAnalyzer:
             row['display_clock_at_utc']=utc_timestamp(stamp)
         started=epoch(source.get('started_at'))
         if stamp is None or not -2<=now-stamp or started is None:
-            row.update(reason='thumbnail_clock_or_stream_binding_uncertain');return self.remember(row)
+            row.update(reason='thumbnail_clock_or_stream_binding_uncertain',ocr_failure_reason='timestamp_binding');return self.remember(row)
         if stamp<started-30:
             if self.verified.get('stream_id')!=identity:
                 row.update(clock_state='WAITING_NEW_STREAM_THUMBNAIL',freshness_state='WAITING_NEW_STREAM_THUMBNAIL',
-                           reason='thumbnail_previous_stream_frame')
-            else:row.update(reason='thumbnail_clock_or_stream_binding_uncertain')
+                           reason='thumbnail_previous_stream_frame',ocr_failure_reason='previous_stream')
+            else:row.update(reason='thumbnail_clock_or_stream_binding_uncertain',ocr_failure_reason='timestamp_binding')
             return self.remember(row)
         before=epoch(self.verified.get('display_clock_at_utc')) if self.verified.get('stream_id')==identity else None
         if before is not None and stamp<before:
-            row.update(reason='thumbnail_clock_regressed');return self.remember(row)
+            row.update(reason='thumbnail_clock_regressed',ocr_failure_reason='time_regressed');return self.remember(row)
         progressed=before is not None and stamp>before
         unique=before is None or stamp>before
         row.update(ocr_verified=True,clock_state='CLOCK_OBSERVED' if before is None else 'ADVANCING_CONFIRMED' if progressed else 'UNCHANGED',

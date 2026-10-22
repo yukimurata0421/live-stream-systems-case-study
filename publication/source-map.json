@@ -42,11 +42,11 @@
     },
     {
       "path": "docs/00_INDEX.md",
-      "source_role": "public-documentation",
-      "decision": "link the 2026-10-22 CRA local reflex port",
-      "before_sha256": "56cb15aeeab03a5ddfe3541c7eaf265241e194d46047421e6afccecf7cc83481",
+      "source_role": "public-documentation-or-configuration",
+      "decision": "Additional conservative OCR, bounded ROI evidence and diagnostics; existing public bindings; source port only.",
+      "before_sha256": "46652547b62aca56b33dcf06c4d20b1f48684dac76fd952896b58cbf80f30bca",
       "source_sha256": null,
-      "public_sha256": "46652547b62aca56b33dcf06c4d20b1f48684dac76fd952896b58cbf80f30bca",
+      "public_sha256": "c301f0702e85cec1d386386fcbf13d6b8d6438c130de9d456ee4ce70deab32a6",
       "prior_public_sha256": "e32ab253e63bfe09d4ec42a5fc1594a2025b8bd859cab754ee1558798c0391dc",
       "localization": "English prose; control structures and machine identifiers preserved.",
       "pre_graph_display_sha256": "6a87a495eb3698b1a49e053ffcc109b28d94a59e9dd29cb3399a62279e196d3d",
@@ -72,7 +72,8 @@
       "pre_thumbnail_ocr_rollout_public_sha256": "94cbeda85d7c05469854effe996cdd8c48b5db06b303e4ae0785a78e7cf48070",
       "thumbnail_ocr_rollout": "2026-10-22 operated verification; source semantics unchanged.",
       "pre_clock_documentation_review_public_sha256": "5d7806ac40bb83b671252d6fa94a0d9ceab93365d6299e151ebdc2909ac15437",
-      "clock_documentation_review": "2026-10-22 observation-layer table, clock case study and current-status consolidation; no code or runtime change."
+      "clock_documentation_review": "2026-10-22 observation-layer table, clock case study and current-status consolidation; no code or runtime change.",
+      "thumbnail_evidence_port": "2026-10-22 conservative OCR, bounded evidence, ROI comparison and diagnostics."
     },
     {
       "path": "docs/same-url-continuity-evidence.md",
@@ -2938,11 +2939,11 @@
     },
     {
       "path": "docs/current-status.md",
-      "source_role": "public-documentation",
-      "decision": "link the 2026-10-22 CRA local reflex port",
-      "before_sha256": "02db2988ecaabcd5e072adc3ce425485c2983f54f8b882128818dc83068f5974",
+      "source_role": "public-documentation-or-configuration",
+      "decision": "Additional conservative OCR, bounded ROI evidence and diagnostics; existing public bindings; source port only.",
+      "before_sha256": "5ccbec1abbb353dc7bb072282516a0f1c758312d4449503f4f2cc437c396ae84",
       "source_sha256": null,
-      "public_sha256": "5ccbec1abbb353dc7bb072282516a0f1c758312d4449503f4f2cc437c396ae84",
+      "public_sha256": "70261cd78b777c09597633df85e5379ba87634c981145723714ebd4eca60ec40",
       "port_date_jst": "2026-10-22",
       "documentation_restructure": "New single page for volatile state.",
       "pre_twitch_observation_public_sha256": "040eac29174151f51e473f7f85e4aa23ff994be0079b3d4c011623b6ec7864ca",
@@ -2955,7 +2956,8 @@
       "pre_thumbnail_ocr_rollout_public_sha256": "209f0cd2d8adc0144f39a214c5f4ccf6c0a99378c3292bca720f453defc6f06f",
       "thumbnail_ocr_rollout": "2026-10-22 operated verification; source semantics unchanged.",
       "pre_clock_documentation_review_public_sha256": "b3c0ed5d6201450618476a5c90a0c5c40ff7a041587a6be590871077742d1b35",
-      "clock_documentation_review": "2026-10-22 observation-layer table, clock case study and current-status consolidation; no code or runtime change."
+      "clock_documentation_review": "2026-10-22 observation-layer table, clock case study and current-status consolidation; no code or runtime change.",
+      "thumbnail_evidence_port": "2026-10-22 conservative OCR, bounded evidence, ROI comparison and diagnostics."
     },
     {
       "path": "monitoring-v4/ops/release/model.py",
@@ -3458,11 +3460,11 @@
     },
     {
       "path": "docs/v3/twitch-thumbnail-monitor.md",
-      "before_sha256": "4e1557062b137358c8ea048a378b171d32bd24785b4b0259f59647c8b062110f",
+      "before_sha256": "a941e0189515220a31aa989ab6f0290290183dcfb269a4d8de68e6661f668f88",
       "source_sha256": null,
-      "public_sha256": "a941e0189515220a31aa989ab6f0290290183dcfb269a4d8de68e6661f668f88",
-      "source_role": "public-documentation-or-regression",
-      "decision": "Review fixes, English prose and existing public bindings; no deployment or unrelated working-copy edits.",
+      "public_sha256": "e1799ededfebf67525624871b82025858356b6bf9946372b23ff79205349f9e8",
+      "source_role": "public-documentation-or-configuration",
+      "decision": "Additional conservative OCR, bounded ROI evidence and diagnostics; existing public bindings; source port only.",
       "thumbnail_clock_port": "2026-10-22 committed source through 740bcc00; concurrent review excluded.",
       "pre_thumbnail_clock_public_sha256": null,
       "pre_thumbnail_review_public_sha256": "4e1557062b137358c8ea048a378b171d32bd24785b4b0259f59647c8b062110f",
@@ -3470,19 +3472,21 @@
       "pre_thumbnail_ocr_rollout_public_sha256": "0f3f80233f5fd6c20a306e97cacb5c4f9e8e4c69960629f339363e89299c3252",
       "thumbnail_ocr_rollout": "2026-10-22 operated verification and OCR counter semantics.",
       "pre_clock_documentation_review_public_sha256": "74232e3d4fdff720c8625e654b941111bb9c7bc0e22836fe8c46219bb1809b71",
-      "clock_documentation_review": "2026-10-22 observation-layer table, clock case study and current-status consolidation; no code or runtime change."
+      "clock_documentation_review": "2026-10-22 observation-layer table, clock case study and current-status consolidation; no code or runtime change.",
+      "thumbnail_evidence_port": "2026-10-22 conservative OCR, bounded evidence, ROI comparison and diagnostics."
     },
     {
       "path": "ops/config/twitch_thumbnail.example.json",
-      "before_sha256": "54584badd1a82c5346f575a3c34ec8bc80d80d8b171bf455d856af207c3a933c",
-      "source_sha256": "c59fc8e08693e87af6e88e0245e0aad8c1d987e5fed8c266e4814662f965189c",
-      "public_sha256": "c59fc8e08693e87af6e88e0245e0aad8c1d987e5fed8c266e4814662f965189c",
-      "source_role": "public-source-adaptation",
-      "decision": "Review fixes, English prose and existing public bindings; no deployment or unrelated working-copy edits.",
+      "before_sha256": "c59fc8e08693e87af6e88e0245e0aad8c1d987e5fed8c266e4814662f965189c",
+      "source_sha256": null,
+      "public_sha256": "cc53ca27e8c9ff00f566d940fcdf85ae6b6befd68b48d4e432316b46d4005605",
+      "source_role": "public-documentation-or-configuration",
+      "decision": "Additional conservative OCR, bounded ROI evidence and diagnostics; existing public bindings; source port only.",
       "thumbnail_clock_port": "2026-10-22 committed source through 740bcc00; concurrent review excluded.",
       "pre_thumbnail_clock_public_sha256": null,
       "pre_thumbnail_review_public_sha256": "54584badd1a82c5346f575a3c34ec8bc80d80d8b171bf455d856af207c3a933c",
-      "thumbnail_review_port": "2026-10-22 stream rollover, bounded gaps and conservative OCR retry."
+      "thumbnail_review_port": "2026-10-22 stream rollover, bounded gaps and conservative OCR retry.",
+      "thumbnail_evidence_port": "2026-10-22 conservative OCR, bounded evidence, ROI comparison and diagnostics."
     },
     {
       "path": "ops/monitoring/prometheus/rules/twitch_thumbnail.yml",
@@ -3564,39 +3568,42 @@
     },
     {
       "path": "src/stream_v3/twitch_thumbnail.py",
-      "before_sha256": "355649aa69299e591079582144cd2c9e01ae93cc741dbdc6f2e0d6cfc306d730",
-      "source_sha256": "f19c8389742b2a076fa49d042e61d916fdccc6878f9bcae2d924ff4f098e67ce",
-      "public_sha256": "c720c2c193ee5a6752a9104d58478135296c98db1412b755552beefc172759ef",
+      "before_sha256": "c720c2c193ee5a6752a9104d58478135296c98db1412b755552beefc172759ef",
+      "source_sha256": "38698761e6567c9d606efc63781b752ee138d27c44aa42a6de3a8e3fccd03c20",
+      "public_sha256": "38698761e6567c9d606efc63781b752ee138d27c44aa42a6de3a8e3fccd03c20",
       "source_role": "public-source-adaptation",
-      "decision": "Review fixes, English prose and existing public bindings; no deployment or unrelated working-copy edits.",
+      "decision": "Additional conservative OCR, bounded ROI evidence and diagnostics; existing public bindings; source port only.",
       "thumbnail_clock_port": "2026-10-22 committed source through 740bcc00; concurrent review excluded.",
       "pre_thumbnail_clock_public_sha256": null,
       "pre_thumbnail_review_public_sha256": "355649aa69299e591079582144cd2c9e01ae93cc741dbdc6f2e0d6cfc306d730",
-      "thumbnail_review_port": "2026-10-22 stream rollover, bounded gaps and conservative OCR retry."
+      "thumbnail_review_port": "2026-10-22 stream rollover, bounded gaps and conservative OCR retry.",
+      "thumbnail_evidence_port": "2026-10-22 conservative OCR, bounded evidence, ROI comparison and diagnostics."
     },
     {
       "path": "src/stream_v3/twitch_thumbnail_metrics.py",
-      "before_sha256": "d824eb6e20a9236509cb91d20c91f1b36055e469312b596c46cd52bde43ee105",
-      "source_sha256": "4b8086e4ada0f667a56b71cb13197b9b2bc6f9d9345c8e369d5f6151bf1dd47b",
-      "public_sha256": "66aeff09e88b66b30d513fa17cc560d222786484587f4a6745fd68ec7ba9425b",
+      "before_sha256": "66aeff09e88b66b30d513fa17cc560d222786484587f4a6745fd68ec7ba9425b",
+      "source_sha256": "f94d943b42d135b99a011dd6a62af53cfad5ef5970f01112ca49d929d0aa69df",
+      "public_sha256": "f94d943b42d135b99a011dd6a62af53cfad5ef5970f01112ca49d929d0aa69df",
       "source_role": "public-source-adaptation",
-      "decision": "Review fixes, English prose and existing public bindings; no deployment or unrelated working-copy edits.",
+      "decision": "Additional conservative OCR, bounded ROI evidence and diagnostics; existing public bindings; source port only.",
       "thumbnail_clock_port": "2026-10-22 committed source through 740bcc00; concurrent review excluded.",
       "pre_thumbnail_clock_public_sha256": null,
       "pre_thumbnail_review_public_sha256": "d824eb6e20a9236509cb91d20c91f1b36055e469312b596c46cd52bde43ee105",
-      "thumbnail_review_port": "2026-10-22 stream rollover, bounded gaps and conservative OCR retry."
+      "thumbnail_review_port": "2026-10-22 stream rollover, bounded gaps and conservative OCR retry.",
+      "thumbnail_evidence_port": "2026-10-22 conservative OCR, bounded evidence, ROI comparison and diagnostics."
     },
     {
       "path": "src/stream_v3/twitch_thumbnail_worker.py",
-      "before_sha256": "dbb368d44d7294115c14d84cd5013421593177182fcb5c416f3d14b960bc5cac",
-      "source_sha256": "6bbb8d76436cfc4e9cc1b402ee08bd159c2475d07b48ac8f3916e30be555dfae",
-      "public_sha256": "c8a2c94ba934da373b484cb6feeefb5c8bc06ffd6a83053491fdc813c0c61cb2",
+      "before_sha256": "c8a2c94ba934da373b484cb6feeefb5c8bc06ffd6a83053491fdc813c0c61cb2",
+      "source_sha256": "58350ba767ea614875cdc0f2d41daf4a3ecc9375aef02c4f206fa57081b73299",
+      "public_sha256": "58350ba767ea614875cdc0f2d41daf4a3ecc9375aef02c4f206fa57081b73299",
       "source_role": "public-source-adaptation",
-      "decision": "Review fixes, English prose and existing public bindings; no deployment or unrelated working-copy edits.",
+      "decision": "Additional conservative OCR, bounded ROI evidence and diagnostics; existing public bindings; source port only.",
       "thumbnail_clock_port": "2026-10-22 committed source through 740bcc00; concurrent review excluded.",
       "pre_thumbnail_clock_public_sha256": null,
       "pre_thumbnail_review_public_sha256": "dbb368d44d7294115c14d84cd5013421593177182fcb5c416f3d14b960bc5cac",
-      "thumbnail_review_port": "2026-10-22 stream rollover, bounded gaps and conservative OCR retry."
+      "thumbnail_review_port": "2026-10-22 stream rollover, bounded gaps and conservative OCR retry.",
+      "thumbnail_evidence_port": "2026-10-22 conservative OCR, bounded evidence, ROI comparison and diagnostics."
     },
     {
       "path": "tests/test_clock_observation_alerts.py",
@@ -3612,15 +3619,16 @@
     },
     {
       "path": "tests/test_twitch_thumbnail.py",
-      "before_sha256": "5f63fb73846046c183ef5585db6410b3641532a194a6064883b6711a395a6f49",
-      "source_sha256": "ac082248e6a972b6e2120a6e08a7157e1e81011d10d7778a95e11d444e39fd77",
-      "public_sha256": "ac082248e6a972b6e2120a6e08a7157e1e81011d10d7778a95e11d444e39fd77",
+      "before_sha256": "ac082248e6a972b6e2120a6e08a7157e1e81011d10d7778a95e11d444e39fd77",
+      "source_sha256": "e5d1a8f40488b2c6a911fccadd15a34834bd3bd37cd11abb9c94f7cb70cc0c69",
+      "public_sha256": "e5d1a8f40488b2c6a911fccadd15a34834bd3bd37cd11abb9c94f7cb70cc0c69",
       "source_role": "public-source-adaptation",
-      "decision": "Review fixes, English prose and existing public bindings; no deployment or unrelated working-copy edits.",
+      "decision": "Additional conservative OCR, bounded ROI evidence and diagnostics; existing public bindings; source port only.",
       "thumbnail_clock_port": "2026-10-22 committed source through 740bcc00; concurrent review excluded.",
       "pre_thumbnail_clock_public_sha256": null,
       "pre_thumbnail_review_public_sha256": "5f63fb73846046c183ef5585db6410b3641532a194a6064883b6711a395a6f49",
-      "thumbnail_review_port": "2026-10-22 stream rollover, bounded gaps and conservative OCR retry."
+      "thumbnail_review_port": "2026-10-22 stream rollover, bounded gaps and conservative OCR retry.",
+      "thumbnail_evidence_port": "2026-10-22 conservative OCR, bounded evidence, ROI comparison and diagnostics."
     },
     {
       "path": "tests/test_twitch_thumbnail_api_compatibility.py",
@@ -4022,6 +4030,33 @@
       "source_sha256": "4afb0f0afd6fe0f789702445666786a2bb35d103385a722db2d481cda3fd6292",
       "public_sha256": "4afb0f0afd6fe0f789702445666786a2bb35d103385a722db2d481cda3fd6292",
       "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "src/stream_v3/twitch_thumbnail_evidence.py",
+      "before_sha256": null,
+      "source_sha256": "9cd2fdc4c880f2352f6fde2d79c86ea1c4fbc3960c4e6a310e9e7f4b5a4d95d1",
+      "public_sha256": "9cd2fdc4c880f2352f6fde2d79c86ea1c4fbc3960c4e6a310e9e7f4b5a4d95d1",
+      "source_role": "public-source-adaptation",
+      "decision": "Additional conservative OCR, bounded ROI evidence and diagnostics; existing public bindings; source port only.",
+      "thumbnail_evidence_port": "2026-10-22 conservative OCR, bounded evidence, ROI comparison and diagnostics."
+    },
+    {
+      "path": "tests/test_twitch_thumbnail_evidence.py",
+      "before_sha256": null,
+      "source_sha256": "9558e3eea7d667cae6fdd9d580a82a01c6f105e1349b633769a9f4c01a9d3d5d",
+      "public_sha256": "9558e3eea7d667cae6fdd9d580a82a01c6f105e1349b633769a9f4c01a9d3d5d",
+      "source_role": "public-source-adaptation",
+      "decision": "Additional conservative OCR, bounded ROI evidence and diagnostics; existing public bindings; source port only.",
+      "thumbnail_evidence_port": "2026-10-22 conservative OCR, bounded evidence, ROI comparison and diagnostics."
+    },
+    {
+      "path": "docs/v3/public-source-port-2026-10-22-thumbnail-evidence.md",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "e3b7305f10e465b7646fb867bdfe7570e6d2a06acadbea2973783cf3b3fe0672",
+      "source_role": "public-documentation-or-configuration",
+      "decision": "Additional conservative OCR, bounded ROI evidence and diagnostics; existing public bindings; source port only.",
+      "thumbnail_evidence_port": "2026-10-22 conservative OCR, bounded evidence, ROI comparison and diagnostics."
     }
   ],
   "omissions": [
@@ -4079,7 +4114,8 @@
     "publication/thumbnail-review-port-20261022.json",
     "publication/thumbnail-ocr-rollout-20261022.json",
     "publication/clock-docs-review-20261022.json",
-    "publication/cra-reflex-port-20261022.json"
+    "publication/cra-reflex-port-20261022.json",
+    "publication/thumbnail-evidence-port-20261022.json"
   ],
   "evidence_checkpoint_cutoff_jst": "2026-10-14T00:04:57+09:00",
   "documentation_audience": "hiring and technical reviewers",
@@ -4212,6 +4248,14 @@
     "date_jst": "2026-10-22",
     "record": "publication/cra-reflex-port-20261022.json",
     "source_commit": "947d899eec2dbedf7949f9cfb98afc9db7d34338",
+    "deployment_performed": false,
+    "push_performed": false
+  },
+  "thumbnail_evidence_port": {
+    "date_jst": "2026-10-22",
+    "record": "publication/thumbnail-evidence-port-20261022.json",
+    "source_commit": "0b7bba914d6ab6d16c2077b268d149ad5a8a7a2c",
+    "development_commit": "ba46f42f18db635d79e3bd9b68d3e14f67baf5a2",
     "deployment_performed": false,
     "push_performed": false
   }

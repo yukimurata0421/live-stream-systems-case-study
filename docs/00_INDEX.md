@@ -51,6 +51,8 @@ start.
 
 ## Measurements And Evidence
 
+- `v3/public-source-port-2026-10-22-thumbnail-evidence.md`: [OCR replay, ROI comparison and bounded evidence follow-up](v3/public-source-port-2026-10-22-thumbnail-evidence.md).
+
 - `same-url-continuity-evidence.md`: [160-day same-URL checkpoint and earlier SLI windows](same-url-continuity-evidence.md).
 - `sli-methodology.md`: [how SLIs were defined and the measured baseline](sli-methodology.md).
 - `v3/sli-and-dashboard.md`: [dashboard and SLI contract](v3/sli-and-dashboard.md).

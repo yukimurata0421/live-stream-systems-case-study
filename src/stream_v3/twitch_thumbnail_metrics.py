@@ -48,6 +48,8 @@ def write_metrics(writer,observation,*,now,last_cycle_epoch=None):
             'request_deferred':int(fresh and row.get('clock_state') in ('WAITING_POLL','WAITING_RETRY')),
             'ocr_attempted':int(fresh and row.get('ocr_attempted') is True),
             'ocr_binary_retried':int(fresh and row.get('ocr_attempted') is True and row.get('ocr_binary_retried') is True),
+            'ocr_interpolation_retried':int(fresh and row.get('ocr_attempted') is True and row.get('ocr_interpolation_retried') is True),
+            'ocr_contrast_retried':int(fresh and row.get('ocr_attempted') is True and row.get('ocr_contrast_retried') is True),
             'image_duplicate':int(captured and row.get('image_duplicate') is True),
             'progress_observed':int(verified and progress_age is not None and progress_age<=600),
             'forward_flowing':int(row['forward_flowing']) if forward_fresh and type(row.get('forward_flowing')) is bool else -1,
@@ -62,9 +64,21 @@ def write_metrics(writer,observation,*,now,last_cycle_epoch=None):
     values['quality_history_available']=int(valid_age is not None)
     if cycle_age is not None:values['seconds_since_last_cycle']=cycle_age
     for suffix,value in values.items():writer.metric('stream_v3_twitch_thumbnail_'+suffix,value,labels=labels)
-    for suffix in ('unique_samples_total','ocr_observations_total','ocr_binary_retries_total'):
+    for suffix in ('unique_samples_total','ocr_observations_total','ocr_binary_retries_total','ocr_interpolation_retries_total',
+                   'ocr_binary_accepted_total','ocr_interpolation_accepted_total',
+                   'ocr_contrast_retries_total','ocr_contrast_accepted_total'):
         value=row.get(suffix)
         if type(value) is int and value>=0:writer.metric('stream_v3_twitch_thumbnail_'+suffix,value,labels=labels,metric_type='counter')
+    methods=('none','cached','original','contrast','binary','interpolation')
+    failures=('none','not_attempted','invalid_time','low_confidence','pair_mismatch','timeout','process_failed',
+              'transform_failed','value_changed','timestamp_binding','time_regressed','previous_stream')
+    method=row.get('ocr_method') if fresh and row.get('ocr_method') in methods else 'none'
+    failure=row.get('ocr_failure_reason') if fresh and row.get('ocr_failure_reason') in failures else 'not_attempted'
+    for value in methods:writer.metric('stream_v3_twitch_thumbnail_ocr_method',int(value==method),labels={**labels,'method':value})
+    for value in failures:writer.metric('stream_v3_twitch_thumbnail_ocr_failure_reason',int(value==failure),labels={**labels,'reason':value})
+    statuses=('not_required','saved','reused','capacity_limited','roi_unavailable','storage_unavailable')
+    status=row.get('evidence_status') if fresh and row.get('evidence_status') in statuses else 'not_required'
+    for value in statuses:writer.metric('stream_v3_twitch_thumbnail_evidence_status',int(value==status),labels={**labels,'status':value})
     states=('FRESH','AGING','STALE_SUSPECT','STALE_CORRELATED','UNKNOWN','SOURCE_OFFLINE','WAITING_NEW_STREAM_THUMBNAIL','WAITING_POLL','WAITING_RETRY')
     state='SOURCE_OFFLINE' if fresh and row.get('api_live') is False else 'UNKNOWN'
     if live and row.get('clock_state') in states[6:]:state=row['clock_state']

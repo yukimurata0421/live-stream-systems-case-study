@@ -1,0 +1,171 @@
+{
+  "schema": "stream.public_port_record.v1",
+  "port_date_jst": "2026-10-22",
+  "scope": "Conservative interpolation, bounded distinct-image evidence, compared UTC ROI and OCR diagnostics.",
+  "source_commits": [
+    "0b7bba914d6ab6d16c2077b268d149ad5a8a7a2c"
+  ],
+  "development_commit": "ba46f42f18db635d79e3bd9b68d3e14f67baf5a2",
+  "base_public_commit": "f4d6392c136174395ba35825bc6198d5130061bd",
+  "private_deployment_performed_by_this_port": false,
+  "public_example_deployment_performed": false,
+  "push_performed": false,
+  "source_selection": "Explicit files; protected parallel paths excluded; shared indexes and source map commit only selected entries.",
+  "checks": {
+    "source_related_pytest": {
+      "passed": 118
+    },
+    "development_candidate_pytest": {
+      "passed": 118
+    },
+    "public_candidate_pytest": {
+      "passed": 142,
+      "subtests_passed": 756
+    },
+    "public_source_map": "PASS; zero issues in the selected committed candidate",
+    "public_language": {
+      "status": "PASS",
+      "checked_text_files": 1847,
+      "unicode_data_exceptions": 1
+    },
+    "syntax_json_selected_secret_scan": "PASS",
+    "validation_boundary": "Candidates use committed HEAD for unrelated and protected files; earlier real-image OCR evidence is separate.",
+    "additional_legacy_probe_suite": {
+      "candidate": {
+        "failed": 6,
+        "passed": 35,
+        "skipped": 2
+      },
+      "unchanged_development_head": {
+        "failed": 6,
+        "passed": 35,
+        "skipped": 2
+      },
+      "same_failure_ids": true,
+      "cause": "Five tests require untracked probe/ADSB helper scripts absent from committed HEAD; one expects legacy v2 support absent from the frozen exporter. These files are outside this port."
+    },
+    "initial_command_correction": "The API-compatibility test exists only in the public repository. A private command included that absent path and collected no tests; it was corrected without source changes."
+  },
+  "files": [
+    {
+      "path": "src/stream_v3/twitch_thumbnail.py",
+      "before_sha256": "c720c2c193ee5a6752a9104d58478135296c98db1412b755552beefc172759ef",
+      "source_sha256": "38698761e6567c9d606efc63781b752ee138d27c44aa42a6de3a8e3fccd03c20",
+      "public_sha256": "38698761e6567c9d606efc63781b752ee138d27c44aa42a6de3a8e3fccd03c20",
+      "source_role": "public-source-adaptation",
+      "decision": "Additional conservative OCR, bounded ROI evidence and diagnostics; existing public bindings; source port only."
+    },
+    {
+      "path": "src/stream_v3/twitch_thumbnail_worker.py",
+      "before_sha256": "c8a2c94ba934da373b484cb6feeefb5c8bc06ffd6a83053491fdc813c0c61cb2",
+      "source_sha256": "58350ba767ea614875cdc0f2d41daf4a3ecc9375aef02c4f206fa57081b73299",
+      "public_sha256": "58350ba767ea614875cdc0f2d41daf4a3ecc9375aef02c4f206fa57081b73299",
+      "source_role": "public-source-adaptation",
+      "decision": "Additional conservative OCR, bounded ROI evidence and diagnostics; existing public bindings; source port only."
+    },
+    {
+      "path": "src/stream_v3/twitch_thumbnail_metrics.py",
+      "before_sha256": "66aeff09e88b66b30d513fa17cc560d222786484587f4a6745fd68ec7ba9425b",
+      "source_sha256": "f94d943b42d135b99a011dd6a62af53cfad5ef5970f01112ca49d929d0aa69df",
+      "public_sha256": "f94d943b42d135b99a011dd6a62af53cfad5ef5970f01112ca49d929d0aa69df",
+      "source_role": "public-source-adaptation",
+      "decision": "Additional conservative OCR, bounded ROI evidence and diagnostics; existing public bindings; source port only."
+    },
+    {
+      "path": "src/stream_v3/twitch_thumbnail_evidence.py",
+      "before_sha256": null,
+      "source_sha256": "9cd2fdc4c880f2352f6fde2d79c86ea1c4fbc3960c4e6a310e9e7f4b5a4d95d1",
+      "public_sha256": "9cd2fdc4c880f2352f6fde2d79c86ea1c4fbc3960c4e6a310e9e7f4b5a4d95d1",
+      "source_role": "public-source-adaptation",
+      "decision": "Additional conservative OCR, bounded ROI evidence and diagnostics; existing public bindings; source port only."
+    },
+    {
+      "path": "tests/test_twitch_thumbnail.py",
+      "before_sha256": "ac082248e6a972b6e2120a6e08a7157e1e81011d10d7778a95e11d444e39fd77",
+      "source_sha256": "e5d1a8f40488b2c6a911fccadd15a34834bd3bd37cd11abb9c94f7cb70cc0c69",
+      "public_sha256": "e5d1a8f40488b2c6a911fccadd15a34834bd3bd37cd11abb9c94f7cb70cc0c69",
+      "source_role": "public-source-adaptation",
+      "decision": "Additional conservative OCR, bounded ROI evidence and diagnostics; existing public bindings; source port only."
+    },
+    {
+      "path": "tests/test_twitch_thumbnail_evidence.py",
+      "before_sha256": null,
+      "source_sha256": "9558e3eea7d667cae6fdd9d580a82a01c6f105e1349b633769a9f4c01a9d3d5d",
+      "public_sha256": "9558e3eea7d667cae6fdd9d580a82a01c6f105e1349b633769a9f4c01a9d3d5d",
+      "source_role": "public-source-adaptation",
+      "decision": "Additional conservative OCR, bounded ROI evidence and diagnostics; existing public bindings; source port only."
+    },
+    {
+      "path": "ops/config/twitch_thumbnail.example.json",
+      "before_sha256": "c59fc8e08693e87af6e88e0245e0aad8c1d987e5fed8c266e4814662f965189c",
+      "source_sha256": null,
+      "public_sha256": "cc53ca27e8c9ff00f566d940fcdf85ae6b6befd68b48d4e432316b46d4005605",
+      "source_role": "public-documentation-or-configuration",
+      "decision": "Additional conservative OCR, bounded ROI evidence and diagnostics; existing public bindings; source port only."
+    },
+    {
+      "path": "docs/v3/twitch-thumbnail-monitor.md",
+      "before_sha256": "a941e0189515220a31aa989ab6f0290290183dcfb269a4d8de68e6661f668f88",
+      "source_sha256": null,
+      "public_sha256": "e1799ededfebf67525624871b82025858356b6bf9946372b23ff79205349f9e8",
+      "source_role": "public-documentation-or-configuration",
+      "decision": "Additional conservative OCR, bounded ROI evidence and diagnostics; existing public bindings; source port only."
+    },
+    {
+      "path": "docs/v3/public-source-port-2026-10-22-thumbnail-evidence.md",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "e3b7305f10e465b7646fb867bdfe7570e6d2a06acadbea2973783cf3b3fe0672",
+      "source_role": "public-documentation-or-configuration",
+      "decision": "Additional conservative OCR, bounded ROI evidence and diagnostics; existing public bindings; source port only."
+    },
+    {
+      "path": "docs/00_INDEX.md",
+      "before_sha256": "46652547b62aca56b33dcf06c4d20b1f48684dac76fd952896b58cbf80f30bca",
+      "source_sha256": null,
+      "public_sha256": "c301f0702e85cec1d386386fcbf13d6b8d6438c130de9d456ee4ce70deab32a6",
+      "source_role": "public-documentation-or-configuration",
+      "decision": "Additional conservative OCR, bounded ROI evidence and diagnostics; existing public bindings; source port only."
+    },
+    {
+      "path": "docs/current-status.md",
+      "before_sha256": "5ccbec1abbb353dc7bb072282516a0f1c758312d4449503f4f2cc437c396ae84",
+      "source_sha256": null,
+      "public_sha256": "70261cd78b777c09597633df85e5379ba87634c981145723714ebd4eca60ec40",
+      "source_role": "public-documentation-or-configuration",
+      "decision": "Additional conservative OCR, bounded ROI evidence and diagnostics; existing public bindings; source port only."
+    }
+  ],
+  "protected_parallel_files": [
+    "monitoring-v4/src/stream_monitoring_v4/compatibility/twitch_sli.py",
+    "monitoring-v4/tests/test_twitch_sli.py",
+    "ops/public-publisher/site/public/assets/ops-20261020.js",
+    "ops/public-publisher/site/tests/twitch-history-20261022.html"
+  ],
+  "prior_operated_evidence": {
+    "date_jst": "2026-10-22",
+    "activated_at_jst": "17:09:42",
+    "last_image_check_jst": "17:12-17:13",
+    "real_saved_image_positive_cases": 5,
+    "real_saved_image_negative_cases": 10,
+    "roi_comparison_images": 3,
+    "new_roi_negative_cases": 6,
+    "ordinary_roi_acceptance_before": 1,
+    "ordinary_roi_acceptance_after": 3,
+    "boundary": "Earlier operated observations; no acquisition or production mutation performed by this source port."
+  },
+  "preserved": [
+    "Four parallel Twitch SLI/publisher files and their index entries.",
+    "Other working changes and staging.",
+    "Delivery, backup, recovery authority, API collection, existing notifications and ordinary in-memory image handling."
+  ],
+  "omissions": [
+    "Credentials, private addresses, runtime settings and raw evidence.",
+    "Images, databases, logs, caches, venvs and deployment assets."
+  ],
+  "unobserved": [
+    "Twenty-four-hour OCR quality and real daily renewal under this version.",
+    "Public player/CDN/audio E2E health.",
+    "Notification message persistence and human receipt."
+  ]
+}

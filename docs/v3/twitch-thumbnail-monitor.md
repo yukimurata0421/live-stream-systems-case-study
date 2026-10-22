@@ -43,6 +43,12 @@ confidence check. Every different image gets OCR; identical images reuse the
 verified reading. A different JPEG with the same clock is not a new sample. No
 real-time cadence test is applied to provider images that refresh in minutes.
 
+The default UTC ROI is `(.0795,.968,.0415,.022)`; JST remains
+`(.019,.968,.04,.022)`. Explicit configuration takes precedence. The UTC left
+edge was widened by three pixels at 1080p after a paired comparison; the right
+edge, height, overlay and return-feed ROIs were unchanged. ROI changes invalidate
+the verified cache even for an identical JPEG.
+
 ## Stream Changes
 
 The thumbnail URL is channel-scoped and survives a stream-ID change, such as the
@@ -67,7 +73,12 @@ the correct nine-hour relationship but confidence is too low, one additional
 binary-threshold-128 pass is allowed. Both values must exactly match the original
 readings and both confidences must meet the same threshold of 70. Different
 readings never win by voting; transformed copies are not independent evidence.
-The cycle deadline and a maximum of six OCR calls still apply. UTC maps to the
+After those passes, one paired retry uses bilinear 2x interpolation followed by
+the existing OCR enlargement. At least one original reading must already have
+confidence 70; every parseable original value, including a low-confidence one,
+must remain unchanged. An originally inconsistent nine-hour pair is never
+repaired by choosing transformed results. Both retry confidences must still be
+at least 70. The 15-second cycle deadline and at most eight OCR calls apply. UTC maps to the
 nearest day; future or regressing readings remain uncertain. A persisted numeric
 anchor survives capture/OCR errors and worker restart. It is not a saved image.
 
@@ -118,20 +129,33 @@ Critical classification, SLO denominator, recovery action or notification servic
 
 ## OCR Accounting
 
-History flags `ocr_attempted` and `ocr_binary_retried` describe work performed
-in that cycle. Cached readings and repeat scrapes do not count as OCR. The
-`ocr_observations_total` and `ocr_binary_retries_total` metrics in this namespace
-persist across capture failures, stream changes and worker restarts; losing
-numeric state resets them. They include failed observations/retries, and count
-observations rather than individual OCR commands. A same-window increase ratio
-measures retry frequency; a window with zero OCR has no evaluated ratio. They
-do not reconstruct observations from before deployment.
+History records `ocr_method`, `ocr_source_method`, `ocr_failure_reason` and
+fixed per-stage results. Final methods are original, contrast, binary or
+interpolation; cached readings retain the original method separately. Failures
+use fixed reason codes; exception text and URLs never become metric labels.
+
+`ocr_observations_total` counts actual OCR observations. For contrast, binary
+and interpolation, `ocr_<method>_retries_total` counts started retries and
+`ocr_<method>_accepted_total` counts final verified observations. A readable pair
+rejected by timestamp, stream binding or regression is not accepted. Cached
+readings and repeat scrapes do not increment counters. Counters survive errors,
+stream changes and restart through numeric state; new counters start at zero
+without reconstructing history. A same-window ratio needs a nonzero denominator.
+Fixed-label gauges expose method, failure reason and evidence-save status.
 
 ## Resources And Storage
 
 Normal full images are processed in memory and discarded. Only small clock
 regions remain in RAM. Numeric state and a 1 MiB x 2 history are retained on disk.
-An abnormal episode may retain small ROI evidence, capped at 8 MiB and seven days.
+Each different abnormal image/stream/ROI combination may retain a small paired
+ROI archive. The [thumbnail evidence store](../../src/stream_v3/twitch_thumbnail_evidence.py)
+deduplicates from archive metadata across restart and caps allocated space at
+8 MiB, age at seven days and archive count at 64. It protects one necessary
+current archive while pruning old evidence; if a new archive cannot fit it skips
+saving and exposes `capacity_limited`. UNKNOWN does not release that protection.
+Normal observations, failed captures and regions larger than 320x96 pixels are
+rejected. New archives identify `jst.pgm` and `utc.pgm`; legacy evidence stays
+unchanged. No normal image or full-frame archive is added.
 The [service template](../../ops/systemd/stream-v3-twitch-thumbnail.service) uses
 a separate non-root user, 0.2-core CPU quota, 256 MiB memory limit, no swap, a
 32 MiB temporary filesystem, no capabilities and process-group cleanup. It is
@@ -161,7 +185,8 @@ name and are not installed by copying this checkout.
 
 ```bash
 PYTHONDONTWRITEBYTECODE=1 OMP_THREAD_LIMIT=1 python3 -m pytest -q -p no:cacheprovider \
-  tests/test_twitch_thumbnail.py tests/test_clock_observation_alerts.py
+  tests/test_twitch_thumbnail.py tests/test_twitch_thumbnail_evidence.py \
++  tests/test_clock_observation_alerts.py
 promtool test rules ops/monitoring/prometheus/tests/twitch_thumbnail.yml
 ```
 
@@ -179,3 +204,5 @@ of this public checkout.
   rollover, missing-metric handling and the OCR retry with its reanalysis.
 - [Operated OCR counter rollout](thumbnail-ocr-rollout-2026-10-22.md): activation
   and the first live counter progression.
+
+- [OCR and evidence follow-up](public-source-port-2026-10-22-thumbnail-evidence.md): conservative interpolation, bounded evidence, ROI comparison and diagnostics.

@@ -38,13 +38,14 @@ they were reached.
 | Return-feed clock | Continuous reader, paired JST/UTC OCR every 10 s, probe fixed after a multi-hour blind period. | 09:44-09:47: 18/18 cycles confirmed after binding. | Low UTC confidence raised the quality warning around noon; this analyzer has no binary retry. |
 | Fallback-sender clock | Deployed; idle because the fallback was not running. | Standby only. | Not observed during a real fallback. |
 | Observation warnings | Gap and observer-unavailable warnings on the existing notification loop; no Critical or recovery threshold. | Rule tests and offline replay of the blind period. | Delivery to the notification channel not yet observed. |
-| Twitch thumbnail clock | Source `c27f0ee0af1f` with stream-change handling, 840 s stale warning, missing-metric rule, binary OCR retry and OCR counters. | 12:12: capture and OCR succeeded; counters at three observations and two retries. | First real session renewal under this worker is due 2026-10-23 00:00 JST. |
+| Twitch thumbnail clock | Conservative interpolation, compared UTC ROI, bounded distinct-image evidence and method/rejection diagnostics. | 17:12-17:13: a new image confirmed by the original read, then cached without recounting; earlier deployment at 17:09:42 JST. | Twenty-four-hour quality and first real session renewal under this version remain unobserved. |
 
 None of these layers is public-player E2E evidence. Dated measurements are in the
 [return-feed port](v3/public-source-port-2026-10-22.md), the
 [thumbnail port](v3/public-source-port-2026-10-22-thumbnail.md) and its
 [review follow-up](v3/public-source-port-2026-10-22-thumbnail-review.md), and the
-[operated OCR counter rollout](v3/thumbnail-ocr-rollout-2026-10-22.md). The public
+[operated OCR counter rollout](v3/thumbnail-ocr-rollout-2026-10-22.md) and
+[OCR/evidence follow-up](v3/public-source-port-2026-10-22-thumbnail-evidence.md). The public
 examples were not deployed; OCI restore assets and monitor images were retained
 privately.
 

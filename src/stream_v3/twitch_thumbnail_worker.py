@@ -12,7 +12,8 @@ from urllib.request import ProxyHandler,build_opener
 from .twitch_thumbnail import (SCHEMA,SCOPE,ThumbnailAnalyzer,ThumbnailHTTP,api_status,epoch,image_url,load_json,validate_source)
 from .viewer_clock import utc_timestamp
 from .viewer_clock_capture import ProcessRunner,ProbeError,TesseractOCR
-from .viewer_clock_worker import EvidenceStore,append_history
+from .viewer_clock_worker import append_history
+from .twitch_thumbnail_evidence import ThumbnailEvidenceStore
 
 
 def publish(path,value):
@@ -46,7 +47,7 @@ class Worker:
         self.runner=ProcessRunner();self.http=http or ThumbnailHTTP()
         self.ocr=ocr or TesseractOCR(self.runner,binary=config['tesseract'],tessdata_dir=config['tessdata_dir'])
         self.analyzer=ThumbnailAnalyzer(config,self.previous)
-        self.store=EvidenceStore(root/'evidence',max_bytes=8*1024*1024,retention_seconds=7*86400,platforms=('twitch_thumbnail',))
+        self.store=ThumbnailEvidenceStore(root/'evidence')
         self.cycle=self.previous.get('cycle',0)
 
     def once(self):
@@ -61,7 +62,8 @@ class Worker:
              'active_stream_id':self.previous.get('active_stream_id') or self.previous.get('stream_id') or self.analyzer.verified.get('stream_id'),
              'startup_grace_started_at_utc':self.previous.get('startup_grace_started_at_utc'),
              'capture_attempted':False,
-             'ocr_attempted':False,'ocr_binary_retried':False,
+             'ocr_attempted':False,'ocr_binary_retried':False,'ocr_interpolation_retried':False,'ocr_contrast_retried':False,
+             'ocr_method':'none','ocr_failure_reason':'not_attempted','ocr_stage_results':{},
              'last_request_at_utc':self.previous.get('last_request_at_utc'),
              'next_fetch_not_before_utc':self.previous.get('next_fetch_not_before_utc')}
         analysis_started=False
@@ -124,10 +126,13 @@ class Worker:
         row['last_verified']={k:v for k,v in self.analyzer.verified.items() if k!='last_verified'}
         try:
             abnormal=row.get('clock_state')=='OCR_UNCERTAIN' or row.get('freshness_state','').startswith('STALE')
-            was_abnormal=self.previous.get('clock_state')=='OCR_UNCERTAIN' or self.previous.get('freshness_state','').startswith('STALE')
-            if abnormal and not was_abnormal and self.analyzer.rois:row['evidence_id']=self.store.save(row,self.analyzer.rois,now=time.time())
-            elif abnormal:row['evidence_id']=self.previous.get('evidence_id')
-            else:self.store.recovered('twitch_thumbnail')
+            if abnormal and row.get('capture_ok') and self.analyzer.rois and row.get('image_sha256'):
+                row['evidence_id']=self.store.save(row,self.analyzer.rois,now=time.time())
+                row['evidence_status']=self.store.last_status
+            elif abnormal:row['evidence_status']='roi_unavailable'
+            else:
+                if row.get('ocr_verified') is True:self.store.recovered('twitch_thumbnail')
+                row['evidence_status']='not_required'
             self.store.prune(now=time.time())
         except (OSError,ValueError):row['evidence_status']='storage_unavailable'
         publish(self.state_file,row);append_history(self.root,row,max_bytes=1024*1024)
