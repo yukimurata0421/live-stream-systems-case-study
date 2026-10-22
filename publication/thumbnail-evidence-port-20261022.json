@@ -108,7 +108,7 @@
       "path": "docs/v3/twitch-thumbnail-monitor.md",
       "before_sha256": "a941e0189515220a31aa989ab6f0290290183dcfb269a4d8de68e6661f668f88",
       "source_sha256": null,
-      "public_sha256": "12f99afa78a4f80bff590fe6298d32f5e755c56ab80007ada1797b0c2046cabe",
+      "public_sha256": "13bcc67a50609e8535239afe86bf8b05619f0f416aab4bcfbdf7b832aa84ff1d",
       "source_role": "public-documentation-or-configuration",
       "decision": "Additional conservative OCR, bounded ROI evidence and diagnostics; existing public bindings; source port only."
     },
@@ -116,7 +116,7 @@
       "path": "docs/v3/public-source-port-2026-10-22-thumbnail-evidence.md",
       "before_sha256": null,
       "source_sha256": null,
-      "public_sha256": "e3b7305f10e465b7646fb867bdfe7570e6d2a06acadbea2973783cf3b3fe0672",
+      "public_sha256": "acc8d2c66c9e72db998a1b6604413acb3984af332f30a371b4b467bd15108558",
       "source_role": "public-documentation-or-configuration",
       "decision": "Additional conservative OCR, bounded ROI evidence and diagnostics; existing public bindings; source port only."
     },
@@ -124,7 +124,7 @@
       "path": "docs/00_INDEX.md",
       "before_sha256": "46652547b62aca56b33dcf06c4d20b1f48684dac76fd952896b58cbf80f30bca",
       "source_sha256": null,
-      "public_sha256": "c301f0702e85cec1d386386fcbf13d6b8d6438c130de9d456ee4ce70deab32a6",
+      "public_sha256": "c76057e6062145ec1ed61c66f8cff372d0af7c5b68820f386eaa17f185887d88",
       "source_role": "public-documentation-or-configuration",
       "decision": "Additional conservative OCR, bounded ROI evidence and diagnostics; existing public bindings; source port only."
     },
@@ -168,5 +168,6 @@
     "Twenty-four-hour OCR quality and real daily renewal under this version.",
     "Public player/CDN/audio E2E health.",
     "Notification message persistence and human receipt."
-  ]
+  ],
+  "documentation_restructure": "Later on 2026-10-22, the follow-up record, the contract's OCR passes and the index placement were restructured for readability; facts and numbers are unchanged."
 }

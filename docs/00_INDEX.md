@@ -51,8 +51,6 @@ start.
 
 ## Measurements And Evidence
 
-- `v3/public-source-port-2026-10-22-thumbnail-evidence.md`: [OCR replay, ROI comparison and bounded evidence follow-up](v3/public-source-port-2026-10-22-thumbnail-evidence.md).
-
 - `same-url-continuity-evidence.md`: [160-day same-URL checkpoint and earlier SLI windows](same-url-continuity-evidence.md).
 - `sli-methodology.md`: [how SLIs were defined and the measured baseline](sli-methodology.md).
 - `v3/sli-and-dashboard.md`: [dashboard and SLI contract](v3/sli-and-dashboard.md).
@@ -100,6 +98,7 @@ start.
 - `v3/thumbnail-ocr-rollout-2026-10-22.md`: [operated counter activation, live OCR evidence and preserved concurrent work](v3/thumbnail-ocr-rollout-2026-10-22.md).
 - `v3/public-source-port-2026-10-22-thumbnail.md`: [thumbnail monitoring and return-reader quality corrections](v3/public-source-port-2026-10-22-thumbnail.md).
 - `v3/public-source-port-2026-10-22-thumbnail-review.md`: [stream rollover, missing metrics, OCR retry and source-only validation](v3/public-source-port-2026-10-22-thumbnail-review.md).
+- `v3/public-source-port-2026-10-22-thumbnail-evidence.md`: [OCR replay, ROI comparison and bounded evidence follow-up](v3/public-source-port-2026-10-22-thumbnail-evidence.md).
 - `v3/public-source-port-2026-10-22.md`: [clock-monitor review, dated evidence and public source adaptations](v3/public-source-port-2026-10-22.md).
 
 - `v3/public-source-port-2026-10-20.md`: [self-healing route port](v3/public-source-port-2026-10-20.md).

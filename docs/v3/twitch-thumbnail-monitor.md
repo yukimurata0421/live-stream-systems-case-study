@@ -68,19 +68,24 @@ failures receive no stream-start allowance.
 ## Clock Reading
 
 JST and UTC readings require confidence at least 70 and a nine-hour offset.
-One alternate-contrast read is allowed. If both original readings already have
-the correct nine-hour relationship but confidence is too low, one additional
-binary-threshold-128 pass is allowed. Both values must exactly match the original
-readings and both confidences must meet the same threshold of 70. Different
-readings never win by voting; transformed copies are not independent evidence.
-After those passes, one paired retry uses bilinear 2x interpolation followed by
-the existing OCR enlargement. At least one original reading must already have
-confidence 70; every parseable original value, including a low-confidence one,
-must remain unchanged. An originally inconsistent nine-hour pair is never
-repaired by choosing transformed results. Both retry confidences must still be
-at least 70. The 15-second cycle deadline and at most eight OCR calls apply.
-UTC maps to the nearest day; future or regressing readings remain uncertain. A persisted numeric
-anchor survives capture/OCR errors and worker restart. It is not a saved image.
+Reads are tried in this order, within the 15-second cycle deadline and at most
+eight OCR calls:
+
+1. The original clock regions.
+2. One alternate-contrast read.
+3. If both original readings already have the correct nine-hour relationship
+   but confidence is too low, one binary-threshold-128 pass. Both values must
+   exactly match the original readings and both confidences must reach 70.
+4. One paired retry using bilinear 2x interpolation followed by the existing
+   OCR enlargement. At least one original reading must already have confidence
+   70, and every parseable original value, including a low-confidence one, must
+   remain unchanged. Both retry confidences must reach 70.
+
+Different readings never win by voting; transformed copies are not independent
+evidence, and an originally inconsistent nine-hour pair is never repaired by
+choosing transformed results. UTC maps to the nearest day; future or regressing
+readings remain uncertain. A persisted numeric anchor survives capture/OCR
+errors and worker restart. It is not a saved image.
 
 | Result | Meaning |
 | --- | --- |
@@ -147,6 +152,7 @@ Fixed-label gauges expose method, failure reason and evidence-save status.
 
 Normal full images are processed in memory and discarded. Only small clock
 regions remain in RAM. Numeric state and a 1 MiB x 2 history are retained on disk.
+
 Each different abnormal image/stream/ROI combination may retain a small paired
 ROI archive. The [thumbnail evidence store](../../src/stream_v3/twitch_thumbnail_evidence.py)
 deduplicates from archive metadata across restart and caps allocated space at
@@ -156,6 +162,7 @@ saving and exposes `capacity_limited`. UNKNOWN does not release that protection.
 Normal observations, failed captures and regions larger than 320x96 pixels are
 rejected. New archives identify `jst.pgm` and `utc.pgm`; legacy evidence stays
 unchanged. No normal image or full-frame archive is added.
+
 The [service template](../../ops/systemd/stream-v3-twitch-thumbnail.service) uses
 a separate non-root user, 0.2-core CPU quota, 256 MiB memory limit, no swap, a
 32 MiB temporary filesystem, no capabilities and process-group cleanup. It is
@@ -204,5 +211,5 @@ of this public checkout.
   rollover, missing-metric handling and the OCR retry with its reanalysis.
 - [Operated OCR counter rollout](thumbnail-ocr-rollout-2026-10-22.md): activation
   and the first live counter progression.
-
-- [OCR and evidence follow-up](public-source-port-2026-10-22-thumbnail-evidence.md): conservative interpolation, bounded evidence, ROI comparison and diagnostics.
+- [OCR and evidence follow-up](public-source-port-2026-10-22-thumbnail-evidence.md):
+  conservative interpolation, bounded evidence, ROI comparison and diagnostics.
