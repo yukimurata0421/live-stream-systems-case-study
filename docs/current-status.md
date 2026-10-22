@@ -25,42 +25,38 @@ defines the components and thresholds.
 | 11:56-12:21 | Main sender switched to RTMPS on the relay; readiness and TCP-sampling port lists updated. | Upload samples of 3.57 and 3.63 Mbps returned. |
 | 14:16 | The YouTube watchdog counts an established fallback-Pod connection as local delivery while the main Pod is not sending. | After restart, `local_ok=true` and no incident with the fallback at zero replicas. Not yet observed during a real fallback. The code change is not part of this public snapshot. |
 
-## Clock Monitor And Backup Source Update (2026-10-22 JST)
+## Video Observation (2026-10-22 JST)
 
-The operated return-feed observer was updated to continuous reception and
-ten-second JST/UTC verification. A dated normal window confirmed ten of ten
-cycles, and stopped/blocked monitor reception passed an isolated primary-output
-exercise. The [source-port record](v3/public-source-port-2026-10-22.md) gives the
-measurements, failed attempts, adaptations and local checks.
+The operated system now runs two clock layers beside the native forward counters
+and provider APIs. [Observability](observability.md#video-observation-layers)
+defines what each layer can show; the
+[clock observation case study](v3/clock-observation-case-study.md) explains how
+they were reached.
 
-The public example adds no production deployment, alert policy, recovery action
-or public-player acquisition. Its native relay and provider evidence remains
-separate from returned-frame health. OCI restore assets and the updated monitor
-image/source were retained privately; only portable code and procedures are
-included here.
+| Layer | Operated state | Last checked | Open item |
+| --- | --- | --- | --- |
+| Return-feed clock | Continuous reader, paired JST/UTC OCR every 10 s, probe fixed after a multi-hour blind period. | 09:44-09:47: 18/18 cycles confirmed after binding. | Low UTC confidence raised the quality warning around noon; this analyzer has no binary retry. |
+| Fallback-sender clock | Deployed; idle because the fallback was not running. | Standby only. | Not observed during a real fallback. |
+| Observation warnings | Gap and observer-unavailable warnings on the existing notification loop; no Critical or recovery threshold. | Rule tests and offline replay of the blind period. | Delivery to the notification channel not yet observed. |
+| Twitch thumbnail clock | Source `c27f0ee0af1f` with stream-change handling, 840 s stale warning, missing-metric rule, binary OCR retry and OCR counters. | 12:12: capture and OCR succeeded; counters at three observations and two retries. | First real session renewal under this worker is due 2026-10-23 00:00 JST. |
 
-## Thumbnail Observation Snapshot (2026-10-22 JST)
-
-The [initial source port](v3/public-source-port-2026-10-22-thumbnail.md) covered a
-short operated window with four clock progressions across five provider images.
-The [review follow-up](v3/public-source-port-2026-10-22-thumbnail-review.md) now
-selects source `c27f0ee0af1f`: stream-change cache invalidation, a bounded
-twelve-minute startup allowance, a fourteen-minute stale-image warning, missing
-publication/metric checks, explicit waits and a conservative OCR retry. The
-[thumbnail contract](v3/twitch-thumbnail-monitor.md) owns the current semantics.
-
-Operated capture/OCR and warning state were checked at 11:22 JST. The public
-example has not been deployed, and the next real daily stream rollover is still
-unobserved. This source port neither changes independent publisher/SLI work nor
-turns provider thumbnails into public-player E2E evidence.
+None of these layers is public-player E2E evidence. Dated measurements are in the
+[return-feed port](v3/public-source-port-2026-10-22.md), the
+[thumbnail port](v3/public-source-port-2026-10-22-thumbnail.md) and its
+[review follow-up](v3/public-source-port-2026-10-22-thumbnail-review.md), and the
+[operated OCR counter rollout](v3/thumbnail-ocr-rollout-2026-10-22.md). The public
+examples were not deployed; OCI restore assets and monitor images were retained
+privately.
 
 ## Not Yet Observed
 
-- A completed keeper-driven Twitch renewal. The first one, at 2026-10-21
-  00:00 JST, did nothing: the keeper sent its forward change as POST, which
-  MediaMTX's config API rejects with 404, and it recorded the date anyway. The
-  keeper now sends PATCH and confirms changes by reading the configuration
-  back. The next renewal is due 2026-10-22 00:00 JST.
+- YouTube continuity across a keeper-driven Twitch renewal. The first renewal,
+  at 2026-10-21 00:00 JST, did nothing: the keeper sent its forward change as
+  POST, which MediaMTX's config API rejects with 404, and it recorded the date
+  anyway. The keeper now sends PATCH. At the 2026-10-22 renewal it removed the
+  Twitch forward at 00:00:01 JST and restored it at 00:02:02 JST, and the Twitch
+  API reported a new stream from 00:02:05 JST. YouTube delivery during that
+  window was not separately checked.
 - Delivery of a real Twitch alert to Discord.
 - A prolonged relay-host stop that releases the cloud host allocation, and
   provider-side failures. A stopped relay service, tunnel loss, and a
@@ -73,8 +69,11 @@ turns provider thumbnails into public-player E2E evidence.
 - Long-term soak of the current route.
 - Twenty-four-hour clock/OCR quality, worst-case two-input performance within
   the observer limit, and the updated observer during a real fallback.
-- Twenty-four-hour thumbnail freshness/OCR quality, daily stream rollover and
-  actual delivery of the new observation-quality warnings.
+- A fix for low UTC OCR confidence on the return feed. It raised the observation
+  warning on 2026-10-22 while frames and forward bytes continued.
+- Twenty-four-hour thumbnail freshness, OCR quality and binary-retry rate, the
+  thumbnail worker across a real session renewal, and actual delivery of the
+  new observation-quality warnings.
 - A new-VM bootstrap and live relay recovery from the saved OCI bundle.
 - Public-player frame continuity or end-to-end platform delay from returned
   relay/fallback clocks. Public-player automated acquisition remains on hold

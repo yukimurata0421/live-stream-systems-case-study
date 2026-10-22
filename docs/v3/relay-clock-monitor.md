@@ -6,23 +6,27 @@ This monitor records those facts separately. It reads the OCI common relay and
 the direct YouTube fallback sender, checks the overlay clock, and combines the
 result with existing native relay observations. It does not restart anything.
 
-The [architecture](../architecture.md#clock-observation-path) owns the host and
-data paths. [Current status](../current-status.md) owns recent changes and
-unobserved behavior. The [dated review and source port](public-source-port-2026-10-22.md)
-records the measurements and failed attempts behind this implementation.
+This page is the stable contract. [Observability](../observability.md#video-observation-layers)
+defines how far each observation layer reaches, and the
+[architecture](../architecture.md#clock-observation-path) owns the host and data
+paths. [Current status](../current-status.md) owns recent changes and unobserved
+behavior. The [clock observation case study](clock-observation-case-study.md)
+explains why the design changed; dated measurements are in the
+[source-port record](public-source-port-2026-10-22.md).
 
-## Observation Boundary
+## Scope Labels
 
-| Scope label | What is observed | What it cannot establish |
-| --- | --- | --- |
-| `dell_oci_relay_dell` | Rendered clock returned from the OCI common relay. | YouTube or Twitch public-player reception. |
-| `dell_backup_sender_dell` | Secondary output of the direct YouTube backup encoder. | YouTube accepting or serving that output. |
-| `oci_forward_sender` | Existing native forward state and per-connection byte progress. | Decoded media or public-player playback. |
+Each metric carries one fixed scope label for the layer it belongs to.
+
+| Scope label | Layer |
+| --- | --- |
+| `dell_oci_relay_dell` | Return-feed clock from the OCI common relay. |
+| `dell_backup_sender_dell` | Fallback-sender clock from the direct YouTube backup encoder. |
+| `oci_forward_sender` | Native per-destination forward state and byte progress. |
 
 `oci_relay` and `youtube_fallback` are independent targets. An unavailable OCI
 reader cannot substitute for the fallback sample. A fallback with no requested
-producer is standby. Public-player acquisition remains a separate mechanism;
-this worker does not use it or rely on an unreviewed automated access method.
+producer is standby. This worker does not acquire the public player.
 
 ## Bounded Capture
 
@@ -39,10 +43,13 @@ OCR has a separate finite deadline. Resource or acquisition failures remain
 `UNKNOWN`. Ordinary full-frame JPEGs stay in memory-backed storage, with two
 recent images per target. Abnormal evidence has capacity and retention limits.
 
-Initial stream probing allows five seconds and 5 MB, with bounded reconnect
-jitter to avoid repeatedly aligning a short probe with the same GOP phase.
-Missing codec parameters have a separate `capture_probe_failed` reason. Cumulative
-PTS versus monotonic drift can invalidate delay without claiming a stream fault.
+Initial stream probing allows five seconds and 5 MB, with 0.1-2 seconds of
+reconnect jitter so a reconnect does not keep landing on the same GOP phase. A
+one-second, 1 MiB probe left the reader unable to start for hours with FFmpeg
+5.1.9; the [case study](clock-observation-case-study.md#the-reader-went-blind)
+describes that failure. Missing codec parameters have a separate
+`capture_probe_failed` reason. Cumulative PTS versus monotonic drift above one
+second invalidates delay without claiming a stream fault.
 
 The fallback encoder keeps one primary synchronous output. Its secondary UDP
 output uses a 32-packet FIFO with drop-on-overflow and ignore-on-failure. The
@@ -135,7 +142,10 @@ quality metrics are missing for five minutes. Fresh, bound fallback standby is
 excluded. It reuses the existing warning delivery loop; two distinct fresh
 observations are required to resolve a warning. No recovery path is added.
 
-The [Twitch thumbnail contract](twitch-thumbnail-monitor.md) adds a slower
+This analyzer has no binary-threshold retry. Low UTC confidence on returned
+frames can raise the observation warning while frames and forward bytes continue;
+[current status](../current-status.md) tracks that open item. The
+[Twitch thumbnail contract](twitch-thumbnail-monitor.md) adds a slower
 provider-image layer with separate age and refresh semantics.
 
 ## Configuration And Local Checks

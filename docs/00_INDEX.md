@@ -9,7 +9,7 @@ start.
 - `README.md`: [documentation guide](README.md), the suggested reading order.
 - `hiring-reviewer-guide.md`: [reading paths by reviewer role](hiring-reviewer-guide.md).
 - `current-status.md`: [recent changes, unobserved items, and disabled features](current-status.md).
-- `operational-case-studies.md`: [eight short incident stories](operational-case-studies.md).
+- `operational-case-studies.md`: [nine short incident stories](operational-case-studies.md).
 - `operational-scorecard.md`: [measured results, tests, and remaining gaps](operational-scorecard.md).
 - `implementation-review-map.md`: [where each claim's code and tests live](implementation-review-map.md).
 
@@ -71,6 +71,7 @@ start.
 - `v3/single-node-dr-case-study.md`: [single-node k3s restart drill and untested DR](v3/single-node-dr-case-study.md).
 - `v3/migration-cutover-case-study.md`: [v2 to v3 cutover and the 24-hour gate](v3/migration-cutover-case-study.md).
 - `v3/three-host-source-consolidation.md`: [comparing three hosts' source trees](v3/three-host-source-consolidation.md).
+- `v3/clock-observation-case-study.md`: [from pixel comparison to paired clocks, a blind reader, and provider thumbnails](v3/clock-observation-case-study.md).
 
 ## History And Superseded Designs
 
@@ -93,6 +94,7 @@ start.
 
 ## Publication Records
 
+- `v3/thumbnail-ocr-rollout-2026-10-22.md`: [operated counter activation, live OCR evidence and preserved concurrent work](v3/thumbnail-ocr-rollout-2026-10-22.md).
 - `v3/public-source-port-2026-10-22-thumbnail.md`: [thumbnail monitoring and return-reader quality corrections](v3/public-source-port-2026-10-22-thumbnail.md).
 - `v3/public-source-port-2026-10-22-thumbnail-review.md`: [stream rollover, missing metrics, OCR retry and source-only validation](v3/public-source-port-2026-10-22-thumbnail-review.md).
 - `v3/public-source-port-2026-10-22.md`: [clock-monitor review, dated evidence and public source adaptations](v3/public-source-port-2026-10-22.md).

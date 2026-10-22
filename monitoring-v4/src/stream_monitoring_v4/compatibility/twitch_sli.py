@@ -131,7 +131,9 @@ class History:
                     self.db.execute('UPDATE renewals SET offline_at=? WHERE due=?', (offline, due))
                 try: new_start = stamp(api['started']) if api['started'] else 0
                 except (ValueError, TypeError): new_start = 0
-                if before and offline and api['live']=='GOOD' and api['stream'] and api['stream']!=before and due <= new_start <= api['observed'] and api['observed']>offline:
+                # A new stream ID started after the due instant proves the session ended. The OFFLINE gap
+                # can be shorter than the 60 s API cadence, so offline_at is kept as evidence only.
+                if before and api['live']=='GOOD' and api['stream'] and api['stream']!=before and due <= new_start <= api['observed']:
                     self.db.execute("UPDATE renewals SET result='GOOD',completed_at=? WHERE due=?", (api['observed'], due))
                     continue
             if now > due+780:  # allow the collector to deliver the sample taken at the 600 s deadline

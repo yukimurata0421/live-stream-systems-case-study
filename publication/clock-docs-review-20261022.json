@@ -1,0 +1,100 @@
+{
+  "schema": "stream.public_docs_restructure.v1",
+  "date_jst": "2026-10-22",
+  "base_public_commit": "3c1db55b13e04012a1326d2a186c0dcdd0019cbe",
+  "built_on_uncommitted_documentation_review": true,
+  "purpose": "Define the video observation layers once, tell the clock-observation history as one case study, and keep volatile clock state in a single current-status table.",
+  "corrections": [
+    "Observation-layer boundaries moved from two component contracts into one table in docs/observability.md.",
+    "The multi-hour blind return-reader period (last valid 06:31 JST, 760 failed rows 07:10-09:17 JST on 2026-10-22) is now told as a case study instead of a single table row.",
+    "Dated operated measurements were moved out of the thumbnail contract into the case study and dated records.",
+    "current-status records the completed 2026-10-22 00:00 JST Twitch renewal (new stream from 00:02:05 JST) without claiming YouTube continuity, and lists low UTC OCR confidence on the return feed as open."
+  ],
+  "retained": "Dated port and rollout records are unchanged and remain the provenance for their windows.",
+  "documents": {
+    "docs/observability.md": {
+      "before": "11334a65c761a119a04864c05446e1f99166b9b97ddf017fc1a4be354f20f02b",
+      "after": "f2d23a1ca64f383539c68478ef9f5c35579bfac6e0afd37188deb0fe49127457"
+    },
+    "docs/v3/relay-clock-monitor.md": {
+      "before": "bb5176c5c013212db5cfe787346c245c8f7670484292cbebdea0641bb7d8c9f2",
+      "after": "3adb3b9405fb0a8f9c6a3dfe1177b67b56a4dad6f64c1da243a925cbbe1b418c"
+    },
+    "docs/v3/twitch-thumbnail-monitor.md": {
+      "before": "74232e3d4fdff720c8625e654b941111bb9c7bc0e22836fe8c46219bb1809b71",
+      "after": "a941e0189515220a31aa989ab6f0290290183dcfb269a4d8de68e6661f668f88"
+    },
+    "docs/current-status.md": {
+      "before": "b3c0ed5d6201450618476a5c90a0c5c40ff7a041587a6be590871077742d1b35",
+      "after": "2970d1c5d8f6cda4d0d0a016317de7663f8f14daf5d9cb9575dce1cf58f84f7b"
+    },
+    "docs/operational-case-studies.md": {
+      "before": "c08e8f4f29564da5309cf4830a8ac07ef3f220feb699f8b327e5ee072e1b14d1",
+      "after": "75864230d4f06acb5fab0bb1948cd5a4fe0738fd35d3e44f59ef19b3ca759ca7"
+    },
+    "docs/00_INDEX.md": {
+      "before": "5d7806ac40bb83b671252d6fa94a0d9ceab93365d6299e151ebdc2909ac15437",
+      "after": "56cb15aeeab03a5ddfe3541c7eaf265241e194d46047421e6afccecf7cc83481"
+    },
+    "docs/README.md": {
+      "before": "a0c9dcf62d61610b3aac2d7ad8d72d5f5977d43d4365ccafb9cb416033f715df",
+      "after": "0e2306b6149e8d3529e22ef67853b75aaf517b765a6ee4178f484e47d59e9a90"
+    },
+    "docs/v3/clock-observation-case-study.md": {
+      "before": null,
+      "after": "063d3f18723b18ca0bbd09c0a2aa813384e3048c7dafc1c9e0094e1ab23826bf"
+    }
+  },
+  "deployment_performed": false,
+  "commit_or_push_performed": false,
+  "pre_commit_review": "Sender-side flow is described without claiming viewer playback; source code and runtime remain unchanged.",
+  "pre_commit_validation": {
+    "public_source_map_issues": 0,
+    "public_language": "PASS",
+    "docs_tests_passed": 17,
+    "docs_subtests_passed": 739,
+    "selected_public_files": 16,
+    "private_values_or_ai_attribution": "not found",
+    "independent_working_files_excluded": 0,
+    "parallel_sli_tests_passed": 27,
+    "parallel_sli_subtests_passed": 23,
+    "public_browser_checks_passed": 11
+  },
+  "not_changed_by_documentation_review": [
+    "source code",
+    "monitoring rules",
+    "configuration examples",
+    "dated publication records",
+    "monitoring-v4/src/stream_monitoring_v4/compatibility/twitch_sli.py",
+    "monitoring-v4/tests/test_twitch_sli.py",
+    "ops/public-publisher/site/public/assets/ops-20261020.js",
+    "ops/public-publisher/site/tests/twitch-history-20261022.html"
+  ],
+  "additional_completed_parallel_work": {
+    "scope": "Included in the combined commit after explicit user request; separate from the documentation-only review.",
+    "files": [
+      {
+        "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/twitch_sli.py",
+        "before_public_sha256": "8bc0436de110717b0dc4013261779f8988bfa2a3e2415ea223b7d007fff5992a",
+        "public_sha256": "8befe0fde5305435a7ee655cf0f4d3e4b228e08d42dc2b286cf517dc19cd9875"
+      },
+      {
+        "path": "monitoring-v4/tests/test_twitch_sli.py",
+        "before_public_sha256": "c172b6ef5c0ec74bb4f42d208df0c0ca7c8c57789fd5bac773aab92f27049c61",
+        "public_sha256": "897481f38aebba61e4f4f60e6ccf04aa1a62a3d820231b9e8febfc5a15ba504a"
+      },
+      {
+        "path": "ops/public-publisher/site/public/assets/ops-20261020.js",
+        "before_public_sha256": "333c1a4e572938df14f66df5c75708b8eac8c26d9ccfb5b125c7631896c4a2c7",
+        "public_sha256": "9cffbced39f04df89dee893044aa34ca7168a7a6a194a79967bbda0c8bf9010a"
+      },
+      {
+        "path": "ops/public-publisher/site/tests/twitch-history-20261022.html",
+        "before_public_sha256": "2fe2bd4ee4bb970cf91031fdc2597f0f277d335bf5fb25747dc8c6081b01d941",
+        "public_sha256": "c3de517c0cf6ea201c402da5eeecf7f9337daaa7ac6b5e2be5aea22e13796640"
+      }
+    ],
+    "deployment_performed": false,
+    "compatibility": "Public JSON field names and accepted display definitions stay unchanged; a sampled OFFLINE gap is no longer required to verify a new session."
+  }
+}

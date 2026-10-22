@@ -68,22 +68,44 @@ raw signals remain available for diagnosis. See the Monitoring v4
 [relay/provider evidence](../monitoring-v4/docs/relay-provider-evidence.md#oci-aware-notification-decisions)
 for cadence, metric definitions, channel routing, and recovery confirmation.
 
-## Returned Clock And Observer Quality
+## Video Observation Layers
 
-The [return-feed clock monitor](v3/relay-clock-monitor.md) adds image/clock facts
-for the OCI relay and direct fallback sender. It does not establish public
-YouTube/Twitch reception. Existing native per-destination state/bytes remain
-separate evidence. `stream_v3_oci_monitor_clock_advancing` and the corresponding
-fallback metric require paired OCR progression and fresh runtime/source binding.
+"Is the video still advancing for viewers?" has no single signal. Each layer
+below observes a different point on the path, at a different cadence. This
+table is the one place that defines how far each layer reaches; component
+contracts link here instead of repeating it.
+
+| Layer | Observed at | Cadence | Supports | Does not establish |
+| --- | --- | --- | --- | --- |
+| Return-feed clock | OCI common relay output, read back to the delivery host | 10 s samples, continuous reader | The rendered JST/UTC clock advanced at the relay output; display age. | Reception by YouTube or Twitch. |
+| Fallback-sender clock | Secondary output of the direct YouTube backup encoder | 10 s while the fallback runs | The backup encoder output advanced. | YouTube accepting or serving it. |
+| Native forward counters | Per-destination forward connections on the relay | 60 s, 90 s freshness | Bytes progressed on each destination's connection. | Provider decoding. |
+| Provider API | YouTube stream status and health; Twitch Get Streams | Provider-specific | The provider reported LIVE, OFFLINE, or a health state. | Continuous decoded video. |
+| Provider thumbnail clock | Twitch `thumbnail_url` image (Twitch only) | 60 s polls; new images arrived every six minutes in the observed window | Twitch produced an image whose clock advanced. | Video CDN, player, or audio health. |
+| Public player | Not observed | — | — | — |
+
+No layer here establishes viewer playback, so none is reported as end-to-end
+success. Layers are combined, not substituted: a stale thumbnail with progressing
+forward bytes is a disagreement to diagnose, not proof that video stopped, and
+an unavailable return reader cannot stand in for the fallback sample. YouTube
+has no provider-image layer. Public-player acquisition is not used.
+
+The return-feed and fallback layers are defined by the
+[return-feed clock monitor](v3/relay-clock-monitor.md); the thumbnail layer by
+the [thumbnail contract](v3/twitch-thumbnail-monitor.md). Both report observation
+gaps as warnings and hold no recovery authority. The
+[clock observation case study](v3/clock-observation-case-study.md) explains how
+this layering was reached, including a period when the return reader was blind
+for hours without any warning.
+
+`stream_v3_oci_monitor_clock_advancing` and the corresponding fallback metric
+require paired OCR progression and fresh runtime/source binding.
 `stream_v3_monitor_probe_*` reports scope, native flow, delay validity, freeze
-coverage, failure class, source freshness and configuration diagnostics.
-
-Display age is measured at complete decoded-frame arrival and includes decoder
-and queue delay. Missing observations do not count as observed freeze time.
-Importer cycle deduplication protects sample denominators; collector failures
-have a separate history. The new metrics refresh on every scrape while the
-existing expensive exporter cache retains its cadence. These facts add no new
-notification route or recovery authority.
+coverage, failure class, source freshness and configuration diagnostics. Display
+age is measured at complete decoded-frame arrival and includes decoder and queue
+delay. Missing observations do not count as observed freeze time. Importer cycle
+deduplication protects sample denominators; collector failures have a separate
+history.
 
 ## Dashboards
 

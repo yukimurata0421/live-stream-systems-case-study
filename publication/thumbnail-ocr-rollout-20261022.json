@@ -1,0 +1,84 @@
+{
+  "schema": "stream.public_port_record.v1",
+  "recorded_on_jst": "2026-10-22",
+  "scope": "Operated rollout verification and documentation only; existing c27f0ee0 public source reused.",
+  "source_commit": "c27f0ee0af1f9e7ff19676c6a7e5eb224d408f71",
+  "public_source_commit": "3c1db55",
+  "private_deployment_performed": true,
+  "private_rollout_at_jst": "2026-10-22T11:51:00+09:00",
+  "public_example_deployment_performed": false,
+  "observations": {
+    "window_end_utc": "2026-10-22T02:56:45.625Z",
+    "cycles": 6,
+    "ocr_observations": 1,
+    "binary_retries": 1,
+    "binary_retry_verified_cycles": 1,
+    "cached_cycles_not_recounted": 5,
+    "prometheus_counter_ingested": true,
+    "protected_processes_continued": true,
+    "normal_image_files": 0,
+    "clock_alerts_at_check": [
+      {
+        "name": "ViewerClockObservationUnavailable",
+        "target": "oci_relay",
+        "state": "firing"
+      }
+    ],
+    "window_start_utc": "2026-10-22T02:51:00Z",
+    "independent_relay_ocr_warning": {
+      "seen_during_check": true,
+      "latest_checked_at_utc": "2026-10-22T03:01:58Z",
+      "latest_firing_alerts": [],
+      "last_valid_observation_at_utc": "2026-10-22T03:01:47.048Z",
+      "native_forward_flowing": true,
+      "changed_by_this_rollout": false,
+      "diagnosis": "Some relay UTC OCR confidences were below the existing threshold; capture and sender byte progress continued."
+    }
+  },
+  "checks": {
+    "private_related_tests_passed": 104,
+    "public_related_tests": {
+      "passed": 128,
+      "subtests_passed": 717
+    },
+    "source_lineage_digest_matches": 10,
+    "worker_source_matches": 8,
+    "observer_manifest_matches": 15,
+    "prometheus_rule_tests": "PASS",
+    "secret_scan": "PASS; private paths/addresses/keys absent from selected documentation",
+    "public_source_map": "PASS for isolated selected snapshot; protected parallel working files excluded",
+    "public_language": "PASS; 1839 text files, one retained upstream exception"
+  },
+  "preserved": [
+    "Existing public source commit and independent publisher/API SLI working files.",
+    "Original hash-pinned exporter and existing notifier/API/readsb processes.",
+    "Delivery routes, fallback, recovery authority and paused acquisition paths."
+  ],
+  "limitations": [
+    "Short normal observation window; no 24-hour quality guarantee.",
+    "No notification receiver-side or public-player/audio E2E confirmation.",
+    "Four pre-existing source-map mismatches in independent public working files."
+  ],
+  "files": [
+    {
+      "path": "docs/v3/thumbnail-ocr-rollout-2026-10-22.md",
+      "before_sha256": null,
+      "public_sha256": "c2f62117249e2e998c516d86a935502082c39d1dac58e69977e88e357b2d2d42"
+    },
+    {
+      "path": "docs/current-status.md",
+      "before_sha256": "209f0cd2d8adc0144f39a214c5f4ccf6c0a99378c3292bca720f453defc6f06f",
+      "public_sha256": "b3c0ed5d6201450618476a5c90a0c5c40ff7a041587a6be590871077742d1b35"
+    },
+    {
+      "path": "docs/00_INDEX.md",
+      "before_sha256": "94cbeda85d7c05469854effe996cdd8c48b5db06b303e4ae0785a78e7cf48070",
+      "public_sha256": "5d7806ac40bb83b671252d6fa94a0d9ceab93365d6299e151ebdc2909ac15437"
+    },
+    {
+      "path": "docs/v3/twitch-thumbnail-monitor.md",
+      "before_sha256": "0f3f80233f5fd6c20a306e97cacb5c4f9e8e4c69960629f339363e89299c3252",
+      "public_sha256": "74232e3d4fdff720c8625e654b941111bb9c7bc0e22836fe8c46219bb1809b71"
+    }
+  ]
+}

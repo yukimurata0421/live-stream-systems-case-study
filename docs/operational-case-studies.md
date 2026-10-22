@@ -3,7 +3,7 @@
 These are short accounts of real operational problems and one failed test
 campaign. They explain the engineering decisions without requiring familiarity
 with the whole system. The October cases summarize retained records from
-2026-10-13 to 2026-10-20 JST; they are historical observations, not a current
+2026-10-13 to 2026-10-22 JST; they are historical observations, not a current
 health report.
 
 The useful result is sometimes restored delivery, sometimes a corrected warning,
@@ -219,6 +219,34 @@ relay service was exercised.
 other automation does during the failure, not only the component under test.
 
 [Self-healing route and drill](v3/self-healing-oci-fanout.md)
+
+## 9. The Video Monitor Was Blind For Hours And Nothing Said So
+
+**Problem.** A reader on the relay output checks that the stream's overlay clock
+keeps advancing. On 2026-10-22 its last valid observation was at 06:31 JST. The
+retained history from 07:10 to 09:17 JST held 760 consecutive start or
+stream-ended failures, while the relay's own counters showed the publisher and
+both platform forwards progressing. Sender-side flow continued; observation did not.
+
+**Investigation and response.** The reader gave FFmpeg 5.1.9 a one-second input
+probe, which often ended before a keyframe arrived. Inside the monitor Pod that
+probe started successfully three times in six, against six in six with five
+seconds. Why the failures ran unbroken for hours was not established. The probe
+was lengthened, reconnects were jittered, and the failure got its own reason
+code. No warning had fired because the worker's heartbeat stayed healthy and no
+rule watched clock observations, so a 300-second observation-gap warning and an
+observer-unavailable warning were added to the existing notification loop.
+
+**Result and limit.** Replaying the 760 retained rows offline, every row met the
+new gap condition, and 18 of 18 cycles after the fix were confirmed. Delivery of
+the new warning to the notification channel has not yet been observed, and the
+clock layers still do not establish viewer playback.
+
+**What it demonstrates.** A healthy heartbeat shows that a worker runs, not that
+it observes anything. An observation gap needs its own warning.
+
+[Clock observation case study](v3/clock-observation-case-study.md) ·
+[Observation layers](observability.md#video-observation-layers)
 
 ## Evidence And Reading Boundaries
 

@@ -46,7 +46,7 @@
       "decision": "Review fixes, English prose and existing public bindings; no deployment or unrelated working-copy edits.",
       "before_sha256": "6cf7bf2af188f52029afb5c5460c0dbf027488303b12a60bf0753a37664bf36c",
       "source_sha256": null,
-      "public_sha256": "94cbeda85d7c05469854effe996cdd8c48b5db06b303e4ae0785a78e7cf48070",
+      "public_sha256": "56cb15aeeab03a5ddfe3541c7eaf265241e194d46047421e6afccecf7cc83481",
       "prior_public_sha256": "e32ab253e63bfe09d4ec42a5fc1594a2025b8bd859cab754ee1558798c0391dc",
       "localization": "English prose; control structures and machine identifiers preserved.",
       "pre_graph_display_sha256": "6a87a495eb3698b1a49e053ffcc109b28d94a59e9dd29cb3399a62279e196d3d",
@@ -68,7 +68,11 @@
       "pre_thumbnail_clock_public_sha256": "fd1f9349b84427f1d7d62186b9996e06efae80ad624fd378ab8da822335777fb",
       "thumbnail_clock_port": "2026-10-22 committed source through 740bcc00; concurrent review excluded.",
       "pre_thumbnail_review_public_sha256": "6cf7bf2af188f52029afb5c5460c0dbf027488303b12a60bf0753a37664bf36c",
-      "thumbnail_review_port": "2026-10-22 stream rollover, bounded gaps and conservative OCR retry."
+      "thumbnail_review_port": "2026-10-22 stream rollover, bounded gaps and conservative OCR retry.",
+      "pre_thumbnail_ocr_rollout_public_sha256": "94cbeda85d7c05469854effe996cdd8c48b5db06b303e4ae0785a78e7cf48070",
+      "thumbnail_ocr_rollout": "2026-10-22 operated verification; source semantics unchanged.",
+      "pre_clock_documentation_review_public_sha256": "5d7806ac40bb83b671252d6fa94a0d9ceab93365d6299e151ebdc2909ac15437",
+      "clock_documentation_review": "2026-10-22 observation-layer table, clock case study and current-status consolidation; no code or runtime change."
     },
     {
       "path": "docs/same-url-continuity-evidence.md",
@@ -85,7 +89,7 @@
       "decision": "English prose and reviewed public bindings; no live deployment, publisher/UI changes or concurrent review patch.",
       "before_sha256": "568b27bc95c95fafb356f040c85508dc2686265c87376a0fd49b3ee542751ceb",
       "source_sha256": null,
-      "public_sha256": "a0c9dcf62d61610b3aac2d7ad8d72d5f5977d43d4365ccafb9cb416033f715df",
+      "public_sha256": "0e2306b6149e8d3529e22ef67853b75aaf517b765a6ee4178f484e47d59e9a90",
       "pre_hardware_selection_sha256": "e1fcb50d004b1acf7c7c79d457c62952161d199e9727f7619bb7fce5cd1ae260",
       "hardware_selection_change": "Link the dated hardware selection retrospective from existing reviewer and topology routes.",
       "pre_documentation_restructure_sha256": "3a14b689ef3c2c1307a39e2f2f40e6267e2bbc507ae430f846d373c2f667b197",
@@ -93,7 +97,9 @@
       "pre_clock_monitor_public_sha256": "e0342ca1c38c3fa879d39e428ea9fadda4e46ba8d1650315bf447ebcfc3abbf5",
       "clock_monitor_port": "2026-10-22 selected return-feed monitor / OCI files-only backup port; existing changes retained.",
       "pre_thumbnail_clock_public_sha256": "568b27bc95c95fafb356f040c85508dc2686265c87376a0fd49b3ee542751ceb",
-      "thumbnail_clock_port": "2026-10-22 committed source through 740bcc00; concurrent review excluded."
+      "thumbnail_clock_port": "2026-10-22 committed source through 740bcc00; concurrent review excluded.",
+      "pre_clock_documentation_review_public_sha256": "a0c9dcf62d61610b3aac2d7ad8d72d5f5977d43d4365ccafb9cb416033f715df",
+      "clock_documentation_review": "2026-10-22 observation-layer table, clock case study and current-status consolidation; no code or runtime change."
     },
     {
       "path": "docs/architecture.md",
@@ -142,10 +148,12 @@
       "decision": "curated-current-contract-and-dated-evidence",
       "before_sha256": "ef434bdce8efbb763645393e0ae4b1d333d6616535963bb6356dec2ef14ec3a6",
       "source_sha256": null,
-      "public_sha256": "c08e8f4f29564da5309cf4830a8ac07ef3f220feb699f8b327e5ee072e1b14d1",
+      "public_sha256": "75864230d4f06acb5fab0bb1948cd5a4fe0738fd35d3e44f59ef19b3ca759ca7",
       "port_date_jst": "2026-10-20",
       "pre_documentation_restructure_sha256": "aab38a602e76fcc8440508d193a58ff41f5a54aec0b817a1e677d7d4e43ed9b5",
-      "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json."
+      "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json.",
+      "pre_clock_documentation_review_public_sha256": "c08e8f4f29564da5309cf4830a8ac07ef3f220feb699f8b327e5ee072e1b14d1",
+      "clock_documentation_review": "2026-10-22 observation-layer table, clock case study and current-status consolidation; no code or runtime change."
     },
     {
       "path": "docs/operational-scorecard.md",
@@ -446,11 +454,13 @@
       "decision": "Twitch observation and OCI-aware notifications; public bindings and English text retained",
       "before_sha256": null,
       "source_sha256": "9bcf09759f9946a689e1a9330853f298cf6ac842a88853073c74c04ab0714590",
-      "public_sha256": "8bc0436de110717b0dc4013261779f8988bfa2a3e2415ea223b7d007fff5992a",
+      "public_sha256": "8befe0fde5305435a7ee655cf0f4d3e4b228e08d42dc2b286cf517dc19cd9875",
       "pre_twitch_sli_resilience_sha256": "6495cf95221045c5b61fcd3da91f67960477edccfabe95045dd4d3b5ffaed51c",
       "twitch_sli_resilience": "Locally checked candidate only; production application held for fresh task.",
       "pre_twitch_observation_public_sha256": "867319076851eae4850d3d57166520a34fbc8816ee33d6581135dfeea25d6218",
-      "port_date_jst": "2026-10-21"
+      "port_date_jst": "2026-10-21",
+      "pre_completed_parallel_work_public_sha256": "8bc0436de110717b0dc4013261779f8988bfa2a3e2415ea223b7d007fff5992a",
+      "completed_parallel_work": "2026-10-22 renewal verification without requiring a sampled OFFLINE gap; indeterminate public assessment remains unknown."
     },
     {
       "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/twitch_sli_public.py",
@@ -535,9 +545,11 @@
       "decision": "configured-public-evidence-binding",
       "before_sha256": null,
       "source_sha256": "cc73310ca1aa5e7ce292057f82b67cd39314b9065f1eb6e5954b45598b750f98",
-      "public_sha256": "c172b6ef5c0ec74bb4f42d208df0c0ca7c8c57789fd5bac773aab92f27049c61",
+      "public_sha256": "897481f38aebba61e4f4f60e6ccf04aa1a62a3d820231b9e8febfc5a15ba504a",
       "pre_twitch_sli_resilience_sha256": "c5aa04babecdaad7a7be108a70f9095bc5791b8a364eea739d9ac0735e447533",
-      "twitch_sli_resilience": "Locally checked candidate only; production application held for fresh task."
+      "twitch_sli_resilience": "Locally checked candidate only; production application held for fresh task.",
+      "pre_completed_parallel_work_public_sha256": "c172b6ef5c0ec74bb4f42d208df0c0ca7c8c57789fd5bac773aab92f27049c61",
+      "completed_parallel_work": "2026-10-22 renewal verification without requiring a sampled OFFLINE gap; indeterminate public assessment remains unknown."
     },
     {
       "path": "ops/host-maintenance/bin/nvidia_driver_update_check.py",
@@ -2874,9 +2886,11 @@
       "decision": "Twitch public history compatibility, freshness and isolated-failure polling repair",
       "before_sha256": "2e553bcf4f20f8864e3319acfae4a8512ad62cbc076af1f0e2ef8f7f23a5c74f",
       "source_sha256": "333c1a4e572938df14f66df5c75708b8eac8c26d9ccfb5b125c7631896c4a2c7",
-      "public_sha256": "333c1a4e572938df14f66df5c75708b8eac8c26d9ccfb5b125c7631896c4a2c7",
+      "public_sha256": "9cffbced39f04df89dee893044aa34ca7168a7a6a194a79967bbda0c8bf9010a",
       "port_date_jst": "2026-10-22",
-      "pre_twitch_history_repair_public_sha256": "82667f7728e1a5b71a00bb4a728cdc9a5cb589a53491233c5cc278e697deb1b2"
+      "pre_twitch_history_repair_public_sha256": "82667f7728e1a5b71a00bb4a728cdc9a5cb589a53491233c5cc278e697deb1b2",
+      "pre_completed_parallel_work_public_sha256": "333c1a4e572938df14f66df5c75708b8eac8c26d9ccfb5b125c7631896c4a2c7",
+      "completed_parallel_work": "2026-10-22 renewal verification without requiring a sampled OFFLINE gap; indeterminate public assessment remains unknown."
     },
     {
       "path": "docs/v3/public-status-page-2026-10-20.md",
@@ -2921,7 +2935,7 @@
       "decision": "Review fixes, English prose and existing public bindings; no deployment or unrelated working-copy edits.",
       "before_sha256": "fc04fe5c2e6937be3fd269d3bd636d44bf4e39dd05de95497936624fb5a63efc",
       "source_sha256": null,
-      "public_sha256": "209f0cd2d8adc0144f39a214c5f4ccf6c0a99378c3292bca720f453defc6f06f",
+      "public_sha256": "2970d1c5d8f6cda4d0d0a016317de7663f8f14daf5d9cb9575dce1cf58f84f7b",
       "port_date_jst": "2026-10-20",
       "documentation_restructure": "New single page for volatile state.",
       "pre_twitch_observation_public_sha256": "040eac29174151f51e473f7f85e4aa23ff994be0079b3d4c011623b6ec7864ca",
@@ -2930,7 +2944,11 @@
       "pre_thumbnail_clock_public_sha256": "6ad341e3fe02aaa577bfabc49e7211a328bae6cf16a48c0a9b5c9dd104a42d3a",
       "thumbnail_clock_port": "2026-10-22 committed source through 740bcc00; concurrent review excluded.",
       "pre_thumbnail_review_public_sha256": "fc04fe5c2e6937be3fd269d3bd636d44bf4e39dd05de95497936624fb5a63efc",
-      "thumbnail_review_port": "2026-10-22 stream rollover, bounded gaps and conservative OCR retry."
+      "thumbnail_review_port": "2026-10-22 stream rollover, bounded gaps and conservative OCR retry.",
+      "pre_thumbnail_ocr_rollout_public_sha256": "209f0cd2d8adc0144f39a214c5f4ccf6c0a99378c3292bca720f453defc6f06f",
+      "thumbnail_ocr_rollout": "2026-10-22 operated verification; source semantics unchanged.",
+      "pre_clock_documentation_review_public_sha256": "b3c0ed5d6201450618476a5c90a0c5c40ff7a041587a6be590871077742d1b35",
+      "clock_documentation_review": "2026-10-22 observation-layer table, clock case study and current-status consolidation; no code or runtime change."
     },
     {
       "path": "monitoring-v4/ops/release/model.py",
@@ -3022,12 +3040,14 @@
       "source_role": "public-documentation",
       "before_sha256": "66ab195158854e1ddbe4ba06dd63fce3442079021b33d759dc9e2f434ec93f2e",
       "pre_twitch_observation_public_sha256": "66ab195158854e1ddbe4ba06dd63fce3442079021b33d759dc9e2f434ec93f2e",
-      "public_sha256": "11334a65c761a119a04864c05446e1f99166b9b97ddf017fc1a4be354f20f02b",
+      "public_sha256": "f2d23a1ca64f383539c68478ef9f5c35579bfac6e0afd37188deb0fe49127457",
       "source_sha256": null,
       "port_date_jst": "2026-10-21",
       "decision": "Twitch observation and OCI-aware notifications; public bindings and English text retained",
       "pre_clock_monitor_public_sha256": "bd88394af5b0c4b2b6b5115f77a10e6002b13fe621a7c57287b05ea1fab79090",
-      "clock_monitor_port": "2026-10-22 selected return-feed monitor / OCI files-only backup port; existing changes retained."
+      "clock_monitor_port": "2026-10-22 selected return-feed monitor / OCI files-only backup port; existing changes retained.",
+      "pre_clock_documentation_review_public_sha256": "11334a65c761a119a04864c05446e1f99166b9b97ddf017fc1a4be354f20f02b",
+      "clock_documentation_review": "2026-10-22 observation-layer table, clock case study and current-status consolidation; no code or runtime change."
     },
     {
       "path": "publication/twitch-observation-port-20261021.json",
@@ -3097,12 +3117,14 @@
       "path": "docs/v3/relay-clock-monitor.md",
       "before_sha256": "9f8bf66dc1d3dbae5d9c69a2bac56d197535169aef465d2f21e0fc41001753be",
       "source_sha256": null,
-      "public_sha256": "bb5176c5c013212db5cfe787346c245c8f7670484292cbebdea0641bb7d8c9f2",
+      "public_sha256": "3adb3b9405fb0a8f9c6a3dfe1177b67b56a4dad6f64c1da243a925cbbe1b418c",
       "source_role": "public-documentation-or-regression",
       "decision": "English prose and reviewed public bindings; no live deployment, publisher/UI changes or concurrent review patch.",
       "port_date_jst": "2026-10-22",
       "pre_thumbnail_clock_public_sha256": "9f8bf66dc1d3dbae5d9c69a2bac56d197535169aef465d2f21e0fc41001753be",
-      "thumbnail_clock_port": "2026-10-22 committed source through 740bcc00; concurrent review excluded."
+      "thumbnail_clock_port": "2026-10-22 committed source through 740bcc00; concurrent review excluded.",
+      "pre_clock_documentation_review_public_sha256": "bb5176c5c013212db5cfe787346c245c8f7670484292cbebdea0641bb7d8c9f2",
+      "clock_documentation_review": "2026-10-22 observation-layer table, clock case study and current-status consolidation; no code or runtime change."
     },
     {
       "path": "ops/config/oci_backup_source.example.json",
@@ -3390,10 +3412,12 @@
       "source_role": "development-public-ui",
       "before_sha256": null,
       "pre_twitch_history_repair_public_sha256": null,
-      "public_sha256": "2fe2bd4ee4bb970cf91031fdc2597f0f277d335bf5fb25747dc8c6081b01d941",
+      "public_sha256": "c3de517c0cf6ea201c402da5eeecf7f9337daaa7ac6b5e2be5aea22e13796640",
       "source_sha256": "2fe2bd4ee4bb970cf91031fdc2597f0f277d335bf5fb25747dc8c6081b01d941",
       "port_date_jst": "2026-10-22",
-      "decision": "Twitch public history compatibility, freshness and isolated-failure polling repair"
+      "decision": "Twitch public history compatibility, freshness and isolated-failure polling repair",
+      "pre_completed_parallel_work_public_sha256": "2fe2bd4ee4bb970cf91031fdc2597f0f277d335bf5fb25747dc8c6081b01d941",
+      "completed_parallel_work": "2026-10-22 renewal verification without requiring a sampled OFFLINE gap; indeterminate public assessment remains unknown."
     },
     {
       "path": "monitoring-v4/tests/test_twitch_sli_public_contract.py",
@@ -3429,13 +3453,17 @@
       "path": "docs/v3/twitch-thumbnail-monitor.md",
       "before_sha256": "4e1557062b137358c8ea048a378b171d32bd24785b4b0259f59647c8b062110f",
       "source_sha256": null,
-      "public_sha256": "0f3f80233f5fd6c20a306e97cacb5c4f9e8e4c69960629f339363e89299c3252",
+      "public_sha256": "a941e0189515220a31aa989ab6f0290290183dcfb269a4d8de68e6661f668f88",
       "source_role": "public-documentation-or-regression",
       "decision": "Review fixes, English prose and existing public bindings; no deployment or unrelated working-copy edits.",
       "thumbnail_clock_port": "2026-10-22 committed source through 740bcc00; concurrent review excluded.",
       "pre_thumbnail_clock_public_sha256": null,
       "pre_thumbnail_review_public_sha256": "4e1557062b137358c8ea048a378b171d32bd24785b4b0259f59647c8b062110f",
-      "thumbnail_review_port": "2026-10-22 stream rollover, bounded gaps and conservative OCR retry."
+      "thumbnail_review_port": "2026-10-22 stream rollover, bounded gaps and conservative OCR retry.",
+      "pre_thumbnail_ocr_rollout_public_sha256": "0f3f80233f5fd6c20a306e97cacb5c4f9e8e4c69960629f339363e89299c3252",
+      "thumbnail_ocr_rollout": "2026-10-22 operated verification and OCR counter semantics.",
+      "pre_clock_documentation_review_public_sha256": "74232e3d4fdff720c8625e654b941111bb9c7bc0e22836fe8c46219bb1809b71",
+      "clock_documentation_review": "2026-10-22 observation-layer table, clock case study and current-status consolidation; no code or runtime change."
     },
     {
       "path": "ops/config/twitch_thumbnail.example.json",
@@ -3606,6 +3634,25 @@
       "decision": "Review fixes, English prose and existing public bindings; no deployment or unrelated working-copy edits.",
       "thumbnail_review_port": "2026-10-22 stream rollover, bounded gaps and conservative OCR retry.",
       "pre_thumbnail_review_public_sha256": null
+    },
+    {
+      "path": "docs/v3/thumbnail-ocr-rollout-2026-10-22.md",
+      "source_role": "public-documentation",
+      "source_sha256": null,
+      "pre_thumbnail_ocr_rollout_public_sha256": null,
+      "public_sha256": "c2f62117249e2e998c516d86a935502082c39d1dac58e69977e88e357b2d2d42",
+      "thumbnail_ocr_rollout": "2026-10-22 operated verification; source semantics unchanged."
+    },
+    {
+      "path": "docs/v3/clock-observation-case-study.md",
+      "source_role": "public-documentation",
+      "decision": "curated-current-contract-and-dated-evidence",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "063d3f18723b18ca0bbd09c0a2aa813384e3048c7dafc1c9e0094e1ab23826bf",
+      "port_date_jst": "2026-10-22",
+      "pre_clock_documentation_review_public_sha256": null,
+      "clock_documentation_review": "2026-10-22 observation-layer table, clock case study and current-status consolidation; no code or runtime change."
     }
   ],
   "omissions": [
@@ -3660,7 +3707,9 @@
     "publication/source-map.json",
     "publication/validation.json",
     "publication/thumbnail-clock-port-20261022.json",
-    "publication/thumbnail-review-port-20261022.json"
+    "publication/thumbnail-review-port-20261022.json",
+    "publication/thumbnail-ocr-rollout-20261022.json",
+    "publication/clock-docs-review-20261022.json"
   ],
   "evidence_checkpoint_cutoff_jst": "2026-10-14T00:04:57+09:00",
   "documentation_audience": "hiring and technical reviewers",
@@ -3759,5 +3808,16 @@
     "development_commit": "57318bd1c4c50c67590f7c9dd0120ca74cb3d5a1",
     "deployment_performed": false,
     "push_performed": false
+  },
+  "thumbnail_ocr_rollout": {
+    "record": "publication/thumbnail-ocr-rollout-20261022.json",
+    "operated_rollout_at_jst": "2026-10-22T11:51:00+09:00",
+    "public_example_deployment_performed": false
+  },
+  "clock_documentation_review": {
+    "record": "publication/clock-docs-review-20261022.json",
+    "date_jst": "2026-10-22",
+    "deployment_performed": false,
+    "runtime_changed": false
   }
 }

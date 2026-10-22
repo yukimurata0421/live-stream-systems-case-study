@@ -86,6 +86,27 @@ class TwitchSliTests(unittest.TestCase):
         self.assertEqual(self.metric(due+240,'daily_renewal')['good_events'],1)
         self.assertNotIn('fixture-before',str(self.h.public(due+240)))
 
+    def test_renewal_verified_when_offline_gap_falls_between_samples(self):
+        # 2026-10-22: Helix OFFLINE lasted under one cadence; samples showed old LIVE then new LIVE.
+        due=int((self.start-54000)//86400)*86400+54000
+        if due<=self.start:due+=86400
+        self.h.tick(due-30,self.api(due-30))
+        self.h.tick(due+30,self.api(due+30))
+        self.h.tick(due+90,self.api(due+90))
+        fresh=self.api(due+150,stream='fixture-new');fresh['started']=sli.iso(due+125)
+        self.h.tick(due+150,fresh)
+        self.h.tick(due+800)
+        m=self.metric(due+840,'daily_renewal')
+        self.assertEqual((m['good_events'],m['bad_events']),(1,0))
+
+    def test_new_id_started_before_due_does_not_verify_renewal(self):
+        due=int((self.start-54000)//86400)*86400+54000
+        if due<=self.start:due+=86400
+        self.h.tick(due-30,self.api(due-30))
+        early=self.api(due+30,stream='fixture-other');early['started']=sli.iso(due-10)
+        self.h.tick(due+30,early)
+        self.assertEqual(self.metric(due+60,'daily_renewal')['good_events'],0)
+
     def test_renewal_missing_evidence_remains_unknown(self):
         due=int((self.start-54000)//86400)*86400+54000
         if due<=self.start:due+=86400

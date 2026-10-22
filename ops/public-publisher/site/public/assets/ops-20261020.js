@@ -354,6 +354,8 @@
     for (const mt of week?.metrics || []) {
       if (!["provider_live", "daily_renewal"].includes(mt.id)) continue;
       const collecting = mt.assessment === "COLLECTING";
+      // UNKNOWN: too little of the window is known to judge; a partial value must not read as a breach.
+      const undetermined = mt.assessment === "UNKNOWN";
       const noResult = !finite(mt.value_percent);
       const ok = finite(mt.value_percent) && finite(mt.target_percent) && mt.value_percent >= mt.target_percent;
       const recent = (day?.metrics || []).find(x => x.id === mt.id)?.value_percent;
@@ -361,8 +363,10 @@
         recent: !stale && mt.id === "provider_live" && finite(recent) ? recent : null, target: mt.target_percent,
         sub: !stale && mt.id === "daily_renewal" && finite(mt.expected_events)
           ? `${mt.good_events ?? 0} ok · ${mt.bad_events ?? 0} failed · ${mt.unknown_events ?? 0} unknown` : null,
-        state: stale || collecting || noResult ? "unknown" : ok ? "good" : "serious",
-        label: stale ? "updates stopped" : noResult ? "no result yet" : collecting ? (finite(mt.coverage_percent) ? `collecting data (coverage ${pct(mt.coverage_percent, 0)})` : "collecting data") : ok ? "meets target" : "below target",
+        state: stale || collecting || undetermined || noResult ? "unknown" : ok ? "good" : "serious",
+        label: stale ? "updates stopped" : noResult ? "no result yet" : collecting ? (finite(mt.coverage_percent) ? `collecting data (coverage ${pct(mt.coverage_percent, 0)})` : "collecting data")
+          : undetermined ? (mt.id === "daily_renewal" && finite(mt.expected_events) ? `not enough evidence (${(mt.unknown_events ?? 0) + (mt.pending_events ?? 0)}/${mt.expected_events} unknown)` : finite(mt.coverage_percent) ? `not enough evidence (coverage ${pct(mt.coverage_percent, 0)})` : "not enough evidence")
+          : ok ? "meets target" : "below target",
         facts: Object.entries(mt).filter(([k, v]) => /minutes$|events$|percent$/.test(k) && finite(v)).map(([k, v]) => ({label: k.replaceAll("_", " "), value: v})),
         note: mt.definition});
     }
