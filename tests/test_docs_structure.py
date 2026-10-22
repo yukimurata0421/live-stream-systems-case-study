@@ -437,9 +437,7 @@ class PublicDocsStructureTests(unittest.TestCase):
             documented,
             {
                 "FRAME_RATE": "5",
-                "VIDEO_BITRATE": "3400k",
-                "VIDEO_MAXRATE": "3400k",
-                "VIDEO_BUFSIZE": "6800k",
+                "VIDEO_BITRATE": "4000k",
                 "AUDIO_BITRATE": "192k",
             },
         )

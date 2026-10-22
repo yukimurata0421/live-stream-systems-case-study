@@ -90,7 +90,7 @@ boundaries:
 | Central Restart Authority | `cra-01` owns policy, budget, cooldown, authorization, command lifecycle, and final verification. | Historical `replacement allowed` fields are evidence from the earlier decision path, not current CRA authority. |
 | Dell effect boundary | Dell may execute one exact, fenced FFmpeg-child effect only after target identity agrees. | Missing or ambiguous results become `OUTCOME_UNKNOWN` and require reconciliation; they do not authorize a second attempt. |
 | Connectivity loss | Physical connectivity failure suppresses repeated child launches and broader restart escalation. | A network outage is not treated as evidence that the YouTube identity should change. |
-| Upload pressure | The 5.0 Mbps ceiling remains a guardrail; 5fps/3400k is the normal encoder contract and 2500k is bounded emergency behavior. | Upload values remain separate from URL identity and cannot authorize restart or bitrate changes alone. |
+| Upload pressure | The 5.0 Mbps ceiling remains a guardrail; 5fps/4000k is the normal encoder contract (3400k until 2026-10-22) and 2500k is bounded emergency behavior. | Upload values remain separate from URL identity and cannot authorize restart or bitrate changes alone. |
 | Public and external evidence | Public snapshots and external probes are supporting, read-only evidence. | They cannot independently burn the formal SLO or grant recovery authority. |
 
 The current contracts are

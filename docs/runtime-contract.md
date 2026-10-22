@@ -42,9 +42,7 @@ VIDEO_ENCODER=h264_nvenc
 VIDEO_NVENC_RC=cbr
 VIDEO_NVENC_PRESET=p4
 FRAME_RATE=5
-VIDEO_BITRATE=3400k
-VIDEO_MAXRATE=3400k
-VIDEO_BUFSIZE=6800k
+VIDEO_BITRATE=4000k
 AUDIO_BITRATE=192k
 AUDIO_SAMPLE_RATE=48000
 ```
@@ -53,6 +51,10 @@ The profile keeps the low-bandwidth lineage from v2: 5fps/3500k/audio192k,
 then 4fps/3400k/audio192k, then 5fps/3400k/audio192k after a 4, 5, and 10 fps
 trial showed that 5 fps stayed under the upload ceiling with a smaller quality
 trade-off than 10 fps ([tuning record](v3/encoder-fps-tuning-2026-05-31.md)).
+On 2026-10-22 the video bitrate moved to 4000k after the relay route, and
+`VIDEO_MAXRATE`/`VIDEO_BUFSIZE` are no longer set: maxrate equals the video
+bitrate and bufsize is twice it unless set explicitly
+([reason and measurements](v3/encoder-upload-case-study.md#2026-10-22-4000k-on-the-relay-route)).
 
 ### Audio
 

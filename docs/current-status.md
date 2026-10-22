@@ -62,10 +62,11 @@ privately.
   provider-side failures. A stopped relay service, tunnel loss, and a
   relay-host reset were exercised on 2026-10-20 and 2026-10-21.
 - Whether MediaMTX reconnects a dropped forward without the keeper.
-- Why YouTube has intermittently reported `bitrateLow` warnings since the
-  route change. Captures on 2026-10-21 showed that delivered media did not
-  drop: the earlier 4.88 Mbps included about 34% TLS framing on the direct
-  connection, and media is about 3.6 Mbps on both routes.
+- Why the relayed stream drew YouTube `bitrateLow` warnings at an unchanged
+  media rate. Captures on 2026-10-21 showed media of about 3.6 Mbps on both
+  routes (the earlier 4.88 Mbps included about 34% TLS framing). Raising the
+  video bitrate to 4000k stopped the warnings: 11 in the 24 hours before, 0 in
+  the 24 hours after.
 - Long-term soak of the current route.
 - Twenty-four-hour clock/OCR quality, worst-case two-input performance within
   the observer limit, and the updated observer during a real fallback.

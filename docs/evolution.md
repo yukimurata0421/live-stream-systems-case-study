@@ -52,9 +52,10 @@ production authority until cutover is explicit.
 
 The encoder target is a deliberate regime change, not a denial of the v2
 history: v3 uses NVIDIA NVENC CBR, kept the low-fps 3400k contract from v2,
-then adopted the env-synced 5fps/3400k current contract after a 4fps, 5fps, and
+then adopted the env-synced 5fps/3400k contract after a 4fps, 5fps, and
 10fps tuning check showed 5fps stayed under the upload ceiling with a smaller
-per-frame quality trade-off than 10fps.
+per-frame quality trade-off than 10fps. On 2026-10-22, after the move to the OCI
+relay, the video bitrate rose to 4000k at the same 5 fps.
 
 Delivery plane:
 

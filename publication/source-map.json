@@ -77,11 +77,12 @@
     {
       "path": "docs/same-url-continuity-evidence.md",
       "source_role": "public-documentation",
-      "decision": "hiring-reader-summary-and-retained-operational-evidence",
-      "before_sha256": "2846581620ef068d222a3b0b8da82a02afbcc5d0458e29a964087ad50ff76de8",
+      "decision": "curated-current-contract-and-dated-evidence",
+      "before_sha256": "21cbf3ecfcc928b9661420cdbc42297986fd37d06758daf05e7cf9c26e72df63",
       "source_sha256": null,
-      "public_sha256": "21cbf3ecfcc928b9661420cdbc42297986fd37d06758daf05e7cf9c26e72df63",
-      "renamed_from": "docs/28-day-same-url-sli-case-study.md"
+      "public_sha256": "b93b104c0a2a1f808054abbb9f9f8324b9d9e5655b78bf6c763a42be7f42ea34",
+      "renamed_from": "docs/28-day-same-url-sli-case-study.md",
+      "port_date_jst": "2026-10-22"
     },
     {
       "path": "docs/README.md",
@@ -190,10 +191,10 @@
       "path": "docs/runtime-contract.md",
       "source_role": "public-documentation",
       "decision": "curated-current-contract-and-dated-evidence",
-      "before_sha256": "8412df27e45a2af9f936bdd64a637464ff7a408fec09903e1b63749fe5b92e16",
+      "before_sha256": "371723464dd5e6e2fdfebf710221dc3dc642c2008fa096f1265c18e9cca2019f",
       "source_sha256": null,
-      "public_sha256": "371723464dd5e6e2fdfebf710221dc3dc642c2008fa096f1265c18e9cca2019f",
-      "port_date_jst": "2026-10-20",
+      "public_sha256": "ea1d00be70145582a40a0d9fcefb9df148fb8993b5cfae181901d8fef16846e5",
+      "port_date_jst": "2026-10-22",
       "pre_documentation_restructure_sha256": "b284f3bfe336d1eb81b49ce6039e5e1445cc17069f5ee3235ffcee796b3232a8",
       "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json.",
       "pre_clock_monitor_public_sha256": "d6f089ac8cb312df387fdd5a63502f77e402dcab489da344a5fbf6b81d3fd86a",
@@ -2484,14 +2485,14 @@
     },
     {
       "path": "tests/test_docs_structure.py",
-      "source_role": "public-validation",
-      "decision": "docs-test-follows-current-route-diagram",
-      "before_sha256": "965a898c7dc7cc16d1296539a1e7ea655ee3fd4c2e75ce7517a9d778db8570b6",
-      "source_sha256": null,
-      "public_sha256": "f00a60e74106a91f741d481a5bdb6740868ce7ad8b7984b9ed3a568809c018cd",
+      "source_role": "development-encoder-contract",
+      "decision": "adapted-english-and-portable-bindings",
+      "before_sha256": "f00a60e74106a91f741d481a5bdb6740868ce7ad8b7984b9ed3a568809c018cd",
+      "source_sha256": "252ebbbed3ab9b440352c564d8cdbc7b62cc2de0e7a792c019dc1ecb41ab6161",
+      "public_sha256": "e141078da1ceb3cc82c5d67016949daad592bbf46d048c6dca33e42efbaa0dd9",
       "before_unicode_source_sha256": "ad687380f09c8a9fb2642a991732247c0a40a804df9838b2c4a1f5b9fa7fd070",
       "unicode_source_change": "English authored text; Unicode fixture values preserved with explicit escapes.",
-      "port_date_jst": "2026-10-20",
+      "port_date_jst": "2026-10-22",
       "pre_documentation_restructure_sha256": "c2478fad72d41ae4616ffca11e78f476a59408557864503a90e760b334268220",
       "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json."
     },
@@ -2804,10 +2805,10 @@
       "path": "docs/v3/self-healing-oci-fanout.md",
       "source_role": "public-documentation",
       "decision": "curated-current-contract-and-dated-evidence",
-      "before_sha256": "c1c35d2ab8686f7d7ccfa10ac15c325be78560dc0d71fa87e60a9a4c33749c9a",
+      "before_sha256": "5d96a625690da59907c871ed065a0e293ae40fdacba81070446195c7302db124",
       "source_sha256": null,
-      "public_sha256": "5d96a625690da59907c871ed065a0e293ae40fdacba81070446195c7302db124",
-      "port_date_jst": "2026-10-20",
+      "public_sha256": "9f66894a936b79f96c015da1118b71d7f3342aa614e3492a3b03e0bf1bcd636e",
+      "port_date_jst": "2026-10-22",
       "pre_documentation_restructure_sha256": "6ff062e19bdb420d125e2559e7f0f647f960374cf35794f18be82db7ce190be4",
       "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json."
     },
@@ -2824,10 +2825,10 @@
       "path": "docs/design-decisions-for-review.md",
       "source_role": "public-documentation",
       "decision": "curated-current-contract-and-dated-evidence",
-      "before_sha256": "1858c49c09bbb1a1b3580c698f74df268e26cc7433c7c7dcabfb5787e65ac043",
+      "before_sha256": "01eff163ba4de9480c1a8b8fe740b98751b7e751dac0b71f375360e8b4265c41",
       "source_sha256": null,
-      "public_sha256": "01eff163ba4de9480c1a8b8fe740b98751b7e751dac0b71f375360e8b4265c41",
-      "port_date_jst": "2026-10-20",
+      "public_sha256": "3d53842818d5b5f7edf48217b9e9d47ca07918644f151ddf519ee492a3a0e238",
+      "port_date_jst": "2026-10-22",
       "pre_documentation_restructure_sha256": "fdda563dc1d60d8b4bae0097ddf03f65e09ca4e594e397af5976808af0f57403",
       "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json."
     },
@@ -2933,12 +2934,12 @@
     },
     {
       "path": "docs/current-status.md",
-      "source_role": "public-documentation-or-regression",
-      "decision": "Review fixes, English prose and existing public bindings; no deployment or unrelated working-copy edits.",
-      "before_sha256": "fc04fe5c2e6937be3fd269d3bd636d44bf4e39dd05de95497936624fb5a63efc",
+      "source_role": "public-documentation",
+      "decision": "curated-current-contract-and-dated-evidence",
+      "before_sha256": "2970d1c5d8f6cda4d0d0a016317de7663f8f14daf5d9cb9575dce1cf58f84f7b",
       "source_sha256": null,
-      "public_sha256": "2970d1c5d8f6cda4d0d0a016317de7663f8f14daf5d9cb9575dce1cf58f84f7b",
-      "port_date_jst": "2026-10-20",
+      "public_sha256": "02db2988ecaabcd5e072adc3ce425485c2983f54f8b882128818dc83068f5974",
+      "port_date_jst": "2026-10-22",
       "documentation_restructure": "New single page for volatile state.",
       "pre_twitch_observation_public_sha256": "040eac29174151f51e473f7f85e4aa23ff994be0079b3d4c011623b6ec7864ca",
       "pre_clock_monitor_public_sha256": "33263da6f88e0f7719830898ada90abd2a7e89c391a9684fdd7b604517bc020f",
@@ -2974,10 +2975,10 @@
       "path": "docs/v3/encoder-upload-case-study.md",
       "source_role": "public-documentation",
       "decision": "curated-current-contract-and-dated-evidence",
-      "before_sha256": "db1d239fa9b46d20aabc42ee5fce9fc6e2676df4108634b63ddcbd064c04df0f",
+      "before_sha256": "c1bc9753087d91372b53bcee9fa46cdc2fb8daedc44934aa62f6eb261992f924",
       "source_sha256": null,
-      "public_sha256": "c1bc9753087d91372b53bcee9fa46cdc2fb8daedc44934aa62f6eb261992f924",
-      "port_date_jst": "2026-10-20"
+      "public_sha256": "f6c86ce171f914d624985671bc54e89a5619521964e63f6ebd309118315f280e",
+      "port_date_jst": "2026-10-22"
     },
     {
       "path": "deploy/k3s/youtube-backup/fallback-controller-rbac.yaml",
@@ -3674,6 +3675,87 @@
       "pre_monitoring_ci_repair_public_sha256": "365ba61545cf22f474d5a59b3004b6f1007d0cc5aca053008aae400b9fb772bf",
       "public_sha256": "54421f909a3591bc4aa481dc1046519fc37006db0a4d7aea6e5c394ca4038189",
       "decision": "Declare schema test dependency and retain the five clock observation warnings in the monitored surface.",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "configs/v3.shadow.env.example",
+      "source_role": "development-encoder-contract",
+      "decision": "adapted-english-and-portable-bindings",
+      "before_sha256": "87f30b4c6ee2cac38ad787478fd4f13fbe8ca1faee207212fc628bc324f71d7b",
+      "source_sha256": "8c7505183c8dbbe8b68cbeedb227ffd41b172083ceb6180a2b437823dc21dc9c",
+      "public_sha256": "683b613feb3cb741db3c0ab73998624829b300e9062d5565d29647bc65909d1d",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "ops/scripts/validate_k3s_manifests.py",
+      "source_role": "development-encoder-contract",
+      "decision": "adapted-english-and-portable-bindings",
+      "before_sha256": "7b9d4db46e4842a3598c7919730cb71f38db94a41c176049163b7976862c0588",
+      "source_sha256": "2c6285279e5bd9a08ad98bdf4713c9d1635bbb04090b527e6dc82c614a001fe5",
+      "public_sha256": "16412f64586b0fd8eed6af36e7062d001176e01925400729ab259213dd16c6cc",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "src/stream_core/engine/config.py",
+      "source_role": "development-encoder-contract",
+      "decision": "adapted-english-and-portable-bindings",
+      "before_sha256": "9368c84546b546ec5f3f45f5785df0fac3527b291138132fcb8e779872962159",
+      "source_sha256": "a4b932b97af6c14487e12e6a9c5b62d93b4b88b860a9f9090c4082d98fc494cf",
+      "public_sha256": "f64ba5c3be912a98028ea2e3700814fd8d779619faf380052d7d728506ab23bf",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "tests/test_runtime_contract.py",
+      "source_role": "development-encoder-contract",
+      "decision": "adapted-english-and-portable-bindings",
+      "before_sha256": "63995ef6e2473430c09a2f122698f0c49b7f1461abee65a3bf698b3219d59bd4",
+      "source_sha256": "9415197c7c651d368760b849cd4568db36dd2d2dc59c1c8e479e0ac48cd4b001",
+      "public_sha256": "666dbebb1867665f083e03336975b6dc0a78f3d8995bb4e8f6f4e83b87ebfb9c",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "tests/test_encoder_rate_derivation.py",
+      "source_role": "development-encoder-contract",
+      "decision": "adapted-english-and-portable-bindings",
+      "before_sha256": null,
+      "source_sha256": "e3243a193f0c313ccad3f38947d13f80fca60093eac05c7aa446aada4ae6a104",
+      "public_sha256": "41c96d25b5d404cdf083e52d4dc50a741734d17c10dfee149aba810e867af983",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "docs/v3/encoder-fps-tuning-2026-05-31.md",
+      "source_role": "public-documentation",
+      "decision": "curated-current-contract-and-dated-evidence",
+      "before_sha256": "95c21011695bd0e8aa6a71378179ae80eb16b1d3048a4e17f24a3ca9d0ed6bb2",
+      "source_sha256": null,
+      "public_sha256": "78315c45bade6247d259abc7fd20e360d687343337ffd6875edabf70afdb0933",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "docs/v3/decisions.md",
+      "source_role": "public-documentation",
+      "decision": "curated-current-contract-and-dated-evidence",
+      "before_sha256": "e4ded03e5912b5112c31a9e9474209c916191cfe799591f4f1fdb738cbaef9db",
+      "source_sha256": null,
+      "public_sha256": "3382a1c152be4201551354aa6c87f843c89274063ed17b42409fc1e9f452fb96",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "docs/evolution.md",
+      "source_role": "public-documentation",
+      "decision": "curated-current-contract-and-dated-evidence",
+      "before_sha256": "c1393fdb6b14c710ecbe859b0762a643f0ea973c1e3f00d32d6fccc24e99f6d7",
+      "source_sha256": null,
+      "public_sha256": "76684f663fce64e7b136f02e5c5ba64ba30e8bbd3e64549a5efe035170cee9e6",
+      "port_date_jst": "2026-10-22"
+    },
+    {
+      "path": "docs/v3/sli-and-dashboard.md",
+      "source_role": "public-documentation",
+      "decision": "curated-current-contract-and-dated-evidence",
+      "before_sha256": "ba7dc6e2760d9764a2431747a7196e16cd53b70246e95330e6c6a8f42dd5c660",
+      "source_sha256": null,
+      "public_sha256": "83821f2adb46ccd10c85464c65817fa5c9b2d12c754e1cd05f302e669f2f3246",
       "port_date_jst": "2026-10-22"
     }
   ],

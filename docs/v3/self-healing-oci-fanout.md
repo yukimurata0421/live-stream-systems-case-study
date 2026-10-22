@@ -218,9 +218,11 @@ RTMP. Toward the relay the records averaged about 3.4 KB and framing added under
 
 YouTube therefore receives the same amount of media as before. The difference
 was real uplink usage, so the relay route also saves about 1.2 Mbps of home
-uplink. YouTube has reported intermittent `bitrateLow` warnings since the route
-change, which a drop in delivered media cannot explain; that cause is still
-open.
+uplink. YouTube reported intermittent `bitrateLow` warnings after the route
+change, which a drop in delivered media cannot explain. Raising the video
+bitrate to 4000k on 2026-10-21 stopped them (11 in the 24 hours before, 0 in
+the 24 hours after); the underlying cause is still open. See
+[the 4000k change](encoder-upload-case-study.md#2026-10-22-4000k-on-the-relay-route).
 
 While the fallback runs, the public relay projection on the monitoring host
 samples the fallback FFmpeg's acknowledged bytes on each call and derives the

@@ -62,7 +62,7 @@ than the older v2 CPU path.
 | v3 `h264_nvenc` CBR 3400k | about p50 4.87 Mbps, p95 4.93 Mbps | acceptable, but much closer to the 5 Mbps ceiling | accepted with guardrails |
 | v3 `h264_nvenc` VBR/CQ trial | about 3.0 Mbps | YouTube low-bitrate / not-enough-video warnings | rejected |
 | v3 4fps/3400k CBR | p95 near 4.92 Mbps in trial | good, but cadence was lower | replaced by 5fps |
-| v3 5fps/3400k CBR | p95 near 4.91 Mbps in trial | good | current contract |
+| v3 5fps/3400k CBR | p95 near 4.91 Mbps in trial | good | contract until 2026-10-22 |
 | v3 10fps/3400k CBR | p95 near 4.94 Mbps in trial | good in short window, but lower per-frame budget | rejected as current target |
 
 The important lesson is that a lower upload number was not automatically a
@@ -156,7 +156,8 @@ the stream as unhealthy.
 
 ## Operational Decision
 
-The accepted production contract is `h264_nvenc p4 CBR 5fps/3400k/audio192k`.
+The accepted production contract is `h264_nvenc p4 CBR 5fps/4000k/audio192k`
+(5fps/3400k until 2026-10-22; see below).
 
 The rejected options remain useful historical evidence:
 
@@ -183,3 +184,24 @@ The rejected options remain useful historical evidence:
 
 The public repository keeps summarized measurements and contract tests, not raw
 RTMPS logs or private runtime state.
+
+## 2026-10-22: 4000k on the relay route
+
+After the route moved to the OCI relay on 2026-10-20, YouTube stream health
+intermittently reported `bitrateLow` warnings, although captures showed the
+delivered media was about 3.6 Mbps on both the direct and relayed routes. The
+video bitrate was raised from 3400k to 4000k on 2026-10-21 at 08:56 JST. In the
+24 hours before, the watchdog recorded `bitrateLow` 11 times in 264
+observations; in the 24 hours after, 0 times in 257. The underlying reason the
+relayed stream drew these warnings at an unchanged media rate is still unknown;
+the higher bitrate removes them with margin.
+
+The relay route carries about 4.24 Mbps on the home uplink at 4000k, under the
+5.0 Mbps ceiling and below the roughly 4.9 Mbps that 3400k used on the direct
+route once TLS framing is counted. The direct-to-YouTube fallback stays at 3400k
+because its TLS framing would push it over the ceiling.
+
+`VIDEO_MAXRATE` and `VIDEO_BUFSIZE` are no longer configured. Unless set
+explicitly, maxrate equals the video bitrate and bufsize is twice it, so one
+value changes the profile.
+

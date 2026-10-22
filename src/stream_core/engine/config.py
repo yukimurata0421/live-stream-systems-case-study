@@ -158,6 +158,18 @@ def normalize_video_encoder(raw: str) -> str:
     return value
 
 
+def double_rate(rate: str) -> str:
+    """Double an FFmpeg rate (4000k, 4.5M, or 4000000) and return it in k; used for the default bufsize."""
+    value = rate.strip().lower()
+    if value.endswith("m"):
+        kbps = float(value[:-1]) * 1000
+    elif value.endswith("k"):
+        kbps = float(value[:-1])
+    else:
+        kbps = float(value) / 1000
+    return f"{int(round(kbps * 2))}k"
+
+
 def load_config() -> Config:
     script_dir = Path(__file__).resolve().parents[1]
     base_default = script_dir.parent.parent
@@ -166,6 +178,9 @@ def load_config() -> Config:
 
     def e(name: str, default: str) -> str:
         return os.environ.get(name, default)
+
+    # Unless set explicitly, maxrate equals the video bitrate and bufsize is twice it.
+    video_bitrate = e("VIDEO_BITRATE", "4000k")
 
     display_name = e("DISPLAY_NAME", os.environ.get("DISPLAY", ":99"))
     return Config(
@@ -253,9 +268,9 @@ def load_config() -> Config:
         video_nvenc_temporal_aq=to_bool(e("VIDEO_NVENC_TEMPORAL_AQ", "0")),
         video_nvenc_bframes=max(0, to_int(e("VIDEO_NVENC_BFRAMES", "0"), 0)),
         video_nvenc_b_ref_mode=e("VIDEO_NVENC_B_REF_MODE", ""),
-        video_bitrate=e("VIDEO_BITRATE", "3400k"),
-        video_maxrate=e("VIDEO_MAXRATE", "3400k"),
-        video_bufsize=e("VIDEO_BUFSIZE", "6800k"),
+        video_bitrate=video_bitrate,
+        video_maxrate=e("VIDEO_MAXRATE", video_bitrate),
+        video_bufsize=e("VIDEO_BUFSIZE", double_rate(video_bitrate)),
         emergency_low_upload_enabled=to_bool(e("EMERGENCY_LOW_UPLOAD_ENABLED", "1"), True),
         emergency_low_upload_triggers=tuple(
             item.strip()

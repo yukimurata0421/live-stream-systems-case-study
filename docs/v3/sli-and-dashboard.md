@@ -35,8 +35,8 @@ Availability and URL identity are higher priority than visual quality warnings.
 Encoder changes should not sacrifice delivery continuity unless the operator
 explicitly accepts that tradeoff.
 
-The upload ceiling is a warning boundary, not the tuning target. The current
-5fps/3400k contract was accepted because the measured windows stayed below
+The upload ceiling is a warning boundary, not the tuning target. The
+5fps/3400k contract (4000k since 2026-10-22) was accepted because the measured windows stayed below
 5.0 Mbps while avoiding the larger per-frame quality loss of 10fps.
 `encoder-upload-case-study.md` documents the additional encoder lesson: the
 move to NVENC CBR increased measured upload versus the older v2 CPU path, and

@@ -161,6 +161,9 @@ On 2026-05-31, v3 compared 4fps, 5fps, and 10fps while holding
 `AUDIO_BITRATE=192k`. All short trials stayed below the 5.0 Mbps upload ceiling
 and YouTube remained healthy in the sampled windows.
 
+
+> Superseded on 2026-10-22: the video bitrate is now 4000k at the same 5 fps; see [the 4000k change](encoder-upload-case-study.md#2026-10-22-4000k-on-the-relay-route).
+
 The accepted contract is 5fps/3400k/audio192k. It improves cadence over 4fps
 with a 20% lower per-frame video budget, while rejecting 10fps as the current
 contract because it leaves only 40% of the 4fps per-frame budget and 50% of the

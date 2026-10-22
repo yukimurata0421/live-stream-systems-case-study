@@ -46,6 +46,9 @@ target; it divides the same video budget across more frames.
 
 ## Decision
 
+
+> Superseded on 2026-10-22: the video bitrate is now 4000k at the same 5 fps; see [the 4000k change](encoder-upload-case-study.md#2026-10-22-4000k-on-the-relay-route).
+
 Adopt 5fps/3400k/audio192k as the current v3 encoder contract.
 
 5fps is the middle point: it improves cadence over 4fps, keeps the short-window

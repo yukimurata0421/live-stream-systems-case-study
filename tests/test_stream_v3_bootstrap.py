@@ -123,9 +123,10 @@ class StreamV3BootstrapTests(unittest.TestCase):
         self.assertIn("VIDEO_NVENC_B_REF_MODE: \"\"", configmap)
         self.assertIn("FRAME_RATE: \"5\"", configmap)
         self.assertIn("VIDEO_QUEUE_SIZE: \"32\"", configmap)
-        self.assertIn("VIDEO_BITRATE: 3400k", configmap)
-        self.assertIn("VIDEO_MAXRATE: 3400k", configmap)
-        self.assertIn("VIDEO_BUFSIZE: 6800k", configmap)
+        self.assertIn("VIDEO_BITRATE: 4000k", configmap)
+        # maxrate and bufsize are derived from VIDEO_BITRATE (2026-10-22).
+        self.assertNotIn("VIDEO_MAXRATE:", configmap)
+        self.assertNotIn("VIDEO_BUFSIZE:", configmap)
         self.assertIn("volume=0.540680", configmap)
         self.assertIn("PULSE_SERVER: unix:/run/stream-pulse/native", configmap)
         self.assertIn("AUTO_DJ_KEEP_PULSE_SERVER: \"1\"", configmap)
