@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import re
 import threading
+import uuid
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Iterator
@@ -45,6 +46,22 @@ class PostgresConnection:
 
     def execute(self, sql: str, params: tuple[Any, ...] | list[Any] = ()) -> Any:
         return self.raw.execute(postgres_sql(sql), params)
+
+    @contextmanager
+    def stream_cursor(
+        self, sql: str, params: tuple[Any, ...] | list[Any] = ()
+    ) -> Iterator[Any]:
+        """Bound libpq result buffers as well as Python's fetched row batches.
+
+        Ordinary psycopg cursors buffer the entire result during execute(),
+        even when the consumer subsequently uses fetchmany(). A named cursor
+        fetches from PostgreSQL only on demand. Its transaction and portal must
+        close before this connection can return to the pool.
+        """
+        with self.raw.transaction():
+            with self.raw.cursor(name=f"monitoring_report_{uuid.uuid4().hex}") as cursor:
+                cursor.execute(postgres_sql(sql), params)
+                yield cursor
 
     def commit(self) -> None:
         self.raw.commit()

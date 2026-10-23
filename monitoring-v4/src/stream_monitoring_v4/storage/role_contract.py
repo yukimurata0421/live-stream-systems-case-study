@@ -24,6 +24,7 @@ class RoleTablePrivileges:
 
 CORE_WRITE_TABLES = frozenset(
     {
+        "metric_series", "metric_minutes", "metric_windows", "normal_cycle_current",
         "observations",
         "rejections",
         "domain_current",
@@ -83,7 +84,7 @@ ROLE_TABLE_PRIVILEGES = {
         )
     ),
     "v4_reporter_ro": RoleTablePrivileges(
-        select=frozenset({"schema_migrations", "shadow_cycles"})
+        select=frozenset({"schema_migrations", "shadow_cycles", "metric_series", "metric_windows", "normal_cycle_current"})
     ),
     "v4_backup_ro": RoleTablePrivileges(select_all=True),
     "v4_notifier_rw": RoleTablePrivileges(

@@ -2,6 +2,10 @@
 
 The dashboard separates present state from historical degradation.
 
+The [ADS-B source coverage contract](adsb-source-coverage.md) defines how
+irregular monitor events cover time, and why complete evidence coverage is
+different from lossless reception of individual ADS-B messages.
+
 ## Measured Results To Read First
 
 | Question | Public answer | Evidence boundary |
@@ -23,6 +27,40 @@ The dashboard must keep objective classes separate:
 | Guardrail | FFmpeg TCP send budget, YouTube API daily units, runtime memory, recovery action safety | Operating boundary. A pass means the system stayed inside a constraint, not that viewers saw perfect output. |
 | Secondary SLI | now-playing freshness, notification delivery, public snapshot freshness, private dashboard reachability | Supporting behavior. Important to operate, but not automatically a delivery outage. |
 | Event / Incident Metric | FFmpeg exits and restarts, TCP stalls, TLS failures, resolver fast mode, recovery requests | Count, cluster, root-cause, and measure MTTR. Do not turn raw attempts into a fake availability percentage. |
+
+## Current Input Quality And Historical Gates
+
+The raw OAuth watchdog state is the authority for current YouTube input
+quality. Prometheus is a sampled projection of that same source. The report
+keeps two comparisons with different scopes:
+
+| Field | Scope | Reading rule |
+| --- | --- | --- |
+| `source_disagreement` | Raw and Prometheus measurements over the report window. | Preserve historical differences and the formal gate's measurement status. A current recovery does not rewrite that window. |
+| `source_disagreement_current` | Latest usable raw state and Prometheus state at the report end. | Compare their `eligible` and `good` values only when both sources are available within their freshness limits. |
+
+Read the current comparison together with `raw_current.available`,
+`prometheus_current.available` and `current_crosscheck_reason`:
+
+| `current_crosscheck_reason` | Current comparison |
+| --- | --- |
+| `current_states_agree` | Both sources are available and their eligibility and quality flags agree. |
+| `current_state_disagreement` | Both are available and at least one compared flag differs; `source_disagreement_current=true`. |
+| `raw_current_state_unavailable` | Raw evidence is unavailable or stale; comparison is unavailable. This reason also takes precedence when both sources are unavailable. |
+| `prometheus_current_state_unavailable` | Raw evidence is available but Prometheus evidence is unavailable or stale; comparison is unavailable. |
+
+The disagreement boolean is false in both agreement and unavailable cases.
+Only the reason and availability fields distinguish those outcomes. Agreement
+establishes consistency between projections; current quality still depends on
+the raw state's eligibility, classification and `good` flag.
+
+Actionable raw OAuth warning/error evidence and multi-window burn have separate
+input-quality notification paths. Raw/Prometheus comparison alone does not open
+a current input-quality incident. Measurement coverage/freshness, historical
+formal compliance and current quality remain separate. The current comparison
+does not change SLI targets, windows or gates. See the
+[notification contract](notification-and-auto-recovery.md#delivery-and-current-state-rules)
+for delivery and recovery rules.
 
 ## Error Budget Rule
 

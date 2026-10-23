@@ -42,8 +42,7 @@ def load_notify_outbox(path: Path, *, now_ts: int | None = None, ttl_sec: int | 
         if not isinstance(item, dict):
             continue
         created_ts = int(item.get("created_ts", 0) or 0)
-        if ttl > 0 and created_ts > 0 and now - created_ts > ttl:
-            continue
+        # Pending delivery survives TTL; only an explicit durable disposition may remove it.
         if str(item.get("status", "pending")) != "pending":
             continue
         rows.append(item)
@@ -67,7 +66,7 @@ def notify_message_id(*, phase: str, incidents: list[dict], now_ts: int, route: 
     elif phase == "recovered":
         recovered_ts = max((int(item.get("_recovered_ts", now_ts) or now_ts) for item in incidents), default=now_ts)
         base = f"recovered|{ids}|{recovered_ts}"
-    elif phase in {"restart_observed", "recovery_unconfirmed", "auto_recovered"}:
+    elif phase in {"restart_observed", "recovery_unconfirmed", "auto_recovered", "planned_rollout"}:
         event_ts = max((int(item.get("observed_ts", now_ts) or now_ts) for item in incidents), default=now_ts)
         base = f"{phase}|{ids}|{event_ts}"
     else:
@@ -126,13 +125,24 @@ def enqueue_notify_messages(
         }
         order.append(message_id)
     rows = [by_id[mid] for mid in order if mid in by_id]
-    same_route_ids = [str(item.get("message_id")) for item in rows if notify_route(item) == route_name]
-    keep_same_route = set(same_route_ids[-max(1, int(max_pending)) :])
-    return [
-        item
-        for item in rows
-        if notify_route(item) != route_name or str(item.get("message_id")) in keep_same_route
-    ]
+    return rows
+
+
+def archive_overflow(path: Path, events: Path, rows: list[dict], *, route: str, limit: int, now_ts: int, acknowledged: list | None = None) -> list[dict]:
+    """Keep bounded pending storage and retain every overflow in a durable dead letter."""
+    kept=[];count=0
+    for item in rows:
+        if notify_route(item)!=route:
+            kept.append(item);continue
+        count+=1
+        if count<=max(1,limit):kept.append(item);continue
+        record={**item,'status':'dead_letter','disposition':'pending_capacity_exceeded','archived_ts':now_ts}
+        append_jsonl(path.with_name(path.name+'.deadletter.jsonl'),record)
+        if acknowledged is not None:acknowledged.append({'phase':item.get('phase'),'incident_ids':item.get('incident_ids',[]),'route':route,'disposition':'dead_letter'})
+        append_jsonl(events,{'ts_utc':utc_now_text(now_ts),'phase':'delivery_dead_letter','route':route,
+                            'incident_ids':item.get('incident_ids',[]),'message_id':item.get('message_id'),
+                            'send_ok':False,'send_reason':'pending_capacity_exceeded'})
+    return kept
 
 
 def flush_notify_outbox(
@@ -144,6 +154,9 @@ def flush_notify_outbox(
     send_webhook: Callable[..., tuple[bool, str]],
     dry_run: bool = False,
     route: str = DEFAULT_ROUTE,
+    fallback_cfg: dict | None = None,
+    fallback_send: Callable | None = None,
+    acknowledged: list | None = None,
 ) -> tuple[int, int, int]:
     route_name = str(route or DEFAULT_ROUTE)
     outbox = load_notify_outbox(outbox_path, now_ts=now_ts, ttl_sec=int(cfg["outbox_ttl_sec"]))
@@ -161,10 +174,25 @@ def flush_notify_outbox(
         if attempted >= flush_limit:
             remaining.append(item)
             continue
+        if item.get("phase") == "recovered":
+            recovered_ids = set(item.get("incident_ids", []))
+            if any(
+                notify_route(prior) == route_name
+                and prior.get("phase") in {"detected", "status"}
+                and recovered_ids.intersection(prior.get("incident_ids", []))
+                for prior in remaining
+            ):
+                # A failed detection must arrive before its recovery follow-up.
+                remaining.append(item)
+                continue
         attempted += 1
         content = str(item.get("content", ""))
         username = str(item.get("username", cfg["username"]))
-        ok, reason = send_webhook(str(cfg["webhook_url"]), content, username=username)
+        if item.get('force_fallback'):
+            ok,reason=False,'detection_delivered_to_discord'
+        else:
+            try:ok, reason = send_webhook(str(cfg["webhook_url"]), content, username=username)
+            except Exception as error:ok,reason=False,type(error).__name__
         attempts = int(item.get("attempts", 0) or 0) + 1
         event = {
             "ts_utc": utc_now_text(now_ts),
@@ -182,8 +210,23 @@ def flush_notify_outbox(
             "send_reason": reason,
         }
         append_jsonl(events_path, event)
+        delivered_route=route_name
+        if not ok and route_name=='slack' and fallback_cfg and fallback_send and fallback_cfg.get('enabled') and fallback_cfg.get('webhook_url'):
+            fallback_content='[Slack delivery failed; using Discord]\n'+content
+            try:ok,fallback_reason=fallback_send(fallback_cfg['webhook_url'],fallback_content,username=fallback_cfg['username'])
+            except Exception as error:ok,fallback_reason=False,type(error).__name__
+            append_jsonl(events_path,{**event,'route':'discord','fallback_from':'slack','message':fallback_content,
+                                     'send_ok':ok,'send_reason':fallback_reason})
+            if ok:
+                delivered_route='discord'
+                if item.get('phase') in {'detected','status'}:
+                    for later in outbox:
+                        if later.get('phase')=='recovered' and notify_route(later)=='slack' and set(item.get('incident_ids',[])).intersection(later.get('incident_ids',[])):
+                            later['force_fallback']=True
         if ok:
             sent += 1
+            if acknowledged is not None:acknowledged.append({'phase':item.get('phase'),'incident_ids':item.get('incident_ids',[]),
+                'route':delivered_route,'fallback_from':'slack' if delivered_route!=route_name else None})
         else:
             failures += 1
             item["attempts"] = attempts

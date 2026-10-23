@@ -325,6 +325,8 @@ def _run_import(
                     "SQLite import source schema is "
                     f"{source_schema_version}, expected {SQLITE_SCHEMA_VERSION}"
                 )
+            if source.execute("SELECT COUNT(*) FROM metric_series").fetchone()[0]:
+                raise RuntimeError("normal history present: legacy SQLite import cannot merge aggregate checkpoints; use a full restore")
             sqlite_active = _active_episodes_sqlite(source)
             postgres_active = _active_episodes_postgres(repository)
             conflicts = {

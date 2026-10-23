@@ -692,19 +692,9 @@ def operational_reliability_incidents(*, status_file: Path | None, now_ts: int) 
         status = str(gate.get("compliance_status") or "unknown")
         reasons = [str(value) for value in gate.get("measurement_unknown_reasons", [])]
         disagreement = gate.get("source_disagreement") is True
-        if status == "breached" and family == "youtube_input_quality":
-            results.append(
-                incident(
-                    ident="reliability:youtube_input_quality_breached",
-                    severity="warning",
-                    component="youtube_input_quality",
-                    summary="official YouTube input quality SLO is breached",
-                    evidence=f"sli_pct={gate.get('sli_pct')} coverage_pct={gate.get('coverage_pct')}",
-                    recovery_type="human_review_no_automatic_restart",
-                    follow_up="Correlate OAuth issue type, encoder contract, and YouTube input quality",
-                    observed_ts=observed_ts,
-                )
-            )
+        # A rolling formal breach is historical SLO evidence, not a current
+        # input fault. Keep the gate and its samples unchanged; active quality
+        # incidents use the raw OAuth fast-feedback and multi-window burn paths.
         coverage_reasons = {
             "minimum_coverage_not_met",
             "source_freshness_not_met",
@@ -739,8 +729,10 @@ def operational_reliability_incidents(*, status_file: Path | None, now_ts: int) 
                         + (f" current_source={current_upload.get('status')} current_reason={current_upload.get('reason')}" if current_upload else "")
                     ),
                     recovery_type="measurement_source_recovery",
-                    follow_up="Repair the source probe and retention gap without changing the SLO",
-                    observed_ts=observed_ts,
+                    follow_up="Repair the source probe and retention gaps while preserving the SLO values",
+                    # Current-source health is evaluated now; the hourly
+                    # formal report timestamp is not this incident's onset.
+                    observed_ts=now_ts if current_upload_failed else observed_ts,
                     repeat_sec=3600,
                 )
             )
@@ -757,7 +749,7 @@ def operational_reliability_incidents(*, status_file: Path | None, now_ts: int) 
                     summary=f"{family} measurement sources disagree",
                     evidence=f"sli_pct={gate.get('sli_pct')} reasons={','.join(reasons)}",
                     recovery_type="source_reconciliation_no_automatic_restart",
-                    follow_up="Compare raw evidence and Prometheus series in the same observation window",
+                    follow_up="Compare raw evidence and Prometheus series over the same window",
                     observed_ts=observed_ts,
                 )
             )
@@ -774,7 +766,7 @@ def operational_reliability_incidents(*, status_file: Path | None, now_ts: int) 
                 summary=f"{family} multi-window error-budget burn",
                 evidence=f"rule={alert.get('rule')} burn_rates={alert.get('burn_rates')}",
                 recovery_type="human_review_no_automatic_restart",
-                follow_up="Check both short and long windows; do not change the target or runtime without evidence",
+                follow_up="Check both short and long windows before changing a target or runtime",
                 observed_ts=observed_ts,
             )
         )
@@ -913,20 +905,30 @@ def collect_notification_incidents(
     recovery_type = recovery_type_from_observe(payload)
     observe_context = compact_observe_context(payload, checks)
 
-    if error and not payload:
+    # observe uses exit 2 for a valid negative health verdict, not a crash.
+    valid_verdict=isinstance(payload.get('pass'),bool) and isinstance(payload.get('checks'),dict)
+    if error or _rc not in {0,2} or (_rc==2 and not valid_verdict):
         incidents.append(
             incident(
                 ident="observe:execution_failed",
                 severity="critical",
                 component="observe_stream_health",
                 summary="observe_stream_health.py execution failed",
-                evidence=error[:240],
+                evidence=f"returncode={_rc} partial_payload={bool(payload)} error_reported={bool(error)}",
                 recovery_type="timer_or_script_recovery",
-                follow_up="Check observer script stderr and systemd notification timer status",
+                follow_up="Check observe script stderr and the systemd notification timer",
             )
         )
     monitoring_only_youtube_gap = is_monitoring_only_youtube_stats_gap(checks)
 
+    if monitoring_only_youtube_gap and not bootstrap_grace_active:
+        incidents.append(incident(ident='youtube:watchdog_stats_stale',severity='warning',component='youtube_watchdog_measurement',
+            summary='YouTube watchdog stats are missing or stale',evidence='current delivery verdict is unavailable',
+            recovery_type='measurement_source_recovery',follow_up='Check the YouTube watchdog task and stats freshness',observed_ts=now))
+    if is_api_report_timer_monitoring_gap(payload) and not bootstrap_grace_active:
+        incidents.append(incident(ident='api_report:timer_monitoring_gap',severity='warning',component='youtube_api_usage_report',
+            summary='API report timers are all stopped',evidence='api_report_timer_monitoring_gap',
+            recovery_type='measurement_source_recovery',follow_up='Check the API report timer and report updates',observed_ts=now))
     if (
         checks.get("current_fail") is True
         and not monitoring_only_youtube_gap
@@ -1126,8 +1128,6 @@ def collect_notification_incidents(
     for ident, component, path, target, label in report_specs:
         item, age = latest_jsonl_item(path, target=target, now_ts=now)
         if is_report_problem(item, age, max_age_sec=report_stale_sec):
-            if is_report_output_gap(item, age, max_age_sec=report_stale_sec) and not current_stream_problem:
-                continue
             if bootstrap_grace_active and not item:
                 continue
             observed_ts = parse_utc_ts(str(item.get("ts_utc", ""))) if item else None

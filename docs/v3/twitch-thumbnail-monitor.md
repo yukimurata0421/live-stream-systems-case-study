@@ -148,6 +148,34 @@ stream changes and restart through numeric state; new counters start at zero
 without reconstructing history. A same-window ratio needs a nonzero denominator.
 Fixed-label gauges expose method, failure reason and evidence-save status.
 
+## Provider And Cache Timing
+
+The HTTP client records a bounded `Age` header on both 200 and 304 responses.
+The worker compares the image body hash with persisted state, so restarting or
+receiving the same image in a full 200 response does not count as an image
+change. It keeps the first-fetch timestamp and that response's `Age` even when
+OCR fails; a later successful reading uses those original values.
+
+These gauges use the `stream_v3_twitch_thumbnail_` prefix:
+
+| Suffix | Meaning |
+| --- | --- |
+| `cdn_age_seconds` | Current response's HTTP `Age`. |
+| `discovery_lag_seconds` | First-fetch time minus the verified image clock. |
+| `cdn_age_at_discovery_seconds` | HTTP `Age` from that image's first fetch. |
+| `origin_side_age_estimate_seconds` | Discovery lag minus the first-fetch `Age`; absent when `Age` is unavailable. |
+| `seconds_since_image_change` | Time since a different image body was first fetched. |
+
+HTTP `Age` measures cache response age since generation or revalidation, not
+time since Twitch rendered the image. Revalidation resets it. The origin-side
+value is therefore an upper-side estimate of rendering delay, not a measurement
+of that delay or proof of which upstream component caused it. The timing gauges
+require a fresh verified observation; the image-change age requires fresh LIVE
+evidence. Poll spacing, OCR confidence and freshness thresholds are unchanged.
+
+The fixed localhost native-forward reader reuses one HTTP-only opener. It does
+not allocate a TLS context on every poll, follow redirects, or use proxy settings.
+
 ## Resources And Storage
 
 Normal full images are processed in memory and discarded. Only small clock
@@ -197,7 +225,7 @@ PYTHONDONTWRITEBYTECODE=1 OMP_THREAD_LIMIT=1 python3 -m pytest -q -p no:cachepro
 promtool test rules ops/monitoring/prometheus/tests/twitch_thumbnail.yml
 ```
 
-These tests use generated images, temporary files and mocked HTTP/OCR. They make
+These tests use generated images, temporary files, local HTTP fixtures and mocked OCR. They make
 no provider requests, send no notifications and change no delivery services.
 
 ## Dated Records

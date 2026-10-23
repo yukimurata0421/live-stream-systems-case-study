@@ -256,7 +256,7 @@ class StorageTests(unittest.TestCase):
         with self.repository.connection(read_only=True) as connection:
             self.assertEqual(str(connection.execute("PRAGMA journal_mode").fetchone()[0]).lower(), "wal")
             self.assertEqual(int(connection.execute("PRAGMA foreign_keys").fetchone()[0]), 1)
-            self.assertEqual(int(connection.execute("PRAGMA user_version").fetchone()[0]), 6)
+            self.assertEqual(int(connection.execute("PRAGMA user_version").fetchone()[0]), 7)
         self.assertEqual(self.repository.integrity_check(), "ok")
         self.assertTrue(self.repository.ping())
 
@@ -443,7 +443,7 @@ class StorageTests(unittest.TestCase):
         repository = MonitoringRepository(path)
         repository.initialize(applied_at=APPLIED_AT)
         with repository.connection(read_only=True) as migrated:
-            self.assertEqual(int(migrated.execute("PRAGMA user_version").fetchone()[0]), 6)
+            self.assertEqual(int(migrated.execute("PRAGMA user_version").fetchone()[0]), 7)
             names = {
                 row[0]
                 for row in migrated.execute(
@@ -464,7 +464,7 @@ class StorageTests(unittest.TestCase):
                 ).fetchall()
             ]
         self.assertIn("source_revision", columns)
-        self.assertEqual(migrations, [1, 2, 3, 4, 5, 6])
+        self.assertEqual(migrations, [1, 2, 3, 4, 5, 6, 7])
 
     def test_v2_shadow_cycle_migrates_with_explicit_unknown_source_revision(self) -> None:
         path = self.root / "v2.sqlite3"
@@ -504,7 +504,7 @@ class StorageTests(unittest.TestCase):
         rows = repository.shadow_cycle_rows()
         self.assertEqual(rows[0]["source_revision"], "unknown-source-revision")
         with repository.connection(read_only=True) as migrated:
-            self.assertEqual(int(migrated.execute("PRAGMA user_version").fetchone()[0]), 6)
+            self.assertEqual(int(migrated.execute("PRAGMA user_version").fetchone()[0]), 7)
 
     def test_v3_notification_backlog_migrates_as_nondeliverable_shadow(self) -> None:
         path = self.root / "v3-outbox.sqlite3"

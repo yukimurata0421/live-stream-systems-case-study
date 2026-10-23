@@ -3,7 +3,9 @@ from __future__ import annotations
 import sqlite3
 
 
-SCHEMA_VERSION = 6
+from .history_schema import DDL_V7
+
+SCHEMA_VERSION = 7
 
 
 DDL_V1 = """
@@ -571,3 +573,19 @@ def migrate(connection: sqlite3.Connection, *, applied_at: str) -> None:
             (6, applied_at),
         )
         connection.execute("PRAGMA user_version=6")
+
+    if current < 7:
+        connection.execute("BEGIN IMMEDIATE")
+        try:
+            for statement in DDL_V7.split(';'):
+                if statement.strip():
+                    connection.execute(statement)
+            connection.execute(
+                "INSERT INTO schema_migrations(version, applied_at) VALUES (?, ?)",
+                (7, applied_at),
+            )
+            connection.execute("PRAGMA user_version=7")
+            connection.commit()
+        except BaseException:
+            connection.rollback()
+            raise

@@ -190,6 +190,62 @@ def ffmpeg_has_ingest_connection_any(ffmpeg_pid: int, ports: list[int]) -> tuple
     return False, ""
 
 
+def fallback_workload() -> str:
+    return env("STREAM_V3_FALLBACK_WORKLOAD", "deployment/stream-v3-youtube-backup")
+
+
+
+def fallback_ingest_ports() -> list[int]:
+    ports = []
+    for raw in env("YTW_FALLBACK_INGEST_TCP_PORTS", "443").split(","):
+        try:
+            port = int(raw.strip())
+        except ValueError:
+            continue
+        if 0 < port < 65536:
+            ports.append(port)
+    return ports or [443]
+
+
+
+def established_ffmpeg_connection(ss_output: str, ports: list[int]) -> str:
+    """Return an established FFmpeg connection to an allowed port, or an empty string."""
+    suffixes = tuple(f":{port}" for port in ports)
+    for line in ss_output.splitlines():
+        cols = line.split()
+        if len(cols) < 6 or cols[0] != "ESTAB" or '"ffmpeg"' not in line:
+            continue
+        if cols[4].endswith(suffixes):
+            return line.strip()
+    return ""
+
+
+
+def fallback_ingest_connection() -> tuple[bool, str]:
+    """Recognize local delivery from the direct YouTube backup while the main sender is unavailable."""
+    if not k8s_mode():
+        return False, ""
+    kubectl = env("STREAM_KUBECTL_BIN", "kubectl")
+    namespace = env("STREAM_K8S_NAMESPACE", "stream-v3")
+    workload = fallback_workload()
+    cp = run([kubectl, "-n", namespace, "get", workload, "-o", "jsonpath={.spec.replicas}/{.status.readyReplicas}"])
+    if cp.returncode != 0:
+        return False, ""
+    desired, _, ready = (cp.stdout or "").strip().partition("/")
+    try:
+        if int(desired or "0") < 1 or int(ready or "0") < 1:
+            return False, ""
+    except ValueError:
+        return False, ""
+    cp = run([kubectl, "-n", namespace, "exec", workload, "-c", env("STREAM_V3_FALLBACK_CONTAINER", "stream-engine"),
+              "--", "ss", "-tpn"])
+    if cp.returncode != 0:
+        return False, ""
+    line = established_ffmpeg_connection(cp.stdout or "", fallback_ingest_ports())
+    return (True, line) if line else (False, "")
+
+
+
 def trim_restart_history(raw_history: list[int], now_ts: int, retention_sec: int = 86400) -> list[int]:
     out: list[int] = []
     max_age = max(0, int(retention_sec))

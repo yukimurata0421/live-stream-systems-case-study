@@ -36,9 +36,9 @@ spec:
           args:
             - stream_monitoring_v4.commands.wall_clock_loop
             - --second
-            - "50"
+            - "30"
             - --minute-modulo
-            - "5"
+            - "1"
             - --timeout-sec
             - "40"
             - --ready-file
@@ -48,7 +48,7 @@ spec:
             - --
             - python
             - -m
-            - stream_monitoring_v4.commands.shadow_report
+            - stream_monitoring_v4.commands.normal_report
             - --postgres
             - --build-revision
             - __BUILD_REVISION__
@@ -70,7 +70,7 @@ spec:
               command:
                 - sh
                 - -ec
-                - 'test -r /tmp/reporter-ready && now=$(date +%s) && seen=$(sed -n "1p" /tmp/reporter-ready) && test "$seen" -le "$now" && test $((now-seen)) -le 420'
+                - 'test -r /tmp/reporter-ready && now=$(date +%s) && seen=$(sed -n "1p" /tmp/reporter-ready) && test "$seen" -le "$now" && test $((now-seen)) -le 120'
             periodSeconds: 15
             timeoutSeconds: 1
             failureThreshold: 2

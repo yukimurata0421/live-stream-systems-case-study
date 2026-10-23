@@ -23,7 +23,7 @@ defines the components and thresholds.
 | 09:10 | Replacement-broadcast creation disabled in the YouTube watchdog. A broadcast that really ends is recreated by hand. | Configuration applied and monitor restarted. |
 | 11:33 | arena-server observes the relay through the private tunnel instead of the home public address. | Public status relay values returned to measured data. |
 | 11:56-12:21 | Main sender switched to RTMPS on the relay; readiness and TCP-sampling port lists updated. | Upload samples of 3.57 and 3.63 Mbps returned. |
-| 14:16 | The YouTube watchdog counts an established fallback-Pod connection as local delivery while the main Pod is not sending. | After restart, `local_ok=true` and no incident with the fallback at zero replicas. Not yet observed during a real fallback. The code change is not part of this public snapshot. |
+| 14:16 | The YouTube watchdog counts an established fallback-Pod connection as local delivery while the main Pod is not sending. | After restart, `local_ok=true` and no incident with the fallback at zero replicas. Not yet observed during a real fallback. The public source includes its credential-free connection tests. |
 
 ## Video Observation (2026-10-22 to 2026-10-23 JST)
 
@@ -51,6 +51,12 @@ examples were not deployed; OCI restore assets and monitor images were retained
 privately.
 
 ## Not Yet Observed
+
+The [October 23 source reconciliation](v3/public-source-port-2026-10-23-observability.md)
+adds thumbnail CDN timing, current input-quality diagnostics, notification
+delivery safeguards and Monitoring v4 normal history to the public checkout.
+This source transfer performs no deployment and does not close the operated
+system's unobserved items below.
 
 - YouTube continuity across a keeper-driven Twitch renewal. The first renewal,
   at 2026-10-21 00:00 JST, did nothing: the keeper sent its forward change as
@@ -130,6 +136,34 @@ interruption; the first entry, at 06:31 JST, left 41 s of relay output unseen.
 - Automatic replacement-broadcast creation by the YouTube watchdog.
 - Runtime and recovery authority in Monitoring v4. Its relay observer and
   public projection run in production as read-only components.
+
+## Source Port Status (2026-10-23 JST)
+
+Implementation, Git history and operated-system evidence are separate:
+
+- **Implementation:** the capabilities below are present in the public working
+  tree and have credential-free source tests.
+- **Commit checkpoint:** the October 23 source-transfer record starts from
+  `0356966` and records local preparation without a new commit or push. Later
+  commits are recorded in Git history; the baseline is not the implementation
+  status of the working tree.
+- **Deployment evidence:** this source transfer performed no deployment or new
+  runtime verification. Operated-system claims retain their own dated
+  checkpoints above; source tests do not establish runtime version parity.
+
+| Area | Public implementation | Contract and checks |
+| --- | --- | --- |
+| Twitch thumbnail age | Bounded CDN `Age`, persisted age at first sight and origin-side estimate. | [Thumbnail timing](v3/twitch-thumbnail-monitor.md#provider-and-cache-timing); HTTP, restart and delayed-OCR regressions. |
+| YouTube input quality | `current_input_quality_crosscheck` alongside retained rolling gates. | [Current and historical quality](v3/sli-and-dashboard.md#current-input-quality-and-historical-gates); latest-state agreement and disagreement regressions. |
+| YouTube watchdog | Recognition of an established FFmpeg connection in a ready fallback workload. | [Source record](v3/public-source-port-2026-10-23-observability.md); mocked connection and exact-port regressions. |
+| Notifications | Actual-route receipts, retry ordering and durable overflow. | [Delivery rules](v3/notification-and-auto-recovery.md#delivery-and-current-state-rules); mocked delivery and persisted-state regressions. |
+| Monitoring v4 | Schema-v7 normal aggregates, explicit campaigns and verified history copies. | [Normal monitoring and history](../monitoring-v4/docs/normal-monitoring-history.md); temporary SQLite and cursor-contract tests. |
+| ADS-B source coverage | Time-based evidence coverage and compatible event counts. The development-source copy still lacks this change at this checkpoint. | [Coverage contract](v3/adsb-source-coverage.md); synthetic-event regressions. |
+
+The [source-transfer record](../publication/observability-port-20261023.json)
+binds the selected files and validation results. These are selected ports;
+private operational material and public configuration adjustments keep other
+differences intentional.
 
 ## Latest Evidence Checkpoints
 

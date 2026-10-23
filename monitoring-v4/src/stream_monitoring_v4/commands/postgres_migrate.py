@@ -136,7 +136,10 @@ def main() -> int:
         lock_timeout_ms=30_000,
     )
     now_at = utc_text(int(__import__("time").time()))
-    repository.initialize(applied_at=now_at)
+    try:
+        repository.initialize(applied_at=now_at)
+    finally:
+        repository.close()
 
     admin = psycopg.connect(**_connection_kwargs(), autocommit=False)
     try:

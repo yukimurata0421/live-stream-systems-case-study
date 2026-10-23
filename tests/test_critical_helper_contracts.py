@@ -91,7 +91,7 @@ class FastRecoveryDecisionContractTests(unittest.TestCase):
     def test_select_restart_reason_prefers_remote_warning_in_url_preservation_mode(self) -> None:
         state = {"net_fail_streak": 3, "stall_streak": 3, "low_upload_pressure_streak": 3}
         network = recovery_decision.NetworkObservation(
-            gateway="192.168.0.1",
+            gateway="192.0.2.1",
             gateway_ok=False,
             public_ok_count=0,
             dns_ok=False,
@@ -118,7 +118,7 @@ class FastRecoveryDecisionContractTests(unittest.TestCase):
 
     def test_select_restart_reason_prefers_network_then_tcp_before_low_upload(self) -> None:
         network = recovery_decision.NetworkObservation(
-            gateway="192.168.0.1",
+            gateway="192.0.2.1",
             gateway_ok=False,
             public_ok_count=0,
             dns_ok=False,
@@ -783,7 +783,7 @@ class NotificationRecoveryEvidenceContractTests(unittest.TestCase):
             )
 
         self.assertEqual(len(events), 1)
-        self.assertEqual(events[0]["trigger"], "runtime_run_id_changed")
+        self.assertEqual(events[0]["trigger"], "unplanned_restart")
         self.assertIn("previous_run_id=19700101T002000Z-111", events[0]["evidence"])
         self.assertEqual(marker["run_id"], "19700101T003000Z-222")
 
@@ -1135,7 +1135,7 @@ class ObjectiveSliContractTests(unittest.TestCase):
 
 
 class NotificationOutboxContractTests(unittest.TestCase):
-    def test_load_notify_outbox_filters_expired_nonpending_and_invalid_rows(self) -> None:
+    def test_load_notify_outbox_preserves_old_pending_and_filters_completed_or_invalid_rows(self) -> None:
         with tempfile.TemporaryDirectory() as td:
             outbox_file = Path(td) / "outbox.jsonl"
             outbox_file.write_text(
@@ -1153,9 +1153,9 @@ class NotificationOutboxContractTests(unittest.TestCase):
 
             rows = notify_outbox.load_notify_outbox(outbox_file, now_ts=1000, ttl_sec=100)
 
-        self.assertEqual([item["message_id"] for item in rows], ["recent"])
+        self.assertEqual([item["message_id"] for item in rows], ["old", "recent"])
 
-    def test_enqueue_notify_messages_deduplicates_status_and_bounds_pending(self) -> None:
+    def test_enqueue_deduplicates_and_archives_capacity_overflow_before_removing_it(self) -> None:
         rows = notify_outbox.enqueue_notify_messages(
             [
                 {"message_id": "old|drop", "status": "pending", "content": "old"},
@@ -1170,10 +1170,20 @@ class NotificationOutboxContractTests(unittest.TestCase):
             max_pending=2,
         )
 
-        self.assertEqual([item["content"] for item in rows], ["updated", "new"])
-        self.assertEqual(rows[0]["attempts"], 2)
-        self.assertEqual(rows[0]["username"], "bot")
-        self.assertTrue(rows[1]["message_id"].startswith("detected|incident-b|500"))
+        self.assertEqual([item["content"] for item in rows], ["old", "updated", "new"])
+        self.assertEqual(rows[1]["attempts"], 2)
+        self.assertEqual(rows[1]["username"], "bot")
+        self.assertTrue(rows[2]["message_id"].startswith("detected|incident-b|500"))
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            kept = notify_outbox.archive_overflow(
+                root / "outbox.jsonl", root / "events.jsonl", rows,
+                route="discord", limit=2, now_ts=1000,
+            )
+            dead = [json.loads(line) for line in (root / "outbox.jsonl.deadletter.jsonl").read_text().splitlines()]
+            self.assertEqual([item["content"] for item in kept], ["old", "updated"])
+            self.assertEqual([item["content"] for item in dead], ["new"])
+            self.assertEqual(dead[0]["disposition"], "pending_capacity_exceeded")
 
     def test_enqueue_notify_messages_keeps_routes_separate(self) -> None:
         rows = notify_outbox.enqueue_notify_messages(

@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import time
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 from stream_contracts.monitoring_v4.ids import stable_id
-from stream_contracts.monitoring_v4.time import utc_text
+from stream_contracts.monitoring_v4.time import utc_text, unix_ts
 
 from stream_monitoring_v4.adapters.factory import SHADOW_DOMAINS, state_file_adapters
 from stream_monitoring_v4.compatibility.legacy_current import (
@@ -34,6 +35,7 @@ from stream_monitoring_v4.reliability.projector import (
 from stream_monitoring_v4.runtime.isolation import validate_isolated_output_path
 from stream_monitoring_v4.runtime.observer import Observer
 from stream_monitoring_v4.runtime.pipeline import ShadowPipeline, ShadowPipelineResult
+from stream_monitoring_v4.history.normal import stage_normal_cycle
 from stream_monitoring_v4.storage.publications import PUBLIC_SAFE_ARTIFACT_KEY
 
 
@@ -48,6 +50,8 @@ class ShadowCycleRequest:
     fixed_now_ts: int | None
     summary_only: bool
     youtube_api_state_file: Path | None = None
+    migration_campaign: str = ""
+    metric_target: str = "stream-v3"
 
 
 def _run_pipeline(repository: Any, request: ShadowCycleRequest) -> ShadowPipelineResult:
@@ -111,6 +115,14 @@ def _stage_cycle(
                 len(item.intents) for item in result.incidents
             ),
             connection=connection,
+            purpose="migration" if request.migration_campaign else "normal",
+            campaign_id=request.migration_campaign,
+        )
+        stage_normal_cycle(
+            connection, result=result, cycle_id=cycle_id,
+            completed_ts=unix_ts(completed_at),
+            build_revision=request.build_revision, source_revision=request.source_revision,
+            projection_status=parity['projection_integrity'], target=request.metric_target,
         )
         if public_payload is not None:
             staged = repository.stage_artifact_publication(
@@ -177,11 +189,10 @@ def _summary_payload(
         "projection_integrity": projection_status,
         "public_shadow_written": public_shadow_written,
         "parity": {
-            "equivalent": parity["equivalent"],
-            "accepted_difference_count": parity["accepted_difference_count"],
-            "unclassified_contract_difference_count": parity[
-                "unclassified_contract_difference_count"
-            ],
+            "qualification_status": parity['qualification_status'],
+            "equivalent": parity.get('equivalent'),
+            "accepted_difference_count": parity.get('accepted_difference_count'),
+            "unclassified_contract_difference_count": parity.get('unclassified_contract_difference_count'),
         },
         "safety_boundary": safety_boundary,
     }
@@ -191,6 +202,10 @@ def execute_shadow_cycle(repository: Any, request: ShadowCycleRequest) -> dict[s
     # Validate every write destination before collecting or persisting a cycle.
     # This boundary was intentionally first in the original command and must
     # remain first after responsibility-level refactors.
+    if not re.fullmatch(r'[A-Za-z0-9_.:-]{1,120}', request.metric_target):
+        raise ValueError('metric target must be a stable secret-free identifier')
+    if request.migration_campaign and not re.fullmatch(r'[A-Za-z0-9_.-]{1,80}', request.migration_campaign):
+        raise ValueError('invalid migration campaign identifier')
     output_path = _output_path(request)
     reconciliation_ts = (
         request.fixed_now_ts
@@ -223,11 +238,19 @@ def execute_shadow_cycle(repository: Any, request: ShadowCycleRequest) -> dict[s
             else None
         )
     )
-    parity = live_parity_report(
-        result.currents,
-        normalized_v3_current(request.state_root),
-        runtime_rollout_projection(request.state_root),
-    )
+    parity: dict[str, Any] = {"qualification_status": "disabled"}
+    if request.migration_campaign:
+        try:
+            parity = live_parity_report(
+                result.currents,
+                normalized_v3_current(request.state_root),
+                runtime_rollout_projection(request.state_root),
+            )
+            parity['qualification_status'] = 'collected'
+        except Exception as exc:
+            # Comparison failures remain campaign failures, not normal-path failures.
+            parity = {'qualification_status': 'failed', 'error_type': type(exc).__name__}
+        parity['campaign_id'] = request.migration_campaign
     completed_ts = (
         request.fixed_now_ts
         if request.fixed_now_ts is not None
@@ -252,6 +275,7 @@ def execute_shadow_cycle(repository: Any, request: ShadowCycleRequest) -> dict[s
         request.build_revision,
         request.source_revision,
         [item.snapshot_id for item in result.currents],
+        request.migration_campaign,
     )
     staged_id = _stage_cycle(
         repository,

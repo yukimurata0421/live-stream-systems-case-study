@@ -40,7 +40,7 @@ def _attestation(root: Path, backup: Path, *, verified_ts: int) -> Path:
                 "backup_name": backup.name,
                 "backup_sha256": hashlib.sha256(backup.read_bytes()).hexdigest(),
                 "verified_at": utc_text(verified_ts),
-                "schema_versions": [1, 2, 3, 4, 5, 6],
+                "schema_versions": [1, 2, 3, 4, 5, 6, 7],
                 "observations": 1,
                 "shadow_cycles": 1,
                 "public_artifact_publications": 1,

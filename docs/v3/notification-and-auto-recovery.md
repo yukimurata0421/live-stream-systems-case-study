@@ -70,6 +70,45 @@ classifier. That replay is SLI evidence, not notification delivery evidence:
 it explains current classifier coverage for retained restart events without
 rewriting historical shadow logs.
 
+## Delivery And Current-State Rules
+
+With notifications enabled and Slack configured, initial detection and active
+incident routing use these rules in order, stopping at the first match in
+`slack_priority`:
+
+| Order | Condition | Preferred route |
+| --- | --- | --- |
+| 1 | ID starts with `public_probe:` or `reliability:upload_ceiling`, or equals `reliability:youtube_input_quality_fast_feedback`. | Discord, including when the incident's severity is Critical. |
+| 2 | Any remaining incident has severity Critical. | Slack immediately. |
+| 3 | ID is `youtube:enable_auto_stop_false_encoder_gap` or `external:blackbox_failed`, or starts with `fast_recovery:recovery_unconfirmed:`. | Slack immediately. |
+| 4 | Any remaining Warning has reached two hours since its first notification. | Slack escalation. |
+| 5 | All other incidents and informational events. | Discord. |
+
+These routing rules preserve the incident's severity. The exclusion in row 1
+is evaluated before the severity rule. When Slack is disabled or unconfigured,
+messages use the configured Discord route. Recovery follow-ups use the actual
+delivery receipts described below, rather than selecting a new route from this
+table. Slack reminders default to 30 minutes. Input-quality warnings must
+persist for ten minutes before their initial notification. These are
+notification rules, not recovery authorization.
+
+Delivery receipts record the route that actually succeeded. A Slack failure can
+fall back to Discord; the corresponding recovery follows that actual route,
+including after restart or a retry. Failed detection stays ahead of its recovery
+follow-up. Pending messages survive TTL expiry, and capacity overflow is written
+to a durable dead-letter record before removal. Large incident sets are split
+before rendering truncates them, so hidden items are not acknowledged as sent.
+
+A historical input-quality SLO breach remains in the formal report. Current
+incidents use fresh OAuth state and multi-window burn instead. Missing watchdog
+stats or API report timers have separate measurement incidents. Partial observe
+failures remain visible; exit 2 with a valid negative verdict is not a script
+crash. Planned rollouts and unplanned restarts retain distinct event labels.
+
+The upload-source recovery check reads only bounded current and immediately
+rotated raw tails, preserving timestamps, plus matching Prometheus evidence.
+Historical SLO coverage is not rewritten when current measurement recovers.
+
 ## Event Classes
 
 | Event | Notification class | Evidence |

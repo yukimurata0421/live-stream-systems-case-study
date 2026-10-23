@@ -13,6 +13,7 @@ from stream_monitoring_v4.runtime.backup_integrity import (
 )
 
 from .contracts import REPORT_SCHEMA, integer, mapping, text
+from stream_monitoring_v4.history.normal import NORMAL_REPORT_SCHEMA
 
 
 def youtube_api_status(
@@ -76,6 +77,31 @@ def report_status(path: Path, *, now_ts: int, max_age_sec: int) -> dict[str, Any
         generated_at = text(payload, "generated_at")
         generated_ts = unix_ts(generated_at)
         age = now_ts - generated_ts
+        if payload.get('schema') == NORMAL_REPORT_SCHEMA:
+            checks = mapping(payload.get('health_checks'))
+            expected_checks = {'cycle_present', 'cycle_fresh', 'cycle_build_matches',
+                               'cycle_source_matches', 'facts_currently_valid', 'normal_pipeline_clean',
+                               'aggregates_present', 'aggregates_fresh'}
+            latest = mapping(payload.get('latest_cycle'))
+            cycle_age = now_ts - unix_ts(text(latest, 'completed_at'))
+            boundary = mapping(payload.get('safety_boundary'))
+            return {
+                'readable': True, 'schema': NORMAL_REPORT_SCHEMA, 'schema_supported': True,
+                'mode': 'normal', 'generated_at': generated_at, 'age_sec': age,
+                'future': age < 0, 'fresh': 0 <= age <= min(max_age_sec, 120),
+                'build_revision': text(payload, 'build_revision'),
+                'build_revision_immutable': payload.get('build_revision_immutable') is True,
+                'source_revision_known': payload.get('source_revision_known') is True,
+                'normal_health_clean': (payload.get('healthy') is True
+                    and set(checks) == expected_checks and all(v is True for v in checks.values())
+                    and 0 <= cycle_age <= 180
+                    and type(latest.get('facts_valid_until_ts')) is int
+                    and now_ts <= latest['facts_valid_until_ts']),
+                'qualification_required': False,
+                'unsafe_real_delivery': boundary.get('real_delivery_enabled') is not False,
+                'unsafe_runtime_mutation': boundary.get('runtime_mutation_enabled') is not False,
+                'unsafe_raspberry_pi_dependency': boundary.get('raspberry_pi_dependency') is not False,
+            }
         parity = mapping(payload.get("parity_14d"))
         projection = mapping(payload.get("projection_integrity_14d"))
         latest = mapping(payload.get("latest_cycle"))

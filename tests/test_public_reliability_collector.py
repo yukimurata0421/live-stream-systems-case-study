@@ -242,6 +242,36 @@ class PublicReliabilityCollectorTests(unittest.TestCase):
         self.assertEqual(facts["Stale"], 0.0)
         self.assertIn("Zero traffic is activity information", item["note"])
 
+    def test_time_based_adsb_displays_time_without_relabeling_event_counts(self) -> None:
+        collector = load_collector()
+        raw = raw_report()
+        before = collector.build_public_payload(raw)
+        adsb = raw["windows"]["7d"]["visual_correctness"]["adsb_source_events"]
+        adsb.update({"coverage_basis": "event_time_span", "uncovered_seconds": 90,
+                     "unclassified_seconds": 30, "max_event_span_sec": 90})
+        after = collector.build_public_payload(raw)
+        item = next(row for row in after["items"] if row["id"] == "adsb_source_health")
+        facts = {row["label"]: row for row in item["facts"]}
+        self.assertEqual(facts["Uncovered time"], {"label": "Uncovered time", "value": 1.5, "unit": "min"})
+        self.assertEqual(facts["Unclassified time"]["value"], 0.5)
+        self.assertEqual(facts["Event valid for up to"]["unit"], "s")
+        self.assertEqual(facts["Monitor events"]["unit"], "events")
+        self.assertNotIn("Missing", facts)
+        self.assertNotIn("Scheduled events", facts)
+        self.assertIn("does not measure individual ADS-B message loss", item["note"])
+        self.assertEqual([row for row in before["items"] if row["id"] != "adsb_source_health"],
+                         [row for row in after["items"] if row["id"] != "adsb_source_health"])
+
+    def test_legacy_adsb_keeps_count_units_and_alias_fallback(self) -> None:
+        collector = load_collector()
+        visual = raw_report()["windows"]["7d"]["visual_correctness"]
+        visual.pop("adsb_source_events")
+        item = collector.adsb_source_item(visual)
+        facts = {row["label"]: row for row in item["facts"]}
+        self.assertEqual(facts["Missing"]["value"], 9)
+        self.assertEqual(facts["Missing"]["unit"], "events")
+        self.assertNotIn("Uncovered time", facts)
+
     def test_active_incidents_are_separate_from_numeric_indicators(self) -> None:
         collector = load_collector()
         payload = collector.build_public_payload(

@@ -6,6 +6,16 @@ from .facts import SentinelFacts
 from .models import SentinelEvidence
 
 
+def _report_health_checks(report: Mapping) -> dict[str, bool]:
+    if report.get('mode') == 'normal':
+        return {'report_normal_health_clean': report.get('normal_health_clean') is True}
+    return {
+        'report_parity_clean': report.get('parity_clean') is True,
+        'report_projection_clean': report.get('projection_clean') is True,
+        'report_latest_cycle_clean': report.get('latest_cycle_clean') is True,
+    }
+
+
 def evaluate_checks(
     evidence: SentinelEvidence,
     facts: SentinelFacts,
@@ -78,13 +88,7 @@ def evaluate_checks(
             evidence.report.get("source_revision_known") is True
         ),
         "report_build_matches_release": facts.report_build_matches_release,
-        "report_parity_clean": evidence.report.get("parity_clean") is True,
-        "report_projection_clean": (
-            evidence.report.get("projection_clean") is True
-        ),
-        "report_latest_cycle_clean": (
-            evidence.report.get("latest_cycle_clean") is True
-        ),
+        **_report_health_checks(evidence.report),
         "real_delivery_disabled": (
             evidence.report.get("unsafe_real_delivery") is False
         ),

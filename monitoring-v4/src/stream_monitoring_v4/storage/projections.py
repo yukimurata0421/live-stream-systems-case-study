@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import sqlite3
 from collections.abc import Iterator
+from contextlib import closing
 from typing import Any, Mapping, Sequence
 
 from stream_contracts.monitoring_v4.ids import canonical_json
@@ -168,6 +169,8 @@ class ProjectionRepositoryMixin:
         current_states: Mapping[str, str],
         parity: Mapping[str, Any],
         notification_intent_count: int,
+        purpose: str = "migration",
+        campaign_id: str = "",
         connection: sqlite3.Connection | None = None,
     ) -> bool:
         owned = connection is None
@@ -179,8 +182,8 @@ class ProjectionRepositoryMixin:
                 """INSERT OR IGNORE INTO shadow_cycles(
                     cycle_id, started_at, started_ts, completed_at, completed_ts,
                     build_revision, source_revision, observer_json, current_states_json, parity_json,
-                    notification_intent_count, real_delivery_enabled, runtime_mutation_enabled
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)""",
+                    notification_intent_count, real_delivery_enabled, runtime_mutation_enabled, purpose, campaign_id
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, ?, ?)""",
                 (
                     cycle_id,
                     started_at,
@@ -193,6 +196,7 @@ class ProjectionRepositoryMixin:
                     canonical_json(current_states),
                     canonical_json(parity),
                     max(0, int(notification_intent_count)),
+                    purpose, campaign_id,
                 ),
             )
             return cursor.rowcount == 1
@@ -247,36 +251,40 @@ class ProjectionRepositoryMixin:
         start_ts: int,
         end_ts: int,
         batch_size: int = 256,
+        campaign_id: str | None = None,
     ) -> Iterator[dict[str, Any]]:
         """Stream the revision-pinned reporter read model in bounded batches.
 
         The reporter runs inside a small, long-lived Pod.  Returning a list here
         retained both the raw JSON rows and their decoded object graphs for the
-        complete 14-day window.  Keeping the connection inside the generator
-        lets both SQLite and PostgreSQL release each batch after it is reduced.
+        complete 14-day window. PostgreSQL also needs a server-side cursor:
+        fetchmany() on a normal psycopg cursor still buffers all rows in libpq.
         """
 
         size = max(1, min(int(batch_size), 4096))
         with self.connection(read_only=True) as connection:
-            cursor = connection.execute(
-                """SELECT started_ts, observer_json, parity_json
+            sql = """SELECT started_ts, observer_json, parity_json
                 FROM shadow_cycles
-                WHERE build_revision=? AND source_revision=?
-                  AND started_ts>=? AND started_ts<?""",
-                (
-                    build_revision,
-                    source_revision,
-                    int(start_ts),
-                    int(end_ts),
-                ),
+                WHERE purpose='migration' AND build_revision=? AND source_revision=?
+                  AND started_ts>=? AND started_ts<?"""
+            params = (build_revision, source_revision, int(start_ts), int(end_ts))
+            if campaign_id is not None:
+                sql += " AND campaign_id=?"
+                params += (campaign_id,)
+            stream_cursor = getattr(connection, "stream_cursor", None)
+            cursor_context = (
+                stream_cursor(sql, params)
+                if callable(stream_cursor)
+                else closing(connection.execute(sql, params))
             )
-            while True:
-                rows = cursor.fetchmany(size)
-                if not rows:
-                    break
-                for row in rows:
-                    yield {
-                        "started_ts": int(row["started_ts"]),
-                        "observer": json.loads(row["observer_json"]),
-                        "parity": json.loads(row["parity_json"]),
-                    }
+            with cursor_context as cursor:
+                while True:
+                    rows = cursor.fetchmany(size)
+                    if not rows:
+                        break
+                    for row in rows:
+                        yield {
+                            "started_ts": int(row["started_ts"]),
+                            "observer": json.loads(row["observer_json"]),
+                            "parity": json.loads(row["parity_json"]),
+                        }

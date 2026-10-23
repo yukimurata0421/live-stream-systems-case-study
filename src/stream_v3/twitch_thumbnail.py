@@ -95,6 +95,15 @@ class NoRedirect(HTTPRedirectHandler):
         fp.close();raise ProbeError('thumbnail_redirect_rejected')
 
 
+def cdn_age(headers):
+    """The HTTP Age header, or None.
+
+    Age estimates the time since the cache generated or last revalidated the response with the
+    origin (RFC 9111), not since Twitch rendered the image: a revalidation resets it."""
+    value=headers.get('Age','') if headers is not None else ''
+    return int(value) if isinstance(value,str) and 0<len(value)<=6 and value.isascii() and value.isdigit() and int(value)<=86400 else None
+
+
 class ThumbnailHTTP:
     def __init__(self):
         self.opener=build_opener(ProxyHandler({}),NoRedirect());self.etag=None;self.cache_url=None
@@ -118,11 +127,12 @@ class ThumbnailHTTP:
                 tag=response.headers.get('ETag','')
                 self.etag=tag if len(tag)<=256 and all(32<=ord(c)<127 for c in tag) else None
                 self.cache_url=url
-                return body,{'http_status':200,'download_bytes':size}
+                return body,{'http_status':200,'download_bytes':size,'cdn_age_seconds':cdn_age(response.headers)}
         except HTTPError as error:
             status=error.code
             if status==304 and self.cache_url==url:
-                error.close();return None,{'http_status':304,'download_bytes':0}
+                age=cdn_age(error.headers)
+                error.close();return None,{'http_status':304,'download_bytes':0,'cdn_age_seconds':age}
             if status in (429,503):
                 retry=error.headers.get('Retry-After','60')
                 try:wait=float(retry)

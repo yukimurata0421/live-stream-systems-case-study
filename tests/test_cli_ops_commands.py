@@ -1220,15 +1220,15 @@ class CliOpsCommandsTests(unittest.TestCase):
             state = json.loads(state_file.read_text(encoding="utf-8"))
             events = [json.loads(line) for line in events_file.read_text(encoding="utf-8").splitlines()]
 
-        self.assertEqual(len(discord_sent), 2)
+        self.assertEqual(len(discord_sent), 0)
         self.assertEqual(len(slack_sent), 2)
         self.assertIn("Incident detected", slack_sent[0])
         self.assertIn("Recovery follow-up", slack_sent[1])
         self.assertEqual(state["active"], {})
         self.assertIn("slack", {item["route"] for item in events})
-        self.assertIn("discord", {item["route"] for item in events})
+        self.assertNotIn("discord", {item["route"] for item in events})
 
-    def test_notify_status_routes_warning_to_slack_after_sustained_window_once(self) -> None:
+    def test_notify_status_keeps_sustained_warning_on_discord(self) -> None:
         config = {
             "enabled": True,
             "webhook_url": "https://discord.example/webhook",
@@ -1278,9 +1278,8 @@ class CliOpsCommandsTests(unittest.TestCase):
             state = json.loads(state_file.read_text(encoding="utf-8"))
 
         self.assertEqual(len(discord_sent), 4)
-        self.assertEqual(len(slack_sent), 1)
-        self.assertIn("Ongoing incident status", slack_sent[0])
-        self.assertEqual(state["active"]["stream1090:overlay_report"]["slack_first_notified_ts"], 2800)
+        self.assertEqual(len(slack_sent), 0)
+        self.assertNotIn("slack_first_notified_ts", state["active"]["stream1090:overlay_report"])
 
     def test_notify_status_honors_incident_specific_repeat_interval(self) -> None:
         config = {
@@ -1338,7 +1337,7 @@ class CliOpsCommandsTests(unittest.TestCase):
         self.assertIn("Incident detected", discord_sent[0])
         self.assertIn("Ongoing incident status", discord_sent[1])
 
-    def test_notify_status_force_test_routes_to_slack_even_without_incidents(self) -> None:
+    def test_notify_status_force_test_stays_on_discord(self) -> None:
         config = {
             "enabled": True,
             "webhook_url": "https://discord.example/webhook",
@@ -1371,8 +1370,8 @@ class CliOpsCommandsTests(unittest.TestCase):
                                         self.assertEqual(cli.notify_status(force_test=True, now_ts=1000), 0)
 
         self.assertEqual(len(discord_sent), 1)
-        self.assertEqual(len(slack_sent), 1)
-        self.assertIn("Notification test", slack_sent[0])
+        self.assertEqual(len(slack_sent), 0)
+        self.assertIn("Notification test", discord_sent[0])
 
     def test_notify_status_sends_maintenance_reminder_without_collecting_incidents(self) -> None:
         config = {

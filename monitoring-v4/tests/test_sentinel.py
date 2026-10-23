@@ -381,7 +381,7 @@ class SentinelTests(unittest.TestCase):
                         "backup_name": backup_name,
                         "backup_sha256": digest,
                         "verified_at": utc_text(BASE_TS - 30),
-                        "schema_versions": [1, 2, 3, 4, 5, 6],
+                        "schema_versions": [1, 2, 3, 4, 5, 6, 7],
                         "observations": 10,
                         "shadow_cycles": 3,
                         "public_artifact_publications": 2,
@@ -657,6 +657,13 @@ class SentinelTests(unittest.TestCase):
         self.assertEqual(healthy.failed_checks, ())
         self.assertEqual(healthy.payload["status"], "good")
         self.assertNotIn("failed_checks", healthy.payload)
+
+        normal_report = {**report, "mode": "normal", "normal_health_clean": True,
+                         "parity_clean": False, "projection_clean": False, "latest_cycle_clean": False}
+        normal = assess(replace(evidence, report=normal_report))
+        self.assertTrue(normal.healthy, normal.failed_checks)
+        normal_failed = assess(replace(evidence, report={**normal_report, "normal_health_clean": False}))
+        self.assertEqual(normal_failed.failed_checks, ("report_normal_health_clean",))
 
         bad_report = dict(report)
         bad_report["parity_clean"] = False

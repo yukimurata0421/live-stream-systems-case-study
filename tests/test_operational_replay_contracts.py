@@ -156,7 +156,13 @@ class NotificationReplayContractTests(unittest.TestCase):
                 report_stale_sec=1800,
             )
 
-        self.assertEqual(incidents, [])
+        ids = {item["id"] for item in incidents}
+        self.assertEqual(ids, {
+            "youtube:watchdog_stats_stale", "api_report:timer_monitoring_gap",
+            "stream1090:overlay_report", "stream1090:upstream_report",
+        })
+        self.assertNotIn("stream:current_fail", ids)
+        self.assertTrue(all(item["severity"] == "warning" for item in incidents))
 
     def test_encoder_gap_replay_requires_fresh_current_stats(self) -> None:
         payload = {

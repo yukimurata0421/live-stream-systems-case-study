@@ -1,0 +1,721 @@
+{
+  "schema": "stream.public_port_record.v1",
+  "port_date_jst": "2026-10-23",
+  "scope": "Selected public source reconciliation: thumbnail cache metrics, current input quality, fallback delivery recognition, notification receipts and Monitoring v4 normal history.",
+  "prior_public_head": "035696645ac9511f8221eaa9489c742ea2848726",
+  "development_worktrees_dirty": true,
+  "deployment_performed": false,
+  "notification_sent": false,
+  "commit_performed": false,
+  "push_performed": false,
+  "selected_features": [
+    "Persisted thumbnail first-sight timing, bounded Age parsing, verified metrics and reusable localhost HTTP client.",
+    "Current raw/Prometheus input-quality diagnostic; historical disagreement and formal gates retained.",
+    "Direct YouTube backup connection recognition without relaxing public runtime guards.",
+    "Actual-route notification receipts, ordered recovery, durable overflow and current measurement incidents.",
+    "Monitoring v4 schema-v7 normal aggregates, explicit campaigns, verified history copy and bounded PostgreSQL cursors."
+  ],
+  "adaptations": [
+    "Keep generic source bindings, private-workspace guards and English public-facing strings.",
+    "Merge the current-quality function into the existing time-based ADS-B report without replacing its measurement code.",
+    "Update changed notification, role and legacy-surface contract expectations; preserve durable-loss and separation assertions.",
+    "Update portable reporter and restore examples together with schema v7; no live database or service mutation.",
+    "Use documentation-reserved gateway addresses in existing helper fixtures; their classification behavior is unchanged."
+  ],
+  "checks": {
+    "baseline_stream_tests": {
+      "passed": 1442,
+      "skipped": 9,
+      "subtests_passed": 1030
+    },
+    "focused_features": {
+      "passed": 166,
+      "subtests_passed": 2
+    },
+    "adsb_measurement_functions_unchanged": true,
+    "relay_clock_analyzer_unchanged": true,
+    "public_coverage_collector_unchanged": true,
+    "final_stream_suite": {
+      "passed": 1506,
+      "skipped": 9,
+      "subtests_passed": 1052
+    },
+    "final_monitoring_suite": {
+      "passed": 523,
+      "skipped": 6,
+      "subtests_passed": 184,
+      "skips": "Requires explicitly configured disposable PostgreSQL DSNs; not run against production."
+    },
+    "public_language": {
+      "status": "PASS",
+      "checked_text_files": 1921,
+      "violations": 0,
+      "upstream_unicode_data_exceptions": 1
+    },
+    "public_source_boundary": "PASS; issue_count=0",
+    "selected_secret_scan": "PASS; no leaks found",
+    "post_sanitization_helper_tests": {
+      "passed": 51
+    },
+    "monitoring_public_boundary": "PASS; issue_count=0",
+    "thumbnail_source_byte_parity": true,
+    "public_runtime_guards_preserved": true
+  },
+  "excluded": [
+    "Private host installers, operational records, raw images, logs, databases, credentials and native deployment artifacts.",
+    "Obsolete OCI-route prototypes, public-player acquisition and unrelated rendering/music work.",
+    "CRA source already reconciled with its separate development repository. Concurrent CRA documentation remains outside this port.",
+    "Unrelated Monitoring v4 OAuth/profile helpers, alert-policy work and private qualification harness campaigns."
+  ],
+  "files": [
+    {
+      "path": "docs/00_INDEX.md",
+      "source_role": "public-documentation",
+      "before_sha256": "54c9f42cbd9e1b2bc054e380f4a7376df991333c1dc4ea31f191c48805d7703e",
+      "source_sha256": null,
+      "public_sha256": "09bb9c3529368d76bb7c107dc021db89519855c24c0f85b7a32e58fecd5fad0a",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "docs/current-status.md",
+      "source_role": "public-documentation",
+      "before_sha256": "1fe4a4d8b103ec10fe05e9024447f8af5ac21fbbaf92d25eb9c8a8dade07c871",
+      "source_sha256": null,
+      "public_sha256": "5e30aa0b752c1cc4dc4b7c655f0db960858df6d1a064b53aff11abef83c4b40a",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23",
+      "pre_documentation_structure_review_sha256": "4f17b6ed3aa0e40601c0972920620a77640f439022f82cc112b487b3be06bd0d"
+    },
+    {
+      "path": "docs/v3/notification-and-auto-recovery.md",
+      "source_role": "public-documentation",
+      "before_sha256": "4897e5faaf1e246a93dcf6b9e68169a07838fade377acdba971b8416cd921f18",
+      "source_sha256": null,
+      "public_sha256": "53d85f593f7addd255370c88bd0aa1bc492cbb2a3fad925fce5804f26681b855",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23",
+      "pre_documentation_structure_review_sha256": "6fc80bf5d6daf9cc28be61b518dfbf56ada7bca5f627aa6495aed7c96a0a77c1"
+    },
+    {
+      "path": "docs/v3/public-source-port-2026-10-23-observability.md",
+      "source_role": "public-documentation",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "8e016cdf3b2d89bd001cfc815b348e24220f7099709c228e566ad15d77360ead",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23",
+      "pre_documentation_structure_review_sha256": "b185516422fd4726d1e3eda8e37d29e731be52c7dad703ebac7ab8d90a078805"
+    },
+    {
+      "path": "docs/v3/twitch-thumbnail-monitor.md",
+      "source_role": "public-documentation",
+      "before_sha256": "13bcc67a50609e8535239afe86bf8b05619f0f416aab4bcfbdf7b832aa84ff1d",
+      "source_sha256": null,
+      "public_sha256": "c58ae36a1afd2266b8ccc7f84777b71478e990674934b5848c405128d16d564a",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "monitoring-v4/README.md",
+      "source_role": "public-documentation",
+      "before_sha256": "209603e882c772be3cfa5772783c19c6fbeece5b95526fe3bc0ba18abdaa6b20",
+      "source_sha256": null,
+      "public_sha256": "2de3603234a842bae7c2643ff56576e8f94d30c726be27f49701c0233f229e85",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "monitoring-v4/config/monitoring_v4_legacy_surface_contract.json",
+      "source_role": "public-adapted-source-or-regression",
+      "before_sha256": "46623169298d3c1092edb12cd08109a2542d91ce76afafceeb93c5341e77f7e4",
+      "source_sha256": "336fa6d69f84808d4a28bc67fce3883a62a7b97658a556e672e0f1a158af8fea",
+      "public_sha256": "74b266bf6da89992172ff37704cb911d40f36265aaca9f154a7d6663ff743099",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "monitoring-v4/deploy/k3s/reporter.yaml",
+      "source_role": "public-adapted-source-or-regression",
+      "before_sha256": "aeefb0807f930f12b775db10ea13a109d5cb7cbf38b0037215400ba57f3538db",
+      "source_sha256": "f9e21e17dd646cd0344ca64fac37b332391b669ddc27fabe193ac6f321b0876a",
+      "public_sha256": "ee5e2c98170fdf97b459c6061f6de6f382e8eb6b41ced96b63a2d1fa6a08d775",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "monitoring-v4/deploy/k3s/restore-smoke-job.yaml",
+      "source_role": "public-adapted-source-or-regression",
+      "before_sha256": "1da18b3d461915852d8632092596784e8dcfaf82b3fd75ddc97866a53bc7e0b0",
+      "source_sha256": "c6ae33259f7567ac8b989f1f66af3ad4b551d5040955ad4afc0d18f0823eb96c",
+      "public_sha256": "1f357b95952c4111a850bd0b56a426561db7f0607208a679be99a5421ee657f2",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "monitoring-v4/docs/architecture.md",
+      "source_role": "public-documentation",
+      "before_sha256": "884d08fb63f6e5c84b7c24e32635b2e69318b0fcfd2ef5ffac38769a866b6a5f",
+      "source_sha256": null,
+      "public_sha256": "dfceb053b7df2a0363a3e892467dfeda5dc430f541acfd9758c4ad274cbb5eba",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "monitoring-v4/docs/failure-mode-mitigation-record.md",
+      "source_role": "public-documentation",
+      "before_sha256": "bd8c6bfd03ccef1aec74fb6a640bb838aa74b288a33d02705ab2d69a9e49a0fa",
+      "source_sha256": null,
+      "public_sha256": "705e212aa6c579c95effeb5cf6fb1f41e293ed159b867cc16601e84cbc01a9e8",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "monitoring-v4/docs/normal-monitoring-history.md",
+      "source_role": "public-documentation",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "a8442233bf152366ae2ad7667becb16efa01e08da9e5e07abffc35983dcfe807",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23",
+      "pre_documentation_structure_review_sha256": "f0fccd5e45f1517495be4c31ddae3e5f38be590237245111a49aa4384297ce14"
+    },
+    {
+      "path": "monitoring-v4/docs/postgresql-k3s.md",
+      "source_role": "public-documentation",
+      "before_sha256": "0ec0bf18ea329f904aa927e118f46db3360335e42f3fc55ceeca8bfe82042606",
+      "source_sha256": null,
+      "public_sha256": "ca6ef854bd7275e9141387ceeab934eece50ea669bd95f0cae47d2787ffd2d0e",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23",
+      "pre_documentation_structure_review_sha256": "21f0a59c7249ef7f665c26a4548c86f1914b32ad550972bc5786fa7a241fd1e6"
+    },
+    {
+      "path": "monitoring-v4/docs/status.md",
+      "source_role": "public-documentation",
+      "before_sha256": "5639c695dc1591c8812b35d4c8cbc907969ab3fb3edd5cfb8c710868159d9496",
+      "source_sha256": null,
+      "public_sha256": "abb77538749f538ed4da3ca463c39f6e7f2dfb00824a5029affc7867122bbe31",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "monitoring-v4/src/stream_contracts/monitoring_v4/schema/postgresql_restore_verification.v1.json",
+      "source_role": "public-adapted-source-or-regression",
+      "before_sha256": "6f90451b8e7410a673c738671be692dc79c4bebf6fbb3a6aa3e9bc8df06ca67c",
+      "source_sha256": "b32a15fe7110d281a62b10aadec2d7d31ddb2c1587a23fdbd73df10639a83adb",
+      "public_sha256": "b32a15fe7110d281a62b10aadec2d7d31ddb2c1587a23fdbd73df10639a83adb",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/commands/history_archive.py",
+      "source_role": "public-adapted-source-or-regression",
+      "before_sha256": null,
+      "source_sha256": "16d28ffa3377b71991464f13f7965d26d753af03aa3472c61bfa95b8dd1bafb6",
+      "public_sha256": "16d28ffa3377b71991464f13f7965d26d753af03aa3472c61bfa95b8dd1bafb6",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/commands/normal_report.py",
+      "source_role": "public-adapted-source-or-regression",
+      "before_sha256": null,
+      "source_sha256": "091fa6c4015019d118df06cb2156bcc421c0f803557f8c5099a0dad26f165829",
+      "public_sha256": "091fa6c4015019d118df06cb2156bcc421c0f803557f8c5099a0dad26f165829",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/commands/postgres_migrate.py",
+      "source_role": "public-adapted-source-or-regression",
+      "before_sha256": "f46cb20cb066c9052ee3b5c317e5b842a2bd65174c6781ecdae3cc26035d6e3c",
+      "source_sha256": "bb91a9b9cbe03d833cd9b889a1b1156d30c308c41d14fa51eac902a3ec2b34c3",
+      "public_sha256": "bb91a9b9cbe03d833cd9b889a1b1156d30c308c41d14fa51eac902a3ec2b34c3",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/commands/shadow_once.py",
+      "source_role": "public-adapted-source-or-regression",
+      "before_sha256": "93a2770100742da018ba3de465b9cd520d957742d288b172f4ba0b90a2f8aa44",
+      "source_sha256": "3df2c084b8b60aa186392cde617bbd970b0d2195d3480ceb3483493811041b91",
+      "public_sha256": "1979a87763b2cb19cbc1f109d0623a8f53131c87520e3105fc817144a83999cd",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/commands/shadow_report.py",
+      "source_role": "public-adapted-source-or-regression",
+      "before_sha256": "5feb9335dc04a3dddf8254cc21a02fba20481c1a6c0e5d3ac3b0aa0b6b4ae8e7",
+      "source_sha256": "914c306ef7cf6b15c7151ad896e8b3110125681e8b18e3903ceec4a7b59b1960",
+      "public_sha256": "914c306ef7cf6b15c7151ad896e8b3110125681e8b18e3903ceec4a7b59b1960",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/commands/sqlite_to_postgres.py",
+      "source_role": "public-adapted-source-or-regression",
+      "before_sha256": "acde6a2d80c380ff60003b3177abd6edc75f6f5ba6cb8d373f3a9a43e2a96f12",
+      "source_sha256": "40e7c14e54f654dab8132f858b854d9fb68a7d3bdfba4bcc441ebcb049bdd0a3",
+      "public_sha256": "40e7c14e54f654dab8132f858b854d9fb68a7d3bdfba4bcc441ebcb049bdd0a3",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/history/__init__.py",
+      "source_role": "public-adapted-source-or-regression",
+      "before_sha256": null,
+      "source_sha256": "47216294007f22a7980003ade3efff44e215cea9b976933126c4543b22f39e19",
+      "public_sha256": "25442e95098fb986fcb0bc816183a8dac29381289c2fd4d1ddbd633e0c78a0ef",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/history/archive.py",
+      "source_role": "public-adapted-source-or-regression",
+      "before_sha256": null,
+      "source_sha256": "15535886393cffa916cf1a04d19ae85e266fb62c1306ae3ad6aa16c19f8b9230",
+      "public_sha256": "15535886393cffa916cf1a04d19ae85e266fb62c1306ae3ad6aa16c19f8b9230",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/history/normal.py",
+      "source_role": "public-adapted-source-or-regression",
+      "before_sha256": null,
+      "source_sha256": "1332451c023d64e85f81dd1c593a3acc0733f3215d1b0750abf76fff110b6c09",
+      "public_sha256": "1332451c023d64e85f81dd1c593a3acc0733f3215d1b0750abf76fff110b6c09",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/history/rolling.py",
+      "source_role": "public-adapted-source-or-regression",
+      "before_sha256": null,
+      "source_sha256": "2394d4482a3b89f5362457ed1d135df57f50c86dbe9f8a4ffddf54dc57e0114e",
+      "public_sha256": "2394d4482a3b89f5362457ed1d135df57f50c86dbe9f8a4ffddf54dc57e0114e",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/history/snapshot.py",
+      "source_role": "public-adapted-source-or-regression",
+      "before_sha256": null,
+      "source_sha256": "d0c6363079cf693d296e71c5f6989ea565e4eba31b4fb01bb0b2999155ebbff3",
+      "public_sha256": "d0c6363079cf693d296e71c5f6989ea565e4eba31b4fb01bb0b2999155ebbff3",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/runtime/shadow_cycle.py",
+      "source_role": "public-adapted-source-or-regression",
+      "before_sha256": "572bc6f170891e1e21ff7ddbba10430373cf4e0e4e6f3521057d9e9bf54ce9f5",
+      "source_sha256": "cf9434fb48ba5f354f82bf6fb2c2250b912b0a1738dc4c748d287b6ccfb050ae",
+      "public_sha256": "cf9434fb48ba5f354f82bf6fb2c2250b912b0a1738dc4c748d287b6ccfb050ae",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/sentinel/checks.py",
+      "source_role": "public-adapted-source-or-regression",
+      "before_sha256": "d148f25dbd1df23ca6c9462c84c60246675da8a1822f04b722679623cdd07a29",
+      "source_sha256": "eb05d2246f65db9cb6aea6091df9071b2f809a7dac0f7a3f91abcbba38173c74",
+      "public_sha256": "eb05d2246f65db9cb6aea6091df9071b2f809a7dac0f7a3f91abcbba38173c74",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/sentinel/evidence.py",
+      "source_role": "public-adapted-source-or-regression",
+      "before_sha256": "46be1617f9525df822f7f395b5b0910278240da41f8c6206cf4f1ebf3cd7b18b",
+      "source_sha256": "5c3c3b11a68f79b5b17c26c1224f4c7d20b495e9a84c24bb777377a36074d01b",
+      "public_sha256": "5c3c3b11a68f79b5b17c26c1224f4c7d20b495e9a84c24bb777377a36074d01b",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/storage/history_schema.py",
+      "source_role": "public-adapted-source-or-regression",
+      "before_sha256": null,
+      "source_sha256": "520790c6d4fbcf8a684a7c2ad096bdc0882a92c861b95d79fc3cd0241d8ba90a",
+      "public_sha256": "520790c6d4fbcf8a684a7c2ad096bdc0882a92c861b95d79fc3cd0241d8ba90a",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/storage/postgres.py",
+      "source_role": "public-adapted-source-or-regression",
+      "before_sha256": "9bc030813694cdc6e73e2f9c092b95dae63b146aba7208dfb1e46329ef1f56ad",
+      "source_sha256": "6cdf5673f505b50d2cab4016e4b9e41fb19a2baefad8a2984c5914d8b3ae41e2",
+      "public_sha256": "6cdf5673f505b50d2cab4016e4b9e41fb19a2baefad8a2984c5914d8b3ae41e2",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/storage/postgres_schema.py",
+      "source_role": "public-adapted-source-or-regression",
+      "before_sha256": "606408fe9c75f3437c0f9d43a498a485f7720a9ae92ce875f969cb99d0833f85",
+      "source_sha256": "0997e620b06502af245f1871e3e223f96023ec8f7ddd2ba59f7a860f6d35dcb8",
+      "public_sha256": "0997e620b06502af245f1871e3e223f96023ec8f7ddd2ba59f7a860f6d35dcb8",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/storage/projections.py",
+      "source_role": "public-adapted-source-or-regression",
+      "before_sha256": "b65ef6f26e82e11fd508a73eed7290563bca1d7bddd239dd247b4e650a8b664f",
+      "source_sha256": "23c198c36a5c697ee26b3dc67051c194c8e1b9fc8ad1781eaf2746791eebaaf3",
+      "public_sha256": "23c198c36a5c697ee26b3dc67051c194c8e1b9fc8ad1781eaf2746791eebaaf3",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/storage/role_contract.py",
+      "source_role": "public-adapted-source-or-regression",
+      "before_sha256": "9928112984a60fd93489d73709d2ca02e0d6ddf4074965e1ace034115db9da1f",
+      "source_sha256": "4e0555829c7f8fcbe9eb0dd828d54d39a5e7625d46695712a06e46e0fa1fb0ae",
+      "public_sha256": "4e0555829c7f8fcbe9eb0dd828d54d39a5e7625d46695712a06e46e0fa1fb0ae",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/storage/schema.py",
+      "source_role": "public-adapted-source-or-regression",
+      "before_sha256": "a939a398d0ff37128e7c0c55c47e23b2348a4d0f43b2cc073d64845969ddd0ef",
+      "source_sha256": "15457bd3f14f2fc9c42ed16a4635747fa504bdee558982b80c879a9e0fd9f02b",
+      "public_sha256": "15457bd3f14f2fc9c42ed16a4635747fa504bdee558982b80c879a9e0fd9f02b",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "monitoring-v4/tests/test_backup_retention.py",
+      "source_role": "public-adapted-source-or-regression",
+      "before_sha256": "2d0a04010287a48ae005e1f7bb7ccd5f493ff154c568eda1bf635e78f552da3c",
+      "source_sha256": "9ed6a0a035cc4baa504cc0cbde0c0061a25ddda4c68b86d3bbbdfeca28a57b0e",
+      "public_sha256": "9ed6a0a035cc4baa504cc0cbde0c0061a25ddda4c68b86d3bbbdfeca28a57b0e",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "monitoring-v4/tests/test_contracts_storage.py",
+      "source_role": "public-adapted-source-or-regression",
+      "before_sha256": "3af6d5b93303b8e57a821a810fbfedc709268bc4e83f0a3fef4ecc553ad26f01",
+      "source_sha256": "3b61ef3b47abe907ba60012f20a23016d34203dfb1ed2ab94a9a58401de9f7ca",
+      "public_sha256": "3b61ef3b47abe907ba60012f20a23016d34203dfb1ed2ab94a9a58401de9f7ca",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "monitoring-v4/tests/test_exporter_shadow_report.py",
+      "source_role": "public-adapted-source-or-regression",
+      "before_sha256": "63a5f51603508103146d25873967972069c508c5bee6d49000c96eb4af533363",
+      "source_sha256": "f0f7ab922690941d4b15cd35c10ed8efbe6f7ff4516e308fadcc6dd3e94d325a",
+      "public_sha256": "f0f7ab922690941d4b15cd35c10ed8efbe6f7ff4516e308fadcc6dd3e94d325a",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "monitoring-v4/tests/test_history_restore.py",
+      "source_role": "public-adapted-source-or-regression",
+      "before_sha256": null,
+      "source_sha256": "262b628e7872d617a2b0f2ee5b1e12278df1f91b44df2f36cbd7aec6903a36a1",
+      "public_sha256": "262b628e7872d617a2b0f2ee5b1e12278df1f91b44df2f36cbd7aec6903a36a1",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "monitoring-v4/tests/test_history_tiers.py",
+      "source_role": "public-adapted-source-or-regression",
+      "before_sha256": null,
+      "source_sha256": "166ffcdd3ee5df0d8cc58ab0f3b2bdf19d590689cf0acfa8e2cf42d67ad72675",
+      "public_sha256": "68d9ff00a137d2fcf579bb3ed04d16162a5f5136ce73836e5774db572c910a35",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "monitoring-v4/tests/test_legacy_surface_inventory.py",
+      "source_role": "public-adapted-source-or-regression",
+      "before_sha256": "54421f909a3591bc4aa481dc1046519fc37006db0a4d7aea6e5c394ca4038189",
+      "source_sha256": "e563c68f82029df1ea79e4272ca984d452a6d4ac4687b3f792d603ac941a2dd8",
+      "public_sha256": "45d02494cc43d10a7e5c50a5ed89a304554a23f2888a80ac9e3e60ee226b9bbb",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "monitoring-v4/tests/test_postgres_k3s.py",
+      "source_role": "public-adapted-source-or-regression",
+      "before_sha256": "4ff23e2fd22087269d9e493a5cb901eed3bb72d4c039e99acc3b42d4e1a9dfef",
+      "source_sha256": "99fc32978d30478f5615ca4274bb766c7c9604a41c962217a67d9d896d94a99d",
+      "public_sha256": "3e315d4b3f63364d0df139ddd8abedd01b463ea8385e1493cb278e5ea035056d",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "monitoring-v4/tests/test_postgres_migrate_command.py",
+      "source_role": "public-adapted-source-or-regression",
+      "before_sha256": "5efddb21d30d95657ef6643119791f6e43557066a88e09e9fffbd9e1f20dbec9",
+      "source_sha256": "752fa6a6c8fa8086d51a530a8c55290ab9ad15cac192b81d1a56ba012816ecdc",
+      "public_sha256": "752fa6a6c8fa8086d51a530a8c55290ab9ad15cac192b81d1a56ba012816ecdc",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "monitoring-v4/tests/test_retention.py",
+      "source_role": "public-adapted-source-or-regression",
+      "before_sha256": "5fbbb65e7643d818f41c6ad815840feb68437e608ba15a3e54c1b6a6955a2c34",
+      "source_sha256": "d63f19e6cf75bdaebc67fe84fbb6a22cba23ce241dd95463336e2d7a8cf958ec",
+      "public_sha256": "d63f19e6cf75bdaebc67fe84fbb6a22cba23ce241dd95463336e2d7a8cf958ec",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "monitoring-v4/tests/test_sentinel.py",
+      "source_role": "public-adapted-source-or-regression",
+      "before_sha256": "1b0933452cb6c01c46f0220034d15f88ffaa01380cd5f3041329688843d959de",
+      "source_sha256": "83c02ee45c38199b245e279253982f14465b68bb7cf418db74ad5d4add3d44b5",
+      "public_sha256": "83c02ee45c38199b245e279253982f14465b68bb7cf418db74ad5d4add3d44b5",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "src/stream_core/cli_support/sli_report.py",
+      "source_role": "public-adapted-source-or-regression",
+      "before_sha256": "c8fccee7c195cf44ba0c1265399b2334b8e94d881b4042c23be5d0fe62f6a686",
+      "source_sha256": "cac9b92a19defd114e177fd8e0ad966c8cf05b655805bf5b54db73bd3c06eaee",
+      "public_sha256": "9fd2785fb59b6c095f4f164def694fd1a9e6ccf79ab214610da67d9bb80d1b88",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "src/stream_core/notifications/incidents.py",
+      "source_role": "public-adapted-source-or-regression",
+      "before_sha256": "29068d15becd9d0df908c4c2095e77451a8c3c995ffeec4283e2434a4c2a67cd",
+      "source_sha256": "e63b94f898789fbcb19b1782a4da84d5831f337d7d634cb05ee83eed96b693b4",
+      "public_sha256": "93e6534d8ae39c2daed447028b62611e5f9573a591a052e351cff8aaffdbd881",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "src/stream_core/notifications/outbox.py",
+      "source_role": "public-adapted-source-or-regression",
+      "before_sha256": "460b47656ad5f2d2d4dd75096acf7013ec75f40a5c29bb747d59c22cf91dc06c",
+      "source_sha256": "7a880f76635f2dac400ecde7d3c63092faf9e257bb5f54e4a18b214973200016",
+      "public_sha256": "28eab0f379c9b1bec484d6191ddeb866fac6d58da48c8f4c2829304428070737",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "src/stream_core/notifications/renderer.py",
+      "source_role": "public-adapted-source-or-regression",
+      "before_sha256": "c292f4d317a38a2e2fa78be8a155ba07ee777509454f6e30c2c4bf469c646a4f",
+      "source_sha256": "8dde8f6e5755fedfb7e38c91145bcb9175e00e30dd0a0c7998d417eac3242470",
+      "public_sha256": "e04fb45801678eafc391e82e1f758b0248d9dd07c6a076b1410ffd078eaae607",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "src/stream_core/notifications/status_loop.py",
+      "source_role": "public-adapted-source-or-regression",
+      "before_sha256": "5fbfef066cb27696f1df5e7d25d2555fa29e6e82cf03b282f1a45d8d691c7da7",
+      "source_sha256": "673a5713009415b6ee0581ec16423f9480ac135f2607c08ef448ec79e9da44b2",
+      "public_sha256": "50b64cea1e8ced643f193a67d0ba92f0eca25b0fd68277304127d7bc8f55d8b1",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "src/stream_core/notifications/upload_source.py",
+      "source_role": "public-adapted-source-or-regression",
+      "before_sha256": "b6ca4ac1875fe51a9d863b2c6ac8e8bd408d549585f103d2b846e4180c271cf6",
+      "source_sha256": "cbbd4ef2f035d2020ef245c5618b64dc0ad755fda2ff2bd7bbcec51bb467017b",
+      "public_sha256": "665106b3c0ddcba07d65bc06daabca5229b0c9f5a69e3c79acf493e4c5ee8689",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "src/stream_v3/twitch_thumbnail.py",
+      "source_role": "public-adapted-source-or-regression",
+      "before_sha256": "38698761e6567c9d606efc63781b752ee138d27c44aa42a6de3a8e3fccd03c20",
+      "source_sha256": "28d44bd42690e02b26941f5294899839f15f1d995003013c864c28fb0aafc7cd",
+      "public_sha256": "28d44bd42690e02b26941f5294899839f15f1d995003013c864c28fb0aafc7cd",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "src/stream_v3/twitch_thumbnail_metrics.py",
+      "source_role": "public-adapted-source-or-regression",
+      "before_sha256": "f94d943b42d135b99a011dd6a62af53cfad5ef5970f01112ca49d929d0aa69df",
+      "source_sha256": "fb976748d32ab423143be44fcd85c4a1efe359b3b6bf8617d561ea920d3ef566",
+      "public_sha256": "fb976748d32ab423143be44fcd85c4a1efe359b3b6bf8617d561ea920d3ef566",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "src/stream_v3/twitch_thumbnail_worker.py",
+      "source_role": "public-adapted-source-or-regression",
+      "before_sha256": "58350ba767ea614875cdc0f2d41daf4a3ecc9375aef02c4f206fa57081b73299",
+      "source_sha256": "96af0c3628018b1607c3d36b4e60e81801e37d5c8e2cdc68db7deb8250530759",
+      "public_sha256": "96af0c3628018b1607c3d36b4e60e81801e37d5c8e2cdc68db7deb8250530759",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "src/watchers/youtube_watchdog.py",
+      "source_role": "public-adapted-source-or-regression",
+      "before_sha256": "13b14aaec86377f30a21cb7e86c28191c4f38f301c47f1ce9b89b460c9ffb8d8",
+      "source_sha256": "031a7a70e1baa91cbba781bcf7a5ae0640116eb09d625f00599ac5c6237d8bd3",
+      "public_sha256": "c83824a45842eff8c4ccfb66d9370454890b99e509b4b017267a0f7d415dae76",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "src/watchers/youtube_watchdog_core/process.py",
+      "source_role": "public-adapted-source-or-regression",
+      "before_sha256": "3772ba9cc259e270274e804dc25605631e4ac5d30a9e6d32b0fb237e26c50f18",
+      "source_sha256": "8a34747c1c5ae89a0265789fb323c74bc87a70a8200355990f926b37f286d45f",
+      "public_sha256": "1a53e10a5e8ccc761673a07736f6a03363ac0d0e826fbd179efbfc9fc52f38a2",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "tests/test_cli_ops_commands.py",
+      "source_role": "public-adapted-source-or-regression",
+      "before_sha256": "2132f58f4513fca2c0ce0c3a3d14052001814c7d5a4bb26baf56c3e3fd2596f6",
+      "source_sha256": "74a9885418b5d96e60fa76d1c7b698741a8f0c3e771118cf91022777d01ae1ae",
+      "public_sha256": "1168f099a90d8cbde98a756f763b99942dc28996342b1497992785a5c3276048",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "tests/test_connectivity_recovery.py",
+      "source_role": "public-adapted-source-or-regression",
+      "before_sha256": "2c3ba2a6002808de785d0edf6924974dcdec13e1ea935712a2f143cbc4453477",
+      "source_sha256": "2c3ba2a6002808de785d0edf6924974dcdec13e1ea935712a2f143cbc4453477",
+      "public_sha256": "18a224d5d8df4960b8ae3192a1a238b49677507b6234d867cd4b7251e6cacf9e",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "tests/test_critical_helper_contracts.py",
+      "source_role": "public-adapted-source-or-regression",
+      "before_sha256": "ca95c76a517dec8c39fd868e6b738b5421571505c5f051dec1efd15a5e973759",
+      "source_sha256": "4697d9f2fcd6894368adecb2a140a98efb07ab8927db002ebedeaedbc6719e63",
+      "public_sha256": "e6eeed95523a08ecca48582219314115b7fbad2c50e20432e990c8eb8cfcb4a8",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "tests/test_notification_routing.py",
+      "source_role": "public-adapted-source-or-regression",
+      "before_sha256": null,
+      "source_sha256": "79c8fbf58a14b127679a39d23f1a992378391b593ec07a7183a3dbf452840268",
+      "public_sha256": "079870ad95bd51a147f9deffd1d75f85816c1411a2e78664c5288cbf8fcaee51",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "tests/test_operational_replay_contracts.py",
+      "source_role": "public-adapted-source-or-regression",
+      "before_sha256": "55030dbc96dc8af097af5d7200a53d2ae671387aaced5b11737af7740582239b",
+      "source_sha256": "7a35ccb48032150e08e9601ee140139236e0316e8f10e20abcfe5c9d94654232",
+      "public_sha256": "be4d51a37f8c50732901ce521d873f17eab1af48d5e48632242f09012e0e81ec",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "tests/test_quality_incident_routes.py",
+      "source_role": "public-adapted-source-or-regression",
+      "before_sha256": null,
+      "source_sha256": "f798dd0476fc5d5a0f0a6a6cc6dbad7c698bfdcb0ce6ab8c1a7744a6ab9a617d",
+      "public_sha256": "f798dd0476fc5d5a0f0a6a6cc6dbad7c698bfdcb0ce6ab8c1a7744a6ab9a617d",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "tests/test_sli_report.py",
+      "source_role": "public-adapted-source-or-regression",
+      "before_sha256": "580430303024485e8456245b3af91f742b02f48ceacbe7d8107e28c3c3f3c72f",
+      "source_sha256": "45e672ad71b0d110df4c2aaacd8baebbe7c493eea66cf96f9c2d9fba42a0b921",
+      "public_sha256": "b7f6991b98b68d67b25f10ad7977d46e7833bb4bcd810c6b7f7b0fb126791736",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "tests/test_twitch_thumbnail.py",
+      "source_role": "public-adapted-source-or-regression",
+      "before_sha256": "e5d1a8f40488b2c6a911fccadd15a34834bd3bd37cd11abb9c94f7cb70cc0c69",
+      "source_sha256": "4e4c318ba6db940102b4e1124b876f5cf5a544ea90bf95725ed5b92b1da2d5c2",
+      "public_sha256": "4e4c318ba6db940102b4e1124b876f5cf5a544ea90bf95725ed5b92b1da2d5c2",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "tests/test_upload_source_recovery.py",
+      "source_role": "public-adapted-source-or-regression",
+      "before_sha256": "da6513c0ab04e59b8b3494fca87716d2de6290dfc4a435c8ffe2a006915437f9",
+      "source_sha256": "55f55289ff3f16b0bb878562a735e1bc00b6dbf11240fa97c70b602823c99931",
+      "public_sha256": "55f55289ff3f16b0bb878562a735e1bc00b6dbf11240fa97c70b602823c99931",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "tests/test_youtube_watchdog_fallback_ingest.py",
+      "source_role": "public-adapted-source-or-regression",
+      "before_sha256": null,
+      "source_sha256": "32c1a998a11c3e9cd81f9680210000bbf4c34d54279d9533f5dfc315203f7372",
+      "public_sha256": "d9faab0427effb0d637a615852910620859dfc8a285073f2256001e671c03bc4",
+      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "docs/v3/sli-and-dashboard.md",
+      "source_role": "public-documentation",
+      "before_sha256": "e3883e3628b05f8bb91dc2cb0c3065853cb724f4d34747f8bb49cc8f2c2b7b40",
+      "source_sha256": null,
+      "public_sha256": "e413383f351377ab693ad73b99333cf4f621048feec91f59cfcaf623692058f1",
+      "decision": "Add the stable current-quality contract while preserving the existing ADS-B contract.",
+      "port_date_jst": "2026-10-23"
+    }
+  ],
+  "limits": [
+    "Source integration does not establish deployment, live notification delivery, production migration, PostgreSQL native qualification or elapsed-time gates.",
+    "Origin-side thumbnail age is an upper-side estimate influenced by cache revalidation.",
+    "Normal-monitoring aggregates are not formal API/OCR SLIs or migration qualification."
+  ],
+  "documentation_structure_review": {
+    "reviewed_on_jst": "2026-10-23",
+    "scope": "Six existing English documents and their active publication digests; implementation unchanged.",
+    "changes": [
+      "Separate public implementation, the source-transfer commit checkpoint and dated deployment evidence.",
+      "Distinguish the current schema-v7 migration/rollback constraints from the historical SQLite-to-PostgreSQL transition.",
+      "Document notification exclusions before severity and escalation rules.",
+      "Define rolling versus current input-quality comparisons, including unavailable comparisons with a false disagreement flag.",
+      "Run the documented Monitoring v4 checks from its subproject directory and link the stable quality contract."
+    ],
+    "checks": {
+      "status": "PASS",
+      "documentation_tests": {
+        "passed": 17,
+        "subtests_passed": 805
+      },
+      "documented_monitoring_command": {
+        "passed": 63,
+        "subtests_passed": 37,
+        "executed_from": "repository root; command changes to monitoring-v4"
+      },
+      "relative_links_and_anchors": {
+        "checked": 38,
+        "issues": 0
+      },
+      "public_language": "PASS; 1921 text files, zero violations",
+      "public_source_map": "PASS; issue_count=0",
+      "diff_whitespace": "PASS",
+      "implementation_and_unrelated_diffs_preserved": true,
+      "selected_secret_scan": "PASS; no leaks found"
+    },
+    "production_changes": false,
+    "code_changes": false,
+    "commit_performed": false,
+    "push_performed": false
+  }
+}

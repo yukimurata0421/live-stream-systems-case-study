@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from contextlib import closing
+from contextlib import closing, contextmanager
 from datetime import datetime, timezone
 import re
 import shutil
@@ -22,6 +22,7 @@ from stream_monitoring_v4.commands.sqlite_to_postgres import (
     _snapshot,
 )
 from stream_monitoring_v4.storage.postgres import (
+    PostgresConnection,
     PostgresMonitoringRepository,
     postgres_advisory_lock_key,
     postgres_sql,
@@ -44,6 +45,7 @@ from stream_monitoring_v4.storage.postgres_schema import (
     DDL_V4,
     DDL_V5,
     DDL_V6,
+    DDL_V7,
 )
 from stream_monitoring_v4.storage.role_contract import (
     ROLE_TABLE_PRIVILEGES,
@@ -61,16 +63,96 @@ from stream_monitoring_v4.storage.schema import (
     DDL_V4 as SQLITE_DDL_V4,
     DDL_V5 as SQLITE_DDL_V5,
     DDL_V6 as SQLITE_DDL_V6,
+    DDL_V7 as SQLITE_DDL_V7,
     SCHEMA_VERSION as SQLITE_SCHEMA_VERSION,
 )
 from stream_monitoring_v4.storage.postgres_schema import SCHEMA_VERSION as POSTGRES_SCHEMA_VERSION
 from ops.scripts.monitoring_v4_source_identity import content_identity, included_paths
 
 
+from tests.helpers import BASE_TS
+
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
 class PostgresCompatibilityTests(unittest.TestCase):
+    def test_report_cursor_cleans_up_before_pool_release_on_stop_and_decode_error(self) -> None:
+        for malformed in (False, True):
+            with self.subTest(malformed=malformed):
+                events = []
+
+                class Cursor:
+                    done = False
+
+                    def execute(self, sql, params):
+                        self.sql, self.params = sql, params
+                        events.append("execute")
+
+                    def fetchmany(self, size):
+                        self.size = size
+                        if self.done:
+                            return []
+                        self.done = True
+                        return [{"started_ts": BASE_TS, "observer_json": "{}",
+                                 "parity_json": "invalid" if malformed else "{}"}]
+
+                cursor = Cursor()
+
+                class Raw:
+                    @contextmanager
+                    def transaction(self):
+                        events.append("transaction_open")
+                        try:
+                            yield
+                        finally:
+                            events.append("transaction_closed")
+
+                    @contextmanager
+                    def cursor(self, *, name):
+                        self.name = name
+                        events.append("cursor_open")
+                        try:
+                            yield cursor
+                        finally:
+                            events.append("cursor_closed")
+
+                    def execute(self, *args):
+                        raise AssertionError("report rows must use a server-side cursor")
+
+                raw = Raw()
+
+                class Repository(PostgresMonitoringRepository):
+                    @contextmanager
+                    def connection(self, *, read_only=False):
+                        self.read_only = read_only
+                        connection = PostgresConnection(
+                            raw, release=lambda _: events.append("pool_release")
+                        )
+                        try:
+                            yield connection
+                        finally:
+                            connection.close()
+
+                repository = Repository()
+                rows = repository.iter_shadow_cycle_report_rows(
+                    build_revision="a" * 40, source_revision="fixture",
+                    start_ts=BASE_TS, end_ts=BASE_TS + 60, batch_size=2,
+                )
+                if malformed:
+                    with self.assertRaises(ValueError):
+                        list(rows)
+                else:
+                    self.assertEqual(next(rows)["observer"], {})
+                    rows.close()
+                self.assertTrue(repository.read_only)
+                self.assertEqual(cursor.size, 2)
+                self.assertIn("build_revision=%s", cursor.sql)
+                self.assertEqual(cursor.params, ("a" * 40, "fixture", BASE_TS, BASE_TS + 60))
+                self.assertTrue(raw.name.startswith("monitoring_report_"))
+                self.assertEqual(events[-3:], ["cursor_closed", "transaction_closed", "pool_release"])
+
+
     def test_failed_session_configuration_is_discarded_from_the_pool(self) -> None:
         class Raw:
             def __init__(self) -> None:
@@ -319,7 +401,7 @@ class PostgresCompatibilityTests(unittest.TestCase):
         self.assertIn('excluded."reduced_ts" < "current_snapshots"."reduced_ts"', sql)
 
     def test_postgres_schema_keeps_timestamp_range_and_has_no_sqlite_pragma(self) -> None:
-        schema = DDL_V1 + DDL_V2 + DDL_V3 + DDL_V4 + DDL_V5 + DDL_V6
+        schema = DDL_V1 + DDL_V2 + DDL_V3 + DDL_V4 + DDL_V5 + DDL_V6 + DDL_V7
         self.assertIn("observed_ts BIGINT", schema)
         self.assertIn("window_end_ts BIGINT", schema)
         self.assertNotIn("PRAGMA", schema)
@@ -333,8 +415,9 @@ class PostgresCompatibilityTests(unittest.TestCase):
             + SQLITE_DDL_V4
             + SQLITE_DDL_V5
             + SQLITE_DDL_V6
+            + SQLITE_DDL_V7
         )
-        postgres_ddl = DDL_V1 + DDL_V2 + DDL_V3 + DDL_V4 + DDL_V5 + DDL_V6
+        postgres_ddl = DDL_V1 + DDL_V2 + DDL_V3 + DDL_V4 + DDL_V5 + DDL_V6 + DDL_V7
         self.assertEqual(SQLITE_SCHEMA_VERSION, POSTGRES_SCHEMA_VERSION)
         self.assertEqual(schema_surface(sqlite_ddl), schema_surface(postgres_ddl))
         for trigger in SQLITE_LIVE_REFERENCE_TRIGGERS:
@@ -544,10 +627,10 @@ class K3sManifestTests(unittest.TestCase):
         self.assertFalse(ROLE_TABLE_PRIVILEGES["v4_exporter_ro"].select_all)
         self.assertEqual(
             ROLE_TABLE_PRIVILEGES["v4_reporter_ro"].select,
-            {"schema_migrations", "shadow_cycles"},
+            {"schema_migrations", "shadow_cycles", "metric_series", "metric_windows", "normal_cycle_current"},
         )
         self.assertIn(
-            "GRANT SELECT ON schema_migrations, shadow_cycles TO v4_reporter_ro",
+            "GRANT SELECT ON metric_series, metric_windows, normal_cycle_current, schema_migrations, shadow_cycles TO v4_reporter_ro",
             table_grant_statements(),
         )
         self.assertEqual(ROLE_TABLE_PRIVILEGES["v4_reporter_ro"].insert, frozenset())

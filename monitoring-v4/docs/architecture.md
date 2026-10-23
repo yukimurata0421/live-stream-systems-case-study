@@ -60,6 +60,12 @@ filesystem form one atomic transaction.
 
 ## Revision-pinned evidence
 
+Normal monitoring uses schema-v7 minute/window aggregates and a small current
+checkpoint. It does not depend on a migration qualification campaign. Explicit
+campaigns retain the build/source-bound coverage and parity checks described
+below; normal health cannot satisfy those elapsed-time gates. See
+[normal monitoring and history](normal-monitoring-history.md).
+
 Coverage and semantic parity are partitioned by both the Monitoring v4 build
 revision and the effective migration-source revision. Unknown or unversioned
 identity fails closed instead of extending an earlier soak. The scheduler uses

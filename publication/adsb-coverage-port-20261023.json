@@ -1,0 +1,125 @@
+{
+  "schema": "stream.public_port_record.v1",
+  "recorded_on_jst": "2026-10-23",
+  "scope": "public-checkout-only; ADS-B measurement, public duration display, offline regressions and documentation",
+  "reviewed_measurement_sha256": "71889b94b7646113ff8c00b235696ae24e46fa6cd54a92ef0a2fe5a0399c8a44",
+  "prior_public_head": "2eb34e5e57b7d34b587affdfb0fb884aaaebd075",
+  "deployment_performed_by_port": false,
+  "commit_performed": false,
+  "push_performed": false,
+  "measurement_contract": {
+    "coverage_basis": "event_time_span",
+    "max_event_span_sec": 90,
+    "coverage_window": "[start_ts, end_ts)",
+    "unknown_events_end_previous_interval": true,
+    "pre_window_event_loading": true,
+    "legacy_event_counts_retained": true,
+    "source_state_prerequisite_adapted": true,
+    "non_adsb_default_run_stats_retained": true
+  },
+  "checks": {
+    "targeted_tests": {
+      "passed": 68,
+      "subtests_passed": 776,
+      "scope": [
+        "tests/test_adsb_event_coverage.py",
+        "tests/test_sli_report.py",
+        "tests/test_public_reliability_collector.py",
+        "tests/test_sli_pipeline_rotation.py",
+        "tests/test_public_publisher_build.py",
+        "tests/test_docs_structure.py"
+      ]
+    },
+    "deployed_measurement_cases_matched": 1000,
+    "non_adsb_default_run_cases_matched": 1000,
+    "non_adsb_fixed_end_report_comparison": "identical outside ADS-B for synthetic 1h and 24h windows",
+    "public_source_validation": "PASS; issue_count=0",
+    "public_language_validation": "PASS",
+    "selected_secret_scan": "PASS; selected public files only"
+  },
+  "excluded": [
+    "private deployment and rollback scripts",
+    "private operational records and host-specific paths",
+    "raw logs, runtime state, databases and credentials",
+    "unrelated SLI, threshold, OCR and recovery changes"
+  ],
+  "files": [
+    {
+      "path": "src/stream_core/cli_support/sli_report.py",
+      "source_role": "reviewed-measurement-adaptation",
+      "decision": "Time-based ADS-B coverage and required source classification; preserve unrelated public behavior and portable bindings.",
+      "before_sha256": "31e3784424c19bb583b1d685f144833205571b1665a0afddebb431be0122c082",
+      "source_sha256": "71889b94b7646113ff8c00b235696ae24e46fa6cd54a92ef0a2fe5a0399c8a44",
+      "public_sha256": "c8fccee7c195cf44ba0c1265399b2334b8e94d881b4042c23be5d0fe62f6a686",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "ops/public-publisher/site/scripts/collect_reliability.py",
+      "source_role": "public-compatible-integration",
+      "decision": "Time-based ADS-B coverage and required source classification; preserve unrelated public behavior and portable bindings.",
+      "before_sha256": "6e7fe5eb3bd6735f0303f9c3c41a51408b93938086c6293d190e22d2dca1de63",
+      "source_sha256": null,
+      "public_sha256": "1ad7423f2a37130ba57fd28ad120b45333761ae9938b6de1fb6d1071c73e4782",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "tests/test_sli_report.py",
+      "source_role": "public-compatible-integration",
+      "decision": "Time-based ADS-B coverage and required source classification; preserve unrelated public behavior and portable bindings.",
+      "before_sha256": "f14f5bd915bb29ae03b5296c1319a91ff05808c593987e1cd18b03cc806ac961",
+      "source_sha256": null,
+      "public_sha256": "580430303024485e8456245b3af91f742b02f48ceacbe7d8107e28c3c3f3c72f",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "tests/test_adsb_event_coverage.py",
+      "source_role": "reviewed-measurement-adaptation",
+      "decision": "Time-based ADS-B coverage and required source classification; preserve unrelated public behavior and portable bindings.",
+      "before_sha256": null,
+      "source_sha256": "03284f53f6709e8b5e27db35a28b6149f0a5402c9e50c05908ed07cea833371c",
+      "public_sha256": "b2c8029c3d947b541404968bd4db09e26be62278baf83e74ce0ce976ef06a831",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "tests/test_public_reliability_collector.py",
+      "source_role": "public-compatible-integration",
+      "decision": "Time-based ADS-B coverage and required source classification; preserve unrelated public behavior and portable bindings.",
+      "before_sha256": "8173e419e869e93793a1d2329a10ebadb4dd7a5f1a7a0671191e529e1d1041e9",
+      "source_sha256": null,
+      "public_sha256": "11f07832b1a2c05b9fd8491ebf2e0dd16d85589d92e5c4eec0adb9192bd21c9d",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "docs/v3/sli-and-dashboard.md",
+      "source_role": "public-compatible-integration",
+      "decision": "Time-based ADS-B coverage and required source classification; preserve unrelated public behavior and portable bindings.",
+      "before_sha256": "83821f2adb46ccd10c85464c65817fa5c9b2d12c754e1cd05f302e669f2f3246",
+      "source_sha256": null,
+      "public_sha256": "e3883e3628b05f8bb91dc2cb0c3065853cb724f4d34747f8bb49cc8f2c2b7b40",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "docs/v3/adsb-source-coverage.md",
+      "source_role": "public-compatible-integration",
+      "decision": "Time-based ADS-B coverage and required source classification; preserve unrelated public behavior and portable bindings.",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "26021f12d437d350f9e4ddc3bb54f00ccf684568f067a9d272842c995a3d70e4",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "docs/00_INDEX.md",
+      "source_role": "public-compatible-integration",
+      "decision": "Time-based ADS-B coverage and required source classification; preserve unrelated public behavior and portable bindings.",
+      "before_sha256": "c76057e6062145ec1ed61c66f8cff372d0af7c5b68820f386eaa17f185887d88",
+      "source_sha256": null,
+      "public_sha256": "e5a7d8243462eed089784656ec246c868d7fa0d51ddefdd7dd7b59584f296d7d",
+      "port_date_jst": "2026-10-23"
+    }
+  ],
+  "limits": [
+    "A public source port does not redeploy or qualify production.",
+    "Full evidence coverage under the 90-second rule does not establish lossless reception of individual ADS-B messages.",
+    "Historical static rows without explicit source heartbeat remain unknown."
+  ]
+}

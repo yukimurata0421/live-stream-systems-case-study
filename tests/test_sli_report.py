@@ -94,7 +94,7 @@ class SliReportUnitTests(unittest.TestCase):
         self.assertEqual(summary["unknown_reason_counts"], {"ffmpeg_timeout": 1})
         self.assertTrue(summary["probe_failures_are_unknown"])
 
-    def test_rendering_summary_accepts_message_or_position_movement(self) -> None:
+    def test_rendering_summary_accepts_movement_but_leaves_static_history_unknown(self) -> None:
         def row(messages: bool, positions: bool) -> dict:
             return {
                 "rendering": {
@@ -114,12 +114,12 @@ class SliReportUnitTests(unittest.TestCase):
             end_ts=120,
         )
 
-        self.assertEqual(summary["observed_points"], 3)
+        self.assertEqual(summary["observed_points"], 2)
         self.assertEqual(summary["good_points"], 2)
-        self.assertEqual(summary["bad_points"], 1)
-        self.assertEqual(summary["unknown_points"], 0)
-        self.assertEqual(summary["sli_pct"], 66.667)
-        self.assertEqual(summary["motion_contract"], "messages_moving_or_positions_moving")
+        self.assertEqual(summary["bad_points"], 0)
+        self.assertEqual(summary["unknown_points"], 1)
+        self.assertEqual(summary["sli_pct"], 100.0)
+        self.assertTrue(summary["activity_is_not_health"])
 
     def test_timestamped_event_loader_projects_large_history_rows(self) -> None:
         with tempfile.TemporaryDirectory() as td:
@@ -346,6 +346,62 @@ class SliReportUnitTests(unittest.TestCase):
         self.assertEqual(result["eligible_seconds"], 600)
         self.assertEqual(result["timeline_missing_seconds"], 3_000)
         self.assertEqual(result["coverage_pct"], 16.667)
+
+    def test_current_input_quality_crosscheck_does_not_replay_historical_difference(self) -> None:
+        end = 10_000
+        events = [
+            (
+                end - 30,
+                {
+                    "ts_utc": self._utc(end - 30),
+                    "oauth_checked_ts_utc": self._utc(end - 30),
+                    "oauth_probe_ok": True,
+                    "oauth_stream_status": "active",
+                    "oauth_stream_health_status": "good",
+                    "oauth_stream_health_issues": 0,
+                    "ingest_connected": True,
+                },
+            )
+        ]
+        result = sli_report.current_input_quality_crosscheck(
+            events,
+            {end - 60: 1.0},
+            {end - 60: 1.0},
+            end_ts=end,
+            step_sec=60,
+        )
+
+        self.assertFalse(result["source_disagreement_current"])
+        self.assertEqual(result["current_crosscheck_reason"], "current_states_agree")
+
+
+    def test_current_input_quality_crosscheck_detects_current_state_difference(self) -> None:
+        end = 10_000
+        events = [
+            (
+                end - 30,
+                {
+                    "ts_utc": self._utc(end - 30),
+                    "oauth_checked_ts_utc": self._utc(end - 30),
+                    "oauth_probe_ok": True,
+                    "oauth_stream_status": "active",
+                    "oauth_stream_health_status": "good",
+                    "oauth_stream_health_issues": 0,
+                    "ingest_connected": True,
+                },
+            )
+        ]
+        result = sli_report.current_input_quality_crosscheck(
+            events,
+            {end - 60: 1.0},
+            {end - 60: 0.0},
+            end_ts=end,
+            step_sec=60,
+        )
+
+        self.assertTrue(result["source_disagreement_current"])
+        self.assertEqual(result["current_crosscheck_reason"], "current_state_disagreement")
+
 
     def test_build_report_integrates_six_sli_families_and_marks_visual_supporting_only(self) -> None:
         end = 24 * 3600

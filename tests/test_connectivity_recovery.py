@@ -467,8 +467,8 @@ class ConnectivityNotificationLifecycleTests(unittest.TestCase):
 
             self.assertEqual(notification_status_loop.notify_status(ctx=ctx, now_ts=1000), 0)
             self.assertEqual(
-                rendered,
-                [("detected", [connectivity_correlation.ROOT_INCIDENT_ID])],
+                {(phase, tuple(ids)) for phase, ids in rendered},
+                {("detected", (connectivity_correlation.ROOT_INCIDENT_ID,))},
             )
             self.assertEqual(recovered_probes, [])
             self.assertEqual(

@@ -3,6 +3,11 @@
 This file reports code availability separately from elapsed-time and
 production-authority gates.
 
+The October 23 source update adds schema-v7 normal-monitoring aggregates and
+verified history copies. Normal health and explicit migration campaigns have
+separate reports; their separation does not complete any phase gate below.
+See [normal monitoring and history](normal-monitoring-history.md).
+
 | Phase | Code status in this milestone | Evidence still required |
 | --- | --- | --- |
 | R0 | ownership inventory and import guards implemented | a deployment-specific, read-only live inventory |

@@ -91,6 +91,8 @@ def parser() -> argparse.ArgumentParser:
         default=None,
         help="sanitized v4-owned direct YouTube API evidence; disabled by default",
     )
+    result.add_argument('--migration-campaign', default='', help='explicit optional migration comparison campaign')
+    result.add_argument('--metric-target', default='stream-v3', help='stable measurement target, independent of build')
     return result
 
 
@@ -238,6 +240,8 @@ def _run(
             fixed_now_ts=fixed_now_ts,
             summary_only=args.summary_only,
             youtube_api_state_file=args.youtube_api_state_file,
+            migration_campaign=args.migration_campaign,
+            metric_target=args.metric_target,
         ),
     )
     print(json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")))

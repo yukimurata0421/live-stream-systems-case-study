@@ -11,11 +11,13 @@ try:
     from stream_core.common.timeutil import parse_utc_ts, utc_now_text
     from stream_core.notifications import connectivity_correlation
     from stream_core.notifications import outbox as notify_outbox
+    from stream_core.notifications.planned_rollout import planned_rollout_context
 except ModuleNotFoundError:
     from common.json_io import append_jsonl, iter_jsonl, read_json_file
     from common.timeutil import parse_utc_ts, utc_now_text
     from notifications import connectivity_correlation
     from notifications import outbox as notify_outbox
+    from notifications.planned_rollout import planned_rollout_context
 
 
 @dataclass(frozen=True)
@@ -45,37 +47,7 @@ class RecoveryEvidence:
     diagnostic_context: str
 
 
-SLACK_EVENT_PHASES = {"restart_observed", "recovery_unconfirmed", "auto_recovered"}
 SLACK_ACTIVE_PHASES = {"detected", "status"}
-SLACK_ALLOW_EMPTY_PHASES = {"test"}
-SLACK_IMMEDIATE_COMPONENTS = {
-    "stream_health",
-    "youtube_remote_observability",
-    "youtube_encoder_viewer_state",
-    "fast_recovery_remote_warning",
-    "rtmp_ffmpeg_transport",
-    "rtmps_ingest_tls",
-    "fast_recovery",
-    "stream_engine",
-    "k8s_runtime_container",
-    "runtime_lifecycle",
-    "nvidia_gpu",
-    "gpu_runtime",
-}
-SLACK_IMMEDIATE_ID_PREFIXES = (
-    "observe:",
-    "stream:",
-    "youtube:current_",
-    "youtube:enable_auto_stop_false",
-    "fast_recovery:",
-    "ffmpeg:",
-    "rtmps:",
-    "runtime:",
-    "k8s:",
-    "gpu:",
-    "nvidia:",
-)
-
 
 def fast_recovery_recovery_events(
     *,
@@ -148,7 +120,7 @@ def fast_recovery_recovery_events(
                 "summary": summary,
                 "evidence": evidence[:240],
                 "recovery_type": f"fast_recovery_restart:{trigger}",
-                "follow_up": "Check for recurrence of the same time window and trigger at the next routine check",
+                "follow_up": "At the next routine check, check for recurrence at the same time and trigger",
                 "observed_ts": int(event_ts),
                 "trigger": trigger,
                 "_event_key": key,
@@ -161,7 +133,7 @@ def fast_recovery_recovery_events(
         )
 
     events.sort(key=lambda event: int(event.get("observed_ts", 0) or 0))
-    return events[-max(1, int(max_events)) :]
+    return events
 
 
 def fast_recovery_auto_recovered_events(
@@ -385,7 +357,7 @@ def stream_engine_ffmpeg_auto_recovered_events(
                 "summary": "ffmpeg child restart completed",
                 "evidence": evidence[:240],
                 "recovery_type": f"ffmpeg_child_self_recovery:exit_{exit_code or 'unknown'}",
-                "follow_up": "At the next routine check, inspect recurrence counts for the same exit_code and simultaneous YouTube ingest changes",
+                "follow_up": "At the next routine check, correlate repeated exit codes with changes at the YouTube ingest",
                 "observed_ts": int(event_ts),
                 "trigger": f"ffmpeg_exit_code_{exit_code or 'unknown'}",
                 "_event_key": key,
@@ -394,7 +366,7 @@ def stream_engine_ffmpeg_auto_recovered_events(
         )
 
     events.sort(key=lambda event: int(event.get("observed_ts", 0) or 0))
-    return events[-max(1, int(max_events)) :]
+    return events
 
 
 def mark_stream_engine_ffmpeg_auto_recovered_events_notified(state: dict, events: list[dict], *, now_ts: int) -> None:
@@ -464,7 +436,7 @@ def k8s_container_restart_auto_recovered_events(
                 "summary": "k8s container restart observed",
                 "evidence": evidence[:240],
                 "recovery_type": "k8s_container_restart_count_change",
-                "follow_up": "At the next routine check, inspect restartCount and OOMKilled/exit reason for the target container",
+                "follow_up": "At the next routine check, inspect the container restartCount, OOMKilled, and exit reason",
                 "observed_ts": int(event_ts),
                 "trigger": "k8s_container_restart_count",
                 "_event_key": key,
@@ -472,7 +444,7 @@ def k8s_container_restart_auto_recovered_events(
         )
 
     events.sort(key=lambda event: int(event.get("observed_ts", 0) or 0))
-    return events[-max(1, int(max_events)) :]
+    return events
 
 
 def mark_k8s_container_restart_auto_recovered_events_notified(state: dict, events: list[dict], *, now_ts: int) -> None:
@@ -581,22 +553,44 @@ def runtime_lifecycle_events(
     if observed_ts < cutoff or observed_ts > int(now_ts) + 60:
         return [], marker
 
+    rollout = planned_rollout_context(runtime_state_base_dir, observed_ts=observed_ts)
     evidence = (
         f"previous_run_id={previous_run_id} run_id={run_id} "
         f"status={marker['status']} ffmpeg_pid={marker['ffmpeg_pid']} "
         f"restart_count={marker['restart_count']} source={path.name}"
     )
+    if rollout:
+        rollout_evidence = (
+            f"planned_rollout_id={rollout['rollout_id']} reason={rollout['reason']} "
+            f"pod={rollout['pod']} image={rollout['stream_engine_image']}"
+        )
+        return [
+            {
+                "id": f"runtime:planned_rollout:{rollout['rollout_id']}:{int(observed_ts)}",
+                "severity": "info",
+                "component": "runtime_lifecycle",
+                "summary": "planned runtime rollout completed",
+                "evidence": f"{evidence} {rollout_evidence}"[:360],
+                "recovery_type": "planned_rollout",
+                "follow_up": "At the next routine check, inspect the same broadcast URL, Pod restartCount, NVENC, and RTMPS",
+                "observed_ts": int(observed_ts),
+                "trigger": "planned_rollout_annotation",
+                "_notification_phase": "planned_rollout",
+                "_runtime_marker": marker,
+            }
+        ], marker
     return [
         {
             "id": f"runtime:lifecycle:{run_id}:{int(observed_ts)}",
             "severity": "info",
             "component": "runtime_lifecycle",
-            "summary": "runtime process restarted",
+            "summary": "unplanned runtime process restart observed",
             "evidence": evidence[:240],
-            "recovery_type": "runtime_run_id_changed",
+            "recovery_type": "unplanned_restart_observed",
             "follow_up": "At the next routine check, inspect Pod restartCount, stream-engine OOMKilled, and FFmpeg PID",
             "observed_ts": int(observed_ts),
-            "trigger": "runtime_run_id_changed",
+            "trigger": "unplanned_restart",
+            "_notification_phase": "auto_recovered",
             "_runtime_marker": marker,
         }
     ], marker
@@ -649,7 +643,13 @@ def incident_first_seen_ts(item: dict, state: dict, now_ts: int) -> int:
 
 
 def incident_slack_notified_ts(item: dict, state: dict) -> int:
-    for value in (item.get("_slack_notified_ts"), active_incident_state(state, str(item.get("id", "") or "")).get("slack_first_notified_ts")):
+    stored = active_incident_state(state, str(item.get("id", "") or ""))
+    severity = item.get("_slack_notified_severity", stored.get("slack_notified_severity"))
+    # Preserve a critical incident's route through a downgrade, without adopting
+    # warning notifications made under the former escalation policy.
+    if severity != "critical":
+        return 0
+    for value in (item.get("_slack_notified_ts"), stored.get("slack_first_notified_ts"), item.get("_slack_queued_ts"), stored.get("slack_first_queued_ts")):
         try:
             ts = int(value or 0)
         except Exception:
@@ -659,24 +659,38 @@ def incident_slack_notified_ts(item: dict, state: dict) -> int:
     return 0
 
 
-def slack_immediate_incident(item: dict) -> bool:
-    if str(item.get("severity", "") or "").lower() == "critical":
-        return True
-    component = str(item.get("component", "") or "")
-    if component in SLACK_IMMEDIATE_COMPONENTS:
-        return True
-    ident = str(item.get("id", "") or "")
-    return any(ident.startswith(prefix) for prefix in SLACK_IMMEDIATE_ID_PREFIXES)
+def is_critical_incident(item: dict) -> bool:
+    return str(item.get("severity", "") or "").lower() == "critical"
+
+
+def slack_priority(item: dict, state: dict, *, now_ts: int) -> bool:
+    ident=str(item.get('id',''))
+    if ident.startswith(('public_probe:','reliability:upload_ceiling')) or ident=='reliability:youtube_input_quality_fast_feedback':return False
+    if is_critical_incident(item) or ident in {'youtube:enable_auto_stop_false_encoder_gap','external:blackbox_failed'} or ident.startswith('fast_recovery:recovery_unconfirmed:'):return True
+    stored=active_incident_state(state,ident)
+    first=int(stored.get('first_notified_ts',now_ts) or now_ts)
+    return item.get('severity')=='warning' and now_ts-first>=7200
 
 
 def slack_incident_due(item: dict, state: dict, cfg: dict, *, now_ts: int) -> bool:
-    if incident_slack_notified_ts(item, state) > 0:
-        return False
-    if slack_immediate_incident(item):
-        return True
-    first_seen = incident_first_seen_ts(item, state, now_ts)
-    min_active_sec = max(60, int(cfg.get("slack_min_active_sec", 1800) or 1800))
-    return (int(now_ts) - first_seen) >= min_active_sec
+    if not slack_priority(item,state,now_ts=now_ts):return False
+    stored=active_incident_state(state,str(item.get('id','')))
+    last=int(stored.get('slack_last_attempt_ts',stored.get('slack_last_notified_ts',0)) or 0)
+    return last<=0 or now_ts-last>=int(cfg.get('slack_repeat_sec',1800))
+
+
+def render_batches(ctx, phase, incidents, state, now_ts):
+    """Every represented ID belongs to a rendered message; split before truncation."""
+    if not incidents:return [(phase,[],ctx.format_message(phase=phase,incidents=[],state=state,now_ts=now_ts))]
+    result=[];batch=[]
+    for item in incidents:
+        trial=batch+[item]
+        content=ctx.format_message(phase=phase,incidents=trial,state=state,now_ts=now_ts)
+        if batch and (len(trial)>8 or len(content)>1750 or '... truncated' in content or 'more events omitted' in content):
+            result.append((phase,batch,ctx.format_message(phase=phase,incidents=batch,state=state,now_ts=now_ts)));batch=[item]
+        else:batch=trial
+    if batch:result.append((phase,batch,ctx.format_message(phase=phase,incidents=batch,state=state,now_ts=now_ts)))
+    return [(p,items,body if len(body)<=1800 else body[:1770]+'\n... truncated') for p,items,body in result]
 
 
 def slack_route_messages(
@@ -692,22 +706,23 @@ def slack_route_messages(
     routed: list[tuple[str, list[dict], str]] = []
     for phase, phase_incidents in messages:
         selected: list[dict] = []
-        if phase in SLACK_ALLOW_EMPTY_PHASES:
-            selected = list(phase_incidents)
-        elif phase in SLACK_EVENT_PHASES:
-            selected = list(phase_incidents)
-        elif phase in SLACK_ACTIVE_PHASES:
+        if phase in SLACK_ACTIVE_PHASES:
             selected = [item for item in phase_incidents if slack_incident_due(item, state, cfg, now_ts=now_ts)]
         elif phase == "recovered":
             selected = [item for item in phase_incidents if incident_slack_notified_ts(item, state) > 0]
-        if not selected and phase not in SLACK_ALLOW_EMPTY_PHASES:
+        else:
+            selected = [item for item in phase_incidents if slack_priority(item,state,now_ts=now_ts)]
+        if not selected:
             continue
-        content = ctx.format_message(phase=phase, incidents=selected, state=state, now_ts=now_ts)
-        routed.append((phase, selected, content))
+        if phase in SLACK_ACTIVE_PHASES:
+            for routed_phase,subset in [('detected',[x for x in selected if not incident_slack_notified_ts(x,state)]),
+                                         ('status',[x for x in selected if incident_slack_notified_ts(x,state)])]:
+                if subset:routed.extend(render_batches(ctx,routed_phase,subset,state,now_ts))
+        else:routed.extend(render_batches(ctx,phase,selected,state,now_ts))
     return routed
 
 
-def mark_slack_active_incidents_notified(state: dict, messages: list[tuple[str, list[dict], str]], *, now_ts: int) -> None:
+def mark_active_incidents_notified(state: dict, messages: list[tuple[str, list[dict], str]], *, now_ts: int, route: str) -> None:
     active = state.get("active") if isinstance(state.get("active"), dict) else {}
     if not isinstance(active, dict):
         return
@@ -719,11 +734,16 @@ def mark_slack_active_incidents_notified(state: dict, messages: list[tuple[str, 
             stored = active.get(ident)
             if not isinstance(stored, dict):
                 continue
-            if int(stored.get("slack_first_notified_ts", 0) or 0) > 0:
+            key = f"{route}_first_notified_ts"
+            if int(stored.get(key, 0) or 0) > 0:
+                if route == "slack":
+                    stored["slack_notified_severity"] = "critical"
                 continue
-            stored["slack_first_notified_ts"] = int(now_ts)
-            stored["slack_first_notified_at_utc"] = utc_now_text(now_ts)
-            stored["slack_first_notified_phase"] = phase
+            stored[key] = int(now_ts)
+            stored[f"{route}_first_notified_at_utc"] = utc_now_text(now_ts)
+            stored[f"{route}_first_notified_phase"] = phase
+            if route == "slack":
+                stored["slack_notified_severity"] = "critical"
 
 
 def deliver_rendered_messages(
@@ -736,6 +756,9 @@ def deliver_rendered_messages(
     route: str,
     send_webhook: Callable[..., tuple[bool, str]],
     missing_webhook_warning: str = "",
+    fallback_cfg: dict | None = None,
+    fallback_send: Callable | None = None,
+    acknowledged: list | None = None,
 ) -> tuple[int, int, int]:
     if not dry_run and cfg["enabled"] and cfg["webhook_url"]:
         outbox = notify_outbox.load_notify_outbox(
@@ -751,6 +774,8 @@ def deliver_rendered_messages(
             max_pending=int(cfg["outbox_max_pending"]),
             route=route,
         )
+        outbox=notify_outbox.archive_overflow(ctx.notify_outbox_file,ctx.notify_events_file,outbox,
+            route=route,limit=int(cfg['outbox_max_pending']),now_ts=now_ts,acknowledged=acknowledged)
         notify_outbox.save_notify_outbox(ctx.notify_outbox_file, outbox)
         return notify_outbox.flush_notify_outbox(
             outbox_path=ctx.notify_outbox_file,
@@ -759,7 +784,7 @@ def deliver_rendered_messages(
             now_ts=now_ts,
             send_webhook=send_webhook,
             dry_run=dry_run,
-            route=route,
+            route=route, fallback_cfg=fallback_cfg, fallback_send=fallback_send, acknowledged=acknowledged,
         )
     if not dry_run and rendered_messages:
         reason = "disabled" if not cfg["enabled"] else "missing_webhook_url"
@@ -794,7 +819,7 @@ def deliver_rendered_messages(
             now_ts=now_ts,
             send_webhook=send_webhook,
             dry_run=dry_run,
-            route=route,
+            route=route, fallback_cfg=fallback_cfg, fallback_send=fallback_send, acknowledged=acknowledged,
         )
     return 0, 0, 0
 
@@ -808,12 +833,35 @@ def deliver_notify_messages(
     now_ts: int,
     dry_run: bool,
 ) -> tuple[int, int, int]:
+    filtered=[]
+    for phase,items in messages:
+        kept=[]
+        for item in items:
+            if phase=='recovered' and item.get('_delivery_dead_lettered') and not (item.get('_discord_notified_ts') or item.get('_slack_notified_ts')):
+                if not dry_run:
+                    append_jsonl(ctx.notify_outbox_file.with_name(ctx.notify_outbox_file.name+'.deadletter.jsonl'),
+                        {'status':'dead_letter','phase':'recovered','incident_ids':[item.get('id')],
+                         'disposition':'detection_not_delivered','archived_ts':now_ts,
+                         'content':ctx.format_message(phase=phase,incidents=[item],state=state,now_ts=now_ts)})
+                continue
+            kept.append(item)
+        if kept or not items:filtered.append((phase,kept))
+    messages=filtered
+    slack_cfg = slack_route_config(cfg)
+    slack_available = bool(slack_cfg["enabled"] and slack_cfg["webhook_url"])
+    acknowledged=[]
     rendered_messages: list[tuple[str, list[dict], str]] = []
     for phase, phase_incidents in messages:
-        content = ctx.format_message(phase=phase, incidents=phase_incidents, state=state, now_ts=now_ts)
+        if phase == "recovered":
+            selected = [item for item in phase_incidents if item.get("_discord_notified_ts") or not incident_slack_notified_ts(item, state)]
+        else:
+            selected = [item for item in phase_incidents if not slack_available or not slack_priority(item,state,now_ts=now_ts)]
+        if not selected and phase != "test":
+            continue
+        content = ctx.format_message(phase=phase, incidents=selected, state=state, now_ts=now_ts)
         if dry_run or not cfg["enabled"]:
             print(content)
-        rendered_messages.append((phase, phase_incidents, content))
+        rendered_messages.extend(render_batches(ctx,phase,selected,state,now_ts))
 
     sent = 0
     failures = 0
@@ -825,15 +873,23 @@ def deliver_notify_messages(
         now_ts=now_ts,
         dry_run=dry_run,
         route="discord",
-        send_webhook=ctx.send_webhook,
+        send_webhook=ctx.send_webhook, acknowledged=acknowledged,
         missing_webhook_warning="[warn] STREAM_NOTIFY_DISCORD_WEBHOOK_URL is not configured",
     )
     sent += route_sent
     failures += route_failures
     pending += route_pending
 
-    slack_cfg = slack_route_config(cfg)
     slack_messages = slack_route_messages(ctx=ctx, messages=messages, state=state, cfg=cfg, now_ts=now_ts)
+    if not dry_run:
+        for phase,items,_ in slack_messages:
+            if phase not in SLACK_ACTIVE_PHASES:continue
+            for item in items:
+                stored=active_incident_state(state,str(item.get('id','')))
+                if stored:
+                    stored.setdefault('slack_first_queued_ts',now_ts)
+                    stored['slack_last_attempt_ts']=now_ts
+                    stored['slack_notified_severity']='critical'
     if slack_messages or (not dry_run and slack_cfg["enabled"] and slack_cfg["webhook_url"]):
         slack_send = ctx.send_slack_webhook or ctx.send_webhook
         route_sent, route_failures, route_pending = deliver_rendered_messages(
@@ -843,14 +899,26 @@ def deliver_notify_messages(
             now_ts=now_ts,
             dry_run=dry_run,
             route="slack",
-            send_webhook=slack_send,
+            send_webhook=slack_send, fallback_cfg=cfg, fallback_send=ctx.send_webhook, acknowledged=acknowledged,
             missing_webhook_warning="[warn] STREAM_NOTIFY_SLACK_WEBHOOK_URL is not configured",
         )
         sent += route_sent
         failures += route_failures
         pending += route_pending
-        if not dry_run and slack_messages and slack_cfg["enabled"] and slack_cfg["webhook_url"]:
-            mark_slack_active_incidents_notified(state, slack_messages, now_ts=now_ts)
+    if not dry_run:
+        for receipt in acknowledged:
+            if receipt['phase'] not in SLACK_ACTIVE_PHASES:continue
+            for ident in receipt['incident_ids']:
+                stored=active_incident_state(state,str(ident))
+                if not stored:continue
+                if receipt.get('disposition')=='dead_letter':
+                    stored['delivery_dead_lettered']=True
+                    continue
+                stored.pop('delivery_dead_lettered',None)
+                route=receipt['route'];stored.setdefault(route+'_first_notified_ts',now_ts)
+                stored[route+'_last_notified_ts']=now_ts
+                if receipt.get('fallback_from')=='slack':stored.pop('slack_first_queued_ts',None)
+                if route=='slack':stored['slack_notified_severity']='critical'
     return sent, failures, pending
 
 
@@ -874,6 +942,7 @@ def notify_status(*, ctx: NotifyStatusContext, dry_run: bool = False, force_test
         ):
             messages.append(("maintenance", [maintenance_item]))
             state["last_maintenance_status_sent_ts"] = now
+        state.setdefault("maintenance_event_scan_since",int(state.get("maintenance_started_ts",now) or now))
         state["maintenance_active"] = True
         state["maintenance_started_ts"] = int(maintenance_item.get("_first_seen_ts", now) or now)
         state["active"] = active_state
@@ -894,6 +963,8 @@ def notify_status(*, ctx: NotifyStatusContext, dry_run: bool = False, force_test
             print(f"[notify-status] messages={len(messages)} sent={sent} failures={failures} pending={pending}")
         return 0 if failures == 0 else 1
 
+    catchup_since=int(state.pop('maintenance_event_scan_since',now) or now)
+    catchup_sec=max(1800,now-catchup_since+180)
     state["maintenance_active"] = False
 
     incidents = ctx.collect_incidents(
@@ -901,6 +972,15 @@ def notify_status(*, ctx: NotifyStatusContext, dry_run: bool = False, force_test
         report_stale_sec=int(cfg["report_stale_sec"]),
         startup_grace_sec=int(cfg.get("startup_grace_sec", 0) or 0),
     )
+    quality_id='reliability:youtube_input_quality_fast_feedback'
+    candidate=next((x for x in incidents if x.get('id')==quality_id and x.get('severity')=='warning'),None)
+    if candidate:
+        prior=state.get('quality_warning_candidate',{})
+        since=int(prior.get('since',now)) if 0<=now-int(prior.get('last_seen',now))<=180 else now
+        state['quality_warning_candidate']={'since':since,'last_seen':now}
+        if now-since<int(cfg.get('quality_warning_hold_sec',600)) and quality_id not in active_state:
+            incidents=[x for x in incidents if x is not candidate]
+    else:state.pop('quality_warning_candidate',None)
     incident_by_id = {str(item.get("id")): item for item in incidents}
     current_ids = set(incident_by_id.keys())
     connectivity_correlation.reconcile_deferred_active(
@@ -935,7 +1015,11 @@ def notify_status(*, ctx: NotifyStatusContext, dry_run: bool = False, force_test
             stored = active_state.get(ident, {})
             last_notified = int(stored.get("last_notified_ts", 0) or 0)
             repeat_sec = max(int(cfg["repeat_sec"]), int(item.get("repeat_sec", 0) or 0))
-            if ident in new_ids or last_notified <= 0 or (now - last_notified) >= repeat_sec:
+            critical_escalation = (
+                bool(cfg.get("slack_enabled") and cfg.get("slack_webhook_url"))
+                and slack_incident_due(item, state, cfg, now_ts=now)
+            )
+            if ident in new_ids or last_notified <= 0 or critical_escalation or (now - last_notified) >= repeat_sec:
                 due_incidents.append(item)
         if due_incidents:
             phase = "detected" if new_ids else "status"
@@ -954,6 +1038,10 @@ def notify_status(*, ctx: NotifyStatusContext, dry_run: bool = False, force_test
             item["_first_notified_ts"] = int(stored.get("first_notified_ts", item["_first_seen_ts"]) or item["_first_seen_ts"])
             item["_last_bad_ts"] = int(stored.get("last_bad_ts", 0) or 0)
             item["_slack_notified_ts"] = int(stored.get("slack_first_notified_ts", 0) or 0)
+            item["_slack_queued_ts"] = int(stored.get("slack_first_queued_ts", 0) or 0)
+            item["_slack_notified_severity"] = stored.get("slack_notified_severity")
+            item["_discord_notified_ts"] = int(stored.get("discord_first_notified_ts", 0) or 0)
+            item["_delivery_dead_lettered"] = bool(stored.get("delivery_dead_lettered"))
             recovered_ts, recovery_evidence = ctx.recovery_observation_for_incident(ident, now)
             item["_recovered_ts"] = recovered_ts
             item["_recovery_evidence"] = recovery_evidence
@@ -967,20 +1055,20 @@ def notify_status(*, ctx: NotifyStatusContext, dry_run: bool = False, force_test
     fast_recovery_events = fast_recovery_recovery_events(
         state=state,
         now_ts=now,
-        recent_sec=int(cfg.get("fast_recovery_event_recent_sec", 1800) or 1800),
+        recent_sec=max(catchup_sec,int(cfg.get("fast_recovery_event_recent_sec", 1800) or 1800)),
         triggers=list(cfg.get("fast_recovery_event_triggers", [])),
         events_file=ctx.fast_recovery_events_file,
     )
     stream_engine_auto_recovered_events = stream_engine_ffmpeg_auto_recovered_events(
         state=state,
         now_ts=now,
-        recent_sec=int(cfg.get("stream_engine_event_recent_sec", 1800) or 1800),
+        recent_sec=max(catchup_sec,int(cfg.get("stream_engine_event_recent_sec", 1800) or 1800)),
         events_file=ctx.stream_engine_events_file,
     )
     k8s_container_restart_events = k8s_container_restart_auto_recovered_events(
         state=state,
         now_ts=now,
-        recent_sec=int(cfg.get("stream_watchdog_event_recent_sec", 1800) or 1800),
+        recent_sec=max(catchup_sec,int(cfg.get("stream_watchdog_event_recent_sec", 1800) or 1800)),
         events_file=ctx.stream_watchdog_events_file,
     )
     runtime_lifecycle_restart_events, runtime_marker = runtime_lifecycle_events(
@@ -996,11 +1084,19 @@ def notify_status(*, ctx: NotifyStatusContext, dry_run: bool = False, force_test
     fast_recovery_recovered_events = [
         event for event in fast_recovery_events if event.get("_notification_phase") == "auto_recovered"
     ]
+    planned_rollout_events = [
+        event for event in runtime_lifecycle_restart_events if event.get("_notification_phase") == "planned_rollout"
+    ]
+    unplanned_runtime_lifecycle_events = [
+        event for event in runtime_lifecycle_restart_events if event.get("_notification_phase") != "planned_rollout"
+    ]
+    if planned_rollout_events:
+        messages.append(("planned_rollout", planned_rollout_events))
     auto_recovered_events = [
         *fast_recovery_recovered_events,
         *stream_engine_auto_recovered_events,
         *k8s_container_restart_events,
-        *runtime_lifecycle_restart_events,
+        *unplanned_runtime_lifecycle_events,
     ]
     if auto_recovered_events:
         messages.append(("auto_recovered", auto_recovered_events))

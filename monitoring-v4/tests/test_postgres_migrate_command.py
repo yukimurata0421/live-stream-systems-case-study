@@ -14,7 +14,7 @@ from stream_monitoring_v4.commands import postgres_migrate
 
 class _Result:
     def fetchall(self) -> list[tuple[int]]:
-        return [(1,), (2,), (3,), (4,), (5,), (6,)]
+        return [(1,), (2,), (3,), (4,), (5,), (6,), (7,)]
 
 
 class _Transaction:
@@ -114,7 +114,23 @@ class PostgresMigrateCommandTests(unittest.TestCase):
         self.assertTrue(grant_admin.closed)
         repository.initialize.assert_called_once()
         payload = json.loads(output.getvalue())
-        self.assertEqual(payload["schema_versions"], [1, 2, 3, 4, 5, 6])
+        self.assertEqual(payload["schema_versions"], [1, 2, 3, 4, 5, 6, 7])
+        repository.close.assert_called_once_with()
+
+    def test_schema_migration_failure_closes_pool_before_exit(self) -> None:
+        admin = _Connection()
+        repository = Mock()
+        repository.initialize.side_effect = RuntimeError("schema migration failed")
+        connect = Mock(return_value=admin)
+        with patch.dict(os.environ, self.environment, clear=False), patch.dict(
+            sys.modules, self._fake_driver(connect)
+        ), patch.object(postgres_migrate, "_ensure_roles"), patch.object(
+            postgres_migrate, "PostgresMonitoringRepository", return_value=repository
+        ):
+            with self.assertRaisesRegex(RuntimeError, "schema migration failed"):
+                postgres_migrate.main()
+        repository.close.assert_called_once_with()
+        self.assertTrue(admin.closed)
 
     def test_role_mutation_failure_rolls_back_before_schema_migration(self) -> None:
         role_admin = _Connection()

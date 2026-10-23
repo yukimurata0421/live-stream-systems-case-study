@@ -61,6 +61,15 @@ def write_metrics(writer,observation,*,now,last_cycle_epoch=None):
     values['startup_grace_remaining_seconds']=max(0.,720-startup_age) if live and startup_age is not None and row.get('stream_clock_observed') is not True else 0.
     if valid_age is not None:values['seconds_since_last_valid_observation']=valid_age
     if frame_age is not None and verified:values['frame_age_seconds']=frame_age
+    # A new image's clock age at first sight, and the part before the cache last obtained or
+    # revalidated it. Age resets on revalidation, so the origin side is an upper estimate only.
+    if verified:
+        for key in ('discovery_lag_seconds','cdn_age_at_discovery_seconds','origin_side_age_estimate_seconds'):
+            value=row.get(key)
+            if type(value) in (int,float) and math.isfinite(value) and abs(value)<=86400:values[key]=value
+        if type(row.get('cdn_age_seconds')) is int:values['cdn_age_seconds']=row['cdn_age_seconds']
+    image_age=age(row.get('image_changed_at_utc'),now)
+    if live and image_age is not None:values['seconds_since_image_change']=image_age
     values['quality_history_available']=int(valid_age is not None)
     if cycle_age is not None:values['seconds_since_last_cycle']=cycle_age
     for suffix,value in values.items():writer.metric('stream_v3_twitch_thumbnail_'+suffix,value,labels=labels)

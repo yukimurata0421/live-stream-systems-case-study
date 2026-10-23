@@ -167,6 +167,26 @@ def adsb_source_item(visual: dict[str, Any]) -> dict[str, Any]:
                 "Event-based ADS-B source evidence is unavailable; the legacy mixed composite is not substituted."
             ),
         }
+    time_based = adsb.get("coverage_basis") == "event_time_span"
+    if time_based:
+        uncovered = as_number(adsb.get("uncovered_seconds"))
+        unclassified = as_number(adsb.get("unclassified_seconds"))
+        coverage_facts = [
+            fact("Uncovered time", uncovered / 60 if uncovered is not None else None, "min"),
+            fact("Unclassified time", unclassified / 60 if unclassified is not None else None, "min"),
+            fact("Event valid for up to", adsb.get("max_event_span_sec"), "s"),
+        ]
+        coverage_note = (
+            "Coverage is the share of time with a current classified monitor event; each event stays "
+            "current until the next event, for at most its stated span. It does not measure individual "
+            "ADS-B message loss."
+        )
+    else:
+        coverage_facts = [
+            fact("Scheduled events", adsb.get("expected_points"), "events"),
+            fact("Missing", adsb.get("missing_points"), "events"),
+        ]
+        coverage_note = "Unknown and missing evidence are excluded from the availability result and shown separately."
     return {
         "id": "adsb_source_health",
         "label": "ADS-B source availability",
@@ -174,21 +194,19 @@ def adsb_source_item(visual: dict[str, Any]) -> dict[str, Any]:
         "value": rounded(adsb.get("sli_pct")),
         "unit": "%",
         "facts": [
-            fact("Scheduled events", adsb.get("expected_points"), "events"),
+            *coverage_facts,
             fact("Monitor events", adsb.get("total_monitor_events"), "events"),
             fact("Classified events", adsb.get("observed_points"), "events"),
             fact("Active", adsb.get("active_points"), "events"),
             fact("Quiet", adsb.get("quiet_points"), "events"),
             fact("Stale", adsb.get("stale_points", adsb.get("bad_points")), "events"),
             fact("Unknown", adsb.get("unknown_points"), "events"),
-            fact("Missing", adsb.get("missing_points"), "events"),
             fact("Evidence coverage", adsb.get("coverage_pct"), "%"),
             fact("Report issues (diagnostic)", adsb.get("report_issue_points"), "events"),
         ],
         "note": (
             "Active and quiet are both healthy when the aircraft.json source heartbeat is fresh. "
-            "Zero traffic is activity information, not a source failure. Unknown and missing evidence "
-            "are excluded from the availability result and shown separately."
+            "Zero traffic is activity information, not a source failure. " + coverage_note
         ),
     }
 

@@ -35,7 +35,7 @@ def format_discord_message(*, phase: str, incidents: list[dict], state: dict, no
         lines = [
             f"[ADS-B Stream] {title}",
             f"time={jst_text(now_ts)}",
-            "active_incidents=0",
+            f"active_incidents={len(state.get('active') or {})}",
             f"events={len(incidents)}",
         ]
         for item in incidents[:8]:
@@ -93,7 +93,7 @@ def format_discord_message(*, phase: str, incidents: list[dict], state: dict, no
         "test": "Notification test",
     }.get(phase, phase)
     active = state.get("active") if isinstance(state.get("active"), dict) else {}
-    active_count = 0 if phase == "recovered" else len(active)
+    active_count = len(active)
     lines = [f"[ADS-B Stream] {title}", f"time={jst_text(now_ts)}", f"active_incidents={active_count}"]
     if phase == "recovered":
         lines.append(f"resolved_incidents={len(incidents)}")

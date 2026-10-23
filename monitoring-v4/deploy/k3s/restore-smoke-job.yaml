@@ -103,7 +103,14 @@ spec:
                     --dbname="${restore_database}" /work/selected.dump
                   schema_versions="$(psql --dbname="${restore_database}" --no-align \
                     --tuples-only --command="SELECT string_agg(version::text, ',' ORDER BY version) FROM schema_migrations;")"
-                  test "${schema_versions}" = "1,2,3,4,5,6"
+                  case "${schema_versions}" in
+                    1,2,3,4,5,6) ;;
+                    1,2,3,4,5,6,7)
+                      psql --dbname="${restore_database}" --no-align --tuples-only \
+                        --command="SELECT COUNT(*) FROM metric_series; SELECT COUNT(*) FROM metric_minutes; SELECT COUNT(*) FROM metric_windows; SELECT COUNT(*) FROM normal_cycle_current;" >/dev/null
+                      ;;
+                    *) exit 1 ;;
+                  esac
                   observations="$(psql --dbname="${restore_database}" --no-align \
                     --tuples-only --command="SELECT COUNT(*) FROM observations;")"
                   shadow_cycles="$(psql --dbname="${restore_database}" --no-align \
@@ -118,9 +125,9 @@ spec:
                   verified_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
                   temporary="/verification/.${backup_name}.restore-verified.json.$$"
                   final="/verification/${backup_name}.restore-verified.json"
-                  printf '{"backup_name":"%s","backup_sha256":"%s","observations":%s,"public_artifact_publications":%s,"schema":"monitoring_v4.postgresql_restore_verification.v1","schema_versions":[1,2,3,4,5,6],"shadow_cycles":%s,"verified_at":"%s"}\n' \
+                  printf '{"backup_name":"%s","backup_sha256":"%s","observations":%s,"public_artifact_publications":%s,"schema":"monitoring_v4.postgresql_restore_verification.v1","schema_versions":[%s],"shadow_cycles":%s,"verified_at":"%s"}\n' \
                     "${backup_name}" "${backup_sha256}" "${observations}" \
-                    "${publications}" "${shadow_cycles}" "${verified_at}" \
+                    "${publications}" "${schema_versions}" "${shadow_cycles}" "${verified_at}" \
                     >"${temporary}"
                   chmod 0640 "${temporary}"
                   sync -f "${temporary}"

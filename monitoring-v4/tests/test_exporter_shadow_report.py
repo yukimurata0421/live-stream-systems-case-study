@@ -523,6 +523,7 @@ class ExporterAndShadowReportTests(unittest.TestCase):
                 self.closed = True
 
         arguments = [
+            "--historical",
             "--db",
             str(self.root / "unused.sqlite3"),
             "--build-revision",

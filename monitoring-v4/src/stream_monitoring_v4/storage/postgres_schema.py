@@ -3,7 +3,9 @@ from __future__ import annotations
 from typing import Any
 
 
-SCHEMA_VERSION = 6
+from .history_schema import DDL_V7
+
+SCHEMA_VERSION = 7
 
 
 DDL_V1 = """
@@ -434,6 +436,7 @@ def migrate(connection: Any, *, applied_at: str) -> None:
         (4, DDL_V4),
         (5, DDL_V5),
         (6, DDL_V6),
+        (7, DDL_V7),
     ):
         if current >= version:
             continue

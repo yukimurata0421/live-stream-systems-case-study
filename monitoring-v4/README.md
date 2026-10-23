@@ -41,7 +41,8 @@ its PostgreSQL/k3s subsystem:
 - read-only compatibility metrics and a fixed-field public-safe projection;
 - an all-or-nothing, network-isolated safe-input generation with a digest manifest;
 - PostgreSQL repositories, scoped database roles, leases, and SQLite import;
-- a schema-v6 durable ledger that reconciles DB commits with file publication;
+- a schema-v7 ledger retaining durable file-publication intents and adding small
+  normal-monitoring minute/window aggregates;
 - separate k3s workloads for input, core, report, export, database, and backup;
 - separately gated database/file retention, dual-device backup, and full-restore evidence;
 - default-deny network policy and a detection-only host sentinel;
@@ -97,6 +98,7 @@ an external read-only source.
 
 ## Read next
 
+- [Normal monitoring, migration campaigns and verified history copies](docs/normal-monitoring-history.md)
 - [Architecture and safety boundaries](docs/architecture.md)
 - [Responsibility refactor and failure hardening](docs/hardening.md)
 - [Failure-mode mitigation record](docs/failure-mode-mitigation-record.md)

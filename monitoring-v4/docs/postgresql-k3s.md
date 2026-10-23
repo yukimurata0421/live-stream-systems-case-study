@@ -46,7 +46,7 @@ instead of silently freezing an old artifact.
 | PostgreSQL StatefulSet | 1 | v4 ledger, current state, outbox, projections | retained 20 GiB PVC |
 | safe-input projector | 1, Recreate | allowlisted projection of external read-only state | fixed v4-owned input files |
 | core | 1, Recreate | observation, reduction, incidents, notification intents | PostgreSQL and private shadow artifact |
-| reporter | 1, Recreate | revision-pinned coverage/parity report | private report artifact |
+| reporter | 1, Recreate | normal health from bounded current/window aggregates | private report artifact |
 | exporter | 2 | read-only metrics and health | none |
 | backup CronJob | one at a time | custom-format dump, SHA-256 validation, and different-device copy | two host directories outside the PVC |
 | restore verification CronJob | one at a time | credential-free full restore into a disposable database and versioned attestation | temporary database and bounded attestation directory |
@@ -82,8 +82,9 @@ so source ownership and field semantics remain part of the contract.
 ## Database roles
 
 Migration, core, reporter, exporter, backup, maintenance, and future notifier
-use separate roles. Grants are table-scoped: the reporter reads only migration/shadow-cycle
-evidence, the exporter reads its metric tables, and the core cannot write
+use separate roles. Grants are table-scoped: the reporter reads only schema,
+shadow-cycle, series/window and current-checkpoint tables; it cannot read raw
+observation rows. The exporter reads its metric tables, and the core cannot write
 delivery result tables. Secret values are created at deployment time and are
 not present in this repository.
 
@@ -99,19 +100,35 @@ Narrower operation-specific roles or stored operations remain follow-up work.
 
 ## Migration and rollback
 
-The SQLite source is retained for forensics and rollback. A final import first
-creates a checkpointed, read-only SQLite snapshot, then performs an idempotent
-PostgreSQL merge. Immutable rows are compared inside the same transaction; a
-mismatch rolls the merge back.
+### Current schema v7
 
-Cutover order is single-writer by construction: validate the candidate k3s
-subsystem, stop the legacy SQLite timer, confirm no running oneshot, import the
-frozen snapshot, verify the merge, and then let only the PostgreSQL core create
-new cycles.
+The public schemas now support v7 normal-monitoring aggregates. The legacy
+SQLite-to-PostgreSQL merger requires the supported schema version and rejects a
+source containing normal-history series, because it cannot merge those
+aggregate checkpoints. Use a verified full restore for that case. The
+[normal-history contract](normal-monitoring-history.md#history-copy) defines
+the copy, restore and compatibility boundaries.
 
-Rollback reverses authority without deleting evidence: scale the PostgreSQL
-core to zero, confirm the writer stopped, and enable exactly one SQLite writer.
-The PostgreSQL PVC and dumps remain intact.
+A schema-v7 rollout must keep its writer, reporter, readers and role grants
+compatible. Schema-v6 binaries reject v7. Reverting application behavior needs
+a separately verified v7-compatible runtime; restoring the database is a
+separate recovery operation. Neither changing an image tag nor enabling an
+older SQLite writer establishes continuity of the v7 aggregates. No database
+migration or production rollback is performed by this public source port.
+
+### Historical SQLite-to-PostgreSQL cutover
+
+The earlier cutover retained SQLite for forensics and rollback. It created a
+checkpointed, read-only SQLite snapshot and performed an idempotent PostgreSQL
+merge, comparing immutable rows inside one transaction and rolling back on a
+mismatch.
+
+That transition stopped the legacy SQLite timer, confirmed no running oneshot,
+imported the frozen snapshot and verified the merge before admitting the sole
+PostgreSQL writer. Its rollback stopped that writer and resumed exactly one
+SQLite writer while retaining the PostgreSQL PVC and dumps. This describes the
+earlier backend transition; it is not the procedure for reverting a v7
+normal-history rollout.
 
 ## Operational limits
 

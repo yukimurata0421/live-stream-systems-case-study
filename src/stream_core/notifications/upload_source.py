@@ -19,34 +19,52 @@ def stamp(value):
     if d.tzinfo is None:raise ValueError()
     return d.timestamp()
 
-def raw_health(path: Path, now: int) -> dict:
+def _raw_times(path: Path, now: int) -> list[float]:
+    """Read at most one bounded tail, preserving the producer timestamps."""
+    fd=os.open(path,os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK)
+    with os.fdopen(fd,'rb') as f:
+        if not stat.S_ISREG(os.fstat(f.fileno()).st_mode):raise ValueError()
+        f.seek(0,os.SEEK_END);size=f.tell();offset=max(0,size-TAIL_BYTES);f.seek(offset)
+        raw=f.read(TAIL_BYTES)
+    lines=raw.splitlines()
+    if offset:lines=lines[1:]
+    times=[]
+    for line in lines:
+        try:
+            row=json.loads(line)
+            if row.get('kind')!='tcp_send_sample':continue
+            t=stamp(row.get('ts_utc'))
+            value=row.get('mbps',row.get('send_mbps'))
+            if type(value) not in (float,int) or not math.isfinite(value) or value<0:continue
+        except (ValueError,TypeError,AttributeError):continue
+        if t>now:raise ValueError()
+        if now-RECOVERY_SECONDS-FRESH_SECONDS<=t<=now:times.append(t)
+    return times
+
+
+def _raw_summary(times: list[float], now: int) -> dict:
     result={'available':False,'fresh':False,'sustained':False,'latest_age_seconds':None}
-    try:
-        fd=os.open(path,os.O_RDONLY|os.O_NOFOLLOW)
-        with os.fdopen(fd,'rb') as f:
-            if not stat.S_ISREG(os.fstat(f.fileno()).st_mode):return result
-            f.seek(0,os.SEEK_END);size=f.tell();offset=max(0,size-TAIL_BYTES);f.seek(offset)
-            raw=f.read(TAIL_BYTES)
-        lines=raw.splitlines()
-        if offset:lines=lines[1:]
-        times=[]
-        for line in lines:
-            try:
-                row=json.loads(line)
-                if row.get('kind')!='tcp_send_sample':continue
-                t=stamp(row.get('ts_utc'))
-                value=row.get('mbps',row.get('send_mbps'))
-                if type(value) not in (float,int) or not math.isfinite(value) or value<0:continue
-                if t>now:return result
-                if now-RECOVERY_SECONDS-FRESH_SECONDS<=t<=now:times.append(t)
-            except (ValueError,TypeError,AttributeError):continue
-        if not times:return result
-        times=sorted(set(times));age=now-times[-1];fresh=age<=FRESH_SECONDS
-        sustained=(fresh and times[0]<=now-RECOVERY_SECONDS and
-                   all(b-a<=FRESH_SECONDS for a,b in zip(times,times[1:])))
-        result.update(available=True,fresh=fresh,sustained=sustained,latest_age_seconds=age)
-    except OSError:pass
+    if not times:return result
+    times=sorted(set(times));age=now-times[-1];fresh=age<=FRESH_SECONDS
+    sustained=(fresh and times[0]<=now-RECOVERY_SECONDS and
+               all(b-a<=FRESH_SECONDS for a,b in zip(times,times[1:])))
+    result.update(available=True,fresh=fresh,sustained=sustained,latest_age_seconds=age)
     return result
+
+
+def raw_health(path: Path, now: int) -> dict:
+    result=_raw_summary([],now)
+    try:
+        try:times=_raw_times(path,now)
+        except FileNotFoundError:times=[]
+        result=_raw_summary(times,now)
+        if result['sustained']:return result
+        # copytruncate moves the recovery window into .1. Read only that
+        # immediate predecessor; deduplicate overlap without refreshing its age.
+        try:times.extend(_raw_times(path.with_name(path.name+'.1'),now))
+        except FileNotFoundError:pass
+        return _raw_summary(times,now)
+    except (OSError,ValueError):return _raw_summary([],now)
 
 def fetch_prometheus(now: int) -> dict:
     end=now//60*60

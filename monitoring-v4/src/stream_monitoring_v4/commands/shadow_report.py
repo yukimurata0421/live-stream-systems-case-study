@@ -22,7 +22,7 @@ from stream_monitoring_v4.storage.factory import (
 
 def parser() -> argparse.ArgumentParser:
     result = argparse.ArgumentParser(
-        description="Report revision-pinned Monitoring v4 shadow gates"
+        description="Explicit migration qualification report; never normal monitoring health"
     )
     add_repository_arguments(result)
     result.add_argument("--build-revision", required=True)
@@ -32,6 +32,9 @@ def parser() -> argparse.ArgumentParser:
     result.add_argument("--now-ts", type=int, default=None)
     result.add_argument("--output", type=Path, default=None)
     result.add_argument("--minimum-coverage-pct", type=float, default=99.0)
+    campaign = result.add_mutually_exclusive_group(required=True)
+    campaign.add_argument('--campaign', help='only this explicitly collected migration campaign')
+    campaign.add_argument('--historical', action='store_true', help='read pre-separation historical migration rows')
     return result
 
 
@@ -60,13 +63,21 @@ def main(argv: list[str] | None = None) -> int:
         args, application_name="stream-monitoring-v4-reporter"
     )
     try:
+        class CampaignReader:
+            def iter_shadow_cycle_report_rows(self, **kwargs):
+                return repository.iter_shadow_cycle_report_rows(
+                    **kwargs, campaign_id=args.campaign if args.campaign else ""
+                )
         report = build_report(
-            repository,
+            CampaignReader(),
             build_revision=args.build_revision,
             source_revision=source_revision,
             now_ts=now_ts,
             minimum_coverage_pct=args.minimum_coverage_pct,
         )
+        report['purpose'] = 'migration_qualification'
+        report['campaign_id'] = args.campaign or 'historical'
+        report['required_for_normal_health'] = False
         if args.output is not None:
             _write_atomic(args.output, report)
         print(json.dumps(report, ensure_ascii=False, sort_keys=True, separators=(",", ":")))

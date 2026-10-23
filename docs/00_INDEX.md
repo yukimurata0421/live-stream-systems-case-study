@@ -54,6 +54,7 @@ start.
 - `same-url-continuity-evidence.md`: [160-day same-URL checkpoint and earlier SLI windows](same-url-continuity-evidence.md).
 - `sli-methodology.md`: [how SLIs were defined and the measured baseline](sli-methodology.md).
 - `v3/sli-and-dashboard.md`: [dashboard and SLI contract](v3/sli-and-dashboard.md).
+- `v3/adsb-source-coverage.md`: [time-based ADS-B evidence coverage, UNKNOWN boundaries, and count compatibility](v3/adsb-source-coverage.md).
 - `v3/rolling-sli-error-budget-feedback.md`: [rolling windows used as operator feedback](v3/rolling-sli-error-budget-feedback.md).
 - `v3/operational-reliability-and-external-evidence.md`: [durable rollups and external checks](v3/operational-reliability-and-external-evidence.md).
 - `v3/observability-plane-self-check.md`: [when monitoring itself is wrong](v3/observability-plane-self-check.md).
@@ -95,6 +96,7 @@ start.
 
 ## Publication Records
 
+- `v3/public-source-port-2026-10-23-observability.md`: [thumbnail cache timing, current quality, notification delivery and Monitoring v4 history](v3/public-source-port-2026-10-23-observability.md).
 - `v3/public-source-port-2026-10-23-relay-clock.md`: [return-feed native clock evidence, non-monotonic ROI widening and a current-ROI-first UTC read](v3/public-source-port-2026-10-23-relay-clock.md).
 - `v3/thumbnail-ocr-rollout-2026-10-22.md`: [operated counter activation, live OCR evidence and preserved concurrent work](v3/thumbnail-ocr-rollout-2026-10-22.md).
 - `v3/public-source-port-2026-10-22-thumbnail.md`: [thumbnail monitoring and return-reader quality corrections](v3/public-source-port-2026-10-22-thumbnail.md).

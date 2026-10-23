@@ -1,13 +1,15 @@
 """Poll and OCR thumbnails without repeating Helix calls or storing ordinary images."""
 import argparse
 import fcntl
+import hashlib
 import json
 import os
 from pathlib import Path
 import signal
 import threading
 import time
-from urllib.request import ProxyHandler,build_opener
+from urllib.error import HTTPError
+from urllib.request import HTTPDefaultErrorHandler,HTTPErrorProcessor,HTTPHandler,OpenerDirector
 
 from .twitch_thumbnail import (SCHEMA,SCOPE,ThumbnailAnalyzer,ThumbnailHTTP,api_status,epoch,image_url,load_json,validate_source)
 from .viewer_clock import utc_timestamp
@@ -25,9 +27,47 @@ def publish(path,value):
     finally:temp.unlink(missing_ok=True)
 
 
-def native_forward(now):
+IMAGE_KEYS=('image_changed_at_utc','image_changed_cdn_age_seconds')
+LAG_KEYS=('discovery_lag_seconds','cdn_age_at_discovery_seconds','origin_side_age_estimate_seconds')
+
+
+def provider_timing(row,previous,*,digest,fetched_at):
+    """Keep each image's first sight apart from OCR, and split a new clock's age at that sight.
+
+    A new image is a body whose hash differs from the persisted last one, so restarts and
+    cache-safety refetches of the same object are not changes. The first sight is kept even
+    when OCR fails on it and succeeds on a later fetch of the same image.
+    discovery_lag = first sight - image clock.
+    origin_side_age_estimate = (first sight - Age) - image clock: the clock's age when the cache
+    last obtained or revalidated the object. Age resets on revalidation, so this is an upper
+    estimate of the provider's rendering delay, not that delay itself."""
+    seen_digest=previous.get('image_seen_sha256') or previous.get('image_sha256')
+    same=previous.get('active_stream_id')==row.get('active_stream_id')
+    timing={key:previous.get(key) for key in IMAGE_KEYS+LAG_KEYS} if same else dict.fromkeys(IMAGE_KEYS+LAG_KEYS)
+    timing['image_seen_sha256']=seen_digest
+    if digest is not None and digest!=seen_digest:
+        timing.update(image_seen_sha256=digest,image_changed_at_utc=utc_timestamp(fetched_at),
+                      image_changed_cdn_age_seconds=row.get('cdn_age_seconds'))
+    first=epoch(timing.get('image_changed_at_utc'));shown=epoch(row.get('display_clock_at_utc'))
+    # A new clock reading belongs to the current image; its first sight may be an earlier fetch.
+    if row.get('ocr_verified') is True and row.get('unique_sample') is True and first is not None and shown is not None:
+        age=timing.get('image_changed_cdn_age_seconds')
+        timing.update(discovery_lag_seconds=round(first-shown,3),cdn_age_at_discovery_seconds=age,
+                      origin_side_age_estimate_seconds=round(first-age-shown,3) if age is not None else None)
+    return timing
+
+
+def native_forward_opener():
+    # This fixed localhost endpoint needs neither TLS nor proxy/redirect handlers.
+    # build_opener creates a certificate-loaded HTTPSHandler even for HTTP URLs.
+    opener=OpenerDirector()
+    for handler in (HTTPHandler(),HTTPDefaultErrorHandler(),HTTPErrorProcessor()):
+        opener.add_handler(handler)
+    return opener
+
+
+def native_forward(now,*,opener):
     try:
-        opener=build_opener(ProxyHandler({}))
         with opener.open('http://127.0.0.1:9116/twitch-delivery',timeout=2) as response:raw=response.read(32769)
         if len(raw)>32768:return None
         value=json.loads(raw);stamp=epoch(value.get('observed_at'))
@@ -35,6 +75,8 @@ def native_forward(now):
         states=(value['relay']['status'],value['input']['status'],value['destinations']['twitch']['status'])
         flowing=True if states==('RUNNING','FLOWING','FLOWING') else False if any(s in ('STOPPED','STALLED','DISCONNECTED') for s in states) else None
         return {'flowing':flowing,'observed_at_utc':value['observed_at']}
+    except HTTPError as error:
+        error.close();return None
     except (OSError,ValueError,KeyError,TypeError):return None
 
 
@@ -45,6 +87,7 @@ class Worker:
         try:self.previous=load_json(self.state_file)
         except (OSError,ValueError,ProbeError):self.previous={}
         self.runner=ProcessRunner();self.http=http or ThumbnailHTTP()
+        self.forward_opener=native_forward_opener()
         self.ocr=ocr or TesseractOCR(self.runner,binary=config['tesseract'],tessdata_dir=config['tessdata_dir'])
         self.analyzer=ThumbnailAnalyzer(config,self.previous)
         self.store=ThumbnailEvidenceStore(root/'evidence')
@@ -66,7 +109,7 @@ class Worker:
              'ocr_method':'none','ocr_failure_reason':'not_attempted','ocr_stage_results':{},
              'last_request_at_utc':self.previous.get('last_request_at_utc'),
              'next_fetch_not_before_utc':self.previous.get('next_fetch_not_before_utc')}
-        analysis_started=False
+        analysis_started=False;digest=None;fetched_at=now
         try:
             api=load_json(self.config['api_file'])
             row['api_live']=api_status(api,self.config,now=now)
@@ -101,7 +144,9 @@ class Worker:
                     row.update(last_request_at_utc=utc_timestamp(now),capture_attempted=True)
                     url=image_url(source['thumbnail_url'],source['user_login'],1920,1080)
                     body,metadata=self.http.get(url,deadline=started+8)
-                    forward=native_forward(time.time()) or {}
+                    fetched_at=time.time();row['cdn_age_seconds']=metadata.get('cdn_age_seconds')
+                    if body is not None:digest=hashlib.sha256(body).hexdigest()
+                    forward=native_forward(time.time(),opener=self.forward_opener) or {}
                     analysis_started=True
                     result=self.analyzer.observe(body,source,lambda image:self.ocr.read(image,deadline=min(started+15,time.monotonic()+2)),
                                                  now=time.time(),forward_flowing=forward.get('flowing'))
@@ -119,6 +164,7 @@ class Worker:
             # Include exceptions from observe/decode: a 304 cannot repair a
             # missing or unverified cached frame.
             self.http.etag=None
+        row.update(provider_timing(row,self.previous,digest=digest,fetched_at=fetched_at))
         row['stream_clock_observed']=bool(row.get('active_stream_id') and self.analyzer.verified.get('stream_id')==row['active_stream_id'])
         row.update(checked_at_utc=utc_timestamp(time.time()),cycle=self.cycle,platform='twitch_thumbnail',
                    duration_seconds=round(time.monotonic()-started,3),normal_image_storage='memory')

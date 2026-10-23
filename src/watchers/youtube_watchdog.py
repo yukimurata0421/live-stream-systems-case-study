@@ -201,6 +201,7 @@ try:
         verdict_from_watch_reason,
     )
     from .youtube_watchdog_core.process import (
+        fallback_ingest_connection,
         ffmpeg_has_ingest_connection,
         ffmpeg_has_ingest_connection_any,
         get_child_ffmpeg_pid,
@@ -241,6 +242,7 @@ except ImportError:
         verdict_from_watch_reason,
     )
     from youtube_watchdog_core.process import (
+        fallback_ingest_connection,
         ffmpeg_has_ingest_connection,
         ffmpeg_has_ingest_connection_any,
         get_child_ffmpeg_pid,
@@ -343,6 +345,13 @@ def main(force_live_once: bool = False) -> int:
     ffmpeg_uptime_sec = get_process_elapsed_sec(ffmpeg_pid)
     ingest_ports = parse_ingest_ports()
     ingest_connected, ingest_connection = ffmpeg_has_ingest_connection_any(ffmpeg_pid, ingest_ports)
+    # Count an established direct backup connection as local delivery while
+    # the main sender is unavailable, preserving the active broadcast.
+    if not (stream_active and ingest_connected):
+        fallback_connected, fallback_connection = fallback_ingest_connection()
+        if fallback_connected:
+            stream_active, ingest_connected = True, True
+            ingest_connection = f"fallback {fallback_connection}"
 
     if stream_active and ffmpeg_uptime_sec > 0 and ffmpeg_uptime_sec < STARTUP_GRACE_SEC:
         in_recovering = last_restart_ts > 0 and (now_ts - last_restart_ts) < RECOVERING_GRACE_SEC

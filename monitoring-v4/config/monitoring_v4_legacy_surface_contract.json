@@ -69,6 +69,7 @@
     "ported_v4_shadow": [],
     "retained_v3": [
       "api_report:freshness_or_timer",
+      "api_report:timer_monitoring_gap",
       "external:blackbox_missing_or_stale",
       "external:blackbox_{status}",
       "fast_recovery:remote_warning_restart_repeated",
@@ -81,7 +82,6 @@
       "map:webgl_failure",
       "observe:execution_failed",
       "public_probe:429_or_bot_confirmation_repeated",
-      "reliability:youtube_input_quality_breached",
       "reliability:youtube_input_quality_coverage_or_freshness",
       "reliability:youtube_input_quality_fast_feedback",
       "reliability:{artifact}_missing_or_stale",
@@ -97,7 +97,8 @@
       "viewer:synthetic_probe_failed",
       "viewer:visual_failure",
       "youtube:current_degraded",
-      "youtube:enable_auto_stop_false_encoder_gap"
+      "youtube:enable_auto_stop_false_encoder_gap",
+      "youtube:watchdog_stats_stale"
     ],
     "diagnostic_only": [],
     "retired": []

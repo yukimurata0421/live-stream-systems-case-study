@@ -186,7 +186,7 @@ def thumbnail_worker_fixture(tmp_path,monkeypatch):
     import stream_v3.twitch_thumbnail_worker as module
     from stream_v3.viewer_clock import utc_timestamp
     clock=[1700000000.]
-    monkeypatch.setattr(module.time,'time',lambda:clock[0]);monkeypatch.setattr(module,'native_forward',lambda _:None)
+    monkeypatch.setattr(module.time,'time',lambda:clock[0]);monkeypatch.setattr(module,'native_forward',lambda _,**kwargs:None)
     config={'api_file':str(tmp_path/'api.json'),'source_file':str(tmp_path/'source.json'),
             'boot_id':'boot','user_id':'id','user_login':'fixture'}
     def publish(stream='first',started=None):
@@ -208,6 +208,62 @@ def thumbnail_worker_fixture(tmp_path,monkeypatch):
     ocr=types.SimpleNamespace(read=None)
     worker=module.Worker(config,tmp_path/'worker',http=http,ocr=ocr)
     return module,worker,http,ocr,clock,publish
+
+
+def test_native_http_client_reuses_handlers_without_tls_and_recovers_from_errors(monkeypatch):
+    import gc
+    import ssl
+    import threading
+    from http.server import BaseHTTPRequestHandler,HTTPServer
+    import stream_v3.twitch_thumbnail_worker as module
+    now=1700000000
+    payload={'schema':'stream.relay_public.v1','source_fresh':True,'observed_at':module.utc_timestamp(now),
+             'relay':{'status':'RUNNING'},'input':{'status':'FLOWING'},'destinations':{'twitch':{'status':'FLOWING'}}}
+    response=[200,json.dumps(payload).encode()]
+    class Handler(BaseHTTPRequestHandler):
+        def do_GET(self):
+            assert self.path=='/twitch-delivery'
+            self.send_response(response[0]);self.send_header('Content-Length',str(len(response[1])));self.end_headers()
+            self.wfile.write(response[1])
+        def log_message(self,*args):pass
+    def no_tls(*args,**kwargs):pytest.fail('localhost HTTP must not allocate a TLS context')
+    monkeypatch.setattr(ssl,'_create_default_https_context',no_tls)
+    monkeypatch.setenv('http_proxy','http://127.0.0.1:1')
+    with HTTPServer(('127.0.0.1',0),Handler) as server:
+        thread=threading.Thread(target=server.serve_forever,daemon=True);thread.start()
+        opener=module.native_forward_opener();handlers=tuple(opener.handlers)
+        class LocalEndpoint:
+            def open(self,url,*,timeout):
+                assert url=='http://127.0.0.1:9116/twitch-delivery' and timeout==2
+                return opener.open(f'http://127.0.0.1:{server.server_port}/twitch-delivery',timeout=timeout)
+        endpoint=LocalEndpoint();gc_enabled=gc.isenabled();gc.disable()
+        try:
+            for _ in range(400):assert module.native_forward(now,opener=endpoint)['flowing'] is True
+            assert tuple(opener.handlers)==handlers
+            response[:]=[503,b'unavailable']
+            for _ in range(40):assert module.native_forward(now,opener=endpoint) is None
+            response[:]=[200,b'invalid json'];assert module.native_forward(now,opener=endpoint) is None
+            response[1]=b'x'*32769;assert module.native_forward(now,opener=endpoint) is None
+            response[1]=json.dumps({**payload,'observed_at':module.utc_timestamp(now-91)}).encode()
+            assert module.native_forward(now,opener=endpoint) is None
+            class TimedOut:
+                def open(self,*args,**kwargs):raise TimeoutError()
+            assert module.native_forward(now,opener=TimedOut()) is None
+            response[1]=json.dumps(payload).encode();assert module.native_forward(now,opener=endpoint)['flowing'] is True
+        finally:
+            if gc_enabled:gc.enable()
+            server.shutdown();thread.join(3)
+
+
+def test_worker_keeps_one_native_http_client_across_polls(tmp_path,monkeypatch):
+    module,worker,http,ocr,clock,publish=thumbnail_worker_fixture(tmp_path,monkeypatch)
+    clients=[]
+    def forward(now,*,opener):clients.append(opener);return {}
+    monkeypatch.setattr(module,'native_forward',forward)
+    for _ in range(3):
+        publish();read=reading(clock[0]-100);ocr.read=lambda image,**kwargs:read(image)
+        assert worker.once()['ocr_verified'];http.body=None;clock[0]+=60
+    assert len(clients)==3 and all(client is worker.forward_opener for client in clients)
 
 
 def test_jst_midnight_stream_change_discards_etag_then_waits_without_evidence(tmp_path,monkeypatch):
@@ -591,3 +647,128 @@ def test_capture_gap_does_not_release_current_evidence_when_storage_is_full(tmp_
     worker.store.max_bytes=worker.store.disk_bytes(worker.root/'evidence'/name)
     clock[0]+=60;publish();http.body=thumbnail_body(129);row=worker.once()
     assert row['evidence_status']=='capacity_limited' and (worker.root/'evidence'/name).exists()
+
+
+@pytest.mark.parametrize('header,expected',[('120',120),('0',0),('86400',86400),('86401',None),('-1',None),('1.5',None),
+                                            ('',None),('１２',None),('9999999',None),(None,None)])
+def test_cdn_age_header_is_a_bounded_integer_or_absent(header,expected):
+    from email.message import Message
+    from stream_v3.twitch_thumbnail import cdn_age
+    headers=Message()
+    if header is not None:headers['Age']=header
+    assert cdn_age(headers)==expected
+
+
+
+def test_thumbnail_http_reports_cdn_age_for_200_and_304():
+    import threading
+    import time
+    from http.server import BaseHTTPRequestHandler,HTTPServer
+    from stream_v3.twitch_thumbnail import ThumbnailHTTP
+    state={'etag':'"a"','age':'120'}
+    class Handler(BaseHTTPRequestHandler):
+        def do_GET(self):
+            body=thumbnail_body()
+            if self.headers.get('If-None-Match')==state['etag']:
+                self.send_response(304);self.send_header('ETag',state['etag']);self.send_header('Age',state['age']);self.end_headers();return
+            self.send_response(200);self.send_header('Content-Type','image/jpeg');self.send_header('ETag',state['etag'])
+            self.send_header('Age',state['age']);self.send_header('Content-Length',str(len(body)));self.end_headers();self.wfile.write(body)
+        def log_message(self,*args):pass
+    with HTTPServer(('127.0.0.1',0),Handler) as server:
+        thread=threading.Thread(target=server.serve_forever,daemon=True);thread.start()
+        try:
+            http=ThumbnailHTTP();url=f'http://127.0.0.1:{server.server_port}/thumb.jpg'
+            body,meta=http.get(url,deadline=time.monotonic()+5)
+            assert body and meta=={'http_status':200,'download_bytes':len(body),'cdn_age_seconds':120}
+            state['age']='180';body,meta=http.get(url,deadline=time.monotonic()+5)
+            assert body is None and meta=={'http_status':304,'download_bytes':0,'cdn_age_seconds':180}
+            state.update(etag='"b"',age='bogus');body,meta=http.get(url,deadline=time.monotonic()+5)
+            assert body and meta['cdn_age_seconds'] is None
+        finally:server.shutdown();thread.join(3)
+
+
+def timing_fixture(tmp_path,monkeypatch):
+    module,worker,http,ocr,clock,publish=thumbnail_worker_fixture(tmp_path,monkeypatch)
+    meta={'cdn_age_seconds':30}
+    original=type(http).get
+    def get(self,url,**kwargs):
+        body,base=original(self,url,**kwargs);return body,{**base,**meta}
+    monkeypatch.setattr(type(http),'get',get)
+    def poll(clock_age=None,*,failed=False):
+        from stream_v3.viewer_clock import ClockReading
+        if failed:ocr.read=lambda image,**kwargs:ClockReading(error='ocr_failed')
+        elif clock_age is not None:
+            read=reading(clock[0]-clock_age);ocr.read=lambda image,**kwargs:read(image)
+        return worker.once()
+    return module,worker,http,ocr,clock,publish,meta,poll
+
+
+def test_worker_splits_first_sight_age_and_keeps_it_for_the_same_image(tmp_path,monkeypatch):
+    from stream_v3.viewer_clock import utc_timestamp
+    module,worker,http,ocr,clock,publish,meta,poll=timing_fixture(tmp_path,monkeypatch)
+    publish();start=clock[0];row=poll(80)
+    assert row['ocr_verified'] and row['unique_sample']
+    assert (row['discovery_lag_seconds'],row['cdn_age_at_discovery_seconds'],row['origin_side_age_estimate_seconds'])==(80,30,50)
+    assert row['image_changed_at_utc']==utc_timestamp(start) and row['image_changed_cdn_age_seconds']==30
+    # A 304 a minute later: the per-image split stays, the current Age moves on.
+    clock[0]+=60;publish();http.body=None;meta['cdn_age_seconds']=90
+    row=poll()
+    assert row['image_duplicate'] and row['cdn_age_seconds']==90
+    assert (row['discovery_lag_seconds'],row['origin_side_age_estimate_seconds'],row['image_changed_at_utc'])==(80,50,utc_timestamp(start))
+    # Without an Age header the origin side is unknown, never guessed.
+    clock[0]+=60;publish();http.body=thumbnail_body(90);meta['cdn_age_seconds']=None
+    row=poll(70)
+    assert row['unique_sample'] and row['discovery_lag_seconds']==70 and row['origin_side_age_estimate_seconds'] is None
+    # A new stream never inherits the previous stream's timing.
+    clock[0]+=60;publish(stream='second');http.body=None
+    row=poll()
+    assert all(row[key] is None for key in module.IMAGE_KEYS+module.LAG_KEYS)
+
+
+def test_restart_and_full_refetch_of_the_same_image_are_not_image_changes(tmp_path,monkeypatch):
+    from stream_v3.viewer_clock import utc_timestamp
+    module,worker,http,ocr,clock,publish,meta,poll=timing_fixture(tmp_path,monkeypatch)
+    publish();start=clock[0];first=poll(80)
+    # A restart loses the in-memory ETag, so the same image comes back as a full 200 body.
+    restarted=module.Worker(worker.config,worker.root,http=http,ocr=ocr)
+    clock[0]+=60;publish();meta['cdn_age_seconds']=90
+    row=restarted.once()
+    assert row['image_duplicate'] and not row['unique_sample']
+    assert row['image_changed_at_utc']==utc_timestamp(start) and row['image_changed_cdn_age_seconds']==30
+    assert {k:row[k] for k in module.LAG_KEYS}=={k:first[k] for k in module.LAG_KEYS}
+
+
+def test_first_sight_is_kept_when_ocr_fails_before_a_later_success(tmp_path,monkeypatch):
+    from stream_v3.viewer_clock import utc_timestamp
+    module,worker,http,ocr,clock,publish,meta,poll=timing_fixture(tmp_path,monkeypatch)
+    publish();start=clock[0];stamp=start-80
+    row=poll(failed=True)
+    assert not row['ocr_verified'] and row['image_changed_at_utc']==utc_timestamp(start)
+    assert row['discovery_lag_seconds'] is None
+    # The same image is fetched again a minute later (Age 90) and OCR now succeeds.
+    clock[0]+=60;publish();meta['cdn_age_seconds']=90
+    read=reading(stamp);ocr.read=lambda image,**kwargs:read(image)
+    row=worker.once()
+    assert row['ocr_verified'] and row['unique_sample']
+    assert (row['discovery_lag_seconds'],row['cdn_age_at_discovery_seconds'],row['origin_side_age_estimate_seconds'])==(80,30,50)
+
+
+def test_provider_timing_metrics_require_a_fresh_verified_reading():
+    from stream_v3.twitch_thumbnail_metrics import write_metrics
+    from stream_v3.viewer_clock import utc_timestamp
+    captured={}
+    class Writer:
+        def metric(self,name,value,**kwargs):captured[name]=value
+    now=1000000.
+    row={'schema':'stream_v3.twitch_thumbnail_observation.v1','checked_at_utc':utc_timestamp(now-10),'api_live':True,
+         'api_collected_at_utc':utc_timestamp(now-10),'capture_ok':True,'ocr_verified':True,'display_clock_at_utc':utc_timestamp(now-200),
+         'cdn_age_seconds':150,'discovery_lag_seconds':80.,'cdn_age_at_discovery_seconds':30,'origin_side_age_estimate_seconds':50.,
+         'image_changed_at_utc':utc_timestamp(now-130)}
+    write_metrics(Writer(),row,now=now)
+    p='stream_v3_twitch_thumbnail_'
+    assert (captured[p+'cdn_age_seconds'],captured[p+'discovery_lag_seconds'],captured[p+'origin_side_age_estimate_seconds'])==(150,80.,50.)
+    assert captured[p+'cdn_age_at_discovery_seconds']==30 and captured[p+'seconds_since_image_change']==130
+    captured.clear();write_metrics(Writer(),{**row,'ocr_verified':False},now=now)
+    assert not any(k.endswith(('cdn_age_seconds','discovery_lag_seconds','origin_side_age_estimate_seconds')) for k in captured)
+    captured.clear();write_metrics(Writer(),{**row,'origin_side_age_estimate_seconds':float('inf'),'cdn_age_seconds':True},now=now)
+    assert p+'origin_side_age_estimate_seconds' not in captured and p+'cdn_age_seconds' not in captured

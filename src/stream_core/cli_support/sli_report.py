@@ -36,6 +36,8 @@ AUDIO_SOURCE_MAX_AGE_SEC = 180
 SOURCE_DISAGREEMENT_TOLERANCE_PCT = 0.25
 VIEWER_PROBE_CADENCE_SEC = 300
 RENDERING_EVENT_CADENCE_SEC = 60
+# Monitor cycles include processing plus a 60-second wait; coverage uses time.
+RENDERING_EVENT_MAX_SPAN_SEC = 90
 
 
 @dataclass(frozen=True)
@@ -242,18 +244,29 @@ def _round(value: float | None, digits: int = 3) -> float | None:
     return round(value, digits) if value is not None and math.isfinite(value) else None
 
 
-def _bad_run_stats(status: dict[int, bool], step_sec: int) -> tuple[int, float]:
+def _bad_run_stats(
+    status: dict[int, bool],
+    step_sec: int,
+    *,
+    max_gap_sec: int | None = None,
+) -> tuple[int, float]:
     bad = sorted(ts for ts, healthy in status.items() if not healthy)
     if not bad:
         return 0, 0.0
     runs: list[int] = []
     start = previous = bad[0]
+    run_points = 1
+    allowed_gap = step_sec if max_gap_sec is None else max_gap_sec
     for ts in bad[1:]:
-        if ts - previous > step_sec:
-            runs.append((previous - start) // step_sec + 1)
+        if ts - previous > allowed_gap:
+            runs.append((previous - start) // step_sec + 1 if max_gap_sec is None else run_points)
             start = ts
+            run_points = 1
+        else:
+            run_points += 1
         previous = ts
-    runs.append((previous - start) // step_sec + 1)
+    # Preserve the existing grid-based calculation for every other SLI caller.
+    runs.append((previous - start) // step_sec + 1 if max_gap_sec is None else run_points)
     return len(runs), max(runs) * step_sec / 60.0
 
 
@@ -458,6 +471,8 @@ def _rendering_event_projection(payload: dict) -> dict:
                 "aircraft_json_ok",
                 "aircraft_messages_moving",
                 "aircraft_positions_moving",
+                "adsb_source_heartbeat_ok",
+                "adsb_activity_state",
                 "stream1090_report_ok",
                 "upstream_stream1090_report_ok",
                 "adsb_freshness_ok",
@@ -526,66 +541,132 @@ def viewer_probe_measurements(
     }
 
 
+def _adsb_source_state(payload: dict) -> str | None:
+    """active / quiet / stale, or None when the row cannot be classified."""
+    rendering = payload.get("rendering")
+    if not isinstance(rendering, dict) or "aircraft_json_ok" not in rendering:
+        return None
+    messages = rendering.get("aircraft_messages_moving")
+    positions = rendering.get("aircraft_positions_moving")
+    heartbeat = rendering.get("adsb_source_heartbeat_ok")
+    if rendering.get("aircraft_json_ok") is False or heartbeat is False:
+        return "stale"
+    if messages is True or positions is True:
+        # Traffic movement itself proves that the source was active, even
+        # for historical events captured before the source-clock field was
+        # introduced.
+        return "active"
+    if heartbeat is True and messages is False and positions is False:
+        return "quiet"
+    # Historical static rows cannot distinguish legitimate quiet from
+    # a stale source. Do not guess.
+    return None
+
+
+def _event_spans(
+    timeline: list[tuple[int, bool]],
+    *,
+    start_ts: int,
+    end_ts: int,
+    max_span_sec: int,
+) -> tuple[int, int]:
+    """(seconds with a current event, seconds with a current classified event) in [start_ts, end_ts).
+
+    ``timeline`` is (timestamp, classified) for every event, unknown rows included,
+    so an unknown row ends the previous classified row's span.
+    """
+    ordered = sorted(timeline)
+    event_sec = classified_sec = 0
+    for index, (ts, classified) in enumerate(ordered):
+        until = ts + max_span_sec
+        if index + 1 < len(ordered):
+            until = min(until, ordered[index + 1][0])
+        seconds = max(0, min(until, end_ts) - max(ts, start_ts))
+        event_sec += seconds
+        if classified:
+            classified_sec += seconds
+    return event_sec, classified_sec
+
+
 def rendering_event_measurements(
     events: list[tuple[int, dict]],
     *,
     start_ts: int,
     end_ts: int,
     cadence_sec: int = RENDERING_EVENT_CADENCE_SEC,
+    max_span_sec: int = RENDERING_EVENT_MAX_SPAN_SEC,
 ) -> dict:
     selected = [(ts, payload) for ts, payload in events if start_ts <= ts <= end_ts]
     expected_points = (end_ts - start_ts) // cadence_sec + 1
     status: dict[int, bool] = {}
+    states: dict[int, str] = {}
     unknown_points = 0
-    required = (
-        "aircraft_json_ok",
-        "aircraft_messages_moving",
-        "aircraft_positions_moving",
-        "stream1090_report_ok",
-        "upstream_stream1090_report_ok",
-        "adsb_freshness_ok",
-    )
+    report_issue_points = 0
     for ts, payload in selected:
         rendering = payload.get("rendering")
-        if not isinstance(rendering, dict) or any(key not in rendering for key in required):
+        # Report issues count for every row carrying source fields,
+        # including historical rows that cannot be classified.
+        if isinstance(rendering, dict) and "aircraft_json_ok" in rendering and (
+            rendering.get("stream1090_report_ok") is False
+            or rendering.get("upstream_stream1090_report_ok") is False
+        ):
+            report_issue_points += 1
+        state = _adsb_source_state(payload)
+        if state is None:
             unknown_points += 1
             continue
-        motion_ok = (
-            rendering.get("aircraft_messages_moving") is True
-            or rendering.get("aircraft_positions_moving") is True
-        )
-        status[ts] = bool(
-            rendering.get("state") == "healthy"
-            and rendering.get("aircraft_json_ok") is True
-            and motion_ok
-            and rendering.get("stream1090_report_ok") is True
-            and rendering.get("upstream_stream1090_report_ok") is True
-            and rendering.get("adsb_freshness_ok") is True
-        )
+        states[ts] = state
+        status[ts] = state != "stale"
     good_points = sum(status.values())
     bad_points = len(status) - good_points
-    run_count, max_run_minutes = _bad_run_stats(status, cadence_sec)
+    run_count, max_run_minutes = _bad_run_stats(
+        status,
+        cadence_sec,
+        max_gap_sec=cadence_sec * 2,
+    )
+    # Events up to one span before the window still describe its first seconds.
+    timeline = [
+        (ts, _adsb_source_state(payload) is not None)
+        for ts, payload in events
+        if start_ts - max_span_sec < ts <= end_ts
+    ]
+    window_sec = end_ts - start_ts
+    event_sec, classified_sec = _event_spans(
+        timeline, start_ts=start_ts, end_ts=end_ts, max_span_sec=max_span_sec
+    )
+    active_points = sum(1 for state in states.values() if state == "active")
+    quiet_points = sum(1 for state in states.values() if state == "quiet")
+    stale_points = sum(1 for state in states.values() if state == "stale")
     return {
         "start_utc": utc_text_from_ts(start_ts),
         "end_utc": utc_text_from_ts(end_ts),
-        "evidence_unit": "rendering_monitor_events",
+        "evidence_unit": "adsb_source_monitor_events",
         "expected_points": expected_points,
         "total_monitor_events": len(selected),
         "observed_points": len(status),
         "good_points": good_points,
         "bad_points": bad_points,
+        "active_points": active_points,
+        "quiet_points": quiet_points,
+        "stale_points": stale_points,
         "unknown_points": unknown_points,
+        # Event count against a 60 s cadence; kept for continuity, not coverage.
         "missing_points": max(0, expected_points - len(selected)),
-        "event_coverage_pct": _round(
-            len(selected) / expected_points * 100.0 if expected_points else None
-        ),
-        "coverage_pct": _round(
-            len(status) / expected_points * 100.0 if expected_points else None
-        ),
+        # Time-based coverage (``coverage_basis``): seconds of [start_ts, end_ts).
+        "window_seconds": window_sec,
+        "uncovered_seconds": max(0, window_sec - event_sec),
+        "unclassified_seconds": max(0, event_sec - classified_sec),
+        "event_coverage_pct": _round(event_sec / window_sec * 100.0 if window_sec else None),
+        "coverage_pct": _round(classified_sec / window_sec * 100.0 if window_sec else None),
+        "coverage_basis": "event_time_span",
+        "max_event_span_sec": max_span_sec,
         "sli_pct": _round(good_points / len(status) * 100.0 if status else None),
         "bad_run_count": run_count,
         "max_bad_run_minutes": _round(max_run_minutes),
-        "motion_contract": "messages_moving_or_positions_moving",
+        "source_state_contract": "active_or_quiet_when_source_heartbeat_fresh",
+        "activity_contract": "message_or_position_movement_is_activity_not_health",
+        "activity_is_not_health": True,
+        "report_issue_points": report_issue_points,
     }
 
 
@@ -811,6 +892,92 @@ def prometheus_input_quality_measurements(
     return summary
 
 
+def current_input_quality_crosscheck(
+    events: list[tuple[int, dict]],
+    eligible: dict[int, float],
+    good: dict[int, float],
+    *,
+    end_ts: int,
+    step_sec: int,
+    max_sample_span_sec: int = INPUT_QUALITY_MAX_SAMPLE_SPAN_SEC,
+) -> dict:
+    """Compare only the latest usable raw and Prometheus quality states.
+
+    Rolling percentages intentionally retain historical differences for review,
+    but they must not keep a current incident active after both sources agree
+    again.  This point-in-time cross-check is therefore kept separate from the
+    rolling ``source_disagreement`` gate.
+    """
+    raw_candidates = [
+        (ts, payload)
+        for ts, payload in events
+        if ts <= end_ts
+        and isinstance(payload, dict)
+        and (
+            "oauth_probe_ok" in payload
+            or "oauth_stream_health_status" in payload
+            or "oauth_stream_status" in payload
+        )
+    ]
+    raw_candidates.sort(key=lambda item: item[0])
+    raw_ts = 0
+    raw_state: dict = {}
+    if raw_candidates:
+        raw_ts, raw_payload = raw_candidates[-1]
+        raw_state = classify_input_quality_sample(
+            raw_payload,
+            now_ts=end_ts,
+            max_age_sec=max_sample_span_sec,
+        )
+    raw_available = bool(
+        raw_state
+        and raw_ts + max(1, int(max_sample_span_sec)) >= end_ts
+        and raw_state.get("fresh") is True
+    )
+
+    common = sorted(ts for ts in set(eligible).intersection(good) if ts <= end_ts)
+    prom_ts = common[-1] if common else 0
+    prom_max_age_sec = max(90, int(step_sec) * 2)
+    prom_available = bool(prom_ts and end_ts - prom_ts <= prom_max_age_sec)
+    prom_eligible = bool(eligible.get(prom_ts, 0.0) >= 1.0) if prom_available else None
+    prom_good = bool(good.get(prom_ts, 0.0) >= 1.0) if prom_available else None
+
+    disagreement = bool(
+        raw_available
+        and prom_available
+        and (
+            bool(raw_state.get("eligible")) != prom_eligible
+            or bool(raw_state.get("good")) != prom_good
+        )
+    )
+    if not raw_available:
+        reason = "raw_current_state_unavailable"
+    elif not prom_available:
+        reason = "prometheus_current_state_unavailable"
+    elif disagreement:
+        reason = "current_state_disagreement"
+    else:
+        reason = "current_states_agree"
+    return {
+        "source_disagreement_current": disagreement,
+        "current_crosscheck_reason": reason,
+        "raw_current": {
+            "available": raw_available,
+            "ts_utc": utc_text_from_ts(raw_ts) if raw_ts else "",
+            "classification": raw_state.get("classification", ""),
+            "eligible": raw_state.get("eligible") if raw_available else None,
+            "good": raw_state.get("good") if raw_available else None,
+        },
+        "prometheus_current": {
+            "available": prom_available,
+            "ts_utc": utc_text_from_ts(prom_ts) if prom_ts else "",
+            "eligible": prom_eligible,
+            "good": prom_good,
+        },
+    }
+
+
+
 def availability_measurements(
     public: dict[int, float],
     ingest: dict[int, float],
@@ -1001,6 +1168,13 @@ def _window_payload(
         end_ts=end_ts,
         step_sec=step_sec,
     )
+    input_quality_current_crosscheck = current_input_quality_crosscheck(
+        events,
+        metrics.get("youtube_input_quality_eligible", {}),
+        metrics.get("youtube_input_quality_good", {}),
+        end_ts=end_ts,
+        step_sec=step_sec,
+    )
     if int(raw_input_quality.get("eligible_seconds") or 0) > 0:
         selected_input_quality = raw_input_quality
         selected_input_quality_source = "raw_oauth_probe_time_weighted"
@@ -1068,6 +1242,7 @@ def _window_payload(
     visual_support.update(
         {
             "viewer_probe_events": viewer_support,
+            "adsb_source_events": adsb_support,
             "adsb_rendering_events": adsb_support,
             "evidence_units_separated": True,
             "assessment_scope": "supporting_only",
@@ -1094,6 +1269,7 @@ def _window_payload(
         "upload_ceiling": upload,
         "youtube_input_quality": {
             **input_quality,
+            **input_quality_current_crosscheck,
             "selected_measurement_source": selected_input_quality_source,
             "raw_oauth_measurement": raw_input_quality,
             "prometheus_crosscheck": prometheus_input_quality,
@@ -1164,7 +1340,7 @@ def build_sli_report(
     subsystem_events = load_timestamped_events(
         ctx.subsystems_status_events_file,
         timestamp_field="ts_utc",
-        start_ts=earliest_ts,
+        start_ts=earliest_ts - RENDERING_EVENT_MAX_SPAN_SEC,
         end_ts=end_ts,
         project=_rendering_event_projection,
     )
