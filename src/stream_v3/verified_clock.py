@@ -27,6 +27,7 @@ class VerifiedClockAnalyzer:
         self.frozen_span=0.;self.frozen_observed=0.
         self.stats={'observations':0,'ocr_uncertain':0,'cadence_drift':0,'valid_clock':0}
         self.histogram={'bounds':list(BUCKETS),'buckets':[0]*len(BUCKETS),'count':0,'sum':0.}
+        self.ocr_pair_stages={};self.evidence_images={}
 
     def _metadata(self,row,now):
         row.update(clock_frozen_seconds=round(self.frozen_span,3),clock_frozen_observed_seconds=round(self.frozen_observed,3),
@@ -43,7 +44,9 @@ class VerifiedClockAnalyzer:
                               'consecutive_failures':self.failures,'consecutive_stalls':self.stalls,
                               'frame_state':'UNKNOWN','delay_valid':False},now)
 
-    def _read_pair(self,first,second,ocr):
+    def _read_pair(self,first,second,ocr,*,expanded_second=None):
+        self.ocr_pair_stages={}
+        self.expanded_utc_attempted=False;self.expanded_utc_skip_reason='not_needed';self.selected_roi_method='none'
         def read(image):
             try:return ocr(image)
             except Exception:return ClockReading(error='ocr_failed')
@@ -51,7 +54,16 @@ class VerifiedClockAnalyzer:
         def valid(a,b):
             left,right=a.seconds(self.config.minimum_confidence),b.seconds(self.config.minimum_confidence)
             return left is not None and right is not None and (left-right)%86400==9*3600
-        if valid(jst,utc):return jst,utc,False,True
+        def record(stage,a,b,*,accepted=None):
+            def reading(value):
+                errors=('', 'ocr_failed','ocr_timeout','deadline_exceeded','ocr_time_unreadable',
+                        'ocr_output_invalid','ocr_roi_too_large','process_output_too_large')
+                return {'text':value.text[:32],'confidence':value.confidence if math.isfinite(value.confidence) else None,
+                        'error':value.error if value.error in errors else 'ocr_failed'}
+            self.ocr_pair_stages[stage]={'jst':reading(a),'utc':reading(b),'accepted':valid(a,b) if accepted is None else accepted}
+        record('original',jst,utc)
+        if valid(jst,utc):
+            self.selected_roi_method='current';return jst,utc,False,True
         # One alternate contrast pass; repeated transforms are not independent votes.
         def contrasted(image):
             from .viewer_clock import GrayImage
@@ -59,10 +71,42 @@ class VerifiedClockAnalyzer:
             if high-low<16:return image
             return GrayImage(image.width,image.height,bytes(round((v-low)*255/(high-low)) for v in image.pixels))
         other_jst,other_utc=read(contrasted(first)),read(contrasted(second))
-        if valid(other_jst,other_utc):return other_jst,other_utc,True,True
+        record('contrast',other_jst,other_utc)
+        if valid(other_jst,other_utc):
+            self.selected_roi_method='current';return other_jst,other_utc,True,True
+        if expanded_second is None:
+            self.expanded_utc_skip_reason='not_enabled';return jst,utc,True,False
+        anchor=jst.seconds(self.config.minimum_confidence)
+        if anchor is None:
+            self.expanded_utc_skip_reason='anchor_unreliable';return jst,utc,True,False
+        expected_utc=None
+        for a,b in ((jst,utc),(other_jst,other_utc)):
+            if any(r.error not in ('','ocr_time_unreadable') for r in (a,b)):
+                self.expanded_utc_skip_reason='process_failure';return jst,utc,True,False
+            if a.seconds(0) is not None and a.text!=jst.text:
+                self.expanded_utc_skip_reason='clock_conflict';return jst,utc,True,False
+            value=b.seconds(0)
+            if value is not None:
+                if (anchor-value)%86400!=9*3600 or expected_utc is not None and b.text!=expected_utc:
+                    self.expanded_utc_skip_reason='clock_conflict';return jst,utc,True,False
+                expected_utc=b.text
+        try:expanded_image=expanded_second()
+        except (ValueError,TypeError):
+            self.expanded_utc_skip_reason='roi_unavailable';return jst,utc,True,False
+        self.expanded_utc_attempted=True;self.expanded_utc_skip_reason='none'
+        # A successful current ROI has already returned. Reuse its confident
+        # JST anchor and read only the wider UTC image, once, within the caller's
+        # existing deadline. Parseable readings may never change.
+        alternative=read(expanded_image)
+        unchanged=expected_utc is None or alternative.text==expected_utc
+        consistent=not alternative.error and unchanged and valid(jst,alternative)
+        record('expanded_utc',jst,alternative,accepted=consistent)
+        if consistent:
+            self.selected_roi_method='expanded_utc';return jst,alternative,True,True
         return jst,utc,True,False
 
-    def analyze(self,capture,ocr,*,now,timing_valid=True):
+    def analyze(self,capture,ocr,*,now,timing_valid=True,retain_evidence=False,utc_retry_left_pixels=0):
+        self.evidence_images={};self.ocr_pair_stages={}
         cfg=self.config
         if capture.identity!=self.identity:
             self.previous=None;self.first_value_at=None;self.stalls=0
@@ -77,16 +121,46 @@ class VerifiedClockAnalyzer:
              'capture_duration_seconds':round(capture.duration_seconds,3),'source_width':capture.source_width,'source_height':capture.source_height,
              'sample_age_seconds':max(0.,now-capture.captured_epoch),'consecutive_failures':0,'consecutive_stalls':self.stalls,
              'frame_state':'WARMUP','clock_anomaly':None,'delay_valid':False,'ocr_trigger':'every_sample'}
+        row['clock_rois']={'jst':list(cfg.jst_roi),'utc':list(cfg.utc_roi)}
+        def retain_clock_images():
+            # Keep the native UTC pixels around the current ROI as well, so a
+            # wider crop can be compared without reconstructing a resized JPEG.
+            width,height=capture.frame.width,capture.frame.height
+            def bounds(roi):
+                x,y,w,h=roi
+                return [round(x*width),round(y*height),min(width,round((x+w)*width)),min(height,round((y+h)*height))]
+            jst_bounds,utc_bounds=bounds(cfg.jst_roi),bounds(cfg.utc_roi)
+            left,top,right,bottom=utc_bounds
+            context=[max(0,left-8),max(0,top-4),min(width,right+8),min(height,bottom+4)]
+            x,y,r,b=context
+            self.evidence_images={'jst':jst_image,'utc':utc_image,
+                                  'utc_context':capture.frame.crop((x/width,y/height,(r-x)/width,(b-y)/height))}
+            row['clock_evidence_bounds']={'jst':jst_bounds,'utc':utc_bounds,'utc_context':context}
         if sum(x<=12 for x in capture.frame.pixels)/len(capture.frame.pixels)>=.995:
             self.gap_since_valid=True;row.update(clock_state='BLACK_FRAME',frame_state='BLACK_FRAME',reason='black_frame')
+            retain_clock_images()
             return self._metadata(row,now),(jst_image,jst_image)
-        jst,utc,retried,consistent=self._read_pair(jst_image,utc_image,ocr)
+        expanded_bounds=None
+        def expanded_utc():
+            nonlocal expanded_bounds
+            width,height=capture.frame.width,capture.frame.height;x,y,w,h=cfg.utc_roi
+            left,top=round(x*width),round(y*height);right,bottom=min(width,round((x+w)*width)),min(height,round((y+h)*height))
+            expanded_bounds=[max(0,left-utc_retry_left_pixels),top,right,bottom]
+            l,t,r,b=expanded_bounds
+            return capture.frame.crop((l/width,t/height,(r-l)/width,(b-t)/height))
+        retry_image=expanded_utc if type(utc_retry_left_pixels) is int and 0<utc_retry_left_pixels<=8 else None
+        jst,utc,retried,consistent=self._read_pair(jst_image,utc_image,ocr,expanded_second=retry_image)
         row.update(ocr_current=jst.text,ocr_utc_current=utc.text,ocr_confidence_current=jst.confidence,
-                   ocr_utc_confidence_current=utc.confidence,clock_pair_consistent=consistent,ocr_retried=retried)
+                   ocr_utc_confidence_current=utc.confidence,clock_pair_consistent=consistent,ocr_retried=retried,
+                   ocr_pair_stages=dict(self.ocr_pair_stages),ocr_roi_method=self.selected_roi_method,
+                   ocr_expanded_utc_attempted=self.expanded_utc_attempted,
+                   ocr_expanded_utc_skip_reason=self.expanded_utc_skip_reason)
+        if expanded_bounds is not None:row['expanded_utc_bounds']=expanded_bounds
         previous=self.previous
         if not consistent:
             self.stats['ocr_uncertain']+=1;self.gap_since_valid=True
             row.update(clock_state='OCR_UNCERTAIN',reason='clock_pair_unreliable',ocr_error=jst.error or utc.error or 'low_confidence_or_pair_mismatch')
+            retain_clock_images()
             return self._metadata(row,now),(previous['roi'] if previous else jst_image,jst_image)
         value=utc.seconds(cfg.minimum_confidence)
         assert value is not None
@@ -133,5 +207,10 @@ class VerifiedClockAnalyzer:
             for i,bound in enumerate(BUCKETS):
                 if display_age<=bound:self.histogram['buckets'][i]+=1
         abnormal=row['clock_state'] in ('STALLED_SUSPECT','STALLED_CONFIRMED','OCR_UNCERTAIN')
+        if abnormal:retain_clock_images()
+        elif self.selected_roi_method=='expanded_utc':
+            retain_clock_images();row['clock_evidence_kind']='roi_retry'
+        elif retain_evidence and row['clock_state']=='ADVANCING_CONFIRMED':
+            retain_clock_images();row['clock_evidence_kind']='periodic_roi'
         evidence=(previous['roi'] if previous else jst_image,jst_image) if abnormal else None
         return self._metadata(row,now),evidence

@@ -42,11 +42,11 @@
     },
     {
       "path": "docs/00_INDEX.md",
-      "source_role": "public-documentation-or-configuration",
-      "decision": "Additional conservative OCR, bounded ROI evidence and diagnostics; existing public bindings; source port only; restructured for readability without changing facts",
+      "source_role": "public-compatible-documentation",
+      "decision": "Index the relay clock evidence and conditional UTC retry source port.",
       "before_sha256": "46652547b62aca56b33dcf06c4d20b1f48684dac76fd952896b58cbf80f30bca",
       "source_sha256": null,
-      "public_sha256": "c76057e6062145ec1ed61c66f8cff372d0af7c5b68820f386eaa17f185887d88",
+      "public_sha256": "a4d8543c20ed50d20dcf141a2499bb31246650f5cf6cdfc1465ee5e73ece3fe3",
       "prior_public_sha256": "e32ab253e63bfe09d4ec42a5fc1594a2025b8bd859cab754ee1558798c0391dc",
       "localization": "English prose; control structures and machine identifiers preserved.",
       "pre_graph_display_sha256": "6a87a495eb3698b1a49e053ffcc109b28d94a59e9dd29cb3399a62279e196d3d",
@@ -59,7 +59,7 @@
       "twitch_sli_resilience": "Locally checked candidate only; production application held for fresh task.",
       "pre_pi_publisher_source_port_sha256": "1a57bd86d9466793daecec2756b29cd2ca24cad934a2dfd795a231e098a230e8",
       "pi_publisher_source_port": "2026-10-14 source reconciliation; portable English code and retained public protections; no live changes.",
-      "port_date_jst": "2026-10-22",
+      "port_date_jst": "2026-10-23",
       "pre_documentation_restructure_sha256": "3d45a66068211ff9944ba891a0017e9189c71daa1b0b4945ae1970f8c2b5c045",
       "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json.",
       "pre_twitch_observation_public_sha256": "c4d59eabef48c302df0d72b7ae0d6a6216f99e199f98e4c9c0a0b92631516c13",
@@ -73,7 +73,9 @@
       "thumbnail_ocr_rollout": "2026-10-22 operated verification; source semantics unchanged.",
       "pre_clock_documentation_review_public_sha256": "5d7806ac40bb83b671252d6fa94a0d9ceab93365d6299e151ebdc2909ac15437",
       "clock_documentation_review": "2026-10-22 observation-layer table, clock case study and current-status consolidation; no code or runtime change.",
-      "thumbnail_evidence_port": "2026-10-22 conservative OCR, bounded evidence, ROI comparison and diagnostics."
+      "thumbnail_evidence_port": "2026-10-22 conservative OCR, bounded evidence, ROI comparison and diagnostics.",
+      "pre_relay_clock_native_fallback_sha256": "c76057e6062145ec1ed61c66f8cff372d0af7c5b68820f386eaa17f185887d88",
+      "relay_clock_native_fallback_port": "2026-10-23 relay OCR source and documentation; ADS-B changes excluded."
     },
     {
       "path": "docs/same-url-continuity-evidence.md",
@@ -2940,11 +2942,11 @@
     },
     {
       "path": "docs/current-status.md",
-      "source_role": "public-documentation",
-      "decision": "document the engine grace window and the relay output interruption record",
+      "source_role": "public-compatible-documentation",
+      "decision": "Native clock evidence and current-ROI-first UTC retry; preserve generic public host bindings, English prose, existing thresholds and unrelated edits.",
       "before_sha256": "b3ef7422407e0ff110cbbe8d80a67945e466f14fb43bbf472c93ca8b8103233d",
       "source_sha256": null,
-      "public_sha256": "89fbe909237d7c3aa6478cb8db165f563f6c95e8b88daaeac024756f0b8def53",
+      "public_sha256": "1fe4a4d8b103ec10fe05e9024447f8af5ac21fbbaf92d25eb9c8a8dade07c871",
       "port_date_jst": "2026-10-23",
       "documentation_restructure": "New single page for volatile state.",
       "pre_twitch_observation_public_sha256": "040eac29174151f51e473f7f85e4aa23ff994be0079b3d4c011623b6ec7864ca",
@@ -2958,7 +2960,9 @@
       "thumbnail_ocr_rollout": "2026-10-22 operated verification; source semantics unchanged.",
       "pre_clock_documentation_review_public_sha256": "b3c0ed5d6201450618476a5c90a0c5c40ff7a041587a6be590871077742d1b35",
       "clock_documentation_review": "2026-10-22 observation-layer table, clock case study and current-status consolidation; no code or runtime change.",
-      "thumbnail_evidence_port": "2026-10-22 conservative OCR, bounded evidence, ROI comparison and diagnostics."
+      "thumbnail_evidence_port": "2026-10-22 conservative OCR, bounded evidence, ROI comparison and diagnostics.",
+      "pre_relay_clock_native_fallback_sha256": "89fbe909237d7c3aa6478cb8db165f563f6c95e8b88daaeac024756f0b8def53",
+      "relay_clock_native_fallback_port": "2026-10-23 selected source and public-safe documentation; no deployment, commit or push."
     },
     {
       "path": "monitoring-v4/ops/release/model.py",
@@ -3127,14 +3131,16 @@
       "path": "docs/v3/relay-clock-monitor.md",
       "before_sha256": "3adb3b9405fb0a8f9c6a3dfe1177b67b56a4dad6f64c1da243a925cbbe1b418c",
       "source_sha256": null,
-      "public_sha256": "49f0355b92173aea393199588e4c9bff592bfd97c1a40fc8d2680710a9648631",
-      "source_role": "public-documentation",
-      "decision": "document the engine grace window and the relay output interruption record",
+      "public_sha256": "dd98509474af36c116d93446f47f775d00971e390bdd2d23ed9e73aced4b9b8c",
+      "source_role": "public-compatible-documentation",
+      "decision": "Native clock evidence and current-ROI-first UTC retry; preserve generic public host bindings, English prose, existing thresholds and unrelated edits.",
       "port_date_jst": "2026-10-23",
       "pre_thumbnail_clock_public_sha256": "9f8bf66dc1d3dbae5d9c69a2bac56d197535169aef465d2f21e0fc41001753be",
       "thumbnail_clock_port": "2026-10-22 committed source through 740bcc00; concurrent review excluded.",
       "pre_clock_documentation_review_public_sha256": "bb5176c5c013212db5cfe787346c245c8f7670484292cbebdea0641bb7d8c9f2",
-      "clock_documentation_review": "2026-10-22 observation-layer table, clock case study and current-status consolidation; no code or runtime change."
+      "clock_documentation_review": "2026-10-22 observation-layer table, clock case study and current-status consolidation; no code or runtime change.",
+      "pre_relay_clock_native_fallback_sha256": "49f0355b92173aea393199588e4c9bff592bfd97c1a40fc8d2680710a9648631",
+      "relay_clock_native_fallback_port": "2026-10-23 selected source and public-safe documentation; no deployment, commit or push."
     },
     {
       "path": "ops/config/oci_backup_source.example.json",
@@ -3226,13 +3232,15 @@
     {
       "path": "ops/scripts/stream_v3_oci_monitor_pull.py",
       "before_sha256": "746aa3000635b78934246efc29ca24580d0e0278e6e2619b87b31161d9625a27",
-      "source_sha256": "c4c21dca017ed5ae4920a7fa4228e3c662ef2b41cb9094f6a7e281e4e71f991c",
-      "public_sha256": "91f0d2220d963a878797a4fe69507de00e70996fc7484752bcaa6f6d33121245",
-      "source_role": "public-source-adaptation",
-      "decision": "English prose and reviewed public bindings; no live deployment, publisher/UI changes or concurrent review patch.",
-      "port_date_jst": "2026-10-22",
+      "source_sha256": "507641d48fc02e9c4921cf1c373f4022e64ee00401ea6b70d591880b3e6ca310",
+      "public_sha256": "89a9218075cffaa7242a9d667a2e3553d467d2d7499697d0b4348d3679639f0c",
+      "source_role": "selected-development-source",
+      "decision": "Native clock evidence and current-ROI-first UTC retry; preserve generic public host bindings, English prose, existing thresholds and unrelated edits.",
+      "port_date_jst": "2026-10-23",
       "pre_thumbnail_clock_public_sha256": "746aa3000635b78934246efc29ca24580d0e0278e6e2619b87b31161d9625a27",
-      "thumbnail_clock_port": "2026-10-22 committed source through 740bcc00; concurrent review excluded."
+      "thumbnail_clock_port": "2026-10-22 committed source through 740bcc00; concurrent review excluded.",
+      "pre_relay_clock_native_fallback_sha256": "91f0d2220d963a878797a4fe69507de00e70996fc7484752bcaa6f6d33121245",
+      "relay_clock_native_fallback_port": "2026-10-23 selected source and public-safe documentation; no deployment, commit or push."
     },
     {
       "path": "ops/scripts/stream_v3_prometheus_exporter.py",
@@ -3306,22 +3314,26 @@
     {
       "path": "src/stream_v3/oci_monitor_probe.py",
       "before_sha256": "02d6bd3cc27bb109ede9048588409004bbbbd4d70467b15b5b3801c5cf2005bd",
-      "source_sha256": "ad23228f69c929b95c5ee8406da36af7b8508dd540905e157539043c30398f8c",
-      "public_sha256": "6a5f76a1558f116d63589be0553c0aa89c625436755a5fe4c9ac4204e553ed57",
-      "source_role": "public-source-adaptation",
-      "decision": "English prose and reviewed public bindings; no live deployment, publisher/UI changes or concurrent review patch.",
-      "port_date_jst": "2026-10-22",
+      "source_sha256": "86824bb9e12d169d3ae54ec1765d7baf62cf85324561c9f3abb966a0afb4ed84",
+      "public_sha256": "6a5585749078c7d7ef04e52148b1015dea9ea05ee7518aa146f75de4441ded1e",
+      "source_role": "selected-development-source",
+      "decision": "Native clock evidence and current-ROI-first UTC retry; preserve generic public host bindings, English prose, existing thresholds and unrelated edits.",
+      "port_date_jst": "2026-10-23",
       "pre_thumbnail_clock_public_sha256": "02d6bd3cc27bb109ede9048588409004bbbbd4d70467b15b5b3801c5cf2005bd",
-      "thumbnail_clock_port": "2026-10-22 committed source through 740bcc00; concurrent review excluded."
+      "thumbnail_clock_port": "2026-10-22 committed source through 740bcc00; concurrent review excluded.",
+      "pre_relay_clock_native_fallback_sha256": "6a5f76a1558f116d63589be0553c0aa89c625436755a5fe4c9ac4204e553ed57",
+      "relay_clock_native_fallback_port": "2026-10-23 selected source and public-safe documentation; no deployment, commit or push."
     },
     {
       "path": "src/stream_v3/verified_clock.py",
       "before_sha256": null,
-      "source_sha256": "d971f474539e462a9238645f5e882cbc02010953ba2ee83488a586f09b825bbf",
-      "public_sha256": "ca3e0939004f54c8e96100dd6018ad91e083d0bb7504b694c03588cdbd40b19f",
-      "source_role": "public-adapted-code",
-      "decision": "English prose; generic relay identity and operator configuration; algorithm and safety limits retained.",
-      "port_date_jst": "2026-10-22"
+      "source_sha256": "867f0265d955d7fb50b341d23e5d8a8f142316c19eb14eda178620d81f71808c",
+      "public_sha256": "0b27ad99f9d2e94c238d1218d714482c000710ea12c85aeda9938a73228129b7",
+      "source_role": "selected-development-source",
+      "decision": "Native clock evidence and current-ROI-first UTC retry; preserve generic public host bindings, English prose, existing thresholds and unrelated edits.",
+      "port_date_jst": "2026-10-23",
+      "pre_relay_clock_native_fallback_sha256": "ca3e0939004f54c8e96100dd6018ad91e083d0bb7504b694c03588cdbd40b19f",
+      "relay_clock_native_fallback_port": "2026-10-23 selected source and public-safe documentation; no deployment, commit or push."
     },
     {
       "path": "src/stream_v3/viewer_clock.py",
@@ -3402,20 +3414,24 @@
     {
       "path": "tests/test_oci_monitor_probe.py",
       "before_sha256": null,
-      "source_sha256": "f56d56e38a1140d1916d3b82bbb8b6cdfb2ed668ac5ca1375d105e3cb3a72139",
-      "public_sha256": "f56d56e38a1140d1916d3b82bbb8b6cdfb2ed668ac5ca1375d105e3cb3a72139",
-      "source_role": "public-adapted-code",
-      "decision": "English prose; generic relay identity and operator configuration; algorithm and safety limits retained.",
-      "port_date_jst": "2026-10-22"
+      "source_sha256": "008cb9e39fae6587a863b7544647da08dcf6010d722b4ac30d5c2e6368696ae4",
+      "public_sha256": "008cb9e39fae6587a863b7544647da08dcf6010d722b4ac30d5c2e6368696ae4",
+      "source_role": "selected-development-source",
+      "decision": "Native clock evidence and current-ROI-first UTC retry; preserve generic public host bindings, English prose, existing thresholds and unrelated edits.",
+      "port_date_jst": "2026-10-23",
+      "pre_relay_clock_native_fallback_sha256": "f56d56e38a1140d1916d3b82bbb8b6cdfb2ed668ac5ca1375d105e3cb3a72139",
+      "relay_clock_native_fallback_port": "2026-10-23 selected source and public-safe documentation; no deployment, commit or push."
     },
     {
       "path": "tests/test_verified_clock.py",
       "before_sha256": null,
-      "source_sha256": "5ebbc56ecd98ba62900202cc71b549ea08e87cc9aa2ef69a7427c1d745309c8e",
-      "public_sha256": "5ebbc56ecd98ba62900202cc71b549ea08e87cc9aa2ef69a7427c1d745309c8e",
-      "source_role": "public-adapted-code",
-      "decision": "English prose; generic relay identity and operator configuration; algorithm and safety limits retained.",
-      "port_date_jst": "2026-10-22"
+      "source_sha256": "a0c19abacf78ca9c0a61ee50d9dacc6fab986be5f7fdeaccf126fd51f08dfda0",
+      "public_sha256": "a0c19abacf78ca9c0a61ee50d9dacc6fab986be5f7fdeaccf126fd51f08dfda0",
+      "source_role": "selected-development-source",
+      "decision": "Native clock evidence and current-ROI-first UTC retry; preserve generic public host bindings, English prose, existing thresholds and unrelated edits.",
+      "port_date_jst": "2026-10-23",
+      "pre_relay_clock_native_fallback_sha256": "5ebbc56ecd98ba62900202cc71b549ea08e87cc9aa2ef69a7427c1d745309c8e",
+      "relay_clock_native_fallback_port": "2026-10-23 selected source and public-safe documentation; no deployment, commit or push."
     },
     {
       "path": "ops/public-publisher/site/tests/twitch-history-20261022.html",
@@ -3665,10 +3681,12 @@
       "decision": "curated-current-contract-and-dated-evidence",
       "before_sha256": null,
       "source_sha256": null,
-      "public_sha256": "063d3f18723b18ca0bbd09c0a2aa813384e3048c7dafc1c9e0094e1ab23826bf",
-      "port_date_jst": "2026-10-22",
+      "public_sha256": "ce90442cf087b81e427860a4510c07cf98199e29fc2e7201d19eba8fefa47fd5",
+      "port_date_jst": "2026-10-23",
       "pre_clock_documentation_review_public_sha256": null,
-      "clock_documentation_review": "2026-10-22 observation-layer table, clock case study and current-status consolidation; no code or runtime change."
+      "clock_documentation_review": "2026-10-22 observation-layer table, clock case study and current-status consolidation; no code or runtime change.",
+      "pre_relay_clock_native_fallback_sha256": "063d3f18723b18ca0bbd09c0a2aa813384e3048c7dafc1c9e0094e1ab23826bf",
+      "relay_clock_native_fallback_port": "2026-10-23 public-safe OCR investigation follow-up; existing text retained."
     },
     {
       "path": "monitoring-v4/config/monitoring_v4_legacy_surface_contract.json",
@@ -4454,6 +4472,33 @@
       "source_sha256": "3bc4ceea1e1d663bddd80daa60d891789258d07dce5dd75343eeae435fa81ff9",
       "public_sha256": "3bc4ceea1e1d663bddd80daa60d891789258d07dce5dd75343eeae435fa81ff9",
       "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "src/stream_v3/verified_clock_evidence.py",
+      "source_role": "selected-development-source",
+      "decision": "Native clock evidence and current-ROI-first UTC retry; preserve generic public host bindings, English prose, existing thresholds and unrelated edits.",
+      "before_sha256": null,
+      "source_sha256": "3a7cb9383ce63a5c37f2044b252f86eabbd73945a71c0ed62345ce13012488a8",
+      "public_sha256": "3a7cb9383ce63a5c37f2044b252f86eabbd73945a71c0ed62345ce13012488a8",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "tests/test_verified_clock_evidence.py",
+      "source_role": "selected-development-source",
+      "decision": "Native clock evidence and current-ROI-first UTC retry; preserve generic public host bindings, English prose, existing thresholds and unrelated edits.",
+      "before_sha256": null,
+      "source_sha256": "2741175e4a391e84f2dac4eced5f7613e14359093fd220d207a64ccb74634dd8",
+      "public_sha256": "2741175e4a391e84f2dac4eced5f7613e14359093fd220d207a64ccb74634dd8",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "docs/v3/public-source-port-2026-10-23-relay-clock.md",
+      "source_role": "public-compatible-documentation",
+      "decision": "Native clock evidence and current-ROI-first UTC retry; preserve generic public host bindings, English prose, existing thresholds and unrelated edits.",
+      "before_sha256": "d68b0a6b2512f6bf6d64607c5ccbe6120f52e640aa50f5f530bc00f47ce350c4",
+      "source_sha256": null,
+      "public_sha256": "5a09c61c3f0df18403fe2b2fb841b609e7dafdad198cd7931e90edceb8afaa5d",
+      "port_date_jst": "2026-10-23"
     }
   ],
   "omissions": [
@@ -4515,7 +4560,8 @@
     "publication/thumbnail-evidence-port-20261022.json",
     "publication/private-path-allowlist.json",
     "publication/cra-reflex-update-20261022.json",
-    "publication/cra-engine-grace-20261023.json"
+    "publication/cra-engine-grace-20261023.json",
+    "publication/relay-clock-port-20261023.json"
   ],
   "evidence_checkpoint_cutoff_jst": "2026-10-14T00:04:57+09:00",
   "documentation_audience": "hiring and technical reviewers",
@@ -4697,5 +4743,11 @@
     "record": "publication/cra-engine-grace-20261023.json",
     "deployment_performed": false,
     "push_performed": false
+  },
+  "relay_clock_native_fallback": {
+    "record": "publication/relay-clock-port-20261023.json",
+    "scope": "public-checkout-only",
+    "original_source_cutoff_unchanged": true,
+    "deployment_performed_by_port": false
   }
 }

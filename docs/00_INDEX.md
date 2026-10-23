@@ -95,6 +95,7 @@ start.
 
 ## Publication Records
 
+- `v3/public-source-port-2026-10-23-relay-clock.md`: [return-feed native clock evidence, non-monotonic ROI widening and a current-ROI-first UTC read](v3/public-source-port-2026-10-23-relay-clock.md).
 - `v3/thumbnail-ocr-rollout-2026-10-22.md`: [operated counter activation, live OCR evidence and preserved concurrent work](v3/thumbnail-ocr-rollout-2026-10-22.md).
 - `v3/public-source-port-2026-10-22-thumbnail.md`: [thumbnail monitoring and return-reader quality corrections](v3/public-source-port-2026-10-22-thumbnail.md).
 - `v3/public-source-port-2026-10-22-thumbnail-review.md`: [stream rollover, missing metrics, OCR retry and source-only validation](v3/public-source-port-2026-10-22-thumbnail-review.md).

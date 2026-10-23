@@ -1,5 +1,6 @@
 import base64
 import hashlib
+import hmac
 import importlib.util
 import json
 from pathlib import Path
@@ -57,6 +58,29 @@ def test_only_ram_accepts_normal_snapshots():
     with pytest.raises(ValueError,match='require_tmpfs'):assert_tmpfs(Path('/'))
 
 
+def test_periodic_native_clock_evidence_is_rate_limited_without_extra_ocr(monkeypatch):
+    from datetime import datetime,timezone
+    from stream_v3 import oci_monitor_probe as module
+    from stream_v3.viewer_clock import ClockReading
+    clock=[1000.];reads=[]
+    monkeypatch.setattr(module.time,'monotonic',lambda:clock[0])
+    config={'source_identity':'fixture','roi':[0,0,.5,1],'utc_roi':[.5,0,.5,1]}
+    def capture(self,deadline):
+        return Capture(GrayImage(40,20,b'\x80'*800),'fixture',86400+clock[0]-1000,clock[0],'h264'),b'jpeg',{}
+    monkeypatch.setattr(MonitorWorker,'capture_relay',capture)
+    def read(*args,**kwargs):
+        second=int(clock[0]-1000)+(32400 if len(reads)%2==0 else 0)
+        reads.append(second)
+        return ClockReading(datetime.fromtimestamp(second,timezone.utc).strftime('%H:%M:%S'),97)
+    monkeypatch.setattr(module.TesseractOCR,'read',read)
+    with tempfile.TemporaryDirectory(dir='/dev/shm') as directory:
+        worker=MonitorWorker(config,Path(directory))
+        for stamp,expected in ((1000,0),(1010,1),(1020,1),(1070,2)):
+            clock[0]=stamp;worker.run_cycle()
+            assert len(list((Path(directory)/'evidence').glob('*.zip')))==expected
+        assert len(reads)==8 and worker.current['targets']['oci_relay']['clock_state']=='ADVANCING_CONFIRMED'
+
+
 def test_anomaly_evidence_keeps_only_bounded_jpegs(tmp_path):
     import zipfile
     store=EvidenceStore(tmp_path/'evidence',max_bytes=16384,platforms=('oci_relay',))
@@ -74,7 +98,7 @@ def test_ram_snapshot_heartbeat_signed_pull_and_failure(monkeypatch,tmp_path):
     key=tmp_path/'observation.key';key.write_bytes(b'k'*32)
     config={'dell_boot_id':'fixture-boot','key_file':str(key),'source_identity':'fixture-source','roi':[0,0,.5,1],'utc_roi':[.5,0,.5,1]}
     def capture(self,deadline):
-        return Capture(GrayImage(200,100,bytes([128])*20000),'fixture-source',time.time(),time.monotonic(),'h264'),b'jpeg',{}
+        return Capture(GrayImage(200,80,bytes([128])*16000),'fixture-source',time.time(),time.monotonic(),'h264'),b'jpeg',{}
     monkeypatch.setattr(MonitorWorker,'capture_relay',capture)
     from stream_v3.viewer_clock import ClockReading
     monkeypatch.setattr(module.TesseractOCR,'read',lambda *_a,**_k:ClockReading('09:00:00',99))
@@ -84,25 +108,44 @@ def test_ram_snapshot_heartbeat_signed_pull_and_failure(monkeypatch,tmp_path):
         server=worker.serve('127.0.0.1',0)
         try:
             pull=load_pull()
+            corrupt_native=[]
             def transport(*_args,**_kwargs):
                 with urlopen(f'http://127.0.0.1:{server.server_port}/bundle.json') as response:
-                    envelope={'signature':response.headers['X-Stream-Observation-Signature'],'payload':base64.b64encode(response.read()).decode(),'ssh_boot_id':Path('/proc/sys/kernel/random/boot_id').read_text().strip(),'observer_runtime':{'available':True,'deployment_uid':'observer','pods':[{'uid':'local'}]}}
+                    content=response.read();signature=response.headers['X-Stream-Observation-Signature']
+                    if corrupt_native:
+                        value=json.loads(content);value['clock_evidence']['oci_relay']=base64.b64encode(b'bad zip').decode()
+                        content=json.dumps(value).encode();signature=hmac.new(key.read_bytes(),b'oci-monitor-observation-v1\0'+content,hashlib.sha256).hexdigest()
+                    envelope={'signature':signature,'payload':base64.b64encode(content).decode(),'ssh_boot_id':Path('/proc/sys/kernel/random/boot_id').read_text().strip(),'observer_runtime':{'available':True,'deployment_uid':'observer','pods':[{'uid':'local'}]}}
                 return CommandResult(0,json.dumps(envelope).encode(),b'')
             monkeypatch.setattr(pull.ProcessRunner,'run',transport)
             cfg={**config,'ssh_host':'fixture','worker_revision':WORKER_REVISION,'observer_deployment_uid':'observer'}
             state=tmp_path/'oci_monitor_observation.json'
             assert pull.collect(cfg,Path(consumer),state)
             assert json.loads(state.read_text())['state']['targets']['oci_relay']['capture_ok']
+            import zipfile
+            native=next((state.parent/'native_clock_evidence').glob('*.zip'))
+            with zipfile.ZipFile(native) as archive:
+                assert 'utc.pgm' in archive.namelist() and 'utc_context.pgm' in archive.namelist()
+                metadata=json.loads(archive.read('observation.json'))
+                assert set(metadata['ocr_pair_stages'])=={'original','contrast'}
+                assert metadata['sample_id']==worker.current['targets']['oci_relay']['sample_id']
             history=state.parent/'viewer_clock_history.jsonl'
             first_history=history.read_bytes()
+            assert 'clock_evidence' not in json.loads(state.read_text())
             assert pull.collect(cfg,Path(consumer),state)
             assert history.read_bytes()==first_history
             assert json.loads(state.read_text())['collector']['duplicates_total']==1
+            assert len(list((state.parent/'native_clock_evidence').glob('*.zip')))==1
             cfg['observer_image']='different-baseline-image'
             assert pull.collect(cfg,Path(consumer),state)
             contract=json.loads(state.read_text())['observer_contract']
             assert contract['configuration_changed'] and contract['runtime_attested'] and contract['compatible']
             cfg.pop('observer_image')
+            corrupt_native.append(True);worker.run_cycle()
+            assert pull.collect(cfg,Path(consumer),state)
+            observed=json.loads(state.read_text())['state']['targets']['oci_relay']
+            assert observed['capture_ok'] and observed['native_evidence_status']=='storage_or_evidence_error'
+            corrupt_native.clear()
             for _ in range(4):
                 worker.run_cycle();assert pull.collect(cfg,Path(consumer),state)
             assert len([p for p in Path(producer).glob('capture/oci_monitor/*.jpg') if not p.is_symlink()])==2

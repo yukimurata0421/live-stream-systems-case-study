@@ -12,7 +12,8 @@ defines how far each observation layer reaches, and the
 paths. [Current status](../current-status.md) owns recent changes and unobserved
 behavior. The [clock observation case study](clock-observation-case-study.md)
 explains why the design changed; dated measurements are in the
-[source-port record](public-source-port-2026-10-22.md).
+[source-port record](public-source-port-2026-10-22.md) and the
+[evidence and UTC fallback record](public-source-port-2026-10-23-relay-clock.md).
 
 ## Scope Labels
 
@@ -64,6 +65,17 @@ UTC on every sample. Each reading must pass the confidence threshold and both
 must agree modulo the nine-hour offset. A failed pair gets one alternate
 contrast pass; repeated image transforms are not independent votes. The previous
 accepted reading is cached rather than OCRed again.
+
+For the relay target only, a pair rejected by both passes gets one more UTC
+read from a region three pixels wider on the left. It runs only when the
+original JST reading is confident, fixes that JST, and requires the new UTC to
+pass the same confidence and nine-hour rules without changing any UTC value that
+was already parseable. Time conflicts, an unreliable JST, process failures and
+timeouts skip it with a fixed reason. A reading accepted on the current region is
+never re-read, so the wider region cannot replace a working one. A relay sample
+makes at most five OCR calls; a fallback sample retains at most four. Both
+targets share the unchanged eight-second cycle deadline, with at most one
+second per OCR call. `ocr_roi_method` records which region was used.
 
 | Result | Meaning |
 | --- | --- |
@@ -151,11 +163,41 @@ interruption the live clock simply shows the current time, and a single OCR
 misread leaves the same spacing. The span estimates unseen relay output, not
 viewer playback; the reader shares the delivery host's WAN.
 
-This analyzer has no binary-threshold retry. Low UTC confidence on returned
-frames can raise the observation warning while frames and forward bytes continue;
-[current status](../current-status.md) tracks that open item. The
+Low UTC confidence on returned frames was the main source of unknown
+picture-freshness minutes while frames and forward bytes continued. The
+fallback read above addresses it without a binary-threshold retry;
+[current status](../current-status.md) tracks whether it has rescued a
+production sample yet. The
 [Twitch thumbnail contract](twitch-thumbnail-monitor.md) adds a slower
 provider-image layer with separate age and refresh semantics.
+
+## Clock Evidence
+
+Each sample records `ocr_pair_stages`: the strings, confidences, bounded error
+codes and pair acceptance of the `original`, `contrast` and, when attempted,
+`expanded_utc` reads. A rejected or retried read can therefore be explained
+without guessing which stage failed.
+
+[ClockEvidenceStore](../../src/stream_v3/verified_clock_evidence.py) keeps small
+native-resolution archives (`stream_v3.clock_pair_evidence.v1`):
+
+| Kind | When | Regions |
+| --- | --- | --- |
+| Abnormal | Uncertain, stalled or black samples | Previous and current JST, plus `jst.pgm`, `utc.pgm` and `utc_context.pgm` |
+| `roi_retry` | A sample accepted only by the wider UTC read | `jst.pgm`, `utc.pgm` (current-region pixels) and `utc_context.pgm`; `expanded_utc_bounds` gives the region read |
+| `periodic_roi` | An advancing relay sample, at most once every 60 seconds | The same three regions, as normal controls |
+
+`utc_context.pgm` extends the UTC region by eight pixels left and right and four
+above and below, so wider crops can be replayed from native pixels rather than a
+resized JPEG. Metadata binds the sample, capture time, display-JPEG hash, source
+resolution, ROI settings and pixel bounds. Regions are at most 320x96 pixels.
+
+Archives travel in the signed bundle. The importer checks sample binding,
+member names and count, PGM format, and 256 KiB per archive. Each host keeps at
+most 8 MiB of allocated space for 24 hours and skips new evidence when full;
+storage failures are recorded and never fail the observation. The periodic
+cadence is not an SLI denominator, and ordinary full frames are still kept only
+in memory.
 
 ## Configuration And Local Checks
 
@@ -182,8 +224,9 @@ Credential-free tests use temporary state, mocked transport and a finite local
 FFmpeg child if available:
 
 ```bash
-python3 -m pytest -q tests/test_verified_clock.py tests/test_frame_receiver.py \
-  tests/test_monitor_facts.py tests/test_oci_monitor_probe.py tests/test_clock_exporter_cache.py
+python3 -m pytest -q tests/test_verified_clock.py tests/test_verified_clock_evidence.py \
+  tests/test_frame_receiver.py tests/test_monitor_facts.py tests/test_oci_monitor_probe.py \
+  tests/test_clock_exporter_cache.py
 ```
 
 The separate isolation fixture expects a test-owned MediaMTX binary, the backup

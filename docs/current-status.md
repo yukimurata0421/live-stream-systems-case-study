@@ -1,6 +1,6 @@
 # Current Status
 
-Last updated: 2026-10-22 JST.
+Last updated: 2026-10-23 JST.
 
 This is the only page that records state expected to change soon: what was
 changed recently, what has not been observed yet, and what is deliberately
@@ -25,7 +25,7 @@ defines the components and thresholds.
 | 11:56-12:21 | Main sender switched to RTMPS on the relay; readiness and TCP-sampling port lists updated. | Upload samples of 3.57 and 3.63 Mbps returned. |
 | 14:16 | The YouTube watchdog counts an established fallback-Pod connection as local delivery while the main Pod is not sending. | After restart, `local_ok=true` and no incident with the fallback at zero replicas. Not yet observed during a real fallback. The code change is not part of this public snapshot. |
 
-## Video Observation (2026-10-22 JST)
+## Video Observation (2026-10-22 to 2026-10-23 JST)
 
 The operated system now runs two clock layers beside the native forward counters
 and provider APIs. [Observability](observability.md#video-observation-layers)
@@ -35,7 +35,7 @@ they were reached.
 
 | Layer | Operated state | Last checked | Open item |
 | --- | --- | --- | --- |
-| Return-feed clock | Continuous reader, paired JST/UTC OCR every 10 s, probe fixed after a multi-hour blind period. | 09:44-09:47: 18/18 cycles confirmed after binding. | Low UTC confidence raised the quality warning around noon; this analyzer has no binary retry. |
+| Return-feed clock | Continuous reader, paired JST/UTC OCR every 10 s. Since 2026-10-23 18:27 JST, stage records, bounded native clock evidence, and one wider UTC read only after both current-region passes fail. | 18:27-18:59 on 2026-10-23: 194 of 195 cycles accepted on the current region, one startup wait; no wider read attempted. | No production rescue yet, so the fallback's coverage gain is unmeasured; rolling 24-hour picture-freshness coverage was 92.64-93.26%. |
 | Fallback-sender clock | Deployed; idle because the fallback was not running. | Standby only. | Not observed during a real fallback. |
 | Observation warnings | Gap and observer-unavailable warnings on the existing notification loop; no Critical or recovery threshold. | Rule tests and offline replay of the blind period. | Delivery to the notification channel not yet observed. |
 | Twitch thumbnail clock | Conservative interpolation, compared UTC ROI, bounded distinct-image evidence and method/rejection diagnostics. | 17:12-17:13: a new image confirmed by the original read, then cached without recounting; earlier deployment at 17:09:42 JST. | Twenty-four-hour quality and first real session renewal under this version remain unobserved. |
@@ -44,8 +44,9 @@ None of these layers is public-player E2E evidence. Dated measurements are in th
 [return-feed port](v3/public-source-port-2026-10-22.md), the
 [thumbnail port](v3/public-source-port-2026-10-22-thumbnail.md) and its
 [review follow-up](v3/public-source-port-2026-10-22-thumbnail-review.md), and the
-[operated OCR counter rollout](v3/thumbnail-ocr-rollout-2026-10-22.md) and
-[OCR/evidence follow-up](v3/public-source-port-2026-10-22-thumbnail-evidence.md). The public
+[operated OCR counter rollout](v3/thumbnail-ocr-rollout-2026-10-22.md),
+[OCR/evidence follow-up](v3/public-source-port-2026-10-22-thumbnail-evidence.md), and the
+[return-feed evidence and UTC fallback record](v3/public-source-port-2026-10-23-relay-clock.md). The public
 examples were not deployed; OCI restore assets and monitor images were retained
 privately.
 
@@ -71,8 +72,13 @@ privately.
 - Long-term soak of the current route.
 - Twenty-four-hour clock/OCR quality, worst-case two-input performance within
   the observer limit, and the updated observer during a real fallback.
-- A fix for low UTC OCR confidence on the return feed. It raised the observation
-  warning on 2026-10-22 while frames and forward bytes continued.
+- A production rescue by the return feed's wider UTC read, and the resulting
+  coverage gain. Replayed on 70 retained native images it accepted all 39
+  low-confidence rejections without changing any normal reading, but no live
+  sample has needed it yet. Behavior at the hours where failures had clustered
+  (UTC 02 and 04) is also unobserved.
+- The cause of two `runtime_attestation_unavailable` minutes on 2026-10-22. The
+  public picture-freshness row labels every unknown minute as unread OCR.
 - Twenty-four-hour thumbnail freshness, OCR quality and binary-retry rate, the
   thumbnail worker across a real session renewal, and actual delivery of the
   new observation-quality warnings.

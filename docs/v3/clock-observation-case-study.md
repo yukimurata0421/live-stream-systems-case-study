@@ -130,7 +130,32 @@ observations and two retries. At 11:22 the live image had passed with the
 ordinary read, so the retry was not shown to be the cause of that recovery.
 
 The return-feed analyzer also raised a UTC-confidence warning around noon while
-frames and forward bytes continued. It has no binary retry and was not changed.
+frames and forward bytes continued. It had no binary retry and was not changed
+that day.
+
+## Evidence Before A Wider Read
+
+On 2026-10-23 the return feed's unknown picture-freshness minutes were traced
+to UTC confidence: in all 40 failing images of one 24-hour window both clocks
+parsed and agreed, and only UTC fell below 70. The thumbnail had already gained
+from a UTC region widened three pixels to the left, and downscaled JPEGs
+suggested the same for the return feed. But the analyzer kept only JST pixels
+on failure and did not record the contrast retry, so the cause could not be
+tested on the production input.
+
+The reader first started keeping native JST and UTC regions, a wider UTC
+context and every read stage, plus occasional normal controls. Within about 40
+minutes that produced 39 natural low-confidence rejections and 31 controls.
+Widening rescued all 39 but rejected one control that the current region read
+at confidence 92.1, which dropped to 51.5 when widened. Widening was better on
+average and worse for that image.
+
+So the region was not changed. The current ROI stays authoritative, and the
+wider UTC region is read once, only after both current passes fail, against a
+confident JST and without changing any value already read. On the retained
+images this keeps all 31 controls untouched and rescues all 39 rejections. In
+its first half hour in production every sample passed on the current region,
+so no rescue has been observed yet.
 
 ## Lessons
 
@@ -141,6 +166,10 @@ frames and forward bytes continued. It has no binary retry and was not changed.
 - Disagreement between independent layers is useful only if something reads it.
 - A threshold derived from one short window should be written as provisional
   and tied to the refresh behaviour it assumes.
+- Keep the input that failed before tuning the reader. A downscaled copy can
+  suggest a cause but cannot confirm it.
+- An improvement in the median can still break individual cases. Add an
+  alternative after the working path fails rather than replacing the path.
 
 ## Not Established
 
@@ -157,3 +186,4 @@ frames and forward bytes continued. It has no binary retry and was not changed.
 - [Thumbnail initial source port](public-source-port-2026-10-22-thumbnail.md)
 - [Thumbnail review follow-up](public-source-port-2026-10-22-thumbnail-review.md)
 - [Operated OCR counter rollout](thumbnail-ocr-rollout-2026-10-22.md)
+- [Return-feed evidence and UTC fallback read](public-source-port-2026-10-23-relay-clock.md)

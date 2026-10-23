@@ -23,6 +23,7 @@ from .viewer_clock_capture import ProbeError, ProcessRunner, TesseractOCR
 from .viewer_clock_worker import EvidenceStore, append_history, atomic_bytes, json_bytes
 from .frame_receiver import FrameReceiver,ObservedTransportBuffer,relay_args,fallback_args
 from .verified_clock import VerifiedClockAnalyzer,VerifiedClockConfig
+from .verified_clock_evidence import ClockEvidenceStore,MAX_BUNDLE_BYTES
 
 SCHEMA = "stream_v3.oci_monitor_probe.v2"
 TARGET = "oci_relay"
@@ -97,7 +98,7 @@ class MonitorWorker:
             self.fallback.start(port=config['fallback_udp_port'])
             self.analyzers[FALLBACK]=VerifiedClockAnalyzer(FALLBACK,VerifiedClockConfig(tuple(config.get('fallback_roi',config.get('roi',[.019,.968,.04,.022]))),tuple(config.get('fallback_utc_roi',config.get('utc_roi',[.081,.968,.04,.022])))))
             self.readers[FALLBACK]=FrameReceiver()
-        self.evidence = EvidenceStore(root / "evidence", max_bytes=8 * 1024 * 1024, retention_seconds=86400, platforms=tuple(self.analyzers))
+        self.evidence = ClockEvidenceStore(root / "evidence", max_bytes=8 * 1024 * 1024, retention_seconds=86400, platforms=tuple(self.analyzers))
         self.current = {"schema": SCHEMA, "targets": {}}
         self.stop = threading.Event()
         self.changed=threading.Condition()
@@ -106,6 +107,7 @@ class MonitorWorker:
         self.completed_cycle=0
         self.started_epoch=time.time()
         self.last_valid_publications={}
+        self.last_clock_sample_monotonic=0.
 
     def _decoded(self,frame,identity,before):
         from .viewer_clock_capture import CommandResult
@@ -139,14 +141,23 @@ class MonitorWorker:
             if name==FALLBACK:
                 capture,jpeg,metadata=self.capture_fallback(min(started+5,time.monotonic()+3))
             else:capture,jpeg,metadata=self.capture_relay(min(started+5,time.monotonic()+3))
-            row, images = analyzer.analyze(capture, lambda roi: self.ocr.read(roi, deadline=min(started+8,time.monotonic()+1)), now=time.time(),timing_valid=metadata.get('measurement_timing_valid',False))
+            sample_due=name==TARGET and time.monotonic()-self.last_clock_sample_monotonic>=60
+            row, images = analyzer.analyze(capture, lambda roi: self.ocr.read(roi, deadline=min(started+8,time.monotonic()+1)), now=time.time(),timing_valid=metadata.get('measurement_timing_valid',False),retain_evidence=sample_due,
+                                           utc_retry_left_pixels=3 if name==TARGET else 0)
             sample_id = hashlib.sha256(f'{os.environ.get("POD_UID","local")}:{time.time_ns()}:{self.cycle}'.encode()).hexdigest()[:24]
             path = self.root / "capture" / ("oci_monitor" if name==TARGET else FALLBACK) / (sample_id + ".jpg")
             path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+            row.update(sample_id=sample_id,image_path=str(path.relative_to(self.root)),
+                       image_sha256=hashlib.sha256(jpeg).hexdigest(),observer_pod_uid=os.environ.get('POD_UID','local'))
             try:
                 atomic_bytes(path, jpeg)
                 if row.get('clock_reading_valid'):self.last_valid_publications[name]=capture.captured_epoch
-                if images:row['evidence_id']=self.evidence.save(row,images,now=time.time())
+                if images or row.get('clock_evidence_kind') in ('periodic_roi','roi_retry'):
+                    if row.get('clock_evidence_kind')=='periodic_roi':self.last_clock_sample_monotonic=time.monotonic()
+                    try:
+                        row['evidence_id']=self.evidence.save(row,images,now=time.time(),clock_images=analyzer.evidence_images)
+                        row['native_evidence_status']='saved' if row['evidence_id'] else 'capacity_exhausted'
+                    except (OSError,ValueError):row['native_evidence_status']='storage_or_evidence_error'
                 elif row['clock_state'].startswith('ADVANCING'):self.evidence.recovered(name)
             except OSError:
                 row.update(analyzed_clock_state=row['clock_state'],clock_state='UNKNOWN',capture_ok=False,
@@ -223,11 +234,18 @@ class MonitorWorker:
                     content=json_bytes(worker.heartbeat());code=200 if worker.heartbeat()["worker_ok"] else 503
                 elif self.path=="/oci_monitor_status.json":content=json_bytes(worker.current)
                 elif parsed.path=="/bundle.json":
-                    current=worker.current;images={}
+                    current=worker.current;images={};clock_evidence={}
                     for name,row in current.get("targets",{}).items():
                         if row.get("capture_ok") and time.time()-epoch(row["checked_at_utc"])<=180:
                             images[name]=base64.b64encode((worker.root/row["image_path"]).read_bytes()).decode()
-                    content=json_bytes({"schema":"stream_v3.oci_monitor_bundle.v1","state":current,"heartbeat":worker.heartbeat(),"images":images})
+                            evidence_id=row.get('evidence_id')
+                            if evidence_id:
+                                try:
+                                    with (worker.evidence.root/evidence_id).open('rb') as file:native=file.read(MAX_BUNDLE_BYTES+1)
+                                    if len(native)<=MAX_BUNDLE_BYTES:clock_evidence[name]=base64.b64encode(native).decode()
+                                except OSError:pass
+                    content=json_bytes({"schema":"stream_v3.oci_monitor_bundle.v1","state":current,"heartbeat":worker.heartbeat(),"images":images,
+                                        "clock_evidence":clock_evidence})
                 elif self.path in ("/capture/oci_monitor/latest.jpg","/capture/youtube_fallback/latest.jpg"):
                     name=TARGET if '/oci_monitor/' in self.path else FALLBACK
                     row=worker.current.get("targets",{}).get(name,{})

@@ -1,0 +1,196 @@
+{
+  "schema": "stream.public_port_record.v1",
+  "recorded_on_jst": "2026-10-23",
+  "scope": "public-checkout-only; relay clock analyzer, worker, bounded native evidence, importer, regressions and documentation",
+  "prior_public_head": "2eb34e5e57b7d34b587affdfb0fb884aaaebd075",
+  "deployment_performed_by_port": false,
+  "push_performed": false,
+  "public_adaptations": [
+    "Keep delivery-host in the producer and importer; preserve existing English docstrings.",
+    "Preserve existing ADS-B and other worktree changes; no broad source-tree copy."
+  ],
+  "checks": {
+    "source_semantic_parity": {
+      "src/stream_v3/verified_clock.py": true,
+      "src/stream_v3/oci_monitor_probe.py": true,
+      "src/stream_v3/verified_clock_evidence.py": true,
+      "ops/scripts/stream_v3_oci_monitor_pull.py": true,
+      "tests/test_verified_clock.py": true,
+      "tests/test_verified_clock_evidence.py": true,
+      "tests/test_oci_monitor_probe.py": true
+    },
+    "clock_config_ast_unchanged": true,
+    "public_candidate_tests": {
+      "passed": 173,
+      "subtests_passed": 785,
+      "scope": [
+        "tests/test_verified_clock.py",
+        "tests/test_verified_clock_evidence.py",
+        "tests/test_oci_monitor_probe.py",
+        "tests/test_twitch_thumbnail.py",
+        "tests/test_twitch_thumbnail_evidence.py",
+        "tests/test_twitch_thumbnail_api_compatibility.py",
+        "tests/test_frame_receiver.py",
+        "tests/test_monitor_facts.py",
+        "tests/test_clock_exporter_cache.py",
+        "tests/test_clock_observation_alerts.py",
+        "tests/test_relay_output_gap_recorder.py",
+        "tests/test_docs_structure.py",
+        "tests/test_public_private_paths.py",
+        "tests/test_public_language_policy.py"
+      ]
+    },
+    "initial_validation_findings": [
+      "The first run found an unindexed existing relay-clock port page and its not-yet-created port-record link. Both were resolved before the passing run.",
+      "The initial source-map check caught the concurrently updated clock case-study digest. The current public-safe document was retained and its digest reconciled."
+    ],
+    "public_source_validation": "PASS; issue_count=0",
+    "public_language_validation": "PASS; no language issues",
+    "selected_secret_scan": "PASS; no leaks found",
+    "diff_whitespace_check": "PASS"
+  },
+  "excluded": [
+    "private deployment and rollback scripts, source configuration and live runtime identities",
+    "native images, raw logs, databases, credentials and operational state",
+    "unrelated thumbnail, source-disagreement, recovery, notification and threshold changes"
+  ],
+  "files": [
+    {
+      "path": "src/stream_v3/verified_clock.py",
+      "source_role": "selected-development-source",
+      "decision": "Native clock evidence and current-ROI-first UTC retry; preserve generic public host bindings, English prose, existing thresholds and unrelated edits.",
+      "before_sha256": "ca3e0939004f54c8e96100dd6018ad91e083d0bb7504b694c03588cdbd40b19f",
+      "source_sha256": "867f0265d955d7fb50b341d23e5d8a8f142316c19eb14eda178620d81f71808c",
+      "public_sha256": "0b27ad99f9d2e94c238d1218d714482c000710ea12c85aeda9938a73228129b7",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "src/stream_v3/oci_monitor_probe.py",
+      "source_role": "selected-development-source",
+      "decision": "Native clock evidence and current-ROI-first UTC retry; preserve generic public host bindings, English prose, existing thresholds and unrelated edits.",
+      "before_sha256": "6a5f76a1558f116d63589be0553c0aa89c625436755a5fe4c9ac4204e553ed57",
+      "source_sha256": "86824bb9e12d169d3ae54ec1765d7baf62cf85324561c9f3abb966a0afb4ed84",
+      "public_sha256": "6a5585749078c7d7ef04e52148b1015dea9ea05ee7518aa146f75de4441ded1e",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "src/stream_v3/verified_clock_evidence.py",
+      "source_role": "selected-development-source",
+      "decision": "Native clock evidence and current-ROI-first UTC retry; preserve generic public host bindings, English prose, existing thresholds and unrelated edits.",
+      "before_sha256": null,
+      "source_sha256": "3a7cb9383ce63a5c37f2044b252f86eabbd73945a71c0ed62345ce13012488a8",
+      "public_sha256": "3a7cb9383ce63a5c37f2044b252f86eabbd73945a71c0ed62345ce13012488a8",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "ops/scripts/stream_v3_oci_monitor_pull.py",
+      "source_role": "selected-development-source",
+      "decision": "Native clock evidence and current-ROI-first UTC retry; preserve generic public host bindings, English prose, existing thresholds and unrelated edits.",
+      "before_sha256": "91f0d2220d963a878797a4fe69507de00e70996fc7484752bcaa6f6d33121245",
+      "source_sha256": "507641d48fc02e9c4921cf1c373f4022e64ee00401ea6b70d591880b3e6ca310",
+      "public_sha256": "89a9218075cffaa7242a9d667a2e3553d467d2d7499697d0b4348d3679639f0c",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "tests/test_verified_clock.py",
+      "source_role": "selected-development-source",
+      "decision": "Native clock evidence and current-ROI-first UTC retry; preserve generic public host bindings, English prose, existing thresholds and unrelated edits.",
+      "before_sha256": "5ebbc56ecd98ba62900202cc71b549ea08e87cc9aa2ef69a7427c1d745309c8e",
+      "source_sha256": "a0c19abacf78ca9c0a61ee50d9dacc6fab986be5f7fdeaccf126fd51f08dfda0",
+      "public_sha256": "a0c19abacf78ca9c0a61ee50d9dacc6fab986be5f7fdeaccf126fd51f08dfda0",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "tests/test_verified_clock_evidence.py",
+      "source_role": "selected-development-source",
+      "decision": "Native clock evidence and current-ROI-first UTC retry; preserve generic public host bindings, English prose, existing thresholds and unrelated edits.",
+      "before_sha256": null,
+      "source_sha256": "2741175e4a391e84f2dac4eced5f7613e14359093fd220d207a64ccb74634dd8",
+      "public_sha256": "2741175e4a391e84f2dac4eced5f7613e14359093fd220d207a64ccb74634dd8",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "tests/test_oci_monitor_probe.py",
+      "source_role": "selected-development-source",
+      "decision": "Native clock evidence and current-ROI-first UTC retry; preserve generic public host bindings, English prose, existing thresholds and unrelated edits.",
+      "before_sha256": "f56d56e38a1140d1916d3b82bbb8b6cdfb2ed668ac5ca1375d105e3cb3a72139",
+      "source_sha256": "008cb9e39fae6587a863b7544647da08dcf6010d722b4ac30d5c2e6368696ae4",
+      "public_sha256": "008cb9e39fae6587a863b7544647da08dcf6010d722b4ac30d5c2e6368696ae4",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "docs/v3/public-source-port-2026-10-23-relay-clock.md",
+      "source_role": "public-compatible-documentation",
+      "decision": "Native clock evidence and current-ROI-first UTC retry; preserve generic public host bindings, English prose, existing thresholds and unrelated edits.",
+      "before_sha256": "d68b0a6b2512f6bf6d64607c5ccbe6120f52e640aa50f5f530bc00f47ce350c4",
+      "source_sha256": null,
+      "public_sha256": "5a09c61c3f0df18403fe2b2fb841b609e7dafdad198cd7931e90edceb8afaa5d",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "docs/v3/relay-clock-monitor.md",
+      "source_role": "public-compatible-documentation",
+      "decision": "Native clock evidence and current-ROI-first UTC retry; preserve generic public host bindings, English prose, existing thresholds and unrelated edits.",
+      "before_sha256": "de10e312605f02a97b6a678da8920afd9b715d94db920c06d556f680f480d744",
+      "source_sha256": null,
+      "public_sha256": "dd98509474af36c116d93446f47f775d00971e390bdd2d23ed9e73aced4b9b8c",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "docs/current-status.md",
+      "source_role": "public-compatible-documentation",
+      "decision": "Native clock evidence and current-ROI-first UTC retry; preserve generic public host bindings, English prose, existing thresholds and unrelated edits.",
+      "before_sha256": "6a999120e0da8f96c417143f99ef53b1876c6c1c6a43482efdc1b05e48316745",
+      "source_sha256": null,
+      "public_sha256": "1fe4a4d8b103ec10fe05e9024447f8af5ac21fbbaf92d25eb9c8a8dade07c871",
+      "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "docs/00_INDEX.md",
+      "source_role": "public-compatible-documentation",
+      "decision": "Native clock evidence and current-ROI-first UTC retry; preserve generic public host bindings, English prose, existing thresholds and unrelated edits.",
+      "before_sha256": "e5a7d8243462eed089784656ec246c868d7fa0d51ddefdd7dd7b59584f296d7d",
+      "source_sha256": null,
+      "public_sha256": "a4d8543c20ed50d20dcf141a2499bb31246650f5cf6cdfc1465ee5e73ece3fe3",
+      "port_date_jst": "2026-10-23",
+      "port_worktree_snapshot_sha256": "54c9f42cbd9e1b2bc054e380f4a7376df991333c1dc4ea31f191c48805d7703e"
+    },
+    {
+      "path": "docs/v3/clock-observation-case-study.md",
+      "source_role": "existing-public-documentation",
+      "decision": "Retain the concurrent public-safe OCR investigation follow-up and reconcile its current digest.",
+      "before_sha256": "063d3f18723b18ca0bbd09c0a2aa813384e3048c7dafc1c9e0094e1ab23826bf",
+      "source_sha256": null,
+      "public_sha256": "ce90442cf087b81e427860a4510c07cf98199e29fc2e7201d19eba8fefa47fd5",
+      "port_date_jst": "2026-10-23"
+    }
+  ],
+  "limits": [
+    "Source transfer does not deploy this checkout.",
+    "Production rescue and coverage improvement remained unobserved at the separately documented 2026-10-23 18:59 JST cutoff.",
+    "Private native-image replay is historical evidence; public regressions use synthetic inputs."
+  ],
+  "documentation_review": {
+    "reviewed_on_jst": "2026-10-23",
+    "structure": "Keep stable contract, dated investigation, short case-study narrative and current unknowns on their existing pages.",
+    "corrections": [
+      "Clarify at most five OCR calls per relay sample, four per fallback sample, sharing the existing cycle deadline.",
+      "Clarify shared fallback diagnostics and abnormal evidence without enabling its expanded-UTC retry.",
+      "Require an actually judged minute before attributing a coverage gain.",
+      "Label the current-status observation table with both checkpoint dates."
+    ],
+    "evidence_boundary": "Historical private replay and operated-system checkpoints remain separate from the credential-free public tests and this local source commit."
+  },
+  "selected_commit_scope": "Relay OCR source, tests and related documentation only; shared index and source-map entries exclude pending ADS-B worktree edits.",
+  "commit_performed_by_port": false,
+  "selected_commit_validation": {
+    "scope": "Exact local commit candidate with pending ADS-B changes excluded; checked after the documentation review.",
+    "passed": 173,
+    "subtests_passed": 778,
+    "public_source_validation": "PASS; issue_count=0",
+    "public_language_validation": "PASS; no language issues",
+    "selected_secret_scan": "PASS; no leaks found",
+    "production_deployment_performed": false,
+    "push_performed": false
+  }
+}

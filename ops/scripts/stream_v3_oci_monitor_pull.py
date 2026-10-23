@@ -16,6 +16,7 @@ from stream_v3.viewer_clock import utc_timestamp
 from stream_v3.viewer_clock_capture import ProcessRunner
 from stream_v3.viewer_clock_worker import EvidenceStore,append_history,atomic_bytes,json_bytes
 from stream_v3.monitor_facts import native_facts,classify
+from stream_v3.verified_clock_evidence import ClockEvidenceStore,MAX_BUNDLE_BYTES
 
 REMOTE_READ="""import base64,json,urllib.request,urllib.parse,subprocess,hashlib,re,copy,time
 from pathlib import Path
@@ -146,6 +147,8 @@ def collect(config,ram_root,state_file):
         assert_tmpfs(ram_root)
         stage='ram_publication'
         images=bundle.pop('images')
+        native_evidence=bundle.pop('clock_evidence',{})
+        if not isinstance(native_evidence,dict):native_evidence={}
         if set(state['targets'])!=expected:raise ValueError('unexpected_monitor_targets')
         if 'youtube_fallback' in expected:
             state['targets']['youtube_fallback']=bind_fallback(state['targets']['youtube_fallback'],envelope.get('fallback_status',{}),config)
@@ -185,6 +188,10 @@ def collect(config,ram_root,state_file):
                 last=row['captured_at_utc']
             bundle['collector']['observation_quality'][target]={'required':required,'required_since_utc':since,'last_valid_at_utc':last}
         store=EvidenceStore(state_file.parent/'evidence',platforms=tuple(sorted(expected)))
+        try:
+            native_store=ClockEvidenceStore(state_file.parent/'native_clock_evidence',max_bytes=8*1024*1024,
+                                            retention_seconds=86400,platforms=tuple(sorted(expected)))
+        except OSError:native_store=None
         for target,row in state['targets'].items():
             if not row.get('capture_ok'):continue
             image=base64.b64decode(images[target],validate=True)
@@ -209,6 +216,21 @@ def collect(config,ram_root,state_file):
                 else:store.recovered(target)
                 store.prune(now=time.time())
             except (ValueError,OSError):row['evidence_status']='storage_or_evidence_error'
+            encoded=native_evidence.get(target)
+            if encoded is not None:
+                try:
+                    if native_store is None:raise OSError('native_clock_store_unavailable')
+                    if not isinstance(encoded,str) or len(encoded)>4*((MAX_BUNDLE_BYTES+2)//3):raise ValueError('native_clock_bundle_too_large')
+                    if duplicate and previous_row.get('native_clock_evidence_id') and (native_store.root/previous_row['native_clock_evidence_id']).is_file():
+                        row['native_clock_evidence_id']=previous_row['native_clock_evidence_id']
+                    else:
+                        row['native_clock_evidence_id']=native_store.import_bundle(base64.b64decode(encoded,validate=True),row,now=time.time())
+                    row['native_evidence_status']='saved' if row['native_clock_evidence_id'] else 'capacity_exhausted'
+                except (ValueError,OSError):row['native_evidence_status']='storage_or_evidence_error'
+            elif native_store is not None and row['clock_state'].startswith('ADVANCING'):native_store.recovered(target)
+        if native_store is not None:
+            try:native_store.prune(now=time.time())
+            except OSError:bundle['collector']['native_evidence_retention_error']=True
         atomic_bytes(state_file,json_bytes(bundle))
         if not duplicate:append_history(state_file.parent,bundle,max_bytes=2*1024*1024)
         for target,row in state['targets'].items():
