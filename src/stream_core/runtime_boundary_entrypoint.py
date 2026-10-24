@@ -597,8 +597,11 @@ class RuntimeBoundaryStreamEngine(StreamEngine):
             socket_gid=socket_gid,
         )
         self.effect_executor.start()
+        from stream_core.engine.fifo_runtime import make_transport_collector
+        observation_path = Path(os.environ.get("FR_RUNTIME_OBSERVATION_FILE", "/run/stream-v3-control/runtime-observation.json"))
         self.runtime_observation_publisher = RuntimeObservationPublisher(
-            path=Path(os.environ.get("FR_RUNTIME_OBSERVATION_FILE", "/run/stream-v3-control/runtime-observation.json")),
+            path=observation_path,
+            tcp_metrics_supplier=make_transport_collector(self.cfg, observation_path),
             projection_path=projection_path,
             target_snapshot_path=target_snapshot_path,
             process_supplier=self.runtime_boundary_process_snapshot,

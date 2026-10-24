@@ -337,7 +337,7 @@ class FfmpegArgumentContractTests(unittest.TestCase):
         self.assertEqual(ffmpeg_args.build_output_args(self.cfg()), ["-f", "flv", "rtmps://a.rtmps.youtube.com:443/live2/key"])
 
         fifo = ffmpeg_args.build_output_args(
-            self.cfg(use_fifo_recovery=True, fifo_drop_pkts_on_overflow=True, fifo_restart_with_keyframe=False)
+            self.cfg(use_fifo_recovery=True, fifo_max_recovery_attempts=20, fifo_drop_pkts_on_overflow=True, fifo_restart_with_keyframe=False)
         )
         self.assertEqual(fifo[:4], ["-f", "fifo", "-fifo_format", "flv"])
         self.assertIn("-attempt_recovery", fifo)
@@ -397,6 +397,16 @@ class FfmpegArgumentContractTests(unittest.TestCase):
         self.assertEqual(args[args.index("-b:a") + 1], "128k")
         self.assertEqual(args[-3:-1], ["-f", "flv"])
         self.assertEqual(args[-1], "rtmps://a.rtmps.youtube.com:443/live2/key")
+
+    def test_fifo_explicitly_maps_filtered_video_and_pulse_audio(self) -> None:
+        args = ffmpeg_args.build_ffmpeg_args(
+            self.cfg(use_fifo_recovery=True, fifo_max_recovery_attempts=20),
+            x11_input=":99+0,0", pulse_source="stream_sink.monitor", encoder_profile={},
+        )
+        self.assertEqual(args[args.index('-filter_complex')+1],
+                         '[0:v:0]scale=1920:1080:flags=lanczos,setsar=1[stream_video]')
+        maps = [args[i+1] for i,v in enumerate(args[:-1]) if v == '-map']
+        self.assertEqual(maps, ['[stream_video]', '1:a:0'])
 
     def test_build_ffmpeg_args_uses_nvenc_only_when_configured(self) -> None:
         args = ffmpeg_args.build_ffmpeg_args(

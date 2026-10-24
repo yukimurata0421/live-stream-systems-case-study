@@ -9,6 +9,13 @@ The design keeps media delivery, observation, and public publication on
 separate owners, so a warning in one cannot silently become an action in
 another.
 
+The main sender uses FFmpeg's internal FIFO to reconnect output while retaining
+the encoder. Its [connection observer](v3/ffmpeg-fifo-recovery.md) tracks socket
+generations independently of process generations. FFmpeg exit still belongs to
+the existing child lifecycle; the relay-health controller independently owns
+backup delivery. The [dated experiment and rollout](v3/ffmpeg-fifo-measurements.md)
+separate those paths and retain the failed first audio rollout.
+
 ## Hosts And Roles
 
 | Host or edge | Role | Runs |

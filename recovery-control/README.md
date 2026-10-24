@@ -61,7 +61,9 @@ runtime recovery; qualification remains a separate evidence gate.
 The 2026-10-22 public port adds a local reflex path for FFmpeg TCP-stall
 recovery. Dell decides under a policy signed by cra-01, and cra-01 verifies the
 append-only audit afterward, so LAN loss needs no fallback mode. See
-[local reflex authority](docs/local-reflex-authority.md). The included policy
+[local reflex authority](docs/local-reflex-authority.md) for the contract,
+[operations](docs/local-reflex-operations.md) for the procedure, and
+[records](docs/local-reflex-records.md) for dated evidence. The included policy
 example is `dry_run`; the port does not enable production restarts.
 
 ## Current source posture

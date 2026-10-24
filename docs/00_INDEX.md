@@ -9,11 +9,14 @@ start.
 - `README.md`: [documentation guide](README.md), the suggested reading order.
 - `hiring-reviewer-guide.md`: [reading paths by reviewer role](hiring-reviewer-guide.md).
 - `current-status.md`: [recent changes, unobserved items, and disabled features](current-status.md).
-- `operational-case-studies.md`: [nine short incident stories](operational-case-studies.md).
+- `operational-case-studies.md`: [ten short incident stories](operational-case-studies.md).
 - `operational-scorecard.md`: [measured results, tests, and remaining gaps](operational-scorecard.md).
 - `implementation-review-map.md`: [where each claim's code and tests live](implementation-review-map.md).
 
 ## Current System
+
+- `v3/ffmpeg-fifo-recovery.md`: [why output reconnection was chosen over ride-through or process restart, bounded FIFO recovery and process/connection generations](v3/ffmpeg-fifo-recovery.md).
+- `v3/ffmpeg-fifo-measurements.md`: [restart versus FIFO timing, where the time went, the audio-loss rollout and the corrected exercise](v3/ffmpeg-fifo-measurements.md).
 
 - `v3/twitch-thumbnail-monitor.md`: [provider-image clocks, API reuse, RAM processing and warning scope](v3/twitch-thumbnail-monitor.md).
 - `v3/relay-clock-monitor.md`: [returned video, paired OCR, native evidence and bounded observer state](v3/relay-clock-monitor.md).

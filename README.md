@@ -47,6 +47,7 @@ See [the dated evidence and counting method](docs/same-url-continuity-evidence.m
 
 | What the project demonstrates | Evidence |
 | --- | --- |
+| Recover an output connection while retaining the encoder | Same-process FIFO recovery, protocol-stage measurements and a corrected audio rollout; [measured recovery case](docs/v3/ffmpeg-fifo-measurements.md). |
 | Preserve a usable public URL through changes and recovery | Same-URL checkpoints, retained migration evidence, and recovery guards. |
 | Diagnose faults across several layers | Network stalls, a watchdog that rejected a new relay port, and stale public-cache incidents. |
 | Correct recovery without hiding failed attempts | A Twitch renewal initially disrupted YouTube; the corrected bounded exercise was verified separately. |
@@ -68,7 +69,7 @@ encoder and direct YouTube upload may run alongside the main GPU path.
 
 ```mermaid
 flowchart TB
-    SOURCE["Aircraft data: HP ProDesk / Airspy / readsb"] --> MEDIA["Dell: map + music + GPU encoder (NVENC)"]
+    SOURCE["Aircraft data: HP ProDesk / Airspy / readsb"] --> MEDIA["Dell: map + music + NVENC + FIFO output"]
     MEDIA -->|"RTMPS over a private tunnel"| OCI["OCI relay: MediaMTX + keeper"]
     OCI --> YT["YouTube primary"]
     OCI --> TW["Twitch"]
@@ -78,6 +79,9 @@ flowchart TB
 
 The [OCI delivery record](docs/v3/self-healing-oci-fanout.md) explains the
 Tokyo OKE capacity attempt, the choice of a VM, and the fallback conditions.
+The [FIFO contract](docs/v3/ffmpeg-fifo-recovery.md) separates connection
+recovery from process replacement and records reconnects without requiring a
+new FFmpeg PID.
 Both home senders still depend on the Dell host and home uplink. A separate
 [clock monitor](docs/v3/relay-clock-monitor.md) checks returned relay/fallback
 video and keeps that evidence distinct from public-player reception.

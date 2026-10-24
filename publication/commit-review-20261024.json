@@ -1,0 +1,276 @@
+{
+  "schema": "stream.public_commit_review.v1",
+  "review_date_jst": "2026-10-24",
+  "prepared_for_commit": true,
+  "head_before": "916e12dbd0f96375e30ec9713829596e9876d9b9",
+  "scope": [
+    "Three confirmed playback exclusions and platform-specific music-credit boundary.",
+    "English design ledger and CRA contract/operations/records split.",
+    "FIFO output recovery, independent connection telemetry, isolated timing tools and curated measurements."
+  ],
+  "language": {
+    "authored_japanese_prose_found": false,
+    "translation_required": false,
+    "retained_upstream_data": "Unmodified MapLibre Unicode glyph/vertical-writing tables; reviewed by the existing exact-line exception.",
+    "upstream_bundle_modified": false
+  },
+  "review_correction": "The output I/O timeout is not a fixed deadline from WAN-gap start; buffering, TCP retries and relay timeouts affect elapsed recovery.",
+  "music_regeneration_check": {
+    "isolated_cli": true,
+    "excluded_tracks": 3,
+    "control_tracks_generated": 1,
+    "source_files_changed": false,
+    "production_mutation": false
+  },
+  "checks": {
+    "stream": {
+      "passed": 1541,
+      "skipped": 9,
+      "subtests_passed": 1162
+    },
+    "recovery_public_runtime_and_target": {
+      "passed": 235,
+      "selected_files": 18,
+      "full_recovery_qualification_claimed": false
+    },
+    "public_english": {
+      "status": "PASS",
+      "checked_text_files": 1949,
+      "authored_japanese_prose": 0,
+      "upstream_unicode_data_exceptions": 1
+    },
+    "public_source_boundary": {
+      "status": "PASS",
+      "issue_count": 0
+    },
+    "selected_payload_secret_scan": {
+      "status": "PASS",
+      "leaks": 0
+    },
+    "diff_whitespace_check": "PASS",
+    "remote_main_before": {
+      "sha": "916e12dbd0f96375e30ec9713829596e9876d9b9",
+      "matches_local_head_before": true
+    }
+  },
+  "push_requested": false,
+  "files": [
+    {
+      "path": "README.md",
+      "sha256": "4017fbd5e252ad4842542382e95580f6294a81db30ae527c4784c117e3765663"
+    },
+    {
+      "path": "configs/auto_dj_classification_overrides.json",
+      "sha256": "9a69a4217de13b19bca70cdcb3004715e636f1844c34b0c0bca65e5b44e63c06"
+    },
+    {
+      "path": "configs/fifo-recovery.env.example",
+      "sha256": "f6e71220e49ec848bf4cc40b57dd34520e38d6883d25db669cefef46cd910d8f"
+    },
+    {
+      "path": "docs/00_INDEX.md",
+      "sha256": "2fa6e03fa73db56b056d9cdcdccc49d8069cf7a1708de4ec0b8464b772530b9d"
+    },
+    {
+      "path": "docs/README.md",
+      "sha256": "a8fde63502af4ccf3c306b5a285d079db0c702af481d5fb3043c9718449a464f"
+    },
+    {
+      "path": "docs/architecture.md",
+      "sha256": "24b7a25418054e0535b233d24ce07a81cba24e22c2481b9f75e2acde4230a124"
+    },
+    {
+      "path": "docs/compliance-and-licensing-boundary.md",
+      "sha256": "065dab7c1c1197cc3c26049356c7fa21bd4f8447d1f16309b7f99ce92a21f91e"
+    },
+    {
+      "path": "docs/current-status.md",
+      "sha256": "ecd92372b57a2d4d699c239e2d01b400168443368c36b1d503cf7f9922d7f9a1"
+    },
+    {
+      "path": "docs/design-decisions-for-review.md",
+      "sha256": "c8ca63c3f85d69f29ceb5032357296d8e19ed6d33483b3e18f9a96c7d0444561"
+    },
+    {
+      "path": "docs/implementation-review-map.md",
+      "sha256": "d14149ea549d86a2a34284bf2f7e4d76ef68a97f541c8f6d5c3551bcc010ecc8"
+    },
+    {
+      "path": "docs/operational-case-studies.md",
+      "sha256": "c211334a465cd3985b194eac6207fa9f31dfbbbcebbe1fbf9c968ef86c86c843"
+    },
+    {
+      "path": "docs/operational-scorecard.md",
+      "sha256": "497630803fbfc91049d47187ca43a898606eb41a4266b302f41c1237f86d1bc2"
+    },
+    {
+      "path": "docs/v3/README.md",
+      "sha256": "84ad321371862bb6cf7eff6259a15e6efb4835ba897850e8c4300c4a99d54de3"
+    },
+    {
+      "path": "docs/v3/connectivity-aware-delivery-recovery.md",
+      "sha256": "88d623f51d9296016b927638853757f9c4c5e4f8fbb86165ba1e10b00a58c338"
+    },
+    {
+      "path": "docs/v3/decisions.md",
+      "sha256": "78cc6653daabc63daceb7d95c61622de27344c89f50b9c2a22cd38abae11a99a"
+    },
+    {
+      "path": "docs/v3/ffmpeg-fifo-measurements.md",
+      "sha256": "c6e23e2b5f3f7f89c3366245fa7b10fd0dc4c1c748f195d6e4387708ba792fec"
+    },
+    {
+      "path": "docs/v3/ffmpeg-fifo-recovery.md",
+      "sha256": "5dc52d739888953989667ad8516c840af5922c896345b6d0f480617f4c6ab251"
+    },
+    {
+      "path": "examples/fifo-recovery/measurements-20261024.json",
+      "sha256": "670c4cf4e7aed798829304395c53bb455b094a32509942ce7903ad583c1477c9"
+    },
+    {
+      "path": "examples/fifo-recovery/summary-20261024.json",
+      "sha256": "d0987786fa031eebbcc2d9b45e6c828d5c647788b83edd2cadb2be6c2340a659"
+    },
+    {
+      "path": "ops/fifo-lab/README.md",
+      "sha256": "f565828b64d8bd868ed95b8382ac3e33c428cb0b33eef337ec08f7fbb609d727"
+    },
+    {
+      "path": "ops/fifo-lab/candidate_output_timing.py",
+      "sha256": "c96e96370b5c996718d7bb60f071a7bfd0c493e2ee17b8ff673504c4e7df636d"
+    },
+    {
+      "path": "ops/fifo-lab/node.py",
+      "sha256": "bb248dcf3ab5cb67051c8fd5c50ec1eb05a75be147462df150a664ef437771ac"
+    },
+    {
+      "path": "ops/fifo-lab/nvenc_transport_timing.py",
+      "sha256": "8ac9f1b4ecd951fc439de8feeef0baaeaac97911e0e57098d5c779e0ddac628a"
+    },
+    {
+      "path": "ops/fifo-lab/restart_timing.py",
+      "sha256": "fa6f9aacd3898bb4a2fc9ff7fd4a6794bc364f9815aa824e3d813b71034b0415"
+    },
+    {
+      "path": "ops/fifo-lab/run.py",
+      "sha256": "24edf3bb98b80d38cac057c2d8877adee5af269ba41afd7c5dc589054b369bde"
+    },
+    {
+      "path": "ops/fifo-lab/stall_fifo_timing.py",
+      "sha256": "bff1dde9d6f334b3fba99e7e3b33e3777d0b2dc22540e90c632322b45ee831b1"
+    },
+    {
+      "path": "ops/fifo-lab/summarize.py",
+      "sha256": "acafc76c48b08f4bb78fa25bb778a958d0a55ef17600e53fcb228200652892f1"
+    },
+    {
+      "path": "ops/fifo-lab/transport_probe.c",
+      "sha256": "a7f3cfe086bb3ceb10e4b466d93bd17c51605075feca4e95acb2a369d32f66f0"
+    },
+    {
+      "path": "ops/fifo-lab/transport_timing.py",
+      "sha256": "694af88201747d0c2481c97109faa02ffd294a1c48bdb9cd3343b7d032c52bcd"
+    },
+    {
+      "path": "ops/fifo-lab/wan_ffmpeg_timing.py",
+      "sha256": "f6f5144c3101df50026a8db822f1b891dce3e99efd78f208ea9dd4290c063fcf"
+    },
+    {
+      "path": "ops/fifo-lab/wan_fifo_timing.py",
+      "sha256": "4c10be360fa70da100c6a10c7e32369c1eee9b5a9a5aabc3e73c28aba6e6c196"
+    },
+    {
+      "path": "ops/fifo-lab/wan_repeated_timing.py",
+      "sha256": "6df9c69e219be0ca96b10c5c93b22c0ad808335fac10f3abb5cebe0ef59d1045"
+    },
+    {
+      "path": "ops/fifo-lab/wan_tuning_timing.py",
+      "sha256": "d51adfcfec4c5ca4ed0df130801501c2730091803c09993e8a3c3dd32d1018de"
+    },
+    {
+      "path": "publication/fifo-recovery-port-20261024.json",
+      "sha256": "563b022875112a0ef7a7b603556e79a7cdb1b65a9544522269252ff594144059"
+    },
+    {
+      "path": "publication/observability-port-20261023.json",
+      "sha256": "7216647c1ea83cac974ea4511f558ba0fba767f1260ab77dfd9a0fcaa6c92aef"
+    },
+    {
+      "path": "recovery-control/README.md",
+      "sha256": "44d32ac857eb17a6bf30b882240cfcefa62490e70de93c5ad5dd388af50986be"
+    },
+    {
+      "path": "recovery-control/docs/00_INDEX.md",
+      "sha256": "c2810e6bae6039f34c37c8efe35863599f0f6ec9c4a8c4e15a662d302288cb3a"
+    },
+    {
+      "path": "recovery-control/docs/local-reflex-authority.md",
+      "sha256": "8395e8a2e60cb83bc99dbc9859aa4cf6c5e68989d7c06fc305999990694f20ec"
+    },
+    {
+      "path": "recovery-control/docs/local-reflex-operations.md",
+      "sha256": "622f91f985380ce8274733b48775dc051e3aafb85b339e672b9e92f87be0ffda"
+    },
+    {
+      "path": "recovery-control/docs/local-reflex-records.md",
+      "sha256": "64508e3eb6c78795340602c10046b1877446f8558333c65cc9d3c684c5139620"
+    },
+    {
+      "path": "recovery-control/src/dell_recovery_agent/delivery_command.py",
+      "sha256": "25357d6142bd90cc8057c38a29931f40d2539f293d80744979b65b977b62fe4d"
+    },
+    {
+      "path": "recovery-control/src/dell_recovery_agent/target_snapshot.py",
+      "sha256": "001a0ff161a18785b6c745a14eca06db0e519110cc97532f2287a5dbd496fac0"
+    },
+    {
+      "path": "recovery-control/src/runtime_boundary/observation.py",
+      "sha256": "93075eb256f9d7489bc4620fa1d7a9b23cf9abde57b458c55a3d82843d123d87"
+    },
+    {
+      "path": "src/stream_core/engine/config.py",
+      "sha256": "ef781fb1caa95d0899cfd15f9272bd137c88a845213a48ef9289566ebad7f181"
+    },
+    {
+      "path": "src/stream_core/engine/ffmpeg_args.py",
+      "sha256": "4a37f5309f058530ed325b01e4a38b9f97966a28404a1880001e7baee267515e"
+    },
+    {
+      "path": "src/stream_core/engine/ffmpeg_stderr.py",
+      "sha256": "2862e5ffc279d97da24151cff45b89d7c5527464cbe0a6fff4e00c17fc5f74f9"
+    },
+    {
+      "path": "src/stream_core/engine/fifo_runtime.py",
+      "sha256": "f2841c335784ac1d7bd5fee8b15acb2c47caea80f814b0c058570be61d94af29"
+    },
+    {
+      "path": "src/stream_core/engine/transport_telemetry.py",
+      "sha256": "41938a4dd3156f3c1309865f3e098305c3129f8e401af345ca535955782a2225"
+    },
+    {
+      "path": "src/stream_core/runtime_boundary_entrypoint.py",
+      "sha256": "0307bd6e41d3084eb6ac074618718e609a26a1cee94eec31bbeeb1dcb4791381"
+    },
+    {
+      "path": "tests/test_fifo_lab_tools.py",
+      "sha256": "d3782c17b71aba1f14530c81f789cc3c3a54010d033f3cff55d512e5cde3889b"
+    },
+    {
+      "path": "tests/test_fifo_runtime_integration.py",
+      "sha256": "05f4f0f6c757eb96f3571c19f2410bd9b1902717d67573a813dc89e2bc2c86da"
+    },
+    {
+      "path": "tests/test_fifo_target_snapshot.py",
+      "sha256": "fd5905d873e04f0b846e4c62160ebef22ec47f4adbe029c1e7bd60ff4ca359c5"
+    },
+    {
+      "path": "tests/test_fifo_transport_telemetry.py",
+      "sha256": "54e7178e1f1827d61f0bfeeb2befe8074d16b02d58aab8f94bedd432232f65e1"
+    },
+    {
+      "path": "tests/test_runtime_bootstrap_contracts.py",
+      "sha256": "2aa71142f96be157db2705493a28743f75499e1ecec1aa75342a09854cb67809"
+    }
+  ],
+  "prior_port_records": "Earlier records describe their own source-transfer steps; later commits are recorded in Git history."
+}

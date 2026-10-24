@@ -32,8 +32,11 @@ def build_output_args(cfg: Any) -> list[str]:
             return ["-f", "matroska", Path(cfg.test_output_file).as_posix()]
         return ["-f", "null", "-"]
     if cfg.use_fifo_recovery:
+        if cfg.fifo_max_recovery_attempts <= 0:
+            raise ValueError("FIFO_REQUIRES_FINITE_RECOVERY_ATTEMPTS")
+        timeout = network_rw_timeout_args(cfg)
+        inner_options = ["-format_opts", "rw_timeout=" + timeout[1]] if timeout else []
         return [
-            *network_rw_timeout_args(cfg),
             "-f",
             "fifo",
             "-fifo_format",
@@ -52,6 +55,7 @@ def build_output_args(cfg: Any) -> list[str]:
             "1" if cfg.fifo_drop_pkts_on_overflow else "0",
             "-restart_with_keyframe",
             "1" if cfg.fifo_restart_with_keyframe else "0",
+            *inner_options,
             cfg.rtmp_url,
         ]
     return [*network_rw_timeout_args(cfg), "-f", "flv", cfg.rtmp_url]
@@ -109,13 +113,18 @@ def build_ffmpeg_args(
     video_maxrate = str(encoder_profile.get("video_maxrate") or cfg.video_maxrate)
     video_bufsize = str(encoder_profile.get("video_bufsize") or cfg.video_bufsize)
     audio_bitrate = str(encoder_profile.get("audio_bitrate") or cfg.audio_bitrate)
+    fifo_mapping = cfg.use_fifo_recovery and not cfg.test_mode
+    video_filter = build_filter(cfg.output_size)
+    if fifo_mapping:
+        video_filter = f"[0:v:0]{video_filter}[stream_video]"
     return [
         "ffmpeg",
         "-nostdin",
         "-y",
         "-hide_banner",
         "-loglevel",
-        "error",
+        "info" if fifo_mapping else "error",
+        *(["-nostats"] if fifo_mapping else []),
         "-fflags",
         "+genpts",
         "-thread_queue_size",
@@ -139,10 +148,12 @@ def build_ffmpeg_args(
         "-i",
         pulse_source,
         "-filter_complex",
-        build_filter(cfg.output_size),
+        video_filter,
         "-af",
         cfg.audio_filter,
+        *(["-map", "[stream_video]", "-map", "1:a:0"] if fifo_mapping else []),
         *build_video_encoder_args(cfg),
+        *(["-flags:v", "+global_header"] if fifo_mapping else []),
         "-pix_fmt",
         "yuv420p",
         "-r",

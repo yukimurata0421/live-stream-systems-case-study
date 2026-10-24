@@ -82,7 +82,7 @@
       "source_role": "public-documentation",
       "before_sha256": "1fe4a4d8b103ec10fe05e9024447f8af5ac21fbbaf92d25eb9c8a8dade07c871",
       "source_sha256": null,
-      "public_sha256": "5e30aa0b752c1cc4dc4b7c655f0db960858df6d1a064b53aff11abef83c4b40a",
+      "public_sha256": "f869fdb0929bc8925b2f9bdb799682d063dded38d8218d282597be95019c59b4",
       "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
       "port_date_jst": "2026-10-23",
       "pre_documentation_structure_review_sha256": "4f17b6ed3aa0e40601c0972920620a77640f439022f82cc112b487b3be06bd0d"

@@ -176,6 +176,29 @@ Status: accepted
 Container PulseAudio uses `--disable-shm=yes` and `--enable-memfd=no` to avoid
 container memory transport failures.
 
+## Output Connection Recovery Layer
+
+Status: accepted (2026-10-24)
+
+A WAN session change interrupts the home-to-relay WireGuard path. The runtime
+reconnects only the RTMPS output inside the same FFmpeg process, using the FIFO
+muxer with a 3 s inner timeout and finite retries. FFmpeg exit keeps the
+existing process-replacement path.
+
+Riding through the gap on the existing TCP connection is deferred. It would
+need a judge that the surviving connection is delivering correctly again, built
+from structured freshness and jitter evidence with calibrated thresholds. An
+uncalibrated judge can leave a stalled connection treated as healthy, while a
+wrong reconnect timeout produces a visible extra reconnect.
+
+Consequence: an output I/O timeout causes reconnection. The configured timeout
+is not a fixed deadline from the start of a WAN gap; buffering, TCP retries and
+relay timeouts also affect the elapsed delay. Transport telemetry records
+connection generations, ACK progress and stalls as input for revisiting
+ride-through. See the
+[runtime contract](ffmpeg-fifo-recovery.md) and
+[measurements](ffmpeg-fifo-measurements.md).
+
 ## SLO Error Budget Policy
 
 Status: accepted

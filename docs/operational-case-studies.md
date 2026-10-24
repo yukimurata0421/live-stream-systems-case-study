@@ -3,7 +3,7 @@
 These are short accounts of real operational problems and one failed test
 campaign. They explain the engineering decisions without requiring familiarity
 with the whole system. The October cases summarize retained records from
-2026-10-13 to 2026-10-22 JST; they are historical observations, not a current
+2026-10-13 to 2026-10-24 JST; they are historical observations, not a current
 health report.
 
 The useful result is sometimes restored delivery, sometimes a corrected warning,
@@ -247,6 +247,36 @@ it observes anything. An observation gap needs its own warning.
 
 [Clock observation case study](v3/clock-observation-case-study.md) ·
 [Observation layers](observability.md#video-observation-layers)
+
+## 10. Keep The Encoder, But Verify Both Media Tracks
+
+**Problem.** Restarting FFmpeg replaces the encoder as well as its failed output
+connection. An internal FIFO can reopen only the output, but successful
+reconnection does not establish complete media recovery.
+
+**Investigation and response.** Isolated NVENC/AAC comparisons measured TCP,
+TLS and publish responses for restarts and FIFO. Repeated 12/30/60-second
+outages showed that retry phase could matter more than the replacement method.
+The first production rollout then exposed a missing test: synthetic trials
+explicitly mapped audio, while the complete production command did not. The
+relay lost audio and the FLV-only target classifier stopped recognizing the
+process. The original template was restored, stream mapping was corrected,
+and the full input/output command and observer were checked before reapplying.
+
+**Result and limit.** The corrected 12-second fault kept the same process and
+Pod, changed connection generation 1 to 2, and resumed observed ACK progress
+about 1.95 seconds after planned restoration. Returned video/audio and both
+forward counters were checked. The initial audio gap, about 12:06-12:18 JST,
+remains a rollout failure; provider-player impact is unknown. The full
+retry-exhaustion/process-replacement cascade and real ISP reconnect were not
+exercised.
+
+**What it demonstrates.** Separate process, connection and media evidence.
+Test the complete invocation rather than transferring a component result to
+an untested input-selection path.
+
+[Measurements and reproducible summaries](v3/ffmpeg-fifo-measurements.md) ·
+[Runtime and telemetry contract](v3/ffmpeg-fifo-recovery.md)
 
 ## Evidence And Reading Boundaries
 

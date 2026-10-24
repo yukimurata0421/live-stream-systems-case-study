@@ -130,7 +130,7 @@ class Config:
     audio_filter: str
     use_fifo_recovery: bool
     fifo_queue_size: int
-    fifo_recovery_wait_sec: int
+    fifo_recovery_wait_sec: float
     fifo_max_recovery_attempts: int
     fifo_drop_pkts_on_overflow: bool
     fifo_restart_with_keyframe: bool
@@ -288,7 +288,7 @@ def load_config() -> Config:
         audio_filter=e("AUDIO_FILTER", "aresample=async=1:min_hard_comp=0.030000:first_pts=0,volume=0.25"),
         use_fifo_recovery=to_bool(e("RTMP_FIFO_RECOVERY", "0"), False),
         fifo_queue_size=max(32, to_int(e("RTMP_FIFO_QUEUE_SIZE", "600"), 600)),
-        fifo_recovery_wait_sec=max(1, to_int(e("RTMP_FIFO_RECOVERY_WAIT_SEC", "1"), 1)),
+        fifo_recovery_wait_sec=max(0.2, min(10.0, to_float(e("RTMP_FIFO_RECOVERY_WAIT_SEC", "1"), 1.0))),
         fifo_max_recovery_attempts=max(0, to_int(e("RTMP_FIFO_MAX_RECOVERY_ATTEMPTS", "0"), 0)),
         fifo_drop_pkts_on_overflow=to_bool(e("RTMP_FIFO_DROP_PKTS_ON_OVERFLOW", "0")),
         fifo_restart_with_keyframe=to_bool(e("RTMP_FIFO_RESTART_WITH_KEYFRAME", "1"), True),

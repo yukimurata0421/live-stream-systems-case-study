@@ -3,7 +3,7 @@
 This is not legal advice. It records the pre-build engineering boundary used by the
 operator when publishing a receive-only ADS-B visualization with credited
 third-party music. The purpose is to show how non-code constraints were turned
-into product and operational design choices. Last reviewed: 2026-09-11.
+into product and operational design choices. Last reviewed: 2026-10-24.
 
 ## Scope
 
@@ -12,8 +12,8 @@ This document covers the public stream and the public repository snapshot:
 - receive-only ADS-B ingest through Airspy, `airspy_adsb`, readsb, modified
   tar1090, a custom MapLibre renderer, processed JMA precipitation, and the
   `stream_v3` browser/FFmpeg delivery path;
-- viewer-facing YouTube video, overlay panels, public-safe status snapshots,
-  and public documentation;
+- viewer-facing YouTube and Twitch video, overlay panels, public-safe status
+  snapshots, and public documentation;
 - NCS usage-policy attribution and a separately reviewed Floracore credit
   contract for a YouTube livestream.
 
@@ -104,7 +104,9 @@ than informal operator memory.
 
 The design rule is:
 
-- The YouTube livestream description is the canonical attribution location.
+- Every delivery destination carries the required credits in its own durable
+  description: the YouTube livestream description, and the Twitch channel for
+  Twitch. A credit on one platform does not cover another.
 - NCS credits follow the current NCS usage policy and track-specific credit
   block where available.
 - Floracore playback requires `@Floracore_EDM` and the official channel link in
@@ -114,6 +116,21 @@ The design rule is:
 - Live chat or comment messages are not used as the compliance anchor because
   they are ephemeral, can scroll away, and are easy for replay viewers to miss.
 - Local music files are excluded from the public repository snapshot.
+
+### Platform Audio Detection
+
+License permission and platform detection are separate constraints. On
+2026-10-23, Twitch's automated audio detection muted VOD segments containing
+three NCS tracks; it was not a DMCA notification. Credits satisfy the NCS usage
+policy, but they do not prevent fingerprint-based detection.
+
+Tracks flagged by a destination's detection are removed from the AutoDJ
+rotation while source files and play history are kept. Because one feed is
+fanned out to every destination, a track cannot be excluded for Twitch alone;
+exclusion applies to the whole stream. The same review found that Twitch had
+carried no NCS credit from its addition on 2026-10-20 until 2026-10-24 16:00
+JST, because this boundary was not re-reviewed when the destination was added. Dated details are in
+[current status](current-status.md#twitch-copyrighted-audio-notice-2026-10-23-to-2026-10-24-jst).
 
 This is why the public overlay can switch between provider-specific credits
 while the durable licensing obligation remains outside the video frame in the
@@ -132,8 +149,9 @@ Re-review this boundary before any of the following changes:
   searchable aircraft history to the public presentation;
 - changing from receive-only equipment to any transmitter or active RF
   operation;
-- moving the stream to a platform whose music-credit or live-description model
-  differs from YouTube;
+- adding or changing a delivery destination, including a relay forward to a new
+  platform (Twitch was added on 2026-10-20 without this re-review);
+- receiving a platform audio-detection notice, takedown or claim;
 - adding a provider beyond the reviewed NCS and Floracore boundaries, changing
   the approved Floracore use, omitting required credit, or adopting another
   commercial licensing model;

@@ -1,0 +1,875 @@
+[
+  {
+    "campaign": "fifo_tuning",
+    "outage_sec": 12,
+    "variant": "baseline",
+    "metrics": {
+      "restore_to_rtmps_ack_sec": {
+        "n": 3,
+        "mean": 4.9230223676810665,
+        "sample_sd": 1.0245197844504634,
+        "median": 4.830859622918069,
+        "min": 3.947697694413364,
+        "max": 5.990509785711765
+      },
+      "restore_to_successful_tcp_begin_wait_sec": {
+        "n": 3,
+        "mean": 4.50589245557785,
+        "sample_sd": 1.030954775505665,
+        "median": 4.382317685522139,
+        "min": 3.542294690385461,
+        "max": 5.593064990825951
+      },
+      "restore_to_tcp_residual_sec": {
+        "n": 3,
+        "mean": 0.03088325106849273,
+        "sample_sd": 0.003255468147512894,
+        "median": 0.029473681934177876,
+        "min": 0.028570104390382767,
+        "max": 0.03460596688091755
+      },
+      "tcp_complete_to_tls_sec": {
+        "n": 3,
+        "mean": 0.03951590849707524,
+        "sample_sd": 0.006755402045400547,
+        "median": 0.038816106505692005,
+        "min": 0.033137647435069084,
+        "max": 0.04659397155046463
+      },
+      "tls_complete_to_publish_sec": {
+        "n": 3,
+        "mean": 0.3467307525376479,
+        "sample_sd": 0.03065402134174422,
+        "median": 0.3380167931318283,
+        "min": 0.3213771414011717,
+        "max": 0.38079832307994366
+      },
+      "tcp_complete_to_publish_sec": {
+        "n": 3,
+        "mean": 0.3862466610347231,
+        "sample_sd": 0.0243855738180993,
+        "median": 0.3768328996375203,
+        "min": 0.3679711129516363,
+        "max": 0.41393597051501274
+      }
+    },
+    "restore_phases": {
+      "old_connection_not_yet_failed": 3
+    }
+  },
+  {
+    "campaign": "fifo_tuning",
+    "outage_sec": 12,
+    "variant": "tuned",
+    "metrics": {
+      "restore_to_rtmps_ack_sec": {
+        "n": 3,
+        "mean": 1.2438107415412862,
+        "sample_sd": 0.18755096224400786,
+        "median": 1.3117060624063015,
+        "min": 1.0317675098776817,
+        "max": 1.3879586523398757
+      },
+      "restore_to_successful_tcp_begin_wait_sec": {
+        "n": 3,
+        "mean": 0,
+        "sample_sd": 0.0,
+        "median": 0,
+        "min": 0,
+        "max": 0
+      },
+      "restore_to_tcp_residual_sec": {
+        "n": 3,
+        "mean": 0.8476959553857645,
+        "sample_sd": 0.16728655868719144,
+        "median": 0.9386418024078012,
+        "min": 0.6546376924961805,
+        "max": 0.9498083712533116
+      },
+      "tcp_complete_to_tls_sec": {
+        "n": 3,
+        "mean": 0.041897815031309925,
+        "sample_sd": 0.00700154155320069,
+        "median": 0.045774975791573524,
+        "min": 0.0338153513148427,
+        "max": 0.04610311798751354
+      },
+      "tls_complete_to_publish_sec": {
+        "n": 3,
+        "mean": 0.35421697112421197,
+        "sample_sd": 0.04487812016448412,
+        "median": 0.3433144660666585,
+        "min": 0.3157945731654763,
+        "max": 0.403541874140501
+      },
+      "tcp_complete_to_publish_sec": {
+        "n": 3,
+        "mean": 0.39611478615552187,
+        "sample_sd": 0.04669956220269746,
+        "median": 0.3771298173815012,
+        "min": 0.36189769115298986,
+        "max": 0.44931684993207455
+      }
+    },
+    "restore_phases": {
+      "successful_tcp_inflight": 3
+    }
+  },
+  {
+    "campaign": "fifo_tuning",
+    "outage_sec": 12,
+    "variant": "tuned_gop5",
+    "metrics": {
+      "restore_to_rtmps_ack_sec": {
+        "n": 3,
+        "mean": 0.9509833998357257,
+        "sample_sd": 0.47663128660178233,
+        "median": 1.1509876502677798,
+        "min": 0.4069361099973321,
+        "max": 1.295026439242065
+      },
+      "restore_to_successful_tcp_begin_wait_sec": {
+        "n": 3,
+        "mean": 0,
+        "sample_sd": 0.0,
+        "median": 0,
+        "min": 0,
+        "max": 0
+      },
+      "restore_to_tcp_residual_sec": {
+        "n": 3,
+        "mean": 0.548479437828064,
+        "sample_sd": 0.4483984062367548,
+        "median": 0.7626064391806722,
+        "min": 0.03315945994108915,
+        "max": 0.8496724143624306
+      },
+      "tcp_complete_to_tls_sec": {
+        "n": 3,
+        "mean": 0.040664720349013805,
+        "sample_sd": 0.013189765248241843,
+        "median": 0.03462215792387724,
+        "min": 0.03157875221222639,
+        "max": 0.055793250910937786
+      },
+      "tls_complete_to_publish_sec": {
+        "n": 3,
+        "mean": 0.36183924165864784,
+        "sample_sd": 0.04657892716566954,
+        "median": 0.35680245887488127,
+        "min": 0.31798339914530516,
+        "max": 0.41073186695575714
+      },
+      "tcp_complete_to_publish_sec": {
+        "n": 3,
+        "mean": 0.40250396200766164,
+        "sample_sd": 0.037820883342739024,
+        "median": 0.38838121108710766,
+        "min": 0.37377665005624294,
+        "max": 0.4453540248796344
+      }
+    },
+    "restore_phases": {
+      "successful_tcp_inflight": 3
+    }
+  },
+  {
+    "campaign": "fifo_tuning",
+    "outage_sec": 30,
+    "variant": "baseline",
+    "metrics": {
+      "restore_to_rtmps_ack_sec": {
+        "n": 3,
+        "mean": 1.2412601641068857,
+        "sample_sd": 0.1225222889345191,
+        "median": 1.2735623503103852,
+        "min": 1.105823121033609,
+        "max": 1.3443950209766626
+      },
+      "restore_to_successful_tcp_begin_wait_sec": {
+        "n": 3,
+        "mean": 0.8115858339394132,
+        "sample_sd": 0.08705152053053876,
+        "median": 0.8607695167884231,
+        "min": 0.7110750144347548,
+        "max": 0.8629129705950618
+      },
+      "restore_to_tcp_residual_sec": {
+        "n": 3,
+        "mean": 0.02495844941586256,
+        "sample_sd": 0.0010527033823671424,
+        "median": 0.025209381245076656,
+        "min": 0.023802954703569412,
+        "max": 0.025863012298941612
+      },
+      "tcp_complete_to_tls_sec": {
+        "n": 3,
+        "mean": 0.03340670187026262,
+        "sample_sd": 0.004571505444825576,
+        "median": 0.034626792185008526,
+        "min": 0.028348938561975956,
+        "max": 0.03724437486380339
+      },
+      "tls_complete_to_publish_sec": {
+        "n": 3,
+        "mean": 0.3713091788813472,
+        "sample_sd": 0.04551637000883313,
+        "median": 0.34754199255257845,
+        "min": 0.3425962133333087,
+        "max": 0.4237893307581544
+      },
+      "tcp_complete_to_publish_sec": {
+        "n": 3,
+        "mean": 0.4047158807516098,
+        "sample_sd": 0.04701788830167686,
+        "median": 0.38478636741638184,
+        "min": 0.37094515189528465,
+        "max": 0.4584161229431629
+      }
+    },
+    "restore_phases": {
+      "old_connection_error_cleanup": 3
+    }
+  },
+  {
+    "campaign": "fifo_tuning",
+    "outage_sec": 30,
+    "variant": "tuned",
+    "metrics": {
+      "restore_to_rtmps_ack_sec": {
+        "n": 3,
+        "mean": 1.2506605988989274,
+        "sample_sd": 0.14130018059449842,
+        "median": 1.212960697710514,
+        "min": 1.132034081965685,
+        "max": 1.4069870170205832
+      },
+      "restore_to_successful_tcp_begin_wait_sec": {
+        "n": 3,
+        "mean": 0,
+        "sample_sd": 0.0,
+        "median": 0,
+        "min": 0,
+        "max": 0
+      },
+      "restore_to_tcp_residual_sec": {
+        "n": 3,
+        "mean": 0.8316144129882256,
+        "sample_sd": 0.17902194363649768,
+        "median": 0.7507508480921388,
+        "min": 0.7072898019105196,
+        "max": 1.0368025889620185
+      },
+      "tcp_complete_to_tls_sec": {
+        "n": 3,
+        "mean": 0.04258071103443702,
+        "sample_sd": 0.012416242868525438,
+        "median": 0.04402694944292307,
+        "min": 0.029504681937396526,
+        "max": 0.054210501722991467
+      },
+      "tls_complete_to_publish_sec": {
+        "n": 3,
+        "mean": 0.37646547487626475,
+        "sample_sd": 0.06619885406083445,
+        "median": 0.3517785519361496,
+        "min": 0.3261574786156416,
+        "max": 0.451460394077003
+      },
+      "tcp_complete_to_publish_sec": {
+        "n": 3,
+        "mean": 0.41904618591070175,
+        "sample_sd": 0.07522417261215149,
+        "median": 0.3812832338735461,
+        "min": 0.37018442805856466,
+        "max": 0.5056708957999945
+      }
+    },
+    "restore_phases": {
+      "successful_tcp_inflight": 3
+    }
+  },
+  {
+    "campaign": "fifo_tuning",
+    "outage_sec": 30,
+    "variant": "tuned_gop5",
+    "metrics": {
+      "restore_to_rtmps_ack_sec": {
+        "n": 3,
+        "mean": 1.225370495269696,
+        "sample_sd": 0.06358181374826447,
+        "median": 1.2242376143112779,
+        "min": 1.1623626919463277,
+        "max": 1.2895111795514822
+      },
+      "restore_to_successful_tcp_begin_wait_sec": {
+        "n": 3,
+        "mean": 0,
+        "sample_sd": 0.0,
+        "median": 0,
+        "min": 0,
+        "max": 0
+      },
+      "restore_to_tcp_residual_sec": {
+        "n": 3,
+        "mean": 0.7458242407689492,
+        "sample_sd": 0.09681292269846485,
+        "median": 0.7757955165579915,
+        "min": 0.637569990940392,
+        "max": 0.824107214808464
+      },
+      "tcp_complete_to_tls_sec": {
+        "n": 3,
+        "mean": 0.042972966718177,
+        "sample_sd": 0.006899714755793949,
+        "median": 0.04676233883947134,
+        "min": 0.035008967854082584,
+        "max": 0.04714759346097708
+      },
+      "tls_complete_to_publish_sec": {
+        "n": 3,
+        "mean": 0.4365732877825697,
+        "sample_sd": 0.06210961573498709,
+        "median": 0.46695332415401936,
+        "min": 0.36512143164873123,
+        "max": 0.4776451075449586
+      },
+      "tcp_complete_to_publish_sec": {
+        "n": 3,
+        "mean": 0.4795462545007467,
+        "sample_sd": 0.06899879500086807,
+        "median": 0.5137156629934907,
+        "min": 0.4001303995028138,
+        "max": 0.5247927010059357
+      }
+    },
+    "restore_phases": {
+      "successful_tcp_inflight": 3
+    }
+  },
+  {
+    "campaign": "fifo_tuning",
+    "outage_sec": 60,
+    "variant": "baseline",
+    "metrics": {
+      "restore_to_rtmps_ack_sec": {
+        "n": 3,
+        "mean": 1.4059266199668248,
+        "sample_sd": 0.1998783634322035,
+        "median": 1.3117207726463675,
+        "min": 1.2705595353618264,
+        "max": 1.6354995518922806
+      },
+      "restore_to_successful_tcp_begin_wait_sec": {
+        "n": 3,
+        "mean": 0.9188914280384779,
+        "sample_sd": 0.1630587685597307,
+        "median": 0.8347044494003057,
+        "min": 0.8151337038725615,
+        "max": 1.1068361308425665
+      },
+      "restore_to_tcp_residual_sec": {
+        "n": 3,
+        "mean": 0.07187587053825457,
+        "sample_sd": 0.04425063327653631,
+        "median": 0.047864953987300396,
+        "min": 0.044820792973041534,
+        "max": 0.1229418646544218
+      },
+      "tcp_complete_to_tls_sec": {
+        "n": 3,
+        "mean": 0.051303213772674404,
+        "sample_sd": 0.018810847002978262,
+        "median": 0.05119806341826916,
+        "min": 0.03254516236484051,
+        "max": 0.07016641553491354
+      },
+      "tls_complete_to_publish_sec": {
+        "n": 3,
+        "mean": 0.363856107617418,
+        "sample_sd": 0.03133113146570898,
+        "median": 0.35848913062363863,
+        "min": 0.33555514086037874,
+        "max": 0.39752405136823654
+      },
+      "tcp_complete_to_publish_sec": {
+        "n": 3,
+        "mean": 0.4151593213900924,
+        "sample_sd": 0.02997957224549781,
+        "median": 0.4057215563952923,
+        "min": 0.39103429298847914,
+        "max": 0.4487221147865057
+      }
+    },
+    "restore_phases": {
+      "between_closed_and_next_attempt": 2,
+      "earlier_unsuccessful_tcp_inflight": 1
+    }
+  },
+  {
+    "campaign": "fifo_tuning",
+    "outage_sec": 60,
+    "variant": "tuned",
+    "metrics": {
+      "restore_to_rtmps_ack_sec": {
+        "n": 3,
+        "mean": 0.9495973167940974,
+        "sample_sd": 0.37359008336910854,
+        "median": 0.8293976318091154,
+        "min": 0.6509025422856212,
+        "max": 1.3684917762875557
+      },
+      "restore_to_successful_tcp_begin_wait_sec": {
+        "n": 3,
+        "mean": 0,
+        "sample_sd": 0.0,
+        "median": 0,
+        "min": 0,
+        "max": 0
+      },
+      "restore_to_tcp_residual_sec": {
+        "n": 3,
+        "mean": 0.5129450975606838,
+        "sample_sd": 0.42571715507399494,
+        "median": 0.3263552254065871,
+        "min": 0.2123831296339631,
+        "max": 1.0000969376415014
+      },
+      "tcp_complete_to_tls_sec": {
+        "n": 3,
+        "mean": 0.03336507019897302,
+        "sample_sd": 0.002118031283972251,
+        "median": 0.03409171476960182,
+        "min": 0.03097936138510704,
+        "max": 0.0350241344422102
+      },
+      "tls_complete_to_publish_sec": {
+        "n": 3,
+        "mean": 0.4032871490344405,
+        "sample_sd": 0.06576785417881406,
+        "median": 0.40349527820944786,
+        "min": 0.3374154772609472,
+        "max": 0.46895069163292646
+      },
+      "tcp_complete_to_publish_sec": {
+        "n": 3,
+        "mean": 0.4366522192334135,
+        "sample_sd": 0.0673432007267951,
+        "median": 0.43851941265165806,
+        "min": 0.36839483864605427,
+        "max": 0.5030424064025283
+      }
+    },
+    "restore_phases": {
+      "successful_tcp_inflight": 3
+    }
+  },
+  {
+    "campaign": "fifo_tuning",
+    "outage_sec": 60,
+    "variant": "tuned_gop5",
+    "metrics": {
+      "restore_to_rtmps_ack_sec": {
+        "n": 3,
+        "mean": 0.6687286167095104,
+        "sample_sd": 0.28424850116362177,
+        "median": 0.5223968820646405,
+        "min": 0.48745887726545334,
+        "max": 0.9963300907984376
+      },
+      "restore_to_successful_tcp_begin_wait_sec": {
+        "n": 3,
+        "mean": 0,
+        "sample_sd": 0.0,
+        "median": 0,
+        "min": 0,
+        "max": 0
+      },
+      "restore_to_tcp_residual_sec": {
+        "n": 3,
+        "mean": 0.24826719922324023,
+        "sample_sd": 0.19838024299852874,
+        "median": 0.14061237126588821,
+        "min": 0.12698736228048801,
+        "max": 0.4772018641233444
+      },
+      "tcp_complete_to_tls_sec": {
+        "n": 3,
+        "mean": 0.0575291874508063,
+        "sample_sd": 0.04177068293203687,
+        "median": 0.03688992653042078,
+        "min": 0.030095597729086876,
+        "max": 0.10560203809291124
+      },
+      "tls_complete_to_publish_sec": {
+        "n": 3,
+        "mean": 0.362932230035464,
+        "sample_sd": 0.04601431196187993,
+        "median": 0.35168891306966543,
+        "min": 0.32358158845454454,
+        "max": 0.41352618858218193
+      },
+      "tcp_complete_to_publish_sec": {
+        "n": 3,
+        "mean": 0.42046141748627025,
+        "sample_sd": 0.08610990288153457,
+        "median": 0.3817845107987523,
+        "min": 0.3604715149849653,
+        "max": 0.5191282266750932
+      }
+    },
+    "restore_phases": {
+      "successful_tcp_inflight": 3
+    }
+  },
+  {
+    "campaign": "restart_vs_fifo",
+    "outage_sec": 12,
+    "variant": "direct",
+    "metrics": {
+      "restore_to_rtmps_ack_sec": {
+        "n": 5,
+        "mean": 5.479418748058379,
+        "sample_sd": 1.387214922781934,
+        "median": 4.524924231693149,
+        "min": 4.449832188896835,
+        "max": 7.412479943595827
+      },
+      "restore_to_successful_tcp_begin_wait_sec": {
+        "n": 5,
+        "mean": 4.983088715188205,
+        "sample_sd": 1.3740514604661764,
+        "median": 4.11490663792938,
+        "min": 3.96114647295326,
+        "max": 7.048220450989902
+      },
+      "restore_to_tcp_residual_sec": {
+        "n": 5,
+        "mean": 0.03612932898104191,
+        "sample_sd": 0.019230734307345416,
+        "median": 0.03191059548407793,
+        "min": 0.022551947273314,
+        "max": 0.06953761726617813
+      },
+      "tcp_complete_to_tls_sec": {
+        "n": 5,
+        "mean": 0.08357897754758596,
+        "sample_sd": 0.06843445931608387,
+        "median": 0.07080150302499533,
+        "min": 0.03161498624831438,
+        "max": 0.2009288752451539
+      },
+      "tls_complete_to_publish_sec": {
+        "n": 5,
+        "mean": 0.37662172634154556,
+        "sample_sd": 0.08597061117054981,
+        "median": 0.34649201203137636,
+        "min": 0.30199077539145947,
+        "max": 0.5244876844808459
+      },
+      "tcp_complete_to_publish_sec": {
+        "n": 5,
+        "mean": 0.46020070388913153,
+        "sample_sd": 0.15298680669068718,
+        "median": 0.4191480986773968,
+        "min": 0.3403610587120056,
+        "max": 0.7254165597259998
+      }
+    },
+    "restore_phases": {
+      "old_connection_not_yet_failed": 5
+    }
+  },
+  {
+    "campaign": "restart_vs_fifo",
+    "outage_sec": 12,
+    "variant": "fifo",
+    "metrics": {
+      "restore_to_rtmps_ack_sec": {
+        "n": 5,
+        "mean": 5.217823998630047,
+        "sample_sd": 1.2486431345975935,
+        "median": 5.587632396258414,
+        "min": 3.8219582783058286,
+        "max": 6.817328748293221
+      },
+      "restore_to_successful_tcp_begin_wait_sec": {
+        "n": 5,
+        "mean": 4.778651464730501,
+        "sample_sd": 1.2758464448982683,
+        "median": 5.111180406995118,
+        "min": 3.3885760623961687,
+        "max": 6.419623827561736
+      },
+      "restore_to_tcp_residual_sec": {
+        "n": 5,
+        "mean": 0.04117200430482626,
+        "sample_sd": 0.020197373459491137,
+        "median": 0.034270189702510834,
+        "min": 0.025733149610459805,
+        "max": 0.07416862808167934
+      },
+      "tcp_complete_to_tls_sec": {
+        "n": 5,
+        "mean": 0.0478869866579771,
+        "sample_sd": 0.017029095120366954,
+        "median": 0.044889435172080994,
+        "min": 0.03357451781630516,
+        "max": 0.07564740534871817
+      },
+      "tls_complete_to_publish_sec": {
+        "n": 5,
+        "mean": 0.3501135429367423,
+        "sample_sd": 0.04370987281458227,
+        "median": 0.3243261808529496,
+        "min": 0.31719835102558136,
+        "max": 0.41553257033228874
+      },
+      "tcp_complete_to_publish_sec": {
+        "n": 5,
+        "mean": 0.39800052959471943,
+        "sample_sd": 0.047437429827454226,
+        "median": 0.36763451900333166,
+        "min": 0.3592135878279805,
+        "max": 0.4506127219647169
+      }
+    },
+    "restore_phases": {
+      "old_connection_not_yet_failed": 5
+    }
+  },
+  {
+    "campaign": "restart_vs_fifo",
+    "outage_sec": 30,
+    "variant": "direct",
+    "metrics": {
+      "restore_to_rtmps_ack_sec": {
+        "n": 5,
+        "mean": 1.619194249995053,
+        "sample_sd": 0.09515751645540176,
+        "median": 1.5953038549050689,
+        "min": 1.5253459624946117,
+        "max": 1.772659294307232
+      },
+      "restore_to_successful_tcp_begin_wait_sec": {
+        "n": 5,
+        "mean": 1.1859483998268843,
+        "sample_sd": 0.05736314082247466,
+        "median": 1.1936605609953403,
+        "min": 1.092122595757246,
+        "max": 1.2430756948888302
+      },
+      "restore_to_tcp_residual_sec": {
+        "n": 5,
+        "mean": 0.026878630742430687,
+        "sample_sd": 0.006682795153072949,
+        "median": 0.02483450621366501,
+        "min": 0.02109621651470661,
+        "max": 0.038441259413957596
+      },
+      "tcp_complete_to_tls_sec": {
+        "n": 5,
+        "mean": 0.038358337990939614,
+        "sample_sd": 0.01184338722257889,
+        "median": 0.031132258474826813,
+        "min": 0.028025765903294086,
+        "max": 0.053601606748998165
+      },
+      "tls_complete_to_publish_sec": {
+        "n": 5,
+        "mean": 0.36800888143479826,
+        "sample_sd": 0.06261088513933948,
+        "median": 0.3426569728180766,
+        "min": 0.3155331229791045,
+        "max": 0.4756407281383872
+      },
+      "tcp_complete_to_publish_sec": {
+        "n": 5,
+        "mean": 0.40636721942573784,
+        "sample_sd": 0.07134097628187833,
+        "median": 0.3913121288642287,
+        "min": 0.34666538145393133,
+        "max": 0.5292423348873854
+      }
+    },
+    "restore_phases": {
+      "old_connection_error_cleanup": 5
+    }
+  },
+  {
+    "campaign": "restart_vs_fifo",
+    "outage_sec": 30,
+    "variant": "fifo",
+    "metrics": {
+      "restore_to_rtmps_ack_sec": {
+        "n": 5,
+        "mean": 1.2494204429909588,
+        "sample_sd": 0.13209082742092235,
+        "median": 1.3104499354958534,
+        "min": 1.054023033939302,
+        "max": 1.3888435810804367
+      },
+      "restore_to_successful_tcp_begin_wait_sec": {
+        "n": 5,
+        "mean": 0.7751927679404617,
+        "sample_sd": 0.12595083433663665,
+        "median": 0.7939743716269732,
+        "min": 0.5906446473672986,
+        "max": 0.8984224051237106
+      },
+      "restore_to_tcp_residual_sec": {
+        "n": 5,
+        "mean": 0.034496187791228296,
+        "sample_sd": 0.009812445318873498,
+        "median": 0.033781866542994976,
+        "min": 0.023154055699706078,
+        "max": 0.04689507186412811
+      },
+      "tcp_complete_to_tls_sec": {
+        "n": 5,
+        "mean": 0.044787101447582245,
+        "sample_sd": 0.013297021987295965,
+        "median": 0.041128210723400116,
+        "min": 0.03255915082991123,
+        "max": 0.0644209049642086
+      },
+      "tls_complete_to_publish_sec": {
+        "n": 5,
+        "mean": 0.3949443858116865,
+        "sample_sd": 0.08349110844289742,
+        "median": 0.37027884647250175,
+        "min": 0.32400424778461456,
+        "max": 0.5278717260807753
+      },
+      "tcp_complete_to_publish_sec": {
+        "n": 5,
+        "mean": 0.43973148725926875,
+        "sample_sd": 0.0843897397256332,
+        "median": 0.4219052968546748,
+        "min": 0.36481976974755526,
+        "max": 0.5620725164189935
+      }
+    },
+    "restore_phases": {
+      "old_connection_error_cleanup": 5
+    }
+  },
+  {
+    "campaign": "restart_vs_fifo",
+    "outage_sec": 60,
+    "variant": "direct",
+    "metrics": {
+      "restore_to_rtmps_ack_sec": {
+        "n": 5,
+        "mean": 0.9727211739867926,
+        "sample_sd": 0.8629467492454688,
+        "median": 0.6338021401315928,
+        "min": 0.41972036473453045,
+        "max": 2.494897933676839
+      },
+      "restore_to_successful_tcp_begin_wait_sec": {
+        "n": 5,
+        "mean": 0.41989627163857224,
+        "sample_sd": 0.9389166068825645,
+        "median": 0,
+        "min": 0,
+        "max": 2.099481358192861
+      },
+      "restore_to_tcp_residual_sec": {
+        "n": 5,
+        "mean": 0.16525996401906012,
+        "sample_sd": 0.1616097112051931,
+        "median": 0.07862864434719086,
+        "min": 0.02528738509863615,
+        "max": 0.41078309435397387
+      },
+      "tcp_complete_to_tls_sec": {
+        "n": 5,
+        "mean": 0.04519786834716797,
+        "sample_sd": 0.007034241869386864,
+        "median": 0.04620730224996805,
+        "min": 0.035049102269113064,
+        "max": 0.05403322819620371
+      },
+      "tls_complete_to_publish_sec": {
+        "n": 5,
+        "mean": 0.34236706998199223,
+        "sample_sd": 0.02998714155813673,
+        "median": 0.3320095771923661,
+        "min": 0.3133394904434681,
+        "max": 0.3871573470532894
+      },
+      "tcp_complete_to_publish_sec": {
+        "n": 5,
+        "mean": 0.3875649383291602,
+        "sample_sd": 0.029289074585560067,
+        "median": 0.38604280538856983,
+        "min": 0.35587900318205357,
+        "max": 0.43336464930325747
+      }
+    },
+    "restore_phases": {
+      "successful_tcp_inflight": 4,
+      "earlier_unsuccessful_tcp_inflight": 1
+    }
+  },
+  {
+    "campaign": "restart_vs_fifo",
+    "outage_sec": 60,
+    "variant": "fifo",
+    "metrics": {
+      "restore_to_rtmps_ack_sec": {
+        "n": 5,
+        "mean": 1.3939176438376308,
+        "sample_sd": 0.1701352028293401,
+        "median": 1.4671302884817123,
+        "min": 1.107718258164823,
+        "max": 1.5189600801095366
+      },
+      "restore_to_successful_tcp_begin_wait_sec": {
+        "n": 5,
+        "mean": 0.9696938972920179,
+        "sample_sd": 0.1704848742006428,
+        "median": 1.07699940726161,
+        "min": 0.7135364366695285,
+        "max": 1.1006265711039305
+      },
+      "restore_to_tcp_residual_sec": {
+        "n": 5,
+        "mean": 0.032754425145685676,
+        "sample_sd": 0.017144472417088986,
+        "median": 0.026704817079007626,
+        "min": 0.021965267136693,
+        "max": 0.06283329799771309
+      },
+      "tcp_complete_to_tls_sec": {
+        "n": 5,
+        "mean": 0.0498446537181735,
+        "sample_sd": 0.018458825037259347,
+        "median": 0.042749649845063686,
+        "min": 0.03557431045919657,
+        "max": 0.08026557322591543
+      },
+      "tls_complete_to_publish_sec": {
+        "n": 5,
+        "mean": 0.34162466768175365,
+        "sample_sd": 0.019886445381425994,
+        "median": 0.3522906070575118,
+        "min": 0.3112341929227114,
+        "max": 0.35921797435730696
+      },
+      "tcp_complete_to_publish_sec": {
+        "n": 5,
+        "mean": 0.39146932139992713,
+        "sample_sd": 0.03163000700073409,
+        "median": 0.3960939571261406,
+        "min": 0.35398384276777506,
+        "max": 0.4337434433400631
+      }
+    },
+    "restore_phases": {
+      "between_closed_and_next_attempt": 4,
+      "earlier_unsuccessful_tcp_inflight": 1
+    }
+  }
+]

@@ -8,9 +8,12 @@ import threading
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import BinaryIO
+from urllib.parse import urlsplit
+
+from .transport_telemetry import TransportTelemetry
 
 
-_RTMP_STREAM_KEY_RE = re.compile(r"(rtmps?://[^\s]+?/live2/)[^\s]+", re.IGNORECASE)
+_RTMP_STREAM_KEY_RE = re.compile(r"rtmps?://[^\s'\"<>]+", re.IGNORECASE)
 
 
 def utc_now() -> str:
@@ -18,7 +21,16 @@ def utc_now() -> str:
 
 
 def redact_stderr_line(line: str) -> str:
-    return _RTMP_STREAM_KEY_RE.sub(r"\1***", line)
+    def redact(match):
+        try:
+            value = urlsplit(match.group(0))
+            host = value.netloc.rsplit('@', 1)[-1]
+            prefix = value.path.split('/')[1] if '/' in value.path else ''
+            path = '/' + prefix + '/***' if prefix in ('live2', 'app') else '/***'
+            return value.scheme + '://' + host + path
+        except ValueError:
+            return 'rtmps://***'
+    return _RTMP_STREAM_KEY_RE.sub(redact, line)
 
 
 class FFmpegStderrCapture:
@@ -40,6 +52,7 @@ class FFmpegStderrCapture:
         self.run_id = run_id
         self.ffmpeg_pid = int(ffmpeg_pid)
         self.stream_generation = stream_generation
+        self.transport = TransportTelemetry(self.ffmpeg_pid, stream_generation)
         self.line_count = 0
         self.last_line = ""
         self.rotated_count = 0
@@ -120,6 +133,7 @@ class FFmpegStderrCapture:
                 else:
                     text = str(raw)
                 line = redact_stderr_line(text.rstrip("\r\n"))
+                self.transport.line(line)
                 self.line_count += 1
                 self.last_line = line
                 payload = {

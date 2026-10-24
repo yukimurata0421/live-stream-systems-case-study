@@ -87,6 +87,7 @@ class RuntimeObservationPublisher:
         interval_seconds: float = 1.0,
         rtmp_ports: tuple[int, ...] = (443,),
         recovery_evidence_cycle: Callable[[], None] | None = None,
+        tcp_metrics_supplier: Callable[[int, tuple[int, ...]], dict[str, int | str]] | None = None,
     ) -> None:
         self.path = path
         self.projection_path = projection_path
@@ -96,6 +97,7 @@ class RuntimeObservationPublisher:
         self.interval_seconds = max(0.2, interval_seconds)
         self.rtmp_ports = rtmp_ports
         self.recovery_evidence_cycle = recovery_evidence_cycle
+        self.tcp_metrics_supplier = tcp_metrics_supplier
         self.instance_id = producer_instance_id or f"runtime-executor-{uuid.uuid4()}"
         self.sequence = 0
         self._stop = threading.Event()
@@ -168,7 +170,7 @@ class RuntimeObservationPublisher:
             "runtime_snapshot_reason": runtime_decision.reason,
             "runtime_snapshot_status": "VALID" if runtime_decision.available else "UNKNOWN",
             "runtime_container_ready": runtime_decision.container_ready,
-            "tcp_metrics": _tcp_metrics(local_pid, self.rtmp_ports),
+            "tcp_metrics": (self.tcp_metrics_supplier or _tcp_metrics)(local_pid, self.rtmp_ports),
             "production_behavior_modified": False,
         }
         if "delivery_route" in process:

@@ -7,6 +7,9 @@ records. They are listed by topic, with one line each, in the
 
 The pages most readers need from this folder:
 
+- [FIFO connection recovery](ffmpeg-fifo-recovery.md): why the output reconnects
+  instead of riding through or restarting FFmpeg; its
+  [measured comparison and rollout failure](ffmpeg-fifo-measurements.md).
 - [Self-healing OCI fan-out](self-healing-oci-fanout.md): the media route since
   2026-10-20.
 - [Replacing an unfinished OCI recovery design](oci-route-simplification-decision.md):

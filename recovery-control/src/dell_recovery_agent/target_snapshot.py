@@ -14,6 +14,7 @@ from typing import Any
 
 from cra_dell_recovery.models import TargetIdentity
 from cra_dell_recovery.time import isoformat_utc, utc_now
+from .delivery_command import is_delivery_command
 
 CommandRunner = Callable[[list[str]], str]
 
@@ -117,8 +118,7 @@ class AtomicKubernetesTargetSnapshotProducer:
                 cgroup = (item / "cgroup").read_text(encoding="utf-8", errors="replace")
                 if bare not in cgroup:
                     continue
-                command = (item / "cmdline").read_bytes().replace(b"\0", b" ").decode("utf-8", errors="replace")
-                if not command.startswith("ffmpeg ") or " rtmps://" not in command or " -f flv " not in command:
+                if not is_delivery_command((item / "cmdline").read_bytes()):
                     continue
                 ticks = self._start_ticks((item / "stat").read_text(encoding="utf-8"))
                 matches.append((int(item.name), ticks))

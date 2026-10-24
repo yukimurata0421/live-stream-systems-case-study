@@ -10,7 +10,9 @@
 - [`public-release.md`](public-release.md): provenance, exclusions, and claim limits.
 - [`source-provenance.json`](source-provenance.json): machine-readable source identity.
 - [`current-evidence-and-route-source.md`](current-evidence-and-route-source.md): current evidence, reconciliation, route-fence source, and qualification boundaries.
-- [`local-reflex-authority.md`](local-reflex-authority.md): local reflex restart path, signed policy, audit verification, and boundaries.
+- [`local-reflex-authority.md`](local-reflex-authority.md): current contract for the local reflex restart path: stage, restart conditions, stall criterion, engine grace, outcome labels, audit, and boundaries.
+- [`local-reflex-operations.md`](local-reflex-operations.md): inspecting, evaluating, switching to `enforce`, stopping, and rolling back the local reflex path.
+- [`local-reflex-records.md`](local-reflex-records.md): dated replays, isolated verification, dry-run rollout, retirement correction, and frozen runtime candidates.
 
 ## Public source language
 

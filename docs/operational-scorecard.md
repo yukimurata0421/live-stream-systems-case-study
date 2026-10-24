@@ -8,6 +8,7 @@ evidence windows, not current service-health guarantees.
 
 | Result | Evidence | Limit |
 | --- | --- | --- |
+| Same-process output recovery | [FIFO measurements](v3/ffmpeg-fifo-measurements.md): repeated NVENC/AAC trials and corrected 12-second live exercise with observed ACK recovery around 1.95 s. | Initial rollout lost audio; public-player continuity and the full retry-exhaustion/restart cascade remain untested. |
 | 160-day same-URL observation | October 14 checkpoint; `140 / 140` ledger dates and zero recorded transitions. | Identity checks do not prove uninterrupted frames or all intraday states. |
 | Diagnosed network and watchdog faults | Independent network checks and correlated restart logs. | Router/carrier ownership and the entire reception history remain unproven. |
 | Corrected one Twitch renewal exercise | New Twitch session, sampled video/audio, preserved YouTube handler after the correction. | The first exercise failed; later scheduled renewals and long reception soak are separate. |

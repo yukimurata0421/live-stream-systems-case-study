@@ -6,6 +6,21 @@
     "others tracks are classified after operator approval on 2026-05-10 JST."
   ],
   "track_overrides": {
+    "Wiguez & Josh Levoid - Get Out Here (Ft. MaryQueen)": {
+      "action": "exclude",
+      "confidence": "confirmed",
+      "reason": "Operator-requested exclusion after a Twitch automated-audio notice on 2026-10-24 JST; retain source audio and playback history."
+    },
+    "Malik Bash - Apollo": {
+      "action": "exclude",
+      "confidence": "confirmed",
+      "reason": "Operator-requested exclusion after a Twitch automated-audio notice on 2026-10-24 JST; retain source audio and playback history."
+    },
+    "Vena Cava & Project Veresen feat. Raya - Flames": {
+      "action": "exclude",
+      "confidence": "confirmed",
+      "reason": "Operator-requested exclusion after a Twitch automated-audio notice on 2026-10-24 JST; retain source audio and playback history."
+    },
     "Alva Gracia - Emotions Like": {
       "slot": "night",
       "confidence": "confirmed",

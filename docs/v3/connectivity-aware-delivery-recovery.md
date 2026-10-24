@@ -4,6 +4,12 @@ Status: public source contract
 
 Recorded: 2026-08-16 JST
 
+Connection-layer update, 2026-10-24 JST: [FFmpeg FIFO recovery](ffmpeg-fifo-recovery.md)
+adds bounded output reconnection and process-independent connection facts.
+Those facts do not authorize termination. The [dated comparison](ffmpeg-fifo-measurements.md)
+distinguishes a successful FIFO reconnect from process replacement and full
+media recovery; existing control ownership below is retained.
+
 This document explains how the delivery runtime avoids amplifying a physical
 connectivity failure. It describes repository behavior and safety boundaries;
 it is not evidence that a particular release is currently deployed.

@@ -17,6 +17,7 @@ for a path that fits their role.
 
 | Question | Read next |
 | --- | --- |
+| Can an output recover without replacing the encoder? | [Runtime contract and layer choice](v3/ffmpeg-fifo-recovery.md), then the [measured FIFO case](v3/ffmpeg-fifo-measurements.md). |
 | Which hosts exist, and who can act on what? | [Architecture](architecture.md). |
 | How do normal delivery, fallback, and return work? | [Self-healing OCI fan-out](v3/self-healing-oci-fanout.md). |
 | Why was the previous recovery design replaced? | [Decision record](v3/oci-route-simplification-decision.md). |

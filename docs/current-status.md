@@ -1,6 +1,6 @@
 # Current Status
 
-Last updated: 2026-10-23 JST.
+Last updated: 2026-10-24 JST.
 
 This is the only page that records state expected to change soon: what was
 changed recently, what has not been observed yet, and what is deliberately
@@ -24,6 +24,60 @@ defines the components and thresholds.
 | 11:33 | arena-server observes the relay through the private tunnel instead of the home public address. | Public status relay values returned to measured data. |
 | 11:56-12:21 | Main sender switched to RTMPS on the relay; readiness and TCP-sampling port lists updated. | Upload samples of 3.57 and 3.63 Mbps returned. |
 | 14:16 | The YouTube watchdog counts an established fallback-Pod connection as local delivery while the main Pod is not sending. | After restart, `local_ok=true` and no incident with the fallback at zero replicas. Not yet observed during a real fallback. The public source includes its credential-free connection tests. |
+
+## Twitch Copyrighted-Audio Notice (2026-10-23 to 2026-10-24 JST)
+
+Twitch's automated audio detection identified three NCS tracks in segments of a
+VOD created on 2026-10-23: *Get Out Here* (Wiguez, Josh Levoid ft. MaryQueen),
+*Apollo* (Malik Bash) and *Flames* (Vena Cava, Project Veresen ft. Raya). Twitch
+muted those segments, deleted corresponding clips and changed the channel's
+default so new VODs are stored unpublished for review. It was not a DMCA
+notification, and no copyright strike was issued.
+
+Review found a separate gap: from the Twitch addition on 2026-10-20 until
+2026-10-24 16:00 JST, the Twitch channel carried no NCS credit. The music boundary named only the YouTube
+livestream description as the attribution location, and adding Twitch did not
+trigger the re-review that boundary already required.
+
+| Time | Change | Verified |
+| --- | --- | --- |
+| 2026-10-24 15:50:41 | The three tracks were removed from AutoDJ playback candidates, and a classification override keeps them out of later regenerations. Source files and play history were kept. | The tracks were absent from the running image's candidate list; no other track's classification changed; the AutoDJ process and the FFmpeg process and connection continued; the next natural track change came at 15:52:54. |
+| 2026-10-24 16:00 | NCS credit added on the Twitch channel. | Operator-applied. |
+
+The two actions address different problems. Removing the tracks responds to
+platform detection; adding credit meets the NCS usage-policy condition. Neither
+restores the muted VOD segments or proves that other tracks will not be
+detected. The operator found no YouTube claim for the same tracks as of
+2026-10-24. Seven VODs were stored unpublished on 2026-10-24; automatic VOD
+publication stays off by choice, so no review before republication is planned.
+
+The public `configs/` copy includes the same three confirmed per-track
+exclusions, so regenerating the time buckets keeps these tracks out of playback
+candidates. The updated rule is in the
+[music licensing boundary](compliance-and-licensing-boundary.md#music-licensing-and-credit-boundary).
+
+## FIFO Connection Recovery (2026-10-24 JST)
+
+The operated main sender now uses bounded FFmpeg FIFO output recovery, retaining
+NVENC/AAC, GOP 10 and the relay's existing timeout. The corrected 12-second
+WireGuard-underlay blackout kept the same process and Pod while the observed
+connection generation changed from 1 to 2. New-connection ACK progress was
+observed about 1.95 s after planned restoration; returned video/audio and both
+provider forward counters were checked separately.
+
+The first rollout lost its relay audio track from about 12:06 to 12:18 JST and
+made the old FLV-only target classifier unavailable. It was rolled back and
+corrected before the successful exercise. Viewer impact was not measured.
+The [dated case](v3/ffmpeg-fifo-measurements.md) retains both outcomes.
+
+The public source now includes the FIFO builder, injected transport observer,
+FIFO-aware target classification, regression checks and sanitized timing tools.
+This source transfer does not deploy them. Local JSON/rotated events and
+Prometheus text exist in the operated version; new arena scrapes, CRA database
+fields and public UI panels were not added. The full retry-exhaustion to
+process-replacement cascade, a real ISP/public-IP change and long-term behavior
+under this version remain untested. Current lab pings use 0.5 s; retained
+measurements used 1 s.
 
 ## Video Observation (2026-10-22 to 2026-10-23 JST)
 
@@ -128,12 +182,18 @@ renumbering around 06:30 JST, after which the stream engine recovers by itself.
 The agent now waits 90 s (signed policy v2, still `dry_run`) before a stall can
 become a restart candidate. A relay output recorder keeps each daily
 interruption; the first entry, at 06:31 JST, left 41 s of relay output unseen.
+The [records](../recovery-control/docs/local-reflex-records.md) keep the dated
+analysis, and [operations](../recovery-control/docs/local-reflex-operations.md)
+lists what remains before `enforce`.
 
 ## Deliberately Disabled
 
 - CRA production authority (`production_behavior_change_authorized=false`).
   The local reflex agent runs only in `dry_run`.
 - Automatic replacement-broadcast creation by the YouTube watchdog.
+- Automatic Twitch VOD publication. Twitch turned it off after the 2026-10-23
+  audio notice; it is kept off because the 24/7 stream does not need public
+  archives.
 - Runtime and recovery authority in Monitoring v4. Its relay observer and
   public projection run in production as read-only components.
 
