@@ -2973,9 +2973,9 @@
       "decision": "add cra-agent and cra-central entry points and include cra in strict mypy",
       "before_sha256": "9620ef85c926f8e68b96a9adb63f6057d834a0c8ad4f07c827f768a5c0d89ad3",
       "source_sha256": null,
-      "public_sha256": "c54be505612cde49eb079574a996540d58676d1f92cee03009488d89ee0904f5",
+      "public_sha256": "2d6d8c9fae5d014cb367f9230be4209542ab56ac9a465be0ea02269c1eaab0ff",
       "port_date_jst": "2026-10-22",
-      "prior_public_sha256": "34ba76cd8ef50c618cc62fe185b2d71bebdb91227f4f1d2fd610d4bd258d8e28",
+      "prior_public_sha256": "c54be505612cde49eb079574a996540d58676d1f92cee03009488d89ee0904f5",
       "layout_update": "Current CRA and Stream support separation, 2026-10-26"
     },
     {
@@ -4763,6 +4763,7 @@
     "cra_python_files": 17,
     "cra_python_lines": 2535,
     "deployment_performed": false,
-    "publication_requested": true
+    "publication_requested": true,
+    "clean_checkout_import_classification": "explicit cra and runtime_boundary first-party imports; first failing Actions run retained in the layout record"
   }
 }

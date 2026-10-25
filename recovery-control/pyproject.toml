@@ -40,6 +40,9 @@ exclude = ["artifacts", ".runtime", ".deploy"]
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]
 
+[tool.ruff.lint.isort]
+known-first-party = ["cra", "runtime_boundary"]
+
 [tool.mypy]
 python_version = "3.11"
 strict = true

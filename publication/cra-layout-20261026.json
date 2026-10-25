@@ -264,6 +264,13 @@
       "status": "PASS",
       "current_changed_or_added_files_scanned": 72,
       "tool": "gitleaks detect --no-git --redact"
+    },
+    "clean_checkout_lint": "PASS: reproduced the original I001 errors in a git archive, then passed with explicit first-party import classification",
+    "clean_checkout_cra_tests": {
+      "passed": 156,
+      "format": "PASS",
+      "lint": "PASS",
+      "strict_mypy": "PASS"
     }
   },
   "deployment_performed": false,
@@ -294,6 +301,12 @@
       "stage": "final fresh-environment full Stream run",
       "passed": 1695,
       "skipped": 9
+    },
+    {
+      "stage": "first GitHub Actions run",
+      "run_id": 40243887980,
+      "commit": "ad066185147b3176a263bc1ce82f91c0ca4fa0db",
+      "result": "CRA lint failed with I001 in two Executor integration tests. A local ignored directory made import classification differ from a clean checkout. The lint configuration now explicitly marks cra and runtime_boundary as first-party packages. No application source or test behavior changed."
     }
   ],
   "publication": {
