@@ -1,84 +1,25 @@
 # Public Release Boundary
 
-The 2026-10-13 source port adds the [current evidence and route source](current-evidence-and-route-source.md)
-contract. Earlier provenance and validation records below keep their original
-cutoffs. The current [selected-file source map](../../publication/source-map.json)
-and [local validation](../../publication/validation.json) record this later port;
-they do not establish a production deployment or formal qualification.
+This source tree presents the current local reflex CRA: 17 Python files and
+2,535 lines under `src/cra/`, plus its tests, tools, examples and English docs.
+The original public snapshot and later selected ports remain traceable through
+the top-level publication records and Git history.
 
-The 2026-10-22 port adds the [local reflex authority](local-reflex-authority.md)
-source. Its [port record](../../publication/cra-reflex-port-20261022.json) records
-the development source identity and public adaptations; it does not establish a
-deployment.
+On 2026-10-26, the public layout was narrowed to this implementation. Required
+Stream Executor and observation modules moved unchanged to the top-level Stream
+source. The previous central authority, fallback agent, Monitoring projection,
+soak machinery and general harness remain at the exact [historical revision](history.md).
+The [layout record](../../publication/cra-layout-20261026.json) identifies moved
+files and the original revision. Dated evidence and failed attempts remain intact.
 
-Recorded: 2026-09-10 JST
+Only `cra` and `cra.central` are included in the CRA distribution. Its runtime
+dependency is `cryptography`. The test extra supplies the dependencies for real
+Executor integration checks using the companion Stream source; no fixed SQLite
+build, PostgreSQL client or private immutable release is required.
 
-Status: sanitized snapshot integrated under `recovery-control/` in the public
-`live-stream-systems-case-study` repository. This publication does not create a
-tag, deployment, service restart, credential operation, or production action.
-
-## Provenance
-
-The snapshot was exported from private source commit
-`fb7ffa3d96c4cf23637d72a5cbc6f65fac4d008c` without its Git history. Exported
-areas were then reviewed and sanitized in a new repository history.
-
-The private source working tree was clean when this provenance was refreshed.
-Later local changes, if any, are outside this exact source identity and cannot
-be inferred from the public commit.
-
-## Included
-
-- authority, monitoring projection, Dell Agent, runtime boundary, no-action
-  soak, maintenance, snapshot projection, and harness packages;
-- versioned JSON schemas and ordered SQLite migrations;
-- the explicit disabled-production recovery policy;
-- deterministic unit, integration, chaos, negative-control, and release tests,
-  with a machine-readable public-CI exclusion manifest;
-- inert systemd, PostgreSQL, Kubernetes, logrotate, and needrestart examples;
-- build, validation, replay, and harness tools; and
-- curated design-rationale, architecture, and safety documentation, including
-  repository-only harness-engineering, failure-injection, and chaos-testing
-  drafts.
-
-## Excluded
-
-- private Git metadata and remote configuration;
-- operational records, incident bodies, raw evidence, and soak artifacts;
-- databases, WAL/SHM, logs, captures, caches, build products, and virtual
-  environments;
-- certificates, private keys, tokens, webhooks, credentials, and real
-  credential paths;
-- private home paths, internal endpoint addresses, and exact live release
-  directories; and
-- deployment claims or authorization to enable production behavior.
-
-RFC 1918 addresses that remain under tests are synthetic fixtures used to
-exercise private-listener validation. They are not retained live endpoints.
-
-## Public adaptations
-
-- private workspace and release paths were replaced with portable `/srv`,
-  `/opt`, and `/var/lib` examples;
-- host-contract examples use a repository-specific generic path;
-- high-resolution private documentation was replaced with this curated set;
-- generated package metadata was excluded; and
-- public validation rejects private workspace paths and common secret or
-  runtime-artifact classes.
-
-## Verification
-
-The public snapshot is accepted only after Python compilation, public snapshot
-validation, the selected repository-only test surface under the hash-pinned
-SQLite 3.51.3 runtime, diff checks, Git object checks, and redacted secret
-scanning succeed. The retained but excluded tests
-are listed with reasons in `tests/public_ci_exclusions.json`; none is converted
-into evidence for a missing private environment, artifact, workflow contract,
-or sibling-repository candidate.
-
-## Operational warning
-
-Files under `ops/` and several tools construct production-shaped commands.
-They are review examples, not an installation request. A real deployment must
-reacquire host identity, live source, running release, failure domain,
-authorization, rollback, and stop conditions for every target host.
+Configuration examples keep `dry_run`; service examples are inert until an
+operator installs them under a separately approved deployment. This reorganization
+did not deploy code, change policy or authority, restart services, or alter live
+state. Local tests are not provider, receiver, recovery-benefit or formal-soak
+proof. Private keys, raw logs, runtime databases, addresses and host workflows
+remain excluded.

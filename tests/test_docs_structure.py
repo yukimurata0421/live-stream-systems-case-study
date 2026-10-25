@@ -217,7 +217,7 @@ class PublicDocsStructureTests(unittest.TestCase):
 
         self.assertIn("HP ProDesk `arena-server`", architecture)
         self.assertIn("## Who Can Act On What", architecture)
-        self.assertIn("production_behavior_change_authorized=false", architecture)
+        self.assertIn("`dry_run`", architecture)
         self.assertIn("## Guarded Restart Gates", runtime)
         self.assertIn("CRA Contract (Production-Disabled)", runtime)
         self.assertIn("one exact, target-wide fenced FFmpeg-child effect", runtime)
@@ -310,10 +310,10 @@ class PublicDocsStructureTests(unittest.TestCase):
 
         scorecard = read(DOCS / "operational-scorecard.md")
         self.assertIn(
-            "Central Restart Authority | Tested / documented / production-disabled",
+            "Central Restart Authority | Current local reflex / tested / dry_run",
             scorecard,
         )
-        self.assertIn("No production authority is enabled", scorecard)
+        self.assertIn("No restart requests are sent", scorecard)
         self.assertIn("no live effect or completed production-soak claim", scorecard)
         self.assertIn("Monitoring v4 arena evidence plane | Tested / documented", scorecard)
 
@@ -364,7 +364,7 @@ class PublicDocsStructureTests(unittest.TestCase):
             with self.subTest(publication_owner=owner):
                 self.assertIn(owner, publication)
         self.assertNotIn("cra-01", media + publication)
-        self.assertIn("production_behavior_change_authorized=false", text)
+        self.assertIn("`dry_run`", text)
         self.assertIn("CRA (Central Restart Authority)", text)
 
     def test_public_docs_preserve_private_public_boundary(self) -> None:

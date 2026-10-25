@@ -85,7 +85,7 @@ failover qualification, or a new same-URL availability measurement.
 - [Lease client](../../src/stream_core/engine/relay_lease_client.py),
   [relay guard](../../ops/relay/relay_guard.py), and
   [relay supervisor](../../ops/relay/relay_supervisor.py).
-- [Route fence tests](../../recovery-control/tests/runtime_boundary/test_stream_route_fence.py)
+- [Route fence tests](../../tests/runtime_boundary/test_stream_route_fence.py)
   and [pipeline tests](../../tests/test_delivery_pipeline.py).
 
 These modules include effectful adapters for review. There is no public

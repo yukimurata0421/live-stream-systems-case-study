@@ -17,8 +17,8 @@ def test_current_public_tree_has_no_boundary_findings() -> None:
 def test_private_workspace_and_runtime_artifacts_are_rejected(tmp_path: Path) -> None:
     for relative in ("README.md", "LICENSE", "pyproject.toml"):
         (tmp_path / relative).write_text("fixture\n", encoding="utf-8")
-    for relative in ("src", "contracts", "migrations", "policy", "tests"):
-        (tmp_path / relative).mkdir()
+    for relative in ("src/cra", "policy", "tests/reflex"):
+        (tmp_path / relative).mkdir(parents=True)
     private_path = "/home/" + "yuki/private"
     (tmp_path / "src" / "bad.py").write_text(f"path = '{private_path}'\n", encoding="utf-8")
     (tmp_path / "runtime.sqlite3").write_bytes(b"sqlite fixture")

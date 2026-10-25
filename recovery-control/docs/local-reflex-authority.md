@@ -222,5 +222,6 @@ included policy example is `dry_run`; `enforce` additionally needs an Executor
 authority handoff and a host contract that permits local restart decisions.
 A Pod-side transport binding and successor evidence were prototyped and are
 frozen; neither is required by the current path.
-The three-host packages remain in this repository for review; the reflex path
-does not consume arena projections.
+The previous three-host packages are retained in [Git history](history.md).
+The current CRA does not consume arena projections. Its companion Stream
+Executor is in `../../src/runtime_boundary/`.

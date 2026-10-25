@@ -35,7 +35,7 @@ def candidate_files(root: Path) -> list[Path]:
 
 def validate(root: Path) -> list[dict[str, str]]:
     issues: list[dict[str, str]] = []
-    required = ["README.md", "LICENSE", "pyproject.toml", "src", "contracts", "migrations", "policy", "tests"]
+    required = ["README.md", "LICENSE", "pyproject.toml", "src/cra", "policy", "tests/reflex"]
     for relative in required:
         if not (root / relative).exists():
             issues.append({"path": relative, "reason": "required_path_missing"})

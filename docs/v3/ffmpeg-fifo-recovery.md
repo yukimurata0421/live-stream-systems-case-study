@@ -112,7 +112,7 @@ next socket poll, so that event carries the **last observed** connection
 generation; the next socket observation establishes the new one. The snapshot
 always reports `delivery_or_video_verified=false`.
 
-The [target snapshot](../../recovery-control/src/dell_recovery_agent/target_snapshot.py)
+The [target snapshot](../../src/dell_recovery_agent/target_snapshot.py)
 accepts a single RTMPS FLV or FIFO output and keeps its existing ownership and
 identity checks. Multiple outputs and unsupported inner formats are rejected.
 
@@ -150,7 +150,7 @@ python3 -m pytest -q tests/test_fifo_transport_telemetry.py \
   tests/test_runtime_bootstrap_contracts.py tests/test_ffmpeg_stderr_capture.py
 ```
 
-Install the public `recovery-control` package as described in the
+Install the Stream package and the public `recovery-control` package as described in the
 [documentation guide](../README.md) for the integrated collector tests.
 When FFmpeg/ffprobe are installed, the AV regression test writes a short local
 FLV through the full output command and verifies both H.264 and AAC headers.

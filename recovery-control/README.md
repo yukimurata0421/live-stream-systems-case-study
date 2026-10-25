@@ -1,164 +1,75 @@
 # Central Restart Authority
 
-This subproject is a sanitized snapshot of the recovery control plane behind a
-self-built 24/7 YouTube Live system. It separates
-monitoring facts, central authorization, and the physical FFmpeg effect across
-three failure domains.
+CRA evaluates a managed FFmpeg child's TCP stall on the delivery host under a
+policy signed by the central service. The central service publishes policy and
+verifies the append-only audit. The existing Stream Effect Executor owns the
+physical effect, exact-target checks, and durable generation fence.
 
-Two designs are retained. The three-host design below routes every restart
-through central authorization. The 2026-10-22
-[local reflex path](docs/local-reflex-authority.md) is the current direction for
-FFmpeg TCP-stall recovery: Dell decides under a policy signed by cra-01, and
-cra-01 verifies the audit afterward. Neither performs production restarts.
+The current implementation is **17 Python files, 2,535 lines** under `src/cra/`
+(including comments and blank lines). The operated release remains in
+`dry_run`: it records decisions and sends no restart requests. Publication,
+local tests, and elapsed runtime do not grant production authority.
 
-The public snapshot is designed for architecture and reliability review. It
-does not contain production credentials, runtime state, databases, host logs,
-packet captures, or an enabled production action path.
+## Start here
 
-## System shape
-
-```text
-Dell delivery host
-  signed target, transport, recovery, and maintenance observations
-       |
-       | read-only mTLS GET
-       v
-arena-server monitoring plane
-  PostgreSQL read-only adapter -> facts-only signed projection
-       |
-       | read-only mTLS GET
-       v
-cra-01 central authority
-  policy + budget + cooldown + command lifecycle + final verification
-       |
-       | production delivery is disabled in this snapshot
-       v
-Dell Recovery Agent
-  authority lease + exact target + durable effect fence
-       v
-stream-engine Effect Executor -> exact FFmpeg child
-```
-
-The monitoring plane cannot authorize an action. The central authority cannot
-signal a process. The Dell Agent cannot redefine central policy. Only the
-Effect Executor owns the physical effect boundary.
-
-CRA was introduced after independent recovery decisions collided and later
-ledger review found seven duplicate restart scopes against the same managed
-FFmpeg generations. The design rationale and the limits of that evidence are
-recorded in [`docs/why-cra.md`](docs/why-cra.md).
-
-## Evidence And Route Source Update
-
-The 2026-10-13 public port adds current evidence/reconciliation checks,
-authorization-revision binding, TCP analysis, and the typed route fence.
-See [current evidence and route source](docs/current-evidence-and-route-source.md).
-The port does not enable production delivery, automatic failover, or broader
-runtime recovery; qualification remains a separate evidence gate.
-
-## Local Reflex Update
-
-The 2026-10-22 public port adds a local reflex path for FFmpeg TCP-stall
-recovery. Dell decides under a policy signed by cra-01, and cra-01 verifies the
-append-only audit afterward, so LAN loss needs no fallback mode. See
-[local reflex authority](docs/local-reflex-authority.md) for the contract,
-[operations](docs/local-reflex-operations.md) for the procedure, and
-[records](docs/local-reflex-records.md) for dated evidence. The included policy
-example is `dry_run`; the port does not enable production restarts.
-
-## Current source posture
-
-The included policy declares:
-
-```text
-status = PROPOSED_LOCAL_VERIFICATION
-production_behavior_change_authorized = false
-```
-
-The no-action runtime can record `WOULD_AUTHORIZE` decisions, but it cannot
-materialize an executable authorization or deliver a command. Source presence
-and test success must not be read as production activation.
-
-## Reliability mechanisms
-
-- RFC 8785 canonical JSON, SHA-256, Ed25519, and TLS 1.3 mutual TLS;
-- signed, source-bound, release-bound, sequence-bound evidence projections;
-- facts-only arena payloads with recursive control-field rejection;
-- host-local SQLite/WAL with ordered migrations and transactional outboxes;
-- request idempotency plus logical-generation and exact-target effect fences;
-- `OUTCOME_UNKNOWN` without automatic retry;
-- append-only reconciliation after delayed or ambiguous outcomes;
-- separate Central, Dell Agent, and runtime EffectLedger databases;
-- an independent oracle, negative controls, evidence completeness checks, and
-  production-isolation counters in the harness.
-
-The design does not claim distributed ACID across hosts. It closes uncertainty
-with durable local transactions, identifiers, fencing, signed evidence, and
-reconciliation.
+- [Architecture](docs/architecture.md): two CRA services and the Stream boundary.
+- [Current contract](docs/local-reflex-authority.md): restart criterion, 90-second
+  engine grace, finite limits, unknown outcomes, and signed audit acknowledgements.
+- [Operations](docs/local-reflex-operations.md): inspect, evaluate, stop and roll back.
+- [Why CRA exists](docs/why-cra.md): duplicate attempts and the simpler authority split.
+- [Test boundaries](docs/harness-trust.md) and [dated evidence](docs/local-reflex-records.md).
+- [Historical design](docs/history.md): the previous three-host implementation,
+  soak machinery, harness, and their exact retained Git revision.
 
 ## Repository map
 
-| Path | Purpose |
+| Path | Responsibility |
 | --- | --- |
-| `src/cra/` | Local reflex agent and signed-policy and audit-verification service. |
-| `src/cra_authority/` | Central policy, command, outbox, and verification logic. |
-| `src/monitoring_projection/` | arena-server read-only facts adapter and signed projection. |
-| `src/dell_recovery_agent/` | Dell observation, authority, lease, and reconciliation boundary. |
-| `src/runtime_boundary/` | Exact FFmpeg target and at-most-once effect ledger. |
-| `src/cra_no_action_soak/` | No-action status, parity, and soak gates. |
-| `src/cra_harness/` | Fault injection, independent checks, and evidence gates. |
-| `contracts/` | Versioned JSON schemas. |
-| `migrations/` | Ordered Central, Dell, and maintenance SQLite migrations. |
-| `policy/` | Explicit recovery policy and disabled production posture. |
-| `ops/` | Inert deployment examples; public CI does not install them. |
-| `tests/` | Unit, integration, chaos, release-boundary, and negative-control tests. |
+| `src/cra/` | Local decision, persistent limits, Executor client, policy and audit verification. |
+| `tests/reflex/` | Current unit and real-Executor integration tests with test-owned resources. |
+| `tools/replay_tcp_samples.py` | Offline replay of retained TCP samples. |
+| `tools/executor_authority.py` | Explicit authority inspection and handover; no automatic invocation. |
+| `ops/systemd/`, `policy/` | Inert service and `dry_run` configuration examples. |
+| `docs/` | Current contract, operations, evidence limits and historical pointers. |
 
-## Local validation
+The Stream runtime boundary lives in [`../src/runtime_boundary/`](../src/runtime_boundary/),
+with its tests in [`../tests/runtime_boundary/`](../tests/runtime_boundary/).
+The target observer and the small shared identity/projection modules also belong
+to Stream. They are not part of the CRA distribution. Their source was moved
+without changing behavior; they are required by the delivery runtime and by CRA's
+real-Executor compatibility checks. The older central authority, fallback agent,
+soak system and general chaos harness are available through Git history rather
+than installed alongside the current CRA.
 
-Run these commands from `recovery-control/`:
+## Install and validate
+
+Use Python 3.11 or later. From `recovery-control/` in this repository:
 
 ```bash
 python3 -m venv .venv
-.venv/bin/pip install -e '.[test]'
-.venv/bin/ruff format --check .
-.venv/bin/ruff check .
+.venv/bin/python -m pip install -e '.[test]'
+.venv/bin/python -m pytest -q tests
+.venv/bin/ruff check src/cra tests tools
+.venv/bin/ruff format --check src/cra tests tools
 .venv/bin/mypy
-tools/sqlite_runtime/build.sh
-tools/sqlite_runtime/run-fixed.sh .venv/bin/python tools/run_public_test_suite.py
-python3 tools/validate_public_snapshot.py
+.venv/bin/python tools/validate_public_snapshot.py
+.venv/bin/cra-agent --help
+.venv/bin/cra-central --help
 ```
 
-The public runner discovers every test file and applies the explicit exclusions
-in `tests/public_ci_exclusions.json`. Those exclusions require private evidence,
-private workflow contracts, immutable release artifacts, a matching sibling
-`stream_v3` candidate, or an extended resource-bound replay. They remain visible
-for review but are not counted as public CI coverage.
-
-The tests require SQLite 3.51.3. The build script downloads the upstream source
-archive, verifies its SHA-256 and `sqlite3.c` SHA3-256, and installs it only
-under the ignored `.runtime/` directory. `tools/run_full_regression.sh` retains
-the private full-regression entrypoint, but running it does not restore excluded
-private evidence or cross-repository candidates.
-
-Start with [`docs/why-cra.md`](docs/why-cra.md), then read
-[`docs/architecture.md`](docs/architecture.md),
-[`docs/safety-model.md`](docs/safety-model.md) and
-[`docs/harness-trust.md`](docs/harness-trust.md). The current repository-only
-design record is split into [harness engineering](docs/harness-engineering-draft.md),
-[failure injection](docs/failure-injection-draft.md), and
-[chaos testing](docs/chaos-testing-draft.md) drafts.
+The integration tests load the companion Stream source from `../src`; no private
+checkout, production database, pinned SQLite build or live credentials are needed.
+Only the test extra needs the Stream boundary's `jsonschema` and `rfc8785`
+dependencies. The installed CRA package itself depends on `cryptography`.
+To run the Stream suite, follow the [top-level guide](../docs/README.md).
 
 ## Public boundary
 
-The original sanitized snapshot used private source commit
-`fb7ffa3d96c4cf23637d72a5cbc6f65fac4d008c`. The 2026-10-13 port adds selected
-later source, including uncommitted development changes, with public adaptations
-recorded in [the source map](../publication/source-map.json). The 2026-10-22
-local reflex port is recorded in
-[its port record](../publication/cra-reflex-port-20261022.json). Private Git history,
-credentials, operational records, raw live evidence, and generated runtime
-artifacts remain excluded. See [public release notes](docs/public-release.md).
+Examples retain `dry_run`. Enabling effects needs an explicit authority handover,
+compatible observations, finite persistent limits, a real Executor socket, and
+operating permission; see the current contract. These files contain no production
+keys, databases, logs, packet captures or private host installation workflow.
+The [publication record](../publication/cra-layout-20261026.json) records this
+source-only reorganization; no service, policy, live ledger or delivery was changed.
 
-## License
-
-MIT. See [`LICENSE`](LICENSE).
+MIT. See [LICENSE](LICENSE) and the [documentation index](docs/00_INDEX.md).

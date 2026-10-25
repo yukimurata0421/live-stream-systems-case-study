@@ -86,13 +86,14 @@ start.
 - `v3/twitch-session-renewal.md`: [2026-10-13 daily renewal owner, superseded](v3/twitch-session-renewal.md).
 - `v3/route-network-observation.md`: [2026-10-13 route diagnostics and baselines](v3/route-network-observation.md).
 
-## CRA And Recovery Design Studies (Not Enabled In Production)
+## CRA (Current Local Reflex In dry_run)
 
 - `v3/scoped-recovery-authority.md`: [the CRA effect boundary](v3/scoped-recovery-authority.md).
 - `v3/failure-injection-and-chaos-draft.md`: [failure-injection plan, draft](v3/failure-injection-and-chaos-draft.md).
 - [Why CRA exists](../recovery-control/docs/why-cra.md), [CRA architecture](../recovery-control/docs/architecture.md),
   [safety model](../recovery-control/docs/safety-model.md), [harness trust](../recovery-control/docs/harness-trust.md),
   and the [recovery-control catalog](../recovery-control/docs/00_INDEX.md).
+- [Current CRA source and validation](../recovery-control/README.md) and [historical three-host design](../recovery-control/docs/history.md).
 - [CRA local reflex path](../recovery-control/docs/local-reflex-authority.md): local restart decision under signed central policy, audit verification, `dry_run` only.
 - [Monitoring v4 README](../monitoring-v4/README.md), [architecture](../monitoring-v4/docs/architecture.md),
   and [implementation status](../monitoring-v4/docs/status.md). Its relay observer and public projection run

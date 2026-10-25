@@ -1,68 +1,37 @@
-# Three-Host Recovery Architecture
+# CRA Architecture
 
-This is the retained three-host design. FFmpeg TCP-stall recovery now follows
-the [local reflex path](local-reflex-authority.md), which keeps the decision on
-Dell under signed central policy.
+The current CRA is the local reflex path. It has two services:
 
-## Goal
+```mermaid
+flowchart LR
+    C["Central: signed policy"] --> A["Delivery host: CRA agent"]
+    O["Stream runtime: fresh observation"] --> A
+    A -->|"one typed request; enforce only"| E["Stream Effect Executor"]
+    E -->|"exact managed child"| F["FFmpeg"]
+    A -->|"append-only audit"| V["Central: verify and signed ACK"]
+```
 
-The control plane reduces recovery time without allowing one monitoring
-process, one stale cache, or one host to both decide and perform a restart.
-Host, Pod, container, and FFmpeg child are distinct failure domains.
-The observed duplicate-decision history behind this split is summarized in
-[`why-cra.md`](why-cra.md).
+Central owns policy versions, thresholds, upper limits and the operating mode.
+The agent evaluates the adopted policy, persists reservations and consumption,
+and asks the Executor at most once for one FFmpeg generation. It uses the same
+policy during a central-network outage and retains unacknowledged audit locally.
+There is no second LAN-loss decider or authority handback state machine in CRA.
 
-## Ownership
+The Stream Executor owns physical effects, peer admission, exact target identity,
+and a target-wide durable fence. Its implementation is in
+[`../../src/runtime_boundary/`](../../src/runtime_boundary/); Stream's target
+observer is in [`../../src/dell_recovery_agent/`](../../src/dell_recovery_agent/).
+The agent uses the existing typed v2 request and read-only status queries.
+Unresolved execution blocks another attempt; recovery observations never erase
+an unknown result or refund consumed limits.
 
-| Component | Owns | Must not own |
-| --- | --- | --- |
-| arena-server | Observation, freshness, parity, incident evidence, signed facts-only projection. | Action, authorization, command, recovery budget, or final verdict. |
-| cra-01 | Policy, budget, cooldown, authorization, command lifecycle, final `RECOVERED` / `FAILED` / `UNKNOWN`, reconciliation. | Direct process, container, Pod, or host mutation. |
-| Dell Recovery Agent | Credential use, authority lease, exact target admission, durable effect fence, local execution truth. | Reimplementation of central policy or independent final verdict. |
-| Effect Executor | The one physical effect against the exact managed FFmpeg child. | Deciding whether the command is authorized. |
+`dry_run` sends no restart request. A confirmed stall first waits for the engine's
+own recovery (90 seconds by default), and a non-running lifecycle is not a reason
+for CRA to interfere. FIFO output reconnection and FFmpeg lifecycle remain Stream
+responsibilities. CRA never promotes a child restart to a container, Pod or host
+restart.
 
-## Evidence flow
-
-Dell publishes signed target and runtime observations through a GET-only mTLS
-server. arena-server pulls those observations and joins them with a
-PostgreSQL transaction running `REPEATABLE READ READ ONLY`. The resulting
-facts bundle is checked for freshness, parity, and forbidden control fields,
-then signed and published as a Monitoring Evidence Projection.
-
-cra-01 pulls that projection into an atomic inbox. The authorizer evaluates
-the incident, required checks, cooldown, budgets, unresolved commands, and
-operating mode. The verifier later joins execution evidence with fresh pre/post
-monitoring evidence; it has no effect capability.
-
-## Transaction model
-
-Each host has a separate SQLite truth. There is no cross-host distributed
-transaction.
-
-The Central database commits command intent and an outbox message in one local
-transaction. Dell admits a request only after producer, generation, target,
-freshness, and fence checks. The runtime reserves `physical_attempt_count = 1`
-before the effect function can run. Ambiguous outcomes remain
-`OUTCOME_UNKNOWN` until append-only reconciliation proves an effect or no
-effect.
-
-## Local fallback
-
-Local fallback is bounded by a prior authority lease and shares the same
-logical-generation effect scope as central commands. Reconnection does not
-allow Dell to push arbitrary truth into the central database. cra-01 pulls the
-signed local journal, imports it exactly once, reconciles uncertainty, and only
-then installs a new central authority epoch.
-
-The 2026-10-22 [local reflex path](local-reflex-authority.md) avoids this mode
-switch for FFmpeg TCP-stall recovery by keeping the decision on Dell under
-signed central policy.
-
-## Integration boundaries
-
-- `stream_v3` owns delivery media and the exact FFmpeg child lifecycle.
-- Monitoring v4 owns arena-server evidence storage and facts generation.
-- This repository owns the protocol, central authority, Dell Agent boundary,
-  and cross-host evidence/reconciliation contracts.
-
-These source boundaries do not prove that any particular revision is deployed.
+Read the [current contract](local-reflex-authority.md),
+[safety model](safety-model.md), [test boundaries](harness-trust.md), and
+[operations](local-reflex-operations.md). The previous per-action central
+approval design is preserved in [history](history.md), not installed here.

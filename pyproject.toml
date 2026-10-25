@@ -2,13 +2,16 @@
 name = "stream-v3"
 version = "3.6.0"
 description = "Reliability engineering case study for a self-built 24/7 YouTube Live pipeline"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 license = { text = "MIT" }
 dependencies = [
   "mutagen",
   "Pillow",
   "PyYAML",
   "requests",
+  "cryptography>=46,<47",
+  "jsonschema>=4.19,<5",
+  "rfc8785>=0.1.4,<0.2",
   "tzdata; platform_system == 'Windows'",
 ]
 

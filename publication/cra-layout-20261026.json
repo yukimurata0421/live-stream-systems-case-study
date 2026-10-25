@@ -1,0 +1,305 @@
+{
+  "schema": "stream.public_cra_layout.v1",
+  "date_jst": "2026-10-26",
+  "scope": "Current local reflex CRA and required Stream runtime support",
+  "history_commit": "c9f632a38d1ca05e1b04dc502af7d7e2a0e7c6df",
+  "current_cra": {
+    "path": "recovery-control/src/cra",
+    "python_files": 17,
+    "lines_including_comments_and_blanks": 2535,
+    "source_bytes_changed": false
+  },
+  "before_recovery_source": {
+    "python_files": 228,
+    "lines_including_comments_and_blanks": 60366
+  },
+  "removed_tracked_paths": 674,
+  "removed_designs": [
+    "per-action central authority",
+    "LAN-loss fallback agent and handback",
+    "Monitoring signed projection transport",
+    "formal soak machinery",
+    "general three-host chaos harness",
+    "legacy release and deployment tools"
+  ],
+  "moved_unchanged_source_and_schemas": [
+    {
+      "path": "src/runtime_boundary/recovery_evidence.py",
+      "sha256": "842618eab50b1a1d67df072710d28b1c959bc44f63369c8fdcf1e5165088fd1b",
+      "from": "recovery-control/src/runtime_boundary/recovery_evidence.py"
+    },
+    {
+      "path": "src/runtime_boundary/operator_route.py",
+      "sha256": "bded541352d1a10f1412f5db9189201dfb85a7c3ad8a379e1c1c3a2e065222a4",
+      "from": "recovery-control/src/runtime_boundary/operator_route.py"
+    },
+    {
+      "path": "src/runtime_boundary/client.py",
+      "sha256": "b9f2636bd56bebd205953a810b26313d547322972df85ac8add9b2167cc3f6fd",
+      "from": "recovery-control/src/runtime_boundary/client.py"
+    },
+    {
+      "path": "src/runtime_boundary/target.py",
+      "sha256": "4137dec15cc98c1e8c184ffcf1763570645b0179de783154aa5d86e0b411e4b5",
+      "from": "recovery-control/src/runtime_boundary/target.py"
+    },
+    {
+      "path": "src/runtime_boundary/reconciliation.py",
+      "sha256": "40681b731995a152708ae6da26cd2aee82bc7edd6071f5bbed1616d04c39eaf8",
+      "from": "recovery-control/src/runtime_boundary/reconciliation.py"
+    },
+    {
+      "path": "src/runtime_boundary/ledger.py",
+      "sha256": "0f201cd0fd8fdb0b617de84550d16f9f73955e9ad1e898ef34868b447b27ec37",
+      "from": "recovery-control/src/runtime_boundary/ledger.py"
+    },
+    {
+      "path": "src/runtime_boundary/recovery_publisher.py",
+      "sha256": "0a98a53a158232c1af1f72d24440f21e200a927ef109c82129696e39239a8d21",
+      "from": "recovery-control/src/runtime_boundary/recovery_publisher.py"
+    },
+    {
+      "path": "src/runtime_boundary/legacy_reconciliation.py",
+      "sha256": "d849a0824d48501ca8a670eaa2c26f54c2b1688d6fb827718b2eccbe587cf126",
+      "from": "recovery-control/src/runtime_boundary/legacy_reconciliation.py"
+    },
+    {
+      "path": "src/runtime_boundary/model.py",
+      "sha256": "d642e741c6eab51b931e902eb53b8a3bcfb404dec7300efe245da7f94f6dbbb3",
+      "from": "recovery-control/src/runtime_boundary/model.py"
+    },
+    {
+      "path": "src/runtime_boundary/child_registry.py",
+      "sha256": "389c8c8d80005041788f7f6327f365b21b435f1a778a1a913bd0691e70a62d75",
+      "from": "recovery-control/src/runtime_boundary/child_registry.py"
+    },
+    {
+      "path": "src/runtime_boundary/observation.py",
+      "sha256": "93075eb256f9d7489bc4620fa1d7a9b23cf9abde57b458c55a3d82843d123d87",
+      "from": "recovery-control/src/runtime_boundary/observation.py"
+    },
+    {
+      "path": "src/runtime_boundary/__init__.py",
+      "sha256": "69249ee1c6346cf26efeb5b6d6266e7f08939dbe8f717096dae7b3770831cf54",
+      "from": "recovery-control/src/runtime_boundary/__init__.py"
+    },
+    {
+      "path": "src/runtime_boundary/server.py",
+      "sha256": "dfdde8936f500f6634d10d829aef9433448550a05732da2fdcaf0ce0912b0a4b",
+      "from": "recovery-control/src/runtime_boundary/server.py"
+    },
+    {
+      "path": "src/cra_dell_recovery/time.py",
+      "sha256": "9f2bc5d67b0a9e59f4805c9e7e2b3a529558548509ffbf78ce8fadf054dbdb1e",
+      "from": "recovery-control/src/cra_dell_recovery/time.py"
+    },
+    {
+      "path": "src/cra_dell_recovery/schema.py",
+      "sha256": "443fc5723a1d814eec2f24791e4a73f25b6f7971a6cc9f67b6e749fd615a1661",
+      "from": "recovery-control/src/cra_dell_recovery/schema.py"
+    },
+    {
+      "path": "src/cra_dell_recovery/json_input.py",
+      "sha256": "38b449d5e62a17f5f5f32c22e07b4d49b39e84db38332fe23862553feab111e1",
+      "from": "recovery-control/src/cra_dell_recovery/json_input.py"
+    },
+    {
+      "path": "src/cra_dell_recovery/owner_diagnostics.py",
+      "sha256": "231991aeb28b45738bc9b5801c51e2004f063c186ebe36d34f060bf61a4099d1",
+      "from": "recovery-control/src/cra_dell_recovery/owner_diagnostics.py"
+    },
+    {
+      "path": "src/cra_dell_recovery/recovery_history.py",
+      "sha256": "c345042f935709661b62345c4565bb92292a3b814587d1b3eee8ebd5c2c1269a",
+      "from": "recovery-control/src/cra_dell_recovery/recovery_history.py"
+    },
+    {
+      "path": "src/cra_dell_recovery/models.py",
+      "sha256": "28d63df15f16e5b9cc3d502a95bc97262d69225f777c67db91a63fd5327d04ae",
+      "from": "recovery-control/src/cra_dell_recovery/models.py"
+    },
+    {
+      "path": "src/cra_dell_recovery/effect_scope.py",
+      "sha256": "d1402177a9e69747e0b4a1be8db2127557b31a0a8208e778215d757d526510f6",
+      "from": "recovery-control/src/cra_dell_recovery/effect_scope.py"
+    },
+    {
+      "path": "src/cra_dell_recovery/__init__.py",
+      "sha256": "df07025216394b51ba40ed43a109562db21410f20601718ae003b32cd5d60487",
+      "from": "recovery-control/src/cra_dell_recovery/__init__.py"
+    },
+    {
+      "path": "src/cra_dell_recovery/canonical.py",
+      "sha256": "34fda672c10e4b70b691ed19aa5b024f1a391a729df8ef658c72ebb295e3ee64",
+      "from": "recovery-control/src/cra_dell_recovery/canonical.py"
+    },
+    {
+      "path": "src/cra_dell_recovery/errors.py",
+      "sha256": "d77b7f54a9e1c83e73efd50ab95c8957c97323d8e9aa1d9df1a9355b85326359",
+      "from": "recovery-control/src/cra_dell_recovery/errors.py"
+    },
+    {
+      "path": "src/dell_recovery_agent/target_snapshot.py",
+      "sha256": "001a0ff161a18785b6c745a14eca06db0e519110cc97532f2287a5dbd496fac0",
+      "from": "recovery-control/src/dell_recovery_agent/target_snapshot.py"
+    },
+    {
+      "path": "src/dell_recovery_agent/delivery_command.py",
+      "sha256": "25357d6142bd90cc8057c38a29931f40d2539f293d80744979b65b977b62fe4d",
+      "from": "recovery-control/src/dell_recovery_agent/delivery_command.py"
+    },
+    {
+      "path": "src/dell_recovery_agent/__init__.py",
+      "sha256": "f486afa115fdc18102c126a330cd0fb38270873c042c7c44b674f12b467b958c",
+      "from": "recovery-control/src/dell_recovery_agent/__init__.py"
+    },
+    {
+      "path": "src/snapshot_projection/model.py",
+      "sha256": "1d62337ba6f0b97464f8739dca8874744dda1018996bf681c5ff286b277842a0",
+      "from": "recovery-control/src/snapshot_projection/model.py"
+    },
+    {
+      "path": "src/snapshot_projection/__init__.py",
+      "sha256": "ffe0c922f6fc52fe47be1d0568629f42915265511c6b9772d673ca3c25b4a5a5",
+      "from": "recovery-control/src/snapshot_projection/__init__.py"
+    },
+    {
+      "path": "contracts/runtime_boundary/effect_response.v1.schema.json",
+      "sha256": "dfb1c664eef0627d13bd63c63d590d4c47dd4fef6a2da0109083a9a3ee4462b5",
+      "from": "recovery-control/contracts/runtime_boundary/effect_response.v1.schema.json"
+    },
+    {
+      "path": "contracts/runtime_boundary/runtime_observation.v1.schema.json",
+      "sha256": "13c7c73207773730be8d16cb67df82676a8884c9afbdbd7d93723b848eeb9bc7",
+      "from": "recovery-control/contracts/runtime_boundary/runtime_observation.v1.schema.json"
+    },
+    {
+      "path": "contracts/runtime_boundary/typed_effect_request.v3.schema.json",
+      "sha256": "5fbd99a4254fcd83c6ca2c64a1b9198178ebc2d6bff780cbad317682bf1281ee",
+      "from": "recovery-control/contracts/runtime_boundary/typed_effect_request.v3.schema.json"
+    },
+    {
+      "path": "contracts/runtime_boundary/effect_request.v1.schema.json",
+      "sha256": "3cbf8e006f2d3a811299e14834c9d6c90483702a6e3afeaa12f1a0c0123b53ec",
+      "from": "recovery-control/contracts/runtime_boundary/effect_request.v1.schema.json"
+    },
+    {
+      "path": "contracts/runtime_boundary/typed_effect_request.v2.schema.json",
+      "sha256": "18a501d78c2c1fceabf5f85e9ecfd3ca1b84a7eda944e02ff4338a834288afed",
+      "from": "recovery-control/contracts/runtime_boundary/typed_effect_request.v2.schema.json"
+    }
+  ],
+  "moved_tests": [
+    {
+      "from": "recovery-control/tests/runtime_boundary/test_effect_protocol.py",
+      "path": "tests/runtime_boundary/test_effect_protocol.py",
+      "prior_sha256": "963089f25b041ca5d3f4e20337d4413ed73acf5c9a05f78e9ee224c30afcb74b"
+    },
+    {
+      "from": "recovery-control/tests/runtime_boundary/test_async_effect_executor.py",
+      "path": "tests/runtime_boundary/test_async_effect_executor.py",
+      "prior_sha256": "dcf5eb075f8e117eefdcc060e5a70e82eaa14b7b1de2afb2503f5769d968a3b6"
+    },
+    {
+      "from": "recovery-control/tests/runtime_boundary/test_child_registry.py",
+      "path": "tests/runtime_boundary/test_child_registry.py",
+      "prior_sha256": "d69bfaf96423026811ca5fc8b17cc779125e2c02d9024c72c245a39d175a3f20"
+    },
+    {
+      "from": "recovery-control/tests/runtime_boundary/test_legacy_effect_reconciliation.py",
+      "path": "tests/runtime_boundary/test_legacy_effect_reconciliation.py",
+      "prior_sha256": "5f59191fcdf246b2c3d113368bcbcfcedc1d466e13e2a9427bf327494632edb7"
+    },
+    {
+      "from": "recovery-control/tests/runtime_boundary/test_recovery_publisher.py",
+      "path": "tests/runtime_boundary/test_recovery_publisher.py",
+      "prior_sha256": "7c9cdf6979ce9fe005520276e2a859b4c695c457174d970697a98fbc3a857253"
+    },
+    {
+      "from": "recovery-control/tests/runtime_boundary/test_recovery_effect_history.py",
+      "path": "tests/runtime_boundary/test_recovery_effect_history.py",
+      "prior_sha256": "f09e761930cd4180e83e80449c2c77918eff42277cce864598c595e8e849d003"
+    },
+    {
+      "from": "recovery-control/tests/runtime_boundary/test_stream_route_fence.py",
+      "path": "tests/runtime_boundary/test_stream_route_fence.py",
+      "prior_sha256": "e1ddf110bce570efb905088fe2dc60d7a534761e709f89aab21670b190e16580"
+    }
+  ],
+  "preserved": [
+    "Git history at the exact previous public revision",
+    "dated local reflex successes, failures and frozen candidates",
+    "dated publication evidence and its old claims"
+  ],
+  "checks": {
+    "cra_tests": {
+      "passed": 156
+    },
+    "cra_ruff": "PASS",
+    "cra_format": "PASS",
+    "cra_strict_mypy": "PASS",
+    "stream_tests": {
+      "passed": 1695,
+      "skipped": 9,
+      "environment": "new isolated virtualenv; declared dependencies only"
+    },
+    "public_boundary": "PASS",
+    "package_installation": {
+      "fresh_cra_tests_passed": 156,
+      "pip_check": "PASS",
+      "wheel_python_files": 17,
+      "wheel_cli": [
+        "cra-agent",
+        "cra-central"
+      ],
+      "legacy_packages_installed": false,
+      "wheel_sha256": "d611c1841338e2b8ddcffc016b0cd0e6b6cef7a52cf4cc7acb30efe75dbaf8a2"
+    },
+    "public_language": "PASS",
+    "public_source_digests": "PASS",
+    "documentation_links": "PASS",
+    "k3s_manifest_validation": "PASS",
+    "shadow_acceptance": "PASS",
+    "secret_scan": {
+      "status": "PASS",
+      "current_changed_or_added_files_scanned": 72,
+      "tool": "gitleaks detect --no-git --redact"
+    }
+  },
+  "deployment_performed": false,
+  "live_state_changed": false,
+  "moved_test_adaptations": [
+    {
+      "path": "tests/runtime_boundary/test_recovery_effect_history.py",
+      "change": "Replace the old authority query helper with a test-owned read-only, query_only transaction; preserve the real evidence reader and its invariants."
+    }
+  ],
+  "validation_history": [
+    {
+      "stage": "initial moved-boundary collection",
+      "result": "one missing old authority helper import; replaced only the test helper"
+    },
+    {
+      "stage": "first full Stream run",
+      "passed": 1672,
+      "failed": 23,
+      "skipped": 9,
+      "cause": "22 read-only snapshot fixture failures and one stale documentation expectation; no runtime implementation change"
+    },
+    {
+      "stage": "follow-up full Stream run",
+      "result": "one remaining documentation assertion; restored the explicit no-live-effect and no-formal-soak claim limit"
+    },
+    {
+      "stage": "final fresh-environment full Stream run",
+      "passed": 1695,
+      "skipped": 9
+    }
+  ],
+  "publication": {
+    "requested": true,
+    "repository": "yukimurata0421/live-stream-systems-case-study",
+    "branch": "main",
+    "evidence": "This record describes local checks before publication. The Git commit, remote ref and matching GitHub Actions run record the published revision."
+  }
+}

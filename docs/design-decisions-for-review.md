@@ -70,9 +70,11 @@ The decisions that most shape the current system:
 
 ## Recovery Authority Design
 
-**Design only.** These rows describe the Central Restart Authority (CRA) and its
-local reflex path. The source is in [`recovery-control/`](../recovery-control/README.md);
-production authority is disabled, and the current media route does not use it.
+The current CRA is the local reflex path in
+[`recovery-control/`](../recovery-control/README.md), running in `dry_run` with
+no restart requests. The first two rows below describe the preceding three-host
+design, retained in [history](../recovery-control/docs/history.md). The remaining
+safety principles also apply to the current agent and Stream Executor.
 The production restart actors are listed [above](#media-route-and-delivery-recovery).
 
 | Area | Decision | Why | Rejected alternative | Trade-off |

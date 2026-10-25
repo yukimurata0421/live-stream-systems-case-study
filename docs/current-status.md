@@ -192,6 +192,17 @@ See the [implementation notes](../monitoring-v4/docs/relay-provider-evidence.md)
 and [source-port validation record](../publication/twitch-observation-port-20261021.json).
 This port applies no public example to production and sends no notifications.
 
+## CRA Public Layout (2026-10-26 JST)
+
+The current [CRA package](../recovery-control/README.md) contains only the local
+reflex implementation: 17 Python files and 2,535 lines, with its tests, tools,
+service examples and current docs. Required Stream Executor and observation
+modules moved unchanged to the top-level `src/`; boundary tests and schemas moved
+with them. The previous three-host authority, soak and general harness remain
+at a fixed [historical revision](../recovery-control/docs/history.md). This is a
+source-only reorganization; it does not deploy code or enable effects. Older
+suite totals and dated records remain historical.
+
 ## CRA Local Reflex (2026-10-22 JST)
 
 Since 15:17 JST, a CRA agent on Dell evaluates the managed FFmpeg child every

@@ -24,7 +24,7 @@ Cloud CI is not inferred from these local checks.
 | Shadow acceptance | Prove command mapping, state writes, action plans, and blockers without live mutation. | `ops/scripts/v3_shadow_acceptance.py` |
 | Observer script tests | Keep diagnostic tools parseable and safe to run as report-only helpers. | `tests/test_wan_observer_scripts.py` |
 | Monitoring v4 tests | Validate typed observation, current/incident reduction, parity, storage, and notification-intent boundaries. | `monitoring-v4/tests/` |
-| CRA Harness and protocol tests | Validate central intent, exact-target admission, effect fences, unknown outcomes, and reconciliation with test-owned resources. | `recovery-control/tests/`, `recovery-control/harness/` |
+| CRA and Stream Executor tests | Validate signed policy, stall decisions, persistent limits, exact-target fences, unknown outcomes and reconciliation with test-owned resources. | `recovery-control/tests/reflex/`, `tests/runtime_boundary/` |
 | Live smoke test | Confirm production-like behavior across a bounded time window. | Manual 24-hour gate after high-impact v3 runtime changes. |
 
 ## Public CI Boundary
@@ -72,10 +72,11 @@ The rationale is specific:
 The 24-hour smoke test is not a replacement for 14-day or 28-day SLI review. It
 is a cutover confidence gate.
 
-It is also not the Monitoring v4 or CRA production gate. Those paths require
-their own immutable build/source identity, failure-domain-specific Harness
-evidence, revision-bound soak epoch, target and rollback verification, and
-explicit deployment authorization. A local Harness pass, an elapsed test
+It is also not a Monitoring v4 or CRA production gate. Those paths require
+their own applicable source identity, target and rollback verification,
+operating permission and evidence for the claimed behavior. CRA remains in
+`dry_run`; its [current contract](../recovery-control/docs/local-reflex-authority.md)
+and [test boundaries](../recovery-control/docs/harness-trust.md) apply. A local Harness pass, an elapsed test
 window, and a public checkout do not establish a live effect or production
 authority.
 

@@ -1,19 +1,12 @@
 # Documentation Index
 
-- [`why-cra.md`](why-cra.md): observed duplicate decisions, transactional recovery rationale, and claim limits.
-- [`architecture.md`](architecture.md): retained three-host ownership and data flow.
-- [`safety-model.md`](safety-model.md): authorization, fencing, and no-action boundaries.
-- [`harness-trust.md`](harness-trust.md): SUT, observer, oracle, and harness trust gates.
-- [`harness-engineering-draft.md`](harness-engineering-draft.md): current test architecture, evidence, classification, and freeze draft.
-- [`failure-injection-draft.md`](failure-injection-draft.md): bounded fault lifecycle, catalog, and isolation draft.
-- [`chaos-testing-draft.md`](chaos-testing-draft.md): deterministic campaign, coverage, and interpretation draft.
-- [`public-release.md`](public-release.md): provenance, exclusions, and claim limits.
-- [`source-provenance.json`](source-provenance.json): machine-readable source identity.
-- [`current-evidence-and-route-source.md`](current-evidence-and-route-source.md): current evidence, reconciliation, route-fence source, and qualification boundaries.
-- [`local-reflex-authority.md`](local-reflex-authority.md): current contract for the local reflex restart path: stage, restart conditions, stall criterion, engine grace, outcome labels, audit, and boundaries.
-- [`local-reflex-operations.md`](local-reflex-operations.md): inspecting, evaluating, switching to `enforce`, stopping, and rolling back the local reflex path.
-- [`local-reflex-records.md`](local-reflex-records.md): dated replays, isolated verification, dry-run rollout, retirement correction, and frozen runtime candidates.
-
-## Public source language
-
-See [Public Source Language](public-language-policy.md) for English prose and preserved Unicode input coverage.
+- [Architecture](architecture.md): current services, ownership and the Stream Executor.
+- [Why CRA exists](why-cra.md): observed duplicate attempts and the authority choice.
+- [Current contract](local-reflex-authority.md): local decisions under signed policy.
+- [Operations](local-reflex-operations.md): inspection, evaluation, handover and rollback.
+- [Safety model](safety-model.md): persistent reservations, fences and unknown outcomes.
+- [Test boundaries](harness-trust.md): current unit and real-Executor integration checks.
+- [Dated evidence](local-reflex-records.md): retained successes, failures and frozen candidates.
+- [Historical design](history.md): original three-host source and test machinery in Git.
+- [Public release boundary](public-release.md): provenance and source-only reorganization.
+- [Public source language](public-language-policy.md): English prose and Unicode data.

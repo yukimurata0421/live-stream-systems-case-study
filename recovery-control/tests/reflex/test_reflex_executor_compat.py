@@ -18,7 +18,7 @@ import runtime_boundary
 from cra import effect
 from cra.observe import read_observation
 
-LEGACY_SRC = Path(__file__).resolve().parents[2] / "src"  # runtime_boundary lives in this repository
+RUNTIME_SRC = Path(runtime_boundary.__file__).resolve().parents[1]  # Companion Stream implementation
 
 TARGET = {
     "host_id": "dell-yuki",

@@ -12,7 +12,7 @@ from pathlib import Path
 import pytest
 
 from cra import effect
-from tests.reflex.test_reflex_executor_fence_reconciliation import LEGACY_SRC, Runtime
+from tests.reflex.test_reflex_executor_fence_reconciliation import RUNTIME_SRC, Runtime
 
 TOOL = Path(__file__).resolve().parents[2] / "tools/executor_authority.py"
 
@@ -26,7 +26,7 @@ def runtime(tmp_path: Path):
 
 def tool(runtime: Runtime, *args: str) -> tuple[int, dict]:
     result = subprocess.run(
-        [sys.executable, str(TOOL), "--ledger", str(runtime.root / "ledger.sqlite3"), "--runtime-src", str(LEGACY_SRC), *args],
+        [sys.executable, str(TOOL), "--ledger", str(runtime.root / "ledger.sqlite3"), "--runtime-src", str(RUNTIME_SRC), *args],
         capture_output=True,
         text=True,
         timeout=30,

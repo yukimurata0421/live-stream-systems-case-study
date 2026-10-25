@@ -15,7 +15,7 @@ code path and regression tests. It does not require a complete repository tour.
 | How are clock progress, capture failure and public reception kept separate? | [Paired-clock analyzer](../src/stream_v3/verified_clock.py), [receiver](../src/stream_v3/frame_receiver.py), [native reduction](../src/stream_v3/monitor_facts.py), and [tests](../tests/test_oci_monitor_probe.py). See the [clock contract](v3/relay-clock-monitor.md). |
 | How can a restore stop at verified file placement? | [Bundle tool](../ops/oci-backup/bundle.py) and [negative tests](../tests/test_oci_backup.py); [restore procedure](v3/oci-backup-and-restore.md). |
 | How does the sender differ from the encoder? | [Delivery pipeline](../src/stream_core/engine/delivery_pipeline.py) and [tests](../tests/test_delivery_pipeline.py). |
-| What prevented replay in the retained fenced route design? | [Runtime fence](../recovery-control/src/runtime_boundary/server.py) and [route tests](../recovery-control/tests/runtime_boundary/test_stream_route_fence.py). This is separate from the current local fallback. |
+| What prevented replay in the retained fenced route design? | [Runtime fence](../src/runtime_boundary/server.py) and [route tests](../tests/runtime_boundary/test_stream_route_fence.py). This is separate from the current local fallback. |
 | How was YouTube checked during the October 13 manual Twitch renewal? | [Historical session reducer](../ops/relay/twitch_session.py), [adapter](../ops/relay/twitch_daily.py), and [tests](../tests/test_twitch_daily.py). The October 20 keeper is a different implementation. |
 | Why did a current warning close without repairing history? | [Upload-source classifier](../src/stream_core/notifications/upload_source.py) and [tests](../tests/test_upload_source_recovery.py). |
 | How are multiple probes combined without authorizing recovery? | [Route observer](../ops/scripts/route_network_observer.py) and [tests](../tests/test_route_network_observer.py). |
@@ -29,8 +29,8 @@ separate from native qualification, deployed authority, and live reception.
 If you only have time for a short code review, start with these files:
 
 - `monitoring-v4/src/stream_monitoring_v4/`
-- `recovery-control/src/recovery_control/`
-- `recovery-control/src/monitoring_projection/`
+- `recovery-control/src/cra/`
+- `src/runtime_boundary/`
 - `src/stream_core/runtime_boundary_entrypoint.py`
 - `src/watchers/fast_recovery_core/effect_contract.py`
 - `src/watchers/decision/evaluator.py`
@@ -58,7 +58,7 @@ for legacy-surface review. They are not the current cross-host authority path.
 
 | Review question | Code | Tests | Docs |
 | --- | --- | --- | --- |
-| How does arena-server reduce observations without acquiring recovery authority? | `monitoring-v4/src/stream_monitoring_v4/`, `monitoring-v4/src/stream_contracts/monitoring_v4/`, `recovery-control/src/monitoring_projection/` | `monitoring-v4/tests/`, `recovery-control/tests/authority/` | `monitoring-v4/docs/architecture.md`, `monitoring-v4/docs/hardening.md`, `recovery-control/docs/architecture.md` |
+| How does arena-server reduce observations without acquiring recovery authority? | `monitoring-v4/src/stream_monitoring_v4/`, `monitoring-v4/src/stream_contracts/monitoring_v4/`, `src/runtime_boundary/` | `monitoring-v4/tests/` | `monitoring-v4/docs/architecture.md`, `monitoring-v4/docs/hardening.md`, `recovery-control/docs/architecture.md` |
 | How are legacy staged recovery surfaces kept fail-closed? | `src/stream_v2/recovery_orchestrator/gate.py`, `src/watchers/decision/*` | `tests/test_v3_shadow_acceptance.py`, `tests/test_action_plan.py`, `tests/test_youtube_evidence_decision.py` | `docs/v3/youtube-lifecycle-safety.md`, `docs/design-decisions-for-review.md` |
 | How is recovery authority limited after cutover? | `src/stream_core/runtime_boundary_entrypoint.py`, `src/watchers/fast_recovery_core/effect_contract.py`, `ops/scripts/stream_v3_scoped_recovery.py` | `tests/test_fast_recovery_runtime_boundary.py`, `tests/test_stream_v3_scoped_recovery.py`, `tests/test_maintenance_audit.py` | `docs/v3/scoped-recovery-authority.md`, `recovery-control/docs/why-cra.md` |
 | How is an FFmpeg exit correlated without publishing raw runtime logs? | `src/stream_core/engine/ffmpeg_stderr.py`, `src/stream_core/stream_engine.py`, `src/stream_core/engine/restart_context.py` | `tests/test_ffmpeg_stderr_capture.py`, `tests/test_stream_engine_exit_evidence.py` | `docs/v3/runtime-state-and-evidence.md`, `docs/public-release.md` |

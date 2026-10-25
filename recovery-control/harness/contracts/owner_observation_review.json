@@ -1,6 +1,0 @@
-{
-  "schema": "cra.owner_contract_review.v1",
-  "reviewed_at": null,
-  "reason": "Public source-only adaptation. Private operator instruction chains and read proofs are excluded. This empty binding cannot attest owner qualification; source provenance is recorded in publication/source-map.json.",
-  "source_hashes": {}
-}

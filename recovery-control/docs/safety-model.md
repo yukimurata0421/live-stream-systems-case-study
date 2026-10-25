@@ -1,58 +1,31 @@
-# Recovery Safety Model
+# Safety Model
 
-## No-action posture
+The [current contract](local-reflex-authority.md) defines the restart conditions.
+These are the boundaries the current code and tests preserve:
 
-The public policy keeps `production_behavior_change_authorized=false`. The
-no-action runtime evaluates evidence but forces a
-`CRA_OPERATING_MODE_NO_ACTION` blocker, records hypothetical decisions, and
-exposes zero command-delivery and physical-effect capability.
+- Signed, monotonic policy versions select `off`, `dry_run` or `enforce`.
+- Distinct fresh observations must show ACK stagnation and queued data. Missing
+  data, target or connection changes reset the comparison. Network or ingest
+  unreachability suppresses intervention.
+- A confirmed stall waits through the engine grace window; an exiting or
+  restart-waiting lifecycle is not an eligible running child.
+- Persistent reservation precedes sending. The agent and Stream Executor fence
+  the same generation, and cooldown/hour/day limits survive restarts. Rejections,
+  unknown outcomes and cancelled reservations keep their consumption.
+- Immediately before sending, the agent checks policy, STOP, target, route,
+  Executor, authority, observation freshness and the three-second request expiry.
+- An asynchronous acknowledgement is not completion. A lost reply is reconciled
+  by querying the same request, never by sending another effect.
+- Transport recovery and execution outcome are separate. A recovered stream
+  does not turn an unknown execution into a success.
+- The Executor's unresolved fence stays occupied until supported reconciliation.
+- Audit is append-only. Central acknowledges its contiguous stored sequence with
+  a signature; missing or conflicting records remain visible.
 
-## Authorization gates
+The physical [Stream boundary](../../src/runtime_boundary/) is retained unchanged.
+Only it may act on the exact managed FFmpeg child. No CRA path requests a Pod,
+container or host restart. `dry_run` and passing tests are not production authority.
 
-A confirmed TCP-stall candidate must pass all required monitoring checks:
-
-```text
-tcp_stall = CONFIRMED
-network_down = FALSE
-ffmpeg_present = TRUE
-target_stable = TRUE
-maintenance = FALSE
-delivery_bad = TRUE
-```
-
-The central layer then checks projection freshness, readiness, hard cooldown,
-hourly and daily budgets, unresolved commands, restore state, authority epoch,
-authorization lifetime, and prior effect-scope reservations.
-
-The runtime repeats independent admission checks for producer identity,
-producer generation, request lifetime, exact target identity, unresolved
-effects, and logical-generation fences. Target identity is checked again at
-the physical boundary.
-
-## Effect identity
-
-The request ID is not the exactly-once key. Two IDs can still refer to the same
-physical target generation.
-
-- `logical_generation_scope_id` excludes PID and fences a managed generation.
-- `effect_scope_id` binds the action to the full exact target, including PID.
-- a unique logical-generation index and `physical_attempt_count <= 1` enforce
-  at-most-one physical effect across duplicate requests and process restart.
-
-## Failure handling
-
-- `network_down`, upload pressure, healthy state, startup transients, and
-  unavailable targets result in no action.
-- an unsafe missing-child state is escalation evidence, not permission for an
-  automatic Pod or host restart.
-- `OUTCOME_UNKNOWN` is not retried automatically under a new request ID.
-- missing evidence, observer failure, harness failure, and SUT failure remain
-  distinct outcomes.
-- a signed payload with forbidden action, authorization, budget, cooldown, or
-  verdict fields is rejected even if its signature is otherwise valid.
-
-## Claim boundary
-
-Passing deterministic tests proves the repository contracts exercised by
-those tests. It does not prove production credentials, a live network path, an
-elapsed soak, external viewer recovery, or authorization to enable actions.
+See [test boundaries](harness-trust.md) and [operations](local-reflex-operations.md).
+The older lease/epoch/command-outbox design and its guarantees are described in
+[historical source](history.md), separately from this contract.

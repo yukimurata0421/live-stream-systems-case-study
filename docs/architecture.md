@@ -220,7 +220,7 @@ into the snapshot.
 | Clock observer on Dell / its importer on arena-server | Their bounded RAM snapshots, independent observation state and metrics | Senders, routes, replicas, provider lifecycle or recovery effects |
 | Monitor on arena-server | Requests a guarded runtime restart (budget, cooldown, 180-second convergence wait) | The FFmpeg process directly; replacement broadcasts (disabled) |
 | Raspberry Pi | Its own static output | Anything else; it receives no control feedback |
-| CRA on `cra-01` | Nothing in production | Its policy keeps `production_behavior_change_authorized=false` |
+| CRA agent / central | Observe decisions, sign policy and verify audit | `dry_run` sends no restart requests |
 
 The route's self-healing pieces (keeper and fallback controller) use fixed
 thresholds and do not depend on the monitor, so they keep working when
@@ -229,17 +229,19 @@ monitoring is down. The guarded restart gates are described in the
 
 ### CRA design
 
-CRA is a stricter recovery design kept in the source: monitoring publishes
-facts only, `cra-01` owns policy, budget, cooldown, authorization, and command
-lifecycle, and Dell executes at most one exact fenced FFmpeg-child effect.
-`OUTCOME_UNKNOWN` blocks automatic retry until reconciliation. It is not enabled
-in production, and the current route does not use it; the
-[decision record](v3/oci-route-simplification-decision.md) explains why. Read
-[scoped recovery authority](v3/scoped-recovery-authority.md) and the
-[recovery-control README](../recovery-control/README.md) for the design. A
-smaller [local reflex path](../recovery-control/docs/local-reflex-authority.md)
-keeps the restart decision on Dell under a policy signed by `cra-01`; it runs
-only in `dry_run` and sends no restart requests.
+The current [CRA](../recovery-control/README.md) is the local reflex path:
+Dell evaluates the managed FFmpeg child under centrally signed policy, while
+`cra-01` publishes policy and verifies the append-only audit. The agent persists
+limits and reservations; the Stream [Effect Executor](../src/runtime_boundary/)
+owns exact-target admission and the durable generation fence. Unknown execution
+is queried without resending the effect. CRA runs in `dry_run` and sends no
+restart requests; it does not carry the media route.
+
+The previous per-action central authorization, local fallback, leases, epochs
+and soak machinery are kept in [history](../recovery-control/docs/history.md).
+The [current contract](../recovery-control/docs/local-reflex-authority.md) and
+[operations](../recovery-control/docs/local-reflex-operations.md) define the
+conditions still required before enabling effects.
 
 ## Failure Domains
 

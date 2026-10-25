@@ -1,46 +1,27 @@
-# Harness Trust Boundary
+# Test Boundaries
 
-The harness is trusted only when SUT behavior, evidence completeness, oracle
-independence, fault lifecycle, negative controls, production isolation, and
-artifact integrity all pass in the same run.
+Current CRA tests live in `tests/reflex/`. They use temporary databases and keys,
+injected clocks and observations, loopback sockets and test-owned effect callbacks.
+They do not use production credentials, delivery targets or a private checkout.
 
-```text
-immutable scenario -> injector -> SUT -> observer -> append-only evidence
-                                          |
-immutable invariants ---------------------+-> independent oracle -> report
-```
+Unit tests cover policy signatures and rollback rejection, ACK-stall criteria,
+the engine grace window, lifecycle guards, persistent budget consumption,
+STOP/policy changes before dispatch, stale observations, audit acknowledgements,
+lost replies, unknown outcomes and recovery-evidence verification.
 
-## Roles
+Integration tests use the real Stream [Effect Executor](../../src/runtime_boundary/)
+and its ledger, not a replacement for the admission or fence logic. They exercise
+v2 request compatibility, asynchronous completion and lost replies, unresolved
+fences, authority handover and rollback. Only the physical callback is replaced
+with an effect recorded in a test-owned list. No real FFmpeg is signalled.
 
-- The SUT is the authority, protocol, Dell Agent, and their SQLite stores.
-- The observer records rows, messages, counters, target identity, timestamps,
-  and exits; it does not decide PASS.
-- The oracle uses immutable scenario invariants and evidence. It does not
-  import the SUT decision or state-transition implementation to calculate the
-  expected result.
-- The classifier keeps `SUT_FAILURE`, `HARNESS_FAILURE`, `MISSING_EVIDENCE`,
-  `UNKNOWN_AMBIGUOUS`, and expected injected failures distinct.
+Stream's own [boundary tests](../../tests/runtime_boundary/) retain protocol,
+expiry, target drift, concurrency, child registration, route fences and recovery
+publication checks. They run in the Stream suite. The public CI runs both suites.
 
-## Evidence and faults
-
-Events carry a run ID, scenario ID, producer, monotonic sequence, event ID, and
-observation time. A freeze rejects later append, sequence gaps, duplicate IDs,
-wrong run/scenario bindings, and out-of-window timestamps.
-
-Every injected fault moves through requested, armed, triggered, and completed
-states. A fault that was requested but never triggered is a harness failure,
-not evidence that the SUT tolerated the fault.
-
-## Negative controls
-
-The negative-control adapter intentionally creates forbidden states while the
-production adapter remains unavailable. The trust gate closes if the oracle
-misses any required injected failure. Production signal, process, Pod,
-Deployment, network, and credential-load counters must remain zero.
-
-## Limits
-
-Harness success does not prove real LAN failure handling, production
-credentials, a real FFmpeg effect, or viewer recovery. Those require separately
-authorized, source-bound evidence and must never be inferred from synthetic
-results.
+These checks establish local code behavior and interoperability. They do not
+establish deployment, real recovery benefit, receiver continuity or a completed
+production soak. The [dated records](local-reflex-records.md) keep those evidence
+levels separate. The general three-host chaos harness and fixed-SQLite soak
+qualification belonged to the [previous design](history.md); they are not an
+installation prerequisite for the current CRA.

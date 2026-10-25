@@ -1,7 +1,7 @@
 # stream_v3
 
 [![public-snapshot-check](https://github.com/yukimurata0421/live-stream-systems-case-study/actions/workflows/public-snapshot-check.yml/badge.svg?branch=main)](https://github.com/yukimurata0421/live-stream-systems-case-study/actions/workflows/public-snapshot-check.yml)
-[![Python >=3.10](https://img.shields.io/badge/python-%3E%3D3.10-3776AB.svg)](pyproject.toml)
+[![Python >=3.11](https://img.shields.io/badge/python-%3E%3D3.11-3776AB.svg)](pyproject.toml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 [![Live aircraft map with prefecture labels and distinct city and airport markers](docs/assets/live-stream-screenshot.png)](https://www.youtube.com/@yukimurata0421/live)
@@ -112,15 +112,15 @@ when monitoring is down. The monitor on arena-server can only request a guarded
 runtime restart, and replacement-broadcast creation is disabled.
 [Architecture](docs/architecture.md#who-can-act-on-what) lists each actor's limits.
 
-The repository also contains CRA (Central Restart Authority), a separate
-recovery design study that separates facts, authorization, and one fenced effect. Its policy
-sets `production_behavior_change_authorized=false`; it is not enabled, and the
-media route does not use it. The
-[decision record](docs/v3/oci-route-simplification-decision.md) explains why the
-route was simplified instead. A smaller CRA
-[local reflex path](recovery-control/docs/local-reflex-authority.md), added on
-2026-10-22, keeps the restart decision on Dell under a policy signed by cra-01;
-it runs only in `dry_run` and sends no restart requests.
+The repository also contains CRA (Central Restart Authority). Its current
+[local reflex implementation](recovery-control/README.md) is 17 Python files
+and 2,535 lines: Dell evaluates stalls under a policy signed by cra-01, and
+cra-01 verifies the audit. It runs only in `dry_run` and sends no restart requests.
+The Stream Effect Executor remains the physical boundary. The previous
+three-host authority and soak machinery are retained in
+[Git history](recovery-control/docs/history.md), rather than installed with CRA.
+The [decision record](docs/v3/oci-route-simplification-decision.md) explains the
+separate choice of the current media route.
 
 ## Key Design Decisions
 
