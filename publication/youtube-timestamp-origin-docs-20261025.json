@@ -1,0 +1,160 @@
+{
+  "schema": "stream.public_port_record.v1",
+  "port_date_jst": "2026-10-25",
+  "scope": "Public documentation for the YouTube per-connection timestamp origin: incident, fix, isolating comparisons and route updates. The matching source port is recorded separately.",
+  "development_worktrees_dirty": true,
+  "deployment_performed": false,
+  "native_experiment_performed": false,
+  "notification_sent": false,
+  "commit_performed": false,
+  "push_performed": false,
+  "adaptations": [
+    "Present the incident as a consequence of the FIFO recovery-layer decision and link it from that contract.",
+    "Keep the three isolating tests in one case study so the local non-reproduction is read with the provider comparison.",
+    "Update the route, architecture and observation contracts to the copy process, byte-progress keeper check and copy-process facts.",
+    "Retain the 08:53 manual re-creation that reconnected the Twitch forward twice as a stated impact."
+  ],
+  "excluded": [
+    "Broadcast and stream identifiers, stream keys, OAuth tokens, recordings and their file names.",
+    "Process, Pod and connection identities, private evidence paths and API unit accounting.",
+    "Operator-side recording troubleshooting and guidance errors during the private player tests.",
+    "Claims of YouTube's internal disconnect reason, NVENC or production-capture equivalence, player recovery time or long-term stability."
+  ],
+  "checks": {
+    "public_source_boundary": "PASS; issue_count=0",
+    "public_language": "PASS",
+    "document_links": "All relative links resolve against the working tree that includes the source port."
+  },
+  "not_executed": [
+    "Source port, test suite run for ported code, deployment, provider experiment, commit, push or notification"
+  ],
+  "files": [
+    {
+      "path": "docs/v3/fifo-timestamp-continuity-case-study.md",
+      "source_role": "public-documentation",
+      "decision": "Document the 2026-10-25 YouTube timestamp-origin incident and fix for reviewers; exclude broadcast identifiers, stream keys, recordings, process identities and private evidence paths.",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "5391d3018847931f26abd0c6af88d7a999ca15981da630d0547a0035c31145a9",
+      "port_date_jst": "2026-10-25",
+      "pre_code_port_record_link_sha256": "958843baf567864a8baeec4f18bf70f9bd7d743f72d44b086090831d2cfd4035"
+    },
+    {
+      "path": "docs/v3/ffmpeg-fifo-recovery.md",
+      "source_role": "public-documentation",
+      "decision": "Document the 2026-10-25 YouTube timestamp-origin incident and fix for reviewers; exclude broadcast identifiers, stream keys, recordings, process identities and private evidence paths.",
+      "before_sha256": "5dc52d739888953989667ad8516c840af5922c896345b6d0f480617f4c6ab251",
+      "source_sha256": null,
+      "public_sha256": "1779fcec3d7991ebb96a9a1aacfc27cc63ddbd574d213fe2d2d16b4761aeabb8",
+      "port_date_jst": "2026-10-25"
+    },
+    {
+      "path": "docs/v3/self-healing-oci-fanout.md",
+      "source_role": "public-documentation",
+      "decision": "Document the 2026-10-25 YouTube timestamp-origin incident and fix for reviewers; exclude broadcast identifiers, stream keys, recordings, process identities and private evidence paths.",
+      "before_sha256": "9f66894a936b79f96c015da1118b71d7f3342aa614e3492a3b03e0bf1bcd636e",
+      "source_sha256": null,
+      "public_sha256": "4bb5b42a42c542f118da85d5e673229119c8ad75fa79f9df5c604c204183eb52",
+      "port_date_jst": "2026-10-25"
+    },
+    {
+      "path": "docs/architecture.md",
+      "source_role": "public-documentation",
+      "decision": "Document the 2026-10-25 YouTube timestamp-origin incident and fix for reviewers; exclude broadcast identifiers, stream keys, recordings, process identities and private evidence paths.",
+      "before_sha256": "24b7a25418054e0535b233d24ce07a81cba24e22c2481b9f75e2acde4230a124",
+      "source_sha256": null,
+      "public_sha256": "f8bd40ab6e2d15b7fde89129aef2667471c48b2e4e6acc030ef3fc1d2f0e83fc",
+      "port_date_jst": "2026-10-25"
+    },
+    {
+      "path": "docs/observability.md",
+      "source_role": "public-documentation",
+      "decision": "Document the 2026-10-25 YouTube timestamp-origin incident and fix for reviewers; exclude broadcast identifiers, stream keys, recordings, process identities and private evidence paths.",
+      "before_sha256": "f2d23a1ca64f383539c68478ef9f5c35579bfac6e0afd37188deb0fe49127457",
+      "source_sha256": null,
+      "public_sha256": "80c751de3628fee3db8e70c7be71d923a5a23ee6c22819f827cfa3a4b35fad07",
+      "port_date_jst": "2026-10-25"
+    },
+    {
+      "path": "docs/current-status.md",
+      "source_role": "public-documentation",
+      "decision": "Document the 2026-10-25 YouTube timestamp-origin incident and fix for reviewers; exclude broadcast identifiers, stream keys, recordings, process identities and private evidence paths.",
+      "before_sha256": "ecd92372b57a2d4d699c239e2d01b400168443368c36b1d503cf7f9922d7f9a1",
+      "source_sha256": null,
+      "public_sha256": "0aa829ab206d2032b623b9f087fc9eb6c03bc7acc008a82d3860ebbfd7cb1515",
+      "port_date_jst": "2026-10-25"
+    },
+    {
+      "path": "docs/operational-case-studies.md",
+      "source_role": "public-documentation",
+      "decision": "Document the 2026-10-25 YouTube timestamp-origin incident and fix for reviewers; exclude broadcast identifiers, stream keys, recordings, process identities and private evidence paths.",
+      "before_sha256": "c211334a465cd3985b194eac6207fa9f31dfbbbcebbe1fbf9c968ef86c86c843",
+      "source_sha256": null,
+      "public_sha256": "8bd6fd50b143ab908bb3c63088393ed1350250d141075e51d366710e00c20071",
+      "port_date_jst": "2026-10-25"
+    },
+    {
+      "path": "docs/design-decisions-for-review.md",
+      "source_role": "public-documentation",
+      "decision": "Document the 2026-10-25 YouTube timestamp-origin incident and fix for reviewers; exclude broadcast identifiers, stream keys, recordings, process identities and private evidence paths.",
+      "before_sha256": "c8ca63c3f85d69f29ceb5032357296d8e19ed6d33483b3e18f9a96c7d0444561",
+      "source_sha256": null,
+      "public_sha256": "9255a27f7a94f07760619f782cf1d8f2735a51d62ff50d41ab4c2c6f49ddfd88",
+      "port_date_jst": "2026-10-25"
+    },
+    {
+      "path": "docs/00_INDEX.md",
+      "source_role": "public-documentation",
+      "decision": "Document the 2026-10-25 YouTube timestamp-origin incident and fix for reviewers; exclude broadcast identifiers, stream keys, recordings, process identities and private evidence paths.",
+      "before_sha256": "2fa6e03fa73db56b056d9cdcdccc49d8069cf7a1708de4ec0b8464b772530b9d",
+      "source_sha256": null,
+      "public_sha256": "8ad9aef831eaf0361e118548135444365df006e594e91c0952a2529f0ef8942f",
+      "port_date_jst": "2026-10-25"
+    },
+    {
+      "path": "docs/v3/README.md",
+      "source_role": "public-documentation",
+      "decision": "Document the 2026-10-25 YouTube timestamp-origin incident and fix for reviewers; exclude broadcast identifiers, stream keys, recordings, process identities and private evidence paths.",
+      "before_sha256": "84ad321371862bb6cf7eff6259a15e6efb4835ba897850e8c4300c4a99d54de3",
+      "source_sha256": null,
+      "public_sha256": "bc15110a6d74d005aa8a4d42e7f59d9136f4119b732ad8070b56db719b2a4372",
+      "port_date_jst": "2026-10-25"
+    },
+    {
+      "path": "docs/implementation-review-map.md",
+      "source_role": "public-documentation",
+      "decision": "Document the 2026-10-25 YouTube timestamp-origin incident and fix for reviewers; exclude broadcast identifiers, stream keys, recordings, process identities and private evidence paths.",
+      "before_sha256": "d14149ea549d86a2a34284bf2f7e4d76ef68a97f541c8f6d5c3551bcc010ecc8",
+      "source_sha256": null,
+      "public_sha256": "f2bc8f368327a60f216fecac9837d1e7af1676d727d5030040ef97e0b7c0a674",
+      "port_date_jst": "2026-10-25"
+    }
+  ],
+  "initial_pending": [
+    "The source files (ops/selfheal/youtube-forward/, ops/selfheal/ recovery checks and facts endpoint, the monitoring-v4 relay observer and matching tests) are registered in source-map.json by the separate source port, which keeps its own record."
+  ],
+  "pending": [],
+  "source_port": {
+    "status": "completed",
+    "record": "publication/youtube-timestamp-origin-code-port-20261025.json",
+    "development_source_commit": "88b195988c5cf0dfd154ba177c1f7780cbb1c835",
+    "scope": "Source transfer and code test results are recorded separately from this original documentation task."
+  },
+  "not_executed_scope": "Original documentation task only; completed source transfer and code checks are recorded in source_port.record.",
+  "source_map_reconciliation": {
+    "id": "youtube-timestamp-origin-record-reconciliation-20261025",
+    "checked_at_jst": "2026-10-25T16:51:20+09:00",
+    "last_writer": "code-port-record-reconciliation",
+    "last_writer_record": "publication/youtube-timestamp-origin-code-port-20261025.json",
+    "write_order": [
+      "publication/youtube-timestamp-origin-docs-20261025.json",
+      "publication/youtube-timestamp-origin-code-port-20261025.json",
+      "publication/source-map.json"
+    ],
+    "code_record": "publication/youtube-timestamp-origin-code-port-20261025.json",
+    "documentation_record": "publication/youtube-timestamp-origin-docs-20261025.json",
+    "code_file_count": 10,
+    "documentation_file_count": 11,
+    "scope": "Final write of this record reconciliation. Recheck hashes and ownership after any later edit and before a public commit."
+  }
+}

@@ -47,7 +47,7 @@
       "decision": "Selected FIFO recovery port; preserve public behavior, explicit observation injection, generic lab endpoints and English documentation.",
       "before_sha256": "09bb9c3529368d76bb7c107dc021db89519855c24c0f85b7a32e58fecd5fad0a",
       "source_sha256": null,
-      "public_sha256": "2fa6e03fa73db56b056d9cdcdccc49d8069cf7a1708de4ec0b8464b772530b9d",
+      "public_sha256": "8ad9aef831eaf0361e118548135444365df006e594e91c0952a2529f0ef8942f",
       "prior_public_sha256": "e32ab253e63bfe09d4ec42a5fc1594a2025b8bd859cab754ee1558798c0391dc",
       "localization": "English prose; control structures and machine identifiers preserved.",
       "pre_graph_display_sha256": "6a87a495eb3698b1a49e053ffcc109b28d94a59e9dd29cb3399a62279e196d3d",
@@ -79,7 +79,8 @@
       "pre_relay_clock_native_fallback_sha256": "e5a7d8243462eed089784656ec246c868d7fa0d51ddefdd7dd7b59584f296d7d",
       "relay_clock_native_fallback_port": "2026-10-23 selected source and public-safe documentation; no deployment, commit or push.",
       "pre_observability_reconciliation_sha256": "54c9f42cbd9e1b2bc054e380f4a7376df991333c1dc4ea31f191c48805d7703e",
-      "pre_fifo_recovery_public_sha256": "09bb9c3529368d76bb7c107dc021db89519855c24c0f85b7a32e58fecd5fad0a"
+      "pre_fifo_recovery_public_sha256": "09bb9c3529368d76bb7c107dc021db89519855c24c0f85b7a32e58fecd5fad0a",
+      "port_record": "publication/youtube-timestamp-origin-docs-20261025.json"
     },
     {
       "path": "docs/same-url-continuity-evidence.md",
@@ -117,7 +118,7 @@
       "decision": "Selected FIFO recovery port; preserve public behavior, explicit observation injection, generic lab endpoints and English documentation.",
       "before_sha256": "dec00dac9bee4c9e594770fe5300eeae24783584face7f9847d7ce174746c29b",
       "source_sha256": null,
-      "public_sha256": "24b7a25418054e0535b233d24ce07a81cba24e22c2481b9f75e2acde4230a124",
+      "public_sha256": "f8bd40ab6e2d15b7fde89129aef2667471c48b2e4e6acc030ef3fc1d2f0e83fc",
       "port_date_jst": "2026-10-24",
       "pre_documentation_restructure_sha256": "5ae4f928c8d5f77be2e827787230606ffbf1e4d7c97d62b9d3afe0bf43048e93",
       "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json.",
@@ -125,7 +126,8 @@
       "clock_monitor_port": "2026-10-22 selected return-feed monitor / OCI files-only backup port; existing changes retained.",
       "pre_thumbnail_clock_public_sha256": "2d353d7cdf20f700c04f35db64adc43e4e4082b35874e88538cd906904c1973a",
       "thumbnail_clock_port": "2026-10-22 committed source through 740bcc00; concurrent review excluded.",
-      "pre_fifo_recovery_public_sha256": "dec00dac9bee4c9e594770fe5300eeae24783584face7f9847d7ce174746c29b"
+      "pre_fifo_recovery_public_sha256": "dec00dac9bee4c9e594770fe5300eeae24783584face7f9847d7ce174746c29b",
+      "port_record": "publication/youtube-timestamp-origin-docs-20261025.json"
     },
     {
       "path": "docs/hiring-reviewer-guide.md",
@@ -145,7 +147,7 @@
       "decision": "Selected FIFO recovery port; preserve public behavior, explicit observation injection, generic lab endpoints and English documentation.",
       "before_sha256": "869f1b5b8fd8415e3b291f85f0ee46c1b5d750e9a65500b8424ea32db17b5906",
       "source_sha256": null,
-      "public_sha256": "d14149ea549d86a2a34284bf2f7e4d76ef68a97f541c8f6d5c3551bcc010ecc8",
+      "public_sha256": "f2bc8f368327a60f216fecac9837d1e7af1676d727d5030040ef97e0b7c0a674",
       "pre_documentation_restructure_sha256": "dce4f788e0479398c6718742c679da57bc203509c7ea7e83fa93c477d8c6dfa4",
       "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json.",
       "pre_clock_monitor_public_sha256": "e61fbc6732027df3a0eb7832e3e28ab37e0914bda85305f3127caa2b64260a53",
@@ -153,7 +155,8 @@
       "pre_thumbnail_clock_public_sha256": "d88b0cbe714c8b977d27627342b5712ff902b69351d8ce1696f7ff3a4df3bffd",
       "thumbnail_clock_port": "2026-10-22 committed source through 740bcc00; concurrent review excluded.",
       "pre_fifo_recovery_public_sha256": "869f1b5b8fd8415e3b291f85f0ee46c1b5d750e9a65500b8424ea32db17b5906",
-      "port_date_jst": "2026-10-24"
+      "port_date_jst": "2026-10-24",
+      "port_record": "publication/youtube-timestamp-origin-docs-20261025.json"
     },
     {
       "path": "docs/operational-case-studies.md",
@@ -161,13 +164,14 @@
       "decision": "Selected FIFO recovery port; preserve public behavior, explicit observation injection, generic lab endpoints and English documentation.",
       "before_sha256": "75864230d4f06acb5fab0bb1948cd5a4fe0738fd35d3e44f59ef19b3ca759ca7",
       "source_sha256": null,
-      "public_sha256": "c211334a465cd3985b194eac6207fa9f31dfbbbcebbe1fbf9c968ef86c86c843",
+      "public_sha256": "8bd6fd50b143ab908bb3c63088393ed1350250d141075e51d366710e00c20071",
       "port_date_jst": "2026-10-24",
       "pre_documentation_restructure_sha256": "aab38a602e76fcc8440508d193a58ff41f5a54aec0b817a1e677d7d4e43ed9b5",
       "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json.",
       "pre_clock_documentation_review_public_sha256": "c08e8f4f29564da5309cf4830a8ac07ef3f220feb699f8b327e5ee072e1b14d1",
       "clock_documentation_review": "2026-10-22 observation-layer table, clock case study and current-status consolidation; no code or runtime change.",
-      "pre_fifo_recovery_public_sha256": "75864230d4f06acb5fab0bb1948cd5a4fe0738fd35d3e44f59ef19b3ca759ca7"
+      "pre_fifo_recovery_public_sha256": "75864230d4f06acb5fab0bb1948cd5a4fe0738fd35d3e44f59ef19b3ca759ca7",
+      "port_record": "publication/youtube-timestamp-origin-docs-20261025.json"
     },
     {
       "path": "docs/operational-scorecard.md",
@@ -228,7 +232,7 @@
       "decision": "Selected FIFO recovery port; preserve public behavior, explicit observation injection, generic lab endpoints and English documentation.",
       "before_sha256": "7260dabcdd49d2080223952d24250bb56cf68e3f82b4ad1daa9f00fccee362ab",
       "source_sha256": null,
-      "public_sha256": "84ad321371862bb6cf7eff6259a15e6efb4835ba897850e8c4300c4a99d54de3",
+      "public_sha256": "bc15110a6d74d005aa8a4d42e7f59d9136f4119b732ad8070b56db719b2a4372",
       "port_date_jst": "2026-10-24",
       "pre_documentation_restructure_sha256": "05aaa171c0ae1542019467073dd5058d7301e5d83eec70c9d39b20d6c8d12c68",
       "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json.",
@@ -236,7 +240,8 @@
       "clock_monitor_port": "2026-10-22 selected return-feed monitor / OCI files-only backup port; existing changes retained.",
       "pre_thumbnail_clock_public_sha256": "4fd2f7e79cad25b52f5ff05d1fe22b208a6d80a10f77879d307a6659c8b4ead6",
       "thumbnail_clock_port": "2026-10-22 committed source through 740bcc00; concurrent review excluded.",
-      "pre_fifo_recovery_public_sha256": "7260dabcdd49d2080223952d24250bb56cf68e3f82b4ad1daa9f00fccee362ab"
+      "pre_fifo_recovery_public_sha256": "7260dabcdd49d2080223952d24250bb56cf68e3f82b4ad1daa9f00fccee362ab",
+      "port_record": "publication/youtube-timestamp-origin-docs-20261025.json"
     },
     {
       "path": "docs/v3/oci-relay-and-twitch.md",
@@ -446,11 +451,14 @@
     {
       "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/relay_observe.py",
       "source_role": "development-monitoring",
-      "decision": "adapted-english-and-portable-bindings",
+      "decision": "Selected timestamp-origin and copy-output health code port; retain English prose, generic relay identity and configurable endpoints.",
       "before_sha256": "13aeda4786d302d4f2c973acedf59d74c71d05f7ac45db3bcfd3db21fed6eb3d",
-      "source_sha256": "39fd5905bff5372642ce64ba98a00d5f8ca5ccf051f8bbb784fbb685a583a652",
-      "public_sha256": "0e2849c4ec687497a6ab00dd53874ddb58e91b05b6215592d6df83c66392c960",
-      "port_date_jst": "2026-10-20"
+      "source_sha256": "40519cd1727dc1c5b816c5f5d55e74e6f79acd20a8db962a2fe9123e190bf8ba",
+      "public_sha256": "41367a215961715f0f4e903da34900d1ec7892f6bc7a7efcef260024c9bf1d20",
+      "port_date_jst": "2026-10-25",
+      "pre_youtube_timestamp_public_sha256": "0e2849c4ec687497a6ab00dd53874ddb58e91b05b6215592d6df83c66392c960",
+      "source_commit": "88b195988c5cf0dfd154ba177c1f7780cbb1c835",
+      "port_record": "publication/youtube-timestamp-origin-code-port-20261025.json"
     },
     {
       "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/relay_public.py",
@@ -2785,29 +2793,38 @@
     {
       "path": "ops/selfheal/forward_keeper.py",
       "source_role": "development-selfheal",
-      "decision": "adapted-english-and-portable-bindings",
+      "decision": "Selected timestamp-origin and copy-output health code port; retain English prose, generic relay identity and configurable endpoints.",
       "before_sha256": "ba734ee453dc2cff98c2343ff1918f3eee5c3e05a05acbb376b88f6aba0af3a3",
-      "source_sha256": "f4afc344c30edc18c0dfc99c4050a9910d54b0a87fa137a8da4e3bc328db5a6a",
-      "public_sha256": "561c98220da97e75e7ca661e63dc246c7db7087b075b98c1f14e3f42615784e5",
-      "port_date_jst": "2026-10-20"
+      "source_sha256": "bcbed4b6f3c1690e7bf5623a746213a23cf08da0311635057df15201bc1f380d",
+      "public_sha256": "d133ce840e061627077b4eb91c34c3f5609b721e31e4c5aecbf365ab2c679e31",
+      "port_date_jst": "2026-10-25",
+      "pre_youtube_timestamp_public_sha256": "561c98220da97e75e7ca661e63dc246c7db7087b075b98c1f14e3f42615784e5",
+      "source_commit": "88b195988c5cf0dfd154ba177c1f7780cbb1c835",
+      "port_record": "publication/youtube-timestamp-origin-code-port-20261025.json"
     },
     {
       "path": "ops/selfheal/fallback_controller.py",
       "source_role": "development-selfheal",
-      "decision": "adapted-english-and-portable-bindings",
+      "decision": "Selected timestamp-origin and copy-output health code port; retain English prose, generic relay identity and configurable endpoints.",
       "before_sha256": "76b14c36c8cbd36e31bdcde67019b162df7ca33b44d604eb655a656449dcb1f4",
-      "source_sha256": "11ad7ae9532f17fe52a7bf101ebf14ec693328d17bff9cfac9e1937f26e9b0f8",
-      "public_sha256": "db9dbc93ffd953ae45c949153f66826f51916ea0661bde9adfd3659c53236cd4",
-      "port_date_jst": "2026-10-20"
+      "source_sha256": "39aebd402615b03187b11ef20741bc4889422e763e38b4f8f6637c4ce89ec874",
+      "public_sha256": "b3df7e5429907ed285ff1bd4163c7b0f516f40482288573d5451894cf0c930c2",
+      "port_date_jst": "2026-10-25",
+      "pre_youtube_timestamp_public_sha256": "db9dbc93ffd953ae45c949153f66826f51916ea0661bde9adfd3659c53236cd4",
+      "source_commit": "88b195988c5cf0dfd154ba177c1f7780cbb1c835",
+      "port_record": "publication/youtube-timestamp-origin-code-port-20261025.json"
     },
     {
       "path": "tests/test_selfheal.py",
       "source_role": "development-selfheal",
-      "decision": "adapted-english-and-portable-bindings",
+      "decision": "Selected timestamp-origin and copy-output health code port; retain English prose, generic relay identity and configurable endpoints.",
       "before_sha256": "95bf33c048a1c4f7a13e8fb9c9d81ca6c61f4ff8e140598eddcf3c25a35addc3",
-      "source_sha256": "c938b9253fd4be3ab0f1d697c949a3e7d56934ff5168747f5aee2454d6635519",
-      "public_sha256": "87612c834e46a2d9c3bed58a81383ecdbbf40c5d84e578a7a1d22c695736cdcb",
-      "port_date_jst": "2026-10-20"
+      "source_sha256": "8fcb45acd1f7dca1d8b6e239de44c872aa36e3395c6946853acfeb3aa3e9ea60",
+      "public_sha256": "2c6bcd50a6ed88bf28e6f6907b5b62345e41e787ee0b9948ae6fff95cd05c96f",
+      "port_date_jst": "2026-10-25",
+      "pre_youtube_timestamp_public_sha256": "87612c834e46a2d9c3bed58a81383ecdbbf40c5d84e578a7a1d22c695736cdcb",
+      "source_commit": "88b195988c5cf0dfd154ba177c1f7780cbb1c835",
+      "port_record": "publication/youtube-timestamp-origin-code-port-20261025.json"
     },
     {
       "path": "deploy/k3s/youtube-backup/deployment.json",
@@ -2851,10 +2868,11 @@
       "decision": "curated-current-contract-and-dated-evidence",
       "before_sha256": "5d96a625690da59907c871ed065a0e293ae40fdacba81070446195c7302db124",
       "source_sha256": null,
-      "public_sha256": "9f66894a936b79f96c015da1118b71d7f3342aa614e3492a3b03e0bf1bcd636e",
+      "public_sha256": "4bb5b42a42c542f118da85d5e673229119c8ad75fa79f9df5c604c204183eb52",
       "port_date_jst": "2026-10-22",
       "pre_documentation_restructure_sha256": "6ff062e19bdb420d125e2559e7f0f647f960374cf35794f18be82db7ce190be4",
-      "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json."
+      "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json.",
+      "port_record": "publication/youtube-timestamp-origin-docs-20261025.json"
     },
     {
       "path": "docs/v3/oci-route-simplification-decision.md",
@@ -2871,12 +2889,13 @@
       "decision": "state the 2026-10-22 local reflex revision against the earlier CRA rationale",
       "before_sha256": "3d53842818d5b5f7edf48217b9e9d47ca07918644f151ddf519ee492a3a0e238",
       "source_sha256": null,
-      "public_sha256": "c8ca63c3f85d69f29ceb5032357296d8e19ed6d33483b3e18f9a96c7d0444561",
+      "public_sha256": "9255a27f7a94f07760619f782cf1d8f2735a51d62ff50d41ab4c2c6f49ddfd88",
       "port_date_jst": "2026-10-22",
       "pre_documentation_restructure_sha256": "fdda563dc1d60d8b4bae0097ddf03f65e09ca4e594e397af5976808af0f57403",
       "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json.",
       "pre_combined_commit_review_public_sha256": "20d6073d4b2355dcdbe421b8d0d9b66b126c2ecc02be8565d3c4beaa4d3b49a7",
-      "combined_commit_review": "2026-10-24 English, playback-exclusion and design review; preceding provenance retained."
+      "combined_commit_review": "2026-10-24 English, playback-exclusion and design review; preceding provenance retained.",
+      "port_record": "publication/youtube-timestamp-origin-docs-20261025.json"
     },
     {
       "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/twitch_alert_notify.py",
@@ -2984,7 +3003,7 @@
       "decision": "Selected FIFO recovery port; preserve public behavior, explicit observation injection, generic lab endpoints and English documentation.",
       "before_sha256": "f869fdb0929bc8925b2f9bdb799682d063dded38d8218d282597be95019c59b4",
       "source_sha256": null,
-      "public_sha256": "ecd92372b57a2d4d699c239e2d01b400168443368c36b1d503cf7f9922d7f9a1",
+      "public_sha256": "0aa829ab206d2032b623b9f087fc9eb6c03bc7acc008a82d3860ebbfd7cb1515",
       "port_date_jst": "2026-10-24",
       "documentation_restructure": "New single page for volatile state.",
       "pre_twitch_observation_public_sha256": "040eac29174151f51e473f7f85e4aa23ff994be0079b3d4c011623b6ec7864ca",
@@ -3005,7 +3024,8 @@
       "pre_documentation_structure_review_sha256": "4f17b6ed3aa0e40601c0972920620a77640f439022f82cc112b487b3be06bd0d",
       "documentation_structure_review": "2026-10-23: implementation/commit/deployment scopes, v7 transition scope, routing priority, quality comparison and runnable checks.",
       "pre_fifo_recovery_public_sha256": "f869fdb0929bc8925b2f9bdb799682d063dded38d8218d282597be95019c59b4",
-      "pre_music_exclusion_port_sha256": "3b3e1db9dc83166e863412eec229fb03bcf8b6442798c06fb8ac6699a7d1dd4f"
+      "pre_music_exclusion_port_sha256": "3b3e1db9dc83166e863412eec229fb03bcf8b6442798c06fb8ac6699a7d1dd4f",
+      "port_record": "publication/youtube-timestamp-origin-docs-20261025.json"
     },
     {
       "path": "monitoring-v4/ops/release/model.py",
@@ -3097,14 +3117,15 @@
       "source_role": "public-documentation",
       "before_sha256": "66ab195158854e1ddbe4ba06dd63fce3442079021b33d759dc9e2f434ec93f2e",
       "pre_twitch_observation_public_sha256": "66ab195158854e1ddbe4ba06dd63fce3442079021b33d759dc9e2f434ec93f2e",
-      "public_sha256": "f2d23a1ca64f383539c68478ef9f5c35579bfac6e0afd37188deb0fe49127457",
+      "public_sha256": "80c751de3628fee3db8e70c7be71d923a5a23ee6c22819f827cfa3a4b35fad07",
       "source_sha256": null,
       "port_date_jst": "2026-10-21",
       "decision": "Twitch observation and OCI-aware notifications; public bindings and English text retained",
       "pre_clock_monitor_public_sha256": "bd88394af5b0c4b2b6b5115f77a10e6002b13fe621a7c57287b05ea1fab79090",
       "clock_monitor_port": "2026-10-22 selected return-feed monitor / OCI files-only backup port; existing changes retained.",
       "pre_clock_documentation_review_public_sha256": "11334a65c761a119a04864c05446e1f99166b9b97ddf017fc1a4be354f20f02b",
-      "clock_documentation_review": "2026-10-22 observation-layer table, clock case study and current-status consolidation; no code or runtime change."
+      "clock_documentation_review": "2026-10-22 observation-layer table, clock case study and current-status consolidation; no code or runtime change.",
+      "port_record": "publication/youtube-timestamp-origin-docs-20261025.json"
     },
     {
       "path": "publication/twitch-observation-port-20261021.json",
@@ -5065,9 +5086,20 @@
       "source_role": "public-documentation",
       "before_sha256": null,
       "source_sha256": null,
-      "public_sha256": "5dc52d739888953989667ad8516c840af5922c896345b6d0f480617f4c6ab251",
+      "public_sha256": "1779fcec3d7991ebb96a9a1aacfc27cc63ddbd574d213fe2d2d16b4761aeabb8",
       "decision": "Selected FIFO recovery port; preserve public behavior, explicit observation injection, generic lab endpoints and English documentation.",
-      "port_date_jst": "2026-10-24"
+      "port_date_jst": "2026-10-24",
+      "port_record": "publication/youtube-timestamp-origin-docs-20261025.json"
+    },
+    {
+      "path": "docs/v3/fifo-timestamp-continuity-case-study.md",
+      "source_role": "public-documentation",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "5391d3018847931f26abd0c6af88d7a999ca15981da630d0547a0035c31145a9",
+      "decision": "Public case study of the 2026-10-25 YouTube timestamp-origin incident; excludes broadcast identifiers, stream keys, recordings, process identities and private evidence paths.",
+      "port_date_jst": "2026-10-25",
+      "port_record": "publication/youtube-timestamp-origin-docs-20261025.json"
     },
     {
       "path": "examples/fifo-recovery/measurements-20261024.json",
@@ -5344,6 +5376,72 @@
       "source_sha256": "9b1fbabdb3188360d2aeb9bbfb64a3509b3226ee499db7fd6371342657bc5299",
       "public_sha256": "9a69a4217de13b19bca70cdcb3004715e636f1844c34b0c0bca65e5b44e63c06",
       "port_date_jst": "2026-10-24"
+    },
+    {
+      "path": "ops/selfheal/youtube-forward/main.go",
+      "source_role": "development-selfheal",
+      "decision": "Selected timestamp-origin and copy-output health code port; retain English prose, generic relay identity and configurable endpoints.",
+      "before_sha256": null,
+      "source_sha256": "3defd5e2382425f8da09654ee67abf8952991a5958323c89e90774dc7c876c30",
+      "public_sha256": "3defd5e2382425f8da09654ee67abf8952991a5958323c89e90774dc7c876c30",
+      "port_date_jst": "2026-10-25",
+      "source_commit": "88b195988c5cf0dfd154ba177c1f7780cbb1c835",
+      "port_record": "publication/youtube-timestamp-origin-code-port-20261025.json"
+    },
+    {
+      "path": "ops/selfheal/youtube-forward/main_test.go",
+      "source_role": "development-selfheal",
+      "decision": "Selected timestamp-origin and copy-output health code port; retain English prose, generic relay identity and configurable endpoints.",
+      "before_sha256": null,
+      "source_sha256": "6cf2b4bd3e63fcf4a1c56e4dc2ae4f64e2497fce9f6a69c85311b46dcba5e723",
+      "public_sha256": "6cf2b4bd3e63fcf4a1c56e4dc2ae4f64e2497fce9f6a69c85311b46dcba5e723",
+      "port_date_jst": "2026-10-25",
+      "source_commit": "88b195988c5cf0dfd154ba177c1f7780cbb1c835",
+      "port_record": "publication/youtube-timestamp-origin-code-port-20261025.json"
+    },
+    {
+      "path": "ops/selfheal/youtube-forward/go.mod",
+      "source_role": "development-selfheal",
+      "decision": "Selected timestamp-origin and copy-output health code port; retain English prose, generic relay identity and configurable endpoints.",
+      "before_sha256": null,
+      "source_sha256": "2d64e0bdc6068c2baadded8c71b6ccacd299143acea8a75c89d2a1aacbc1067d",
+      "public_sha256": "2d64e0bdc6068c2baadded8c71b6ccacd299143acea8a75c89d2a1aacbc1067d",
+      "port_date_jst": "2026-10-25",
+      "source_commit": "88b195988c5cf0dfd154ba177c1f7780cbb1c835",
+      "port_record": "publication/youtube-timestamp-origin-code-port-20261025.json"
+    },
+    {
+      "path": "ops/selfheal/youtube-forward/go.sum",
+      "source_role": "development-selfheal",
+      "decision": "Selected timestamp-origin and copy-output health code port; retain English prose, generic relay identity and configurable endpoints.",
+      "before_sha256": null,
+      "source_sha256": "efeaf99766bfaa79e79a68c4e742baf9d97d8f63081d4e2853558320ea4beabc",
+      "public_sha256": "efeaf99766bfaa79e79a68c4e742baf9d97d8f63081d4e2853558320ea4beabc",
+      "port_date_jst": "2026-10-25",
+      "source_commit": "88b195988c5cf0dfd154ba177c1f7780cbb1c835",
+      "port_record": "publication/youtube-timestamp-origin-code-port-20261025.json"
+    },
+    {
+      "path": "ops/selfheal/route_facts_http.py",
+      "source_role": "development-selfheal",
+      "decision": "Selected timestamp-origin and copy-output health code port; retain English prose, generic relay identity and configurable endpoints.",
+      "before_sha256": null,
+      "source_sha256": "c0e8fe5a0b70d190a522b14306a3ff4ed40ae150961389b35c6c423ff45ee2ad",
+      "public_sha256": "5373e2692247eae800e001924b8a1d33eafad9aa4e64c7ae6ca3dda970dfb151",
+      "port_date_jst": "2026-10-25",
+      "source_commit": "88b195988c5cf0dfd154ba177c1f7780cbb1c835",
+      "port_record": "publication/youtube-timestamp-origin-code-port-20261025.json"
+    },
+    {
+      "path": "tests/test_fallback_copy_route.py",
+      "source_role": "development-selfheal",
+      "decision": "Selected timestamp-origin and copy-output health code port; retain English prose, generic relay identity and configurable endpoints.",
+      "before_sha256": null,
+      "source_sha256": "61ede933f392938909a390e7d21244b5469f954191f6e75a0834bd3da4e822e3",
+      "public_sha256": "1a14beb9e9df0d07880b2a82e9afc2028506d7a27f28bdc3d97f2052f3188f16",
+      "port_date_jst": "2026-10-25",
+      "source_commit": "88b195988c5cf0dfd154ba177c1f7780cbb1c835",
+      "port_record": "publication/youtube-timestamp-origin-code-port-20261025.json"
     }
   ],
   "omissions": [
@@ -5410,7 +5508,9 @@
     "publication/relay-clock-port-20261023.json",
     "publication/observability-port-20261023.json",
     "publication/fifo-recovery-port-20261024.json",
-    "publication/commit-review-20261024.json"
+    "publication/commit-review-20261024.json",
+    "publication/youtube-timestamp-origin-docs-20261025.json",
+    "publication/youtube-timestamp-origin-code-port-20261025.json"
   ],
   "evidence_checkpoint_cutoff_jst": "2026-10-14T00:04:57+09:00",
   "documentation_audience": "hiring and technical reviewers",
@@ -5624,5 +5724,38 @@
     "record": "publication/commit-review-20261024.json",
     "scope": "Operator-requested combined local commit after language, behavior, boundary and secret checks.",
     "push_requested": false
+  },
+  "youtube_timestamp_origin_docs": {
+    "date_jst": "2026-10-25",
+    "record": "publication/youtube-timestamp-origin-docs-20261025.json",
+    "scope": "Case study and contract updates for the YouTube per-connection timestamp origin; matching source port completed and linked.",
+    "deployment_performed": false,
+    "commit_or_push_performed": false,
+    "initial_scope": "Case study and contract updates for the YouTube per-connection timestamp origin; source port pending.",
+    "source_port_record": "publication/youtube-timestamp-origin-code-port-20261025.json"
+  },
+  "youtube_timestamp_origin_code_port": {
+    "date_jst": "2026-10-25",
+    "record": "publication/youtube-timestamp-origin-code-port-20261025.json",
+    "development_source_commit": "88b195988c5cf0dfd154ba177c1f7780cbb1c835",
+    "code_file_count": 10,
+    "deployment_performed": false,
+    "commit_or_push_performed": false
+  },
+  "youtube_timestamp_origin_reconciliation": {
+    "id": "youtube-timestamp-origin-record-reconciliation-20261025",
+    "checked_at_jst": "2026-10-25T16:51:20+09:00",
+    "last_writer": "code-port-record-reconciliation",
+    "last_writer_record": "publication/youtube-timestamp-origin-code-port-20261025.json",
+    "write_order": [
+      "publication/youtube-timestamp-origin-docs-20261025.json",
+      "publication/youtube-timestamp-origin-code-port-20261025.json",
+      "publication/source-map.json"
+    ],
+    "code_record": "publication/youtube-timestamp-origin-code-port-20261025.json",
+    "documentation_record": "publication/youtube-timestamp-origin-docs-20261025.json",
+    "code_file_count": 10,
+    "documentation_file_count": 11,
+    "scope": "Final write of this record reconciliation. Recheck hashes and ownership after any later edit and before a public commit."
   }
 }

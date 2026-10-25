@@ -28,7 +28,8 @@ after five minutes of continuous relay health.
 ```mermaid
 flowchart LR
     MAIN["Dell main Pod: map + audio + NVENC"] -->|"RTMPS over a private tunnel"| MTX["OCI: MediaMTX (Restart=always)"]
-    MTX -->|"forward 1"| YT["YouTube primary ingest"]
+    MTX -->|"forward 1 (loopback)"| COPY["OCI copy process: per-connection timestamp origin"]
+    COPY --> YT["YouTube primary ingest"]
     MTX -->|"forward 2"| TW["Twitch ingest"]
     KEEP["OCI keeper"] -. "re-create a failed forward; renew Twitch daily" .-> MTX
     CTRL["Dell fallback controller"] -. "reads relay health every 15 s" .-> MTX
@@ -58,13 +59,16 @@ retired is recorded in
 | --- | --- | --- |
 | Main sender | Dell k3s Deployment `stream-v3-runtime` | The engine reconnects five seconds after a dropped connection; Kubernetes restarts a failed Pod. |
 | Relay | OCI systemd `stream-v3-oci-mediamtx` | `Restart=always` with a three-second delay. Tunnel access is restricted; the public unit is an example of the encoder allowlist. |
-| Keeper | OCI systemd `stream-v3-oci-keeper` | Re-creates one forward that has not been forwarding, or has reported an error, for 30 seconds (at most once per minute per destination). Renews Twitch at 00:00 JST or after 46 hours. |
+| YouTube copy process | OCI systemd `stream-v3-youtube-forward` | Since 2026-10-25, copies the YouTube forward to YouTube without re-encoding and starts each connection at the first IDR with its own timestamp origin. On a YouTube-side failure it closes its input and the forward reconnects. See the [timestamp case study](fifo-timestamp-continuity-case-study.md). |
+| Keeper | OCI systemd `stream-v3-oci-keeper` | Re-creates one forward that has not been forwarding with advancing outbound bytes on the same handler, or has reported an error, for 30 seconds (at most once per minute per destination). Repair replaces only that list slot so other providers keep their handlers. Renews Twitch at 00:00 JST or after 46 hours. |
 | Fallback controller | Dell systemd `stream-v3-fallback-controller` | Starts the fallback after 30 seconds of relay failure and stops it after 300 seconds of continuous relay health. |
 | Fallback sender | Dell k3s Deployment `stream-v3-youtube-backup` | Normally zero replicas. While running, it reconnects on its own. |
 
 Relay health means three things at once: the input path is ready, its received
-byte counter advances, and the YouTube forward is `forwarding` without an error
-while its outbound counter advances. An unreachable API or a missing sample
+byte counter advances, and YouTube output advances. Since 2026-10-25 the YouTube
+part is read from the copy process: the expected process, boot and destination,
+fresh state, and increases in YouTube output bytes and in both video and audio
+packets on the same connection. An unreachable API or a missing sample
 counts as unhealthy. The controller only stops the fallback after continuous
 health; it never stops it because an observation is missing.
 
@@ -261,7 +265,7 @@ An external review raised three points, all confirmed and changed the same day.
 | Observation | Supported conclusion | Remaining uncertainty |
 | --- | --- | --- |
 | Relay input bytes advance | The relay receives the main sender's feed. | Provider reception is separate. |
-| A forward is `forwarding` and its bytes advance | The relay is sending to that provider. | It does not show that the provider accepted decodable media. |
+| A forward is `forwarding` and its bytes advance (YouTube: the copy process is flowing with both tracks) | The relay is sending to that provider. | It does not show that the provider accepted decodable media. |
 | YouTube API live / active / good | The provider reports a healthy broadcast. | Frame-level continuity for viewers is not measured. |
 | Twitch Helix LIVE with a new session ID | A new Twitch session exists after renewal. | It does not show delivered audio or video. |
 | Drills on 2026-10-20 and 2026-10-21 | Automatic fallback and return work for a stopped relay service, tunnel loss, and a relay-host reset. | A prolonged relay-host stop and provider-side failures were not exercised; the YouTube-side gap was not measured. |
@@ -271,7 +275,8 @@ without the keeper, are listed in [current status](../current-status.md).
 
 ## Reviewable implementation
 
-- [Keeper](../../ops/selfheal/forward_keeper.py) and
+- [YouTube copy process](../../ops/selfheal/youtube-forward/),
+  [keeper](../../ops/selfheal/forward_keeper.py) and
   [fallback controller](../../ops/selfheal/fallback_controller.py), with
   [tests](../../tests/test_selfheal.py).
 - [Example units](../../ops/selfheal/systemd/) and the

@@ -9,7 +9,9 @@ The pages most readers need from this folder:
 
 - [FIFO connection recovery](ffmpeg-fifo-recovery.md): why the output reconnects
   instead of riding through or restarting FFmpeg; its
-  [measured comparison and rollout failure](ffmpeg-fifo-measurements.md).
+  [measured comparison and rollout failure](ffmpeg-fifo-measurements.md), and
+  [what keeping the encoder also kept](fifo-timestamp-continuity-case-study.md):
+  its timestamps, and the YouTube fix.
 - [Self-healing OCI fan-out](self-healing-oci-fanout.md): the media route since
   2026-10-20.
 - [Replacing an unfinished OCI recovery design](oci-route-simplification-decision.md):

@@ -72,12 +72,41 @@ The [dated case](v3/ffmpeg-fifo-measurements.md) retains both outcomes.
 
 The public source now includes the FIFO builder, injected transport observer,
 FIFO-aware target classification, regression checks and sanitized timing tools.
-This source transfer does not deploy them. Local JSON/rotated events and
-Prometheus text exist in the operated version; new arena scrapes, CRA database
-fields and public UI panels were not added. The full retry-exhaustion to
+This source transfer does not deploy them. Since 2026-10-25, a read-only export
+on Dell and an observer on arena-server feed the operated observation into
+Prometheus and an internal dashboard, and its reconnect events into Loki. The
+public page counts output reconnects per day from those events, so FIFO
+recoveries no longer disappear from the restart record. The event journal
+covers every reconnect since FIFO recovery was enabled at 12:05 JST on
+2026-10-24: three by 2026-10-25, one of them inside the first rollout that was
+later rolled back. The observer is not yet in the public source, and no CRA
+database fields were added. The full retry-exhaustion to
 process-replacement cascade, a real ISP/public-IP change and long-term behavior
 under this version remain untested. Current lab pings use 0.5 s; retained
 measurements used 1 s.
+
+## YouTube Timestamp Origin (2026-10-25 JST)
+
+After the 06:31 uplink interruption, FIFO reconnected the main sender in the
+same process, but the relay's YouTube connection kept closing until 09:22
+because it received about 20 hours of continuing media timestamps. The YouTube
+backup carried YouTube meanwhile; Twitch recovered on its own. A copy process on
+the relay now gives each YouTube connection its own timestamp origin, the
+keeper requires byte progress, and the fallback controller reads the copy
+process's output facts. A manual re-creation at 08:53 also reconnected the
+Twitch forward twice.
+
+| Time | Change | Verified |
+| --- | --- | --- |
+| 09:22 | YouTube forward routed through the copy process. | One session sending with both tracks; no new `EOF`. |
+| 09:56-10:02 | Fallback controller reads the new output facts. | Backup stopped after 300 s of continuous health. |
+| 10:31-10:58 | Private YouTube comparison, timestamp origin only. | 5/5/6 unplanned reconnects without it, 0/0/0 with it. |
+| 15:43 | Private player, connection cut during recording. | Same FFmpeg process; continuous video and test tone across 487 s. |
+
+YouTube's internal reason for closing the connection, the long-term behavior of
+the copy process, and Twitch player continuity during the 08:53 re-creation are
+not observed. The [case study](v3/fifo-timestamp-continuity-case-study.md) has
+the details and limits.
 
 ## Video Observation (2026-10-22 to 2026-10-23 JST)
 

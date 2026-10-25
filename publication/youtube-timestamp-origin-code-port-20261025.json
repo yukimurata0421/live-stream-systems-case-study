@@ -1,0 +1,205 @@
+{
+  "schema": "stream.public_port_record.v1",
+  "port_date_jst": "2026-10-25",
+  "recorded_at_jst": "2026-10-25T16:49:54+09:00",
+  "scope": "Public source port of the YouTube per-connection timestamp origin, copy-output facts, progress-based recovery checks and matching tests.",
+  "development_source_commit": "88b195988c5cf0dfd154ba177c1f7780cbb1c835",
+  "prior_public_head": "8df7c5df22cc2cedd0ad138a9fdc24fd17d1d03b",
+  "development_worktrees_dirty": true,
+  "deployment_performed": false,
+  "native_experiment_performed": false,
+  "notification_sent": false,
+  "commit_performed": false,
+  "push_performed": false,
+  "public_adaptations": [
+    "Copy the pinned Go RTMP bridge and tests; retain first-IDR common-origin rebasing without re-encoding.",
+    "Keep the public relay-host identity and require configurable relay API or facts endpoints; do not copy private addresses.",
+    "Extend the existing monitoring-v4 relay observer instead of adding a second observer module.",
+    "Bind backup-stop health to the current copy session and increasing input bytes, actual output bytes and both media packet counters.",
+    "Retain English comments and docstrings; load the public observer location explicitly in the matching tests."
+  ],
+  "excluded": [
+    "Private deployment units and firewall changes, provider experiment orchestration and account-specific credential helpers.",
+    "Credentials, provider stream destinations, private addresses, runtime state, raw logs and recordings.",
+    "New deployment, provider qualification, live-player verification or long-term stability claims from this source transfer."
+  ],
+  "code_port_validation": {
+    "basis": "Results from the completed source port. Listed public code and dependency-file hashes were rechecked during this record reconciliation; code tests were not rerun for metadata-only changes.",
+    "python_recovery_tests": {
+      "passed": 45,
+      "subtests_passed": 40,
+      "command": ".venv/bin/python -B -m pytest -q tests/test_selfheal.py tests/test_fallback_copy_route.py"
+    },
+    "python_observer_and_boundary_tests": {
+      "passed": 16,
+      "subtests_passed": 2,
+      "command": "PYTHONPATH=monitoring-v4/src .venv/bin/python -B -m pytest -q monitoring-v4/tests/test_relay_observe.py tests/test_public_private_paths.py tests/test_public_language_policy.py"
+    },
+    "go_race_tests": {
+      "status": "PASS",
+      "tests_passed": 3,
+      "toolchain": "go1.26.3",
+      "working_directory": "ops/selfheal/youtube-forward",
+      "command": "GOTOOLCHAIN=local GOMAXPROCS=2 GOFLAGS=-p=2 go test -race ./..."
+    },
+    "public_source_boundary": "PASS; issue_count=0",
+    "public_language": "PASS",
+    "selected_secret_scan": "PASS"
+  },
+  "reconciliation_checks": {
+    "public_code_hashes": "PASS",
+    "development_commit_hashes": "PASS",
+    "documentation_hashes": "PASS",
+    "unrelated_source_map_rows": "Preserved. Only the selected code/documentation rows and related publication metadata were reconciled."
+  },
+  "documentation_record": "publication/youtube-timestamp-origin-docs-20261025.json",
+  "source_map_reconciliation": {
+    "id": "youtube-timestamp-origin-record-reconciliation-20261025",
+    "checked_at_jst": "2026-10-25T16:51:20+09:00",
+    "last_writer": "code-port-record-reconciliation",
+    "last_writer_record": "publication/youtube-timestamp-origin-code-port-20261025.json",
+    "write_order": [
+      "publication/youtube-timestamp-origin-docs-20261025.json",
+      "publication/youtube-timestamp-origin-code-port-20261025.json",
+      "publication/source-map.json"
+    ],
+    "code_record": "publication/youtube-timestamp-origin-code-port-20261025.json",
+    "documentation_record": "publication/youtube-timestamp-origin-docs-20261025.json",
+    "code_file_count": 10,
+    "documentation_file_count": 11,
+    "scope": "Final write of this record reconciliation. Recheck hashes and ownership after any later edit and before a public commit."
+  },
+  "pre_commit_recheck": [
+    "Compare this record and the documentation record with current file and source-map SHA-256 values.",
+    "Re-run the public source boundary and language validators and check local document links.",
+    "Keep unrelated working-tree changes and confirm a separately authorized public commit scope."
+  ],
+  "files": [
+    {
+      "path": "ops/selfheal/youtube-forward/main.go",
+      "source_role": "development-selfheal",
+      "decision": "Selected timestamp-origin and copy-output health code port; retain English prose, generic relay identity and configurable endpoints.",
+      "before_sha256": null,
+      "source_sha256": "3defd5e2382425f8da09654ee67abf8952991a5958323c89e90774dc7c876c30",
+      "public_sha256": "3defd5e2382425f8da09654ee67abf8952991a5958323c89e90774dc7c876c30",
+      "port_date_jst": "2026-10-25",
+      "source_commit": "88b195988c5cf0dfd154ba177c1f7780cbb1c835",
+      "port_record": "publication/youtube-timestamp-origin-code-port-20261025.json"
+    },
+    {
+      "path": "ops/selfheal/youtube-forward/main_test.go",
+      "source_role": "development-selfheal",
+      "decision": "Selected timestamp-origin and copy-output health code port; retain English prose, generic relay identity and configurable endpoints.",
+      "before_sha256": null,
+      "source_sha256": "6cf2b4bd3e63fcf4a1c56e4dc2ae4f64e2497fce9f6a69c85311b46dcba5e723",
+      "public_sha256": "6cf2b4bd3e63fcf4a1c56e4dc2ae4f64e2497fce9f6a69c85311b46dcba5e723",
+      "port_date_jst": "2026-10-25",
+      "source_commit": "88b195988c5cf0dfd154ba177c1f7780cbb1c835",
+      "port_record": "publication/youtube-timestamp-origin-code-port-20261025.json"
+    },
+    {
+      "path": "ops/selfheal/youtube-forward/go.mod",
+      "source_role": "development-selfheal",
+      "decision": "Selected timestamp-origin and copy-output health code port; retain English prose, generic relay identity and configurable endpoints.",
+      "before_sha256": null,
+      "source_sha256": "2d64e0bdc6068c2baadded8c71b6ccacd299143acea8a75c89d2a1aacbc1067d",
+      "public_sha256": "2d64e0bdc6068c2baadded8c71b6ccacd299143acea8a75c89d2a1aacbc1067d",
+      "port_date_jst": "2026-10-25",
+      "source_commit": "88b195988c5cf0dfd154ba177c1f7780cbb1c835",
+      "port_record": "publication/youtube-timestamp-origin-code-port-20261025.json"
+    },
+    {
+      "path": "ops/selfheal/youtube-forward/go.sum",
+      "source_role": "development-selfheal",
+      "decision": "Selected timestamp-origin and copy-output health code port; retain English prose, generic relay identity and configurable endpoints.",
+      "before_sha256": null,
+      "source_sha256": "efeaf99766bfaa79e79a68c4e742baf9d97d8f63081d4e2853558320ea4beabc",
+      "public_sha256": "efeaf99766bfaa79e79a68c4e742baf9d97d8f63081d4e2853558320ea4beabc",
+      "port_date_jst": "2026-10-25",
+      "source_commit": "88b195988c5cf0dfd154ba177c1f7780cbb1c835",
+      "port_record": "publication/youtube-timestamp-origin-code-port-20261025.json"
+    },
+    {
+      "path": "ops/selfheal/fallback_controller.py",
+      "source_role": "development-selfheal",
+      "decision": "Selected timestamp-origin and copy-output health code port; retain English prose, generic relay identity and configurable endpoints.",
+      "before_sha256": "76b14c36c8cbd36e31bdcde67019b162df7ca33b44d604eb655a656449dcb1f4",
+      "source_sha256": "39aebd402615b03187b11ef20741bc4889422e763e38b4f8f6637c4ce89ec874",
+      "public_sha256": "b3df7e5429907ed285ff1bd4163c7b0f516f40482288573d5451894cf0c930c2",
+      "port_date_jst": "2026-10-25",
+      "pre_youtube_timestamp_public_sha256": "db9dbc93ffd953ae45c949153f66826f51916ea0661bde9adfd3659c53236cd4",
+      "source_commit": "88b195988c5cf0dfd154ba177c1f7780cbb1c835",
+      "port_record": "publication/youtube-timestamp-origin-code-port-20261025.json"
+    },
+    {
+      "path": "ops/selfheal/forward_keeper.py",
+      "source_role": "development-selfheal",
+      "decision": "Selected timestamp-origin and copy-output health code port; retain English prose, generic relay identity and configurable endpoints.",
+      "before_sha256": "ba734ee453dc2cff98c2343ff1918f3eee5c3e05a05acbb376b88f6aba0af3a3",
+      "source_sha256": "bcbed4b6f3c1690e7bf5623a746213a23cf08da0311635057df15201bc1f380d",
+      "public_sha256": "d133ce840e061627077b4eb91c34c3f5609b721e31e4c5aecbf365ab2c679e31",
+      "port_date_jst": "2026-10-25",
+      "pre_youtube_timestamp_public_sha256": "561c98220da97e75e7ca661e63dc246c7db7087b075b98c1f14e3f42615784e5",
+      "source_commit": "88b195988c5cf0dfd154ba177c1f7780cbb1c835",
+      "port_record": "publication/youtube-timestamp-origin-code-port-20261025.json"
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/relay_observe.py",
+      "source_role": "development-monitoring",
+      "decision": "Selected timestamp-origin and copy-output health code port; retain English prose, generic relay identity and configurable endpoints.",
+      "before_sha256": "13aeda4786d302d4f2c973acedf59d74c71d05f7ac45db3bcfd3db21fed6eb3d",
+      "source_sha256": "40519cd1727dc1c5b816c5f5d55e74e6f79acd20a8db962a2fe9123e190bf8ba",
+      "public_sha256": "41367a215961715f0f4e903da34900d1ec7892f6bc7a7efcef260024c9bf1d20",
+      "port_date_jst": "2026-10-25",
+      "pre_youtube_timestamp_public_sha256": "0e2849c4ec687497a6ab00dd53874ddb58e91b05b6215592d6df83c66392c960",
+      "source_commit": "88b195988c5cf0dfd154ba177c1f7780cbb1c835",
+      "port_record": "publication/youtube-timestamp-origin-code-port-20261025.json"
+    },
+    {
+      "path": "ops/selfheal/route_facts_http.py",
+      "source_role": "development-selfheal",
+      "decision": "Selected timestamp-origin and copy-output health code port; retain English prose, generic relay identity and configurable endpoints.",
+      "before_sha256": null,
+      "source_sha256": "c0e8fe5a0b70d190a522b14306a3ff4ed40ae150961389b35c6c423ff45ee2ad",
+      "public_sha256": "5373e2692247eae800e001924b8a1d33eafad9aa4e64c7ae6ca3dda970dfb151",
+      "port_date_jst": "2026-10-25",
+      "source_commit": "88b195988c5cf0dfd154ba177c1f7780cbb1c835",
+      "port_record": "publication/youtube-timestamp-origin-code-port-20261025.json"
+    },
+    {
+      "path": "tests/test_selfheal.py",
+      "source_role": "development-selfheal",
+      "decision": "Selected timestamp-origin and copy-output health code port; retain English prose, generic relay identity and configurable endpoints.",
+      "before_sha256": "95bf33c048a1c4f7a13e8fb9c9d81ca6c61f4ff8e140598eddcf3c25a35addc3",
+      "source_sha256": "8fcb45acd1f7dca1d8b6e239de44c872aa36e3395c6946853acfeb3aa3e9ea60",
+      "public_sha256": "2c6bcd50a6ed88bf28e6f6907b5b62345e41e787ee0b9948ae6fff95cd05c96f",
+      "port_date_jst": "2026-10-25",
+      "pre_youtube_timestamp_public_sha256": "87612c834e46a2d9c3bed58a81383ecdbbf40c5d84e578a7a1d22c695736cdcb",
+      "source_commit": "88b195988c5cf0dfd154ba177c1f7780cbb1c835",
+      "port_record": "publication/youtube-timestamp-origin-code-port-20261025.json"
+    },
+    {
+      "path": "tests/test_fallback_copy_route.py",
+      "source_role": "development-selfheal",
+      "decision": "Selected timestamp-origin and copy-output health code port; retain English prose, generic relay identity and configurable endpoints.",
+      "before_sha256": null,
+      "source_sha256": "61ede933f392938909a390e7d21244b5469f954191f6e75a0834bd3da4e822e3",
+      "public_sha256": "1a14beb9e9df0d07880b2a82e9afc2028506d7a27f28bdc3d97f2052f3188f16",
+      "port_date_jst": "2026-10-25",
+      "source_commit": "88b195988c5cf0dfd154ba177c1f7780cbb1c835",
+      "port_record": "publication/youtube-timestamp-origin-code-port-20261025.json"
+    }
+  ],
+  "record_reconciliation_validation": {
+    "public_source_boundary": "PASS; issue_count=0",
+    "public_language": "PASS",
+    "documentation_tests": {
+      "passed": 17,
+      "subtests_passed": 942
+    },
+    "selected_secret_scan": "PASS; no leaks found",
+    "diff_whitespace_check": "PASS",
+    "code_tests_rerun": false,
+    "boundary": "Metadata and document-link validation only; prior code-port test results remain tied to unchanged code hashes."
+  }
+}

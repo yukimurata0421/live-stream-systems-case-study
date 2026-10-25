@@ -3,7 +3,7 @@
 These are short accounts of real operational problems and one failed test
 campaign. They explain the engineering decisions without requiring familiarity
 with the whole system. The October cases summarize retained records from
-2026-10-13 to 2026-10-24 JST; they are historical observations, not a current
+2026-10-13 to 2026-10-25 JST; they are historical observations, not a current
 health report.
 
 The useful result is sometimes restored delivery, sometimes a corrected warning,
@@ -277,6 +277,36 @@ an untested input-selection path.
 
 [Measurements and reproducible summaries](v3/ffmpeg-fifo-measurements.md) ·
 [Runtime and telemetry contract](v3/ffmpeg-fifo-recovery.md)
+
+## 11. Keeping The Encoder Also Kept Its Clock
+
+**Problem.** After a home uplink interruption, FIFO reconnected the output in
+the same FFmpeg process and Twitch recovered. The relay's new YouTube
+connection, however, closed about every six seconds for nearly three hours.
+The relay's own repair never started, because its health check accepted a
+`forwarding` label that appears before any bytes move.
+
+**Investigation and response.** The encoder's timestamps had continued across
+the reconnect, and the relay forwarded about 20 hours of media time unchanged.
+A copy process now starts each YouTube connection at the first IDR with its own
+timestamp origin, without re-encoding; the keeper requires byte progress. The
+first fix had also changed the starting frame, and a local receiver did not
+reproduce the failure, so a private YouTube comparison changed only the origin:
+5, 5 and 6 unplanned reconnects without it, none with it. An end-to-end run cut
+the connection while a private player was being recorded.
+
+**Result and limit.** The recording showed continuous video and test tone
+across 487 seconds, with the same FFmpeg process throughout. YouTube's internal
+reason is unknown, the fixture was synthetic, and one end-to-end run does not
+establish long-term behavior. An earlier manual repair also reconnected the
+Twitch forward twice.
+
+**What it demonstrates.** A recovery choice can move a problem downstream.
+Health checks need progress, not labels, and a fix that changes two things
+needs a comparison that changes one.
+
+[Case study](v3/fifo-timestamp-continuity-case-study.md) ·
+[FIFO layer decision](v3/ffmpeg-fifo-recovery.md#choosing-the-recovery-layer)
 
 ## Evidence And Reading Boundaries
 

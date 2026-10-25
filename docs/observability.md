@@ -19,6 +19,11 @@ Key signal groups:
 - local FFmpeg process and TCP ingest state
 - k3s runtime status and in-container probes
 - upload throughput, `notsent`, `unacked`, and `lastsnd` samples
+- FIFO output transport: connection generation, same-process output
+  reconnects, ACK-stall state and FIFO recovery reports, exported read-only
+  from Dell to arena-server Prometheus since 2026-10-25; reconnect events from
+  the in-Pod journal go to Loki and cover every reconnect since FIFO recovery
+  was enabled on 2026-10-24
 - report-only WAN identity and TCP anchor probes for transport root-cause
   splitting
 - YouTube Data API, OAuth, and public watch-page state
@@ -79,7 +84,7 @@ contracts link here instead of repeating it.
 | --- | --- | --- | --- | --- |
 | Return-feed clock | OCI common relay output, read back to the delivery host | 10 s samples, continuous reader | The rendered JST/UTC clock advanced at the relay output; display age. | Reception by YouTube or Twitch. |
 | Fallback-sender clock | Secondary output of the direct YouTube backup encoder | 10 s while the fallback runs | The backup encoder output advanced. | YouTube accepting or serving it. |
-| Native forward counters | Per-destination forward connections on the relay | 60 s, 90 s freshness | Bytes progressed on each destination's connection. | Provider decoding. |
+| Native forward counters | Per-destination forward connections on the relay; YouTube from the copy process since 2026-10-25 | 60 s, 90 s freshness | Bytes progressed on each destination's connection. | Provider decoding. |
 | Provider API | YouTube stream status and health; Twitch Get Streams | Provider-specific | The provider reported LIVE, OFFLINE, or a health state. | Continuous decoded video. |
 | Provider thumbnail clock | Twitch `thumbnail_url` image (Twitch only) | 60 s polls; new images arrived every six minutes in the observed window | Twitch produced an image whose clock advanced. | Video CDN, player, or audio health. |
 | Public player | Not observed | — | — | — |

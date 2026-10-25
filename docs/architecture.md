@@ -123,7 +123,8 @@ recovery loop.
 ```mermaid
 flowchart LR
     FF["Dell main Pod: FFmpeg / NVENC"] -->|"RTMPS over a private tunnel"| MTX["OCI MediaMTX relay"]
-    MTX --> YT["YouTube primary ingest"]
+    MTX -->|"loopback"| COPY["OCI copy process: per-connection timestamp origin"]
+    COPY --> YT["YouTube primary ingest"]
     MTX --> TW["Twitch ingest"]
     FB["Dell fallback Pod: separate map/audio workload + CPU encoder"] -. "fallback and recovery confirmation only" .-> YTB["YouTube backup ingest"]
 ```

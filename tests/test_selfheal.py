@@ -6,10 +6,45 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "ops/selfheal"))
 from fallback_controller import Controller, START_AFTER, STOP_AFTER, youtube_item  # noqa: E402
-from forward_keeper import Keeper, OFFLINE_MAX, OFFLINE_MIN, VERIFY_MAX, AGE_LIMIT, reconcile  # noqa: E402
+from forward_keeper import Keeper, OFFLINE_MAX, OFFLINE_MIN, VERIFY_MAX, AGE_LIMIT, HEALING_DEST, reconcile  # noqa: E402
+import importlib.util
+_observer_path = Path(__file__).resolve().parents[1] / 'monitoring-v4/src/stream_monitoring_v4/compatibility/relay_observe.py'
+_observer_spec = importlib.util.spec_from_file_location('public_selfheal_relay_observe', _observer_path)
+relay_observe = importlib.util.module_from_spec(_observer_spec)
+_observer_spec.loader.exec_module(relay_observe)
+observed_provider = relay_observe.provider
+renewal_time = relay_observe.renewal_time
+youtube_forward_facts = relay_observe.youtube_forward_facts
 
 YT = {'dest': 'rtmps://a.rtmps.youtube.com:443/live2#k'}
 TW = {'dest': 'rtmps://ingest.global-contribute.live-video.net:443/app#k'}
+
+
+class YouTubeForwardFactsTests(unittest.TestCase):
+    def facts(self, **changes):
+        value = {'schema': 'stream_v3.youtube_forward.v1', 'pid': 123, 'boot_id': 'boot',
+                 'destination_fingerprint': 'bound', 'updated_at': '2026-10-25T00:00:00Z',
+                 'last_progress_at': '2026-10-25T00:00:00Z', 'state': 'FLOWING',
+                 'session': 1, 'output_bytes': 1000, 'video_packets': 10, 'audio_packets': 20}
+        value.update(changes)
+        return youtube_forward_facts(value, now=datetime(2026, 10, 25, tzinfo=timezone.utc).timestamp(),
+                                     pid=123, boot_id='boot', fingerprint='bound')
+
+    def test_current_copy_process_reports_actual_output(self):
+        self.assertEqual(self.facts(), {'id': 'youtube-forward-123-1', 'state': 'forwarding', 'bytes': 1000})
+
+    def test_old_or_unbound_process_facts_are_unknown(self):
+        for changes in ({'pid': 999}, {'boot_id': 'old'}, {'destination_fingerprint': 'other'},
+                        {'updated_at': '2026-10-24T23:59:00Z'}, {'updated_at': '2026-10-25T00:01:00Z'},
+                        {'output_bytes': True}, {'session': 0}):
+            with self.subTest(changes=changes):
+                self.assertIsNone(self.facts(**changes))
+
+    def test_metadata_only_or_frozen_media_never_reports_flowing(self):
+        for changes in ({'audio_packets': 0}, {'video_packets': 0}, {'state': 'ERROR'},
+                        {'last_progress_at': '2026-10-24T23:59:00Z'}):
+            with self.subTest(changes=changes):
+                self.assertEqual(self.facts(**changes)['state'], 'unknown')
 
 
 def sample(n, *, ready=True, state='forwarding', error=False):
@@ -37,7 +72,7 @@ class FallbackTests(unittest.TestCase):
         self.assertEqual(c.decide(START_AFTER, c.healthy(None), 0), 'START')
 
     def test_stalled_input_or_youtube_error_counts_as_unhealthy(self):
-        # input not ready, received bytes not advancing, YouTube forward idle, YouTube forward error
+        # Input not ready, stalled input bytes, idle YouTube forward, or a forward error.
         for bad in (sample(5, ready=False), sample(1), sample(5, state='idle'), sample(5, error=True)):
             with self.subTest(bad=bad):
                 c = Controller()
@@ -60,7 +95,7 @@ class FallbackTests(unittest.TestCase):
         c.healthy(sample(0))
         c.decide(0, c.healthy(sample(1)), 1)
         c.decide(290, c.healthy(sample(2)), 1)
-        c.decide(295, c.healthy(None), 1)              # missing sample
+        c.decide(295, c.healthy(None), 1)              # Missing observation.
         c.healthy(sample(3))
         self.assertIsNone(c.decide(310, c.healthy(sample(4)), 1))
         self.assertIsNone(c.decide(310 + STOP_AFTER - 1, c.healthy(sample(5)), 1))
@@ -83,19 +118,27 @@ class ProviderIdentityTests(unittest.TestCase):
         self.assertIsNone(youtube_item([{'pos': 1, 'conf': YT}, {'pos': 2, 'conf': YT}]))
         self.assertIsNone(youtube_item([{'pos': 1, 'conf': {'dest': 'rtmps://evil.example/youtube.com#k'}}]))
 
+    def test_observer_uses_the_same_host_rule(self):
+        self.assertEqual(observed_provider({'conf': YT}), 'youtube')
+        self.assertEqual(observed_provider({'conf': TW}), 'twitch')
+        self.assertIsNone(observed_provider({'pos': 1}))
 
 
 class HealTests(unittest.TestCase):
     def test_removes_failing_destination_then_restores_it(self):
         k = Keeper([YT, TW])
-        bad = [{'pos': 1, 'state': 'forwarding', 'conf': YT}, {'pos': 2, 'state': 'idle', 'lastError': 'x', 'conf': TW}]
+        bad = [{'id': 'yt', 'pos': 1, 'state': 'forwarding', 'conf': YT, 'outboundBytes': 0}, {'pos': 2, 'state': 'idle', 'lastError': 'x', 'conf': TW}]
         self.assertIsNone(k.heal(0, True, bad))
-        self.assertEqual(k.heal(30, True, bad), [YT])
+        bad[0]['outboundBytes'] = 300000
+        self.assertEqual(k.heal(30, True, bad), [YT, HEALING_DEST])
         self.assertEqual(k.heal(35, True, []), [YT, TW])
-        # the same destination is not re-created again within 60 seconds
+        # Do not reconnect the same destination again within 60 seconds.
+        bad[0]['outboundBytes'] = 700000
         self.assertIsNone(k.heal(70, True, bad))
+        bad[0]['outboundBytes'] = 850000
         self.assertIsNone(k.heal(85, True, bad))
-        self.assertEqual(k.heal(100, True, bad), [YT])
+        bad[0]['outboundBytes'] = 1000000
+        self.assertEqual(k.heal(100, True, bad), [YT, HEALING_DEST])
 
     def test_no_input_is_not_a_forward_failure(self):
         k = Keeper([YT, TW])
@@ -103,17 +146,45 @@ class HealTests(unittest.TestCase):
         self.assertIsNone(k.heal(100, False, [{'pos': 1, 'state': 'idle', 'conf': YT}]))
 
     def test_destination_is_matched_by_its_own_dest_not_by_position(self):
-        # Right after YouTube is removed, Twitch sits at pos 1; its failure must not count against YouTube.
+        # Removing YouTube shifts Twitch to position 1; do not attribute its failure to YouTube.
         k = Keeper([YT, TW])
         shifted = [{'pos': 1, 'state': 'idle', 'lastError': 'x', 'conf': TW}]
         k.heal(0, True, shifted)
         self.assertEqual(set(k.bad_since), {TW['dest']})
-        self.assertEqual(k.heal(30, True, shifted), [YT])
+        self.assertEqual(k.heal(30, True, shifted), [YT, HEALING_DEST])
 
     def test_items_without_a_configured_dest_are_ignored(self):
         k = Keeper([YT, TW])
         self.assertIsNone(k.heal(0, True, [{'pos': 1, 'state': 'idle'}, {'pos': 2, 'state': 'idle', 'conf': {'dest': 'rtmps://x/y'}}]))
         self.assertEqual(k.bad_since, {})
+
+    def test_zero_byte_forwarding_flaps_do_not_hide_failed_youtube(self):
+        k = Keeper([YT, TW])
+        for now in range(0, 30, 5):
+            items = [{'id': 'yt', 'conf': YT, 'state': 'error' if now % 10 == 0 else 'forwarding',
+                      'lastError': 'EOF' if now % 10 == 0 else '', 'outboundBytes': 0},
+                     {'id': 'tw', 'conf': TW, 'state': 'forwarding', 'outboundBytes': now * 10000}]
+            self.assertIsNone(k.heal(now, True, items))
+        items[0].update(state='forwarding', lastError='')
+        items[1]['outboundBytes'] = 300000
+        self.assertEqual(k.heal(30, True, items), [HEALING_DEST, TW])
+        self.assertEqual(k.heal(35, True, items), [YT, TW])
+        # The healthy Twitch slot remains at index 1 in both API patches.
+        self.assertEqual(k.current[1], TW)
+
+    def test_advancing_bytes_keep_both_destinations_healthy(self):
+        k = Keeper([YT, TW])
+        for now in range(0, 125, 5):
+            items = [{'id': 'yt', 'conf': YT, 'state': 'forwarding', 'outboundBytes': now * 10000},
+                     {'id': 'tw', 'conf': TW, 'state': 'forwarding', 'outboundBytes': now * 10000}]
+            self.assertIsNone(k.heal(now, True, items))
+        self.assertEqual(k.bad_since, {})
+
+    def test_same_state_without_byte_progress_is_not_healthy(self):
+        k = Keeper([YT, TW])
+        for now in range(0, 30, 5):
+            self.assertIsNone(k.heal(now, True, [{'id': 'yt', 'conf': YT, 'state': 'forwarding', 'outboundBytes': 100}]))
+        self.assertEqual(k.heal(30, True, [{'id': 'yt', 'conf': YT, 'state': 'forwarding', 'outboundBytes': 100}]), [HEALING_DEST, TW])
 
 
 class FakeMediaMTX:
@@ -165,7 +236,7 @@ class ReconcileTests(unittest.TestCase):
     def test_failed_patch_is_retried_on_the_next_cycle(self):
         m = FakeMediaMTX([YT, TW], fail=True)
         self.assertEqual(reconcile(m.read, m.patch, [YT]), 'failed')
-        self.assertEqual(m.forward, [YT, TW])          # nothing was actually removed
+        self.assertEqual(m.forward, [YT, TW])          # The actual configuration has not changed.
         m.fail = False
         self.assertEqual(reconcile(m.read, m.patch, [YT]), 'patched')
 
@@ -203,7 +274,7 @@ class RenewalTests(unittest.TestCase):
         self.assertEqual(k.phase, 'VERIFY')
         k.renewal(200, day2, True, self.twitch(sid='2'))
         self.assertEqual(k.phase, 'IDLE')
-        # never renew twice on the same JST date
+        # Never renew twice on the same date.
         self.assertIsNone(k.renewal(300, day2 + timedelta(hours=1), True, self.twitch(sid='2', wall=day2)))
 
     def test_twitch_is_restored_even_if_offline_is_never_observed(self):
@@ -229,6 +300,20 @@ class RenewalTests(unittest.TestCase):
         wall = datetime(2026, 10, 20, 15, 1, tzinfo=timezone.utc)
         self.assertIsNone(k.renewal(0, wall, False, self.twitch(wall=wall)))
         self.assertIsNone(k.renewal(0, wall, True, self.twitch('UNKNOWN')))
+
+
+class RenewalTimeTests(unittest.TestCase):
+    # The monitor treats an active renewal within 360 seconds of its scheduled time as planned.
+    def test_renewing_reports_this_midnight(self):
+        now = datetime(2026, 10, 20, 15, 2, tzinfo=timezone.utc)  # 00:02 JST
+        for phase in ('WAIT_OFFLINE', 'VERIFY'):
+            with self.subTest(phase=phase):
+                self.assertEqual(renewal_time(now, phase), '2026-10-20T15:00:00+00:00')
+
+    def test_idle_reports_next_midnight(self):
+        now = datetime(2026, 10, 20, 15, 2, tzinfo=timezone.utc)
+        self.assertEqual(renewal_time(now, 'IDLE'), '2026-10-21T15:00:00+00:00')
+        self.assertEqual(renewal_time(datetime(2026, 10, 20, 3, tzinfo=timezone.utc), 'IDLE'), '2026-10-20T15:00:00+00:00')
 
 
 if __name__ == '__main__':

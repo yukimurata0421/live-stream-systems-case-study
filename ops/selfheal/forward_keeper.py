@@ -7,7 +7,7 @@
 - Twitch renewal: at 00:00 JST, or 46 hours after the Twitch session started, only the Twitch
   forward is removed. It is restored after OFFLINE is observed (at least 120 seconds), or after
   600 seconds even if OFFLINE is never observed, so Twitch is never held down for long.
-- The YouTube forward is never touched. State is persisted so a restart does not renew twice on
+- Daily renewal does not touch the YouTube forward. State is persisted so a restart does not renew twice on
   the same JST date.
 """
 from __future__ import annotations
@@ -31,6 +31,8 @@ OFFLINE_MIN = 120
 OFFLINE_MAX = 600
 VERIFY_MAX = 180
 AGE_LIMIT = 46 * 3600
+# Preserve destination slots when the server matches handlers by list position.
+HEALING_DEST = {'dest': 'rtmp://127.0.0.1:1/stream-v3-healing'}
 
 
 def is_twitch(dest: str) -> bool:
@@ -42,6 +44,7 @@ class Keeper:
     destinations: list            # every configured forward, [{'dest': ...}, ...]
     bad_since: dict = field(default_factory=dict)
     last_heal: dict = field(default_factory=dict)
+    previous_samples: dict = field(default_factory=dict)
     removed: str | None = None    # destination temporarily removed for healing
     phase: str = 'IDLE'           # IDLE / WAIT_OFFLINE / VERIFY
     phase_at: float = 0.0
@@ -62,6 +65,7 @@ class Keeper:
             if self.phase == 'WAIT_OFFLINE' and is_twitch(d['dest']):
                 continue
             if d['dest'] == self.removed:
+                keep.append(dict(HEALING_DEST))
                 continue
             keep.append(d)
         return keep
@@ -74,6 +78,7 @@ class Keeper:
             return self.apply(self.desired())
         if not ready:
             self.bad_since.clear()
+            self.previous_samples.clear()
             return None
         configured = {d['dest'] for d in self.destinations}
         for item in items:
@@ -81,7 +86,14 @@ class Keeper:
             dest = (item.get('conf') or {}).get('dest')
             if dest not in configured:
                 continue
-            ok = item.get('state') == 'forwarding' and not item.get('lastError')
+            previous = self.previous_samples.get(dest, {})
+            self.previous_samples[dest] = dict(item)
+            count, before = item.get('outboundBytes'), previous.get('outboundBytes')
+            # The state label can precede a completed publish handshake.
+            ok = (item.get('state') == 'forwarding' and not item.get('lastError')
+                  and previous.get('state') == 'forwarding' and not previous.get('lastError')
+                  and item.get('id') == previous.get('id')
+                  and type(count) is int and type(before) is int and count > before >= 0)
             if ok:
                 self.bad_since.pop(dest, None)
                 continue

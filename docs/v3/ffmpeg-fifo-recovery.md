@@ -38,8 +38,16 @@ Replacement restarts capture and encoding before the output can reconnect.
 the encoder and the socket, so a blocked connection drops queued packets on
 overflow instead of stalling encoding.
 
+**What keeping the process also keeps.** The encoder's timestamps continue
+across a reconnect. A relay that forwards them unchanged hands each new
+provider connection a clock that may be many hours in. On 2026-10-25 YouTube
+did not keep such a connection up while Twitch did; the relay now gives each
+YouTube connection its own origin. See the
+[timestamp case study](fifo-timestamp-continuity-case-study.md).
+
 **When to revisit.** The [transport telemetry](#observing-recovery-without-a-new-pid)
-records connection generations, ACK progress and stalls. Reconnect frequency,
+records connection generations, ACK progress and stalls; since 2026-10-25 the
+operated counts are retained in Prometheus. Reconnect frequency,
 real gap durations and post-restoration ACK latency gathered from it are the
 inputs a ride-through judge would need.
 
@@ -127,8 +135,9 @@ This contract does not:
 - guarantee a total recovery deadline; the retry policy bounds attempts, not
   elapsed time;
 - treat the keyframe flag as proof of a decoded IDR or playback;
-- add an arena-server scrape job, CRA database fields, public UI panels or
-  control authority.
+- add CRA database fields or control authority. A separate read-only observer
+  on arena-server, outside this source, exports reconnect counts; see
+  [current status](../current-status.md#fifo-connection-recovery-2026-10-24-jst).
 
 The production exercise verified the FIFO branch once. It did not exercise
 retry exhaustion followed by process replacement and successful reception.

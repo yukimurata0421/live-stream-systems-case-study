@@ -20,6 +20,33 @@ KEEPER = Path('/var/lib/private/stream-v3-oci-keeper/keeper.json')
 JST = timezone(timedelta(hours=9))
 # Map keeper phases onto the daily-state vocabulary the public projection already knows.
 KEEPER_STATES = {'IDLE': 'TRACKING', 'WAIT_OFFLINE': 'WAIT_OFFLINE', 'VERIFY': 'VERIFYING'}
+YOUTUBE_BRIDGE = 'rtmp://127.0.0.1:19350/live/youtube'
+YOUTUBE_STATUS = Path('/run/stream-v3-youtube-forward/observation.json')
+YOUTUBE_FINGERPRINT = Path('/etc/stream-v3-youtube-forward/destination-fingerprint')
+
+
+def youtube_forward_facts(value, *, now, pid, boot_id, fingerprint):
+    """Accept fresh facts only from the current, destination-bound copy process."""
+    try:
+        if (value['schema'] != 'stream_v3.youtube_forward.v1'
+                or type(pid) is not int or pid <= 0 or value['pid'] != pid
+                or value['boot_id'] != boot_id or value['destination_fingerprint'] != fingerprint):
+            return None
+        stamp = datetime.fromisoformat(value['updated_at'].replace('Z', '+00:00')).timestamp()
+        if not 0 <= now - stamp <= 20:
+            return None
+        count = value['output_bytes']
+        session = value['session']
+        if type(count) is not int or count < 0 or type(session) is not int or session < 1:
+            return None
+        progress = datetime.fromisoformat(value['last_progress_at'].replace('Z', '+00:00')).timestamp()
+        flowing = (value['state'] == 'FLOWING' and 0 <= now - progress <= 20
+                   and type(value['video_packets']) is int and value['video_packets'] > 0
+                   and type(value['audio_packets']) is int and value['audio_packets'] > 0)
+        return {'id': f'youtube-forward-{pid}-{session}',
+                'state': 'forwarding' if flowing else 'unknown', 'bytes': count}
+    except (ValueError, TypeError, KeyError, OverflowError):
+        return None
 
 
 def api(path):
@@ -87,6 +114,16 @@ def observe():
             x = matches[0]
             result['destinations'][name] = {'id': x['id'], 'state': x['state'] if x['state'] in ['forwarding', 'idle', 'connecting'] else 'unknown',
                                             'bytes': x['outboundBytes']}
+        bridges = [x for x in rows if (x.get('conf') or {}).get('dest') == YOUTUBE_BRIDGE]
+        if len(bridges) == 1 and 'youtube' not in result['destinations']:
+            pid = int(subprocess.check_output(
+                ['systemctl', 'show', 'stream-v3-youtube-forward.service', '-p', 'MainPID', '--value'],
+                text=True, timeout=3).strip())
+            facts = youtube_forward_facts(
+                json.loads(YOUTUBE_STATUS.read_text()), now=time.time(), pid=pid,
+                boot_id=result['boot_id'], fingerprint=YOUTUBE_FINGERPRINT.read_text().strip())
+            if facts is not None:
+                result['destinations']['youtube'] = facts
     except Exception:
         pass
     try:
