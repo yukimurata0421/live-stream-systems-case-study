@@ -1,0 +1,40 @@
+[Unit]
+Description=Read-only main FIFO transport flight recorder (SQLite)
+After=local-fs.target
+
+[Service]
+Type=simple
+User=stream-v3
+Group=stream-v3
+SupplementaryGroups=stream-recovery
+# Example unit; provision the service account and input read permissions locally.
+# No dependency on delivery/controller services.
+ExecStart=/usr/bin/python3 -I -B /opt/stream_v3/ops/scripts/stream_v3_transport_recorder.py collect --source /run/stream-v3-control/ffmpeg-transport.json --journal /tmp/fifo-journal/ffmpeg-transport-events.jsonl --state /var/lib/stream-v3-transport-recorder
+StateDirectory=stream-v3-transport-recorder
+StateDirectoryMode=0700
+UMask=0077
+Restart=no
+Nice=10
+CPUQuota=5%
+MemoryMax=64M
+TasksMax=4
+LimitFSIZE=80M
+NoNewPrivileges=yes
+PrivateNetwork=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_UNIX
+SystemCallFilter=~@network-io
+CapabilityBoundingSet=
+ReadOnlyPaths=-/run/stream-v3-control
+# Bind the directory, not a snapshot file: atomic replacements must remain visible.
+BindReadOnlyPaths=-/srv/stream-v3/runtime/fifo-transport:/tmp/fifo-journal
+InaccessiblePaths=-/run/stream-v3-control/effect.sock -/run/stream-v3-control/runtime-recovery.sock -/run/credentials -/var/lib/rancher/k3s -/var/lib/stream-recovery-control
+
+[Install]
+WantedBy=multi-user.target

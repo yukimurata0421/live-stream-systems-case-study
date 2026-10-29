@@ -49,7 +49,9 @@ YouTube connection its own origin. See the
 records connection generations, ACK progress and stalls; since 2026-10-25 the
 operated counts are retained in Prometheus. Reconnect frequency,
 real gap durations and post-restoration ACK latency gathered from it are the
-inputs a ride-through judge would need.
+inputs a ride-through judge would need. Since 2026-10-29 the
+[transport flight recorder](transport-flight-recorder.md) keeps the
+one-second detail around each event.
 
 ## Recovery Boundaries
 

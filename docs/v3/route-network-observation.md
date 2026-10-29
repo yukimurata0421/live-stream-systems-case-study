@@ -1,5 +1,11 @@
 # Route Network Observation And Baselines
 
+> Retired on 2026-10-29: its relay-side rates had stopped on 2026-10-14 and its
+> local rate on 2026-10-20, and its learned throughput baseline was not
+> repaired. See [why the baseline was retired](route-baseline-retirement-decision.md)
+> and its replacement, the [transport flight recorder](transport-flight-recorder.md).
+> The code and replay below remain as the record of the design.
+
 > This page records the 2026-10-13 diagnostic design and its SSH-tunnel socket
 > assumptions. For the route introduced on 2026-10-20, read the
 > [current OCI delivery record](self-healing-oci-fanout.md). The earlier local

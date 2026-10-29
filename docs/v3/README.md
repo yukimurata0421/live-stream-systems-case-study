@@ -23,6 +23,9 @@ The pages most readers need from this folder:
   evidence beside the fast return branch; no player E2E claim.
 - [TCP stall case study](tcp-stall-case-study.md): diagnosing a home-network
   fault without replacing the broadcast.
+- [Transport flight recorder](transport-flight-recorder.md): event windows of
+  sender transport evidence, and
+  [why the learned throughput baseline was retired](route-baseline-retirement-decision.md).
 - [YouTube lifecycle safety](youtube-lifecycle-safety.md): what must be true
   before a destructive YouTube action.
 

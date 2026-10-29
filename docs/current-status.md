@@ -1,11 +1,26 @@
 # Current Status
 
-Last updated: 2026-10-24 JST.
+Last updated: 2026-10-29 JST.
 
 This is the only page that records state expected to change soon: what was
 changed recently, what has not been observed yet, and what is deliberately
 disabled. Other pages describe designs and dated evidence and link here instead
 of repeating these items.
+
+## Transport Recording (2026-10-29 JST)
+
+The route observer's learned throughput baseline was retired at 10:13:57 JST.
+Its relay-side rates had stopped on 2026-10-14 and its local rate on
+2026-10-20; only ping probes continued. The retained data could not confirm
+that a learned rate baseline discriminates faults on the constant-bitrate
+sender. Its database is kept; it does not restart automatically.
+
+The [transport flight recorder](v3/transport-flight-recorder.md) has run on the
+Dell sender since 09:59 JST. It saves FIFO transport evidence around events and
+has no action path. **Not yet observed:** an event window on a real fault, a
+configured clock input, boot or power loss, and the storage limit. The first
+two weeks evaluate classification value; a precursor result is likely to stay
+open. See the [decision and revisit conditions](v3/route-baseline-retirement-decision.md).
 
 ## Production Route
 

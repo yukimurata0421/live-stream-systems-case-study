@@ -212,11 +212,11 @@
     {
       "path": "docs/00_INDEX.md",
       "source_role": "public-documentation",
-      "decision": "Selected FIFO recovery port; preserve public behavior, explicit observation injection, generic lab endpoints and English documentation.",
+      "decision": "Transport flight recorder and learned-baseline retirement; recorder-only sections of shared documents.",
       "before_sha256": "09bb9c3529368d76bb7c107dc021db89519855c24c0f85b7a32e58fecd5fad0a",
       "source_sha256": null,
-      "public_sha256": "3131adf3d66a0035b126f9002dff210aca8460683eabbc2adfdd517230846eb3",
-      "prior_public_sha256": "8ad9aef831eaf0361e118548135444365df006e594e91c0952a2529f0ef8942f",
+      "public_sha256": "815266f040ba34202764fc19a6dda2923e34c06e98e835a6cafc3922c9972f6d",
+      "prior_public_sha256": "3131adf3d66a0035b126f9002dff210aca8460683eabbc2adfdd517230846eb3",
       "localization": "English prose; control structures and machine identifiers preserved.",
       "pre_graph_display_sha256": "6a87a495eb3698b1a49e053ffcc109b28d94a59e9dd29cb3399a62279e196d3d",
       "graph_display_change": "Observed link arrows, explicit direct-path inference, and timestamp-preserving charts.",
@@ -228,7 +228,7 @@
       "twitch_sli_resilience": "Locally checked candidate only; production application held for fresh task.",
       "pre_pi_publisher_source_port_sha256": "1a57bd86d9466793daecec2756b29cd2ca24cad934a2dfd795a231e098a230e8",
       "pi_publisher_source_port": "2026-10-14 source reconciliation; portable English code and retained public protections; no live changes.",
-      "port_date_jst": "2026-10-24",
+      "port_date_jst": "2026-10-29",
       "pre_documentation_restructure_sha256": "3d45a66068211ff9944ba891a0017e9189c71daa1b0b4945ae1970f8c2b5c045",
       "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json.",
       "pre_twitch_observation_public_sha256": "c4d59eabef48c302df0d72b7ae0d6a6216f99e199f98e4c9c0a0b92631516c13",
@@ -248,7 +248,7 @@
       "relay_clock_native_fallback_port": "2026-10-23 selected source and public-safe documentation; no deployment, commit or push.",
       "pre_observability_reconciliation_sha256": "54c9f42cbd9e1b2bc054e380f4a7376df991333c1dc4ea31f191c48805d7703e",
       "pre_fifo_recovery_public_sha256": "09bb9c3529368d76bb7c107dc021db89519855c24c0f85b7a32e58fecd5fad0a",
-      "port_record": "publication/youtube-timestamp-origin-docs-20261025.json",
+      "port_record": "publication/transport-recorder-port-20261029.json",
       "layout_update": "Current CRA and Stream support separation, 2026-10-26"
     },
     {
@@ -293,11 +293,11 @@
     {
       "path": "docs/current-status.md",
       "source_role": "public-documentation",
-      "decision": "Selected FIFO recovery port; preserve public behavior, explicit observation injection, generic lab endpoints and English documentation.",
+      "decision": "Transport flight recorder and learned-baseline retirement; recorder-only sections of shared documents.",
       "before_sha256": "f869fdb0929bc8925b2f9bdb799682d063dded38d8218d282597be95019c59b4",
       "source_sha256": null,
-      "public_sha256": "4998fd310833888def4533338a6dc712bfad0795ce48f6a923513130857a8ada",
-      "port_date_jst": "2026-10-24",
+      "public_sha256": "182b2e8a6bb79eb67c8f17caf8044d84291ac8d885f56e30779661f2ddfcb1ad",
+      "port_date_jst": "2026-10-29",
       "documentation_restructure": "New single page for volatile state.",
       "pre_twitch_observation_public_sha256": "040eac29174151f51e473f7f85e4aa23ff994be0079b3d4c011623b6ec7864ca",
       "pre_clock_monitor_public_sha256": "33263da6f88e0f7719830898ada90abd2a7e89c391a9684fdd7b604517bc020f",
@@ -318,8 +318,8 @@
       "documentation_structure_review": "2026-10-23: implementation/commit/deployment scopes, v7 transition scope, routing priority, quality comparison and runnable checks.",
       "pre_fifo_recovery_public_sha256": "f869fdb0929bc8925b2f9bdb799682d063dded38d8218d282597be95019c59b4",
       "pre_music_exclusion_port_sha256": "3b3e1db9dc83166e863412eec229fb03bcf8b6442798c06fb8ac6699a7d1dd4f",
-      "port_record": "publication/youtube-timestamp-origin-docs-20261025.json",
-      "prior_public_sha256": "0aa829ab206d2032b623b9f087fc9eb6c03bc7acc008a82d3860ebbfd7cb1515",
+      "port_record": "publication/transport-recorder-port-20261029.json",
+      "prior_public_sha256": "4998fd310833888def4533338a6dc712bfad0795ce48f6a923513130857a8ada",
       "layout_update": "Current CRA and Stream support separation, 2026-10-26"
     },
     {
@@ -491,8 +491,8 @@
       "decision": "Selected FIFO recovery port; preserve public behavior, explicit observation injection, generic lab endpoints and English documentation.",
       "before_sha256": "7260dabcdd49d2080223952d24250bb56cf68e3f82b4ad1daa9f00fccee362ab",
       "source_sha256": null,
-      "public_sha256": "bc15110a6d74d005aa8a4d42e7f59d9136f4119b732ad8070b56db719b2a4372",
-      "port_date_jst": "2026-10-24",
+      "public_sha256": "0949492076683057b521e05979f3630e1ac6fce18eeae1f39a683ec3f5799a41",
+      "port_date_jst": "2026-10-29",
       "pre_documentation_restructure_sha256": "05aaa171c0ae1542019467073dd5058d7301e5d83eec70c9d39b20d6c8d12c68",
       "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json.",
       "pre_clock_monitor_public_sha256": "6409e2179144180bba49fd874a2762583699138e36201f1793d7968bd0dd2aa2",
@@ -500,7 +500,8 @@
       "pre_thumbnail_clock_public_sha256": "4fd2f7e79cad25b52f5ff05d1fe22b208a6d80a10f77879d307a6659c8b4ead6",
       "thumbnail_clock_port": "2026-10-22 committed source through 740bcc00; concurrent review excluded.",
       "pre_fifo_recovery_public_sha256": "7260dabcdd49d2080223952d24250bb56cf68e3f82b4ad1daa9f00fccee362ab",
-      "port_record": "publication/youtube-timestamp-origin-docs-20261025.json"
+      "port_record": "publication/transport-recorder-port-20261029.json",
+      "prior_public_sha256": "bc15110a6d74d005aa8a4d42e7f59d9136f4119b732ad8070b56db719b2a4372"
     },
     {
       "path": "docs/v3/adsb-source-coverage.md",
@@ -577,11 +578,11 @@
       "source_role": "public-documentation",
       "before_sha256": null,
       "source_sha256": null,
-      "public_sha256": "0518460a24d561d922943016ebf1574fc6efafea975470131408d325e4afaf4a",
+      "public_sha256": "412bf849c590050e9aaa061321d407d027ba130cdbb18ab95d09272e6b43a071",
       "decision": "Selected FIFO recovery port; preserve public behavior, explicit observation injection, generic lab endpoints and English documentation.",
-      "port_date_jst": "2026-10-24",
-      "port_record": "publication/youtube-timestamp-origin-docs-20261025.json",
-      "prior_public_sha256": "1779fcec3d7991ebb96a9a1aacfc27cc63ddbd574d213fe2d2d16b4761aeabb8",
+      "port_date_jst": "2026-10-29",
+      "port_record": "publication/transport-recorder-port-20261029.json",
+      "prior_public_sha256": "0518460a24d561d922943016ebf1574fc6efafea975470131408d325e4afaf4a",
       "layout_update": "Current CRA and Stream support separation, 2026-10-26"
     },
     {
@@ -767,7 +768,10 @@
       "decision": "curated-current-contract-and-dated-evidence",
       "before_sha256": null,
       "source_sha256": null,
-      "public_sha256": "83213403df4f8c021ace1f0a4dc2b7847706a0b719dfc2d283c12d93c8393a6c"
+      "public_sha256": "03ee87ed204d739074b72c038552a8bdc1690932f110a283ce1922c5bc55941a",
+      "prior_public_sha256": "83213403df4f8c021ace1f0a4dc2b7847706a0b719dfc2d283c12d93c8393a6c",
+      "port_date_jst": "2026-10-29",
+      "port_record": "publication/transport-recorder-port-20261029.json"
     },
     {
       "path": "docs/v3/self-healing-oci-fanout.md",
@@ -4440,6 +4444,56 @@
       "public_sha256": "d9faab0427effb0d637a615852910620859dfc8a285073f2256001e671c03bc4",
       "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
       "port_date_jst": "2026-10-23"
+    },
+    {
+      "path": "docs/v3/transport-flight-recorder.md",
+      "source_role": "public-documentation",
+      "decision": "Transport flight recorder port and learned-baseline retirement documentation.",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "2c4ffdfed052f6b0cbb1afb1b1870646b56e880b69d4d1c2b3c713b892267fc2",
+      "port_date_jst": "2026-10-29",
+      "port_record": "publication/transport-recorder-port-20261029.json"
+    },
+    {
+      "path": "docs/v3/route-baseline-retirement-decision.md",
+      "source_role": "public-documentation",
+      "decision": "Transport flight recorder port and learned-baseline retirement documentation.",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "57bb7ad9222d5327c993063f3452c12f55d3af6fef8bbd5edf6feb848686924d",
+      "port_date_jst": "2026-10-29",
+      "port_record": "publication/transport-recorder-port-20261029.json"
+    },
+    {
+      "path": "ops/scripts/stream_v3_transport_recorder.py",
+      "source_role": "development-transport-recorder",
+      "decision": "Transport flight recorder port and learned-baseline retirement documentation.",
+      "before_sha256": null,
+      "source_sha256": "dc2d8a70240121e06137134627a7bee295e60ec49a737083f83063255e3c06be",
+      "public_sha256": "8218758a3e87661cfb3bfd979966548555caf803c1add5c0d2ffdcafe2b2f6a4",
+      "port_date_jst": "2026-10-29",
+      "port_record": "publication/transport-recorder-port-20261029.json"
+    },
+    {
+      "path": "tests/test_transport_recorder.py",
+      "source_role": "development-stream-tests",
+      "decision": "Transport flight recorder port and learned-baseline retirement documentation.",
+      "before_sha256": null,
+      "source_sha256": "f16fc5ed7a0bac914f89a88ca727c79b7a3035fbc6d8a09b07a568102b0b8545",
+      "public_sha256": "a0f21b87d66a1082c79f225e9841c39a7acfdfd69686e7274508847a10cff58c",
+      "port_date_jst": "2026-10-29",
+      "port_record": "publication/transport-recorder-port-20261029.json"
+    },
+    {
+      "path": "ops/systemd/stream-v3-transport-recorder.service",
+      "source_role": "development-systemd-unit-example",
+      "decision": "Transport flight recorder port and learned-baseline retirement documentation.",
+      "before_sha256": null,
+      "source_sha256": "a7870ac87657db3c213500bb66e289511bb0e564707501be96721219c4c0f82b",
+      "public_sha256": "1ef5e14895a20697e09c2d2f72515e9b41c54e2677edbeb46eaadb6adf0329f5",
+      "port_date_jst": "2026-10-29",
+      "port_record": "publication/transport-recorder-port-20261029.json"
     }
   ],
   "omissions": [
@@ -4509,7 +4563,8 @@
     "publication/commit-review-20261024.json",
     "publication/youtube-timestamp-origin-docs-20261025.json",
     "publication/youtube-timestamp-origin-code-port-20261025.json",
-    "publication/cra-layout-20261026.json"
+    "publication/cra-layout-20261026.json",
+    "publication/transport-recorder-port-20261029.json"
   ],
   "evidence_checkpoint_cutoff_jst": "2026-10-14T00:04:57+09:00",
   "documentation_audience": "hiring and technical reviewers",
@@ -4765,5 +4820,18 @@
     "deployment_performed": false,
     "publication_requested": true,
     "clean_checkout_import_classification": "explicit cra and runtime_boundary first-party imports; first failing Actions run retained in the layout record"
+  },
+  "transport_recorder_port": {
+    "date_jst": "2026-10-29",
+    "record": "publication/transport-recorder-port-20261029.json",
+    "scope": "public-checkout-only",
+    "deployment_performed": false,
+    "commit_or_push_performed": false,
+    "last_writer": "transport-recorder-port",
+    "write_order": [
+      "documentation files",
+      "publication/transport-recorder-port-20261029.json",
+      "publication/source-map.json"
+    ]
   }
 }

@@ -1,0 +1,141 @@
+{
+  "schema": "stream.public_port_record.v1",
+  "port_date_jst": "2026-10-29",
+  "scope": "Transport flight recorder contract, learned-baseline retirement decision, index/status links, and the already prepared English port of the recorder source, tests and example unit.",
+  "base_public_commit": "f57de586486d0f1a530d2fd8b6fb0ed22f56243f",
+  "deployment_performed": false,
+  "runtime_changed_by_documentation_port": false,
+  "source_code_ported": true,
+  "commit_performed": false,
+  "push_performed": false,
+  "notification_sent": false,
+  "describes_prior_operated_changes": true,
+  "observation_boundaries": {
+    "baseline_data_window_jst": "2026-10-13 23:19 to 2026-10-20 08:43 JST, 15-second samples, read-only",
+    "baseline_observer_last_sample_jst": "2026-10-29T10:13:57+09:00",
+    "baseline_history_retained": true,
+    "recorder_started_jst": "2026-10-29 09:59 JST",
+    "recorder_first_window": {
+      "seconds": 189,
+      "polls": 188,
+      "distinct_samples": 180,
+      "duplicates": 8,
+      "gaps": 0,
+      "episodes": 0
+    },
+    "real_fault_episode_observed": false,
+    "clock_input_configured": false,
+    "detection_or_precursor_performance_established": false,
+    "baseline_last_relay_side_rate_jst": "2026-10-14 18:18 JST",
+    "baseline_last_local_ack_rate_jst": "2026-10-20 08:43 JST",
+    "baseline_ping_probes_continued_until_stop": true,
+    "training_gate_is_fault_label": false,
+    "rate_table_aggregates_regimes": true
+  },
+  "omissions": [
+    "Production database, raw samples, host, boot and process identities, private paths and deployment receipts.",
+    "Private deployment and retirement helper scripts.",
+    "Claims of fault detection, precursor performance, provider reception or SLI coverage."
+  ],
+  "checks": {
+    "portable_tests": {
+      "tests/test_transport_recorder.py": {
+        "passed": 40
+      }
+    },
+    "documentation_and_boundary_tests": {
+      "passed": 30,
+      "subtests_passed": 978
+    },
+    "public_language": {
+      "status": "PASS"
+    },
+    "local_links_in_changed_documents": "PASS",
+    "validation_scope": "Recorder-only Git snapshot; unrelated pending R2/Twitch changes excluded."
+  },
+  "files": [
+    {
+      "path": "docs/v3/transport-flight-recorder.md",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "2c4ffdfed052f6b0cbb1afb1b1870646b56e880b69d4d1c2b3c713b892267fc2",
+      "adaptation": "New public English page curated from private implementation, deployment and retirement records; private paths, host identities and raw evidence excluded."
+    },
+    {
+      "path": "docs/v3/route-baseline-retirement-decision.md",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "57bb7ad9222d5327c993063f3452c12f55d3af6fef8bbd5edf6feb848686924d",
+      "adaptation": "New public English page curated from private implementation, deployment and retirement records; private paths, host identities and raw evidence excluded."
+    },
+    {
+      "path": "docs/v3/route-network-observation.md",
+      "before_sha256": "83213403df4f8c021ace1f0a4dc2b7847706a0b719dfc2d283c12d93c8393a6c",
+      "source_sha256": null,
+      "public_sha256": "03ee87ed204d739074b72c038552a8bdc1690932f110a283ce1922c5bc55941a",
+      "adaptation": "Index, banner or status link for the transport recorder and baseline retirement; unrelated existing working-tree changes retained."
+    },
+    {
+      "path": "docs/00_INDEX.md",
+      "before_sha256": "3131adf3d66a0035b126f9002dff210aca8460683eabbc2adfdd517230846eb3",
+      "source_sha256": null,
+      "public_sha256": "815266f040ba34202764fc19a6dda2923e34c06e98e835a6cafc3922c9972f6d",
+      "adaptation": "Recorder-only index/status sections; unrelated working-tree edits are excluded from this snapshot."
+    },
+    {
+      "path": "docs/current-status.md",
+      "before_sha256": "4998fd310833888def4533338a6dc712bfad0795ce48f6a923513130857a8ada",
+      "source_sha256": null,
+      "public_sha256": "182b2e8a6bb79eb67c8f17caf8044d84291ac8d885f56e30779661f2ddfcb1ad",
+      "adaptation": "Recorder-only index/status sections; unrelated working-tree edits are excluded from this snapshot."
+    },
+    {
+      "path": "docs/v3/README.md",
+      "before_sha256": "bc15110a6d74d005aa8a4d42e7f59d9136f4119b732ad8070b56db719b2a4372",
+      "source_sha256": null,
+      "public_sha256": "0949492076683057b521e05979f3630e1ac6fce18eeae1f39a683ec3f5799a41",
+      "adaptation": "Index, banner or status link for the transport recorder and baseline retirement; unrelated existing working-tree changes retained."
+    },
+    {
+      "path": "docs/v3/ffmpeg-fifo-recovery.md",
+      "before_sha256": "0518460a24d561d922943016ebf1574fc6efafea975470131408d325e4afaf4a",
+      "source_sha256": null,
+      "public_sha256": "412bf849c590050e9aaa061321d407d027ba130cdbb18ab95d09272e6b43a071",
+      "adaptation": "Index, banner or status link for the transport recorder and baseline retirement; unrelated existing working-tree changes retained."
+    },
+    {
+      "path": "ops/scripts/stream_v3_transport_recorder.py",
+      "before_sha256": null,
+      "source_sha256": "dc2d8a70240121e06137134627a7bee295e60ec49a737083f83063255e3c06be",
+      "public_sha256": "8218758a3e87661cfb3bfd979966548555caf803c1add5c0d2ffdcafe2b2f6a4",
+      "adaptation": "English docstrings and help text; control flow and machine identifiers preserved."
+    },
+    {
+      "path": "tests/test_transport_recorder.py",
+      "before_sha256": null,
+      "source_sha256": "f16fc5ed7a0bac914f89a88ca727c79b7a3035fbc6d8a09b07a568102b0b8545",
+      "public_sha256": "a0f21b87d66a1082c79f225e9841c39a7acfdfd69686e7274508847a10cff58c",
+      "adaptation": "English docstrings and help text; control flow and machine identifiers preserved."
+    },
+    {
+      "path": "ops/systemd/stream-v3-transport-recorder.service",
+      "before_sha256": null,
+      "source_sha256": "a7870ac87657db3c213500bb66e289511bb0e564707501be96721219c4c0f82b",
+      "public_sha256": "1ef5e14895a20697e09c2d2f72515e9b41c54e2677edbeb46eaadb6adf0329f5",
+      "adaptation": "English docstrings and help text; generic service account and /srv journal path; control flow and machine identifiers preserved."
+    }
+  ],
+  "write_order": [
+    "documentation files",
+    "publication/transport-recorder-port-20261029.json",
+    "publication/source-map.json"
+  ],
+  "validation_notes": [
+    "Recorder source, tests and example unit were already present untracked in the public checkout; this record registers them after checking they differ from development only in English text and generic unit paths/account.",
+    "This documentation port performs no deployment and changes no runtime.",
+    "Review correction: separated the 2026-10-14 relay-side and 2026-10-20 local rate stops, stated that training-gate failure is not a fault label and that the table aggregates regimes, described recorder states as observations, and stated the about 720-second maximum episode span and always-false action flags.",
+    "Final review correction: only status is documented as always containing both false flags; summary report fields remain unchanged.",
+    "Only recorder-related sections of shared index/status pages are included in this Git snapshot; unrelated R2 publication and Twitch API changes remain in the working tree.",
+    "This record was prepared before the Git commit; commit identity and remote confirmation are recorded separately."
+  ]
+}

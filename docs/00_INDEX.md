@@ -18,6 +18,8 @@ start.
 - `v3/ffmpeg-fifo-recovery.md`: [why output reconnection was chosen over ride-through or process restart, bounded FIFO recovery and process/connection generations](v3/ffmpeg-fifo-recovery.md).
 - `v3/ffmpeg-fifo-measurements.md`: [restart versus FIFO timing, where the time went, the audio-loss rollout and the corrected exercise](v3/ffmpeg-fifo-measurements.md).
 - `v3/fifo-timestamp-continuity-case-study.md`: [how same-process recovery carried old timestamps to YouTube, the per-connection origin fix, and the comparison that isolated it](v3/fifo-timestamp-continuity-case-study.md).
+- `v3/transport-flight-recorder.md`: [event windows of FIFO transport evidence in SQLite, recording triggers, missing-data rules and limits](v3/transport-flight-recorder.md).
+- `v3/route-baseline-retirement-decision.md`: [why the learned throughput baseline was retired, the data behind it, and when to revisit](v3/route-baseline-retirement-decision.md).
 
 - `v3/twitch-thumbnail-monitor.md`: [provider-image clocks, API reuse, RAM processing and warning scope](v3/twitch-thumbnail-monitor.md).
 - `v3/relay-clock-monitor.md`: [returned video, paired OCR, native evidence and bounded observer state](v3/relay-clock-monitor.md).
@@ -84,7 +86,7 @@ start.
 - `v2/README.md`: [stream_v2 summary](v2/README.md).
 - `v3/oci-relay-and-twitch.md`: [2026-10-13 signed-lease relay, superseded](v3/oci-relay-and-twitch.md).
 - `v3/twitch-session-renewal.md`: [2026-10-13 daily renewal owner, superseded](v3/twitch-session-renewal.md).
-- `v3/route-network-observation.md`: [2026-10-13 route diagnostics and baselines](v3/route-network-observation.md).
+- `v3/route-network-observation.md`: [2026-10-13 route diagnostics and baselines, retired 2026-10-29](v3/route-network-observation.md).
 
 ## CRA (Current Local Reflex In dry_run)
 
