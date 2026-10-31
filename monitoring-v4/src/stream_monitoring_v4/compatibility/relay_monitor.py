@@ -1,6 +1,9 @@
 """Arena-owned relay monitoring, bounded SSH observation, public GET and metrics."""
 from __future__ import annotations
 import argparse
+import importlib.util
+import secrets
+import sys
 import json
 import math
 import os
@@ -79,16 +82,25 @@ def empty(now):
             'twitch_api':{'state':'UNKNOWN','observed_at':None,'source_fresh':False},'issues':[]}
 
 
-def project(raw,previous,twitch,now,machine,binding=None):
+def project(raw,previous,twitch,now,machine,binding=None,clock_model=None):
     out=empty(now)
     try:
         if raw['schema']!='stream.relay_raw.v1' or raw['host_id']!='relay-host' or raw['machine_id_sha256']!=machine:raise ValueError()
         observed=stamp(raw['observed_at'])
-        if not 0<=now-observed<=180 or not number(raw['monotonic_seconds']):raise ValueError()
+        def age(value):
+            if clock_model is None: return (now-stamp(value),)*2
+            return clock_model.age_bounds(stamp(value))
+        def fresh(value, limit):
+            low, high = age(value)
+            return high >= -.005 and high <= limit
+        def normalized(value):
+            if clock_model is None: return value
+            return datetime.fromtimestamp(now-age(value)[1],timezone.utc).isoformat()
+        if not fresh(raw['observed_at'],180) or not number(raw['monotonic_seconds']):raise ValueError()
         vm=raw['vm'];cpu=vm['cpu_percent'];total=vm['memory_total_bytes'];used=vm['memory_used_bytes'];disk=vm['disk_total_bytes'];free=vm['disk_available_bytes']
         if not number(cpu,0,100) or not number(total,1) or not number(used,0,total) or not number(disk,1) or not number(free,0,disk) or not number(vm['uptime_seconds']):raise ValueError()
         if type(raw['relay']['active']) is not bool or type(raw['input']['available']) is not bool: raise ValueError()
-        out.update(observed_at=raw['observed_at'],status='OBSERVED',source_fresh=True)
+        out.update(observed_at=normalized(raw['observed_at']),status='OBSERVED',source_fresh=True)
         out['vm']={'status':'OBSERVED','cpu_percent':cpu,'memory_percent':round(100*used/total,2),'disk_free_percent':round(100*free/disk,2),'uptime_seconds':vm['uptime_seconds']}
         out['relay']={'status':'RUNNING' if raw['relay']['active'] is True else 'STOPPED','restart_count':raw['relay']['restart_count']}
         elapsed=None
@@ -111,13 +123,13 @@ def project(raw,previous,twitch,now,machine,binding=None):
             before=previous.get('destinations',{}).get(n) if previous else None
             r=rate(current,before,'id')
             out['destinations'][n]={'status':('FLOWING' if r and r>0 else 'STALLED' if r==0 else 'CONNECTED') if current['state']=='forwarding' else 'DISCONNECTED' if current['state']=='idle' else 'UNKNOWN','mbps':r}
-        d=raw['daily'];fresh=d.get('observed_at') and 0<=now-stamp(d['observed_at'])<=60
-        if fresh and d['state'] in PHASES:
+        d=raw['daily'];daily_fresh=d.get('observed_at') and fresh(d['observed_at'],60)
+        if daily_fresh and d['state'] in PHASES:
             due=d.get('next_renewal_at')
             if due is not None:stamp(due)
             # A scheduled window is bounded; it never hides a YouTube problem.
-            planned=bool(due and 0<=now-stamp(due)<=360 and d['state'] in {'WAIT_STOP','WAIT_OFFLINE','WAIT_START','VERIFYING'})
-            out['daily']={'state':d['state'],'next_renewal_at':due,'planned_break':planned}
+            planned=bool(due and age(due)[0]>=0 and age(due)[1]<=360 and d['state'] in {'WAIT_STOP','WAIT_OFFLINE','WAIT_START','VERIFYING'})
+            out['daily']={'state':d['state'],'next_renewal_at':normalized(due) if due else None,'planned_break':planned}
         if out['relay']['status']=='STOPPED':out['issues'].append('RELAY_STOPPED')
         if out['input']['status'] in ['DISCONNECTED','STALLED']:out['issues'].append('INPUT_NOT_PROGRESSING')
         for n in ['youtube','twitch']:
@@ -161,6 +173,34 @@ def metrics(out):
     emit('twitch_delivery_recovery_confirmed', delivery['recovery_confirmed'])
     for state in DELIVERY_STATES:
         lines.append('stream_v4_twitch_delivery_state{state="'+state+'"} '+str(int(delivery['state'] == state)))
+    try:
+        import route_causality
+        cause=route_causality.guard()
+        lines.append('stream_v4_route_secondary_recovery_blocked '+str(int(cause['secondary_recovery_blocked'])))
+        for domain in sorted(route_causality.DOMAINS):
+            lines.append('stream_v4_route_assessment{assessment="'+domain+'"} '+str(int(cause['assessment']==domain)))
+    except (ImportError, OSError, ValueError, KeyError, TypeError):
+        lines.append('stream_v4_route_secondary_recovery_blocked 1')
+    try:
+        mesh=load(Path('/run/stream-clock-mesh/current.json'))
+        # Monotonic TTL, bound to this boot; a stopped mesh cannot stay green.
+        boot=Path('/proc/sys/kernel/random/boot_id').read_text().strip()
+        elapsed=time.clock_gettime(time.CLOCK_BOOTTIME)-mesh['mono']
+        current=mesh['boot_id']==boot and 0<=elapsed<=90
+        for host in ('encoder-host','relay-host','arena-monitoring-facts','public-host','recovery-host'):
+            peer=mesh['peers'].get(host,{})
+            age=peer.get('source_age_upper_seconds')
+            valid=(current and peer.get('status') in ('OBSERVED','CACHED')
+                   and number(age) and age+elapsed<=90)
+            label='{host_id="'+host+'"} '
+            lines.append('stream_v4_clock_observation_ok'+label+str(int(valid)))
+            if valid:
+                for key in ('offset_seconds','uncertainty_seconds','maximum_error_seconds','source_age_upper_seconds','synchronized'):
+                    v=peer.get(key)
+                    if key=='source_age_upper_seconds' and number(v):v+=elapsed
+                    if key=='uncertainty_seconds' and number(v):v+=elapsed*.001
+                    if type(v) in (int,float,bool) and math.isfinite(v):lines.append('stream_v4_clock_'+key+label+str(float(v)))
+    except (OSError,ValueError,KeyError,TypeError):pass
     return '\n'.join(lines)+'\n'
 
 
@@ -186,23 +226,38 @@ def load(path):
 def main():
     parser=argparse.ArgumentParser();parser.add_argument('--config',type=Path,required=True);parser.add_argument('--credentials',type=Path,required=True);parser.add_argument('--state',type=Path,required=True)
     args=parser.parse_args();config=load(args.config);previous=None;stopped=threading.Event()
+    spec=importlib.util.spec_from_file_location('stream_clock_contract',Path(__file__).with_name('clock_contract.py'))
+    clock=importlib.util.module_from_spec(spec);sys.modules[spec.name]=clock;spec.loader.exec_module(clock)
     signal.signal(signal.SIGTERM,lambda *_:stopped.set());signal.signal(signal.SIGINT,lambda *_:stopped.set())
     server=ThreadingHTTPServer(('127.0.0.1',9116),Handler);server.daemon_threads=True
     thread=threading.Thread(target=server.serve_forever,daemon=True);thread.start()
     while not stopped.is_set():
-        started=time.monotonic();raw={}
+        started=time.monotonic();raw={};model=None;timing={'status':'UNKNOWN'}
+        nonce=secrets.token_hex(16)
         argv=['/usr/bin/ssh','-F','/dev/null','-o','BatchMode=yes','-o','ConnectTimeout=5','-o','ConnectionAttempts=1','-o','StrictHostKeyChecking=yes',
-              '-o','HostKeyAlias=stream-vm-oci-observer','-o','UserKnownHostsFile='+str(args.credentials/'known-hosts'),'-i',str(args.credentials/'ssh-key'),'-l','ubuntu',config['host'],'observe']
+              '-o','HostKeyAlias=relay-host-observer','-o','UserKnownHostsFile='+str(args.credentials/'known-hosts'),'-i',str(args.credentials/'ssh-key'),'-l','ubuntu',config['host'],'observe',nonce]
         try:
-            r=subprocess.run(argv,capture_output=True,timeout=12)
+            sent=clock.capture()
+            r=subprocess.run(argv,input=nonce.encode('ascii'),capture_output=True,timeout=12)
+            received=clock.capture()
             if r.returncode or len(r.stdout)>16384:raise ValueError()
             raw=json.loads(r.stdout)
+            model=clock.estimate(raw.get('clock',{}),nonce,sent,received,machine=config['machine_id_sha256'],boot_id=raw['boot_id'])
+            timing={'status':'VERIFIED',**model.diagnostic(),'boot_id':model.boot_id,
+                    'received_wall':model.received_wall,'received_mono':model.received_mono,
+                    'low':model.low,'high':model.high,'machine':model.machine,'local_boot':model.local_boot,
+                    'clock_status':raw.get('clock_status')}
+        except clock.ClockRejected as error:
+            raw={};timing={'status':'UNKNOWN','reason':str(error)}
         except (OSError,ValueError,subprocess.TimeoutExpired):pass
         try:twitch=load(TWITCH)
         except (OSError,ValueError):twitch={}
-        out=project(raw,previous,twitch,time.time(),config['machine_id_sha256'],config.get('twitch_binding'))
+        out=project(raw,previous,twitch,time.time(),config['machine_id_sha256'],binding=config.get('twitch_binding'),clock_model=model)
+        clock_path=os.environ.get('STREAM_CLOCK_RELAY_STATE')
+        if clock_path:
+            p=Path(clock_path);tmp=p.with_suffix('.tmp');tmp.write_text(json.dumps(timing,allow_nan=False));tmp.chmod(0o644);os.replace(tmp,p)
         with LOCK:LATEST.clear();LATEST.update(out)
-        for name,value in [('public.json',out),('previous.json',raw)]:
+        for name,value in [('public.json',out),('previous.json',raw),('clock.json',timing)]:
             p=args.state/name;t=p.with_suffix('.tmp');t.write_text(json.dumps(value,allow_nan=False));t.chmod(0o600);os.replace(t,p)
         previous=raw if out['source_fresh'] else None
         stopped.wait(max(1,60-(time.monotonic()-started)))

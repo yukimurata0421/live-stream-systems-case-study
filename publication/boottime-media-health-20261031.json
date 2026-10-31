@@ -1,0 +1,443 @@
+{
+  "schema": "stream.boottime_media_health_audit.v1",
+  "at_jst": "2026-10-31T20:58:39.730465+09:00",
+  "supersedes": "publication/route-transition-audit-20261031.json",
+  "scope": "One boot-bound media freshness decision path, independent UTC diagnostics and arena veto, no transition grace, selected public source and documentation",
+  "decision": {
+    "freshness": "New nonce, pinned machine/boot, same-source boottime age plus whole client exchange, confirmed producer copy age",
+    "health": "Typed bound input/output/video/audio progress earns healthy retirement time despite rejected UTC",
+    "progress_deadline": "90 seconds since last downstream proof; no ACK renewal or transition grace",
+    "failure_window": "30 continuous seconds",
+    "stop_window": "300 continuous healthy seconds; missing observations reset it",
+    "UTC_diagnostics": "Separate 300-second alert using existing incident ID, notifier, durable outbox and routes",
+    "secondary_recovery": "Arena retains veto for rejected/unavailable UTC, independent of media HEALTHY",
+    "conflicting_evidence": "Verified complete-route progress outweighs a local STOPPED export; conflict remains diagnostic"
+  },
+  "validation": {
+    "private_tests": 210,
+    "private_subtests": 93,
+    "public_tests": 212,
+    "public_subtests": 97,
+    "actual_notifier_subset": 19,
+    "projection_tests_each_checkout": 8,
+    "native_conditions_passed": 22,
+    "native_case_launches": 27,
+    "aborted_setup_launches": 2,
+    "readiness_failures": 1,
+    "sibling_case_cancellations": 2,
+    "unknown_label_suffixes": 6561,
+    "failure_unknown_patterns": 1024,
+    "source_binding": "Identical final controller and producer bytes in all successful native cases",
+    "clock_module_sync": "PASS",
+    "actual_UID_cold_and_actual_notifier_CLI": "PASS",
+    "behavioral_public_port_parity": "PASS"
+  },
+  "native": {
+    "status": "PASS",
+    "successful_conditions": 22,
+    "aborted_setup_attempts": 2,
+    "readiness_failures": 1,
+    "sibling_case_cancellations": 2,
+    "case_launches": 27,
+    "source_manifest": {
+      "fallback_controller.py": "febc024ded73bb8c10899ea5261fe08fdfadca1b2b2bc1b50f18b325612172fd",
+      "route_assessment.py": "6ac0f645d6f2b138b50b73abddd7e83655116b221ddd695a7a06cd69022bb14d",
+      "maintenance_state.py": "c1de218348c8a1510d5b9897de43e8e10ee74eb96ade4614ec36910e4f737bd3",
+      "clock_contract.py": "52f72bf2e46181a628063b5917a4caf55bb25312041a5d2188d3c0d3ddba7bb6"
+    },
+    "conditions": [
+      {
+        "mode": "clock-alternating-missing",
+        "backup_started": true,
+        "backup_stopped": false,
+        "relay_stop_to_backup_seconds": 94.71344219800085,
+        "ffmpeg_restarts": 0,
+        "backup_receiver_advancing": true,
+        "start_events": 1
+      },
+      {
+        "mode": "clock-alternating-flow",
+        "backup_started": false,
+        "backup_stopped": false,
+        "relay_stop_to_backup_seconds": null,
+        "ffmpeg_restarts": 0,
+        "backup_receiver_advancing": null,
+        "start_events": 0
+      },
+      {
+        "mode": "clock-no-ack",
+        "backup_started": false,
+        "backup_stopped": false,
+        "relay_stop_to_backup_seconds": null,
+        "ffmpeg_restarts": 0,
+        "backup_receiver_advancing": null,
+        "start_events": 0
+      },
+      {
+        "mode": "clock-flow-then-missing",
+        "backup_started": true,
+        "backup_stopped": false,
+        "relay_stop_to_backup_seconds": 189.0830914415419,
+        "ffmpeg_restarts": 0,
+        "backup_receiver_advancing": true,
+        "start_events": 1
+      },
+      {
+        "mode": "clock-gap-long",
+        "backup_started": true,
+        "backup_stopped": false,
+        "relay_stop_to_backup_seconds": 190.039988710545,
+        "ffmpeg_restarts": 0,
+        "backup_receiver_advancing": true,
+        "start_events": 1
+      },
+      {
+        "mode": "clock-gap-transient",
+        "backup_started": false,
+        "backup_stopped": false,
+        "relay_stop_to_backup_seconds": null,
+        "ffmpeg_restarts": 0,
+        "backup_receiver_advancing": null,
+        "start_events": 0
+      },
+      {
+        "mode": "runtime",
+        "backup_started": true,
+        "backup_stopped": false,
+        "relay_stop_to_backup_seconds": 47.494236565195024,
+        "ffmpeg_restarts": 4,
+        "backup_receiver_advancing": true,
+        "start_events": 1
+      },
+      {
+        "mode": "held",
+        "backup_started": true,
+        "backup_stopped": false,
+        "relay_stop_to_backup_seconds": 47.22229889407754,
+        "ffmpeg_restarts": 0,
+        "backup_receiver_advancing": true,
+        "start_events": 1
+      },
+      {
+        "mode": "frozen",
+        "backup_started": true,
+        "backup_stopped": false,
+        "relay_stop_to_backup_seconds": 46.87600989919156,
+        "ffmpeg_restarts": 0,
+        "backup_receiver_advancing": true,
+        "start_events": 1
+      },
+      {
+        "mode": "blind",
+        "backup_started": true,
+        "backup_stopped": false,
+        "relay_stop_to_backup_seconds": 94.59613158367574,
+        "ffmpeg_restarts": 8,
+        "backup_receiver_advancing": true,
+        "start_events": 1
+      },
+      {
+        "mode": "copy-stop",
+        "backup_started": true,
+        "backup_stopped": false,
+        "relay_stop_to_backup_seconds": 48.02221492957324,
+        "ffmpeg_restarts": 0,
+        "backup_receiver_advancing": true,
+        "start_events": 1
+      },
+      {
+        "mode": "copy-hang",
+        "backup_started": true,
+        "backup_stopped": false,
+        "relay_stop_to_backup_seconds": 78.61336379498243,
+        "ffmpeg_restarts": 0,
+        "backup_receiver_advancing": true,
+        "start_events": 1
+      },
+      {
+        "mode": "copy-missing",
+        "backup_started": true,
+        "backup_stopped": false,
+        "relay_stop_to_backup_seconds": 95.04075512383133,
+        "ffmpeg_restarts": 0,
+        "backup_receiver_advancing": true,
+        "start_events": 1
+      },
+      {
+        "mode": "copy-stop-clock",
+        "backup_started": true,
+        "backup_stopped": false,
+        "relay_stop_to_backup_seconds": 47.49814863037318,
+        "ffmpeg_restarts": 0,
+        "backup_receiver_advancing": true,
+        "start_events": 1
+      },
+      {
+        "mode": "facts-only",
+        "backup_started": true,
+        "backup_stopped": false,
+        "relay_stop_to_backup_seconds": 94.25398045405746,
+        "ffmpeg_restarts": 0,
+        "backup_receiver_advancing": true,
+        "start_events": 1
+      },
+      {
+        "mode": "copy-hang-clock",
+        "backup_started": true,
+        "backup_stopped": false,
+        "relay_stop_to_backup_seconds": 79.3160073729232,
+        "ffmpeg_restarts": 0,
+        "backup_receiver_advancing": true,
+        "start_events": 1
+      },
+      {
+        "mode": "clock",
+        "backup_started": false,
+        "backup_stopped": false,
+        "relay_stop_to_backup_seconds": null,
+        "ffmpeg_restarts": 0,
+        "backup_receiver_advancing": null,
+        "start_events": 0
+      },
+      {
+        "mode": "clock-frozen-stamp",
+        "backup_started": false,
+        "backup_stopped": false,
+        "relay_stop_to_backup_seconds": null,
+        "ffmpeg_restarts": 0,
+        "backup_receiver_advancing": null,
+        "start_events": 0
+      },
+      {
+        "mode": "copy-clock-multi-reader",
+        "backup_started": false,
+        "backup_stopped": false,
+        "relay_stop_to_backup_seconds": null,
+        "ffmpeg_restarts": 0,
+        "backup_receiver_advancing": null,
+        "start_events": 0
+      },
+      {
+        "mode": "facts-alternating-flow",
+        "backup_started": false,
+        "backup_stopped": false,
+        "relay_stop_to_backup_seconds": null,
+        "ffmpeg_restarts": 0,
+        "backup_receiver_advancing": null,
+        "start_events": 0
+      },
+      {
+        "mode": "clock-local-conflict",
+        "backup_started": false,
+        "backup_stopped": false,
+        "relay_stop_to_backup_seconds": null,
+        "ffmpeg_restarts": 0,
+        "backup_receiver_advancing": null,
+        "start_events": 0
+      },
+      {
+        "mode": "clock-backup-stop",
+        "backup_started": false,
+        "backup_stopped": true,
+        "relay_stop_to_backup_seconds": null,
+        "ffmpeg_restarts": 0,
+        "backup_receiver_advancing": true,
+        "start_events": 0,
+        "stop_healthy_seconds": 302.982,
+        "stop_clock_fault_seconds": 286.799,
+        "primary_samples": 699,
+        "primary_bytes_advanced": 18006935,
+        "longest_receiver_counter_plateau_seconds": 0.599,
+        "final_UTC_diagnostic": {
+          "status": "FAULT",
+          "fault_for_sec": 335.805
+        }
+      }
+    ]
+  },
+  "operated": {
+    "controller_release": "b38eb215dec46486",
+    "projection_release": "545156b88e99d6d4",
+    "notification_adapter_release": "dbe6f9cd39b4e025",
+    "OCI_producer_unchanged": true,
+    "media_process_and_connection_identities_preserved": true,
+    "controller": "HEALTHY",
+    "backup_replicas": 0,
+    "ACK_advanced": true,
+    "existing_status_loop_renderer_outbox_routing_and_admission_preserved": true,
+    "real_alert_delivery": "UNVERIFIED",
+    "root_rollback_preimages": "READY"
+  },
+  "remaining_unknown": [
+    "Production fault behavior",
+    "YouTube backup selection",
+    "Gap-free public-player AV",
+    "Real notification delivery",
+    "Long-term false-start rate"
+  ],
+  "commit_or_push": false,
+  "files": [
+    {
+      "path": "README.md",
+      "before_sha256": "a0bc7547f82a6961e73c712f40a8ea118310737fa46d73ac9d9af0a4871c1da7",
+      "source_sha256": null,
+      "public_sha256": "b83530df3902aab260034c81c5afd9a6ac2064d62c614984d8146723ae1c5079"
+    },
+    {
+      "path": "docs/00_INDEX.md",
+      "before_sha256": "929bcd26a6fcf1c48523dda82211690dc5306887350d2b3d2daf7f32cf856d65",
+      "source_sha256": null,
+      "public_sha256": "3b50fe9e3cc95036c0743b750e39f9d0aea17612b1859162bd7426ce62cfe23f"
+    },
+    {
+      "path": "docs/README.md",
+      "before_sha256": "64d12f218b0a8fdb31f7e8ed1ce1d651073d9d1c39e8e512c5579c29080f75bd",
+      "source_sha256": null,
+      "public_sha256": "12467ef3c1ec74ee7e6603fbfdc91b037f16b0f363d7f2545035a2ff0aa26d7b"
+    },
+    {
+      "path": "docs/architecture.md",
+      "before_sha256": "d0b6ee5d2ccb5f92fcc4fc272002ee37d534b5348b6fec30e8de0125bfd9cbb9",
+      "source_sha256": null,
+      "public_sha256": "de3dc74c3a8ca3b8620e97f57251a4b85d739927b0b9ec8f4250184b906cb4eb"
+    },
+    {
+      "path": "docs/current-status.md",
+      "before_sha256": "f3fb0c2ddfc0ca930ce698da92fe350ffdfa945982b69752925b941bf637ac3e",
+      "source_sha256": null,
+      "public_sha256": "b6d83960d01a581f4872f84424d270574822431c76634541af4f8077db1e1538"
+    },
+    {
+      "path": "docs/design-decisions-for-review.md",
+      "before_sha256": "cd2c159b9e4261b397e85623ca4625f774f2539947cfc79fd2533edf35573f8b",
+      "source_sha256": null,
+      "public_sha256": "9bcee0fde7d6644a4b1fc7a194d5fe34b708fcd8d11335d946a29aefcf39ee98"
+    },
+    {
+      "path": "docs/hiring-reviewer-guide.md",
+      "before_sha256": "df35579f38d3c5e70fa0dc6059686b2400601f77bc03f0a487342b5c974a1c7e",
+      "source_sha256": null,
+      "public_sha256": "c0409c599760f9779b48926c0385dc381fd39d8540501bafb4a4f32fc4e5ca19"
+    },
+    {
+      "path": "docs/operational-case-studies.md",
+      "before_sha256": "f3a07b8850948c236d42d4bbc1ef7b9ebc6164b304d2341142d0ba19ab854f2d",
+      "source_sha256": null,
+      "public_sha256": "c95b2affabaca485544b9942336c5d7c2bd041d53824d5619ba9dbd52e8f3aef"
+    },
+    {
+      "path": "docs/operational-scorecard.md",
+      "before_sha256": "cc41f873df4d575521513fb13891a2c1e2eba59f599c2f22c92c35c05a711b70",
+      "source_sha256": null,
+      "public_sha256": "0790f598431be9fbae139e78a886ff61bc0e9a5d26c7d6f2c3dc203bfa386335"
+    },
+    {
+      "path": "docs/v3/boottime-media-health.md",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "5d9121b81b5ef57600adcd3bb7e9dafb5f93858861021745adb6d18e2c91993e"
+    },
+    {
+      "path": "docs/v3/cross-host-observation-time.md",
+      "before_sha256": "d229856ccedf0c6fc46466e550ffd20188c8d325d1a685d14df5669f54a38330",
+      "source_sha256": null,
+      "public_sha256": "e20bb1adea8fff5275d104ebe52f2e452dcd97c9ac27ca7b2f431fec82e36b8a"
+    },
+    {
+      "path": "docs/v3/fallback-clock-recording.md",
+      "before_sha256": "efa7a15d9d103a5282a676c3f1c18d5ef1228c35023213ee6e91b357aebe766e",
+      "source_sha256": null,
+      "public_sha256": "1b0349c842c871a9b3ba8a2a261bb591324f9dd355ea1ca325e1d9181aa93541"
+    },
+    {
+      "path": "docs/v3/fallback-decision-contract.md",
+      "before_sha256": "c41eb3045724bb458403000742df282f6ff9f358e390905e970b04c511c24421",
+      "source_sha256": null,
+      "public_sha256": "ccf62b7efcc668da75a203f94a704dcb2c0229591c07231fe975d69b39c80895"
+    },
+    {
+      "path": "docs/v3/fallback-policy-revisions.md",
+      "before_sha256": "02667ffc6e2769665cecd3ac8e12549189b32d5453bfb36f38b69c30a18f54f6",
+      "source_sha256": null,
+      "public_sha256": "6e4bc7130ffc041d534415617c6369c7ed5d94af85091dfd8c902e3d3609c800"
+    },
+    {
+      "path": "docs/v3/route-causality.md",
+      "before_sha256": "d3da94b969af6094e0a66f53503218354d17b9713763e2d3b0cebb9ad2633b6d",
+      "source_sha256": null,
+      "public_sha256": "19d9f403c66163e65467d3ae115a74574d06f389b7d6e85aa4bd11212cd4a75c"
+    },
+    {
+      "path": "docs/v3/self-healing-oci-fanout.md",
+      "before_sha256": "b4edf6c993b4552c77207fe8108eea1c4a90acd1cea6a34ea51fcacaa174a4a2",
+      "source_sha256": null,
+      "public_sha256": "6ab1144dffc2214c92d8332a33e0f697cba2b0be7277505089ef9ec519f8a77f"
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/route_causality.py",
+      "before_sha256": "476acfc4d3fb9fe42a52de0ce49efc86eca42ef89e733b42b9cb2b543618eaab",
+      "source_sha256": "2e1649928cc31eacce13f0497c37b505026237b2597e87e2e1b9810c60303294",
+      "public_sha256": "2e1649928cc31eacce13f0497c37b505026237b2597e87e2e1b9810c60303294"
+    },
+    {
+      "path": "monitoring-v4/tests/test_route_causality.py",
+      "before_sha256": "8bbef3db1f02e088bb1aea1487dfcc022e6710f2425a8809c508a782c23ac26b",
+      "source_sha256": "b82aca0cef947d77c1ec451d8a3bbaca565c13c42b71387f36b4f41447795554",
+      "public_sha256": "b82aca0cef947d77c1ec451d8a3bbaca565c13c42b71387f36b4f41447795554"
+    },
+    {
+      "path": "ops/selfheal/fallback_controller.py",
+      "before_sha256": "4e9ad8a0928aee9fff7c264076a07c0c5f837e48a18f96ccc376393f53eb7991",
+      "source_sha256": "febc024ded73bb8c10899ea5261fe08fdfadca1b2b2bc1b50f18b325612172fd",
+      "public_sha256": "4d48f0193b8fac2215e9078914e85d3fe1072f48df9b0e064e4ac16d4f6864c8"
+    },
+    {
+      "path": "ops/selfheal/route_assessment.py",
+      "before_sha256": "2c7d0c3127665481e05ba4fe3688505c6ae70c1369ec2db4ad7152f142ee6779",
+      "source_sha256": "6ac0f645d6f2b138b50b73abddd7e83655116b221ddd695a7a06cd69022bb14d",
+      "public_sha256": "6ac0f645d6f2b138b50b73abddd7e83655116b221ddd695a7a06cd69022bb14d"
+    },
+    {
+      "path": "src/stream_core/notifications/route_observation.py",
+      "before_sha256": "c20cc5eb9723fc3fb2b6e8b4fc22da1b70d1d367b67edaf2db84cf6e1200d5b4",
+      "source_sha256": "476ace4319214e6e9e21eeb6fddfde67f997c9f09dfe478c70f983ed8f02d75b",
+      "public_sha256": "476ace4319214e6e9e21eeb6fddfde67f997c9f09dfe478c70f983ed8f02d75b"
+    },
+    {
+      "path": "tests/test_fallback_copy_route.py",
+      "before_sha256": "72d486a7cc4d9ff476870cd686dc13ec1ea879a69a6b169ae098dad881b2c080",
+      "source_sha256": "375776568891c739b56acb100239d1a5786e0bf3e552d4004cc3b40d5934eaeb",
+      "public_sha256": "2d7b5e45177e9b72202cf425da50a27b83951e284b6ff3b9eb8e85f7da9e1b65"
+    },
+    {
+      "path": "tests/test_fallback_relay_stop_loop.py",
+      "before_sha256": "20ec98fb81d9d05df04cfd600e1f30ed353dcd874e4748a5285ec159d4c3bd5c",
+      "source_sha256": "24e8817f11d6f56933a2439d50e739eeb528721f0129d55f0918197426abffbf",
+      "public_sha256": "6ccd1d4edc65744f03a90b46bd418476c3c88e2be577c6d9827f898c88196812"
+    },
+    {
+      "path": "tests/test_relay_availability.py",
+      "before_sha256": "9f336362630aa6133e0cfb4dc79c653a73107031bb11fd0a88cde779788231bf",
+      "source_sha256": "853de3121318da7612da572c16b42b25e5285dd6160004d4496452286be57937",
+      "public_sha256": "e0443f5999efaf4a7bf88ef14ba3d8f3f4af7e1c70419cc63e42de73a8c0761a"
+    },
+    {
+      "path": "tests/test_route_causality.py",
+      "before_sha256": "66c4ee5102fb95db82fa708c922e569465d4aee437d897830b4c677766c34db1",
+      "source_sha256": "0cbe28b508b9137b1533ba5a264c4b5f0662ccf052258fa22a34c37e354f1567",
+      "public_sha256": "0cbe28b508b9137b1533ba5a264c4b5f0662ccf052258fa22a34c37e354f1567"
+    },
+    {
+      "path": "tests/test_route_observation_notify.py",
+      "before_sha256": "acfd3d3eeade31bd34086e4fac9f933453997b72f4d2866faa463c9e780e502b",
+      "source_sha256": "e2645a9d0b96ecb2798a1934b706cf255d042e3b972e1979206f1c6254602f62",
+      "public_sha256": "f8901447653db286669b55bca95d956e7645b578f7ec4090396131fe3a509082"
+    },
+    {
+      "path": "tests/test_route_transition_audit.py",
+      "before_sha256": "999a0e77088c237f5ec82c1545d9cf66f1f1946c0537f7e6ac1d86a6857e4ba3",
+      "source_sha256": "36e81ffbfa360c272ebf00f94a4e7b90c9e4f08c9a19cdb72d437b75fe0a49ac",
+      "public_sha256": "c020cf02b1e017a5126e92971b1c15dfc1c65f196138c2607a4aae41f496cb5d"
+    }
+  ]
+}

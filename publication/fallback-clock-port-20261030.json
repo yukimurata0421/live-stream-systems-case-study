@@ -1,0 +1,136 @@
+{
+  "schema": "stream.public_port_record.v1",
+  "port_date_jst": "2026-10-30",
+  "scope": "Bounded HDD clock-observation recorder, explicit SSH/job examples, fixture tests, generic service template and English measurement contract. Existing controller skew/timing support was already present and is preserved.",
+  "base_public_commit": "d9426d1c10ce73cbd4dfbcaa995429b8981043b8",
+  "deployment_performed": false,
+  "commit_performed": false,
+  "push_performed": false,
+  "notification_sent": false,
+  "operated_recording_checkpoint": {
+    "started_at_jst": "2026-10-30T21:12:08+09:00",
+    "deadline_jst": "2026-10-31T21:12:08+09:00",
+    "initial_controller_and_both_host_clock_records_observed": true,
+    "full_window_complete": false,
+    "one_second_tolerance_optimality_established": false
+  },
+  "existing_prerequisites": [
+    {
+      "path": "ops/selfheal/fallback_controller.py",
+      "public_sha256": "439d1c3f61f924b7ed5fa597afce49b6bff71d405a4d02c30472a815d168e6f3",
+      "source_sha256": "0af4f00b51bd99b46f84591f715186fcef6f9dc7097b646bc5f93879a26fcc11",
+      "mutated_by_this_port": false
+    },
+    {
+      "path": "tests/test_fallback_copy_route.py",
+      "public_sha256": "22a25f985ae396e246cc0e12c1523748bb7ca446cf6c2dd3f843a06a37ed23ee",
+      "source_sha256": "99ec75221e553be2d68e013d594eef99e59f8cd18f4007790be657d8a465da64",
+      "mutated_by_this_port": false
+    }
+  ],
+  "omissions": [
+    "Private host and disk identities, addresses, SSH material, deployment receipts and raw observations.",
+    "Changes to recovery thresholds, production services, the active recording job or other pending public work."
+  ],
+  "checks": {
+    "status": "OWNED_PORT_PASS",
+    "related_python_tests": {
+      "passed": 106,
+      "subtests_passed": 73,
+      "command": ".venv/bin/python -B -m pytest -q tests/test_fallback_clock_recorder.py tests/test_fallback_copy_route.py tests/test_selfheal.py tests/test_manual_maintenance.py tests/test_offline_slate.py",
+      "validation_scope": "Passed before subsequent independent manual-maintenance edits; the recorder/controller/documentation subset was rerun separately."
+    },
+    "recorder_docs_language_policy_tests": {
+      "passed": 34,
+      "subtests_passed": 1032
+    },
+    "recorder_core_ast_parity": "PASS for projection, collection, storage guards and summaries; configured SSH and generic host-role adaptation isolated",
+    "existing_controller_ast_parity": "PASS for check_timestamp, observe and status_snapshot",
+    "public_language": "PASS (1372 text files)",
+    "selected_secret_scan": "PASS",
+    "cli_help_and_example_job_validation": "PASS (no probes performed)",
+    "unrelated_preexisting_changes": "PRESERVED",
+    "public_source_boundary": {
+      "initial_full_tree_issue_count": 0,
+      "owned_paths_issue_count": 0,
+      "latest_full_tree_issues": [
+        {
+          "path": "ops/selfheal/manual_maintenance.py",
+          "reason": "source_digest_mismatch"
+        },
+        {
+          "path": "ops/selfheal/manual_maintenance_lab.py",
+          "reason": "source_digest_mismatch"
+        },
+        {
+          "path": "tests/test_manual_maintenance.py",
+          "reason": "source_digest_mismatch"
+        }
+      ],
+      "scope_note": "Independent manual-maintenance edits were observed after the initial full-tree check; those files were preserved and their metadata was not rewritten by this port."
+    },
+    "current_recorder_controller_docs_tests": {
+      "passed": 87,
+      "subtests_passed": 1087,
+      "command": ".venv/bin/python -B -m pytest -q tests/test_fallback_clock_recorder.py tests/test_fallback_copy_route.py tests/test_selfheal.py tests/test_docs_structure.py tests/test_public_language_policy.py"
+    }
+  },
+  "files": [
+    {
+      "path": "ops/scripts/stream_v3_fallback_clock_recorder.py",
+      "before_sha256": null,
+      "source_sha256": "4b0018d76a1129481a4e6ebbbf6b1428329c24d2dc9e24e44c3527aa7f945a8e",
+      "public_sha256": "63590cc26ee940a9934ca30d793937821b7ab73a65abda9b863e8cd4e3b26566",
+      "adaptation": "Explicit sender/relay labels and SSH configuration; English source; no personal paths or live configuration."
+    },
+    {
+      "path": "tests/test_fallback_clock_recorder.py",
+      "before_sha256": null,
+      "source_sha256": "a1ea0cb3cb22894c59fcc9e2bfef4e86d6f9b117036c766bceb86c9d9359fc8d",
+      "public_sha256": "bb175644ee256c2a8f23e6dfe6566923e0d5c84f00cfd3f04c05b1bfdb57be89",
+      "adaptation": "Portable fixture paths, configured SSH binding checks and English test text; no production connections."
+    },
+    {
+      "path": "ops/systemd/stream-v3-fallback-clock-recorder.service.in",
+      "before_sha256": null,
+      "source_sha256": "2e841c43b1cdda3d1a6fedae9f2d2bba40229d99f3978835d84b88f8604a9068",
+      "public_sha256": "c264e80ce6bf4316f4129caac66f71f4b0e122a1ac9fefef06d7a27ff8dba6c1",
+      "adaptation": "User, group, mount, SSH files, output and release placeholders; no automatic installation."
+    },
+    {
+      "path": "configs/fallback-clock-recording.example.json",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "98052d0cbe17b069d5ebdbc075f94ddc04d44b1517acc661bda1ff032efaf99e",
+      "adaptation": "Expired example window, example fingerprints and UUID; local operators must supply verified settings."
+    },
+    {
+      "path": "configs/fallback-clock-observer.ssh_config.example",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "bb869c08f86f534694fd10294ffbef131c9a8b86462167b515edbd3c152a02eb",
+      "adaptation": "Reserved example domain and observer identity-file placeholders; no credentials."
+    },
+    {
+      "path": "docs/v3/fallback-clock-recording.md",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "d56273045bac232ab4b4b004aaaab5eb634a3f6e42ee4d6b9e95cb6def611376",
+      "adaptation": "English contract and dated investigation; no private evidence or host identity."
+    },
+    {
+      "path": "docs/00_INDEX.md",
+      "before_sha256": "4a1fbdbfaeb22de34f972851ad323151eb6c33eca8973e576a91b7cefdcfa594",
+      "source_sha256": null,
+      "public_sha256": "9c5939f0bf82ebfbb098ccaa3677aed7926c4459a201613f4ac00801faa2472d",
+      "adaptation": "Add one catalog link, preserving existing changes."
+    },
+    {
+      "path": "docs/current-status.md",
+      "before_sha256": "ed69609ed46150ccb048978f1e1c03374109bf93e87017d38e854073947b640e",
+      "source_sha256": null,
+      "public_sha256": "f1cbf73afb032ed1a19279030f2a6974060023331904904e44f51be9c02e4860",
+      "adaptation": "Add the dated in-progress collection checkpoint, preserving other pending status sections."
+    }
+  ]
+}

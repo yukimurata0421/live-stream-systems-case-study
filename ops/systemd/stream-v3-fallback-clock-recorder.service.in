@@ -1,0 +1,38 @@
+[Unit]
+Description=Bounded read-only fallback clock observation on HDD
+After=local-fs.target network-online.target
+RequiresMountsFor=@MOUNT@
+StartLimitIntervalSec=120
+StartLimitBurst=3
+
+[Service]
+Type=simple
+User=@USER@
+Group=@GROUP@
+ExecStart=/usr/bin/python3 -I -B @RELEASE@/stream_v3_fallback_clock_recorder.py --job @JOB@
+UMask=0077
+Restart=on-failure
+RestartSec=10
+Nice=15
+CPUQuota=5%
+MemoryMax=128M
+TasksMax=16
+LimitFSIZE=32M
+TimeoutStopSec=45
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectSystem=strict
+ProtectHome=tmpfs
+BindReadOnlyPaths=@SSH_CONFIG@ @SSH_KEY@ @SSH_KNOWN_HOSTS@
+ReadWritePaths=@OUTPUT@
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+InaccessiblePaths=-/run/credentials -/run/stream-v3-control -/var/lib/rancher/k3s -/var/lib/stream-recovery-control
+Environment=LC_ALL=C
+
+[Install]
+WantedBy=multi-user.target

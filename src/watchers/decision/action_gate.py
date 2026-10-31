@@ -46,6 +46,9 @@ class ActionDecision:
 
 
 def decide_action(decision: Decision, snap: LedgerSnapshot, policy: Policy, ctx: GateContext) -> ActionDecision:
+    from watchers.route_guard import veto
+    if veto() and decision.state in {"inconsistent_remote", "remote_ended_confirmed", "local_unhealthy"}:
+        return ActionDecision("none", "route causal guard", ("route_causal_guard",))
     if decision.state == "available":
         return ActionDecision("none", "available")
     if decision.state == "remote_unconfirmed":

@@ -1,0 +1,45 @@
+[Unit]
+Description=Read-only relay and provider monitoring
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=@OBSERVER_USER@
+Group=@OBSERVER_GROUP@
+SupplementaryGroups=@EVIDENCE_GROUP@
+UMask=0077
+LoadCredential=ssh-key:/etc/stream-v4-relay-observer/ssh-key
+LoadCredential=known-hosts:/etc/stream-v4-relay-observer/known-hosts
+LoadCredential=config.json:/etc/stream-v4-relay-observer/config.json
+ExecStart=/usr/bin/python3 -B /opt/stream-v4-relay-observer/current/relay_monitor.py --config %d/config.json --credentials %d --state /var/lib/stream-v4-relay-observer
+StateDirectory=stream-v4-relay-observer
+StateDirectoryMode=0700
+Restart=no
+TimeoutStopSec=15
+KillMode=control-group
+Nice=10
+CPUQuota=5%
+MemoryMax=96M
+TasksMax=24
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+AmbientCapabilities=
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+RestrictSUIDSGID=yes
+RestrictRealtime=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+LockPersonality=yes
+Environment=PYTHONDONTWRITEBYTECODE=1
+StandardOutput=null
+StandardError=null
+
+[Install]
+WantedBy=multi-user.target

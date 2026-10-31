@@ -1,4 +1,4 @@
-"""Self-healing fan-out decisions (fallback start/stop, forward healing, daily Twitch renewal) without side effects."""
+"""Test fallback decisions, forward repair and daily Twitch renewal without production effects."""
 import sys
 import unittest
 from datetime import datetime, timedelta, timezone
@@ -7,14 +7,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "ops/selfheal"))
 from fallback_controller import Controller, START_AFTER, STOP_AFTER, youtube_item  # noqa: E402
 from forward_keeper import Keeper, OFFLINE_MAX, OFFLINE_MIN, VERIFY_MAX, AGE_LIMIT, HEALING_DEST, reconcile  # noqa: E402
-import importlib.util
-_observer_path = Path(__file__).resolve().parents[1] / 'monitoring-v4/src/stream_monitoring_v4/compatibility/relay_observe.py'
-_observer_spec = importlib.util.spec_from_file_location('public_selfheal_relay_observe', _observer_path)
-relay_observe = importlib.util.module_from_spec(_observer_spec)
-_observer_spec.loader.exec_module(relay_observe)
-observed_provider = relay_observe.provider
-renewal_time = relay_observe.renewal_time
-youtube_forward_facts = relay_observe.youtube_forward_facts
+from test_fallback_copy_route import relay_observe
+observed_provider, renewal_time = relay_observe.provider, relay_observe.renewal_time  # noqa: E402
+youtube_forward_facts = relay_observe.youtube_forward_facts  # noqa: E402
 
 YT = {'dest': 'rtmps://a.rtmps.youtube.com:443/live2#k'}
 TW = {'dest': 'rtmps://ingest.global-contribute.live-video.net:443/app#k'}
@@ -67,12 +62,12 @@ class FallbackTests(unittest.TestCase):
     def test_starts_after_sustained_failure_only(self):
         c = Controller()
         c.healthy(sample(1))
-        self.assertIsNone(c.decide(0, c.healthy(None), 0))
-        self.assertIsNone(c.decide(START_AFTER - 1, c.healthy(None), 0))
-        self.assertEqual(c.decide(START_AFTER, c.healthy(None), 0), 'START')
+        self.assertIsNone(c.decide(0, c.healthy(sample(1,ready=False)), 0))
+        self.assertIsNone(c.decide(START_AFTER - 1, c.healthy(sample(1,ready=False)), 0))
+        self.assertEqual(c.decide(START_AFTER, c.healthy(sample(1,ready=False)), 0), 'START')
 
     def test_stalled_input_or_youtube_error_counts_as_unhealthy(self):
-        # Input not ready, stalled input bytes, idle YouTube forward, or a forward error.
+        # Unready input, frozen input bytes, stopped forwarding or a YouTube error.
         for bad in (sample(5, ready=False), sample(1), sample(5, state='idle'), sample(5, error=True)):
             with self.subTest(bad=bad):
                 c = Controller()
@@ -95,7 +90,7 @@ class FallbackTests(unittest.TestCase):
         c.healthy(sample(0))
         c.decide(0, c.healthy(sample(1)), 1)
         c.decide(290, c.healthy(sample(2)), 1)
-        c.decide(295, c.healthy(None), 1)              # Missing observation.
+        c.decide(295, c.healthy(None), 1)              # Missing observation
         c.healthy(sample(3))
         self.assertIsNone(c.decide(310, c.healthy(sample(4)), 1))
         self.assertIsNone(c.decide(310 + STOP_AFTER - 1, c.healthy(sample(5)), 1))
@@ -132,7 +127,7 @@ class HealTests(unittest.TestCase):
         bad[0]['outboundBytes'] = 300000
         self.assertEqual(k.heal(30, True, bad), [YT, HEALING_DEST])
         self.assertEqual(k.heal(35, True, []), [YT, TW])
-        # Do not reconnect the same destination again within 60 seconds.
+        # Do not repair the same destination again within 60 seconds.
         bad[0]['outboundBytes'] = 700000
         self.assertIsNone(k.heal(70, True, bad))
         bad[0]['outboundBytes'] = 850000
@@ -146,7 +141,7 @@ class HealTests(unittest.TestCase):
         self.assertIsNone(k.heal(100, False, [{'pos': 1, 'state': 'idle', 'conf': YT}]))
 
     def test_destination_is_matched_by_its_own_dest_not_by_position(self):
-        # Removing YouTube shifts Twitch to position 1; do not attribute its failure to YouTube.
+        # Removing YouTube can move Twitch to position one; do not misclassify its failure.
         k = Keeper([YT, TW])
         shifted = [{'pos': 1, 'state': 'idle', 'lastError': 'x', 'conf': TW}]
         k.heal(0, True, shifted)
@@ -188,7 +183,7 @@ class HealTests(unittest.TestCase):
 
 
 class FakeMediaMTX:
-    """A MediaMTX stand-in holding only the forward config; it can fail or ignore a patch."""
+    """Minimal MediaMTX fixture supporting failed or ignored patches."""
     def __init__(self, forward, *, fail=False, ignore=False):
         self.forward, self.fail, self.ignore, self.patches = forward, fail, ignore, 0
 
@@ -236,7 +231,7 @@ class ReconcileTests(unittest.TestCase):
     def test_failed_patch_is_retried_on_the_next_cycle(self):
         m = FakeMediaMTX([YT, TW], fail=True)
         self.assertEqual(reconcile(m.read, m.patch, [YT]), 'failed')
-        self.assertEqual(m.forward, [YT, TW])          # The actual configuration has not changed.
+        self.assertEqual(m.forward, [YT, TW])          # The destination was not actually removed.
         m.fail = False
         self.assertEqual(reconcile(m.read, m.patch, [YT]), 'patched')
 
@@ -274,7 +269,7 @@ class RenewalTests(unittest.TestCase):
         self.assertEqual(k.phase, 'VERIFY')
         k.renewal(200, day2, True, self.twitch(sid='2'))
         self.assertEqual(k.phase, 'IDLE')
-        # Never renew twice on the same date.
+        # Do not renew twice on the same day.
         self.assertIsNone(k.renewal(300, day2 + timedelta(hours=1), True, self.twitch(sid='2', wall=day2)))
 
     def test_twitch_is_restored_even_if_offline_is_never_observed(self):
@@ -303,7 +298,7 @@ class RenewalTests(unittest.TestCase):
 
 
 class RenewalTimeTests(unittest.TestCase):
-    # The monitor treats an active renewal within 360 seconds of its scheduled time as planned.
+    # The monitor treats active renewal within 360 seconds of schedule as planned downtime.
     def test_renewing_reports_this_midnight(self):
         now = datetime(2026, 10, 20, 15, 2, tzinfo=timezone.utc)  # 00:02 JST
         for phase in ('WAIT_OFFLINE', 'VERIFY'):

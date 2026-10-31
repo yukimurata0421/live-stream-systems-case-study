@@ -9,12 +9,19 @@ start.
 - `README.md`: [documentation guide](README.md), the suggested reading order.
 - `hiring-reviewer-guide.md`: [reading paths by reviewer role](hiring-reviewer-guide.md).
 - `current-status.md`: [recent changes, unobserved items, and disabled features](current-status.md).
-- `operational-case-studies.md`: [eleven short incident stories](operational-case-studies.md).
+- `operational-case-studies.md`: [twelve short incident stories](operational-case-studies.md).
 - `operational-scorecard.md`: [measured results, tests, and remaining gaps](operational-scorecard.md).
 - `implementation-review-map.md`: [where each claim's code and tests live](implementation-review-map.md).
 
 ## Current System
 
+- `v3/clock-safe-media-progress.md`: [counter-proven clock holds, bounded alternating uncertainty, retained baselines and transition audit](v3/clock-safe-media-progress.md).
+
+- `v3/boottime-media-health.md`: [boottime media health, independent UTC diagnostics and removal of transition grace](v3/boottime-media-health.md).
+- `v3/fallback-decision-contract.md`: [when the direct YouTube backup starts and stops: evidence, decision table, timers, tradeoffs and evidence status](v3/fallback-decision-contract.md).
+- `v3/route-causality.md`: [durable cause identity and arena's secondary-recovery veto](v3/route-causality.md).
+- `v3/cross-host-observation-time.md`: [request-bound clock intervals, finite caches, public timestamp normalization, and verification limits](v3/cross-host-observation-time.md).
+- `v3/manual-maintenance.md`: [one-command planned maintenance, a relay-hosted slate, backup exclusion and explicit return gates](v3/manual-maintenance.md).
 - `v3/ffmpeg-fifo-recovery.md`: [why output reconnection was chosen over ride-through or process restart, bounded FIFO recovery and process/connection generations](v3/ffmpeg-fifo-recovery.md).
 - `v3/ffmpeg-fifo-measurements.md`: [restart versus FIFO timing, where the time went, the audio-loss rollout and the corrected exercise](v3/ffmpeg-fifo-measurements.md).
 - `v3/fifo-timestamp-continuity-case-study.md`: [how same-process recovery carried old timestamps to YouTube, the per-connection origin fix, and the comparison that isolated it](v3/fifo-timestamp-continuity-case-study.md).
@@ -27,7 +34,7 @@ start.
 
 - `architecture.md`: [hosts, data paths, who can act on what, failure domains](architecture.md).
 - `runtime-contract.md`: [delivery and monitoring runtimes, encoder, restart gates](runtime-contract.md).
-- `v3/self-healing-oci-fanout.md`: [the media route since 2026-10-20, its thresholds, and the relay-stop drill](v3/self-healing-oci-fanout.md).
+- `v3/self-healing-oci-fanout.md`: [the media route since 2026-10-20, its components, and the relay-stop drill](v3/self-healing-oci-fanout.md).
 - `v3/oci-route-simplification-decision.md`: [why the unfinished recovery design was replaced](v3/oci-route-simplification-decision.md).
 - `hardware-selection.md`: [why each host, CPU, and GPU was chosen](hardware-selection.md).
 - `observability.md`: [monitoring signals, OCI-aware Twitch assessment, and evidence boundaries](observability.md).
@@ -49,6 +56,7 @@ start.
 
 ## Public Status Page
 
+- `v3/r2-publication-and-freshness-case-study.md`: [operated R2 migration, stale-data checks, archive verification, and the later clock-skew diagnosis](v3/r2-publication-and-freshness-case-study.md).
 - `v3/public-status-snapshot.md`: [what the public site shows and why it is static](v3/public-status-snapshot.md).
 - `v3/public-publisher-boundary.md`: [Raspberry Pi collectors, redaction, last-good, and cache](v3/public-publisher-boundary.md).
 - `v3/public-status-page-2026-10-20.md`: [page redesign around current state and 24-hour trends](v3/public-status-page-2026-10-20.md).
@@ -79,6 +87,12 @@ start.
 - `v3/migration-cutover-case-study.md`: [v2 to v3 cutover and the 24-hour gate](v3/migration-cutover-case-study.md).
 - `v3/three-host-source-consolidation.md`: [comparing three hosts' source trees](v3/three-host-source-consolidation.md).
 - `v3/clock-observation-case-study.md`: [from pixel comparison to paired clocks, a blind reader, and provider thumbnails](v3/clock-observation-case-study.md).
+- `v3/fallback-policy-revisions.md`: [one fallback rule revised under test, and what each check found](v3/fallback-policy-revisions.md). Its dated records:
+  - `v3/fallback-clock-recording.md`: [the October 30 clock-skew false start, the provisional fix, its interval replacement and bounded HDD recording](v3/fallback-clock-recording.md).
+  - `v3/route-failover-validation.md`: [isolated input-loss switching, the fixed producer gap and failed continuity measurements](v3/route-failover-validation.md).
+  - `v3/relay-stop-main-loop.md`: [the failed relay-stop test under hold-on-observation-loss](v3/relay-stop-main-loop.md).
+  - `v3/relay-recovery-deadline.md`: [explicit relay-stop facts and a deadline that survives FFmpeg generations](v3/relay-recovery-deadline.md).
+  - `v3/youtube-egress-failover.md`: [separating upstream ACKs from YouTube confirmation, copy failure facts, and the clock-hold transition fix](v3/youtube-egress-failover.md).
 
 ## History And Superseded Designs
 

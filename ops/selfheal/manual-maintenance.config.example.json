@@ -1,0 +1,12 @@
+{
+  "schema": "stream_v3.manual_maintenance_config.v1",
+  "oci_host": "oci-relay",
+  "ssh_operator": "operator",
+  "dell_machine_sha256": "REPLACE_WITH_CURRENT_DELL_MACHINE_ID_SHA256",
+  "oci_machine_sha256": "REPLACE_WITH_CURRENT_OCI_MACHINE_ID_SHA256",
+  "youtube_destination_sha256": "REPLACE_WITH_CURRENT_PRIMARY_COPY_DESTINATION_FINGERPRINT",
+  "slate_file": "/opt/stream-v3-maintenance/assets/REPLACE_WITH_RELEASE/offline.mp4",
+  "slate_sha256": "REPLACE_WITH_BUNDLE_MEDIA_SHA256",
+  "slate_manifest_sha256": "REPLACE_WITH_BUNDLE_MANIFEST_SHA256",
+  "effect_ledger_file": "/REPLACE_WITH_CURRENT_HOST_MOUNT/runtime/fast_recovery_effects.sqlite3"
+}

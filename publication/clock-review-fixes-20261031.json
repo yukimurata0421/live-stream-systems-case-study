@@ -1,0 +1,112 @@
+{
+  "schema": "stream.public_review_fix.v1",
+  "reviewed_on_jst": "2026-10-31T07:37:54.597226+09:00",
+  "scope": "Public checkout code and documentation only; existing unrelated changes retained.",
+  "deployment_performed": false,
+  "commit_or_push_performed": false,
+  "decisions": [
+    {
+      "id": "R1",
+      "resolution": "Require a clock Estimate for bound route samples; remove the unused scalar branch and fresh helper; interval/offset/None/step regressions added."
+    },
+    {
+      "id": "R2",
+      "resolution": "Keep one-way compatibility and fail-closed UNKNOWN for old servers; real HTTP regressions cover missing envelopes and rejected nonce queries. Document producer-first upgrade and consumer-first rollback."
+    },
+    {
+      "id": "R3",
+      "resolution": "Port shared one-second/180-second snapshot validation to both Twitch and SLI collectors. Keep original bytes/timestamps on failure and order SLI history against source generation."
+    },
+    {
+      "id": "R4",
+      "resolution": "Describe model offset, uncertainty, RTT and corrected age upper bounds. Full age intervals exist in controller status; recorder stores upper bounds only."
+    },
+    {
+      "id": "R5",
+      "resolution": "Add five-host clock observation, mesh, timing envelope and explicit manual-maintenance authority to architecture; distinguish operated R2 from the older public GCS uploader."
+    },
+    {
+      "id": "R6",
+      "resolution": "Update status to October 31; separate the October 27 public-snapshot fix, provisional October 30 controller rule and October 31 interval policy."
+    },
+    {
+      "id": "R7",
+      "resolution": "Move clock contract under Current System; shorten installation/job procedures into artifact and permission contracts."
+    }
+  ],
+  "validation": {
+    "command": ".venv/bin/python -B -m pytest -q tests/test_clock_contract.py tests/test_fallback_copy_route.py tests/test_offline_slate.py tests/test_manual_maintenance.py tests/test_public_twitch.py tests/test_public_twitch_sli.py tests/test_public_relay.py tests/test_fallback_clock_recorder.py tests/test_selfheal.py tests/test_public_publisher_build.py tests/test_docs_structure.py monitoring-v4/tests/test_relay_monitor.py monitoring-v4/tests/test_relay_public.py monitoring-v4/tests/test_twitch_sli_public_contract.py",
+    "passed": 197,
+    "subtests_passed": 1187,
+    "cold_collector_cli": "PASS for both real entrypoints with local SSH fixtures; original generation timestamps preserved.",
+    "shared_clock_copies": "PASS",
+    "monitoring_public_snapshot": "PASS (374 files; zero issues)",
+    "language": "PASS (1393 text files; zero issues)",
+    "public_boundary": "PASS (zero issues)",
+    "secret_scan": "PASS (no leaks)",
+    "unrelated_preexisting_files": "PRESERVED"
+  },
+  "historical_checkpoint": "publication/history/cross-host-clock-port-20261031-before-review.json",
+  "files": [
+    {
+      "path": "docs/00_INDEX.md",
+      "sha256": "876088e919175f8e04f8ca121c3b56de538d417b18d5e1d1fc93ed29faf6fa40"
+    },
+    {
+      "path": "docs/architecture.md",
+      "sha256": "c81c5f03d539270e9ada9d065903f77d89617f549b76b80e6e4a1bf712890dbe"
+    },
+    {
+      "path": "docs/current-status.md",
+      "sha256": "0ddf4f6dcb114610e4edc7ee946ece11ec92c3690f0711fb6b97cdded4a0135d"
+    },
+    {
+      "path": "docs/v3/cross-host-observation-time.md",
+      "sha256": "c741f7825a4cde359a7ef5e9efa671f924f12b4da3df4a9a9306e94fd3f7f8aa"
+    },
+    {
+      "path": "docs/v3/fallback-clock-recording.md",
+      "sha256": "b080253bac140a7445db378b2c6f0ce0ee0b6269a4ec1babd55e1d8fb11d9ccc"
+    },
+    {
+      "path": "docs/v3/manual-maintenance.md",
+      "sha256": "a618e3041273b51248cc8ca6a12be7c4394323fe83191dfcc7b72c3fce1b6748"
+    },
+    {
+      "path": "docs/v3/r2-publication-and-freshness-case-study.md",
+      "sha256": "6b0a98e45874b1a6a7876a720b3fe39003636c1d6ca92dbd0255a1341bdf42dc"
+    },
+    {
+      "path": "monitoring-v4/tests/test_twitch_sli_public_contract.py",
+      "sha256": "7dc4fc2818632c72f634d4dbebbe26e5133431a1c45cd1777f868f673143d49a"
+    },
+    {
+      "path": "ops/public-publisher/site/scripts/collect_twitch_public.py",
+      "sha256": "582ec3dcda24a830d462e29dc75bf9dd38aafe0adf34137d6148c8532c3727ae"
+    },
+    {
+      "path": "ops/public-publisher/site/scripts/collect_twitch_sli.py",
+      "sha256": "7dcec5b18d539e6e1c2268bbd459037b81970aa39dffd13d487d2bcef4d26afb"
+    },
+    {
+      "path": "ops/selfheal/fallback_controller.py",
+      "sha256": "69258c5c4031f9ed2ee42ae70915f92a1a49cd631d7a84353d24b5040d640a2b"
+    },
+    {
+      "path": "tests/test_fallback_copy_route.py",
+      "sha256": "2facbacefb538e153716043e76aa983bab49648d581581320fb15e653d63c507"
+    },
+    {
+      "path": "tests/test_offline_slate.py",
+      "sha256": "cf6ce934a4e58090d5b9ed210f3bd4e5a5a869110ac9878b9fcb4634d90762d7"
+    },
+    {
+      "path": "tests/test_public_twitch.py",
+      "sha256": "89f612395bd10098c386e6417288c886352dcb8e1a844e486f90efb42e8285c8"
+    },
+    {
+      "path": "tests/test_public_twitch_sli.py",
+      "sha256": "96de343fbba5fad6c017411eec9fd1710dbd2262cf2b6f2f87c0c9be49345c52"
+    }
+  ]
+}

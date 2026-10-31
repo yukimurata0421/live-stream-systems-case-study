@@ -19,6 +19,8 @@ def restart_stream(
     log: Callable[[str], None],
     supervisor=None,
 ) -> tuple[bool, str]:
+    from watchers.route_guard import veto
+    if veto():return False, "route causal guard"
     write_restart_reason(component="stream", reason=reason, unit=stream_service)
     log(f"Restarting {stream_service}: {reason}")
     if supervisor is not None:
@@ -37,6 +39,8 @@ def restart_stream(
 
 
 def force_transition_live_once(*args: Any, quota_guard_active: bool = False, **kwargs: Any) -> tuple[bool, str]:
+    from watchers.route_guard import veto
+    if veto():return False, "route causal guard"
     feature_enabled = bool(kwargs.get("feature_enabled", args[0] if args else False))
     guard = force_live_precheck(feature_enabled=feature_enabled, quota_guard_active=quota_guard_active)
     if not guard.allowed:

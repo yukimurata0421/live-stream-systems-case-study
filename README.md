@@ -19,9 +19,12 @@ I built and operate a continuous aircraft-map stream on a home network.
 It combines live aircraft data, weather, and music. Adding Twitch had to
 preserve the existing YouTube Live broadcast without requiring two permanent
 uploads from home. One feed therefore goes to an Oracle Cloud Infrastructure
-(OCI) relay, which forwards it to both platforms. If relay health is lost or
-cannot be observed, the home host starts a direct YouTube backup upload and
-keeps it until five minutes of continuous relay health have been observed.
+(OCI) relay, which forwards it to both platforms. If the relay route to
+YouTube fails, the home host starts a temporary direct YouTube backup upload.
+The controller returns to the single upload after sustained verified recovery.
+The [fallback decision contract](docs/v3/fallback-decision-contract.md) defines
+the evidence, deadlines and accepted uncertainty.
+
 
 The engineering challenge is keeping the stream recoverable when the network,
 encoder, monitoring, or cloud relay fails. This repository shows the code,
@@ -53,7 +56,7 @@ See [the dated evidence and counting method](docs/same-url-continuity-evidence.m
 | Correct recovery without hiding failed attempts | A Twitch renewal initially disrupted YouTube; the corrected bounded exercise was verified separately. |
 | Recognize when testing has not proved safety | The qualification harness failed to produce its results; native qualification remains unverified. |
 | Recognize an unfinished design and change course | After 104 qualification runs, the redesigned migration and recovery system was still incomplete. A smaller route replaced it on October 20. |
-| Exercise recovery on purpose | A relay-stop drill started the fallback in 52 seconds. After the operator restarted the relay, the senders reconnected and the fallback stopped automatically; the broadcast did not end. |
+| Exercise recovery on purpose | A production relay-stop drill on 2026-10-20 started the backup in 52 seconds. When the rule was revised on October 30-31, isolated fault tests and review found gaps in the deployed rule without faulting production, and each was fixed; see [One fallback rule, revised under test](docs/v3/fallback-policy-revisions.md). |
 
 The [incident stories](docs/operational-case-studies.md) explain what happened,
 what changed, what was checked, and what remains unknown.
@@ -74,7 +77,7 @@ flowchart TB
     OCI --> YT["YouTube primary"]
     OCI --> TW["Twitch"]
     SOURCE -.-> BACKUP["Dell fallback Pod: separate map + audio + CPU encoder"]
-    BACKUP -.->|"fallback only; retained through 300 s of relay health"| YTB["YouTube backup ingest"]
+    BACKUP -.->|"fallback only; until sustained verified recovery"| YTB["YouTube backup ingest"]
 ```
 
 The [OCI delivery record](docs/v3/self-healing-oci-fanout.md) explains the
@@ -142,9 +145,12 @@ The October 14 checkpoint extends the URL-identity record. It does not extend
 older availability ratios or prove uninterrupted video/audio. Current warnings,
 missing measurements, and actual delivery faults are treated separately.
 
-Automatic fallback was exercised once, by stopping the relay service. Other
-relay failure modes, the keeper's scheduled Twitch renewal, and long-term soak
-are listed as unobserved in [current status](docs/current-status.md).
+Production relay-stop fallback was exercised on October 20 under an earlier
+rule. The current rule is checked against isolated, owned processes and a local
+receiver ([evidence status](docs/v3/fallback-decision-contract.md#evidence-status));
+that does not prove YouTube backup selection or switching without a gap. Other
+relay failure modes and long-term soak are listed as unobserved in
+[current status](docs/current-status.md).
 Production credentials, raw logs, and databases are excluded from this
 repository. The [scorecard](docs/operational-scorecard.md) keeps measured
 results, source tests, and remaining gaps separate.

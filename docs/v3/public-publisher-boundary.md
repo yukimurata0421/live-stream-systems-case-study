@@ -1,5 +1,12 @@
 # Raspberry Pi Public Publisher Boundary
 
+The operated site moved to private R2 on 2026-10-27. The
+[dated migration and freshness record](r2-publication-and-freshness-case-study.md)
+describes its checks and a later clock-skew failure. The R2 uploader itself is
+documented there but not ported: the public source described below still
+represents the earlier GCS publisher. The collectors' timestamp validation from
+that record is ported, in `public_snapshot_time.py`.
+
 The 2026-10-13 public source includes separate relay, Twitch API/reception, and
 Twitch SLI collectors plus updated static layout assets. Their public fields
 remain allowlisted. This source port does not run the collectors, upload the

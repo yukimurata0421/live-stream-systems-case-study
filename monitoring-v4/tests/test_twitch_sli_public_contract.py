@@ -5,11 +5,12 @@ from pathlib import Path
 from stream_monitoring_v4.compatibility import twitch_sli
 
 
-def test_history_projection_is_accepted_by_the_public_publisher(tmp_path):
+def test_history_projection_is_accepted_by_the_public_publisher(tmp_path, monkeypatch):
     root = Path(__file__).resolve().parents[1]
     candidates = [root.parent/'ops/public-publisher/site/scripts/collect_twitch_sli.py',
                   root.parent/'stream_v3/ops/public-publisher/site/scripts/collect_twitch_sli.py']
     source = next(path for path in candidates if path.is_file())
+    monkeypatch.syspath_prepend(str(source.parent))
     spec = importlib.util.spec_from_file_location('integrated_sli_publisher', source)
     publisher = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(publisher)

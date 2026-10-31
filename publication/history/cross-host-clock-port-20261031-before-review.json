@@ -1,0 +1,168 @@
+{
+  "schema": "stream.public_port_record.v1",
+  "port_date_jst": "2026-10-31",
+  "scope": "Clock contract, runtime adapters, finite caches, public projection, service/configuration templates and reproducible shared dependencies; public checkout only.",
+  "deployment_performed_by_port": false,
+  "commit_performed": false,
+  "push_performed": false,
+  "checks": {
+    "public_regression": {
+      "passed": 169,
+      "subtests": 1154,
+      "includes": "Clock, fallback, recorder, public collector, maintenance/slate, relay adapters and documentation tests."
+    },
+    "live_delivery_claim": "The preceding implementation recorded output progress and a FIFO reconnect. This public-source port performed no deployment or host operation.",
+    "public_language": "PASS (1391 text files; zero issues)",
+    "source_boundary": "PASS (full source-map; zero issues)",
+    "dependency_copies": "PASS; canonical bytes match both consumer copies; regeneration and symlink refusal verified through the real CLI.",
+    "systemd_templates": "PASS; rendered/parser-checked only; no service activated.",
+    "monitoring_snapshot": "PASS; 374 files, zero issues.",
+    "selected_secret_scan": "PASS (owned files and source-map; no leaks)",
+    "unrelated_existing_files": "PRESERVED (before/after content hashes unchanged)"
+  },
+  "public_adaptations": [
+    "Preserve generic relay identity and controller defaults.",
+    "Retain configured public Twitch collector/user binding.",
+    "Generate common clock module copies from one canonical source.",
+    "Keep English prose and existing unrelated worktree changes.",
+    "Add rendered service templates and explicit non-working machine/configuration examples.",
+    "Check generated clock dependency copies in CI without activating services."
+  ],
+  "excluded": [
+    "Private paths, addresses, credentials, physical/boot identities, runtime receipts and raw logs.",
+    "Standalone public stream_v4 checkout; the existing embedded monitoring compatibility port is updated here."
+  ],
+  "files": [
+    {
+      "path": ".github/workflows/public-snapshot-check.yml",
+      "public_sha256": "537d020e0ed25450241bc2833dbcad0a26a4fe384e79cfd7423885de7ff96ead"
+    },
+    {
+      "path": "configs/publisher-clock-peers.example.json",
+      "public_sha256": "3cad4d5a58a595bc16e6b38609aba320c51b3c2489e9c69ff70560ca00a94d70"
+    },
+    {
+      "path": "docs/00_INDEX.md",
+      "public_sha256": "fe88716f5d5bc1d647da6238b7379145730a61626ee01306ea8194c76066fbec"
+    },
+    {
+      "path": "docs/README.md",
+      "public_sha256": "3aee1a9156ffef2d78f126461d5ba029aaf0ca023dfd6a33e3dd3333107b9bd5"
+    },
+    {
+      "path": "docs/v3/cross-host-observation-time.md",
+      "public_sha256": "4f0ce257d46732d2dc2a7fc10220c72e409d898758e5ec552a2d686020dc646e"
+    },
+    {
+      "path": "monitoring-v4/config/clock-mesh.example.json",
+      "public_sha256": "9bc6c0231ac480223b8b3085fb051514e3b886704e187d1f9f56ef9d00a9320c"
+    },
+    {
+      "path": "monitoring-v4/config/clock-peers.example.json",
+      "public_sha256": "b3c7f1afab95663aefd28fc4776aa939cecd091e6f4eb53b57a63b3cc140f4e6"
+    },
+    {
+      "path": "monitoring-v4/config/relay-observer.example.json",
+      "public_sha256": "0c262a1a36b8e2ba1dea54186b1331a93f317d5f69896503606b80f4459c181b"
+    },
+    {
+      "path": "monitoring-v4/deploy/systemd/stream-clock-mesh.service.in",
+      "public_sha256": "7e05159a19928db9c3917021d57add244524323c3d8a7afc8941422f3bc7f934"
+    },
+    {
+      "path": "monitoring-v4/deploy/systemd/stream-v4-relay-observer.service.d/80-clock-contract.conf",
+      "public_sha256": "731b32870b41f43dcc93fa1e3806d4da65d170c235371f09218d495ed0e82a5b"
+    },
+    {
+      "path": "monitoring-v4/deploy/systemd/stream-v4-relay-observer.service.in",
+      "public_sha256": "1c86e7c4fe7b577e0c2ebdb10d118fb03e5afaf99da9a84c2eaace899cb7e27f"
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/clock_contract.py",
+      "public_sha256": "12ede974387fe96c54cea31b18d92bc636b317131fa9a7fdb87ad2821d0221f5"
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/clock_mesh.py",
+      "public_sha256": "336b290c5391c63e8671bee74eba969072c819d426a5f73eca0421ca038571f6"
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/relay_monitor.py",
+      "public_sha256": "e826b48362d9335bc37e716f5b5be7701413bb5d7c06e50b49bf481a18c3fa65"
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/relay_observe.py",
+      "public_sha256": "7c68efa46e0c243fa6f60ae2804be3eb07aa89fcc5e5a626bfa26a4897c0fbba"
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/relay_public.py",
+      "public_sha256": "f6726fb884d8124c8aa7f21afaf4eeee28ceb0eb7ab54578129973e652e9ea9f"
+    },
+    {
+      "path": "monitoring-v4/tests/test_relay_monitor.py",
+      "public_sha256": "9ae756450b8241b50c59b35b810f350e96fd7985db53794939b265907fa9339b"
+    },
+    {
+      "path": "ops/public-publisher/site/scripts/clock_contract.py",
+      "public_sha256": "12ede974387fe96c54cea31b18d92bc636b317131fa9a7fdb87ad2821d0221f5"
+    },
+    {
+      "path": "ops/public-publisher/site/scripts/collect_relay_public.py",
+      "public_sha256": "2dffa0782d6aee5a9fe8b46176011a40b81287ccc2eaf1c512c39b675b3e58cd"
+    },
+    {
+      "path": "ops/public-publisher/site/scripts/public_snapshot_time.py",
+      "public_sha256": "bb1ab3a90806af0079ae339e4ab30792accc46bf5560d8e1486f62d821e0fbaf"
+    },
+    {
+      "path": "ops/scripts/stream_v3_fallback_clock_recorder.py",
+      "public_sha256": "4ebc57f17360ca90c36028469ff0fd5b92cd56e80859f5d3a5289928adfdda2a"
+    },
+    {
+      "path": "ops/scripts/sync_observation_clock.py",
+      "public_sha256": "ecba98e44693b48db4bffaac8078f3d5669bf953d5bbcf14995b0a0535957df9"
+    },
+    {
+      "path": "ops/selfheal/clock_contract.py",
+      "public_sha256": "12ede974387fe96c54cea31b18d92bc636b317131fa9a7fdb87ad2821d0221f5"
+    },
+    {
+      "path": "ops/selfheal/clock_observer.py",
+      "public_sha256": "cfc055a2cfedcfdced2c61595f1f900e5f8cc0d0261229cb268b9ea65efd66c4"
+    },
+    {
+      "path": "ops/selfheal/fallback_controller.py",
+      "public_sha256": "45e703412fd39102fcc328ee8b1a4a982dfc7c3a0cccfc43d35ab5f61c8333da"
+    },
+    {
+      "path": "ops/selfheal/route_facts_http.py",
+      "public_sha256": "8f3254fe7c6365a57e79f23b8479aa4b4e405e76eaa5e09e258476c00eee8800"
+    },
+    {
+      "path": "ops/selfheal/units/stream-clock-observer.service.in",
+      "public_sha256": "bcd0ad6d490c02d49920ecf08af61b36d7fd8e1ebcaa05b081cbdd5d565be645"
+    },
+    {
+      "path": "publication/history/cross-host-clock-port-20261031-before-packaging.json",
+      "public_sha256": "b1c0ee7f8f7e6fa3ec1ae60ac28a14f8f366567adc0763b65ce40a4c3a2c2dde"
+    },
+    {
+      "path": "tests/test_clock_contract.py",
+      "public_sha256": "4d9d0587b08732344e21274857626d94b3b6ec259c62fd84c31e3e9239cd11ba"
+    },
+    {
+      "path": "tests/test_fallback_clock_recorder.py",
+      "public_sha256": "c0433338a31d32391df7a7c3c4a8c1bc53e1246d421595f163f6f5bc4c69610a"
+    },
+    {
+      "path": "tests/test_fallback_copy_route.py",
+      "public_sha256": "1d924ab71740932427d7b3229c46ee2d06fa086943f7d76448d70a500357d262"
+    },
+    {
+      "path": "tests/test_public_relay.py",
+      "public_sha256": "01c0d2eb0935b84bb014158a0c8c83fba654862223907f0eca87f1f97fc4905e"
+    }
+  ],
+  "reconciled_at_jst": "2026-10-31T07:08:34.650471+09:00",
+  "history_checkpoint": "publication/history/cross-host-clock-port-20261031-before-packaging.json",
+  "validation_command": ".venv/bin/python -B -m pytest -q tests/test_clock_contract.py tests/test_fallback_copy_route.py tests/test_public_relay.py tests/test_fallback_clock_recorder.py tests/test_selfheal.py tests/test_manual_maintenance.py tests/test_offline_slate.py monitoring-v4/tests/test_relay_monitor.py monitoring-v4/tests/test_relay_public.py tests/test_docs_structure.py"
+}

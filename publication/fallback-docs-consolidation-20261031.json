@@ -1,0 +1,155 @@
+{
+  "schema": "stream.public_documentation_restructure.v1",
+  "at_jst": "2026-10-31T19:51:30+09:00",
+  "scope": "Consolidate the October 30-31 fallback policy documentation for case-study readers; no code, configuration or deployment change.",
+  "supersedes": null,
+  "decision": {
+    "single_current_contract": "docs/v3/fallback-decision-contract.md is the only page that states the current start/stop rule and timers; other pages summarize and link.",
+    "revision_case_study": "docs/v3/fallback-policy-revisions.md narrates the six revisions and the failed checks between them.",
+    "dated_records": "route-failover-validation, relay-stop-main-loop, relay-recovery-deadline, youtube-egress-failover and fallback-clock-recording keep their results and gain a dated-record banner.",
+    "route_causality_scope": "route-causality.md now covers only cause identity and the secondary-recovery veto.",
+    "current_status": "Five same-day fallback sections merged into one state table.",
+    "porting_wording": "R2 uploader stated as not ported; collector timestamp validation stated as ported."
+  },
+  "checks": {
+    "docs_structure_and_language_tests": "see validation below",
+    "public_language": "PASS",
+    "public_port_validation": "PASS after hash update",
+    "concurrent_code_changes": "Eight code/test files changed concurrently by separate work during this restructure; their rows are left unreconciled here."
+  },
+  "commit_push_performed": false,
+  "files": [
+    {
+      "path": "README.md",
+      "before_sha256": "4e8f108076e993de07f29a3e322169db0607870dfe5dd538736388b2d37f7aac",
+      "source_sha256": null,
+      "public_sha256": "a8fdeca281734d4b87b7a1e4ec67adf412445628a0f5d90b8ef147f7680d004c"
+    },
+    {
+      "path": "docs/00_INDEX.md",
+      "before_sha256": "5adef4c1804cc7af674b775945eca7617abbb04bf8396463e38ded21d8a8e3cd",
+      "source_sha256": null,
+      "public_sha256": "c9048a1a2281a5fe6d75412d378d85711bd89468923a2a6bc2f9917c8065a177"
+    },
+    {
+      "path": "docs/README.md",
+      "before_sha256": "3aee1a9156ffef2d78f126461d5ba029aaf0ca023dfd6a33e3dd3333107b9bd5",
+      "source_sha256": null,
+      "public_sha256": "64d12f218b0a8fdb31f7e8ed1ce1d651073d9d1c39e8e512c5579c29080f75bd"
+    },
+    {
+      "path": "docs/architecture.md",
+      "before_sha256": "13b67c6b502e27e9c33e584d4542376dd568b8463599447b83f3d4e991c25825",
+      "source_sha256": null,
+      "public_sha256": "3e55a043c9bacc32c34e769b519f48277f2648cae8ed007c244aec9d04bdb2ce"
+    },
+    {
+      "path": "docs/current-status.md",
+      "before_sha256": "b6646fd5feb355b5919a728ee2b4b3638569a73a98d20a14c97397cfdd7cc9c2",
+      "source_sha256": null,
+      "public_sha256": "e1118c0a64fc4fdfaea784a221d7b867e8e2c1aa8a82dc2cdebe4c2e7d809df7"
+    },
+    {
+      "path": "docs/design-decisions-for-review.md",
+      "before_sha256": "9cf6cc5eb1fedfc8e43c0adaa8cbc6de7d6479b03ce85366ccbf8543d3926209",
+      "source_sha256": null,
+      "public_sha256": "cd2c159b9e4261b397e85623ca4625f774f2539947cfc79fd2533edf35573f8b"
+    },
+    {
+      "path": "docs/hiring-reviewer-guide.md",
+      "before_sha256": "50417db18d90e0ee79bc582430788a82f59f3c8ecf88257d594bb41248b47614",
+      "source_sha256": null,
+      "public_sha256": "df35579f38d3c5e70fa0dc6059686b2400601f77bc03f0a487342b5c974a1c7e"
+    },
+    {
+      "path": "docs/implementation-review-map.md",
+      "before_sha256": "1e7534e464ec96e390b9d3bab735e87bc0399a3a2125b6179a8dea6e1c89f6bd",
+      "source_sha256": null,
+      "public_sha256": "4fe2abe81ff620c2eb5d8a9e0bad0993d8d55a618e6a6c01741c97957d724a71"
+    },
+    {
+      "path": "docs/operational-case-studies.md",
+      "before_sha256": "eda0c7d64b767561bd2fb43739a3aa770a950dc09d08d4d0e6e84910024859ef",
+      "source_sha256": null,
+      "public_sha256": "f3a07b8850948c236d42d4bbc1ef7b9ebc6164b304d2341142d0ba19ab854f2d"
+    },
+    {
+      "path": "docs/operational-scorecard.md",
+      "before_sha256": "389427530a54f38344704b3bcca1d750cbf92c3b0a7f2c943c2f5da0de5675c5",
+      "source_sha256": null,
+      "public_sha256": "cc41f873df4d575521513fb13891a2c1e2eba59f599c2f22c92c35c05a711b70"
+    },
+    {
+      "path": "docs/v3/public-publisher-boundary.md",
+      "before_sha256": "c2905c43fa4e1f0ab8052c9c385252eef19eefc0008274be68301f2333f263f3",
+      "source_sha256": null,
+      "public_sha256": "8607cf911dc854b305399d75060a3ad6a503d6be271c59e005aed06a0d1ae276"
+    },
+    {
+      "path": "docs/v3/self-healing-oci-fanout.md",
+      "before_sha256": "704f8001d876dde9bcc47c47dc5820b65d8ade454470eb40cbc5ddce460de5ba",
+      "source_sha256": null,
+      "public_sha256": "a2c2e81c1d09530d15b086e06b1eef883f5310621564e386a36379db57fa005b"
+    },
+    {
+      "path": "docs/v3/r2-publication-and-freshness-case-study.md",
+      "before_sha256": "6b0a98e45874b1a6a7876a720b3fe39003636c1d6ca92dbd0255a1341bdf42dc",
+      "source_sha256": null,
+      "public_sha256": "b2ab427cb4f5e8f36538dcb29d943daf3fc3542fce353b40272c06913ea3c98d"
+    },
+    {
+      "path": "docs/v3/fallback-clock-recording.md",
+      "before_sha256": "0ca60b2b214c0d8e1e48778616cdb1fbc29e7e3cc1937ba8d5f6d3745ea996bd",
+      "source_sha256": null,
+      "public_sha256": "efa7a15d9d103a5282a676c3f1c18d5ef1228c35023213ee6e91b357aebe766e"
+    },
+    {
+      "path": "docs/v3/cross-host-observation-time.md",
+      "before_sha256": "55d40918f26b5ee3b095ee49a2a0f716504c3781f488071d2a1fd63accc5c8de",
+      "source_sha256": null,
+      "public_sha256": "539ac80385e33febc137e28aafdaabfd085e68c76dfeeed455c2ab9133c51b52"
+    },
+    {
+      "path": "docs/v3/route-causality.md",
+      "before_sha256": "de15d312776e4a0a9aebefc293de26c3fd07e4bdbcfe3892f8d018ae1734c766",
+      "source_sha256": null,
+      "public_sha256": "d3da94b969af6094e0a66f53503218354d17b9713763e2d3b0cebb9ad2633b6d"
+    },
+    {
+      "path": "docs/v3/route-failover-validation.md",
+      "before_sha256": "2672f84c1c6c598511a33ede6ee4aeff1af28ddafcc0df78e7f46fca1e748e22",
+      "source_sha256": null,
+      "public_sha256": "41c7c134a7f764e9026023545a8959aba3b2f289b4f59f00e01c4b34ea87bd80"
+    },
+    {
+      "path": "docs/v3/relay-stop-main-loop.md",
+      "before_sha256": "22052af4f1aaac555c91569f05386c7fb1e0155ea2704d01a21d4cb095dda1e3",
+      "source_sha256": null,
+      "public_sha256": "c5efbcb694e0c4d125b2fff1048efd9f0be118da0c983f55a4210203fb88caca"
+    },
+    {
+      "path": "docs/v3/relay-recovery-deadline.md",
+      "before_sha256": "a683a94e359cde920fee363fedcebfdcb273699eac17da4d17f124bc9101ada1",
+      "source_sha256": null,
+      "public_sha256": "d5032d81a2617c5edade1a7a4d82dbb796f574c381ce90163c875f06bdb95275"
+    },
+    {
+      "path": "docs/v3/youtube-egress-failover.md",
+      "before_sha256": "f712e2633f36a2e59e14b1d6ca147ba1854bc7f6c8c0bb2e73a4c256f65e430b",
+      "source_sha256": null,
+      "public_sha256": "633fbaa3d8691c603d2538513680f750e33e263097269972d6a2473a7c2aa859"
+    },
+    {
+      "path": "docs/v3/fallback-decision-contract.md",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "3ce78fca93d2acc1b0b304954e22218523fe1a13181fcc296656111910d3e8fc"
+    },
+    {
+      "path": "docs/v3/fallback-policy-revisions.md",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "eb931ba15b51689b8d7d0be282af29885c8f3fc4a489dab0fb9cc3790dfe3e3b"
+    }
+  ]
+}

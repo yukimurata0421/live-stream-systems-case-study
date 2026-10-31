@@ -68,8 +68,16 @@ class ArchitectureInventoryTests(unittest.TestCase):
                 "stream-monitoring-v4-shadow-report.timer",
                 "stream-monitoring-v4-k3s-sentinel.service",
                 "stream-monitoring-v4-k3s-sentinel.timer",
+                "stream-v4-route-causality.service.in",
             },
         )
+        route_observer = (units / "stream-v4-route-causality.service.in").read_text(encoding="utf-8")
+        for required in ("route_causality.py --config @CONFIG@", "NoNewPrivileges=yes",
+                         "CapabilityBoundingSet=\n", "ProtectSystem=strict", "ProtectClock=yes",
+                         "BindReadOnlyPaths=@SSH_CONFIG@ @SSH_KNOWN_HOSTS@ @SSH_KEY@"):
+            self.assertIn(required, route_observer)
+        for forbidden in ("WEBHOOK", "TOKEN=", "PASSWORD=", "kubectl", "systemctl", "sudo "):
+            self.assertNotIn(forbidden, route_observer)
         shadow_service_text = "\n".join(
             path.read_text(encoding="utf-8")
             for path in units.glob("stream-monitoring-v4-shadow*.service")

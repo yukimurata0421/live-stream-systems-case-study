@@ -45,13 +45,12 @@
     },
     "documentation_and_boundary_tests": {
       "passed": 30,
-      "subtests_passed": 978
+      "subtests_passed": 987
     },
     "public_language": {
       "status": "PASS"
     },
-    "local_links_in_changed_documents": "PASS",
-    "validation_scope": "Recorder-only Git snapshot; unrelated pending R2/Twitch changes excluded."
+    "local_links_in_changed_documents": "PASS"
   },
   "files": [
     {
@@ -77,17 +76,17 @@
     },
     {
       "path": "docs/00_INDEX.md",
-      "before_sha256": "3131adf3d66a0035b126f9002dff210aca8460683eabbc2adfdd517230846eb3",
+      "before_sha256": "041662c42f1558a013ca948ed430d63bf25e77d56e7ff1f018405500b6829603",
       "source_sha256": null,
-      "public_sha256": "815266f040ba34202764fc19a6dda2923e34c06e98e835a6cafc3922c9972f6d",
-      "adaptation": "Recorder-only index/status sections; unrelated working-tree edits are excluded from this snapshot."
+      "public_sha256": "909610f0fb320a28a3c975f7f0424eee8bc863bdd2080f79a5c7be1b7fa10e62",
+      "adaptation": "Index, banner or status link for the transport recorder and baseline retirement; unrelated existing working-tree changes retained."
     },
     {
       "path": "docs/current-status.md",
-      "before_sha256": "4998fd310833888def4533338a6dc712bfad0795ce48f6a923513130857a8ada",
+      "before_sha256": "63095ce9fd6db606e50b2f51726012ba9376ef54cb54fe4f466a84e23404fc90",
       "source_sha256": null,
-      "public_sha256": "182b2e8a6bb79eb67c8f17caf8044d84291ac8d885f56e30779661f2ddfcb1ad",
-      "adaptation": "Recorder-only index/status sections; unrelated working-tree edits are excluded from this snapshot."
+      "public_sha256": "0d6b43b800b6a73c340f1c663b7110fee3bdfcdf5c41d452f3f8992d570c72b3",
+      "adaptation": "Index, banner or status link for the transport recorder and baseline retirement; unrelated existing working-tree changes retained."
     },
     {
       "path": "docs/v3/README.md",
@@ -132,10 +131,9 @@
   ],
   "validation_notes": [
     "Recorder source, tests and example unit were already present untracked in the public checkout; this record registers them after checking they differ from development only in English text and generic unit paths/account.",
+    "docs/00_INDEX.md and docs/current-status.md already carried uncommitted changes from the 2026-10-27 R2 documentation port; those lines were kept and that record's file hashes now precede this update.",
     "This documentation port performs no deployment and changes no runtime.",
     "Review correction: separated the 2026-10-14 relay-side and 2026-10-20 local rate stops, stated that training-gate failure is not a fault label and that the table aggregates regimes, described recorder states as observations, and stated the about 720-second maximum episode span and always-false action flags.",
-    "Final review correction: only status is documented as always containing both false flags; summary report fields remain unchanged.",
-    "Only recorder-related sections of shared index/status pages are included in this Git snapshot; unrelated R2 publication and Twitch API changes remain in the working tree.",
-    "This record was prepared before the Git commit; commit identity and remote confirmation are recorded separately."
+    "Final review correction: only status is documented as always containing both false flags; summary report fields remain unchanged."
   ]
 }

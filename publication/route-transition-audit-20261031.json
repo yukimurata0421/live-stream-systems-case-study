@@ -1,0 +1,315 @@
+{
+  "schema": "stream.clock_safe_media_audit.v1",
+  "at_jst": "2026-10-31T20:11:59.115891+09:00",
+  "supersedes": "publication/clock-hold-gap-fix-20261031.json",
+  "scope": "Bound clock-safe media availability, bounded baseline retention, existing read-only projection/notification adapter and selected public port",
+  "before_reproduced": [
+    "No fallback for alternating clock labels and missing copy facts with upstream ACK progress",
+    "Fallback despite downstream flow during clock fault when local ACK export is missing",
+    "Normal flow alternating with HTTP 503 starts fallback at logical 90 seconds"
+  ],
+  "decision": {
+    "availability_renewal": "Fresh bound input/output/video/audio counter progress; UTC-failed proof remains CLOCK_FAULT",
+    "unknown_labels": "Cannot renew a deadline or restart grace without media proof",
+    "baseline": "Retain within source and local boottime gaps <=45 seconds; missing samples reset healthy time",
+    "confirmed_media_failure": "30 continuous seconds",
+    "unknown_availability": "90 seconds; first loss of genuine clock-safe progress starts one grace",
+    "stop": "300 continuous fully verified healthy seconds",
+    "notification": "Existing 300-second clock-hold incident can use typed route proof without local ACK export",
+    "tradeoff": "Without verifiable downstream evidence, conservative backup start is possible even if media actually flows."
+  },
+  "validation": {
+    "private_tests": 203,
+    "private_subtests": 107,
+    "public_tests": 205,
+    "public_subtests": 111,
+    "actual_notifier_overlay_tests": 13,
+    "projection_tests_each_checkout": 5,
+    "unknown_suffix_patterns": 6561,
+    "failure_unknown_patterns": 1024,
+    "native_conditions": 20,
+    "native_attempts": 20,
+    "source_binding": "Same byte-identical controller/producer in all native cases; normal-flap case used a separately selected harness variant.",
+    "clock_copy_sync": "PASS"
+  },
+  "native": [
+    {
+      "case": "clock-alternating-missing",
+      "start_count": 1,
+      "seconds_from_initial_fault": 95.04081227444112,
+      "ffmpeg_restarts": 0,
+      "receiver_advancing": true
+    },
+    {
+      "case": "clock-alternating-flow",
+      "start_count": 0,
+      "seconds_from_initial_fault": null,
+      "ffmpeg_restarts": 0,
+      "receiver_advancing": false
+    },
+    {
+      "case": "clock-no-ack",
+      "start_count": 0,
+      "seconds_from_initial_fault": null,
+      "ffmpeg_restarts": 0,
+      "receiver_advancing": false
+    },
+    {
+      "case": "clock-flow-then-missing",
+      "start_count": 1,
+      "seconds_from_initial_fault": 203.99614908453077,
+      "ffmpeg_restarts": 0,
+      "receiver_advancing": true
+    },
+    {
+      "case": "clock-gap-long",
+      "start_count": 1,
+      "seconds_from_initial_fault": 206.54489179514349,
+      "ffmpeg_restarts": 0,
+      "receiver_advancing": true
+    },
+    {
+      "case": "clock-gap-transient",
+      "start_count": 0,
+      "seconds_from_initial_fault": null,
+      "ffmpeg_restarts": 0,
+      "receiver_advancing": false
+    },
+    {
+      "case": "runtime",
+      "start_count": 1,
+      "seconds_from_initial_fault": 47.087993605062366,
+      "ffmpeg_restarts": 4,
+      "receiver_advancing": true
+    },
+    {
+      "case": "held",
+      "start_count": 1,
+      "seconds_from_initial_fault": 47.47037494927645,
+      "ffmpeg_restarts": 0,
+      "receiver_advancing": true
+    },
+    {
+      "case": "frozen",
+      "start_count": 1,
+      "seconds_from_initial_fault": 47.139667759649456,
+      "ffmpeg_restarts": 0,
+      "receiver_advancing": true
+    },
+    {
+      "case": "blind",
+      "start_count": 1,
+      "seconds_from_initial_fault": 93.94604739174247,
+      "ffmpeg_restarts": 8,
+      "receiver_advancing": true
+    },
+    {
+      "case": "copy-stop",
+      "start_count": 1,
+      "seconds_from_initial_fault": 47.2073190882802,
+      "ffmpeg_restarts": 0,
+      "receiver_advancing": true
+    },
+    {
+      "case": "copy-hang",
+      "start_count": 1,
+      "seconds_from_initial_fault": 79.2937320638448,
+      "ffmpeg_restarts": 0,
+      "receiver_advancing": true
+    },
+    {
+      "case": "copy-missing",
+      "start_count": 1,
+      "seconds_from_initial_fault": 94.5236920658499,
+      "ffmpeg_restarts": 0,
+      "receiver_advancing": true
+    },
+    {
+      "case": "copy-stop-clock",
+      "start_count": 1,
+      "seconds_from_initial_fault": 47.29329114500433,
+      "ffmpeg_restarts": 0,
+      "receiver_advancing": true
+    },
+    {
+      "case": "facts-only",
+      "start_count": 1,
+      "seconds_from_initial_fault": 94.28065172582865,
+      "ffmpeg_restarts": 0,
+      "receiver_advancing": true
+    },
+    {
+      "case": "copy-hang-clock",
+      "start_count": 1,
+      "seconds_from_initial_fault": 79.11904280353338,
+      "ffmpeg_restarts": 0,
+      "receiver_advancing": true
+    },
+    {
+      "case": "clock",
+      "start_count": 0,
+      "seconds_from_initial_fault": null,
+      "ffmpeg_restarts": 0,
+      "receiver_advancing": false
+    },
+    {
+      "case": "clock-frozen-stamp",
+      "start_count": 0,
+      "seconds_from_initial_fault": null,
+      "ffmpeg_restarts": 0,
+      "receiver_advancing": false
+    },
+    {
+      "case": "copy-clock-multi-reader",
+      "start_count": 0,
+      "seconds_from_initial_fault": null,
+      "ffmpeg_restarts": 0,
+      "receiver_advancing": false
+    },
+    {
+      "case": "facts-alternating-flow",
+      "start_count": 0,
+      "seconds_from_initial_fault": null,
+      "ffmpeg_restarts": 0,
+      "receiver_advancing": false
+    }
+  ],
+  "operated": {
+    "controller_release": "ce11eb721373f867",
+    "previous_controller_release": "8702d01fd15b1202",
+    "projection_release": "06f90715b1ea34ec",
+    "notification_adapter_release": "f5c1e8110ae5ebd5",
+    "OCI_facts_unchanged": true,
+    "existing_notifier_status_loop_and_routing_unchanged": true,
+    "real_UID_cold_and_actual_CLI_loader": "PASS",
+    "primary_assessment": "HEALTHY",
+    "backup_replicas": 0,
+    "media_identity_preserved": true,
+    "ACK_advanced": true,
+    "rollback_preimages": "READY"
+  },
+  "remaining_unknown": [
+    "Production fault outcome",
+    "YouTube backup input selection",
+    "Uninterrupted public-player AV",
+    "Real alert delivery",
+    "Long-term false-start rate"
+  ],
+  "commit_or_push": false,
+  "files": [
+    {
+      "path": "README.md",
+      "before_sha256": "a8fdeca281734d4b87b7a1e4ec67adf412445628a0f5d90b8ef147f7680d004c",
+      "source_sha256": null,
+      "public_sha256": "a0bc7547f82a6961e73c712f40a8ea118310737fa46d73ac9d9af0a4871c1da7"
+    },
+    {
+      "path": "docs/00_INDEX.md",
+      "before_sha256": "c9048a1a2281a5fe6d75412d378d85711bd89468923a2a6bc2f9917c8065a177",
+      "source_sha256": null,
+      "public_sha256": "929bcd26a6fcf1c48523dda82211690dc5306887350d2b3d2daf7f32cf856d65"
+    },
+    {
+      "path": "docs/architecture.md",
+      "before_sha256": "3e55a043c9bacc32c34e769b519f48277f2648cae8ed007c244aec9d04bdb2ce",
+      "source_sha256": null,
+      "public_sha256": "d0b6ee5d2ccb5f92fcc4fc272002ee37d534b5348b6fec30e8de0125bfd9cbb9"
+    },
+    {
+      "path": "docs/current-status.md",
+      "before_sha256": "e1118c0a64fc4fdfaea784a221d7b867e8e2c1aa8a82dc2cdebe4c2e7d809df7",
+      "source_sha256": null,
+      "public_sha256": "f3fb0c2ddfc0ca930ce698da92fe350ffdfa945982b69752925b941bf637ac3e"
+    },
+    {
+      "path": "docs/v3/clock-safe-media-progress.md",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "76ac76a1772d09de0c1518f9837d878d49f2bb9474c409ed75fbd0f8da67e425"
+    },
+    {
+      "path": "docs/v3/cross-host-observation-time.md",
+      "before_sha256": "539ac80385e33febc137e28aafdaabfd085e68c76dfeeed455c2ab9133c51b52",
+      "source_sha256": null,
+      "public_sha256": "d229856ccedf0c6fc46466e550ffd20188c8d325d1a685d14df5669f54a38330"
+    },
+    {
+      "path": "docs/v3/fallback-decision-contract.md",
+      "before_sha256": "3ce78fca93d2acc1b0b304954e22218523fe1a13181fcc296656111910d3e8fc",
+      "source_sha256": null,
+      "public_sha256": "c41eb3045724bb458403000742df282f6ff9f358e390905e970b04c511c24421"
+    },
+    {
+      "path": "docs/v3/fallback-policy-revisions.md",
+      "before_sha256": "eb931ba15b51689b8d7d0be282af29885c8f3fc4a489dab0fb9cc3790dfe3e3b",
+      "source_sha256": null,
+      "public_sha256": "02667ffc6e2769665cecd3ac8e12549189b32d5453bfb36f38b69c30a18f54f6"
+    },
+    {
+      "path": "docs/v3/self-healing-oci-fanout.md",
+      "before_sha256": "a2c2e81c1d09530d15b086e06b1eef883f5310621564e386a36379db57fa005b",
+      "source_sha256": null,
+      "public_sha256": "b4edf6c993b4552c77207fe8108eea1c4a90acd1cea6a34ea51fcacaa174a4a2"
+    },
+    {
+      "path": "docs/v3/youtube-egress-failover.md",
+      "before_sha256": "633fbaa3d8691c603d2538513680f750e33e263097269972d6a2473a7c2aa859",
+      "source_sha256": null,
+      "public_sha256": "3d14cd11981552984303e6bc39836dbc8fc14daee88edfe67ff4c6bb1b1911a0"
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/route_causality.py",
+      "before_sha256": "e5e350c4046667b7dc63c10477381738e55e3df86494b53c3c6b8c9440947eae",
+      "source_sha256": "8919dc03cccbd5335300596a52cef1b47e2d2009bf4a271816343ae02ecffff0",
+      "public_sha256": "476acfc4d3fb9fe42a52de0ce49efc86eca42ef89e733b42b9cb2b543618eaab"
+    },
+    {
+      "path": "monitoring-v4/tests/test_route_causality.py",
+      "before_sha256": "6b5b36b5c62d64b5a99fc908f8e1e5cdfc24a9bab4e708cbe6ccf3222474aaa4",
+      "source_sha256": "8bbef3db1f02e088bb1aea1487dfcc022e6710f2425a8809c508a782c23ac26b",
+      "public_sha256": "8bbef3db1f02e088bb1aea1487dfcc022e6710f2425a8809c508a782c23ac26b"
+    },
+    {
+      "path": "ops/selfheal/fallback_controller.py",
+      "before_sha256": "a615296c8b6a72574c853905188f8c0babf9103d3ce4026f990ff420438db0a1",
+      "source_sha256": "e72aab0f4fa7137ad9a3c032dc82c7e73e70d3a7fc15c32643b725f3d1a89c0e",
+      "public_sha256": "4e9ad8a0928aee9fff7c264076a07c0c5f837e48a18f96ccc376393f53eb7991"
+    },
+    {
+      "path": "ops/selfheal/route_assessment.py",
+      "before_sha256": "be3142b7d7835bf73256d3706d0ec708157e365578cfd9ae4e2b515a65d1a433",
+      "source_sha256": "2c7d0c3127665481e05ba4fe3688505c6ae70c1369ec2db4ad7152f142ee6779",
+      "public_sha256": "2c7d0c3127665481e05ba4fe3688505c6ae70c1369ec2db4ad7152f142ee6779"
+    },
+    {
+      "path": "src/stream_core/notifications/route_observation.py",
+      "before_sha256": "ddd27ee001c02a28725b978d37af970ba96a562083afe1068d6a1b908f788383",
+      "source_sha256": "c20cc5eb9723fc3fb2b6e8b4fc22da1b70d1d367b67edaf2db84cf6e1200d5b4",
+      "public_sha256": "c20cc5eb9723fc3fb2b6e8b4fc22da1b70d1d367b67edaf2db84cf6e1200d5b4"
+    },
+    {
+      "path": "tests/test_fallback_relay_stop_loop.py",
+      "before_sha256": "424d3a8b45465ebd10b12db3458594d686e63eeda44f3433bb0d25440a55b365",
+      "source_sha256": "20ec98fb81d9d05df04cfd600e1f30ed353dcd874e4748a5285ec159d4c3bd5c",
+      "public_sha256": "20ec98fb81d9d05df04cfd600e1f30ed353dcd874e4748a5285ec159d4c3bd5c"
+    },
+    {
+      "path": "tests/test_relay_availability.py",
+      "before_sha256": "459613bb292575f7a5dd0bf61fbdb7400af2d035ddacf5d9ddeb24ee5d3bdcde",
+      "source_sha256": "9f336362630aa6133e0cfb4dc79c653a73107031bb11fd0a88cde779788231bf",
+      "public_sha256": "9f336362630aa6133e0cfb4dc79c653a73107031bb11fd0a88cde779788231bf"
+    },
+    {
+      "path": "tests/test_route_causality.py",
+      "before_sha256": "76961304f93f753122cd9215cc1a0481feb4fa51eff7a96b818679bac612dec1",
+      "source_sha256": "66c4ee5102fb95db82fa708c922e569465d4aee437d897830b4c677766c34db1",
+      "public_sha256": "66c4ee5102fb95db82fa708c922e569465d4aee437d897830b4c677766c34db1"
+    },
+    {
+      "path": "tests/test_route_transition_audit.py",
+      "before_sha256": null,
+      "source_sha256": "999a0e77088c237f5ec82c1545d9cf66f1f1946c0537f7e6ac1d86a6857e4ba3",
+      "public_sha256": "999a0e77088c237f5ec82c1545d9cf66f1f1946c0537f7e6ac1d86a6857e4ba3"
+    }
+  ]
+}

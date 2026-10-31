@@ -1,0 +1,267 @@
+{
+  "schema": "stream.public_port_record.v1",
+  "port_date_jst": "2026-10-30",
+  "scope": "Manual planned sender maintenance, cloud slate generation and backup exclusion; no unattended failover policy.",
+  "development_source_commit": "88b195988c5cf0dfd154ba177c1f7780cbb1c835",
+  "prior_public_head": "d9426d1c10ce73cbd4dfbcaa995429b8981043b8",
+  "development_worktrees_dirty": true,
+  "commit_performed": false,
+  "push_performed": false,
+  "deployment_performed": true,
+  "provider_or_player_verified": false,
+  "source_validation": {
+    "python_tests_passed": 105,
+    "subtests_passed": 72,
+    "public_language": "PASS",
+    "public_map_bundle": "PASS",
+    "isolated_media_lab": "PASS",
+    "selected_secret_scan": "PASS",
+    "source_boundary": "PASS"
+  },
+  "operated_installation": {
+    "state": "ENABLED_NORMAL",
+    "main_replicas": 1,
+    "backup_replicas": 0,
+    "installed_preflight": "PASS",
+    "running_uid_mount_and_shared_lock": "PASS",
+    "pinned_relay_assets": "PASS_NOT_ARMED",
+    "program_hashes_match_public_files": true,
+    "sender_and_relay_progress": "PASS",
+    "maintenance_start_performed": false,
+    "provider_or_player_verified": false,
+    "initial_verification_rolled_back": true,
+    "startup_and_sample_windows_separated": true,
+    "bounded_read_only_oneshot_wait_seconds": 5,
+    "effects_automatically_retried": false
+  },
+  "excluded": [
+    "Credentials, addresses, machine fingerprints, live configuration and raw evidence.",
+    "Unrelated pending public changes and production stream interruption."
+  ],
+  "files": [
+    {
+      "path": "ops/selfheal/manual_maintenance.py",
+      "source_role": "manual-maintenance-source-or-public-guide",
+      "decision": "Port manual maintenance with an English interface, canonical observer imports, configured host binding and no runtime secrets.",
+      "before_sha256": null,
+      "source_sha256": "4cbfb1b9cbe223dd329b914acfb9b02d392a52856ca4e6778e0f525d389e1a6c",
+      "public_sha256": "e1333cd2161eac220d5417e569effebb6cef75fb728430a4e0f30cb384664125",
+      "port_record": "publication/manual-maintenance-port-20261030.json",
+      "port_date_jst": "2026-10-30"
+    },
+    {
+      "path": "ops/selfheal/maintenance_state.py",
+      "source_role": "manual-maintenance-source-or-public-guide",
+      "decision": "Port manual maintenance with an English interface, canonical observer imports, configured host binding and no runtime secrets.",
+      "before_sha256": null,
+      "source_sha256": "c1de218348c8a1510d5b9897de43e8e10ee74eb96ade4614ec36910e4f737bd3",
+      "public_sha256": "aa7e1222767254651a46b46ec8422dc39ccf40c54cda88735f9a5c22a68531e9",
+      "port_record": "publication/manual-maintenance-port-20261030.json",
+      "port_date_jst": "2026-10-30"
+    },
+    {
+      "path": "ops/selfheal/maintenance_host.py",
+      "source_role": "manual-maintenance-source-or-public-guide",
+      "decision": "Port manual maintenance with an English interface, canonical observer imports, configured host binding and no runtime secrets.",
+      "before_sha256": null,
+      "source_sha256": "9a09293f25c15774a340c00fdf58136637a613c7e2fd3384f819bbd8525b7394",
+      "public_sha256": "af65d55ab88a36475f93c1fec97ca4e013dc3a1b5797b30e82489c29c592f13c",
+      "port_record": "publication/manual-maintenance-port-20261030.json",
+      "port_date_jst": "2026-10-30"
+    },
+    {
+      "path": "ops/selfheal/manual_maintenance_lab.py",
+      "source_role": "manual-maintenance-source-or-public-guide",
+      "decision": "Port manual maintenance with an English interface, canonical observer imports, configured host binding and no runtime secrets.",
+      "before_sha256": null,
+      "source_sha256": "922122243b8c5865f4db301f57bb63e7d2c8f05543b64c86959cc2586a093635",
+      "public_sha256": "55689e79c5db563b2f4384c11937076807894b7e960ee499c06970d3d4344055",
+      "port_record": "publication/manual-maintenance-port-20261030.json",
+      "port_date_jst": "2026-10-30"
+    },
+    {
+      "path": "ops/selfheal/stream-v3-maintenance",
+      "source_role": "manual-maintenance-source-or-public-guide",
+      "decision": "Port manual maintenance with an English interface, canonical observer imports, configured host binding and no runtime secrets.",
+      "before_sha256": null,
+      "source_sha256": "c3490b8c209db555461e92c84804cfa111c0e81004e9100ffbf5b6cfa4351d83",
+      "public_sha256": "2980febf7aa3ddb52d723fb2b55295f48e885fab4eed3acc7c5b3c5de4adbabe",
+      "port_record": "publication/manual-maintenance-port-20261030.json",
+      "port_date_jst": "2026-10-30"
+    },
+    {
+      "path": "ops/selfheal/offline_slate.py",
+      "source_role": "manual-maintenance-source-or-public-guide",
+      "decision": "Port manual maintenance with an English interface, canonical observer imports, configured host binding and no runtime secrets.",
+      "before_sha256": null,
+      "source_sha256": "986cd454bb9dd212fce11cbe4af0e3d0208a292a5667cea0f8985e34be86be46",
+      "public_sha256": "1078549f043014fdecb7ace7f2677a6c7b3bedeb5bbe3b03c3b3570af94981f7",
+      "port_record": "publication/manual-maintenance-port-20261030.json",
+      "port_date_jst": "2026-10-30"
+    },
+    {
+      "path": "ops/selfheal/offline_slate_lab.py",
+      "source_role": "manual-maintenance-source-or-public-guide",
+      "decision": "Port manual maintenance with an English interface, canonical observer imports, configured host binding and no runtime secrets.",
+      "before_sha256": null,
+      "source_sha256": "ff7e71259da8c26cc520ed0b31ca25eae90239c3dbd9ca817ee0e0fc446f1496",
+      "public_sha256": "ba191ff7da9eadb2b96298d114e9efc85299109488e4d1444f478bdc8e5f9146",
+      "port_record": "publication/manual-maintenance-port-20261030.json",
+      "port_date_jst": "2026-10-30"
+    },
+    {
+      "path": "ops/selfheal/manual-maintenance.config.example.json",
+      "source_role": "manual-maintenance-source-or-public-guide",
+      "decision": "Port manual maintenance with an English interface, canonical observer imports, configured host binding and no runtime secrets.",
+      "before_sha256": null,
+      "source_sha256": "d8c0e476917dea3c9fec9b5a973e4e5e71d2820cf7d15833bf220b6067b9d166",
+      "public_sha256": "d8c0e476917dea3c9fec9b5a973e4e5e71d2820cf7d15833bf220b6067b9d166",
+      "port_record": "publication/manual-maintenance-port-20261030.json",
+      "port_date_jst": "2026-10-30"
+    },
+    {
+      "path": "ops/selfheal/fallback_controller.py",
+      "source_role": "manual-maintenance-source-or-public-guide",
+      "decision": "Port manual maintenance with an English interface, canonical observer imports, configured host binding and no runtime secrets.",
+      "before_sha256": "b3df7e5429907ed285ff1bd4163c7b0f516f40482288573d5451894cf0c930c2",
+      "source_sha256": "0af4f00b51bd99b46f84591f715186fcef6f9dc7097b646bc5f93879a26fcc11",
+      "public_sha256": "439d1c3f61f924b7ed5fa597afce49b6bff71d405a4d02c30472a815d168e6f3",
+      "port_record": "publication/manual-maintenance-port-20261030.json",
+      "port_date_jst": "2026-10-30"
+    },
+    {
+      "path": "ops/selfheal/route_facts_http.py",
+      "source_role": "manual-maintenance-source-or-public-guide",
+      "decision": "Port manual maintenance with an English interface, canonical observer imports, configured host binding and no runtime secrets.",
+      "before_sha256": "5373e2692247eae800e001924b8a1d33eafad9aa4e64c7ae6ca3dda970dfb151",
+      "source_sha256": "16bc59ebffc595a49f0536ac2dbf7f8484fe6bfe72caf82f2ce4c3536a5029c8",
+      "public_sha256": "0c7bfac8babf8a6b8d491dabbea20ebc5cc019d1f92ccdca6fc63608d38800f0",
+      "port_record": "publication/manual-maintenance-port-20261030.json",
+      "port_date_jst": "2026-10-30"
+    },
+    {
+      "path": "ops/selfheal/offline-slate/index.html",
+      "source_role": "manual-maintenance-source-or-public-guide",
+      "decision": "Port manual maintenance with an English interface, canonical observer imports, configured host binding and no runtime secrets.",
+      "before_sha256": null,
+      "source_sha256": "35538737c88acd3fc7bab98b86b44ec86e6f51ca772cae7a67eb0f082d33a5d9",
+      "public_sha256": "35538737c88acd3fc7bab98b86b44ec86e6f51ca772cae7a67eb0f082d33a5d9",
+      "port_record": "publication/manual-maintenance-port-20261030.json",
+      "port_date_jst": "2026-10-30"
+    },
+    {
+      "path": "ops/selfheal/offline-slate/slate.css",
+      "source_role": "manual-maintenance-source-or-public-guide",
+      "decision": "Port manual maintenance with an English interface, canonical observer imports, configured host binding and no runtime secrets.",
+      "before_sha256": null,
+      "source_sha256": "7a1e6485acb2480861b41bcc5ff7cf5daf1ea16fa5a60015365ebca2be2be65b",
+      "public_sha256": "7a1e6485acb2480861b41bcc5ff7cf5daf1ea16fa5a60015365ebca2be2be65b",
+      "port_record": "publication/manual-maintenance-port-20261030.json",
+      "port_date_jst": "2026-10-30"
+    },
+    {
+      "path": "ops/selfheal/offline-slate/slate.js",
+      "source_role": "manual-maintenance-source-or-public-guide",
+      "decision": "Port manual maintenance with an English interface, canonical observer imports, configured host binding and no runtime secrets.",
+      "before_sha256": null,
+      "source_sha256": "5a42118828441f735b01af0cc8e35cbe7ae02878b47ac89e264b8bb195442c3d",
+      "public_sha256": "5a42118828441f735b01af0cc8e35cbe7ae02878b47ac89e264b8bb195442c3d",
+      "port_record": "publication/manual-maintenance-port-20261030.json",
+      "port_date_jst": "2026-10-30"
+    },
+    {
+      "path": "tests/test_manual_maintenance.py",
+      "source_role": "manual-maintenance-source-or-public-guide",
+      "decision": "Port manual maintenance with an English interface, canonical observer imports, configured host binding and no runtime secrets.",
+      "before_sha256": null,
+      "source_sha256": "f9ad04005fb3452ad2b539759632926228c2478fef13de8265b490c9a28c86b2",
+      "public_sha256": "561d7a61cebba417c216f90e9d50d9c84f13b9b1d67ead806cf95743f8f19463",
+      "port_record": "publication/manual-maintenance-port-20261030.json",
+      "port_date_jst": "2026-10-30"
+    },
+    {
+      "path": "tests/test_offline_slate.py",
+      "source_role": "manual-maintenance-source-or-public-guide",
+      "decision": "Port manual maintenance with an English interface, canonical observer imports, configured host binding and no runtime secrets.",
+      "before_sha256": null,
+      "source_sha256": "19b0ae7ec4cc40af011662d15dec2f6893673896b9d223f625cfc94db6248e3e",
+      "public_sha256": "0514d2a99aa867de96ec017024d26992a30c50d98a8896560c2ce16b206ea44b",
+      "port_record": "publication/manual-maintenance-port-20261030.json",
+      "port_date_jst": "2026-10-30"
+    },
+    {
+      "path": "tests/test_fallback_copy_route.py",
+      "source_role": "manual-maintenance-source-or-public-guide",
+      "decision": "Port manual maintenance with an English interface, canonical observer imports, configured host binding and no runtime secrets.",
+      "before_sha256": "1a14beb9e9df0d07880b2a82e9afc2028506d7a27f28bdc3d97f2052f3188f16",
+      "source_sha256": "99ec75221e553be2d68e013d594eef99e59f8cd18f4007790be657d8a465da64",
+      "public_sha256": "22a25f985ae396e246cc0e12c1523748bb7ca446cf6c2dd3f843a06a37ed23ee",
+      "port_record": "publication/manual-maintenance-port-20261030.json",
+      "port_date_jst": "2026-10-30"
+    },
+    {
+      "path": "tests/test_selfheal.py",
+      "source_role": "manual-maintenance-source-or-public-guide",
+      "decision": "Port manual maintenance with an English interface, canonical observer imports, configured host binding and no runtime secrets.",
+      "before_sha256": "2c6bcd50a6ed88bf28e6f6907b5b62345e41e787ee0b9948ae6fff95cd05c96f",
+      "source_sha256": "8fcb45acd1f7dca1d8b6e239de44c872aa36e3395c6946853acfeb3aa3e9ea60",
+      "public_sha256": "4e4a96df85cf8a785dedf7cea82c461a1e4f3536f01f48c1581b324ace1a7c8e",
+      "port_record": "publication/manual-maintenance-port-20261030.json",
+      "port_date_jst": "2026-10-30"
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/relay_observe.py",
+      "source_role": "manual-maintenance-source-or-public-guide",
+      "decision": "Port manual maintenance with an English interface, canonical observer imports, configured host binding and no runtime secrets.",
+      "before_sha256": "41367a215961715f0f4e903da34900d1ec7892f6bc7a7efcef260024c9bf1d20",
+      "source_sha256": "6f234e5c42f029a3ce853d07f881afdbd5381a4104260b57e5ece537dc0a48cb",
+      "public_sha256": "5060c4c36eb1ad26b97a3a9ea47b37927dc027b39f63b02caa3b21b39b080ea7",
+      "port_record": "publication/manual-maintenance-port-20261030.json",
+      "port_date_jst": "2026-10-30"
+    },
+    {
+      "path": "docs/v3/manual-maintenance.md",
+      "source_role": "manual-maintenance-source-or-public-guide",
+      "decision": "Port manual maintenance with an English interface, canonical observer imports, configured host binding and no runtime secrets.",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "8373e427c4813f5e4f5d29ddbb153632255e9eb8d79085f45c8e250e44dc73e1",
+      "port_record": "publication/manual-maintenance-port-20261030.json",
+      "port_date_jst": "2026-10-30"
+    },
+    {
+      "path": "docs/00_INDEX.md",
+      "source_role": "manual-maintenance-source-or-public-guide",
+      "decision": "Port manual maintenance with an English interface, canonical observer imports, configured host binding and no runtime secrets.",
+      "before_sha256": "fd6b799844453cf83c05d47231eacc48eef92903c127698eed87cd2dd14bde5a",
+      "source_sha256": "b744a45eaa29d812ec315d58c693d60a92cfa7fa66d5b8d8be0e4f49bd7b5d48",
+      "public_sha256": "4a1fbdbfaeb22de34f972851ad323151eb6c33eca8973e576a91b7cefdcfa594",
+      "port_record": "publication/manual-maintenance-port-20261030.json",
+      "port_date_jst": "2026-10-30"
+    },
+    {
+      "path": "docs/current-status.md",
+      "source_role": "manual-maintenance-source-or-public-guide",
+      "decision": "Port manual maintenance with an English interface, canonical observer imports, configured host binding and no runtime secrets.",
+      "before_sha256": "033b36e0cdb49457cb1521add7182355bf42aa5edf1051e6230d62c4d1e80a4b",
+      "source_sha256": null,
+      "public_sha256": "2faba1460a953a0f9e017a1f27e4c219fb2af29c59add2d9c52a971beac2adb0",
+      "port_record": "publication/manual-maintenance-port-20261030.json",
+      "port_date_jst": "2026-10-30"
+    }
+  ],
+  "one_command_return": {
+    "command": "stream-v3-maintenance off",
+    "implemented": true,
+    "installed": true,
+    "continuous_live_progress_seconds": 300,
+    "public_player_and_data_confirmation": "interactive_operator_attestation",
+    "real_executable_and_isolated_media_lab": "PASS",
+    "clock_fixture_production_stability_window": "PASS",
+    "installed_normal_noop": "PASS",
+    "controller_restarted": false,
+    "existing_session_and_configuration_unchanged": true,
+    "actual_maintenance_return_performed": false,
+    "effects_automatically_retried": false
+  }
+}

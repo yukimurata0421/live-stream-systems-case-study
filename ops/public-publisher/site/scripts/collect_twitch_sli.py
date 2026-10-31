@@ -7,6 +7,7 @@ import tempfile
 import time
 from datetime import datetime
 from pathlib import Path
+from public_snapshot_time import PublicTimestampError, validate_generated_at
 
 PUBLIC=Path(__file__).resolve().parents[1]/'public'
 DEFINITIONS={
@@ -36,8 +37,11 @@ def count(v,upper):
 
 def validate(v,now):
     keys(v,['schema','generated_at','history_started_at','cadence_sec','freshness_limit_sec','primary_window','coverage_gate_percent','planned_downtime_included','windows','timeline'])
-    if v['schema']!='stream.twitch_sli_public.v1' or not 0<=now-timestamp(v['generated_at'])<=180:raise ValueError()
-    if timestamp(v['history_started_at'])>now or v['cadence_sec']!=60 or v['freshness_limit_sec']!=180 or v['primary_window']!='7d' or v['coverage_gate_percent']!=99.0 or v['planned_downtime_included'] is not True:raise ValueError()
+    if v['schema']!='stream.twitch_sli_public.v1':raise ValueError()
+    generated=timestamp(v['generated_at'])
+    validate_generated_at(generated,now)
+    # History and generation belong to the same source clock domain.
+    if timestamp(v['history_started_at'])>generated or v['cadence_sec']!=60 or v['freshness_limit_sec']!=180 or v['primary_window']!='7d' or v['coverage_gate_percent']!=99.0 or v['planned_downtime_included'] is not True:raise ValueError()
     if type(v['windows']) is not list or len(v['windows'])!=2:raise ValueError()
     for w,(name,length) in zip(v['windows'],[('24h',1440),('7d',10080)]):
         keys(w,['id','start_at','end_at','full_history','metrics'])
@@ -71,8 +75,9 @@ def main():
         r=subprocess.run(['ssh','-o','BatchMode=yes','-o','ConnectTimeout=5','arena-server','python3','-B','/opt/stream-v4-twitch-sli-public/current/twitch_sli_public.py'],capture_output=True,timeout=12)
         if r.returncode or len(r.stdout)>24576:raise ValueError()
         value=validate(json.loads(r.stdout),time.time())
-    except (OSError,ValueError,TypeError,KeyError,subprocess.TimeoutExpired):
-        print(json.dumps({'twitch_sli_source':'unavailable','last_artifact_retained':path.exists()}));return 0
+    except (OSError,ValueError,TypeError,KeyError,subprocess.TimeoutExpired) as exc:
+        reason=str(exc) if isinstance(exc,PublicTimestampError) else 'FETCH_OR_SCHEMA_INVALID'
+        print(json.dumps({'twitch_sli_source':'unavailable','last_artifact_retained':path.exists(),'reason':reason}));return 0
     fd,name=tempfile.mkstemp(prefix='.sli-',dir=PUBLIC)
     try:
         with os.fdopen(fd,'w') as out:

@@ -1,11 +1,70 @@
 # Current Status
 
-Last updated: 2026-10-29 JST.
+Last updated: 2026-10-31 JST.
 
 This is the only page that records state expected to change soon: what was
 changed recently, what has not been observed yet, and what is deliberately
 disabled. Other pages describe designs and dated evidence and link here instead
 of repeating these items.
+
+## Fallback Decision Rule (2026-10-31 JST)
+
+The [boottime simplification](v3/boottime-media-health.md) uses one media-freshness
+path and keeps UTC diagnostics separate. The
+[fallback decision contract](v3/fallback-decision-contract.md) is the current
+rule; the [revision history](v3/fallback-policy-revisions.md) preserves older policies.
+
+| Item | State at this checkpoint |
+| --- | --- |
+| Applied | Dell controller `b38eb215dec46486`; OCI facts producer unchanged; arena read-only projection `545156b88e99d6d4` and existing-notifier adapter `dbe6f9cd39b4e025`. |
+| Production | Main Pod/container, FFmpeg generation/connection and OCI relay/copy/keeper identities preserved. ACKs advancing, controller HEALTHY, backup zero. Existing admission hooks, disabled restart flags and notification routing/state/outbox retained. |
+| Checked | 22 successful native conditions; two aborted setup launches, one readiness failure and two sibling cancellations retained separately. 210 private tests / 93 subtests; 212 public tests / 97 subtests. Actual-notifier subset: 19 tests with fake senders. Projection: eight tests in each checkout. |
+| Representative result | Relay-stop start 47.5 s; copy-hang start 78.6 s; facts-only loss start 94.3 s. A healthy backup stopped after 303.0 s despite UTC rejection. |
+| Policy evidence | Fresh bound downstream media can earn health and retirement credit independently of UTC. Every missing sample resets healthy time. A single downstream progress deadline replaces transition grace; local STOPPED does not override contradictory verified downstream progress. |
+| Not observed | Production fault outcome, YouTube backup selection, uninterrupted public playback, actual alert delivery, long-term false-start rate. |
+
+## Host Clock and Freshness Contract (2026-10-31 JST)
+
+The October 30 one-second tolerance was provisional. The first October 31
+revision replaced it with UTC offset intervals; the current media consumer uses
+nonce/machine/boot-bound boottime freshness instead. UTC intervals remain
+diagnostic and keep arena's independent secondary-recovery veto. A UTC fault
+alone neither starts a backup nor prevents retiring a healthy one. The current
+rule and timing bounds are in the decision contract.
+
+Five hosts retain read-only clock observers. Their timing envelopes do not
+extend CRA authorization or lease/command expiry. New consumers require the
+boottime-aware producer: upgrade producers first and roll back consumers first.
+The public Twitch/SLI snapshot readers keep their separate scalar policy; see
+the [cross-host clock contract](v3/cross-host-observation-time.md).
+
+The fixed HDD recording retains its October 31 21:12 JST deadline and original
+capacity. Its full-window completion and final coverage remain unobserved at
+this checkpoint. See the [dated recording case](v3/fallback-clock-recording.md).
+
+## Manual Maintenance Command (2026-10-30 JST)
+
+The [manual-maintenance module](v3/manual-maintenance.md) was ported with an
+English interface, a map-backed slate, durable fallback inhibition and explicit
+return gates. The command and controller guard are installed on the operated
+sender, and a pinned inactive bundle is placed on the relay. The installed
+`preflight`, actual UID/mount reads and shared-lock access passed. State remains
+`NORMAL`, main replicas remain one and backup replicas zero; no stream switch
+was requested. The primary-copy process/session and both output counters were
+checked before and after enablement.
+
+`stream-v3-maintenance on` combines entry and an in-terminal public-player
+confirmation. `stream-v3-maintenance off` combines return, 300 seconds of stable
+live progress and an in-terminal public video/audio/data confirmation. Both
+commands continue their saved stages after interruption, retain inhibition on
+failed checks and refuse to resend unknown effects. The return command passed
+the real executable/PTY and isolated media pipeline; an actual maintenance return
+on the operated stream remains untested. Only readiness observations wait briefly for a naturally activating
+recovery oneshot; effects are never automatically retried. The first controller
+verification expired before its second sample and rolled back; separate startup
+and observation windows completed the next attempt. Failed evidence is retained.
+This installation does not enable unattended source-loss slates or establish
+provider selection, broadcast retention or public playback during maintenance.
 
 ## Transport Recording (2026-10-29 JST)
 
@@ -22,19 +81,56 @@ configured clock input, boot or power loss, and the storage limit. The first
 two weeks evaluate classification value; a precursor result is likely to stay
 open. See the [decision and revisit conditions](v3/route-baseline-retirement-decision.md).
 
+## Public Snapshot Delivery (2026-10-27 JST)
+
+The operated site now serves its snapshots through a Worker bound to private
+R2. The 09:47 JST checkpoint confirmed continued publication, the previous
+56 GCS objects archived and checked in private R2, and zero live objects in
+the old GCS bucket. Deleted generations retain their existing expiry.
+
+At 11:32 JST, the operated page separated required live-status observations
+from supporting-data gaps, and the publisher began using at most two parallel
+requests while retaining readback and uncertain-outcome reconciliation. The
+primary health check and a strict eight-feed check expose both views. Four
+natural cycles had median duration 27.3 seconds versus 42.6 seconds in the
+preceding 15 cycles; all eight feeds advanced, both checks remained healthy,
+and the next natural external-result import retained three passing regions.
+
+Earlier that morning, an acquisition failure left two feeds at approximately 10:01 JST.
+Diagnosis found successful source responses rejected by the older collectors'
+zero-tolerance future-timestamp check with a 47-50 ms clock difference. Both
+collectors received a one-second tolerance at 10:40 JST, preserving original
+timestamps and the 180-second age limit. Publication resumed, the browser
+showed LIVE again, subsequent timer output advanced, and all three publication
+check regions passed at 10:42 JST. A recent monitoring snapshot timestamp does
+not by itself make the other feed bodies current. The first repair missed the
+clock collector's equivalent check: its warning appeared after the initial
+freshness window expired. At 10:47 JST the same bounded tolerance was applied
+to clock, relay and Twitch SLI acquisition, preserving their existing age
+limits. At 10:48 JST the clock file resumed and all eight feeds were fresh.
+Seven observations through 10:51:50 JST remained healthy, and all eight
+timestamps advanced across multiple natural publication cycles. The 10:50 JST
+external-result import was also healthy with three passing regions per target.
+
+The [dated record](v3/r2-publication-and-freshness-case-study.md) separates the
+operated changes, subsequent diagnosis, status separation and response-time observations.
+This public update adds the record only; it does not transfer the matching R2
+code or deploy the public example.
+
 ## Production Route
 
 Since 2026-10-20 08:43 JST, Dell uploads one feed to the OCI relay, which
 forwards it to YouTube and Twitch. A Dell controller starts a direct YouTube
-fallback upload when relay health is lost or unobservable and stops it after
+fallback upload when the relay route to YouTube fails and stops it after
 300 seconds of continuous relay health. The [route record](v3/self-healing-oci-fanout.md)
-defines the components and thresholds.
+describes the components; the [decision contract](v3/fallback-decision-contract.md)
+defines the thresholds. The table below keeps the October 20 rule as it was.
 
 ## Changes Since The Route Went Live (2026-10-20 JST)
 
 | Time | Change | Verified |
 | --- | --- | --- |
-| 08:55-09:03 | Relay-stop drill. | Fallback started after 52 s and stopped after 300 s of relay health; the broadcast did not end. |
+| 08:55-09:03 | Historical relay-stop drill under the former policy. | Fallback started after 52 s and stopped after 300 s of relay health; the broadcast did not end. |
 | 09:10 | Replacement-broadcast creation disabled in the YouTube watchdog. A broadcast that really ends is recreated by hand. | Configuration applied and monitor restarted. |
 | 11:33 | arena-server observes the relay through the private tunnel instead of the home public address. | Public status relay values returned to measured data. |
 | 11:56-12:21 | Main sender switched to RTMPS on the relay; readiness and TCP-sampling port lists updated. | Upload samples of 3.57 and 3.63 Mbps returned. |
@@ -285,7 +381,8 @@ differences intentional.
 | Evidence | Latest checkpoint | Record |
 | --- | --- | --- |
 | Same YouTube URL | 2026-10-14 00:04:57 JST, `140 / 140` ledger dates | [Continuity evidence](same-url-continuity-evidence.md) |
-| Automatic fallback and return | 2026-10-20 drill | [Route record](v3/self-healing-oci-fanout.md#drill-stopping-the-relay-2026-10-20-0855-to-0903-jst) |
+| Automatic fallback and return in production | 2026-10-20 drill, earlier rule | [Route record](v3/self-healing-oci-fanout.md#drill-stopping-the-relay-2026-10-20-0855-to-0903-jst) |
+| Current fallback rule, isolated faults | 2026-10-31, 22 conditions | [Evidence status](v3/fallback-decision-contract.md#evidence-status) |
 
 ## Longer-Term Gaps
 

@@ -1,0 +1,271 @@
+{
+  "schema": "stream.youtube_egress_correction.v1",
+  "prepared_at_jst": "2026-10-31T18:53:39.215746+09:00",
+  "scope": "selected source/tests/docs port and scoped operated controller/facts/existing-notifier correction",
+  "commit_or_push_performed": false,
+  "production_fault_injection": false,
+  "external_test_notification_sent": false,
+  "supersedes_policy_in": "publication/relay-recovery-fix-20261031.json",
+  "decision": {
+    "confirmed_copy_stopped_or_stalled": "30 seconds MEDIA_FAILURE",
+    "youtube_observation_unconfirmed": "90 seconds since complete route health; upstream ACK cannot renew",
+    "clock_rejection_with_ACK_progress": "hold; critical observation alert after 300 seconds",
+    "healthy_stop": "300 continuous healthy seconds",
+    "upstream_evidence_unavailable_during_clock_fault": "independent 90-second upstream deadline",
+    "maintenance": "inhibit and reset deadlines"
+  },
+  "validation": {
+    "private_tests": 186,
+    "private_subtests": 107,
+    "public_tests": 188,
+    "public_subtests": 111,
+    "actual_operated_notification_overlay_tests": 12,
+    "private_projection_tests": 4,
+    "public_projection_tests": 4,
+    "clock_three_copy_sync": "PASS",
+    "suite_scope": "related files only; not entire repository"
+  },
+  "native": [
+    {
+      "case": "blind",
+      "started": true,
+      "start_count": 1,
+      "seconds": 94.25053262058645,
+      "ffmpeg_restarts": 8,
+      "independent_receiver_advancing": true
+    },
+    {
+      "case": "clock",
+      "started": false,
+      "start_count": 0,
+      "seconds": null,
+      "ffmpeg_restarts": 0,
+      "independent_receiver_advancing": false
+    },
+    {
+      "case": "clock-frozen-stamp",
+      "started": false,
+      "start_count": 0,
+      "seconds": null,
+      "ffmpeg_restarts": 0,
+      "independent_receiver_advancing": false
+    },
+    {
+      "case": "copy-clock-multi-reader",
+      "started": false,
+      "start_count": 0,
+      "seconds": null,
+      "ffmpeg_restarts": 0,
+      "independent_receiver_advancing": false
+    },
+    {
+      "case": "copy-hang",
+      "started": true,
+      "start_count": 1,
+      "seconds": 78.69580503366888,
+      "ffmpeg_restarts": 0,
+      "independent_receiver_advancing": true
+    },
+    {
+      "case": "copy-missing",
+      "started": true,
+      "start_count": 1,
+      "seconds": 94.00012980122119,
+      "ffmpeg_restarts": 0,
+      "independent_receiver_advancing": true
+    },
+    {
+      "case": "copy-stop",
+      "started": true,
+      "start_count": 1,
+      "seconds": 47.53985744621605,
+      "ffmpeg_restarts": 0,
+      "independent_receiver_advancing": true
+    },
+    {
+      "case": "copy-stop-clock",
+      "started": true,
+      "start_count": 1,
+      "seconds": 47.80547774024308,
+      "ffmpeg_restarts": 0,
+      "independent_receiver_advancing": true
+    },
+    {
+      "case": "copy-stop-r2",
+      "started": true,
+      "start_count": 1,
+      "seconds": 47.44277263246477,
+      "ffmpeg_restarts": 0,
+      "independent_receiver_advancing": true
+    },
+    {
+      "case": "facts-only",
+      "started": true,
+      "start_count": 1,
+      "seconds": 94.75481841806322,
+      "ffmpeg_restarts": 0,
+      "independent_receiver_advancing": true
+    },
+    {
+      "case": "frozen",
+      "started": true,
+      "start_count": 1,
+      "seconds": 47.64020982850343,
+      "ffmpeg_restarts": 0,
+      "independent_receiver_advancing": true
+    },
+    {
+      "case": "held",
+      "started": true,
+      "start_count": 1,
+      "seconds": 47.5972660696134,
+      "ffmpeg_restarts": 0,
+      "independent_receiver_advancing": true
+    },
+    {
+      "case": "runtime",
+      "started": true,
+      "start_count": 1,
+      "seconds": 47.21721864119172,
+      "ffmpeg_restarts": 4,
+      "independent_receiver_advancing": true
+    }
+  ],
+  "version_limits": "First eleven native runs used the initial candidate. Final multi-reader consumer correction rechecked copy stop and fixed-copy-clock plus prior reader; initial eleven not rerun wholesale.",
+  "operated": {
+    "controller_release": "d18623ebec778bcc",
+    "facts_release": "b81154a1c8a65ebc",
+    "read_only_projection_release": "8e8e7789e9ab42a9",
+    "existing_notifier_overlay_release": "76d443fceb25390d",
+    "real_UID_cold_reads": "PASS",
+    "actual_CLI_import_and_running_mount": "PASS",
+    "natural_notifier_cycle": "returncode 0; no notification due",
+    "media_process_container_identity_preserved": true,
+    "ACK_advanced": true,
+    "backup_replicas": 0,
+    "primary_assessment": "HEALTHY",
+    "postimage_checked_rollback": "READY"
+  },
+  "remaining_unknown": [
+    "Production failure outcome",
+    "YouTube backup input selection",
+    "Uninterrupted public player AV",
+    "Actual critical notification delivery"
+  ],
+  "files": [
+    {
+      "path": "README.md",
+      "before_sha256": "9e087e422f9e209809dd447f48f1954357e4f4c0342e1a7eda04e5727197c3f1",
+      "public_sha256": "7b8e7bbffca5b4b797f33874cb14f2aa11fea3c9d64e52ba7ffc9d7e9fbac10f",
+      "source_sha256": null
+    },
+    {
+      "path": "docs/00_INDEX.md",
+      "before_sha256": "045419979d7281df6c1a3c85c912fb844d2708500a74c6bd16b7668944b814ad",
+      "public_sha256": "5adef4c1804cc7af674b775945eca7617abbb04bf8396463e38ded21d8a8e3cd",
+      "source_sha256": null
+    },
+    {
+      "path": "docs/architecture.md",
+      "before_sha256": "cd178b72f1d62e4acbad4075e3fe64af2afd905d957fc4ba29993acfd40294a5",
+      "public_sha256": "24ebadc374bfdbe9fffd99eda7bb7386e649b8b4b0deebb550cfdde4c1685fbf",
+      "source_sha256": null
+    },
+    {
+      "path": "docs/current-status.md",
+      "before_sha256": "4dc859dcc414eda8fbf9c21a330ba911d26e9e34a6a2e504ee920a769f97e2b1",
+      "public_sha256": "9ffcc757db5534c314a62d0b62e9da54367105c119a820d1d4b2250ddab6b7bd",
+      "source_sha256": null
+    },
+    {
+      "path": "docs/v3/cross-host-observation-time.md",
+      "before_sha256": "b87f7dfe7e1c583129b4a2e5afa97186ade78a94e3dd9e46e1e9832809d02ee9",
+      "public_sha256": "69320f71d126a957e89b70998b3a32b2e4bd9c3e177c1ac81f01c2c7ffb1418a",
+      "source_sha256": null
+    },
+    {
+      "path": "docs/v3/relay-recovery-deadline.md",
+      "before_sha256": "66c0a319a2b209d949dd6c81fc648db60fea62f107e0edff00f761845500e74c",
+      "public_sha256": "a683a94e359cde920fee363fedcebfdcb273699eac17da4d17f124bc9101ada1",
+      "source_sha256": null
+    },
+    {
+      "path": "docs/v3/route-causality.md",
+      "before_sha256": "0e94f3f10b6b7473b3007a6d4ca112e6a9287b7d547da78f32e78c2bac26e2cf",
+      "public_sha256": "f24f72427c0cd9de648a4f37fc349f00c8509ef67966afa8093241dd1128e1c0",
+      "source_sha256": null
+    },
+    {
+      "path": "docs/v3/self-healing-oci-fanout.md",
+      "before_sha256": "bfc3e29275bad8d2db12a18bb47cd7817fecdf7500614da534fa4540a2b7c862",
+      "public_sha256": "b909e495e361a949a80312740214aa2403d976db061e4617e32105901520fb43",
+      "source_sha256": null
+    },
+    {
+      "path": "docs/v3/youtube-egress-failover.md",
+      "before_sha256": null,
+      "public_sha256": "88dc40696598a46110a53ea3e24eb0c4b8e9722e5f85aa79f1be06eae367d8b6",
+      "source_sha256": null
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/route_causality.py",
+      "before_sha256": "274ff01d6c440ff665312fe1f39ed21748665738c265f6114fe59af1fed5005f",
+      "public_sha256": "e5e350c4046667b7dc63c10477381738e55e3df86494b53c3c6b8c9440947eae",
+      "source_sha256": "cbdf8a4a792051a60d22f36c0f5d0aae1a6e940b49e7a6d1aedfeb36d4db410c"
+    },
+    {
+      "path": "monitoring-v4/tests/test_route_causality.py",
+      "before_sha256": "48685b8e6e5210e5e967b0ee982c9d0673d2d8c1fe888258edfcff4c85ae7af3",
+      "public_sha256": "6b5b36b5c62d64b5a99fc908f8e1e5cdfc24a9bab4e708cbe6ccf3222474aaa4",
+      "source_sha256": "6b5b36b5c62d64b5a99fc908f8e1e5cdfc24a9bab4e708cbe6ccf3222474aaa4"
+    },
+    {
+      "path": "ops/selfheal/fallback_controller.py",
+      "before_sha256": "34af247ed27bc6ec4fa6e9b6575da283edc4e340dc29f013d9c2fa99c80663e6",
+      "public_sha256": "a615296c8b6a72574c853905188f8c0babf9103d3ce4026f990ff420438db0a1",
+      "source_sha256": "135300ac3d4e93a5631987535fafd6cb95680c7db066fa75303e8b1a3c426b4c"
+    },
+    {
+      "path": "ops/selfheal/route_assessment.py",
+      "before_sha256": "1e3b1959f5c695f3507767bc88179c9e6f68d1e3327fc79c9a265d4567df4318",
+      "public_sha256": "d60020c2a6b1d5aee4ccde441ea5d2004125e5cb1d4b5dc2195623806137ec4f",
+      "source_sha256": "d60020c2a6b1d5aee4ccde441ea5d2004125e5cb1d4b5dc2195623806137ec4f"
+    },
+    {
+      "path": "ops/selfheal/route_facts_http.py",
+      "before_sha256": "00de60667fa255ffaae74ab78637befe03a30ee83848c579ae8498e15205ad36",
+      "public_sha256": "a88ae7978e3cdeef63fd770ef4ecccc511d28084b88aab47b1b5a792c14de99b",
+      "source_sha256": "2d00fb47a0f34e4b9578ee525628500ca3976b85452d6e09aab478de08f363be"
+    },
+    {
+      "path": "src/stream_core/notifications/route_observation.py",
+      "before_sha256": null,
+      "public_sha256": "ddd27ee001c02a28725b978d37af970ba96a562083afe1068d6a1b908f788383",
+      "source_sha256": "ddd27ee001c02a28725b978d37af970ba96a562083afe1068d6a1b908f788383"
+    },
+    {
+      "path": "src/stream_core/notifications/status_loop.py",
+      "before_sha256": "50b64cea1e8ced643f193a67d0ba92f0eca25b0fd68277304127d7bc8f55d8b1",
+      "public_sha256": "6cc423daecec5aa68c2991733761616b1c0e10300186a45580721b10f467b65b",
+      "source_sha256": "b7bdd17354cb23e4721cf86e1bcb36713d732bcb7076b51fb35ec07a44af0c89"
+    },
+    {
+      "path": "tests/test_fallback_relay_stop_loop.py",
+      "before_sha256": "b15e0a91c69c8bb2cb616772b15721e550d0c53988d743c2d19ebab0af0563d2",
+      "public_sha256": "e5ec751e54cf785466bad06f974c751d460e4da690c6940b0aa56e181146a9ab",
+      "source_sha256": "e5ec751e54cf785466bad06f974c751d460e4da690c6940b0aa56e181146a9ab"
+    },
+    {
+      "path": "tests/test_relay_availability.py",
+      "before_sha256": "d3c4895b6e3bd13c45089ad5bf57615c3c23d3e832eb27dbe3c0bebe7815f9e1",
+      "public_sha256": "c1877a963e36b296456b44bbd737a8e2b84ea20bab20628c9b0e387827208c8c",
+      "source_sha256": "c1877a963e36b296456b44bbd737a8e2b84ea20bab20628c9b0e387827208c8c"
+    },
+    {
+      "path": "tests/test_route_observation_notify.py",
+      "before_sha256": null,
+      "public_sha256": "9c16df83f61a134c957f95df2cf9ff4ccfe477507728568102366c45c0670e7b",
+      "source_sha256": "9cd661deecefbc0b8395bb3763c8b11a1d49a59cd69f624d7f41dc823eb6f2fc"
+    }
+  ]
+}

@@ -922,7 +922,38 @@ def deliver_notify_messages(
     return sent, failures, pending
 
 
+def route_observation_context(ctx):
+    """Optional pinned observation adapter; baseline delivery must keep running."""
+    import hashlib
+    import importlib.util
+    import os
+    import sys
+    import dataclasses
+    path=os.environ.get('STREAM_ROUTE_OBSERVATION_MODULE','')
+    if not path:return ctx
+    try:
+        source=Path(path)
+        if hashlib.sha256(source.read_bytes()).hexdigest()!=os.environ.get('STREAM_ROUTE_OBSERVATION_SHA256'):
+            raise ValueError('route_observation_source_changed')
+        spec=importlib.util.spec_from_file_location('route_observation_notifications',source)
+        module=importlib.util.module_from_spec(spec);sys.modules[spec.name]=module;spec.loader.exec_module(module)
+        return module.wrap_context(ctx,module.pinned_reader())
+    except (OSError,ValueError,KeyError,TypeError,ImportError):
+        print('[notify-status] route observation extension unavailable')
+        # Retain a previously raised incident if the adapter cannot be loaded.
+        # Missing extension evidence is never a recovery observation.
+        def collect(*args,**kwargs):
+            rows=ctx.collect_incidents(*args,**kwargs)
+            active=ctx.load_state().get('active')
+            prior=active.get('route:youtube_observation_unconfirmed') if isinstance(active,dict) else None
+            if isinstance(prior,dict) and isinstance(prior.get('last_incident'),dict):
+                rows=[*rows,prior['last_incident']]
+            return rows
+        return dataclasses.replace(ctx,collect_incidents=collect)
+
+
 def notify_status(*, ctx: NotifyStatusContext, dry_run: bool = False, force_test: bool = False, now_ts: int | None = None) -> int:
+    ctx=route_observation_context(ctx)
     now = int(time.time() if now_ts is None else now_ts)
     cfg = ctx.load_config()
     state = ctx.load_state()

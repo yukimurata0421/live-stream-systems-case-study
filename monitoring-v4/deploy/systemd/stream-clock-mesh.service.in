@@ -1,0 +1,29 @@
+[Unit]
+Description=Read-only inter-host clock observations
+After=network-online.target
+
+[Service]
+User=@MONITOR_USER@
+ExecStart=/usr/bin/python3 -I -B /opt/stream-clock-mesh/current/clock_mesh.py --config /opt/stream-clock-mesh/current/mesh-config.json --output /run/stream-clock-mesh/current.json
+RuntimeDirectory=stream-clock-mesh
+RuntimeDirectoryMode=0755
+CPUQuota=5%
+MemoryMax=96M
+TasksMax=24
+Restart=on-failure
+RestartSec=15
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+ProtectSystem=strict
+ProtectHome=tmpfs
+BindReadOnlyPaths=@SSH_CONFIG@ @SSH_KNOWN_HOSTS@ @SSH_KEY@
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectClock=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+StandardOutput=null
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,89 @@
+{
+  "schema": "stream.public_route_player_validation.v1",
+  "updated_at_jst": "2026-10-31T09:17:02.739834+09:00",
+  "scope": "Automated local fault switching and read-only production player observation; raw evidence remains private on HDD",
+  "commit_or_push_performed": false,
+  "production_faults": 0,
+  "provider_resource_or_lifecycle_mutations": 0,
+  "results": {
+    "clock_only": "Backup remains off in isolated 35-second wall-envelope discontinuity",
+    "resident_input_loss": "No backup in 75 seconds because idle bridge discarded fresh error diagnostics",
+    "fixed_input_loss": {
+      "backup_start_seconds": 45.40195840783417,
+      "same_local_player_backup_video_and_audio": true,
+      "maximum_video_gap_seconds": 48.633244471624494,
+      "decoded_recording_silence_seconds": 47.941646,
+      "continuity": "FAIL"
+    },
+    "public_youtube_player": {
+      "actual_initial_frames_observed": true,
+      "observation_windows_seconds": [
+        120,
+        75
+      ],
+      "media_403_in_control": 6,
+      "audio_verified": false,
+      "continuity": "FAIL in automated observer; production receiver continuity not established"
+    }
+  },
+  "operated_fix": {
+    "component": "Read-only relay route-facts collector",
+    "behavior": "Preserve fresh process/boot/destination-bound copy error facts even when forwarding is idle",
+    "applied": true,
+    "cold_actual_uid": "PASS",
+    "actual_consumer_read": "PASS; clock VERIFIED",
+    "media_processes_preserved": true,
+    "production_backup_replicas": 0
+  },
+  "validation": {
+    "public_related_suite": {
+      "passed": 130,
+      "subtests_passed": 77
+    },
+    "receiver_analysis_tests": 3,
+    "native_test_owned_children_exited": true,
+    "failed_setup_and_receiver_attempts_preserved": true,
+    "docs": {
+      "passed": 17,
+      "subtests_passed": 1065
+    },
+    "public_source_boundary": "PASS; zero issues",
+    "public_language": "PASS; zero issues",
+    "selected_secret_scan": "PASS; no leaks",
+    "shared_clock_copies": "PASS"
+  },
+  "limits": [
+    "Local unmodified MediaMTX/HLS receiver is not YouTube selection evidence",
+    "Cold backup and the current failure window did not provide no-gap playback",
+    "Authenticated public reception and Twitch public-player continuity not observed",
+    "Public media HTTP 403 cause not established",
+    "No production fault injection or provider cutover was performed",
+    "Local-output copy lab variant and low-resolution synthetic media do not qualify production-resolution or WAN behavior"
+  ],
+  "files": [
+    {
+      "path": "docs/00_INDEX.md",
+      "sha256": "4c7a20053bb4ce767eaaff3eca928ae72c50894e258ec38bd12fe1766a650203"
+    },
+    {
+      "path": "docs/current-status.md",
+      "sha256": "8268a6573cb4545ac8cb97b05d31f46256df88ae5480bb3e683fa9a7d02c5ee2"
+    },
+    {
+      "path": "docs/v3/route-causality.md",
+      "sha256": "45c69462399fb8dae1e52d3852ff85fa16525119f4e1140d0b03e47e86049c2a"
+    },
+    {
+      "path": "docs/v3/route-failover-validation.md",
+      "sha256": "2672f84c1c6c598511a33ede6ee4aeff1af28ddafcc0df78e7f46fca1e748e22"
+    },
+    {
+      "path": "ops/selfheal/route_facts_http.py",
+      "sha256": "8fb556dcde03c4a504e89453038fab727647b663f0e002bce3fc7b3b9aac63c9"
+    },
+    {
+      "path": "tests/test_fallback_copy_route.py",
+      "sha256": "4410e920597892bb794d09d387a34da40948211f7587cbe4d1cf597affcd2c41"
+    }
+  ]
+}

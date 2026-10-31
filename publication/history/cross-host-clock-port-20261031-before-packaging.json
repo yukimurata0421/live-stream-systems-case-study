@@ -1,0 +1,117 @@
+{
+  "schema": "stream.public_port_record.v1",
+  "port_date_jst": "2026-10-31",
+  "scope": "Clock contract, selected existing runtime adapters, finite cache and public projection integration; public checkout only.",
+  "deployment_performed_by_port": false,
+  "commit_performed": false,
+  "push_performed": false,
+  "checks": {
+    "public_regression": {
+      "passed": 152,
+      "subtests": 119
+    },
+    "live_delivery_claim": "Current provider output progress observed; player continuity not established. A FIFO reconnect was preserved as a separate event.",
+    "public_language": "PASS",
+    "source_boundary": "PASS for all owned paths and the full manifest at the verification checkpoint"
+  },
+  "public_adaptations": [
+    "Preserve generic relay identity and controller defaults.",
+    "Retain configured public Twitch collector/user binding.",
+    "Generate common clock module copies from one canonical source.",
+    "Keep English prose and existing unrelated worktree changes."
+  ],
+  "excluded": [
+    "Private paths, addresses, credentials, physical/boot identities, runtime receipts and raw logs.",
+    "Standalone public stream_v4 checkout; the existing embedded monitoring compatibility port is updated here."
+  ],
+  "files": [
+    {
+      "path": "docs/00_INDEX.md",
+      "public_sha256": "fe88716f5d5bc1d647da6238b7379145730a61626ee01306ea8194c76066fbec"
+    },
+    {
+      "path": "docs/README.md",
+      "public_sha256": "3aee1a9156ffef2d78f126461d5ba029aaf0ca023dfd6a33e3dd3333107b9bd5"
+    },
+    {
+      "path": "docs/v3/cross-host-observation-time.md",
+      "public_sha256": "b17bd96550d340ae9a0413869b59aa80e2cbcfac7d27dd17cf5ea53537ef5984"
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/clock_contract.py",
+      "public_sha256": "12ede974387fe96c54cea31b18d92bc636b317131fa9a7fdb87ad2821d0221f5"
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/clock_mesh.py",
+      "public_sha256": "336b290c5391c63e8671bee74eba969072c819d426a5f73eca0421ca038571f6"
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/relay_monitor.py",
+      "public_sha256": "e826b48362d9335bc37e716f5b5be7701413bb5d7c06e50b49bf481a18c3fa65"
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/relay_observe.py",
+      "public_sha256": "7c68efa46e0c243fa6f60ae2804be3eb07aa89fcc5e5a626bfa26a4897c0fbba"
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/relay_public.py",
+      "public_sha256": "f6726fb884d8124c8aa7f21afaf4eeee28ceb0eb7ab54578129973e652e9ea9f"
+    },
+    {
+      "path": "monitoring-v4/tests/test_relay_monitor.py",
+      "public_sha256": "9ae756450b8241b50c59b35b810f350e96fd7985db53794939b265907fa9339b"
+    },
+    {
+      "path": "ops/public-publisher/site/scripts/clock_contract.py",
+      "public_sha256": "12ede974387fe96c54cea31b18d92bc636b317131fa9a7fdb87ad2821d0221f5"
+    },
+    {
+      "path": "ops/public-publisher/site/scripts/collect_relay_public.py",
+      "public_sha256": "2dffa0782d6aee5a9fe8b46176011a40b81287ccc2eaf1c512c39b675b3e58cd"
+    },
+    {
+      "path": "ops/public-publisher/site/scripts/public_snapshot_time.py",
+      "public_sha256": "bb1ab3a90806af0079ae339e4ab30792accc46bf5560d8e1486f62d821e0fbaf"
+    },
+    {
+      "path": "ops/scripts/stream_v3_fallback_clock_recorder.py",
+      "public_sha256": "4ebc57f17360ca90c36028469ff0fd5b92cd56e80859f5d3a5289928adfdda2a"
+    },
+    {
+      "path": "ops/selfheal/clock_contract.py",
+      "public_sha256": "12ede974387fe96c54cea31b18d92bc636b317131fa9a7fdb87ad2821d0221f5"
+    },
+    {
+      "path": "ops/selfheal/clock_observer.py",
+      "public_sha256": "cfc055a2cfedcfdced2c61595f1f900e5f8cc0d0261229cb268b9ea65efd66c4"
+    },
+    {
+      "path": "ops/selfheal/fallback_controller.py",
+      "public_sha256": "45e703412fd39102fcc328ee8b1a4a982dfc7c3a0cccfc43d35ab5f61c8333da"
+    },
+    {
+      "path": "ops/selfheal/route_facts_http.py",
+      "public_sha256": "8f3254fe7c6365a57e79f23b8479aa4b4e405e76eaa5e09e258476c00eee8800"
+    },
+    {
+      "path": "ops/selfheal/units/stream-clock-observer.service.in",
+      "public_sha256": "bcd0ad6d490c02d49920ecf08af61b36d7fd8e1ebcaa05b081cbdd5d565be645"
+    },
+    {
+      "path": "tests/test_clock_contract.py",
+      "public_sha256": "4d9d0587b08732344e21274857626d94b3b6ec259c62fd84c31e3e9239cd11ba"
+    },
+    {
+      "path": "tests/test_fallback_clock_recorder.py",
+      "public_sha256": "c0433338a31d32391df7a7c3c4a8c1bc53e1246d421595f163f6f5bc4c69610a"
+    },
+    {
+      "path": "tests/test_fallback_copy_route.py",
+      "public_sha256": "1d924ab71740932427d7b3229c46ee2d06fa086943f7d76448d70a500357d262"
+    },
+    {
+      "path": "tests/test_public_relay.py",
+      "public_sha256": "01c0d2eb0935b84bb014158a0c8c83fba654862223907f0eca87f1f97fc4905e"
+    }
+  ]
+}

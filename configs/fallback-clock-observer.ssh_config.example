@@ -1,0 +1,9 @@
+# Supply a read-only observer account and its own key and known-hosts file.
+Host relay-observer
+    HostName relay.example.invalid
+    User observer
+    IdentityFile /etc/stream-clock/identity
+    UserKnownHostsFile /etc/stream-clock/known_hosts
+    IdentitiesOnly yes
+    BatchMode yes
+    StrictHostKeyChecking yes

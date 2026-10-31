@@ -5,6 +5,9 @@ unchanged from the signed-lease relay; only the sources moved to the MediaMTX se
 """
 from __future__ import annotations
 import json
+import importlib.util
+import sys
+import select
 import hashlib
 import os
 import subprocess
@@ -23,6 +26,25 @@ KEEPER_STATES = {'IDLE': 'TRACKING', 'WAIT_OFFLINE': 'WAIT_OFFLINE', 'VERIFY': '
 YOUTUBE_BRIDGE = 'rtmp://127.0.0.1:19350/live/youtube'
 YOUTUBE_STATUS = Path('/run/stream-v3-youtube-forward/observation.json')
 YOUTUBE_FINGERPRINT = Path('/etc/stream-v3-youtube-forward/destination-fingerprint')
+
+
+def input_facts(path):
+    """An available slate is distinct from a connected upstream publisher.
+
+    MediaMTX keeps ready=true and advances stream bytes in alwaysAvailable mode.
+    Consumers of input.ready must still require a real source. Older API fixtures
+    without online retain their source-bound behavior.
+    """
+    available = path.get('ready') is True
+    source = path.get('source') or {}
+    connection = source.get('id')
+    online = path.get('online', available and bool(connection))
+    live = available and online is True and isinstance(connection, str) and bool(connection)
+    state = 'LIVE' if live else ('OFFLINE_SLATE' if available and online is False else 'UNKNOWN')
+    return {'available': True, 'ready': live, 'stream_available': available,
+            'online': online if type(online) is bool else None, 'content_state': state,
+            'bytes': path.get('bytesReceived', path.get('inboundBytes')),
+            'connection_id': connection if live else None}
 
 
 def youtube_forward_facts(value, *, now, pid, boot_id, fingerprint):
@@ -102,8 +124,7 @@ def observe():
     try:
         path = api('/v3/paths/get/relay')
         inbound = path.get('inboundBytes', path.get('bytesReceived'))
-        result['input'] = {'available': True, 'ready': path['ready'] is True, 'bytes': inbound,
-                           'connection_id': path['source']['id'] if path.get('source') else None}
+        result['input'] = input_facts(path)
         rows = api('/v3/paths/forward-dests/list?path=relay')['items']
         for name in ('youtube', 'twitch'):
             # Match by destination host, not position: positions shift when the keeper removes a forward.
@@ -140,6 +161,26 @@ def observe():
 
 if __name__ == '__main__':
     try:
-        print(json.dumps(observe(), allow_nan=False, separators=(',', ':')))
+        # The forced command remains read-only; only a fixed nonce is accepted.
+        command = os.environ.get('SSH_ORIGINAL_COMMAND', 'observe').split()
+        nonce = command[1] if len(command) == 2 and command[0] == 'observe' else None
+        # sudo env_reset may remove SSH_ORIGINAL_COMMAND. A fixed 32-byte nonce
+        # can also cross stdin, without changing authorized_keys or sudo policy.
+        if nonce is None and select.select([sys.stdin], [], [], .1)[0]:
+            nonce = os.read(sys.stdin.fileno(), 33).decode('ascii').strip() or None
+        timing = nonce is not None
+        if timing:
+            spec = importlib.util.spec_from_file_location('stream_clock_contract', Path(__file__).with_name('clock_contract.py'))
+            clock = importlib.util.module_from_spec(spec); sys.modules[spec.name] = clock; spec.loader.exec_module(clock)
+            if not clock.valid_nonce(nonce): raise ValueError('clock_nonce_invalid')
+            started = clock.capture()
+        value = observe()
+        if timing:
+            try:
+                value['clock_status'] = json.loads(Path('/run/stream-clock/status.json').read_text())
+            except (OSError, ValueError):
+                value['clock_status'] = None
+            value['clock'] = clock.envelope(nonce, started)
+        print(json.dumps(value, allow_nan=False, separators=(',', ':')))
     except Exception:
         print('{"schema":"stream.relay_raw.v1","error":"OBSERVATION_UNAVAILABLE"}')

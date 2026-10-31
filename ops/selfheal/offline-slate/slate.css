@@ -1,0 +1,17 @@
+* { box-sizing: border-box; }
+html, body, #map { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+body { background: #09151a; color: #eff5f5; font-family: "Noto Sans CJK JP", "Noto Sans", sans-serif; }
+#map { position: absolute; inset: 0; }
+.shade { position: absolute; inset: 0; background: linear-gradient(180deg, #06111788, #06111715 35%, #06111720 65%, #061117ed); }
+header { position: absolute; top: 52px; left: 64px; right: 64px; display: flex; justify-content: space-between; align-items: center; }
+.brand { color: #d8e6e8; font-size: 24px; font-weight: 700; letter-spacing: .19em; }
+.status { border: 1px solid #f3c46c66; border-radius: 30px; background: #162124ee; color: #f3cf8c; padding: 12px 24px; font-size: 19px; letter-spacing: .08em; }
+.notice { position: absolute; left: 50%; top: 48%; transform: translate(-50%, -50%); width: 1080px; padding: 42px 50px 38px; border: 1px solid #9fb5b84d; border-top: 3px solid #e9be73; border-radius: 12px; background: #08171ded; box-shadow: 0 22px 90px #0008; text-align: center; }
+.eyebrow { display: flex; justify-content: center; align-items: center; gap: 12px; color: #f3cf8c; font-size: 18px; font-weight: 600; letter-spacing: .17em; }
+.indicator { width: 9px; height: 9px; border-radius: 50%; background: #f3cf8c; }
+h1 { margin: 22px 0 24px; font-size: 51px; font-weight: 700; line-height: 1.4; letter-spacing: .025em; }
+.notice p { margin: 7px 0; color: #cfdddf; font-size: 24px; line-height: 1.7; }
+.english { margin-top: 29px; padding-top: 23px; border-top: 1px solid #b0c7cc26; color: #a5b9bd; font-size: 18px; line-height: 1.6; }
+footer { position: absolute; bottom: 31px; left: 64px; right: 64px; text-align: center; color: #a9bdc1; font-size: 14px; line-height: 1.6; }
+footer p { margin: 4px 0; }
+footer p:first-child { margin-bottom: 14px; color: #d4dfe0; font-size: 19px; }

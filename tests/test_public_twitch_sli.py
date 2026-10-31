@@ -1,3 +1,4 @@
+import sys
 import importlib.util
 import json
 import pathlib
@@ -6,6 +7,7 @@ import unittest
 from unittest.mock import patch
 
 PATH=pathlib.Path(__file__).resolve().parents[1]/'ops/public-publisher/site/scripts/collect_twitch_sli.py'
+sys.path.insert(0,str(PATH.parent))
 spec=importlib.util.spec_from_file_location('sli_publish',PATH);pub=importlib.util.module_from_spec(spec);spec.loader.exec_module(pub)
 
 def fixture():
@@ -22,6 +24,33 @@ def fixture():
     return v
 
 class PublicSliTests(unittest.TestCase):
+    def test_small_future_and_exact_freshness_boundaries_preserve_source_time(self):
+        original=fixture();generated=pub.timestamp(original['generated_at'])
+        for ahead in (.003,.05,1.,-180.):
+            with self.subTest(ahead=ahead):
+                value=fixture()
+                self.assertIs(pub.validate(value,generated-ahead),value)
+                self.assertEqual(value['generated_at'],original['generated_at'])
+
+    def test_history_start_is_ordered_against_the_source_generation(self):
+        from datetime import datetime,timezone
+        value=fixture();generated=pub.timestamp(value['generated_at'])
+        value['history_started_at']=datetime.fromtimestamp(generated-.1,timezone.utc).isoformat()
+        self.assertIs(pub.validate(value,generated-1),value)
+        value['history_started_at']=datetime.fromtimestamp(generated+.1,timezone.utc).isoformat()
+        with self.assertRaises(ValueError):pub.validate(value,generated+1)
+
+    def test_rejected_source_keeps_prior_artifact_bytes_and_mtime(self):
+        generated=pub.timestamp(fixture()['generated_at'])
+        with tempfile.TemporaryDirectory() as d:
+            root=pathlib.Path(d);p=root/'twitch-sli.json';p.write_text(json.dumps(fixture()))
+            before=p.read_bytes();mtime=p.stat().st_mtime_ns
+            for now in (generated-1.001,generated+180.001):
+                with patch.object(pub,'PUBLIC',root),patch.object(pub.time,'time',return_value=now),\
+                     patch.object(pub.subprocess,'run',return_value=type('Result',(),{'returncode':0,'stdout':json.dumps(fixture()).encode()})()):
+                    self.assertEqual(pub.main(),0)
+                self.assertEqual(p.read_bytes(),before);self.assertEqual(p.stat().st_mtime_ns,mtime)
+
     def test_current_and_previous_api_wording_are_accepted_without_changing_counts(self):
         now=pub.timestamp(fixture()['generated_at'])+1
         for text in [
@@ -61,7 +90,7 @@ class PublicSliTests(unittest.TestCase):
 
     def test_stale_or_future_artifact_is_rejected(self):
         now=pub.timestamp(fixture()['generated_at'])
-        for at in [now+181,now-1]:
+        for at in [now+180.001,now-1.001]:
             with self.assertRaises(ValueError):pub.validate(fixture(),at)
 
     def test_fetch_failure_keeps_original_bytes_and_mtime(self):

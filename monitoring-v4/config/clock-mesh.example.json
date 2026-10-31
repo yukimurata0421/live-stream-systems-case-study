@@ -1,0 +1,19 @@
+{
+  "peers": [
+    {
+      "host_id": "encoder-host",
+      "ssh_alias": "encoder-host",
+      "machine_id_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    {
+      "host_id": "public-host",
+      "ssh_alias": "public-host",
+      "machine_id_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    {
+      "host_id": "recovery-host",
+      "ssh_alias": "recovery-host",
+      "machine_id_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  ]
+}

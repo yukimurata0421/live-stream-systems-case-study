@@ -1,0 +1,27 @@
+[Unit]
+Description=Read-only route cause facts and secondary recovery veto
+After=network-online.target stream-clock-observer.service
+[Service]
+User=@OBSERVER_USER@
+ExecStart=/usr/bin/python3 -B @RELEASE@/route_causality.py --config @CONFIG@ --output /run/stream-v4-route-causality/current.json
+RuntimeDirectory=stream-v4-route-causality
+RuntimeDirectoryMode=0755
+CPUQuota=5%
+MemoryMax=96M
+TasksMax=24
+Restart=on-failure
+RestartSec=15
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+ProtectSystem=strict
+ProtectHome=tmpfs
+BindReadOnlyPaths=@SSH_CONFIG@ @SSH_KNOWN_HOSTS@ @SSH_KEY@
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectClock=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+StandardOutput=null
+[Install]
+WantedBy=multi-user.target

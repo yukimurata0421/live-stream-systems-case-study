@@ -1,0 +1,174 @@
+{
+  "schema": "stream.public_route_causality.v1",
+  "updated_at_jst": "2026-10-31T08:25:12.084732+09:00",
+  "scope": "Clock-only route holds, persistent cause facts and arena secondary recovery veto; existing dirty changes preserved.",
+  "commit_or_push_performed": false,
+  "source_behavior": {
+    "start": "30 continuous seconds of confirmed MEDIA_FAILURE",
+    "stop": "300 continuous seconds of fresh HEALTHY",
+    "clock_or_observation_only": "Hold current replicas; reset both decision windows",
+    "secondary_guard": "Before restart budget reservation, typed restart/resync and force-live API; expired/invalid context vetoes",
+    "cause_ttl_seconds": 45,
+    "cause_clear_healthy_after_backup_off_seconds": 180
+  },
+  "operated_deployment": {
+    "controller": "Applied to sender; actual DynamicUser observe entry passed",
+    "monitoring": "Arena collector, pinned legacy monitor admission hooks and metrics applied; both restart flags remain disabled",
+    "publication": "Read-only arena projection and Pi allowlist applied; actual Pi artifact and natural R2 upload success observed",
+    "media": "No media process/Deployment/NTP/CRA changes; before/after media identity and advancing ACK/output counters checked",
+    "hdd": "Original deadline and 32 MiB cap retained; previous segments preserved"
+  },
+  "validation": {
+    "public_related_suite": {
+      "passed": 210,
+      "subtests_passed": 1195
+    },
+    "cold_monitor_imports": "PASS, no effects executed",
+    "controller_cold_dynamic_user": "PASS, bound clock VERIFIED",
+    "media_identity": "Non-Job Pod UID/container/restart, FFmpeg generation and relay media PID/restarts preserved",
+    "runtime_secondary_guard": "Natural status from both watchers includes VERIFIED cause context",
+    "production_fault_injection": false,
+    "private_related_suite": {
+      "passed": 152,
+      "subtests_passed": 106
+    },
+    "final_focused_suite": {
+      "passed": 29,
+      "subtests_passed": 1058
+    },
+    "language": "PASS; zero issues",
+    "public_boundary": "PASS; zero issues",
+    "shared_clock_copies": "PASS",
+    "monitoring_snapshot": "PASS; 378 files; zero issues",
+    "selected_secret_scan": "PASS; no leaks"
+  },
+  "limits": [
+    "Actual player continuity unverified",
+    "Real-fault switching under this release unobserved",
+    "Full-day false-positive rate and full HDD recording window unobserved",
+    "Candidate cause correlation does not prove which provider ingest generated an API warning",
+    "All trustworthy evidence unavailable intentionally holds current route"
+  ],
+  "files": [
+    {
+      "path": "docs/00_INDEX.md",
+      "sha256": "50e4b547c467f7bc3c45f0ebfc630a5e096c19de5b859510372811eae2101bcf"
+    },
+    {
+      "path": "docs/architecture.md",
+      "sha256": "cd178b72f1d62e4acbad4075e3fe64af2afd905d957fc4ba29993acfd40294a5"
+    },
+    {
+      "path": "docs/current-status.md",
+      "sha256": "4a3ea7563aba3cc5b02c7a0659eb1d45d7fdb903c9f3fab71d15adebca993897"
+    },
+    {
+      "path": "docs/v3/cross-host-observation-time.md",
+      "sha256": "7e2177fc2cb8b431faa808fc2830fa2c2d1245d05e55a6da28898b3bac6a9c14"
+    },
+    {
+      "path": "docs/v3/fallback-clock-recording.md",
+      "sha256": "0ca60b2b214c0d8e1e48778616cdb1fbc29e7e3cc1937ba8d5f6d3745ea996bd"
+    },
+    {
+      "path": "docs/v3/route-causality.md",
+      "sha256": "a7ceb29bb6633c277ad7085808262811dd7f04874d809d227d8ab2e44724d6ea"
+    },
+    {
+      "path": "monitoring-v4/ops/systemd/stream-v4-route-causality.service.in",
+      "sha256": "53d07a10d83dac1cb7bce5ec6b423b9a76e1ba71b58de3ddd24228f6f099777e"
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/causal_monitor_entry.py",
+      "sha256": "da72315fc2cf062208144ef43e4bc59eee547f0875f9c02014f4e1da32e43a35"
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/clock_contract.py",
+      "sha256": "52f72bf2e46181a628063b5917a4caf55bb25312041a5d2188d3c0d3ddba7bb6"
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/relay_monitor.py",
+      "sha256": "5a84170f39633a91e904489d9d1a086cb736f3768c5bc730bc3d56cde060b739"
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/relay_public.py",
+      "sha256": "e9b52b9193355f72f0d7e2a0e0c15282878d3fa86d32e915bd44da303cf6e751"
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/route_causality.py",
+      "sha256": "274ff01d6c440ff665312fe1f39ed21748665738c265f6114fe59af1fed5005f"
+    },
+    {
+      "path": "monitoring-v4/tests/test_route_causality.py",
+      "sha256": "48685b8e6e5210e5e967b0ee982c9d0673d2d8c1fe888258edfcff4c85ae7af3"
+    },
+    {
+      "path": "ops/public-publisher/site/scripts/clock_contract.py",
+      "sha256": "52f72bf2e46181a628063b5917a4caf55bb25312041a5d2188d3c0d3ddba7bb6"
+    },
+    {
+      "path": "ops/public-publisher/site/scripts/collect_relay_public.py",
+      "sha256": "f7c2946bc72f8f02ae1cefd4a2efe9054c3b1f91d74efddcfe6744e95f5324ab"
+    },
+    {
+      "path": "ops/scripts/stream_v3_fallback_clock_recorder.py",
+      "sha256": "ca7b9cbfea876dc3826e5c028981fe12df1ac365931a96881f17dcc6d6a2b613"
+    },
+    {
+      "path": "ops/selfheal/clock_contract.py",
+      "sha256": "52f72bf2e46181a628063b5917a4caf55bb25312041a5d2188d3c0d3ddba7bb6"
+    },
+    {
+      "path": "ops/selfheal/fallback_controller.py",
+      "sha256": "9541dc2e739cbb41b482a7703cd79e33a943798f4585329a957ba88c18b37063"
+    },
+    {
+      "path": "ops/selfheal/route_assessment.py",
+      "sha256": "39f8949642855605c88e5b6426d925e5a7dd4ac5b15b87b6bf0226a49b910171"
+    },
+    {
+      "path": "ops/selfheal/units/stream-v3-fallback-controller.service.in",
+      "sha256": "e2bb7b579ef1a320062b6d73699fc68caa3e6a29c16eecfc7372601bc5f18849"
+    },
+    {
+      "path": "src/watchers/decision/action_gate.py",
+      "sha256": "c572404ceed2752e9098ac5a84d887fa9c306e11dd3b73470de4fe68313c1725"
+    },
+    {
+      "path": "src/watchers/local_health/actions.py",
+      "sha256": "3eebf0099732fdcabdb6cd326a958ccead604f18f2044df2c7c15fc2f2f24d3c"
+    },
+    {
+      "path": "src/watchers/route_guard.py",
+      "sha256": "251a8d2a6a150b698f9dc5dd58667efbb94b200c3c6de12a605f45268c4d6616"
+    },
+    {
+      "path": "src/watchers/youtube_lifecycle/actions.py",
+      "sha256": "b1871c7fea001d8ff78fcb695a8b733fd0e02d40f9f2e63935a23beed196318d"
+    },
+    {
+      "path": "tests/test_fallback_copy_route.py",
+      "sha256": "1fc2ebf8104ca7da93ad7adcfb3cd00e9d7902e1915a87869bd3a33c3f823d07"
+    },
+    {
+      "path": "tests/test_manual_maintenance.py",
+      "sha256": "11d495f587202b1742a2a922085f142eebd2d21cd696cc57033454bffc5c2bde"
+    },
+    {
+      "path": "tests/test_offline_slate.py",
+      "sha256": "6658762610de9271ae4987ff0c6024f91b76dac7963675d50493dd663552d964"
+    },
+    {
+      "path": "tests/test_public_relay.py",
+      "sha256": "791290b00c0d48758125b2bf5a48e250c0ddfe4db3dee4439b6b725f7a3a567c"
+    },
+    {
+      "path": "tests/test_route_causality.py",
+      "sha256": "b66af15394eb689686ec3fd36472f3b7a57984f6330de16495e36e7429accf0b"
+    },
+    {
+      "path": "tests/test_selfheal.py",
+      "sha256": "9b109844ac835c1d41aa99e6e51f5faa64ff0e63c18be7d3d4fbf45818bcdac3"
+    }
+  ]
+}

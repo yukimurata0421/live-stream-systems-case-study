@@ -1,0 +1,114 @@
+{
+  "schema": "stream.public_relay_stop_validation.v1",
+  "updated_at_jst": "2026-10-31T09:45:06.574280+09:00",
+  "scope": "Review corrections and isolated relay-stop main-loop validation; raw evidence remains private on HDD",
+  "production_mutations": false,
+  "production_faults": 0,
+  "provider_mutations": 0,
+  "commit_or_push_performed": false,
+  "policy_changed": false,
+  "historical_52_seconds": "2026-10-20 former-policy production result; not current-policy validation",
+  "regression": {
+    "passed": 100,
+    "subtests_passed": 111,
+    "new_main_loop_tests": 3,
+    "method": "Actual main with HTTP 503, atomic synthetic transport files and owned replica CLI; controlled elapsed time"
+  },
+  "native": {
+    "ffmpeg_version": "5.1.9-0+deb12u1",
+    "ffmpeg_sha256": "0dafc1360bb07743f76abeb1e4ae16b0aaa1331e9041a0e8d6a8524111dc0cbb",
+    "production_runtime_output_and_transport_modules_used": true,
+    "runtime_options": {
+      "recovery_wait_seconds": 0.2,
+      "max_recovery_attempts": 20,
+      "fixture_restart_after_exit_seconds": 5,
+      "observation_seconds": 75,
+      "backup_started": false,
+      "ffmpeg_restarts": 6,
+      "assessment": "OBSERVATION_LOST; fresh baseline required after each sampled generation change",
+      "recovery_availability": "FAIL in this fixture"
+    },
+    "long_recovery_control": {
+      "recovery_wait_seconds": 5,
+      "max_recovery_attempts": 20,
+      "backup_starts": 1,
+      "relay_stop_request_to_backup_seconds": 61.889245993457735,
+      "local_rtmp_receiver_bytes_advanced": true,
+      "production_setting": false
+    },
+    "frozen_export_control": {
+      "observation_seconds": 75,
+      "backup_started": false,
+      "assessment": "OBSERVATION_LOST; unchanged export rejected"
+    },
+    "setup_failures_before_relay_stop": {
+      "fifo_remux": 6,
+      "guard_directory_permissions": 3,
+      "preserved": true
+    },
+    "all_owned_children_exited": true
+  },
+  "production_guard": {
+    "samples": 23,
+    "span_seconds": 111.99781584739685,
+    "ack_delta_bytes": 55974317,
+    "all_healthy": true,
+    "ffmpeg_and_connection_generation_unchanged": true,
+    "backup_replicas": 0
+  },
+  "limits": [
+    "Owned five-second restart supervisor is not the complete production engine",
+    "Current production relay-stop failover is not established",
+    "Positive control has a deliberately longer recovery wait",
+    "Local RTMP byte progress is not player AV continuity or YouTube backup selection",
+    "No runtime retries, thresholds or provider policy were changed"
+  ],
+  "validation": {
+    "shared_clock_copies": "PASS",
+    "documentation": {
+      "passed": 23,
+      "subtests_passed": 1082
+    },
+    "public_source_boundary": "PASS; zero issues",
+    "public_language": "PASS; zero issues",
+    "selected_secret_scan": "PASS; no leaks"
+  },
+  "files": [
+    {
+      "path": "README.md",
+      "sha256": "8b6a0c566f6d7893aef12b498bc63082ac6e798918a5abb9a913c90bd98eeb2e"
+    },
+    {
+      "path": "docs/00_INDEX.md",
+      "sha256": "6e23ab500691f6440971d773e1e88799b36bd9179010cefdf167f310ee52867f"
+    },
+    {
+      "path": "docs/current-status.md",
+      "sha256": "baa0eecf24744221a1ef79822cb3800f7561245c980a68a1636d44d97d4861ab"
+    },
+    {
+      "path": "docs/operational-case-studies.md",
+      "sha256": "eda0c7d64b767561bd2fb43739a3aa770a950dc09d08d4d0e6e84910024859ef"
+    },
+    {
+      "path": "docs/operational-scorecard.md",
+      "sha256": "eddcbc70d222c692fa8b2eea1ee4043eff48ba6a872ca7c27d8e8db10b03149f"
+    },
+    {
+      "path": "docs/v3/self-healing-oci-fanout.md",
+      "sha256": "2c4621235936b326d56810491737113e461a2dc1adf84784093c38f7ad1d1d32"
+    },
+    {
+      "path": "docs/v3/route-causality.md",
+      "sha256": "29c66896957bde7f817d9f529133277f2dd14b67d5f03da9366d1683f81c9934"
+    },
+    {
+      "path": "docs/v3/relay-stop-main-loop.md",
+      "sha256": "0d8ef89db752fccc0092c537a520acb853e7e5b74f7709d8d41c951860a733d8"
+    },
+    {
+      "path": "tests/test_fallback_relay_stop_loop.py",
+      "sha256": "eafc4bcaf5019ec286a9fa5d48ba55a2f45d8237fde619abe359714b53cf2eec"
+    }
+  ]
+}

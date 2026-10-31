@@ -1,0 +1,18 @@
+{
+  "schema": "stream_v3.fallback_clock_recording.v1",
+  "started_at": "2000-01-01T00:00:00+00:00",
+  "deadline": "2000-01-02T00:00:00+00:00",
+  "mount": "/srv/observations",
+  "output": "/srv/observations/fallback-clock-example",
+  "filesystem_uuid": "00000000-0000-0000-0000-000000000000",
+  "min_free_bytes": 1073741824,
+  "max_bytes": 33554432,
+  "machines": {
+    "sender": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "relay": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  },
+  "ssh": {
+    "config": "/etc/stream-clock/ssh_config",
+    "host": "relay-observer"
+  }
+}

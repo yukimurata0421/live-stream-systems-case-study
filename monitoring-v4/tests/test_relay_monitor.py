@@ -2,6 +2,8 @@ import copy
 import importlib.util
 import pathlib
 import unittest
+import sys
+from unittest import mock
 from datetime import datetime,timezone
 
 SOURCE=pathlib.Path(__file__).resolve().parents[1]/'src/stream_monitoring_v4/compatibility/relay_monitor.py'
@@ -9,6 +11,33 @@ spec=importlib.util.spec_from_file_location('relay_monitor',SOURCE);monitor=impo
 
 
 class RelayMonitorTests(unittest.TestCase):
+    def test_metrics_ages_cached_peer_evidence_after_mesh_collection_stops(self):
+        boot=pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip()
+        peer={'status':'CACHED','source_age_upper_seconds':89.,'uncertainty_seconds':.1,'synchronized':True}
+        mesh={'boot_id':boot,'mono':100.,'peers':{'encoder-host':peer}}
+        with mock.patch.object(monitor,'load',return_value=mesh),mock.patch.object(monitor.time,'clock_gettime',return_value=102.):
+            self.assertIn('stream_v4_clock_observation_ok{host_id="encoder-host"} 0',monitor.metrics(self.project()))
+            peer['source_age_upper_seconds']=10.
+            text=monitor.metrics(self.project())
+            self.assertIn('stream_v4_clock_source_age_upper_seconds{host_id="encoder-host"} 12.0',text)
+            self.assertIn('stream_v4_clock_uncertainty_seconds{host_id="encoder-host"} 0.102',text)
+    def test_corrected_remote_age_preserves_flow_and_rejects_expired_data(self):
+        root=pathlib.Path(__file__).resolve().parents[2]/'ops/selfheal/clock_contract.py'
+        spec=importlib.util.spec_from_file_location('clock_relay_test',root)
+        clock=importlib.util.module_from_spec(spec);sys.modules[spec.name]=clock;spec.loader.exec_module(clock)
+        for offset in (-600,600):
+            with self.subTest(offset=offset):
+                local=clock.capture();now=local['wall']
+                raw=copy.deepcopy(self.raw);previous=copy.deepcopy(self.before)
+                raw['observed_at']=self.date(now+offset-2)
+                raw['daily']['observed_at']=self.date(now+offset-2)
+                raw['daily']['next_renewal_at']=self.date(now+offset+10000)
+                model=clock.Estimate(offset-.01,offset+.01,now,local['mono'],'boot','a'*64,'local',.02)
+                out=monitor.project(raw,previous,{},now,'fixture-machine',clock_model=model)
+                self.assertTrue(out['source_fresh']);self.assertEqual(out['input']['status'],'FLOWING')
+                self.assertAlmostEqual(now-monitor.stamp(out['observed_at']),2.01,delta=.02)
+                raw['observed_at']=self.date(now+offset-181)
+                self.assertFalse(monitor.project(raw,previous,{},now,'fixture-machine',clock_model=model)['source_fresh'])
     def setUp(self):
         self.now=1791884000.;self.date=lambda t:datetime.fromtimestamp(t,timezone.utc).isoformat()
         self.raw={'schema':'stream.relay_raw.v1','host_id':'relay-host','machine_id_sha256':'fixture-machine','boot_id':'boot',

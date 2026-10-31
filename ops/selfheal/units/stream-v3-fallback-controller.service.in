@@ -1,0 +1,28 @@
+[Unit]
+Description=Evidence-based fallback controller
+After=network-online.target
+[Service]
+DynamicUser=yes
+LoadCredential=kubeconfig:@KUBECONFIG@
+Environment=KUBECONFIG=%d/kubeconfig
+EnvironmentFile=@FACTS_CONFIG@
+StateDirectory=stream-v3-fallback-causality
+StateDirectoryMode=0700
+RuntimeDirectory=stream-v3-fallback-controller
+RuntimeDirectoryMode=0755
+ExecStart=/usr/bin/python3 -B @RELEASE@/fallback_controller.py
+Restart=on-failure
+RestartSec=5
+CPUQuota=10%
+MemoryMax=128M
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+[Install]
+WantedBy=multi-user.target

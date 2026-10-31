@@ -16,16 +16,23 @@ the existing child lifecycle; the relay-health controller independently owns
 backup delivery. The [dated experiment and rollout](v3/ffmpeg-fifo-measurements.md)
 separate those paths and retain the failed first audio rollout.
 
+When the backup starts and stops is defined in the
+[fallback decision contract](v3/fallback-decision-contract.md). Media freshness
+and UTC diagnostics have independent roles. Evidence remains limited to the
+hop observed: Dell ACKs do not establish the relay's YouTube output. Arena
+keeps its secondary-recovery veto and existing notification owner; the
+read-only projection gains no delivery provider or recovery authority.
+
 ## Hosts And Roles
 
 | Host or edge | Role | Runs |
 | --- | --- | --- |
-| HP ProDesk `arena-server` | ADS-B reception and monitoring | Airspy USB receiver, `airspy_adsb`, readsb; the monitor service `stream-v3-arena-monitor` (YouTube resolver and watchdog, stream watchdog, notifications, SLI, exporter); Prometheus, Loki, and Grafana in a local k3s; relay observation over the private tunnel |
-| Dell workstation `delivery-host` | Video production and upload | Dell-side readsb and modified tar1090 endpoint; k3s `stream-v3-runtime` (map rendering, precipitation, PulseAudio, AutoDJ, FFmpeg/NVENC, fast recovery); the fallback Deployment and its controller; an independent RAM return-feed observer |
-| OCI VM | Media fan-out | MediaMTX relay and the keeper that repairs forwards and renews Twitch |
-| Raspberry Pi `publisher-host` | Public status publisher | nginx `/grafana/` proxy to arena-server Grafana, snapshot collectors, static site build, outbound GCS upload |
-| GCS + Cloudflare | Public static edge | Serves <https://yukimurata0421.dev/> from uploaded static files |
-| `cra-01` | CRA design target | Central Restart Authority source; production authority is disabled, and it takes no part in the media route |
+| HP ProDesk `arena-server` | ADS-B reception and monitoring | Airspy USB receiver, `airspy_adsb`, readsb; the monitor service `stream-v3-arena-monitor` (YouTube resolver and watchdog, stream watchdog, notifications, SLI, exporter); Prometheus, Loki, and Grafana in a local k3s; relay observation over the private tunnel; local host clock observer and read-only clock mesh |
+| Dell workstation `delivery-host` | Video production and upload | Dell-side readsb and modified tar1090 endpoint; k3s `stream-v3-runtime` (map rendering, precipitation, PulseAudio, AutoDJ, FFmpeg/NVENC, fast recovery); the fallback Deployment and its controller; an independent RAM return-feed video observer; a separate host clock observer and explicit manual-maintenance command |
+| OCI VM | Media fan-out | MediaMTX relay, timestamp-rebasing YouTube copy and keeper; read-only facts endpoints and host clock observer |
+| Raspberry Pi `publisher-host` | Public status publisher | nginx `/grafana/` proxy to arena-server Grafana, snapshot collectors, host clock observer and static site build; the operated uploader targets private R2 |
+| Private R2 + Cloudflare Worker | Operated public static edge | Serves <https://yukimurata0421.dev/> from sanitized uploaded files; the public checkout retains the older GCS uploader example |
+| `cra-01` | CRA central host | Policy/audit service and independent host clock observer; the public CRA remains `dry_run` and takes no part in the media route |
 
 Monitoring and ADS-B reception share the ProDesk; video production has the Dell
 to itself. The [hardware selection](hardware-selection.md) explains why.
@@ -45,14 +52,14 @@ flowchart LR
     end
     subgraph DELL["Dell delivery-host"]
         PROD["stream-v3-runtime Pod: map, weather, music, encoder"]
-        PROBE["Clock observer Deployment"]
+        PROBE["Return-feed video clock OCR Deployment"]
         FB["Fallback Pod (standby)"]
     end
     subgraph OCI["OCI VM"]
         RELAY["MediaMTX relay + keeper"]
     end
     PLAT["YouTube / Twitch"]
-    PUB["Raspberry Pi -> GCS + Cloudflare"]
+    PUB["Raspberry Pi -> private R2 + Cloudflare Worker"]
     RX -->|"aircraft data"| PROD
     PROD -->|"RTMPS"| RELAY --> PLAT
     FB -. "fallback only" .-> PLAT
@@ -193,21 +200,79 @@ What each of these layers can and cannot establish is defined once in
 the existing notification loop; none of these observation paths can act on
 delivery.
 
+## Host Clock and Freshness Path
+
+Video-clock OCR above and host-clock timing below are separate observations.
+The five host-clock observers read kernel/NTP facts and cannot set clocks.
+The interval-based [clock contract](v3/cross-host-observation-time.md) dates from
+October 31; it supersedes the controller's provisional October 30 tolerance.
+
+```mermaid
+flowchart LR
+    subgraph RELAYHOST["OCI relay host"]
+        OCLK["Host clock observer"]
+        FACTS["HTTP facts and fixed SSH observation endpoints"]
+    end
+    subgraph SENDER["Dell sender"]
+        DCLK["Host clock observer"]
+        FBC["Fallback controller"]
+    end
+    subgraph MONITORHOST["arena-server"]
+        ACLK["Host clock observer"]
+        RM["Relay observation consumer"]
+        MESH["Read-only clock mesh"]
+        PV["Public projection and timing envelope"]
+    end
+    subgraph PUBLISHER["Raspberry Pi"]
+        PCLK["Host clock observer"]
+        PC["Collector: validate timing and strip private envelope"]
+    end
+    CCLK["cra-01: host clock observer"]
+    OCLK -. "local clock facts" .-> FACTS
+    FACTS -. "nonce-bound HTTP timing; sender pulls" .-> FBC
+    FACTS -. "fixed SSH observation; arena pulls" .-> RM
+    RM --> MESH
+    ACLK --> MESH
+    DCLK -. "read-only clock probe" .-> MESH
+    PCLK -. "read-only clock probe" .-> MESH
+    CCLK -. "read-only clock probe" .-> MESH
+    RM --> PV
+    FBC -. "controller facts and timing; arena pulls" .-> PV
+    PV -. "timing envelope; Pi pulls" .-> PC
+    PC --> EDGE["Sanitized public JSON"]
+```
+
+The sender's facts path is independent of arena. The mesh exports diagnostic
+facts and metrics, with no recovery policy or control feedback. Expired cached
+evidence becomes UNKNOWN and cannot add healthy time. The public projection
+contains neither internal machine/boot bindings nor the transport envelope.
+Clock estimates never extend CRA authorization or command expiry.
+
+The [route causal guard](v3/route-causality.md) adds an arena-owned veto before
+watchdog budget reservation, resolver resync and provider lifecycle mutation.
+Dell publishes a persistent cause ID as facts; arena decides whether to block
+secondary recovery. Unknown or expired cause context also blocks it. Raw API
+warnings remain visible and are only candidates for correlation. This guard
+cannot grant recovery authority or extend CRA authorization.
+
 ## Public Status Path
 
 ```text
 Pi collector -- HTTP GET --> Pi-local /grafana/ proxy --> arena-server Grafana
              <-- datasource JSON (Prometheus / Loki) --
 Pi collector -- relay and Twitch observations, read-only pull --> arena-server
-Pi -> filtered static files -> outbound upload -> GCS -> Cloudflare -> yukimurata0421.dev
+Pi -> filtered static files -> private R2 -> Cloudflare Worker -> yukimurata0421.dev
 ```
 
-The Pi initiates every request; arena-server never pushes to it. Public readers
+For public collection the Pi initiates every request; arena-server never pushes
+publication data to it. The separate read-only clock mesh can probe the Pi
+clock; that is not a publication or control channel. Public readers
 reach only the static edge, so they do not load the home uplink and cannot
 reach Grafana, Prometheus, Loki, raw logs, credentials, or the home network.
 Non-static operational access is outside this path and is not named here. The
 [publisher boundary](v3/public-publisher-boundary.md) lists what is allowed
-into the snapshot.
+into the snapshot. The [R2 case study](v3/r2-publication-and-freshness-case-study.md)
+distinguishes the operated edge from the older uploader code retained publicly.
 
 ## Who Can Act On What
 
@@ -216,11 +281,20 @@ into the snapshot.
 | Fast recovery inside the Dell Pod | The FFmpeg child of its own Pod | Pods, Deployments, or the relay |
 | Kubernetes on Dell | Restarts a failed container or Pod | Anything on OCI |
 | Fallback controller on Dell | Scales only `stream-v3-youtube-backup` between 0 and 1 | The main Pod or the relay |
+| Explicit operator running manual maintenance | Main Deployment replicas; fixed sender recovery timer/service; durable fallback inhibition; relay `alwaysAvailable`, `alwaysAvailableFile`, `alwaysAvailableTracks` | Provider destinations, credentials, fences, authority ownership, unrelated workloads or relay maintenance |
+| Arena route causal guard | Its bounded read-only cause context and a secondary-recovery veto | Starting media, granting authority, changing budgets, NTP, CRA or Pi control |
+| Host clock observers on all five hosts | Their bounded local current facts | System clocks, media, replicas, incident policy or authorization |
+| Read-only clock mesh on arena-server | Its diagnostic cache and metrics | Clock setting, recovery effects, policy, credentials or the Pi's published artifacts |
 | Keeper on OCI | Re-creates a failed forward; renews the Twitch forward | The YouTube forward during renewal; anything at home |
-| Clock observer on Dell / its importer on arena-server | Their bounded RAM snapshots, independent observation state and metrics | Senders, routes, replicas, provider lifecycle or recovery effects |
+| Return-feed video-clock observer on Dell / its importer on arena-server | Their bounded RAM snapshots, independent observation state and metrics | Senders, routes, replicas, provider lifecycle or recovery effects |
 | Monitor on arena-server | Requests a guarded runtime restart (budget, cooldown, 180-second convergence wait) | The FFmpeg process directly; replacement broadcasts (disabled) |
 | Raspberry Pi | Its own static output | Anything else; it receives no control feedback |
 | CRA agent / central | Observe decisions, sign policy and verify audit | `dry_run` sends no restart requests |
+
+Manual maintenance is an explicit, existing-authority operation with durable
+inhibition, shared locking, target binding and no resend of unknown effects.
+Its return requires fresh progress and operator confirmation; clock observers
+do not acquire those privileges. See the [maintenance boundary](v3/manual-maintenance.md).
 
 The route's self-healing pieces (keeper and fallback controller) use fixed
 thresholds and do not depend on the monitor, so they keep working when

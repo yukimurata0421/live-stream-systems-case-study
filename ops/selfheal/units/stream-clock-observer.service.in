@@ -1,0 +1,34 @@
+[Unit]
+Description=Read-only host clock synchronization facts
+After=time-sync.target
+
+[Service]
+Type=simple
+DynamicUser=yes
+ExecStart=/usr/bin/python3 -I -B /opt/stream-clock/current/clock_observer.py --host-id @HOST_ID@ --state /run/stream-clock/status.json
+RuntimeDirectory=stream-clock
+RuntimeDirectoryMode=0755
+CPUQuota=2%
+MemoryMax=48M
+TasksMax=8
+Restart=on-failure
+RestartSec=15
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+# ProtectClock also blocks modes=0 adjtimex reads. DynamicUser and an empty
+# capability set prevent adjtimex writes; explicit clock-setting calls stay denied.
+SystemCallFilter=~clock_settime settimeofday
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+IPAddressDeny=any
+IPAddressAllow=localhost
+StandardOutput=null
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Waiting for source data</title>
+  <link rel="stylesheet" href="/map/vendor/maplibre-gl.css">
+  <link rel="stylesheet" href="/slate.css">
+</head>
+<body>
+  <main id="map" aria-label="Background map while the source feed is unavailable"></main>
+  <div class="shade" aria-hidden="true"></div>
+  <header><span class="brand">ADS-B MAP</span><span class="status">WAITING FOR DATA</span></header>
+  <section class="notice" role="status">
+    <div class="eyebrow"><span class="indicator" aria-hidden="true"></span>WAITING FOR SOURCE</div>
+    <h1>No data received</h1>
+    <p>Waiting for video and data from the source.</p>
+    <p>The live view will return when the connection is restored.</p>
+    <div class="english">Live aircraft positions and weather updates are not being displayed.</div>
+  </section>
+  <footer>
+    <p>Background map only. Live aircraft and weather data are not shown.</p>
+    <p lang="en">Map: OpenFreeMap © OpenMapTiles · Data © OpenStreetMap contributors (ODbL)</p>
+    <p lang="en">Terrain: Mapterhorn / GSI Japan (Approval R 7JHs 542) · Not for navigation</p>
+  </footer>
+  <script type="module" src="/slate.js"></script>
+</body>
+</html>

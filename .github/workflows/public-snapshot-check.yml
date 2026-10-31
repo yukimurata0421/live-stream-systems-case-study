@@ -46,6 +46,9 @@ jobs:
       - name: Validate current public source port
         run: python ops/scripts/validate_public_port.py
 
+      - name: Verify observation clock dependencies
+        run: python ops/scripts/sync_observation_clock.py --check
+
       - name: Validate k3s manifests
         run: |
           python ops/scripts/validate_k3s_manifests.py

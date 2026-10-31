@@ -1,0 +1,175 @@
+{
+  "schema": "stream.public_relay_recovery_correction.v1",
+  "updated_at_jst": "2026-10-31T17:39:53.464916+09:00",
+  "scope": "Explicit relay-stop facts and a generation-independent uncertainty deadline; bounded automated validation and operated read checks",
+  "policy": {
+    "confirmed_media_start_seconds": 30,
+    "unconfirmed_progress_seconds": 90,
+    "continuous_healthy_stop_seconds": 300,
+    "uncertainty_is_not_confirmed_media_failure": true,
+    "wall_stamp_independent_ack_progress": true,
+    "media_retry_settings_changed": false
+  },
+  "native": {
+    "runtime-r3": {
+      "backup_started": true,
+      "relay_stop_to_backup_seconds": 47.358385062776506,
+      "ffmpeg_restarts": 4,
+      "backup_receiver_advancing": true,
+      "start_events": 1
+    },
+    "held-r2": {
+      "backup_started": true,
+      "relay_stop_to_backup_seconds": 47.80397209059447,
+      "ffmpeg_restarts": 0,
+      "backup_receiver_advancing": true,
+      "start_events": 1
+    },
+    "frozen-r2": {
+      "backup_started": true,
+      "relay_stop_to_backup_seconds": 46.93393007759005,
+      "ffmpeg_restarts": 0,
+      "backup_receiver_advancing": true,
+      "start_events": 1
+    },
+    "blind": {
+      "backup_started": true,
+      "relay_stop_to_backup_seconds": 94.03554271906614,
+      "ffmpeg_restarts": 8,
+      "backup_receiver_advancing": true,
+      "start_events": 1
+    },
+    "clock": {
+      "backup_started": false,
+      "relay_stop_to_backup_seconds": null,
+      "ffmpeg_restarts": 0,
+      "backup_receiver_advancing": null,
+      "start_events": 0
+    },
+    "facts-only": {
+      "backup_started": false,
+      "relay_stop_to_backup_seconds": null,
+      "ffmpeg_restarts": 0,
+      "backup_receiver_advancing": null,
+      "start_events": 0
+    },
+    "clock-frozen-stamp": {
+      "backup_started": false,
+      "relay_stop_to_backup_seconds": null,
+      "ffmpeg_restarts": 0,
+      "backup_receiver_advancing": null,
+      "start_events": 0
+    }
+  },
+  "validation": {
+    "public_related_tests": 155,
+    "public_subtests_passed": 126,
+    "native_expected_outcomes": 7,
+    "native_all_owned_children_exited": true,
+    "failed_setups_and_expected_before_fix_regression_preserved": true,
+    "cold_actual_uid": {
+      "controller": "PASS",
+      "facts_real_cli": "PASS"
+    },
+    "source_defaults_and_language": "Public defaults preserved; same loop and HTTP regressions passed",
+    "documentation_tests": 23,
+    "documentation_subtests_passed": 1099,
+    "public_source_boundary": "PASS; zero issues",
+    "public_language": "PASS; zero issues",
+    "selected_secret_scan": "PASS; no leaks",
+    "clock_copies": "PASS",
+    "live_runtime_input_match": "PASS; executable and four runtime modules matched",
+    "maintenance_behavior_and_causebook": "Preserved; maintenance documentation language differs"
+  },
+  "operated": {
+    "controller_applied": true,
+    "facts_producer_applied": true,
+    "consumer_first": true,
+    "loaded_source_and_process_checked": true,
+    "post_apply_actual_consumer": "HEALTHY; clock VERIFIED",
+    "media_pod_and_relay_process_identities_preserved": true,
+    "ack_advancing": true,
+    "backup_replicas": 0,
+    "rollback_postimage_checks": "PASS; no rollback executed",
+    "initial_controller_postcheck": "Immediate argv assertion failed once; read-only reconciliation confirmed the new process; apply/restart was not repeated"
+  },
+  "production_faults": 0,
+  "provider_lifecycle_mutations": 0,
+  "ntp_changes": 0,
+  "cra_arena_pi_changes": 0,
+  "commit_or_push_performed": false,
+  "limits": [
+    "Local five-second restart supervisor and low-resolution media are not the complete production engine or WAN",
+    "ACK growth does not prove provider reception",
+    "Production relay-stop/YouTube backup selection and gap-free public playback remain unverified",
+    "Complete observation loss may start backup during actual media flow; 300 healthy seconds is not a maximum backup duration",
+    "Controller restart starts a new uncertainty deadline"
+  ],
+  "private_evidence_cap_bytes": 134217728,
+  "files": [
+    {
+      "path": "README.md",
+      "sha256": "9e087e422f9e209809dd447f48f1954357e4f4c0342e1a7eda04e5727197c3f1"
+    },
+    {
+      "path": "docs/00_INDEX.md",
+      "sha256": "045419979d7281df6c1a3c85c912fb844d2708500a74c6bd16b7668944b814ad"
+    },
+    {
+      "path": "docs/current-status.md",
+      "sha256": "4dc859dcc414eda8fbf9c21a330ba911d26e9e34a6a2e504ee920a769f97e2b1"
+    },
+    {
+      "path": "docs/operational-scorecard.md",
+      "sha256": "389427530a54f38344704b3bcca1d750cbf92c3b0a7f2c943c2f5da0de5675c5"
+    },
+    {
+      "path": "docs/v3/route-causality.md",
+      "sha256": "0e94f3f10b6b7473b3007a6d4ca112e6a9287b7d547da78f32e78c2bac26e2cf"
+    },
+    {
+      "path": "docs/v3/cross-host-observation-time.md",
+      "sha256": "b87f7dfe7e1c583129b4a2e5afa97186ade78a94e3dd9e46e1e9832809d02ee9"
+    },
+    {
+      "path": "docs/v3/self-healing-oci-fanout.md",
+      "sha256": "bfc3e29275bad8d2db12a18bb47cd7817fecdf7500614da534fa4540a2b7c862"
+    },
+    {
+      "path": "docs/v3/relay-stop-main-loop.md",
+      "sha256": "22052af4f1aaac555c91569f05386c7fb1e0155ea2704d01a21d4cb095dda1e3"
+    },
+    {
+      "path": "docs/v3/relay-recovery-deadline.md",
+      "sha256": "cc8d60db62687d7aacebc58f40c9800e15752a5e70632fe81bcca57b815e6f58"
+    },
+    {
+      "path": "ops/selfheal/fallback_controller.py",
+      "sha256": "34af247ed27bc6ec4fa6e9b6575da283edc4e340dc29f013d9c2fa99c80663e6"
+    },
+    {
+      "path": "ops/selfheal/route_assessment.py",
+      "sha256": "1e3b1959f5c695f3507767bc88179c9e6f68d1e3327fc79c9a265d4567df4318"
+    },
+    {
+      "path": "ops/selfheal/route_facts_http.py",
+      "sha256": "00de60667fa255ffaae74ab78637befe03a30ee83848c579ae8498e15205ad36"
+    },
+    {
+      "path": "tests/test_fallback_relay_stop_loop.py",
+      "sha256": "b15e0a91c69c8bb2cb616772b15721e550d0c53988d743c2d19ebab0af0563d2"
+    },
+    {
+      "path": "tests/test_relay_availability.py",
+      "sha256": "d3c4895b6e3bd13c45089ad5bf57615c3c23d3e832eb27dbe3c0bebe7815f9e1"
+    },
+    {
+      "path": "tests/test_route_causality.py",
+      "sha256": "58f30630de06d490952f5f44dcfc3b0a3d29b2894349d1001d19d48ecd9b8b79"
+    },
+    {
+      "path": "tests/test_fallback_copy_route.py",
+      "sha256": "72d486a7cc4d9ff476870cd686dc13ec1ea879a69a6b169ae098dad881b2c080"
+    }
+  ]
+}

@@ -23,6 +23,10 @@ def restart_service(
     log: Callable[[str], None],
     supervisor=None,
 ) -> bool:
+    from watchers.route_guard import veto
+    if veto():
+        append_event("restart_skipped", component=context.component, reason="route causal guard", unit=context.unit)
+        return False
     if not allow_restart(context.component, context.reason):
         append_event("restart_skipped", component=context.component, reason=context.reason, unit=context.unit)
         return False

@@ -15,7 +15,9 @@ evidence windows, not current service-health guarantees.
 | Repaired current warnings and public freshness | Recent raw/monitoring agreement and fresh public snapshots after cache expiry. | Historical gaps and formal UNKNOWN results were preserved. |
 | Public source checks | Focused and component checks in [validation](../publication/validation.json). | Source tests do not establish production activation or native qualification. |
 | October 13 qualification campaign remained unverified | Harness result artifacts were not recovered. | This campaign is separate from the later migration-system runs; missing results are not a pass. |
-| One automatic fallback and return drill | Fallback started 52 seconds after a manual relay stop; it later stopped after sustained relay health. | The operator restarted the relay. Other failure modes and frame-level continuity were not tested. |
+| Historical production fallback drill (2026-10-20, former policy) | Fallback started 52 seconds after a manual relay stop; it later stopped after sustained relay health. | The operator restarted the relay. Other failure modes and frame-level continuity were not tested. |
+| Fallback rule revisions (2026-10-30 to 10-31) | Isolated tests and review found gaps in successive revisions, including no backup within 75 s of a relay stop and no backup for 600 s with a stopped YouTube copy. Each was reproduced, kept as a regression and fixed. | [Revision history](v3/fallback-policy-revisions.md); failed results are retained in the dated records. |
+| Current fallback rule, isolated faults (2026-10-31) | The current consumer is checked with isolated media faults, clock faults and changing observation states. | [Evidence status](v3/fallback-decision-contract.md#evidence-status); production faults, YouTube backup selection and uninterrupted public playback remain unverified. |
 
 Read [the incident stories](operational-case-studies.md) for symptoms, actions,
 verification, and limits. Read [the continuity note](same-url-continuity-evidence.md)

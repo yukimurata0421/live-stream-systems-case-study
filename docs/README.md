@@ -19,7 +19,9 @@ for a path that fits their role.
 | --- | --- |
 | Can an output recover without replacing the encoder? | [Runtime contract and layer choice](v3/ffmpeg-fifo-recovery.md), then the [measured FIFO case](v3/ffmpeg-fifo-measurements.md). |
 | Which hosts exist, and who can act on what? | [Architecture](architecture.md). |
-| How do normal delivery, fallback, and return work? | [Self-healing OCI fan-out](v3/self-healing-oci-fanout.md). |
+| How do normal delivery, fallback, and return work? | [Self-healing OCI fan-out](v3/self-healing-oci-fanout.md), then the [fallback decision contract](v3/fallback-decision-contract.md). |
+| How was a failover rule corrected when each fix exposed a new gap? | [One fallback rule, revised under test](v3/fallback-policy-revisions.md). |
+| How are timestamps compared across hosts with imperfect clocks? | [Cross-host time contract](v3/cross-host-observation-time.md). |
 | Why was the previous recovery design replaced? | [Decision record](v3/oci-route-simplification-decision.md). |
 | Why were these hosts, CPU, and GPU selected? | [Hardware selection](hardware-selection.md). |
 | What do the 160 days actually measure? | [Continuity evidence](same-url-continuity-evidence.md). |
@@ -53,3 +55,13 @@ suites are described in their own READMEs and the
 The [catalog](00_INDEX.md) lists every document by topic, including dated case
 studies, superseded designs, and the CRA design study. Private operational
 logs, credentials, raw evidence, and runtime databases are excluded.
+
+## Current Rules And Dated Evidence
+
+Keep changing fallback counts, durations and the evidence that permits a hold
+in the [decision contract](v3/fallback-decision-contract.md) and
+[current status](current-status.md). Summaries link to those pages instead of
+repeating the current numbers or decision conditions. Revision-history titles
+do not contain revision counts. A dated measurement retains its original
+values and identifies its policy version; update its current-rule link rather
+than rewriting historical evidence as a new result.

@@ -1,0 +1,221 @@
+{
+  "schema": "stream.clock_hold_gap_fix.v1",
+  "at_jst": "2026-10-31T19:22:54.462585+09:00",
+  "scope": "clock-hold transition grace in existing fallback controller; selected public port",
+  "supersedes": "publication/youtube-egress-fix-20261031.json",
+  "decision": {
+    "first_nonclock_gap_after_clock_hold": "new 90-second grace; no complete-route-health credit",
+    "continuing_nonclock_gap": "does not renew grace",
+    "returning_clock_rejected_response": "ends that gap; a later independent gap gets a new grace",
+    "clock_hold_age": "retained across observation/initialization gaps with recent ACKs",
+    "confirmed_media_failure": "existing 30-second window",
+    "alert_recovery_and_backup_stop": "fresh verified health; continuous 300 seconds for backup stop",
+    "tradeoff": "Alternating clock rejection and brief nonclock gaps can hold while ACKs advance; observation alert exposes prolonged uncertainty."
+  },
+  "regression": {
+    "before": "one HTTP 503 after 300 logical seconds of clock rejection dispatched START at time 315",
+    "after": "no immediate start, no hold-age reset; sustained gap starts 90 seconds after transition"
+  },
+  "checks": {
+    "private_tests": 192,
+    "private_subtests": 107,
+    "public_tests": 194,
+    "public_subtests": 111,
+    "operated_notification_overlay_tests": 13,
+    "native_conditions_passed": 13,
+    "native_attempts": 16,
+    "native_harness_failed": 1,
+    "native_interrupted": 2,
+    "version_binding": "Same final controller/producer source in all successful cases; harness collector lookup corrected for retries.",
+    "clock_copy_sync": "PASS"
+  },
+  "native": {
+    "rows": [
+      {
+        "case": "runtime",
+        "start_count": 1,
+        "start_seconds_from_initial_fault": 47.15856515336782,
+        "ffmpeg_restarts": 4,
+        "receiver_advancing": true
+      },
+      {
+        "case": "held",
+        "start_count": 1,
+        "start_seconds_from_initial_fault": 46.85793988406658,
+        "ffmpeg_restarts": 0,
+        "receiver_advancing": true
+      },
+      {
+        "case": "copy-hang-clock",
+        "start_count": 1,
+        "start_seconds_from_initial_fault": 78.81679043080658,
+        "ffmpeg_restarts": 0,
+        "receiver_advancing": true
+      },
+      {
+        "case": "clock-gap-transient",
+        "start_count": 0,
+        "start_seconds_from_initial_fault": null,
+        "ffmpeg_restarts": 0,
+        "receiver_advancing": false
+      },
+      {
+        "case": "clock-gap-long",
+        "start_count": 1,
+        "start_seconds_from_initial_fault": 205.44955381192267,
+        "ffmpeg_restarts": 0,
+        "receiver_advancing": true
+      },
+      {
+        "case": "frozen",
+        "start_count": 1,
+        "start_seconds_from_initial_fault": 47.64748093020171,
+        "ffmpeg_restarts": 0,
+        "receiver_advancing": true
+      },
+      {
+        "case": "copy-stop",
+        "start_count": 1,
+        "start_seconds_from_initial_fault": 47.1622281242162,
+        "ffmpeg_restarts": 0,
+        "receiver_advancing": true
+      },
+      {
+        "case": "blind",
+        "start_count": 1,
+        "start_seconds_from_initial_fault": 94.20164159592241,
+        "ffmpeg_restarts": 8,
+        "receiver_advancing": true
+      },
+      {
+        "case": "copy-hang",
+        "start_count": 1,
+        "start_seconds_from_initial_fault": 78.54701426066458,
+        "ffmpeg_restarts": 0,
+        "receiver_advancing": true
+      },
+      {
+        "case": "copy-stop-clock",
+        "start_count": 1,
+        "start_seconds_from_initial_fault": 46.98561692610383,
+        "ffmpeg_restarts": 0,
+        "receiver_advancing": true
+      },
+      {
+        "case": "copy-missing",
+        "start_count": 1,
+        "start_seconds_from_initial_fault": 95.71686412394047,
+        "ffmpeg_restarts": 0,
+        "receiver_advancing": true
+      },
+      {
+        "case": "facts-only",
+        "start_count": 1,
+        "start_seconds_from_initial_fault": 94.54761892836541,
+        "ffmpeg_restarts": 0,
+        "receiver_advancing": true
+      },
+      {
+        "case": "clock",
+        "start_count": 0,
+        "start_seconds_from_initial_fault": null,
+        "ffmpeg_restarts": 0,
+        "receiver_advancing": false
+      }
+    ],
+    "sustained_gap_to_start_decision_sec": 95.16035227011889
+  },
+  "operated": {
+    "controller_release": "8702d01fd15b1202",
+    "previous_controller_release": "d18623ebec778bcc",
+    "changed_services": [
+      "fallback controller"
+    ],
+    "real_service_UID_cold_read": "PASS",
+    "loaded_source_and_fresh_primary": "HEALTHY",
+    "backup_replicas": 0,
+    "media_identity_preserved": true,
+    "ACK_advanced": true,
+    "postimage_checked_rollback": "READY"
+  },
+  "limits": [
+    "Isolated local RTMP receiver proof does not establish YouTube backup selection",
+    "No production failure injection or external test notification",
+    "Uninterrupted public-player AV and actual critical delivery remain unverified"
+  ],
+  "commit_push_performed": false,
+  "files": [
+    {
+      "path": "README.md",
+      "before_sha256": "7b8e7bbffca5b4b797f33874cb14f2aa11fea3c9d64e52ba7ffc9d7e9fbac10f",
+      "source_sha256": null,
+      "public_sha256": "4e8f108076e993de07f29a3e322169db0607870dfe5dd538736388b2d37f7aac"
+    },
+    {
+      "path": "docs/architecture.md",
+      "before_sha256": "24ebadc374bfdbe9fffd99eda7bb7386e649b8b4b0deebb550cfdde4c1685fbf",
+      "source_sha256": null,
+      "public_sha256": "13b67c6b502e27e9c33e584d4542376dd568b8463599447b83f3d4e991c25825"
+    },
+    {
+      "path": "docs/current-status.md",
+      "before_sha256": "9ffcc757db5534c314a62d0b62e9da54367105c119a820d1d4b2250ddab6b7bd",
+      "source_sha256": null,
+      "public_sha256": "b6646fd5feb355b5919a728ee2b4b3638569a73a98d20a14c97397cfdd7cc9c2"
+    },
+    {
+      "path": "docs/v3/cross-host-observation-time.md",
+      "before_sha256": "69320f71d126a957e89b70998b3a32b2e4bd9c3e177c1ac81f01c2c7ffb1418a",
+      "source_sha256": null,
+      "public_sha256": "55d40918f26b5ee3b095ee49a2a0f716504c3781f488071d2a1fd63accc5c8de"
+    },
+    {
+      "path": "docs/v3/route-causality.md",
+      "before_sha256": "f24f72427c0cd9de648a4f37fc349f00c8509ef67966afa8093241dd1128e1c0",
+      "source_sha256": null,
+      "public_sha256": "de15d312776e4a0a9aebefc293de26c3fd07e4bdbcfe3892f8d018ae1734c766"
+    },
+    {
+      "path": "docs/v3/self-healing-oci-fanout.md",
+      "before_sha256": "b909e495e361a949a80312740214aa2403d976db061e4617e32105901520fb43",
+      "source_sha256": null,
+      "public_sha256": "704f8001d876dde9bcc47c47dc5820b65d8ade454470eb40cbc5ddce460de5ba"
+    },
+    {
+      "path": "docs/v3/youtube-egress-failover.md",
+      "before_sha256": "88dc40696598a46110a53ea3e24eb0c4b8e9722e5f85aa79f1be06eae367d8b6",
+      "source_sha256": null,
+      "public_sha256": "f712e2633f36a2e59e14b1d6ca147ba1854bc7f6c8c0bb2e73a4c256f65e430b"
+    },
+    {
+      "path": "ops/selfheal/route_assessment.py",
+      "before_sha256": "d60020c2a6b1d5aee4ccde441ea5d2004125e5cb1d4b5dc2195623806137ec4f",
+      "source_sha256": "be3142b7d7835bf73256d3706d0ec708157e365578cfd9ae4e2b515a65d1a433",
+      "public_sha256": "be3142b7d7835bf73256d3706d0ec708157e365578cfd9ae4e2b515a65d1a433"
+    },
+    {
+      "path": "tests/test_fallback_relay_stop_loop.py",
+      "before_sha256": "e5ec751e54cf785466bad06f974c751d460e4da690c6940b0aa56e181146a9ab",
+      "source_sha256": "424d3a8b45465ebd10b12db3458594d686e63eeda44f3433bb0d25440a55b365",
+      "public_sha256": "424d3a8b45465ebd10b12db3458594d686e63eeda44f3433bb0d25440a55b365"
+    },
+    {
+      "path": "tests/test_relay_availability.py",
+      "before_sha256": "c1877a963e36b296456b44bbd737a8e2b84ea20bab20628c9b0e387827208c8c",
+      "source_sha256": "2ce5e69550eee2ca7e0a9489407ee48868f8216e9a420b2383f56fafe28d6c6c",
+      "public_sha256": "459613bb292575f7a5dd0bf61fbdb7400af2d035ddacf5d9ddeb24ee5d3bdcde"
+    },
+    {
+      "path": "tests/test_route_causality.py",
+      "before_sha256": "58f30630de06d490952f5f44dcfc3b0a3d29b2894349d1001d19d48ecd9b8b79",
+      "source_sha256": "efe49cfd852dcf8fec88ea9b79f3cce9133919ea59ad1c5e1eb5ba7bb2b7b72c",
+      "public_sha256": "76961304f93f753122cd9215cc1a0481feb4fa51eff7a96b818679bac612dec1"
+    },
+    {
+      "path": "tests/test_route_observation_notify.py",
+      "before_sha256": "9c16df83f61a134c957f95df2cf9ff4ccfe477507728568102366c45c0670e7b",
+      "source_sha256": "93ca63b5a9af5a05da6c0195083a7e0a199184e15bef3d57e0ea3179e4341276",
+      "public_sha256": "acfd3d3eeade31bd34086e4fac9f933453997b72f4d2866faa463c9e780e502b"
+    }
+  ]
+}

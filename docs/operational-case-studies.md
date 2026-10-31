@@ -3,7 +3,7 @@
 These are short accounts of real operational problems and one failed test
 campaign. They explain the engineering decisions without requiring familiarity
 with the whole system. The October cases summarize retained records from
-2026-10-13 to 2026-10-25 JST; they are historical observations, not a current
+2026-10-13 to 2026-10-31 JST; they are historical observations, not a current
 health report.
 
 The useful result is sometimes restored delivery, sometimes a corrected warning,
@@ -198,14 +198,16 @@ operation of an earlier component does not establish the replacement system.
 **Problem.** Automatic fallback exists only on paper until the relay actually
 fails. The drill stopped the relay service during a live broadcast.
 
-**Result.** The controller started the fallback 52 seconds after the stop, and
+**Historical result (2026-10-20, former policy).** The controller started the
+fallback 52 seconds after the stop, and
 YouTube reported the broadcast live and healthy while the fallback sent. The
 relay was started again after about two minutes; the main sender reconnected
 within seven seconds, Twitch came back with a new session, and the fallback
 stopped itself after 300 seconds of relay health. The broadcast did not end,
 and the recorded gap in data reaching YouTube was about 65 seconds. The operator
 stopped and restarted the relay; fallback control and sender reconnection were
-automatic. Frame-level continuity was not measured.
+automatic. Frame-level continuity was not measured. The start rule used here
+was later revised; see story 12.
 
 **What it found.** The YouTube watchdog on the monitoring host counted only the
 main sender and confirmed an incident while the fallback was sending. Because
@@ -307,6 +309,39 @@ needs a comparison that changes one.
 
 [Case study](v3/fifo-timestamp-continuity-case-study.md) ·
 [FIFO layer decision](v3/ffmpeg-fifo-recovery.md#choosing-the-recovery-layer)
+
+## 12. Each Fix To The Failover Rule Exposed The Next Gap
+
+**Problem.** A relay timestamp 3 ms ahead of Dell's clock was rejected as coming
+from the future, and the controller started an unneeded YouTube backup. The
+obvious fix, "a clock fault is not a media fault", was correct. Its first
+implementation went further and held the route on *every* observation loss.
+
+**Investigation and response.** Faults were injected only into owned processes
+in isolated namespaces, running the real controller loop, real FFmpeg and real
+kernel TCP counters. A stopped relay then started no backup in 75 s: short
+FFmpeg retries kept changing the process generation, and each change reset the
+failure window. The next fix let Dell's upload ACKs extend a 90 s deadline.
+Review showed ACKs prove delivery only as far as the relay, so a stopped
+YouTube copy process on the relay was invisible; a trace started nothing in
+600 s. A later review found that leaving a long clock hold reused an expired
+timer, so one HTTP 503 started the backup at once. Each gap was reproduced as a
+failing regression before it was fixed. Lengthening FFmpeg retries made the
+first test pass and was rejected, because it tuned media recovery to suit the
+detector.
+
+**Result and limit.** Isolated faults and transition traces test the current
+rule; deployment and measured results are recorded in
+[current status](current-status.md) and the [decision contract](v3/fallback-decision-contract.md). Production faults, YouTube's
+choice of the backup ingest and switching without a gap remain unverified; a
+the [dated player study](v3/route-failover-validation.md) records the local reception gap.
+
+**What it demonstrates.** Weigh the two kinds of error before choosing what to
+do under uncertainty. Know which hop each piece of evidence covers. Test the
+transitions between states, not only the states.
+
+[Revision history](v3/fallback-policy-revisions.md) ·
+[Current decision contract](v3/fallback-decision-contract.md)
 
 ## Evidence And Reading Boundaries
 

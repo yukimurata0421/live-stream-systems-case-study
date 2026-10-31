@@ -16,14 +16,15 @@ constraint. The operator reports sufficient VM resources and outbound bandwidth
 for the current two-platform workload; this record includes no independent
 capacity benchmark or itemized comparison of cloud bills.
 
-## Current Route: 2026-10-20
+## Current Route
 
 Since 2026-10-20 08:43 JST, the production media route uploads one feed from the
 Dell encoder host to the OCI relay. The relay forwards that feed to YouTube and
-Twitch. When relay health is lost or cannot be observed, the Dell host starts a
-fallback sender that publishes directly to the YouTube backup ingest. It keeps
-that sender running through the recovery confirmation window and stops it only
-after five minutes of continuous relay health.
+Twitch. When the relay route to YouTube fails, a Dell controller starts a
+fallback sender that publishes directly to the YouTube backup ingest, keeps it
+running through recovery, and retires it after sustained verified media health.
+The [fallback decision contract](fallback-decision-contract.md) is the single
+current definition of the evidence, decisions, timers and uncertainty tradeoffs.
 
 ```mermaid
 flowchart LR
@@ -39,7 +40,7 @@ flowchart LR
 
 | State | Home uploads | What changes next |
 | --- | --- | --- |
-| Normal operation | One main feed to OCI. | A sustained unhealthy or unavailable relay observation starts the fallback. |
+| Normal operation | One main feed to OCI. | Confirmed media failure, or prolonged loss of YouTube route confirmation, starts the fallback. |
 | Fallback | The main sender may continue or reconnect; a separate sender uploads directly to YouTube. | The fallback remains active while relay health is unhealthy or unknown. |
 | Recovery confirmation | Both uploads can run while the relay forwards again. | After 300 seconds of continuous relay health, the fallback stops. |
 
@@ -61,30 +62,36 @@ retired is recorded in
 | Relay | OCI systemd `stream-v3-oci-mediamtx` | `Restart=always` with a three-second delay. Tunnel access is restricted; the public unit is an example of the encoder allowlist. |
 | YouTube copy process | OCI systemd `stream-v3-youtube-forward` | Since 2026-10-25, copies the YouTube forward to YouTube without re-encoding and starts each connection at the first IDR with its own timestamp origin. On a YouTube-side failure it closes its input and the forward reconnects. See the [timestamp case study](fifo-timestamp-continuity-case-study.md). |
 | Keeper | OCI systemd `stream-v3-oci-keeper` | Re-creates one forward that has not been forwarding with advancing outbound bytes on the same handler, or has reported an error, for 30 seconds (at most once per minute per destination). Repair replaces only that list slot so other providers keep their handlers. Renews Twitch at 00:00 JST or after 46 hours. |
-| Fallback controller | Dell systemd `stream-v3-fallback-controller` | Starts the fallback after 30 seconds of relay failure and stops it after 300 seconds of continuous relay health. |
+| Fallback controller | Dell systemd `stream-v3-fallback-controller` | Scales the fallback sender between 0 and 1 under the [decision contract](fallback-decision-contract.md). |
 | Fallback sender | Dell k3s Deployment `stream-v3-youtube-backup` | Normally zero replicas. While running, it reconnects on its own. |
 
 Relay health means three things at once: the input path is ready, its received
 byte counter advances, and YouTube output advances. Since 2026-10-25 the YouTube
 part is read from the copy process: the expected process, boot and destination,
 fresh state, and increases in YouTube output bytes and in both video and audio
-packets on the same connection. An unreachable API or a missing sample
-counts as unhealthy. The controller only stops the fallback after continuous
-health; it never stops it because an observation is missing.
+packets on the same connection. An unreachable API or missing sample is
+observation loss, not health: it resets the continuous-health window, and the
+[decision contract](fallback-decision-contract.md) bounds how long it can last
+before the backup starts.
 
 The YouTube forward is identified by the host of its own destination, not by
 its position in the forward list. Until 2026-10-21 the controller, keeper, and
 observer took position 1 as YouTube. While the keeper had removed a failing
 YouTube forward, Twitch moved to position 1, and its advancing counters could be
-read as YouTube health and delay the fallback. A missing or duplicated YouTube
-forward now counts as unhealthy.
+read as YouTube health and delay the fallback. Under the current bound-facts path, a missing or duplicated YouTube
+forward is rejected as observation loss rather than read as another provider's
+progress.
 
 The monitoring host is not in this control loop. If monitoring is down, the
 relay, keeper, and fallback controller still act on their own observations.
 
-The 30-second start threshold is measured from the controller's unhealthy
-observation. Polling occurs every 15 seconds, followed by Pod startup and
-connection setup. It is not a promise of restored delivery within 30 seconds.
+The start thresholds are decision points, not promised recovery times:
+polling every 15 seconds, Pod startup and connection setup come on top. The
+rule was revised several times on October 30-31; the
+[revision history](fallback-policy-revisions.md) explains why. Isolated checks
+of the current rule started the backup about 47 s after a relay stop; production
+fault injection and provider backup selection remain untested. The 52-second
+result below is a production drill under the October 20 rule.
 
 The fallback bypasses the OCI route; it still shares the Dell host, power, and
 home uplink with the main sender. It cannot restore delivery through a failed
@@ -121,6 +128,10 @@ Later renewals are tracked in [current status](../current-status.md).
 
 ## Drill: stopping the relay (2026-10-20 08:55 to 09:03 JST)
 
+This historical production drill used the former policy, which counted
+observation loss toward fallback startup. Its 52-second result does not
+validate the current policy. Current isolated evidence and its limits are
+recorded in the [decision contract](fallback-decision-contract.md#evidence-status).
 The relay service was stopped by hand and started again two minutes later.
 
 | Elapsed from stop | Observation |
@@ -153,6 +164,7 @@ checked only with the fallback at zero replicas; see
 
 ## Drills: tunnel loss and relay-host reset (2026-10-21)
 
+These are also historical drills under the former failure policy.
 Two more failure modes were exercised during the live broadcast. Before each,
 the state of all three hosts was recorded; afterwards the same checks were
 repeated and matched apart from timestamps, rates, and the relay's boot time.
