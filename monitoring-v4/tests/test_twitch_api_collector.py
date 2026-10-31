@@ -261,32 +261,26 @@ def test_diagnostics_keep_failures_after_recovery_and_separate_latency_by_stage(
 
 
 def test_http_429_preserves_quota_headers_without_provider_body(setup, monkeypatch):
-    from urllib.error import HTTPError
-    from io import BytesIO
     import stream_monitoring_v4.collectors.twitch_api as module
-    body = BytesIO(b'dummySecret123')
-    class Opener:
-        def open(self, *args, **kwargs):
-            raise HTTPError(STREAMS_URL, 429, 'unused',
-                            {'Ratelimit-Remaining':'0','Ratelimit-Limit':'800','Retry-After':'120'}, body)
-    monkeypatch.setattr(module, 'build_opener', lambda *args: Opener())
+    raw = b'HTTP/1.1 429 Limited\r\nRatelimit-Remaining: 0\r\nRatelimit-Limit: 800\r\nretry-after: 120\r\n\r\ndummySecret123'
+    monkeypatch.setattr(module, '_curl_transfer', lambda *args: (raw, 0, None, None))
     collector, transport, _ = setup
     collector.collect()
     collector.transport = request_json
     result = collector.collect()
     assert result['http_status'] == 429 and result['error_category'] == 'rate_limited'
     assert result['rate_limit_remaining'] == 0 and result['rate_limit_limit'] == 800
-    assert result['retry_after_sec'] == 120 and body.closed
+    assert result['retry_after_sec'] == 120
     assert result['probe_counts']['rate_limited'] == 1
     assert 'dummy' not in str(result)
 
 
-def test_urlerror_wrapped_timeout_is_not_mislabeled_as_network(monkeypatch):
-    from urllib.error import URLError
+def test_dns_timeout_is_not_mislabeled_as_network(monkeypatch):
     import stream_monitoring_v4.collectors.twitch_api as module
-    class Opener:
-        def open(self, *args, **kwargs): raise URLError(TimeoutError())
-    monkeypatch.setattr(module, 'build_opener', lambda *args: Opener())
+    def transfer(config, timeout, marker):
+        return ('\n'+marker+' 000 0 0 0 0 5').encode(), 28, None, 'dns'
+    monkeypatch.setattr(module, '_curl_transfer', transfer)
     with pytest.raises(ProbeError) as caught:
         request_json(STREAMS_URL, {}, None, 5)
     assert caught.value.reason == 'timeout'
+    assert caught.value.transport_phase == 'dns'

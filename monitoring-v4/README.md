@@ -21,6 +21,11 @@ collectors and separate public SLI projections. See
 The 2026-10-21 update adds fixed-cadence API collection, failure/quota diagnostics,
 and OCI-aware Twitch notification decisions with verified-observation recovery
 gates. The public examples retain configured account/revision bindings.
+The 2026-10-27 update bounds each API request across DNS, TCP, TLS and response
+reads, replaces per-request Python TLS setup with a bounded curl child, and adds
+transport-phase diagnostics. The collector requires `/usr/bin/curl` with HTTPS
+support and a system CA trust store. See the [transport update and validation
+record](../publication/twitch-api-deadline-20261027.json).
 The milestone measurements below predate this update; they are historical
 validation results, not current deployment or elapsed-time qualification.
 
@@ -91,6 +96,12 @@ single-node k3s cluster highly available.
 python3 -m pip install -e '.[test]'
 python3 -m pytest -q tests
 ```
+
+The local HTTPS transport tests require curl and the OpenSSL command-line tool.
+The DNS-stall fixture also uses a C compiler when available; that fixture is
+skipped if the compiler is absent. These tests generate disposable certificates
+and use owned loopback endpoints or a reserved `.invalid` name with an injected
+resolver. They require no provider access or real credentials.
 
 The public tests are self-contained. A real migration-source repository is
 required only when running the optional inventory or shadow commands against

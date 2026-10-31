@@ -1,0 +1,133 @@
+{
+  "schema": "stream.public_port_record.v1",
+  "port_date_jst": "2026-10-27",
+  "scope": "Bound Twitch API transfers, avoid repeated Python TLS setup, and expose transport-phase diagnostics in the configured public observer.",
+  "base_public_commit": "f57de586486d0f1a530d2fd8b6fb0ed22f56243f",
+  "changes": [
+    "Apply a whole-transfer curl timeout and a parent deadline with bounded child kill/reap.",
+    "Bound response/diagnostic output and keep request secrets in stdin, never arguments or files.",
+    "Record observable DNS/TCP/TLS/header/body phases and fixed failure counters; reject incomplete/stale observations.",
+    "Extend the bound SLI diagnostics reader for multiple fixed labels.",
+    "Port owned local TLS/process regression tests with synthetic account fixtures."
+  ],
+  "preserved": [
+    "Operator-supplied account/revision bindings and existing relay/public projector behavior.",
+    "Sixty-second monotonic cadence, five-second default, Retry-After, backoff, no catch-up and no inline retry.",
+    "SLO targets, denominators, history, renewal behavior, notification decisions and media routes."
+  ],
+  "requirements": [
+    "Root-owned /usr/bin/curl with HTTPS support and a system CA trust store.",
+    "OpenSSL CLI for generated local TLS fixtures; a C compiler for the optional injected DNS-stall fixture."
+  ],
+  "checks": {
+    "focused_monitoring_tests": {
+      "passed": 120,
+      "subtests_passed": 31
+    },
+    "public_monitoring_suite": {
+      "passed": 539,
+      "skipped": 6,
+      "subtests_passed": 184,
+      "skip_reason": "Disposable PostgreSQL DSNs not supplied."
+    },
+    "documentation_tests": {
+      "passed": 17,
+      "subtests_passed": 952
+    },
+    "public_boundary": {
+      "issue_count": 0,
+      "monitoring_snapshot_files": 366
+    },
+    "public_language": {
+      "status": "PASS",
+      "checked_text_files": 1328,
+      "reviewed_unicode_exceptions": 1
+    },
+    "owned_secret_scan": "PASS",
+    "source_map_digests": "PASS",
+    "unrelated_tracked_files_preserved": 1321
+  },
+  "public_example_deployment_performed": false,
+  "production_operation_performed": false,
+  "provider_experiment_performed": false,
+  "notification_performed": false,
+  "commit_performed": false,
+  "push_performed": false,
+  "unobserved": [
+    "Long-term timeout reduction and naturally occurring failures after this public source port.",
+    "Continuous decoded viewer video/audio reception."
+  ],
+  "omissions": [
+    "Private deployment scripts, release/account allowlists, credentials, certificates, logs, runtime state and history databases."
+  ],
+  "files": [
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/collectors/twitch_api.py",
+      "before_sha256": "b4cfea23f5b14a02ca6a866cbf33e7017ab027cd4df8f19146495c2c15f96010",
+      "source_sha256": "368181f50ff090f67f255363cfed269c90d6a84f832883d86d5ece35b23cd565",
+      "public_sha256": "368181f50ff090f67f255363cfed269c90d6a84f832883d86d5ece35b23cd565",
+      "adaptation": "Selected source transfer."
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/twitch_sli.py",
+      "before_sha256": "8befe0fde5305435a7ee655cf0f4d3e4b228e08d42dc2b286cf517dc19cd9875",
+      "source_sha256": "19e960d7190f3bc3005a90ffaa8fc61255f1267e205f2b394c0c97e1130523fa",
+      "public_sha256": "22aaec7e3db2a06b1b8a3dcb51399252b923ce9562fa4f2dbfbb5aef8ec542f2",
+      "adaptation": "Retain public configured bindings; only metrics label grammar changes."
+    },
+    {
+      "path": "monitoring-v4/src/stream_contracts/monitoring_v4/schema/twitch_api_evidence.v1.json",
+      "before_sha256": "ccdeeed5181c9c22aa3487184c0a7e210eb8cd908b6b38e717e5743d4defae19",
+      "source_sha256": "b7cd7ada77124beaaa119835b474eea8279f6149b99d87ac7a0a2c3d15708493",
+      "public_sha256": "295c7476eecc01cda0486f88a3ddc28a16517678df118363f4b1f481bb10d6b7",
+      "adaptation": "Preserve public compact JSON formatting with semantic schema parity."
+    },
+    {
+      "path": "monitoring-v4/tests/test_twitch_api_collector.py",
+      "before_sha256": "c712169b46d8bbc86076f9a9c1b1482e0f004f2a3b305d628930e783035f669f",
+      "source_sha256": "6d7e72781c706208041a798541610658e455aebaf3a6261854dfd433ec79db24",
+      "public_sha256": "1ad2a11b74be25e2b0ea2ad8a6bea31770972f16fea716468771740487807149",
+      "adaptation": "Synthetic account/session fixture identities retained."
+    },
+    {
+      "path": "monitoring-v4/tests/test_twitch_api_transport.py",
+      "before_sha256": null,
+      "source_sha256": "8ec62e828281e244c3a0a54f4913c1008120a23d84b362775edd689a05822c39",
+      "public_sha256": "8ec62e828281e244c3a0a54f4913c1008120a23d84b362775edd689a05822c39",
+      "adaptation": "Selected source transfer."
+    },
+    {
+      "path": "monitoring-v4/tests/test_twitch_api_diagnostics.py",
+      "before_sha256": "829a674b2ac6587e21f517237dcd87887ca185214af1d574dbcea92d04e6b2bc",
+      "source_sha256": "91d386c8341f4b3cbf8a2be9628eade3fa1f7ec8dd20bba40bbb30e9c88edbca",
+      "public_sha256": "9742d98e20cfd5ad221aa1658b77002778404e7b08632a01049792fc56d3d721",
+      "adaptation": "Add a public binding/schema/diagnostics integration regression."
+    },
+    {
+      "path": "monitoring-v4/README.md",
+      "before_sha256": "2de3603234a842bae7c2643ff56576e8f94d30c726be27f49701c0233f229e85",
+      "source_sha256": null,
+      "public_sha256": "d2ba3ae4e49d6a724ce1933d38f1c5f1a74ce6ad5d8a6af8bff6fe9f61ae1668",
+      "adaptation": "English public documentation; no private operational artifacts."
+    },
+    {
+      "path": "monitoring-v4/docs/relay-provider-evidence.md",
+      "before_sha256": "baf0da6af54d3ab82d4e983fe17a9a0d14352ef446554a9d6e178402a56e89b3",
+      "source_sha256": null,
+      "public_sha256": "422cc63e438bec5685b812d9102755960560c69ecbfc1ba4caa5e13a7b3b6499",
+      "adaptation": "English public documentation; no private operational artifacts."
+    },
+    {
+      "path": "docs/current-status.md",
+      "before_sha256": "4998fd310833888def4533338a6dc712bfad0795ce48f6a923513130857a8ada",
+      "source_sha256": null,
+      "public_sha256": "00626a6215b9f73779f63bb73816f98104c7e76a4fe83697f950276864458d3d",
+      "adaptation": "English public documentation; no private operational artifacts."
+    }
+  ],
+  "validation_notes": [
+    "An initial documentation check ran before the new record file existed and found one temporary missing link; the completed record passed all 17 documentation tests and 952 subtests.",
+    "The schema was transferred with semantic equality while retaining the public compact formatting.",
+    "Checks concern the public source snapshot only; no service or provider was exercised by this port."
+  ]
+}

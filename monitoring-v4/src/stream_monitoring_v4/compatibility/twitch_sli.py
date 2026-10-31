@@ -229,7 +229,7 @@ def api_diagnostic_metrics(now, source=SOURCE, binding=None):
         if marker not in text.splitlines(): return unavailable
         for line in text.splitlines():
             if line.startswith('#') or not line: continue
-            if not re.fullmatch(r'stream_v4_twitch_(?:api|provider)_[a-z_]+(?:\{[a-z_]+="[A-Za-z_]+"\})? [0-9.eE+\-]+', line): return unavailable
+            if not re.fullmatch(r'stream_v4_twitch_(?:api|provider)_[a-z_]+(?:\{[a-z_]+="[A-Za-z_]+"(?:,[a-z_]+="[A-Za-z_]+")*\})? [0-9.eE+\-]+', line): return unavailable
             if not math.isfinite(float(line.rsplit(' ', 1)[1])): return unavailable
         return 'stream_v4_twitch_api_diagnostics_available 1\n' + text
     except (OSError, UnicodeError, ValueError, TypeError): return unavailable

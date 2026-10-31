@@ -99,10 +99,60 @@ account/revision binding, boot, freshness, and matching JSON/text timestamps:
 
 Counters reset with the collector process; use `increase()` or `rate()` for
 windows. Logs omit credentials, provider bodies, URLs, and exception messages.
-Stage timing does not identify DNS, connect, TLS, or response-read time separately.
+The stage-duration summary covers a whole HTTP request; the transport metrics
+added below separate the underlying phases when they are observable.
 Set `collector_revision` in the existing binding file to the reviewed collector
 file's SHA-256. The public example requires that explicit pin; it does not ship
 the private deployment's account or rolling-release allowlist.
+
+## Request deadline and transport diagnostics: 2026-10-27 JST
+
+A socket timeout did not bound a whole urllib request: DNS resolution, connection
+candidates, TLS and response-header waits could exceed the five-second setting.
+The selected transport now starts a root-owned `/usr/bin/curl` child for each
+request and applies `--max-time` to the whole transfer. The parent waits at most
+the configured timeout plus 0.5 seconds before killing its child, and reaps it
+with a bounded wait. This is not a real-time scheduling guarantee. The change
+also avoids repeatedly constructing Python SSL contexts in the long-lived
+collector, which had reproduced memory growth under a fixed resource limit.
+
+The transport keeps TLS certificate verification enabled, rejects redirects,
+disables inherited proxies and curl configuration, bounds response/diagnostic
+output, and performs no transfer retry. Credentials and request bodies enter
+the child through stdin rather than arguments or temporary files. Verbose
+headers exist only in bounded process memory: the parent retains fixed phase
+enums and discards the raw text. No URL, credential, provider body or raw header
+is added to the journal.
+
+- `stream_v4_twitch_api_transport_failures_total{stage,phase}` counts failures by
+  API stage and DNS, connect, TLS, response headers/body, whole-request deadline,
+  HTTP result or unknown phase.
+- `stream_v4_twitch_api_transport_phase_seconds{stage,phase}` reports observable
+  phase times from requests in the latest probe. Missing end timestamps are not
+  fabricated as completed zero-duration phases.
+
+Final curl timing fields can omit a completed TCP connection when TLS stalls,
+so phase classification also reads fixed progress events in memory. If the
+evidence is insufficient, the result remains unknown or deadline-limited.
+Historical timeouts cannot be assigned a phase retroactively. Failed requests
+remain UNKNOWN and never reuse a previous LIVE observation.
+
+The SLI endpoint accepts multiple fixed labels for these diagnostics while
+preserving the account/revision/boot/freshness checks, timestamp match, size
+limit, allowed metric prefix and numeric validation. Public consumers still
+require the operator's exact `collector_revision` binding. Review the new file
+hash and update the binding when upgrading; no private rolling-release pins are
+included. Relay and public projector behavior is unchanged.
+
+The 60-second monotonic grid, five-second default, Retry-After floor, consecutive
+failure backoff, no catch-up and no inline retry remain intact. This port changes
+no SLO target, history denominator, renewal decision, notification policy or
+media route. The [source-transfer record](../../publication/twitch-api-deadline-20261027.json)
+lists local source tests separately from any operated private deployment. The
+local TLS fixtures exercise DNS/TCP/TLS/header/body stalls, certificate rejection,
+redirects, rate limiting, oversized responses and child cleanup without calling
+a provider. They do not establish long-term timeout reduction or decoded media
+reception.
 
 ## OCI-aware notification decisions
 

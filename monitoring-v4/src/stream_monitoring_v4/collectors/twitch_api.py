@@ -7,20 +7,23 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import http.client
+import io
 import json
 import math
 import os
 import re
 import signal
 import socket
+import selectors
+import subprocess
 import tempfile
 import time
 import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from urllib.error import HTTPError, URLError
-from urllib.parse import urlencode
-from urllib.request import HTTPRedirectHandler, ProxyHandler, Request, build_opener
+from urllib.parse import urlencode, urlsplit
+from urllib.request import HTTPRedirectHandler
 
 UTC = timezone.utc
 SCHEMA = "monitoring_v4.twitch_api_evidence.v1"
@@ -31,13 +34,19 @@ STREAMS_URL = "https://api.twitch.tv/helix/streams"
 STAGES = ("credentials", "oauth", "validate", "users", "streams")
 RESULTS = ("ok", "timeout", "network", "rate_limited", "auth", "upstream",
            "credentials", "response", "target", "clock", "collector")
+TRANSPORT_PHASES = ("dns", "connect", "tls", "response_headers", "response_body", "deadline", "http", "unknown")
+TIMED_PHASES = TRANSPORT_PHASES[:5]
+CURL_PATH = "/usr/bin/curl"
 
 
 class ProbeError(Exception):
-    def __init__(self, reason: str, status: int = 0, retry_after: float = 0, *, rate_limit=None):
+    def __init__(self, reason: str, status: int = 0, retry_after: float = 0, *, rate_limit=None,
+                 transport_phase="unknown", transport_seconds=None):
         super().__init__(reason)
         self.reason, self.status, self.retry_after = reason, status, retry_after
         self.rate_limit = rate_limit or {}
+        self.transport_phase = transport_phase if transport_phase in TRANSPORT_PHASES else "unknown"
+        self.transport_seconds = transport_seconds or {}
 
 
 def rate_limit_fields(headers):
@@ -92,10 +101,11 @@ def utc(value: float) -> str:
 
 
 def retry_delay(headers, now: float) -> float:
+    headers = {name.lower(): value for name, value in headers.items()}
     values = [0.0]
     for name, offset in (("Retry-After", 0), ("Ratelimit-Reset", now)):
         try:
-            value = float(headers.get(name, "0")) - offset
+            value = float(headers.get(name.lower(), "0")) - offset
             if math.isfinite(value):
                 values.append(max(0, value))
         except (TypeError, ValueError):
@@ -103,43 +113,166 @@ def retry_delay(headers, now: float) -> float:
     return min(86400, max(values))
 
 
-def request_json(url: str, headers: dict, body: bytes | None, timeout: float):
-    # No environment proxy and no redirects carrying Authorization/client secret.
-    opener = build_opener(ProxyHandler({}), NoRedirect())
-    request = Request(url, data=body, headers=headers)
-    deadline = time.monotonic() + timeout
+class TransportHeaders(dict):
+    def __init__(self, values, seconds):
+        super().__init__(values)
+        self.transport_seconds = seconds
+
+
+def _curl_config(url, headers, body):
+    parsed = urlsplit(url)
+    if parsed.scheme != "https" or not parsed.hostname or parsed.username or parsed.password or parsed.fragment:
+        raise ProbeError("response_invalid")
+    def quote(value):
+        if not isinstance(value, str) or any(c in value for c in "\r\n\0"):
+            raise ProbeError("response_invalid")
+        return '"' + value.replace('\\', '\\\\').replace('"', '\\"') + '"'
+    lines = ["url = " + quote(url)]
+    for name, value in headers.items():
+        if not re.fullmatch(r"[A-Za-z0-9-]+", name): raise ProbeError("response_invalid")
+        lines.append("header = " + quote(name + ": " + value))
+    if body is not None:
+        try: lines.append("data-raw = " + quote(body.decode("ascii")))
+        except UnicodeError: raise ProbeError("response_invalid") from None
+    config = ("\n".join(lines) + "\n").encode()
+    if len(config) > 4096: raise ProbeError("response_too_large")
+    return config
+
+
+def _curl_transfer(config, timeout, marker):
+    """Secrets stay in stdin/memory; bound stdout, lifetime, and child cleanup."""
+    footer = "\n" + marker + " %{http_code} %{time_namelookup} %{time_connect} %{time_appconnect} %{time_starttransfer} %{time_total}"
+    command = [CURL_PATH, "-q", "--config", "-", "--silent", "--verbose", "--include", "--http1.1",
+               "--proxy", "", "--noproxy", "*", "--proto", "=https", "--proto-redir", "=https",
+               "--max-redirs", "0", "--retry", "0", "--max-time", str(timeout),
+               "--max-filesize", "65536", "--write-out", footer]
+    deadline = time.monotonic() + timeout + 0.5
+    process = None
+    output = bytearray()
+    guard = None
+    observed_phase, debug_status = None, 0
+    pending, debug_size, discard_line = bytearray(), 0, False
     try:
-        with opener.open(request, timeout=timeout) as response:
-            chunks, size = [], 0
-            while True:
-                if time.monotonic() > deadline:
-                    raise ProbeError("timeout")
-                chunk = response.read1(min(4096, 65537 - size))
-                if not chunk:
-                    break
-                chunks.append(chunk)
-                size += len(chunk)
-                if size > 65536:
-                    raise ProbeError("response_too_large")
-            value = json.loads(b"".join(chunks))
-            if not isinstance(value, dict):
-                raise ProbeError("response_invalid")
-            return value, dict(response.headers)
-    except HTTPError as exc:
-        status, delay = exc.code, retry_delay(exc.headers, time.time())
-        quota = rate_limit_fields(exc.headers)
-        exc.close()
-        reason = ("auth" if status in (401, 403) else "rate_limited" if status == 429
-                  else "upstream" if status >= 500 else "http")
-        raise ProbeError(reason, status, delay, rate_limit=quota) from None
-    except (TimeoutError, socket.timeout):
-        raise ProbeError("timeout") from None
-    except URLError as exc:
-        raise ProbeError("timeout" if isinstance(exc.reason, (TimeoutError, socket.timeout)) else "network") from None
+        process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE, env={"PATH": "/usr/bin:/bin", "LC_ALL": "C"},
+                                   start_new_session=True)
+        try: process.stdin.write(config); process.stdin.close()
+        except BrokenPipeError: pass
+        os.set_blocking(process.stdout.fileno(), False)
+        os.set_blocking(process.stderr.fileno(), False)
+        with selectors.DefaultSelector() as selector:
+            selector.register(process.stdout, selectors.EVENT_READ, "output")
+            selector.register(process.stderr, selectors.EVENT_READ, "debug")
+            while selector.get_map():
+                remaining = deadline - time.monotonic()
+                if remaining <= 0: guard = "timeout"; break
+                events = selector.select(remaining)
+                if not events: guard = "timeout"; break
+                for key, _ in events:
+                    chunk = os.read(key.fd, 4096)
+                    if not chunk: selector.unregister(key.fileobj); continue
+                    if key.data == "output":
+                        output.extend(chunk)
+                        if len(output) > 196608: guard = "response_too_large"; break
+                    else:
+                        # Verbose headers may contain credentials. Consume only
+                        # in RAM, retain fixed phase enums, and discard all text.
+                        debug_size += len(chunk)
+                        if debug_size > 65536: guard = "response_too_large"; break
+                        pending.extend(chunk)
+                        while b"\n" in pending:
+                            line, _, rest = pending.partition(b"\n"); pending = bytearray(rest)
+                            if discard_line: discard_line = False; continue
+                            phase = None
+                            if line.startswith(b"*   Trying "): phase = "connect"
+                            elif line.startswith((b"* TLSv", b"* SSL connection")): phase = "tls"
+                            elif line.startswith((b"> GET ", b"> POST ", b"> HEAD ")): phase = "response_headers"
+                            elif line.startswith(b"< HTTP/"):
+                                match = re.match(rb"< HTTP/[0-9.]+ ([0-9]{3})", line)
+                                debug_status = int(match[1]) if match else 0
+                            elif line.rstrip(b"\r") == b"< " and debug_status >= 200: phase = "response_body"
+                            if phase and (observed_phase is None or TIMED_PHASES.index(phase) > TIMED_PHASES.index(observed_phase)):
+                                observed_phase = phase
+                        if len(pending) > 8192: pending.clear(); discard_line = True
+                if guard: break
+        if process.poll() is None:
+            if guard: process.kill()
+            else:
+                try: process.wait(timeout=max(0.001, deadline - time.monotonic()))
+                except subprocess.TimeoutExpired: guard = "timeout"; process.kill()
+        process.wait(timeout=0.5)
+        return bytes(output), process.returncode, guard, observed_phase
     except OSError:
-        raise ProbeError("network") from None
+        raise ProbeError("transport_unavailable") from None
+    finally:
+        if process is not None:
+            if process.poll() is None: process.kill()
+            process.wait(timeout=0.5)
+            try: process.stdin.close()
+            except OSError: pass
+            process.stdout.close(); process.stderr.close()
+
+
+def _transport_timings(metadata, failed):
+    try:
+        values = [float(value) for value in metadata.split()]
+        if len(values) != 6 or any(not math.isfinite(v) or not 0 <= v <= 86400 for v in values):
+            return "unknown", {}
+        _, dns, connected, tls, first_byte, total = values
+        ends = [dns, connected, tls, first_byte, total]
+        durations, previous = {}, 0.0
+        for phase, end in zip(TIMED_PHASES, ends):
+            if failed and end == 0:
+                durations[phase] = max(0.0, total - previous)
+                return phase, durations
+            durations[phase] = max(0.0, end - previous)
+            previous = max(previous, end)
+        return "response_body", durations
+    except (TypeError, ValueError):
+        return "unknown", {}
+
+
+def request_json(url: str, headers: dict, body: bytes | None, timeout: float):
+    if not math.isfinite(timeout) or timeout <= 0: raise ProbeError("timeout")
+    marker = "__TWITCH_TRANSFER_" + uuid.uuid4().hex
+    raw, code, guard, observed_phase = _curl_transfer(_curl_config(url, headers, body), timeout, marker)
+    prefix, separator, metadata = raw.rpartition(("\n" + marker + " ").encode())
+    phase, seconds = _transport_timings(metadata if separator else b"", code != 0 or guard is not None)
+    content = prefix if separator else raw
+    status, response_headers, response_body = 0, {}, b""
+    try:
+        stream = io.BytesIO(content)
+        while True:
+            line = stream.readline(4097)
+            match = re.fullmatch(rb"HTTP/1\.[01] ([0-9]{3})[^\r\n]*\r?\n", line)
+            if not match: break
+            status = int(match[1]); response_headers = dict(http.client.parse_headers(stream).items())
+            if not 100 <= status < 200: response_body = stream.read(); break
+    except (ValueError, http.client.HTTPException):
+        raise ProbeError("response_invalid", transport_phase=phase, transport_seconds=seconds) from None
+    if status >= 300:
+        reason = ("redirect_rejected" if status < 400 else "auth" if status in (401, 403)
+                  else "rate_limited" if status == 429 else "upstream" if status >= 500 else "http")
+        raise ProbeError(reason, status, retry_delay(response_headers, time.time()),
+                         rate_limit=rate_limit_fields(response_headers), transport_phase="http", transport_seconds=seconds)
+    if guard or code:
+        reason = guard or ("timeout" if code == 28 else "response_too_large" if code == 63 else "network")
+        if observed_phase and observed_phase != phase:
+            # Missing end timestamps are not zero-duration completed phases.
+            seconds = ({key: value for key, value in seconds.items()
+                        if TIMED_PHASES.index(key) < TIMED_PHASES.index(phase)}
+                       if phase in TIMED_PHASES else {})
+            phase = observed_phase
+        elif guard == "timeout" and observed_phase is None: phase = "deadline"
+        raise ProbeError(reason, transport_phase=phase, transport_seconds=seconds)
+    if status != 200 or len(response_body) > 65536:
+        raise ProbeError("response_invalid", transport_phase=phase, transport_seconds=seconds)
+    try:
+        value = json.loads(response_body)
+        if not isinstance(value, dict): raise ValueError()
     except (ValueError, UnicodeError):
-        raise ProbeError("response_invalid") from None
+        raise ProbeError("response_invalid", transport_phase="response_body", transport_seconds=seconds) from None
+    return value, TransportHeaders(response_headers, seconds)
 
 
 def _positive_int(value) -> bool:
@@ -188,26 +321,35 @@ class TwitchCollector:
         self.probe_counts = {result: 0 for result in RESULTS}
         self.request_counts = {stage: 0 for stage in STAGES[1:]}
         self.request_seconds = {stage: 0.0 for stage in STAGES[1:]}
+        self.transport_failures = {stage: {phase: 0 for phase in TRANSPORT_PHASES} for stage in STAGES[1:]}
 
     def _request(self, url, headers, body=None):
         self.request_count += 1
         started = self.monotonic()
         status, result = 0, "collector"
+        transport_phase, transport_seconds = None, {}
         try:
             value, headers = self.transport(url, headers, body, self.timeout)
+            transport_seconds = getattr(headers, "transport_seconds", {})
             status, result = 200, "ok"
             self.quota.update(rate_limit_fields(headers))
             return value
         except ProbeError as exc:
             status, result = exc.status, error_category(exc.reason, exc.status)
+            transport_phase, transport_seconds = exc.transport_phase, exc.transport_seconds
             self.quota.update(exc.rate_limit)
             raise
         finally:
             elapsed = max(0.0, self.monotonic() - started)
             self.request_counts[self.stage] += 1
             self.request_seconds[self.stage] += elapsed
-            self.request_stats.append({"stage": self.stage, "http_status": status,
-                                       "result": result, "duration_seconds": elapsed})
+            record = {"stage": self.stage, "http_status": status,
+                      "result": result, "duration_seconds": elapsed}
+            if transport_seconds: record["transport_seconds"] = dict(transport_seconds)
+            if transport_phase is not None:
+                record["transport_phase"] = transport_phase
+                self.transport_failures[self.stage][transport_phase] += 1
+            self.request_stats.append(record)
 
     def _authenticate(self):
         mono = self.monotonic()
@@ -295,7 +437,8 @@ class TwitchCollector:
                        probe_duration_seconds=max(0.0, self.monotonic() - mono),
                        schedule_lag_seconds=max(0.0, mono - scheduled_at) if scheduled_at is not None else 0.0,
                        request_stats=self.request_stats, probe_counts=dict(self.probe_counts),
-                       request_counts=dict(self.request_counts), request_seconds=dict(self.request_seconds))
+                       request_counts=dict(self.request_counts), request_seconds=dict(self.request_seconds),
+                       transport_failures={stage: dict(values) for stage, values in self.transport_failures.items()})
         return payload
 
 
@@ -342,6 +485,12 @@ def metrics(payload: dict) -> str:
         lines.extend([f'stream_v4_twitch_api_requests_total{labels} {count}',
                       f'stream_v4_twitch_api_request_duration_seconds_count{labels} {count}',
                       f'stream_v4_twitch_api_request_duration_seconds_sum{labels} {payload["request_seconds"][stage]}'])
+    for stage, phases in payload.get("transport_failures", {}).items():
+        for phase, count in phases.items():
+            lines.append(f'stream_v4_twitch_api_transport_failures_total{{stage="{stage}",phase="{phase}"}} {count}')
+    for request in payload.get("request_stats", []):
+        for phase, seconds in request.get("transport_seconds", {}).items():
+            lines.append(f'stream_v4_twitch_api_transport_phase_seconds{{stage="{request["stage"]}",phase="{phase}"}} {seconds}')
     return "\n".join(lines) + "\n"
 
 

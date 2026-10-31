@@ -355,7 +355,7 @@
       "decision": "Port manual maintenance with an English interface, canonical observer imports, configured host binding and no runtime secrets.",
       "before_sha256": "033b36e0cdb49457cb1521add7182355bf42aa5edf1051e6230d62c4d1e80a4b",
       "source_sha256": null,
-      "public_sha256": "6cc81dbbd445410ce601ceb53c6a34ee416a214428a092b2b11170ad580b7f60",
+      "public_sha256": "b6d83960d01a581f4872f84424d270574822431c76634541af4f8077db1e1538",
       "port_date_jst": "2026-10-30",
       "documentation_restructure": "New single page for volatile state.",
       "pre_twitch_observation_public_sha256": "040eac29174151f51e473f7f85e4aa23ff994be0079b3d4c011623b6ec7864ca",
@@ -884,8 +884,8 @@
       "source_sha256": null,
       "public_sha256": "03ee87ed204d739074b72c038552a8bdc1690932f110a283ce1922c5bc55941a",
       "prior_public_sha256": "83213403df4f8c021ace1f0a4dc2b7847706a0b719dfc2d283c12d93c8393a6c",
-      "port_date_jst": "2026-10-29",
-      "port_record": "publication/transport-recorder-port-20261029.json"
+      "port_record": "publication/transport-recorder-port-20261029.json",
+      "port_date_jst": "2026-10-29"
     },
     {
       "path": "docs/v3/self-healing-oci-fanout.md",
@@ -1007,13 +1007,15 @@
     {
       "path": "monitoring-v4/README.md",
       "source_role": "public-documentation",
-      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "decision": "Selected Twitch API deadline and transport diagnostics port; retain configured public bindings and synthetic identities.",
       "before_sha256": "474b906aef2d61b33adc34cbe1a1eb86cfc88a0142e881af85f3b23f4f7fdc70",
       "source_sha256": null,
-      "public_sha256": "2de3603234a842bae7c2643ff56576e8f94d30c726be27f49701c0233f229e85",
+      "public_sha256": "d2ba3ae4e49d6a724ce1933d38f1c5f1a74ce6ad5d8a6af8bff6fe9f61ae1668",
       "pre_twitch_observation_public_sha256": "ed3bb73f94d1501428678e0128eeef4988e6df6e622bf09414b1e282c58cd7ff",
-      "port_date_jst": "2026-10-23",
-      "pre_observability_reconciliation_sha256": "209603e882c772be3cfa5772783c19c6fbeece5b95526fe3bc0ba18abdaa6b20"
+      "port_date_jst": "2026-10-27",
+      "pre_observability_reconciliation_sha256": "209603e882c772be3cfa5772783c19c6fbeece5b95526fe3bc0ba18abdaa6b20",
+      "pre_twitch_api_deadline_public_sha256": "2de3603234a842bae7c2643ff56576e8f94d30c726be27f49701c0233f229e85",
+      "prior_public_sha256": "2de3603234a842bae7c2643ff56576e8f94d30c726be27f49701c0233f229e85"
     },
     {
       "path": "monitoring-v4/config/monitoring_v4_legacy_surface_contract.json",
@@ -1148,14 +1150,16 @@
     {
       "path": "monitoring-v4/docs/relay-provider-evidence.md",
       "source_role": "public-documentation",
-      "decision": "Twitch public history compatibility, freshness and isolated-failure polling repair",
+      "decision": "Selected Twitch API deadline and transport diagnostics port; retain configured public bindings and synthetic identities.",
       "before_sha256": "2e03f832008b632eedc4a537c8e6917d396e96e5846497a4d84d62d7389c86c3",
       "source_sha256": null,
-      "public_sha256": "baf0da6af54d3ab82d4e983fe17a9a0d14352ef446554a9d6e178402a56e89b3",
-      "port_date_jst": "2026-10-22",
+      "public_sha256": "422cc63e438bec5685b812d9102755960560c69ecbfc1ba4caa5e13a7b3b6499",
+      "port_date_jst": "2026-10-27",
       "pre_twitch_observation_public_sha256": "4f1722ee298a7343f5e4d137eab208b4e7ad760a35228167a3352b4423b8d144",
       "pre_daily_reminder_public_sha256": "2eaba9a578c7a6ccb705550c3d9c38fa5e068545570eaa776af38cc093dceb56",
-      "pre_twitch_history_repair_public_sha256": "760f8e2058eb7d7b9246eaf452a1ee4198a5b55b49a98e25c323ffe65ff00dc5"
+      "pre_twitch_history_repair_public_sha256": "760f8e2058eb7d7b9246eaf452a1ee4198a5b55b49a98e25c323ffe65ff00dc5",
+      "pre_twitch_api_deadline_public_sha256": "baf0da6af54d3ab82d4e983fe17a9a0d14352ef446554a9d6e178402a56e89b3",
+      "prior_public_sha256": "baf0da6af54d3ab82d4e983fe17a9a0d14352ef446554a9d6e178402a56e89b3"
     },
     {
       "path": "monitoring-v4/docs/status.md",
@@ -1240,23 +1244,27 @@
     {
       "path": "monitoring-v4/src/stream_contracts/monitoring_v4/schema/twitch_api_evidence.v1.json",
       "source_role": "development-monitoring",
-      "decision": "Twitch observation and OCI-aware notifications; public bindings and English text retained",
+      "decision": "Selected Twitch API deadline and transport diagnostics port; retain configured public bindings and synthetic identities.",
       "before_sha256": null,
-      "source_sha256": "4d2cff32841b456c138f74d8fc853d0b930fee3954ebf0e38066f0225bf10edb",
-      "public_sha256": "ccdeeed5181c9c22aa3487184c0a7e210eb8cd908b6b38e717e5743d4defae19",
+      "source_sha256": "b7cd7ada77124beaaa119835b474eea8279f6149b99d87ac7a0a2c3d15708493",
+      "public_sha256": "295c7476eecc01cda0486f88a3ddc28a16517678df118363f4b1f481bb10d6b7",
       "pre_twitch_observation_public_sha256": "388fe38f5c2eaedac5e3247d3b9a8e3348adc9453439c57b59f220c74f2765de",
-      "port_date_jst": "2026-10-21"
+      "port_date_jst": "2026-10-27",
+      "pre_twitch_api_deadline_public_sha256": "ccdeeed5181c9c22aa3487184c0a7e210eb8cd908b6b38e717e5743d4defae19",
+      "prior_public_sha256": "ccdeeed5181c9c22aa3487184c0a7e210eb8cd908b6b38e717e5743d4defae19"
     },
     {
       "path": "monitoring-v4/src/stream_monitoring_v4/collectors/twitch_api.py",
       "source_role": "development-monitoring",
-      "decision": "Twitch public history compatibility, freshness and isolated-failure polling repair",
+      "decision": "Selected Twitch API deadline and transport diagnostics port; retain configured public bindings and synthetic identities.",
       "before_sha256": null,
-      "source_sha256": "b4cfea23f5b14a02ca6a866cbf33e7017ab027cd4df8f19146495c2c15f96010",
-      "public_sha256": "b4cfea23f5b14a02ca6a866cbf33e7017ab027cd4df8f19146495c2c15f96010",
+      "source_sha256": "368181f50ff090f67f255363cfed269c90d6a84f832883d86d5ece35b23cd565",
+      "public_sha256": "368181f50ff090f67f255363cfed269c90d6a84f832883d86d5ece35b23cd565",
       "pre_twitch_observation_public_sha256": "af3e63b2a45810ef81bd6567c5ca41ee9e54d3e437cae4b997900e044fa9a578",
-      "port_date_jst": "2026-10-22",
-      "pre_twitch_history_repair_public_sha256": "82ac1425f2766cbf413b32379233723c54f4bc18b2826fb41120cc3e7df247a2"
+      "port_date_jst": "2026-10-27",
+      "pre_twitch_history_repair_public_sha256": "82ac1425f2766cbf413b32379233723c54f4bc18b2826fb41120cc3e7df247a2",
+      "pre_twitch_api_deadline_public_sha256": "b4cfea23f5b14a02ca6a866cbf33e7017ab027cd4df8f19146495c2c15f96010",
+      "prior_public_sha256": "b4cfea23f5b14a02ca6a866cbf33e7017ab027cd4df8f19146495c2c15f96010"
     },
     {
       "path": "monitoring-v4/src/stream_monitoring_v4/commands/history_archive.py",
@@ -1378,16 +1386,18 @@
     {
       "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/twitch_sli.py",
       "source_role": "development-monitoring",
-      "decision": "Twitch observation and OCI-aware notifications; public bindings and English text retained",
+      "decision": "Selected Twitch API deadline and transport diagnostics port; retain configured public bindings and synthetic identities.",
       "before_sha256": null,
-      "source_sha256": "9bcf09759f9946a689e1a9330853f298cf6ac842a88853073c74c04ab0714590",
-      "public_sha256": "8befe0fde5305435a7ee655cf0f4d3e4b228e08d42dc2b286cf517dc19cd9875",
+      "source_sha256": "19e960d7190f3bc3005a90ffaa8fc61255f1267e205f2b394c0c97e1130523fa",
+      "public_sha256": "22aaec7e3db2a06b1b8a3dcb51399252b923ce9562fa4f2dbfbb5aef8ec542f2",
       "pre_twitch_sli_resilience_sha256": "6495cf95221045c5b61fcd3da91f67960477edccfabe95045dd4d3b5ffaed51c",
       "twitch_sli_resilience": "Locally checked candidate only; production application held for fresh task.",
       "pre_twitch_observation_public_sha256": "867319076851eae4850d3d57166520a34fbc8816ee33d6581135dfeea25d6218",
-      "port_date_jst": "2026-10-21",
+      "port_date_jst": "2026-10-27",
       "pre_completed_parallel_work_public_sha256": "8bc0436de110717b0dc4013261779f8988bfa2a3e2415ea223b7d007fff5992a",
-      "completed_parallel_work": "2026-10-22 renewal verification without requiring a sampled OFFLINE gap; indeterminate public assessment remains unknown."
+      "completed_parallel_work": "2026-10-22 renewal verification without requiring a sampled OFFLINE gap; indeterminate public assessment remains unknown.",
+      "pre_twitch_api_deadline_public_sha256": "8befe0fde5305435a7ee655cf0f4d3e4b228e08d42dc2b286cf517dc19cd9875",
+      "prior_public_sha256": "8befe0fde5305435a7ee655cf0f4d3e4b228e08d42dc2b286cf517dc19cd9875"
     },
     {
       "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/twitch_sli_public.py",
@@ -1719,23 +1729,38 @@
     {
       "path": "monitoring-v4/tests/test_twitch_api_collector.py",
       "source_role": "development-monitoring-tests",
-      "decision": "Twitch public history compatibility, freshness and isolated-failure polling repair",
+      "decision": "Selected Twitch API deadline and transport diagnostics port; retain configured public bindings and synthetic identities.",
       "before_sha256": null,
-      "source_sha256": "f9a41af26bedb0a59759af5ecfad7abd61b6ee78135e84a45a028de218eaca6b",
-      "public_sha256": "c712169b46d8bbc86076f9a9c1b1482e0f004f2a3b305d628930e783035f669f",
+      "source_sha256": "6d7e72781c706208041a798541610658e455aebaf3a6261854dfd433ec79db24",
+      "public_sha256": "1ad2a11b74be25e2b0ea2ad8a6bea31770972f16fea716468771740487807149",
       "pre_twitch_observation_public_sha256": "b6c70ef61b5bc8f39bd5831714604a4a2677d438e7d563a2e9d83d2c55d1c109",
-      "port_date_jst": "2026-10-22",
-      "pre_twitch_history_repair_public_sha256": "cb7a54a1481560a09c3421edf13d25f6c6179cfd952df42609a7604750c28eb5"
+      "port_date_jst": "2026-10-27",
+      "pre_twitch_history_repair_public_sha256": "cb7a54a1481560a09c3421edf13d25f6c6179cfd952df42609a7604750c28eb5",
+      "pre_twitch_api_deadline_public_sha256": "c712169b46d8bbc86076f9a9c1b1482e0f004f2a3b305d628930e783035f669f",
+      "prior_public_sha256": "c712169b46d8bbc86076f9a9c1b1482e0f004f2a3b305d628930e783035f669f"
     },
     {
       "path": "monitoring-v4/tests/test_twitch_api_diagnostics.py",
       "source_role": "development-monitoring",
       "before_sha256": null,
       "pre_twitch_observation_public_sha256": null,
-      "public_sha256": "829a674b2ac6587e21f517237dcd87887ca185214af1d574dbcea92d04e6b2bc",
+      "public_sha256": "9742d98e20cfd5ad221aa1658b77002778404e7b08632a01049792fc56d3d721",
       "source_sha256": "91d386c8341f4b3cbf8a2be9628eade3fa1f7ec8dd20bba40bbb30e9c88edbca",
-      "port_date_jst": "2026-10-21",
-      "decision": "Twitch observation and OCI-aware notifications; public bindings and English text retained"
+      "port_date_jst": "2026-10-27",
+      "decision": "Selected Twitch API deadline and transport diagnostics port; retain configured public bindings and synthetic identities.",
+      "pre_twitch_api_deadline_public_sha256": "829a674b2ac6587e21f517237dcd87887ca185214af1d574dbcea92d04e6b2bc",
+      "prior_public_sha256": "829a674b2ac6587e21f517237dcd87887ca185214af1d574dbcea92d04e6b2bc"
+    },
+    {
+      "path": "monitoring-v4/tests/test_twitch_api_transport.py",
+      "source_role": "public-adapted-source-or-regression",
+      "before_sha256": null,
+      "pre_twitch_api_deadline_public_sha256": null,
+      "prior_public_sha256": null,
+      "public_sha256": "8ec62e828281e244c3a0a54f4913c1008120a23d84b362775edd689a05822c39",
+      "source_sha256": "8ec62e828281e244c3a0a54f4913c1008120a23d84b362775edd689a05822c39",
+      "port_date_jst": "2026-10-27",
+      "decision": "Selected Twitch API deadline and transport diagnostics port; retain configured public bindings and synthetic identities."
     },
     {
       "path": "monitoring-v4/tests/test_twitch_public.py",
@@ -2969,6 +2994,17 @@
       "source_sha256": null,
       "public_sha256": "f75da4630327260c186e15db7f65e267225a204f2b7a5936ddeedd3b0928cd17",
       "port_date_jst": "2026-10-20"
+    },
+    {
+      "path": "publication/twitch-api-deadline-20261027.json",
+      "source_role": "public-documentation",
+      "before_sha256": null,
+      "pre_twitch_api_deadline_public_sha256": null,
+      "prior_public_sha256": null,
+      "public_sha256": "3c09f962b0d5210c19fbbcf8134415a094b04189975fc06fe17ae25e98b48788",
+      "source_sha256": null,
+      "port_date_jst": "2026-10-27",
+      "decision": "Selected Twitch API deadline and transport diagnostics port; retain configured public bindings and synthetic identities."
     },
     {
       "path": "publication/twitch-history-repair-20261022.json",
@@ -4729,6 +4765,137 @@
       "port_record": "publication/transport-recorder-port-20261029.json"
     },
     {
+      "path": "docs/v3/airspy-reception-guard.md",
+      "source_role": "optional-receiver-source-or-public-documentation",
+      "decision": "Optional Airspy reception guard; preserve the durable one-extra-attempt cap, remove personal configuration writers and keep raw evidence private.",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "7d6c867ddd7afa5409b42e2938a4c047f2bef40e230d55d0e3ade96a27a8c5e6",
+      "port_date_jst": "2026-10-30",
+      "port_record": "publication/airspy-reception-port-20261030.json"
+    },
+    {
+      "path": "ops/airspy-reception/README.md",
+      "source_role": "optional-receiver-source-or-public-documentation",
+      "decision": "Optional Airspy reception guard; preserve the durable one-extra-attempt cap, remove personal configuration writers and keep raw evidence private.",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "910946c7438494fa717b6931ffc3fd050ee1cbe8755a978a92265c08e89e0281",
+      "port_date_jst": "2026-10-30",
+      "port_record": "publication/airspy-reception-port-20261030.json"
+    },
+    {
+      "path": "ops/airspy-reception/airspy-reception-guard.service",
+      "source_role": "optional-receiver-source-or-public-documentation",
+      "decision": "Optional Airspy reception guard; preserve the durable one-extra-attempt cap, remove personal configuration writers and keep raw evidence private.",
+      "before_sha256": null,
+      "source_sha256": "ee9cefb8ab3e5cafef8fddef19455481cb5c1cf579077e413d711b901b51bae5",
+      "public_sha256": "0d526ef32dbd6468d0da60ef36a211ef92a80c4d864853b1a376fabb71e01ad8",
+      "port_date_jst": "2026-10-30",
+      "port_record": "publication/airspy-reception-port-20261030.json",
+      "before_publication_whitespace_cleanup_sha256": "3319ecf1757ba26432bf530f0d16761eab88d1796aa51fbfc11f08f04663a6cb"
+    },
+    {
+      "path": "ops/airspy-reception/airspy-reception-guard.timer",
+      "source_role": "optional-receiver-source-or-public-documentation",
+      "decision": "Optional Airspy reception guard; preserve the durable one-extra-attempt cap, remove personal configuration writers and keep raw evidence private.",
+      "before_sha256": null,
+      "source_sha256": "a1e3d5a8f459f7c88375aa5d95c45a293bd8640df678b217663861e493968fb6",
+      "public_sha256": "a1e3d5a8f459f7c88375aa5d95c45a293bd8640df678b217663861e493968fb6",
+      "port_date_jst": "2026-10-30",
+      "port_record": "publication/airspy-reception-port-20261030.json"
+    },
+    {
+      "path": "ops/airspy-reception/airspy-reception.env.example",
+      "source_role": "optional-receiver-source-or-public-documentation",
+      "decision": "Optional Airspy reception guard; preserve the durable one-extra-attempt cap, remove personal configuration writers and keep raw evidence private.",
+      "before_sha256": null,
+      "source_sha256": "0ddfc2910caf389cfc746a9043f1d366a0ccf4f5cdd31adb3f3c5fc9d5423cf1",
+      "public_sha256": "6e340836217029ffffcec46a2ec6156fed1fb737eb2de87e67dc5dc27b7fe920",
+      "port_date_jst": "2026-10-30",
+      "port_record": "publication/airspy-reception-port-20261030.json"
+    },
+    {
+      "path": "ops/airspy-reception/enable-recovery.conf.example",
+      "source_role": "optional-receiver-source-or-public-documentation",
+      "decision": "Optional Airspy reception guard; preserve the durable one-extra-attempt cap, remove personal configuration writers and keep raw evidence private.",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "46d5932028f96f96984f8fc39676e44bd7522c37d0853466102953445e82ae55",
+      "port_date_jst": "2026-10-30",
+      "port_record": "publication/airspy-reception-port-20261030.json"
+    },
+    {
+      "path": "ops/airspy-reception/receiver_guard.py",
+      "source_role": "optional-receiver-source-or-public-documentation",
+      "decision": "Optional Airspy reception guard; preserve the durable one-extra-attempt cap, remove personal configuration writers and keep raw evidence private.",
+      "before_sha256": null,
+      "source_sha256": "2822550413261f39450375001b61626bd4076a49174339176b02f51a23e53d9f",
+      "public_sha256": "d2a6c4a60178a71cc8aa73d26b4d87acb8f23dc69e43ed1bb8557aaa2d6008e0",
+      "port_date_jst": "2026-10-30",
+      "port_record": "publication/airspy-reception-port-20261030.json"
+    },
+    {
+      "path": "ops/airspy-reception/systemd_lab/README.md",
+      "source_role": "optional-receiver-source-or-public-documentation",
+      "decision": "Optional Airspy reception guard; preserve the durable one-extra-attempt cap, remove personal configuration writers and keep raw evidence private.",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "4653f85bac1600ad1e0cde479abbe6d1d35c31018136d1fc30e09fe635701207",
+      "port_date_jst": "2026-10-30",
+      "port_record": "publication/airspy-reception-port-20261030.json"
+    },
+    {
+      "path": "ops/airspy-reception/systemd_lab/controller.py",
+      "source_role": "optional-receiver-source-or-public-documentation",
+      "decision": "Optional Airspy reception guard; preserve the durable one-extra-attempt cap, remove personal configuration writers and keep raw evidence private.",
+      "before_sha256": null,
+      "source_sha256": "eba436a4d51d40f60831d24e0b8f7adc4a6183fcf7b6c2498b1972248c68c3e0",
+      "public_sha256": "91d7bdc19e35c7a4debe3161bba009e59e092ec0662f428db8e8fa4248a2bbb4",
+      "port_date_jst": "2026-10-30",
+      "port_record": "publication/airspy-reception-port-20261030.json"
+    },
+    {
+      "path": "ops/airspy-reception/systemd_lab/launch.py",
+      "source_role": "optional-receiver-source-or-public-documentation",
+      "decision": "Optional Airspy reception guard; preserve the durable one-extra-attempt cap, remove personal configuration writers and keep raw evidence private.",
+      "before_sha256": null,
+      "source_sha256": "a557627cb3f46c589e40c3f5aa9297d9698a3642909ba868fc8f7eb513983ec5",
+      "public_sha256": "b2ca6977e14847dffbf511cc4a9b1a88e61a7c130a0672c7987aa67f10a02ebb",
+      "port_date_jst": "2026-10-30",
+      "port_record": "publication/airspy-reception-port-20261030.json"
+    },
+    {
+      "path": "ops/airspy-reception/systemd_lab/receiver.c",
+      "source_role": "optional-receiver-source-or-public-documentation",
+      "decision": "Optional Airspy reception guard; preserve the durable one-extra-attempt cap, remove personal configuration writers and keep raw evidence private.",
+      "before_sha256": null,
+      "source_sha256": "1a70ea13c25671f4eb0a8e16b3089ba4339e5435d0feacd0033e182532daa771",
+      "public_sha256": "77a00dfb8900809b768827e1e875ba15e90dcb8e6e5c76e8342c044ff936bed5",
+      "port_date_jst": "2026-10-30",
+      "port_record": "publication/airspy-reception-port-20261030.json"
+    },
+    {
+      "path": "ops/airspy-reception/systemd_lab/verify.py",
+      "source_role": "optional-receiver-source-or-public-documentation",
+      "decision": "Optional Airspy reception guard; preserve the durable one-extra-attempt cap, remove personal configuration writers and keep raw evidence private.",
+      "before_sha256": null,
+      "source_sha256": "a3451fda41519e58b2e449c00ab95727280f7589db6bb12b877fd91366b20c9f",
+      "public_sha256": "1be118570092804e7416ede03728cf1f8942b1c59385547a0e8f93987f8c05f6",
+      "port_date_jst": "2026-10-30",
+      "port_record": "publication/airspy-reception-port-20261030.json"
+    },
+    {
+      "path": "tests/test_airspy_reception_guard.py",
+      "source_role": "optional-receiver-source-or-public-documentation",
+      "decision": "Optional Airspy reception guard; preserve the durable one-extra-attempt cap, remove personal configuration writers and keep raw evidence private.",
+      "before_sha256": null,
+      "source_sha256": "7229f040f2a7d27d6b18966fbb46444697811ad8ab6ecaa6416d713397e553c4",
+      "public_sha256": "93edceba0147129b094c6d36e09cb99642fbc85b19f170174f0395ba9472d7ba",
+      "port_date_jst": "2026-10-30",
+      "port_record": "publication/airspy-reception-port-20261030.json"
+    },
+    {
       "path": "ops/selfheal/manual_maintenance.py",
       "source_role": "manual-maintenance-source-or-public-guide",
       "decision": "Port manual maintenance with an English interface, canonical observer imports, configured host binding and no runtime secrets.",
@@ -5505,137 +5672,6 @@
       "source_sha256": null,
       "public_sha256": "d79eded2b17012d022d316fff307f94c301724837b38e0d28172bd4792f3c0f4",
       "before_publication_check_sha256": null
-    },
-    {
-      "path": "docs/v3/airspy-reception-guard.md",
-      "source_role": "optional-receiver-source-or-public-documentation",
-      "decision": "Optional Airspy reception guard; preserve the durable one-extra-attempt cap, remove personal configuration writers and keep raw evidence private.",
-      "before_sha256": null,
-      "source_sha256": null,
-      "public_sha256": "7d6c867ddd7afa5409b42e2938a4c047f2bef40e230d55d0e3ade96a27a8c5e6",
-      "port_date_jst": "2026-10-30",
-      "port_record": "publication/airspy-reception-port-20261030.json"
-    },
-    {
-      "path": "ops/airspy-reception/README.md",
-      "source_role": "optional-receiver-source-or-public-documentation",
-      "decision": "Optional Airspy reception guard; preserve the durable one-extra-attempt cap, remove personal configuration writers and keep raw evidence private.",
-      "before_sha256": null,
-      "source_sha256": null,
-      "public_sha256": "910946c7438494fa717b6931ffc3fd050ee1cbe8755a978a92265c08e89e0281",
-      "port_date_jst": "2026-10-30",
-      "port_record": "publication/airspy-reception-port-20261030.json"
-    },
-    {
-      "path": "ops/airspy-reception/airspy-reception-guard.service",
-      "source_role": "optional-receiver-source-or-public-documentation",
-      "decision": "Optional Airspy reception guard; preserve the durable one-extra-attempt cap, remove personal configuration writers and keep raw evidence private.",
-      "before_sha256": null,
-      "source_sha256": "ee9cefb8ab3e5cafef8fddef19455481cb5c1cf579077e413d711b901b51bae5",
-      "public_sha256": "0d526ef32dbd6468d0da60ef36a211ef92a80c4d864853b1a376fabb71e01ad8",
-      "port_date_jst": "2026-10-30",
-      "port_record": "publication/airspy-reception-port-20261030.json",
-      "before_publication_whitespace_cleanup_sha256": "3319ecf1757ba26432bf530f0d16761eab88d1796aa51fbfc11f08f04663a6cb"
-    },
-    {
-      "path": "ops/airspy-reception/airspy-reception-guard.timer",
-      "source_role": "optional-receiver-source-or-public-documentation",
-      "decision": "Optional Airspy reception guard; preserve the durable one-extra-attempt cap, remove personal configuration writers and keep raw evidence private.",
-      "before_sha256": null,
-      "source_sha256": "a1e3d5a8f459f7c88375aa5d95c45a293bd8640df678b217663861e493968fb6",
-      "public_sha256": "a1e3d5a8f459f7c88375aa5d95c45a293bd8640df678b217663861e493968fb6",
-      "port_date_jst": "2026-10-30",
-      "port_record": "publication/airspy-reception-port-20261030.json"
-    },
-    {
-      "path": "ops/airspy-reception/airspy-reception.env.example",
-      "source_role": "optional-receiver-source-or-public-documentation",
-      "decision": "Optional Airspy reception guard; preserve the durable one-extra-attempt cap, remove personal configuration writers and keep raw evidence private.",
-      "before_sha256": null,
-      "source_sha256": "0ddfc2910caf389cfc746a9043f1d366a0ccf4f5cdd31adb3f3c5fc9d5423cf1",
-      "public_sha256": "6e340836217029ffffcec46a2ec6156fed1fb737eb2de87e67dc5dc27b7fe920",
-      "port_date_jst": "2026-10-30",
-      "port_record": "publication/airspy-reception-port-20261030.json"
-    },
-    {
-      "path": "ops/airspy-reception/enable-recovery.conf.example",
-      "source_role": "optional-receiver-source-or-public-documentation",
-      "decision": "Optional Airspy reception guard; preserve the durable one-extra-attempt cap, remove personal configuration writers and keep raw evidence private.",
-      "before_sha256": null,
-      "source_sha256": null,
-      "public_sha256": "46d5932028f96f96984f8fc39676e44bd7522c37d0853466102953445e82ae55",
-      "port_date_jst": "2026-10-30",
-      "port_record": "publication/airspy-reception-port-20261030.json"
-    },
-    {
-      "path": "ops/airspy-reception/receiver_guard.py",
-      "source_role": "optional-receiver-source-or-public-documentation",
-      "decision": "Optional Airspy reception guard; preserve the durable one-extra-attempt cap, remove personal configuration writers and keep raw evidence private.",
-      "before_sha256": null,
-      "source_sha256": "2822550413261f39450375001b61626bd4076a49174339176b02f51a23e53d9f",
-      "public_sha256": "d2a6c4a60178a71cc8aa73d26b4d87acb8f23dc69e43ed1bb8557aaa2d6008e0",
-      "port_date_jst": "2026-10-30",
-      "port_record": "publication/airspy-reception-port-20261030.json"
-    },
-    {
-      "path": "ops/airspy-reception/systemd_lab/README.md",
-      "source_role": "optional-receiver-source-or-public-documentation",
-      "decision": "Optional Airspy reception guard; preserve the durable one-extra-attempt cap, remove personal configuration writers and keep raw evidence private.",
-      "before_sha256": null,
-      "source_sha256": null,
-      "public_sha256": "4653f85bac1600ad1e0cde479abbe6d1d35c31018136d1fc30e09fe635701207",
-      "port_date_jst": "2026-10-30",
-      "port_record": "publication/airspy-reception-port-20261030.json"
-    },
-    {
-      "path": "ops/airspy-reception/systemd_lab/controller.py",
-      "source_role": "optional-receiver-source-or-public-documentation",
-      "decision": "Optional Airspy reception guard; preserve the durable one-extra-attempt cap, remove personal configuration writers and keep raw evidence private.",
-      "before_sha256": null,
-      "source_sha256": "eba436a4d51d40f60831d24e0b8f7adc4a6183fcf7b6c2498b1972248c68c3e0",
-      "public_sha256": "91d7bdc19e35c7a4debe3161bba009e59e092ec0662f428db8e8fa4248a2bbb4",
-      "port_date_jst": "2026-10-30",
-      "port_record": "publication/airspy-reception-port-20261030.json"
-    },
-    {
-      "path": "ops/airspy-reception/systemd_lab/launch.py",
-      "source_role": "optional-receiver-source-or-public-documentation",
-      "decision": "Optional Airspy reception guard; preserve the durable one-extra-attempt cap, remove personal configuration writers and keep raw evidence private.",
-      "before_sha256": null,
-      "source_sha256": "a557627cb3f46c589e40c3f5aa9297d9698a3642909ba868fc8f7eb513983ec5",
-      "public_sha256": "b2ca6977e14847dffbf511cc4a9b1a88e61a7c130a0672c7987aa67f10a02ebb",
-      "port_date_jst": "2026-10-30",
-      "port_record": "publication/airspy-reception-port-20261030.json"
-    },
-    {
-      "path": "ops/airspy-reception/systemd_lab/receiver.c",
-      "source_role": "optional-receiver-source-or-public-documentation",
-      "decision": "Optional Airspy reception guard; preserve the durable one-extra-attempt cap, remove personal configuration writers and keep raw evidence private.",
-      "before_sha256": null,
-      "source_sha256": "1a70ea13c25671f4eb0a8e16b3089ba4339e5435d0feacd0033e182532daa771",
-      "public_sha256": "77a00dfb8900809b768827e1e875ba15e90dcb8e6e5c76e8342c044ff936bed5",
-      "port_date_jst": "2026-10-30",
-      "port_record": "publication/airspy-reception-port-20261030.json"
-    },
-    {
-      "path": "ops/airspy-reception/systemd_lab/verify.py",
-      "source_role": "optional-receiver-source-or-public-documentation",
-      "decision": "Optional Airspy reception guard; preserve the durable one-extra-attempt cap, remove personal configuration writers and keep raw evidence private.",
-      "before_sha256": null,
-      "source_sha256": "a3451fda41519e58b2e449c00ab95727280f7589db6bb12b877fd91366b20c9f",
-      "public_sha256": "1be118570092804e7416ede03728cf1f8942b1c59385547a0e8f93987f8c05f6",
-      "port_date_jst": "2026-10-30",
-      "port_record": "publication/airspy-reception-port-20261030.json"
-    },
-    {
-      "path": "tests/test_airspy_reception_guard.py",
-      "source_role": "optional-receiver-source-or-public-documentation",
-      "decision": "Optional Airspy reception guard; preserve the durable one-extra-attempt cap, remove personal configuration writers and keep raw evidence private.",
-      "before_sha256": null,
-      "source_sha256": "7229f040f2a7d27d6b18966fbb46444697811ad8ab6ecaa6416d713397e553c4",
-      "public_sha256": "93edceba0147129b094c6d36e09cb99642fbc85b19f170174f0395ba9472d7ba",
-      "port_date_jst": "2026-10-30",
-      "port_record": "publication/airspy-reception-port-20261030.json"
     }
   ],
   "omissions": [
@@ -5966,6 +6002,19 @@
     "publication_requested": true,
     "clean_checkout_import_classification": "explicit cra and runtime_boundary first-party imports; first failing Actions run retained in the layout record"
   },
+  "twitch_api_deadline": {
+    "date_jst": "2026-10-27",
+    "record": "publication/twitch-api-deadline-20261027.json",
+    "scope": "public-checkout-only",
+    "last_writer": "twitch-api-deadline-port",
+    "write_order": [
+      "publication/twitch-api-deadline-20261027.json",
+      "publication/source-map.json"
+    ],
+    "public_example_deployment_performed": false,
+    "production_operation_performed": false,
+    "commit_or_push_performed": false
+  },
   "r2_publication_documentation": {
     "record": "publication/r2-publication-docs-20261027.json",
     "date_jst": "2026-10-27",
@@ -5987,6 +6036,17 @@
       "publication/transport-recorder-port-20261029.json",
       "publication/source-map.json"
     ]
+  },
+  "airspy_reception_port": {
+    "date_jst": "2026-10-30",
+    "record": "publication/airspy-reception-port-20261030.json",
+    "scope": "public-checkout-only",
+    "deployment_performed": false,
+    "production_runtime_changed": false,
+    "commit_or_push_performed": false,
+    "public_default": "observe-only",
+    "additional_restarts_per_origin": 1,
+    "original_source_cutoff_unchanged": true
   },
   "manual_maintenance_port": {
     "record": "publication/manual-maintenance-port-20261030.json",
@@ -6029,26 +6089,7 @@
     "record": "publication/boottime-media-health-20261031.json",
     "prior_source_map": "publication/history/source-map-before-boottime-media-health-20261031.json"
   },
-  "selected_publication": {
-    "prepared_at_jst": "2026-11-01T00:14:47.064866+09:00",
-    "scope": "Clock-safe fallback and the optional receiver-side Airspy reception guard",
-    "pending_topics_excluded": [
-      "Twitch API transport deadline"
-    ],
-    "original_worktree_changes_preserved": true
-  },
   "publication_clean_check_fixes": {
     "scope": "Update the offline-slate test for boot-bound freshness; include and restrict the read-only causal-observer unit without granting production authority."
-  },
-  "airspy_reception_port": {
-    "date_jst": "2026-10-30",
-    "record": "publication/airspy-reception-port-20261030.json",
-    "scope": "public-checkout-only",
-    "deployment_performed": false,
-    "production_runtime_changed": false,
-    "commit_or_push_performed": false,
-    "public_default": "observe-only",
-    "additional_restarts_per_origin": 1,
-    "original_source_cutoff_unchanged": true
   }
 }

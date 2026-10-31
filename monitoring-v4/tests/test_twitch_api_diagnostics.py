@@ -52,6 +52,36 @@ def test_new_diagnostic_evidence_matches_the_backward_compatible_schema(tmp_path
     Draft202012Validator(schema).validate(raw)
 
 
+def test_transport_failure_reaches_schema_and_bound_metrics_without_stale_live(tmp_path):
+    from jsonschema import Draft202012Validator
+    from stream_monitoring_v4.collectors.twitch_api import ProbeError
+
+    def failed_transport(*_):
+        raise ProbeError('timeout', transport_phase='tls',
+                         transport_seconds={'dns':.01, 'connect':.02})
+
+    collector = TwitchCollector(tmp_path/'credentials', '100000001', 'fixturechannel',
+                                transport=failed_transport, wall=lambda:NOW,
+                                monotonic=lambda:1000.0)
+    collector._authenticate = lambda:{}
+    collector.identity_checked = 1000.0
+    raw = collector.collect()
+    assert raw['provider_state']=='UNKNOWN' and raw['error_reason']=='streams_timeout'
+    assert raw['transport_failures']['streams']['tls']==1
+    assert raw['request_stats'][0]['transport_seconds']=={'dns':.01, 'connect':.02}
+    schema = json.loads((Path(__file__).resolve().parents[1]/
+                         'src/stream_contracts/monitoring_v4/schema/twitch_api_evidence.v1.json').read_text())
+    Draft202012Validator(schema).validate(raw)
+    source = tmp_path/'twitch_api_evidence.json'
+    source.write_text(json.dumps(raw));source.with_name('twitch_api.prom').write_text(metrics(raw))
+    binding = {'user_id':'100000001', 'collector_revision':raw['collector_revision']}
+    text = sli.api_diagnostic_metrics(NOW, source, binding=binding)
+    assert 'stream_v4_twitch_api_diagnostics_available 1\n' in text
+    assert 'stream_v4_twitch_api_transport_failures_total{stage="streams",phase="tls"} 1\n' in text
+    assert 'stream_v4_twitch_api_transport_phase_seconds{stage="streams",phase="connect"} 0.02\n' in text
+    assert sli.api_diagnostic_metrics(NOW, source, binding={**binding,'collector_revision':'unreviewed'}).strip().endswith('0')
+
+
 def test_observed_success_and_collection_gaps_keep_distinct_denominators(tmp_path):
     history = sli.History(tmp_path/'history.sqlite3', NOW)
     try:

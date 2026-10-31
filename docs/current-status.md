@@ -319,6 +319,13 @@ See the [implementation notes](../monitoring-v4/docs/relay-provider-evidence.md)
 and [source-port validation record](../publication/twitch-observation-port-20261021.json).
 This port applies no public example to production and sends no notifications.
 
+The [2026-10-27 transport update](../publication/twitch-api-deadline-20261027.json)
+adds a whole-request API deadline, a bounded curl child in place of repeated
+Python TLS setup, and phase-specific diagnostics. Local HTTPS and process tests
+cover stalled DNS/TCP/TLS/header/body processing and child cleanup. Explicit
+public account/revision bindings, SLO history and notification decisions remain
+unchanged; this source port performs no deployment or provider experiment.
+
 ## CRA Public Layout (2026-10-26 JST)
 
 The current [CRA package](../recovery-control/README.md) contains only the local
