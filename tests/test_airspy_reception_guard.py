@@ -8,6 +8,7 @@ import subprocess
 import sys
 import tempfile
 import time
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
@@ -425,14 +426,15 @@ class LiveAdapterTests(unittest.TestCase):
         (self.root / "proc/123/exe").symlink_to(self.binary)
         (self.root / "proc/123/cmdline").write_bytes(b"\0".join([b"airspy_adsb",b"-g",b"16",b"-b",b""]))
         (self.root / "proc/sys/kernel/random/boot_id").write_text("fixture-boot")
-        now = time.time()
+        self.now = now = 1_800_000_000.
+        self.mono = 1000.
         self.airspy = {"now":now-2, "gain":16, "df_counts":[100]*32, "lost_buffers":0}
         self.readsb = {"now":now-2,"total":{"start":now-1000,"position_count_total":100}}
         self.aircraft = {"now":now-1,"aircraft":[{"lat":36,"lon":140,"seen_pos":1}]}
         self.backend = guard.LiveBackend()
         self.service = {"ActiveState":"active","SubState":"running","MainPID":"123",
                         "InvocationID":"fixture-invocation",
-                        "ExecMainStartTimestampMonotonic":str(int((time.monotonic()-100)*1e6))}
+                        "ExecMainStartTimestampMonotonic":str(int((self.mono-100)*1e6))}
 
     def tearDown(self):self.tmp.cleanup()
 
@@ -447,7 +449,8 @@ class LiveAdapterTests(unittest.TestCase):
                 return self.root/value.lstrip("/")
             return self.actual_path(value)
         with patch.object(guard,"Path",mapped),patch.object(guard,"CONFIG_FILE",self.config),\
-             patch.object(guard,"BINARY",str(self.binary)),patch.object(self.backend,"service",return_value=self.service):
+             patch.object(guard,"BINARY",str(self.binary)),patch.object(self.backend,"service",return_value=self.service), \
+             patch.object(guard,"time",SimpleNamespace(time=lambda:self.now,monotonic=lambda:self.mono)):
             return self.backend.collect(guard.Policy())
 
     def test_real_json_files_validated_and_identifiers_not_exported(self):
@@ -457,7 +460,7 @@ class LiveAdapterTests(unittest.TestCase):
         self.assertNotIn("private-id",json.dumps(result))
 
     def test_stale_future_bool_and_nonfinite_source_times_rejected(self):
-        for value in [time.time()-91,time.time()+5,True,float("nan")]:
+        for value in [self.now-91,self.now+5,True,float("nan")]:
             with self.subTest(value=value):
                 self.airspy["now"]=value
                 with self.assertRaises(ValueError):self.collect()
@@ -467,6 +470,13 @@ class LiveAdapterTests(unittest.TestCase):
             old=self.airspy.get(key);self.airspy[key]=value
             with self.subTest(key=key,value=value),self.assertRaises(ValueError):self.collect()
             self.airspy[key]=old
+
+    def test_nonpositive_or_future_invocation_start_rejected(self):
+        for started in (0., -1., self.mono+1.):
+            with self.subTest(started=started):
+                self.service["ExecMainStartTimestampMonotonic"]=str(int(started*1e6))
+                with self.assertRaisesRegex(ValueError,"invocation identity unavailable"):
+                    self.collect()
 
     def test_restart_command_is_exactly_airspy_only(self):
         with patch.object(guard.subprocess,"run") as run:

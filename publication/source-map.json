@@ -4891,9 +4891,10 @@
       "decision": "Optional Airspy reception guard; preserve the durable one-extra-attempt cap, remove personal configuration writers and keep raw evidence private.",
       "before_sha256": null,
       "source_sha256": "7229f040f2a7d27d6b18966fbb46444697811ad8ab6ecaa6416d713397e553c4",
-      "public_sha256": "93edceba0147129b094c6d36e09cb99642fbc85b19f170174f0395ba9472d7ba",
+      "public_sha256": "757db95baee77ea34979e3934dff10b389d3f23da6931b69a1bb01e37f477966",
       "port_date_jst": "2026-10-30",
-      "port_record": "publication/airspy-reception-port-20261030.json"
+      "port_record": "publication/airspy-reception-port-20261030.json",
+      "before_ci_clock_fixture_sha256": "93edceba0147129b094c6d36e09cb99642fbc85b19f170174f0395ba9472d7ba"
     },
     {
       "path": "ops/selfheal/manual_maintenance.py",
@@ -6091,5 +6092,9 @@
   },
   "publication_clean_check_fixes": {
     "scope": "Update the offline-slate test for boot-bound freshness; include and restrict the read-only causal-observer unit without granting production authority."
+  },
+  "airspy_ci_clock_fixture": {
+    "decision": "Use a fixture-local wall and monotonic clock, independent of runner uptime. Retain rejection of nonpositive or future invocation starts.",
+    "production_behavior_changed": false
   }
 }
