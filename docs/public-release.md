@@ -4,6 +4,16 @@ This repository is a sanitized public snapshot of a personal 24/7 ADS-B
 streaming system. The goal is to show the architecture, code, tests, deployment
 contracts, and operational decisions without publishing runtime data or secrets.
 
+## Optional Airspy Reception Guard
+
+The [2026-10-30 receiver-side port](v3/airspy-reception-guard.md) includes
+reception checks, a durable one-extra-restart cap, an observation-only service
+example, explicit recovery opt-in and synthetic tests with a real isolated
+systemd manager. It excludes personal gain schedules, notification adapters,
+host-specific installers, historical raw fixtures and generated evidence.
+Porting this optional module does not deploy it or change receiver power,
+gain or stream delivery.
+
 ## OCI And Twitch Source Update
 
 The [2026-10-20 port record](v3/public-source-port-2026-10-20.md) describes the

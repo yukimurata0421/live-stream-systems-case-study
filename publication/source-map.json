@@ -33,7 +33,7 @@
       "decision": "Optional Airspy reception guard; preserve the durable one-extra-attempt cap, remove personal configuration writers and keep raw evidence private.",
       "before_sha256": "d2268fba12ef09d57e492f92569838989f651d84fc89d8e3d4d242420cac01ba",
       "source_sha256": null,
-      "public_sha256": "68a34a723bb0da795c45e57d18652f2a2c6a291d2952697a793c285bfd68671a",
+      "public_sha256": "b83530df3902aab260034c81c5afd9a6ac2064d62c614984d8146723ae1c5079",
       "port_date_jst": "2026-10-30",
       "pre_documentation_restructure_sha256": "00b596e75b50eaedbd3bed4ebc79e71d882e7049e72516aec95dfc0860ed015e",
       "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json.",
@@ -231,7 +231,7 @@
       "decision": "Add one catalog link, preserving existing changes.",
       "before_sha256": "fd6b799844453cf83c05d47231eacc48eef92903c127698eed87cd2dd14bde5a",
       "source_sha256": null,
-      "public_sha256": "599f274f94d450c720c155790343159b1450c8832efda760eb4ac96337c9cd2c",
+      "public_sha256": "3b50fe9e3cc95036c0743b750e39f9d0aea17612b1859162bd7426ce62cfe23f",
       "prior_public_sha256": "fe88716f5d5bc1d647da6238b7379145730a61626ee01306ea8194c76066fbec",
       "localization": "English prose; control structures and machine identifiers preserved.",
       "pre_graph_display_sha256": "6a87a495eb3698b1a49e053ffcc109b28d94a59e9dd29cb3399a62279e196d3d",
@@ -323,7 +323,7 @@
       "decision": "Optional Airspy reception guard; preserve the durable one-extra-attempt cap, remove personal configuration writers and keep raw evidence private.",
       "before_sha256": "f5b4bb471cbc41668422f4ae9fdeff39e146dc528d0646540a39f23b0a348df5",
       "source_sha256": null,
-      "public_sha256": "57cb921d1c1e3d0eb69e17839995ce9b596d767370d0fa215eec3f7b7e75ac9f",
+      "public_sha256": "de3dc74c3a8ca3b8620e97f57251a4b85d739927b0b9ec8f4250184b906cb4eb",
       "port_date_jst": "2026-10-30",
       "pre_documentation_restructure_sha256": "5ae4f928c8d5f77be2e827787230606ffbf1e4d7c97d62b9d3afe0bf43048e93",
       "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json.",
@@ -355,7 +355,7 @@
       "decision": "Port manual maintenance with an English interface, canonical observer imports, configured host binding and no runtime secrets.",
       "before_sha256": "033b36e0cdb49457cb1521add7182355bf42aa5edf1051e6230d62c4d1e80a4b",
       "source_sha256": null,
-      "public_sha256": "5054144e8218379c249a1b7341f9c62339e5dc5d6d13b371d021c2f2d0964770",
+      "public_sha256": "6cc81dbbd445410ce601ceb53c6a34ee416a214428a092b2b11170ad580b7f60",
       "port_date_jst": "2026-10-30",
       "documentation_restructure": "New single page for volatile state.",
       "pre_twitch_observation_public_sha256": "040eac29174151f51e473f7f85e4aa23ff994be0079b3d4c011623b6ec7864ca",
@@ -553,11 +553,14 @@
     },
     {
       "path": "docs/public-release.md",
-      "source_role": "public-documentation",
-      "decision": "curated-current-contract-and-dated-evidence",
-      "before_sha256": "c877a47fbe90baa9b00250c575e26b2510815148bd46b75978a6902203cd71fc",
+      "source_role": "optional-receiver-source-or-public-documentation",
+      "decision": "Optional Airspy reception guard; preserve the durable one-extra-attempt cap, remove personal configuration writers and keep raw evidence private.",
+      "before_sha256": "4fae26b5711f73bf3e22ab226e195aa28ada120f0c2cf7aa617ff6448c1ed27b",
       "source_sha256": null,
-      "public_sha256": "4fae26b5711f73bf3e22ab226e195aa28ada120f0c2cf7aa617ff6448c1ed27b"
+      "public_sha256": "84638924d1155935fcdfca7de707fc481420b65687ad2e91b22c0879d21e9d27",
+      "port_date_jst": "2026-10-30",
+      "port_record": "publication/airspy-reception-port-20261030.json",
+      "prior_public_sha256": "4fae26b5711f73bf3e22ab226e195aa28ada120f0c2cf7aa617ff6448c1ed27b"
     },
     {
       "path": "docs/runtime-contract.md",
@@ -5502,6 +5505,137 @@
       "source_sha256": null,
       "public_sha256": "d79eded2b17012d022d316fff307f94c301724837b38e0d28172bd4792f3c0f4",
       "before_publication_check_sha256": null
+    },
+    {
+      "path": "docs/v3/airspy-reception-guard.md",
+      "source_role": "optional-receiver-source-or-public-documentation",
+      "decision": "Optional Airspy reception guard; preserve the durable one-extra-attempt cap, remove personal configuration writers and keep raw evidence private.",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "7d6c867ddd7afa5409b42e2938a4c047f2bef40e230d55d0e3ade96a27a8c5e6",
+      "port_date_jst": "2026-10-30",
+      "port_record": "publication/airspy-reception-port-20261030.json"
+    },
+    {
+      "path": "ops/airspy-reception/README.md",
+      "source_role": "optional-receiver-source-or-public-documentation",
+      "decision": "Optional Airspy reception guard; preserve the durable one-extra-attempt cap, remove personal configuration writers and keep raw evidence private.",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "910946c7438494fa717b6931ffc3fd050ee1cbe8755a978a92265c08e89e0281",
+      "port_date_jst": "2026-10-30",
+      "port_record": "publication/airspy-reception-port-20261030.json"
+    },
+    {
+      "path": "ops/airspy-reception/airspy-reception-guard.service",
+      "source_role": "optional-receiver-source-or-public-documentation",
+      "decision": "Optional Airspy reception guard; preserve the durable one-extra-attempt cap, remove personal configuration writers and keep raw evidence private.",
+      "before_sha256": null,
+      "source_sha256": "ee9cefb8ab3e5cafef8fddef19455481cb5c1cf579077e413d711b901b51bae5",
+      "public_sha256": "0d526ef32dbd6468d0da60ef36a211ef92a80c4d864853b1a376fabb71e01ad8",
+      "port_date_jst": "2026-10-30",
+      "port_record": "publication/airspy-reception-port-20261030.json",
+      "before_publication_whitespace_cleanup_sha256": "3319ecf1757ba26432bf530f0d16761eab88d1796aa51fbfc11f08f04663a6cb"
+    },
+    {
+      "path": "ops/airspy-reception/airspy-reception-guard.timer",
+      "source_role": "optional-receiver-source-or-public-documentation",
+      "decision": "Optional Airspy reception guard; preserve the durable one-extra-attempt cap, remove personal configuration writers and keep raw evidence private.",
+      "before_sha256": null,
+      "source_sha256": "a1e3d5a8f459f7c88375aa5d95c45a293bd8640df678b217663861e493968fb6",
+      "public_sha256": "a1e3d5a8f459f7c88375aa5d95c45a293bd8640df678b217663861e493968fb6",
+      "port_date_jst": "2026-10-30",
+      "port_record": "publication/airspy-reception-port-20261030.json"
+    },
+    {
+      "path": "ops/airspy-reception/airspy-reception.env.example",
+      "source_role": "optional-receiver-source-or-public-documentation",
+      "decision": "Optional Airspy reception guard; preserve the durable one-extra-attempt cap, remove personal configuration writers and keep raw evidence private.",
+      "before_sha256": null,
+      "source_sha256": "0ddfc2910caf389cfc746a9043f1d366a0ccf4f5cdd31adb3f3c5fc9d5423cf1",
+      "public_sha256": "6e340836217029ffffcec46a2ec6156fed1fb737eb2de87e67dc5dc27b7fe920",
+      "port_date_jst": "2026-10-30",
+      "port_record": "publication/airspy-reception-port-20261030.json"
+    },
+    {
+      "path": "ops/airspy-reception/enable-recovery.conf.example",
+      "source_role": "optional-receiver-source-or-public-documentation",
+      "decision": "Optional Airspy reception guard; preserve the durable one-extra-attempt cap, remove personal configuration writers and keep raw evidence private.",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "46d5932028f96f96984f8fc39676e44bd7522c37d0853466102953445e82ae55",
+      "port_date_jst": "2026-10-30",
+      "port_record": "publication/airspy-reception-port-20261030.json"
+    },
+    {
+      "path": "ops/airspy-reception/receiver_guard.py",
+      "source_role": "optional-receiver-source-or-public-documentation",
+      "decision": "Optional Airspy reception guard; preserve the durable one-extra-attempt cap, remove personal configuration writers and keep raw evidence private.",
+      "before_sha256": null,
+      "source_sha256": "2822550413261f39450375001b61626bd4076a49174339176b02f51a23e53d9f",
+      "public_sha256": "d2a6c4a60178a71cc8aa73d26b4d87acb8f23dc69e43ed1bb8557aaa2d6008e0",
+      "port_date_jst": "2026-10-30",
+      "port_record": "publication/airspy-reception-port-20261030.json"
+    },
+    {
+      "path": "ops/airspy-reception/systemd_lab/README.md",
+      "source_role": "optional-receiver-source-or-public-documentation",
+      "decision": "Optional Airspy reception guard; preserve the durable one-extra-attempt cap, remove personal configuration writers and keep raw evidence private.",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "4653f85bac1600ad1e0cde479abbe6d1d35c31018136d1fc30e09fe635701207",
+      "port_date_jst": "2026-10-30",
+      "port_record": "publication/airspy-reception-port-20261030.json"
+    },
+    {
+      "path": "ops/airspy-reception/systemd_lab/controller.py",
+      "source_role": "optional-receiver-source-or-public-documentation",
+      "decision": "Optional Airspy reception guard; preserve the durable one-extra-attempt cap, remove personal configuration writers and keep raw evidence private.",
+      "before_sha256": null,
+      "source_sha256": "eba436a4d51d40f60831d24e0b8f7adc4a6183fcf7b6c2498b1972248c68c3e0",
+      "public_sha256": "91d7bdc19e35c7a4debe3161bba009e59e092ec0662f428db8e8fa4248a2bbb4",
+      "port_date_jst": "2026-10-30",
+      "port_record": "publication/airspy-reception-port-20261030.json"
+    },
+    {
+      "path": "ops/airspy-reception/systemd_lab/launch.py",
+      "source_role": "optional-receiver-source-or-public-documentation",
+      "decision": "Optional Airspy reception guard; preserve the durable one-extra-attempt cap, remove personal configuration writers and keep raw evidence private.",
+      "before_sha256": null,
+      "source_sha256": "a557627cb3f46c589e40c3f5aa9297d9698a3642909ba868fc8f7eb513983ec5",
+      "public_sha256": "b2ca6977e14847dffbf511cc4a9b1a88e61a7c130a0672c7987aa67f10a02ebb",
+      "port_date_jst": "2026-10-30",
+      "port_record": "publication/airspy-reception-port-20261030.json"
+    },
+    {
+      "path": "ops/airspy-reception/systemd_lab/receiver.c",
+      "source_role": "optional-receiver-source-or-public-documentation",
+      "decision": "Optional Airspy reception guard; preserve the durable one-extra-attempt cap, remove personal configuration writers and keep raw evidence private.",
+      "before_sha256": null,
+      "source_sha256": "1a70ea13c25671f4eb0a8e16b3089ba4339e5435d0feacd0033e182532daa771",
+      "public_sha256": "77a00dfb8900809b768827e1e875ba15e90dcb8e6e5c76e8342c044ff936bed5",
+      "port_date_jst": "2026-10-30",
+      "port_record": "publication/airspy-reception-port-20261030.json"
+    },
+    {
+      "path": "ops/airspy-reception/systemd_lab/verify.py",
+      "source_role": "optional-receiver-source-or-public-documentation",
+      "decision": "Optional Airspy reception guard; preserve the durable one-extra-attempt cap, remove personal configuration writers and keep raw evidence private.",
+      "before_sha256": null,
+      "source_sha256": "a3451fda41519e58b2e449c00ab95727280f7589db6bb12b877fd91366b20c9f",
+      "public_sha256": "1be118570092804e7416ede03728cf1f8942b1c59385547a0e8f93987f8c05f6",
+      "port_date_jst": "2026-10-30",
+      "port_record": "publication/airspy-reception-port-20261030.json"
+    },
+    {
+      "path": "tests/test_airspy_reception_guard.py",
+      "source_role": "optional-receiver-source-or-public-documentation",
+      "decision": "Optional Airspy reception guard; preserve the durable one-extra-attempt cap, remove personal configuration writers and keep raw evidence private.",
+      "before_sha256": null,
+      "source_sha256": "7229f040f2a7d27d6b18966fbb46444697811ad8ab6ecaa6416d713397e553c4",
+      "public_sha256": "93edceba0147129b094c6d36e09cb99642fbc85b19f170174f0395ba9472d7ba",
+      "port_date_jst": "2026-10-30",
+      "port_record": "publication/airspy-reception-port-20261030.json"
     }
   ],
   "omissions": [
@@ -5896,15 +6030,25 @@
     "prior_source_map": "publication/history/source-map-before-boottime-media-health-20261031.json"
   },
   "selected_publication": {
-    "prepared_at_jst": "2026-10-31T21:12:33.941882+09:00",
-    "scope": "Clock-safe fallback, required dependency ports and related documentation",
+    "prepared_at_jst": "2026-11-01T00:14:47.064866+09:00",
+    "scope": "Clock-safe fallback and the optional receiver-side Airspy reception guard",
     "pending_topics_excluded": [
-      "Airspy reception guard",
       "Twitch API transport deadline"
     ],
     "original_worktree_changes_preserved": true
   },
   "publication_clean_check_fixes": {
     "scope": "Update the offline-slate test for boot-bound freshness; include and restrict the read-only causal-observer unit without granting production authority."
+  },
+  "airspy_reception_port": {
+    "date_jst": "2026-10-30",
+    "record": "publication/airspy-reception-port-20261030.json",
+    "scope": "public-checkout-only",
+    "deployment_performed": false,
+    "production_runtime_changed": false,
+    "commit_or_push_performed": false,
+    "public_default": "observe-only",
+    "additional_restarts_per_origin": 1,
+    "original_source_cutoff_unchanged": true
   }
 }

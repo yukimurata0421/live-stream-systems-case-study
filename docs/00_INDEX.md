@@ -22,6 +22,7 @@ start.
 - `v3/route-causality.md`: [durable cause identity and arena's secondary-recovery veto](v3/route-causality.md).
 - `v3/cross-host-observation-time.md`: [request-bound clock intervals, finite caches, public timestamp normalization, and verification limits](v3/cross-host-observation-time.md).
 - `v3/manual-maintenance.md`: [one-command planned maintenance, a relay-hosted slate, backup exclusion and explicit return gates](v3/manual-maintenance.md).
+- `v3/airspy-reception-guard.md`: [optional receiver-host reception checks, a durable one-extra-restart cap, isolated real-systemd tests and publication limits](v3/airspy-reception-guard.md).
 - `v3/ffmpeg-fifo-recovery.md`: [why output reconnection was chosen over ride-through or process restart, bounded FIFO recovery and process/connection generations](v3/ffmpeg-fifo-recovery.md).
 - `v3/ffmpeg-fifo-measurements.md`: [restart versus FIFO timing, where the time went, the audio-loss rollout and the corrected exercise](v3/ffmpeg-fifo-measurements.md).
 - `v3/fifo-timestamp-continuity-case-study.md`: [how same-process recovery carried old timestamps to YouTube, the per-connection origin fix, and the comparison that isolated it](v3/fifo-timestamp-continuity-case-study.md).

@@ -66,6 +66,22 @@ and observation windows completed the next attempt. Failed evidence is retained.
 This installation does not enable unattended source-loss slates or establish
 provider selection, broadcast retention or public playback during maintenance.
 
+## Airspy Startup Reception (2026-10-30 JST)
+
+A receiver-local quality guard was added to the operated installation after
+an Airspy-only restart with unchanged settings restored zero-position
+reception. The exact device/software initialization or Bias-T/LNA cause is
+still unresolved. The existing gain/power policy and media delivery remain
+separate from its one-extra-restart budget.
+
+The [public module](../ops/airspy-reception/README.md) ships as an optional,
+observation-only example; this source port does not install a second guard.
+Portable tests and the isolated real-systemd cases are tracked in the
+[dated record](v3/airspy-reception-guard.md). **Unobserved:** a production
+fault-triggered automatic restart, physical RF/power failure recovery and the
+10% threshold's general false-positive rate. Synthetic service-manager tests
+are kept distinct from those outcomes.
+
 ## Transport Recording (2026-10-29 JST)
 
 The route observer's learned throughput baseline was retired at 10:13:57 JST.

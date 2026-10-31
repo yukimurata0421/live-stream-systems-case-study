@@ -1,0 +1,23 @@
+[Unit]
+Description=Airspy startup reception quality and one bounded recovery attempt
+After=network.target
+
+[Service]
+Type=oneshot
+User=root
+EnvironmentFile=/etc/airspy-reception-guard.env
+ExecStart=/usr/bin/python3 /opt/airspy-reception-guard/current/receiver_guard.py observe-only
+StateDirectory=airspy-reception-guard
+StateDirectoryMode=0755
+UMask=0077
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+NoNewPrivileges=true
+RestrictAddressFamilies=AF_UNIX
+ReadWritePaths=/var/lib/airspy-reception-guard
+MemoryMax=64M
+CPUQuota=20%
+TasksMax=16
+TimeoutStartSec=25
+SuccessExitStatus=2

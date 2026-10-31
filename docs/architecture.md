@@ -119,6 +119,12 @@ repository-owned MapLibre renderer, not the upstream tar1090 page.
 tiles, precipitation assets, now-playing data and render readiness. The k3s
 manifests do not manage the Airspy device or readsb.
 
+The optional [receiver-host reception guard](../ops/airspy-reception/README.md)
+runs separately from these manifests. It verifies startup reception and can
+make one additional Airspy-only restart per origin startup or gain transition.
+The public unit is observation-only until explicitly enabled; gain schedules
+and Bias-T power remain with the existing receiver operator/controller.
+
 The production overlay `deploy/k3s/streaming` runs four containers:
 `stream-engine`, `precipitation-fetcher`, `auto-dj` and `fast-recovery-loop`.
 The base `deploy/k3s/v3-runtime` manifest used for shadow validation has a
@@ -279,6 +285,7 @@ distinguishes the operated edge from the older uploader code retained publicly.
 | Actor | Can change | Cannot change |
 | --- | --- | --- |
 | Fast recovery inside the Dell Pod | The FFmpeg child of its own Pod | Pods, Deployments, or the relay |
+| Receiver-host reception guard, when explicitly enabled | One additional Airspy restart per origin startup, after a durable reservation | Gain or power policy, readsb, media processes, containers or hosts |
 | Kubernetes on Dell | Restarts a failed container or Pod | Anything on OCI |
 | Fallback controller on Dell | Scales only `stream-v3-youtube-backup` between 0 and 1 | The main Pod or the relay |
 | Explicit operator running manual maintenance | Main Deployment replicas; fixed sender recovery timer/service; durable fallback inhibition; relay `alwaysAvailable`, `alwaysAvailableFile`, `alwaysAvailableTracks` | Provider destinations, credentials, fences, authority ownership, unrelated workloads or relay maintenance |

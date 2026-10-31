@@ -1,0 +1,11 @@
+[Unit]
+Description=Observe Airspy startup reception every 30 seconds
+
+[Timer]
+OnBootSec=30
+OnUnitActiveSec=30
+AccuracySec=1
+Unit=airspy-reception-guard.service
+
+[Install]
+WantedBy=timers.target

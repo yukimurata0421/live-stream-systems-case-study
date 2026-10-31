@@ -115,6 +115,12 @@ when monitoring is down. The monitor on arena-server can only request a guarded
 runtime restart, and replacement-broadcast creation is disabled.
 [Architecture](docs/architecture.md#who-can-act-on-what) lists each actor's limits.
 
+An optional [Airspy reception guard](ops/airspy-reception/README.md) handles
+receiver startups that leave processes alive but positioned aircraft at zero.
+It persists a one-extra-restart budget across timeout and monitor death; the
+public unit starts in observation-only mode and leaves gain and power policy
+with the receiver operator.
+
 The repository also contains CRA (Central Restart Authority). Its current
 [local reflex implementation](recovery-control/README.md) is 17 Python files
 and 2,535 lines: Dell evaluates stalls under a policy signed by cra-01, and
