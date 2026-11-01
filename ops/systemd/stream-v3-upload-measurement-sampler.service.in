@@ -1,0 +1,35 @@
+[Unit]
+Description=Read-only upload measurement sampler
+After=local-fs.target
+
+[Service]
+Type=simple
+User=@OBSERVER_USER@
+Group=@OBSERVER_GROUP@
+ExecStart=/usr/bin/python3 -I -B @BUNDLE@/ops/scripts/stream_v3_upload_measurement.py sample --directory @SOURCE_DIRECTORY@ --source-host @SOURCE_HOST@
+Restart=on-failure
+RestartSec=10
+UMask=0022
+Nice=10
+CPUQuota=10%
+MemoryMax=96M
+TasksMax=16
+NoNewPrivileges=yes
+PrivateTmp=yes
+PrivateDevices=yes
+PrivateNetwork=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+RestrictRealtime=yes
+LockPersonality=yes
+CapabilityBoundingSet=
+ReadWritePaths=@SOURCE_DIRECTORY@
+InaccessiblePaths=-/run/stream-v3-control/effect.sock -/var/lib/stream-recovery-control
+SystemCallFilter=~@network-io @mount @reboot @module @raw-io
+
+[Install]
+WantedBy=multi-user.target

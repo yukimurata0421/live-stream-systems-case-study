@@ -21,6 +21,7 @@ if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
 from stream_core.k8s_gpu_guard import summarize_runtime_gpu
+from stream_core.common import upload_samples
 from stream_core.common.adsb_timing import adsb_source_timing
 from stream_v3.oci_monitor_metrics import write_metrics as write_oci_monitor_metrics
 from stream_core.common.youtube_input_quality import (
@@ -493,7 +494,7 @@ def tcp_send_rows(state_root: Path, *, now: float) -> list[dict[str, Any]]:
         if ts <= now:
             rows.append(payload)
     rows.sort(key=lambda item: as_float(item.get("_ts")))
-    return rows
+    return upload_samples.exporter_rows(state_root, rows, now)
 
 
 def upload_fallback_by_window(state_root: Path, *, now: float) -> dict[str, dict[str, float]]:
@@ -519,6 +520,9 @@ def upload_fallback_by_window(state_root: Path, *, now: float) -> dict[str, dict
 
 
 def latest_tcp_send_observation(state_root: Path, *, now: float) -> dict[str, Any]:
+    independent = upload_samples.latest(state_root, now)
+    if independent is not None:
+        return independent
     rows = tcp_send_rows(state_root, now=now)
     if not rows:
         return {}

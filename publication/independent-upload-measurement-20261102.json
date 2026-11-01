@@ -1,0 +1,142 @@
+{
+  "schema": "public-source-port.independent-upload-measurement.v1",
+  "date_jst": "2026-11-02",
+  "scope": "Independent read-only upload measurement collection and its existing notification/SLI readers",
+  "source_worktree_dirty": true,
+  "files": [
+    {
+      "path": "src/stream_core/common/upload_samples.py",
+      "before_public_sha256": null,
+      "source_sha256": "a6edd3338fd270256f75d88a850e2e6ed360e0441e54dacfbbb1924f23e1710c",
+      "public_sha256": "a6edd3338fd270256f75d88a850e2e6ed360e0441e54dacfbbb1924f23e1710c",
+      "adaptation": "Public baseline retained; identical independent sampler, receipt reader and tests; clock implementation remains the checked package copy."
+    },
+    {
+      "path": "ops/scripts/stream_v3_upload_measurement.py",
+      "before_public_sha256": null,
+      "source_sha256": "9682d654672f1c48586d0bc155bb23ab6b02c02c6b227853b1d6b32d82eb8af3",
+      "public_sha256": "9682d654672f1c48586d0bc155bb23ab6b02c02c6b227853b1d6b32d82eb8af3",
+      "adaptation": "Public baseline retained; identical independent sampler, receipt reader and tests; clock implementation remains the checked package copy."
+    },
+    {
+      "path": "ops/scripts/upload_measurement_exporter.py",
+      "before_public_sha256": null,
+      "source_sha256": "6b781c241889435dd3ce94f962ff15de905e08f3e115e08b9450e861fb9dcb4b",
+      "public_sha256": "6b781c241889435dd3ce94f962ff15de905e08f3e115e08b9450e861fb9dcb4b",
+      "adaptation": "Public baseline retained; identical independent sampler, receipt reader and tests; clock implementation remains the checked package copy."
+    },
+    {
+      "path": "tests/test_independent_upload_measurement.py",
+      "before_public_sha256": null,
+      "source_sha256": "4a8664215c06d4ee0d2424ed5e2f58bf4782c743680342627be15af1840cb9be",
+      "public_sha256": "4a8664215c06d4ee0d2424ed5e2f58bf4782c743680342627be15af1840cb9be",
+      "adaptation": "Public baseline retained; identical independent sampler, receipt reader and tests; clock implementation remains the checked package copy."
+    },
+    {
+      "path": "ops/systemd/stream-v3-upload-measurement-sampler.service.in",
+      "before_public_sha256": null,
+      "source_sha256": "5daceb22d630dd8488dd194029d0d873c83cd73677a420bd8beddebfd4d09d65",
+      "public_sha256": "5daceb22d630dd8488dd194029d0d873c83cd73677a420bd8beddebfd4d09d65",
+      "adaptation": "Public baseline retained; identical independent sampler, receipt reader and tests; clock implementation remains the checked package copy."
+    },
+    {
+      "path": "ops/systemd/stream-v3-upload-measurement-puller.service.in",
+      "before_public_sha256": null,
+      "source_sha256": "1eaa193c1ff3e45da0e2aa3826654d9484ee207ad28e83ed9ce1c7a4efbdaf93",
+      "public_sha256": "1eaa193c1ff3e45da0e2aa3826654d9484ee207ad28e83ed9ce1c7a4efbdaf93",
+      "adaptation": "Public baseline retained; identical independent sampler, receipt reader and tests; clock implementation remains the checked package copy."
+    },
+    {
+      "path": "src/stream_core/notifications/upload_source.py",
+      "before_public_sha256": "665106b3c0ddcba07d65bc06daabca5229b0c9f5a69e3c79acf493e4c5ee8689",
+      "source_sha256": "ca1f901e0c794e4cc890a56f54e92940864f4ab5350c6757b6a70b4ce9e99cea",
+      "public_sha256": "a9ee39f0f786e3d97e8c7613793761a4bcd49a70fc9675e3013f60b8a794a9ce",
+      "adaptation": "Public baseline retained; identical independent sampler, receipt reader and tests; clock implementation remains the checked package copy."
+    },
+    {
+      "path": "ops/scripts/stream_v3_prometheus_exporter.py",
+      "before_public_sha256": "60fc8ac2e4aabc99f5fd2487ba9495a0ffd5fa9ea01280c3fb4c999ca43b7eb3",
+      "source_sha256": "1b3ff3799110368024c4d8a64fcdaf2d59173d7109683193c056447ba5692f3d",
+      "public_sha256": "3231a335fdc09678c672eb91f02837c515a0393bb82bbc9a7927b35c5b7eb783",
+      "adaptation": "Public baseline retained; identical independent sampler, receipt reader and tests; clock implementation remains the checked package copy."
+    },
+    {
+      "path": "src/stream_core/cli_support/objective_sli.py",
+      "before_public_sha256": "3fd9063e39c84ae360f0a08442d3c35c0c51db09e8e338cec4b2f8cce55fb9fe",
+      "source_sha256": "52a44695550512291d0e966f060bcfd5ae1d653a74b06a4c1a97049c61328988",
+      "public_sha256": "e3e6b5ef124ef0c8c5cadc6c2d720b43bfc6b0266e727af680357890298d97bf",
+      "adaptation": "Public baseline retained; identical independent sampler, receipt reader and tests; clock implementation remains the checked package copy."
+    },
+    {
+      "path": "ops/scripts/observe_stream_health.py",
+      "before_public_sha256": "4dcf8bfe884d57601fbd8e12e6996b476462753a0bc569e502d172d66fa9ea14",
+      "source_sha256": "4d1fee94597b49d35261834601b92094b75d27830f6e5b10fd613f9266c24b9d",
+      "public_sha256": "fea883a915635593179969a0c5a48b761beabf9f474d063c05d5592b018e5674",
+      "adaptation": "Public baseline retained; identical independent sampler, receipt reader and tests; clock implementation remains the checked package copy."
+    },
+    {
+      "path": "docs/00_INDEX.md",
+      "before_public_sha256": "9f7605e83cdf9ec60df73ebe3f2472cca9292c4e06ec6768621ce53026c0b82c",
+      "public_sha256": "62b67eeb9e9ce71b6ef55e8db07f608822991fe0cc3ade33a74f1ac3be5c539d",
+      "source_sha256": null,
+      "adaptation": "English public contract and reader links; private deployment evidence excluded."
+    },
+    {
+      "path": "docs/architecture.md",
+      "before_public_sha256": "ae7e39d185704eed824fec533351f4713fa3369815ad95cb92647279e8304e7b",
+      "public_sha256": "63325eb09b905f71cccbe692fad231bcc1e1f6b396280159e3b8af40d29322da",
+      "source_sha256": null,
+      "adaptation": "English public contract and reader links; private deployment evidence excluded."
+    },
+    {
+      "path": "docs/v3/program-map.md",
+      "before_public_sha256": "5e831478e61f25f678e8b1ba32198364736326cfa93db9855bf30f1b8d8a49e8",
+      "public_sha256": "1621887c0025ebf417651aff9dd8c57eebd0e1c82cb246e88cf4797ee86beb47",
+      "source_sha256": null,
+      "adaptation": "English public contract and reader links; private deployment evidence excluded."
+    },
+    {
+      "path": "docs/v3/notification-observation-time.md",
+      "before_public_sha256": "1d37156850117a46cc6937e74ac9ff6486db682582606b6f16ae35dbb7538952",
+      "public_sha256": "4336b872c1bdc4de66fac59faaaa24da52a3eba50cecfd8803d715409678ed95",
+      "source_sha256": null,
+      "adaptation": "English public contract and reader links; private deployment evidence excluded."
+    },
+    {
+      "path": "docs/v3/upload-measurement-source.md",
+      "before_public_sha256": null,
+      "public_sha256": "c74b2ff6c2fa50a992871dc63170bfc9f7ea0013a7bf0a1cb10e718f9312a794",
+      "source_sha256": null,
+      "adaptation": "English public contract and reader links; private deployment evidence excluded."
+    }
+  ],
+  "unchanged": [
+    "Recovery identity and authorization guards",
+    "Safety fences, budgets and restart policy",
+    "SLO targets, existing history and missing intervals",
+    "Media processes, Pod configuration and provider lifecycle"
+  ],
+  "verification": {
+    "related_public_tests": {
+      "passed": 209,
+      "subtests_passed": 3
+    },
+    "production": "Measurement producers and consumers applied; continuous qualification pending.",
+    "limits": [
+      "No production fault injection",
+      "No public-player video/audio continuity claim",
+      "No human message visibility claim"
+    ],
+    "public_suite": {
+      "passed": 2045,
+      "skipped": 9,
+      "subtests_passed": 1612
+    },
+    "application": {
+      "sender_sampler_at_jst": "2026-11-02T06:30:48+09:00",
+      "monitor_consumers_at_jst": "2026-11-02T06:38:57+09:00",
+      "sampler_user_mount_read_checks": "PASS; physical source readable, effect socket and recovery database inaccessible",
+      "continuous_freshness": "IN_PROGRESS; no fifteen-minute completion claim at this checkpoint"
+    }
+  }
+}

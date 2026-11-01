@@ -296,6 +296,7 @@ distinguishes the operated edge from the older uploader code retained publicly.
 | Arena route causal guard | Its bounded read-only cause context and a secondary-recovery veto | Starting media, granting authority, changing budgets, NTP, CRA or Pi control |
 | Host clock observers on all five hosts | Their bounded local current facts | System clocks, media, replicas, incident policy or authorization |
 | Read-only clock mesh on arena-server | Its diagnostic cache and metrics | Clock setting, recovery effects, policy, credentials or the Pi's published artifacts |
+| Independent upload sampler on Dell / replica on arena-server | Their own bounded measurement journals and verified observation state | Recovery identity, effect sockets, control databases, media processes, route choice or SLO targets |
 | Keeper on OCI | Re-creates a failed forward; renews the Twitch forward | The YouTube forward during renewal; anything at home |
 | Return-feed video-clock observer on Dell / its importer on arena-server | Their bounded RAM snapshots, independent observation state and metrics | Senders, routes, replicas, provider lifecycle or recovery effects |
 | Monitor on arena-server | Requests a guarded runtime restart (budget, cooldown, 180-second convergence wait) | The FFmpeg process directly; replacement broadcasts (disabled) |

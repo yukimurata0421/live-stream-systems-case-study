@@ -64,6 +64,7 @@ start.
 
 ## Measurements And Evidence
 
+- `v3/upload-measurement-source.md`: [independent read-only upload sampling, original evidence and source-recovery verification](v3/upload-measurement-source.md).
 - `same-url-continuity-evidence.md`: [160-day same-URL checkpoint and earlier SLI windows](same-url-continuity-evidence.md).
 - `sli-methodology.md`: [how SLIs were defined and the measured baseline](sli-methodology.md).
 - `v3/sli-and-dashboard.md`: [dashboard and SLI contract](v3/sli-and-dashboard.md).

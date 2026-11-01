@@ -7,10 +7,12 @@ from dataclasses import dataclass
 from pathlib import Path
 
 try:
+    from stream_core.common import upload_samples
     from stream_core.common.ffmpeg_restarts import summarize_ffmpeg_restart_attempts
     from stream_core.common.json_io import append_jsonl, iter_jsonl
     from stream_core.common.timeutil import jst_day, jst_text_or_unknown, parse_utc_ts, pt_day, utc_now_text, utc_text_from_ts
 except ModuleNotFoundError:
+    from common import upload_samples
     from common.ffmpeg_restarts import summarize_ffmpeg_restart_attempts
     from common.json_io import append_jsonl, iter_jsonl
     from common.timeutil import jst_day, jst_text_or_unknown, parse_utc_ts, pt_day, utc_now_text, utc_text_from_ts
@@ -291,7 +293,7 @@ def upload_budget_sli(items: list[tuple[int, dict]]) -> dict:
         "over_5mbps_sec": round(over_5_sec, 3),
         "within_5mbps_ratio_pct": ratio_percent(within_sec, sampled_sec),
         "budget_mbps": 5.0,
-        "denominator": "fast_recovery_events.jsonl kind=tcp_send_sample sampled seconds",
+        "denominator": "kind=tcp_send_sample original measured seconds from selected upload history",
     }
 
 
@@ -606,6 +608,13 @@ def objective_sli_payload(ctx: ObjectiveSliContext, *, now_ts: int | None = None
         ctx.fast_recovery_events_file,
         payload_projector=fast_recovery_sli_payload,
     )
+    upload_items = [
+        (int(upload_samples.epoch(row["ts_utc"])), row)
+        for row in upload_samples.merge_events(
+            ctx.log_base_dir.parent,
+            (dict(payload, ts_utc=utc_text_from_ts(ts)) for ts, payload in fast_recovery_items),
+        )
+    ]
     stream_engine_items = timestamped_jsonl_items(ctx.stream_engine_events_file)
     stream_watchdog_items = timestamped_jsonl_items(
         ctx.log_base_dir / "stream_watchdog_events.jsonl",
@@ -659,7 +668,7 @@ def objective_sli_payload(ctx: ObjectiveSliContext, *, now_ts: int | None = None
         },
         "upload_budget": {
             "since_samples_started": upload_budget_sli(
-                [(ts, p) for ts, p in fast_recovery_items if ts >= regime_starts["upload_budget"]]
+                [(ts, p) for ts, p in upload_items if ts >= regime_starts["upload_budget"]]
             )
         },
         "visual_upstream": {

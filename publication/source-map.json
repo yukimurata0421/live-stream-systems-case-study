@@ -234,11 +234,11 @@
     },
     {
       "path": "docs/00_INDEX.md",
-      "source_role": "public-documentation-with-fallback-clock-observations",
-      "decision": "English contract, dated evidence and navigation for the bounded thumbnail-transfer and current-age display correction.",
-      "before_sha256": "fd6b799844453cf83c05d47231eacc48eef92903c127698eed87cd2dd14bde5a",
-      "source_sha256": "b744a45eaa29d812ec315d58c693d60a92cfa7fa66d5b8d8be0e4f49bd7b5d48",
-      "public_sha256": "9f7605e83cdf9ec60df73ebe3f2472cca9292c4e06ec6768621ce53026c0b82c",
+      "source_role": "public-measurement-documentation",
+      "decision": "Describe independent upload observation and preserve the control and SLO boundaries.",
+      "before_sha256": "9f7605e83cdf9ec60df73ebe3f2472cca9292c4e06ec6768621ce53026c0b82c",
+      "source_sha256": null,
+      "public_sha256": "62b67eeb9e9ce71b6ef55e8db07f608822991fe0cc3ade33a74f1ac3be5c539d",
       "prior_public_sha256": "fe88716f5d5bc1d647da6238b7379145730a61626ee01306ea8194c76066fbec",
       "localization": "English prose; control structures and machine identifiers preserved.",
       "pre_graph_display_sha256": "6a87a495eb3698b1a49e053ffcc109b28d94a59e9dd29cb3399a62279e196d3d",
@@ -251,7 +251,7 @@
       "twitch_sli_resilience": "Locally checked candidate only; production application held for fresh task.",
       "pre_pi_publisher_source_port_sha256": "1a57bd86d9466793daecec2756b29cd2ca24cad934a2dfd795a231e098a230e8",
       "pi_publisher_source_port": "2026-10-14 source reconciliation; portable English code and retained public protections; no live changes.",
-      "port_date_jst": "2026-11-01",
+      "port_date_jst": "2026-11-02",
       "pre_documentation_restructure_sha256": "3d45a66068211ff9944ba891a0017e9189c71daa1b0b4945ae1970f8c2b5c045",
       "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json.",
       "pre_twitch_observation_public_sha256": "c4d59eabef48c302df0d72b7ae0d6a6216f99e199f98e4c9c0a0b92631516c13",
@@ -271,7 +271,7 @@
       "relay_clock_native_fallback_port": "2026-10-23 selected source and public-safe documentation; no deployment, commit or push.",
       "pre_observability_reconciliation_sha256": "54c9f42cbd9e1b2bc054e380f4a7376df991333c1dc4ea31f191c48805d7703e",
       "pre_fifo_recovery_public_sha256": "09bb9c3529368d76bb7c107dc021db89519855c24c0f85b7a32e58fecd5fad0a",
-      "port_record": "publication/fallback-clock-port-20261030.json",
+      "port_record": "publication/independent-upload-measurement-20261102.json",
       "layout_update": "Current CRA and Stream support separation, 2026-10-26",
       "pre_r2_publication_docs_sha256": "3131adf3d66a0035b126f9002dff210aca8460683eabbc2adfdd517230846eb3",
       "r2_publication_documentation": "2026-10-27 English record only; no source or runtime change by this port.",
@@ -332,12 +332,12 @@
     },
     {
       "path": "docs/architecture.md",
-      "source_role": "optional-receiver-source-or-public-documentation",
-      "decision": "Optional Airspy reception guard; preserve the durable one-extra-attempt cap, remove personal configuration writers and keep raw evidence private.",
-      "before_sha256": "f5b4bb471cbc41668422f4ae9fdeff39e146dc528d0646540a39f23b0a348df5",
+      "source_role": "public-measurement-documentation",
+      "decision": "Describe independent upload observation and preserve the control and SLO boundaries.",
+      "before_sha256": "ae7e39d185704eed824fec533351f4713fa3369815ad95cb92647279e8304e7b",
       "source_sha256": null,
-      "public_sha256": "ae7e39d185704eed824fec533351f4713fa3369815ad95cb92647279e8304e7b",
-      "port_date_jst": "2026-10-30",
+      "public_sha256": "63325eb09b905f71cccbe692fad231bcc1e1f6b396280159e3b8af40d29322da",
+      "port_date_jst": "2026-11-02",
       "pre_documentation_restructure_sha256": "5ae4f928c8d5f77be2e827787230606ffbf1e4d7c97d62b9d3afe0bf43048e93",
       "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json.",
       "pre_clock_monitor_public_sha256": "be72378ef63e1cf256d7369929042ef1d4e5a38256b25f170ef5ba61934bc69d",
@@ -345,7 +345,7 @@
       "pre_thumbnail_clock_public_sha256": "2d353d7cdf20f700c04f35db64adc43e4e4082b35874e88538cd906904c1973a",
       "thumbnail_clock_port": "2026-10-22 committed source through 740bcc00; concurrent review excluded.",
       "pre_fifo_recovery_public_sha256": "dec00dac9bee4c9e594770fe5300eeae24783584face7f9847d7ce174746c29b",
-      "port_record": "publication/airspy-reception-port-20261030.json",
+      "port_record": "publication/independent-upload-measurement-20261102.json",
       "prior_public_sha256": "8a79dd79fce838ab90d7abae964c56a90715bcff923c1f4699e39745d51fd8e4",
       "layout_update": "Current CRA and Stream support separation, 2026-10-26",
       "review_reconciliation": "clock-review-20261031",
@@ -2563,15 +2563,16 @@
     },
     {
       "path": "ops/scripts/stream_v3_prometheus_exporter.py",
-      "before_sha256": "ec64855f4e88302ac5152ff4ce4f08e0fabaea9b1c6060f559eaf9915775d34e",
-      "source_sha256": null,
-      "public_sha256": "60fc8ac2e4aabc99f5fd2487ba9495a0ffd5fa9ea01280c3fb4c999ca43b7eb3",
-      "source_role": "public-adaptation",
-      "decision": "Curated English public documentation/configuration or a public-binding regression; no live deployment.",
-      "port_date_jst": "2026-10-22",
+      "before_sha256": "60fc8ac2e4aabc99f5fd2487ba9495a0ffd5fa9ea01280c3fb4c999ca43b7eb3",
+      "source_sha256": "1b3ff3799110368024c4d8a64fcdaf2d59173d7109683193c056447ba5692f3d",
+      "public_sha256": "3231a335fdc09678c672eb91f02837c515a0393bb82bbc9a7927b35c5b7eb783",
+      "source_role": "independent-upload-measurement",
+      "decision": "Keep upload observation independent from control admission; retain public localization and compatibility.",
+      "port_date_jst": "2026-11-02",
       "before_notification_observation_time_sha256": "90f13120181e53186d4c7d102a8a70513e746e8e027ca89b0f7f59d842ab2168",
       "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
-      "notification_observation_time_source_sha256": "d71f0f9299d56c86e20dc2f538d9ee097f07978d89175c73cf41c097e3119a1d"
+      "notification_observation_time_source_sha256": "d71f0f9299d56c86e20dc2f538d9ee097f07978d89175c73cf41c097e3119a1d",
+      "port_record": "publication/independent-upload-measurement-20261102.json"
     },
     {
       "path": "ops/scripts/stream_v3_twitch_thumbnail_source.py",
@@ -3928,13 +3929,14 @@
     },
     {
       "path": "src/stream_core/notifications/upload_source.py",
-      "source_role": "public-adapted-source-or-regression",
-      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
-      "before_sha256": null,
-      "source_sha256": "cbbd4ef2f035d2020ef245c5618b64dc0ad755fda2ff2bd7bbcec51bb467017b",
-      "public_sha256": "665106b3c0ddcba07d65bc06daabca5229b0c9f5a69e3c79acf493e4c5ee8689",
+      "source_role": "independent-upload-measurement",
+      "decision": "Keep upload observation independent from control admission; retain public localization and compatibility.",
+      "before_sha256": "665106b3c0ddcba07d65bc06daabca5229b0c9f5a69e3c79acf493e4c5ee8689",
+      "source_sha256": "ca1f901e0c794e4cc890a56f54e92940864f4ab5350c6757b6a70b4ce9e99cea",
+      "public_sha256": "a9ee39f0f786e3d97e8c7613793761a4bcd49a70fc9675e3013f60b8a794a9ce",
       "pre_observability_reconciliation_sha256": "b6ca4ac1875fe51a9d863b2c6ac8e8bd408d549585f103d2b846e4180c271cf6",
-      "port_date_jst": "2026-10-23"
+      "port_date_jst": "2026-11-02",
+      "port_record": "publication/independent-upload-measurement-20261102.json"
     },
     {
       "path": "src/stream_core/runtime_boundary_entrypoint.py",
@@ -5884,16 +5886,19 @@
     },
     {
       "path": "docs/v3/notification-observation-time.md",
-      "source_role": "notification-time-evidence",
-      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes.",
+      "source_role": "public-measurement-documentation",
+      "decision": "Describe independent upload observation and preserve the control and SLO boundaries.",
       "source_sha256": null,
-      "public_sha256": "1d37156850117a46cc6937e74ac9ff6486db682582606b6f16ae35dbb7538952",
+      "public_sha256": "4336b872c1bdc4de66fac59faaaa24da52a3eba50cecfd8803d715409678ed95",
       "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
       "notification_observation_time_source_sha256": null,
       "before_notification_source_timing_fix_sha256": "9c23fb959cd8b40a78b106cd0c299954c0156c3f2b9ac845a3c08b905b9564f0",
       "notification_source_timing_fix": "publication/notification-source-timing-fix-20261101.json",
       "before_notification_source_timing_rollout_sha256": "f0bafb97c2011fb8f476a59a778c9b3940720a99bea007ca80fef20d68c907ee",
-      "notification_source_timing_rollout": "publication/notification-source-timing-rollout-20261101.json"
+      "notification_source_timing_rollout": "publication/notification-source-timing-rollout-20261101.json",
+      "before_sha256": "1d37156850117a46cc6937e74ac9ff6486db682582606b6f16ae35dbb7538952",
+      "port_date_jst": "2026-11-02",
+      "port_record": "publication/independent-upload-measurement-20261102.json"
     },
     {
       "path": "src/stream_core/common/observation_time.py",
@@ -6043,12 +6048,15 @@
     },
     {
       "path": "ops/scripts/observe_stream_health.py",
-      "source_role": "notification-time-evidence",
-      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes.",
-      "source_sha256": "7aa103a8d3683dddb8893596de809abef5f68c3b451afb9cc70389b0999df65b",
-      "public_sha256": "4dcf8bfe884d57601fbd8e12e6996b476462753a0bc569e502d172d66fa9ea14",
+      "source_role": "independent-upload-measurement",
+      "decision": "Keep upload observation independent from control admission; retain public localization and compatibility.",
+      "source_sha256": "4d1fee94597b49d35261834601b92094b75d27830f6e5b10fd613f9266c24b9d",
+      "public_sha256": "fea883a915635593179969a0c5a48b761beabf9f474d063c05d5592b018e5674",
       "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
-      "notification_observation_time_source_sha256": "7aa103a8d3683dddb8893596de809abef5f68c3b451afb9cc70389b0999df65b"
+      "notification_observation_time_source_sha256": "7aa103a8d3683dddb8893596de809abef5f68c3b451afb9cc70389b0999df65b",
+      "before_sha256": "4dcf8bfe884d57601fbd8e12e6996b476462753a0bc569e502d172d66fa9ea14",
+      "port_date_jst": "2026-11-02",
+      "port_record": "publication/independent-upload-measurement-20261102.json"
     },
     {
       "path": "ops/scripts/sync_observation_contract.py",
@@ -6176,6 +6184,96 @@
       "public_sha256": "a94b23d69e97eb76b6690d97d5d2ad0c810a3cff6b60ceb38cdb5cf12a9d0107",
       "source_sha256": null,
       "notification_source_timing_rollout": "publication/notification-source-timing-rollout-20261101.json"
+    },
+    {
+      "path": "src/stream_core/common/upload_samples.py",
+      "source_role": "independent-upload-measurement",
+      "decision": "Keep upload observation independent from control admission; retain public localization and compatibility.",
+      "before_sha256": null,
+      "source_sha256": "a6edd3338fd270256f75d88a850e2e6ed360e0441e54dacfbbb1924f23e1710c",
+      "public_sha256": "a6edd3338fd270256f75d88a850e2e6ed360e0441e54dacfbbb1924f23e1710c",
+      "port_date_jst": "2026-11-02",
+      "port_record": "publication/independent-upload-measurement-20261102.json"
+    },
+    {
+      "path": "ops/scripts/stream_v3_upload_measurement.py",
+      "source_role": "independent-upload-measurement",
+      "decision": "Keep upload observation independent from control admission; retain public localization and compatibility.",
+      "before_sha256": null,
+      "source_sha256": "9682d654672f1c48586d0bc155bb23ab6b02c02c6b227853b1d6b32d82eb8af3",
+      "public_sha256": "9682d654672f1c48586d0bc155bb23ab6b02c02c6b227853b1d6b32d82eb8af3",
+      "port_date_jst": "2026-11-02",
+      "port_record": "publication/independent-upload-measurement-20261102.json"
+    },
+    {
+      "path": "ops/scripts/upload_measurement_exporter.py",
+      "source_role": "independent-upload-measurement",
+      "decision": "Keep upload observation independent from control admission; retain public localization and compatibility.",
+      "before_sha256": null,
+      "source_sha256": "6b781c241889435dd3ce94f962ff15de905e08f3e115e08b9450e861fb9dcb4b",
+      "public_sha256": "6b781c241889435dd3ce94f962ff15de905e08f3e115e08b9450e861fb9dcb4b",
+      "port_date_jst": "2026-11-02",
+      "port_record": "publication/independent-upload-measurement-20261102.json"
+    },
+    {
+      "path": "tests/test_independent_upload_measurement.py",
+      "source_role": "independent-upload-measurement",
+      "decision": "Keep upload observation independent from control admission; retain public localization and compatibility.",
+      "before_sha256": null,
+      "source_sha256": "4a8664215c06d4ee0d2424ed5e2f58bf4782c743680342627be15af1840cb9be",
+      "public_sha256": "4a8664215c06d4ee0d2424ed5e2f58bf4782c743680342627be15af1840cb9be",
+      "port_date_jst": "2026-11-02",
+      "port_record": "publication/independent-upload-measurement-20261102.json"
+    },
+    {
+      "path": "ops/systemd/stream-v3-upload-measurement-sampler.service.in",
+      "source_role": "independent-upload-measurement",
+      "decision": "Keep upload observation independent from control admission; retain public localization and compatibility.",
+      "before_sha256": null,
+      "source_sha256": "5daceb22d630dd8488dd194029d0d873c83cd73677a420bd8beddebfd4d09d65",
+      "public_sha256": "5daceb22d630dd8488dd194029d0d873c83cd73677a420bd8beddebfd4d09d65",
+      "port_date_jst": "2026-11-02",
+      "port_record": "publication/independent-upload-measurement-20261102.json"
+    },
+    {
+      "path": "ops/systemd/stream-v3-upload-measurement-puller.service.in",
+      "source_role": "independent-upload-measurement",
+      "decision": "Keep upload observation independent from control admission; retain public localization and compatibility.",
+      "before_sha256": null,
+      "source_sha256": "1eaa193c1ff3e45da0e2aa3826654d9484ee207ad28e83ed9ce1c7a4efbdaf93",
+      "public_sha256": "1eaa193c1ff3e45da0e2aa3826654d9484ee207ad28e83ed9ce1c7a4efbdaf93",
+      "port_date_jst": "2026-11-02",
+      "port_record": "publication/independent-upload-measurement-20261102.json"
+    },
+    {
+      "path": "src/stream_core/cli_support/objective_sli.py",
+      "source_role": "independent-upload-measurement",
+      "decision": "Keep upload observation independent from control admission; retain public localization and compatibility.",
+      "before_sha256": "3fd9063e39c84ae360f0a08442d3c35c0c51db09e8e338cec4b2f8cce55fb9fe",
+      "source_sha256": "52a44695550512291d0e966f060bcfd5ae1d653a74b06a4c1a97049c61328988",
+      "public_sha256": "e3e6b5ef124ef0c8c5cadc6c2d720b43bfc6b0266e727af680357890298d97bf",
+      "port_date_jst": "2026-11-02",
+      "port_record": "publication/independent-upload-measurement-20261102.json"
+    },
+    {
+      "path": "docs/v3/program-map.md",
+      "source_role": "public-measurement-documentation",
+      "decision": "Describe independent upload observation and preserve the control and SLO boundaries.",
+      "before_sha256": "5e831478e61f25f678e8b1ba32198364736326cfa93db9855bf30f1b8d8a49e8",
+      "public_sha256": "1621887c0025ebf417651aff9dd8c57eebd0e1c82cb246e88cf4797ee86beb47",
+      "source_sha256": null,
+      "port_date_jst": "2026-11-02",
+      "port_record": "publication/independent-upload-measurement-20261102.json"
+    },
+    {
+      "path": "docs/v3/upload-measurement-source.md",
+      "source_role": "public-measurement-documentation",
+      "decision": "Describe independent upload observation and preserve the control and SLO boundaries.",
+      "before_sha256": null,
+      "public_sha256": "c74b2ff6c2fa50a992871dc63170bfc9f7ea0013a7bf0a1cb10e718f9312a794",
+      "source_sha256": null,
+      "port_date_jst": "2026-11-02",
+      "port_record": "publication/independent-upload-measurement-20261102.json"
     }
   ],
   "omissions": [

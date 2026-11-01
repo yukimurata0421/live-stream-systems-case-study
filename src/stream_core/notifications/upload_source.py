@@ -8,6 +8,7 @@ from datetime import datetime
 from pathlib import Path
 from urllib.parse import urlencode
 from urllib.request import ProxyHandler, build_opener
+from stream_core.common import upload_samples
 
 RECOVERY_SECONDS = 900
 FRESH_SECONDS = 180
@@ -53,6 +54,9 @@ def _raw_summary(times: list[float], now: int) -> dict:
 
 
 def raw_health(path: Path, now: int) -> dict:
+    independent = upload_samples.current_times(path.parent.parent, now)
+    if independent is not None:
+        return _raw_summary(independent, now)
     result=_raw_summary([],now)
     try:
         try:times=_raw_times(path,now)

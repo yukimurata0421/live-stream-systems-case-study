@@ -19,6 +19,7 @@
 | `stream_v3.control_loop --mode monitor` | arena-server service `stream-v3-arena-monitor` (k3s packaging: `stream-v3-control`) | observability task runner |
 | `stream_v2 recovery_orchestrator` | observability plane | action planning and guard checks |
 | `stream_v3_prometheus_exporter.py` | arena-server (k3s packaging: `stream-v3-observer`) | Prometheus metrics |
+| `stream_v3_upload_measurement.py` | read-only sender sampler / monitor replica | upload measurements independent of recovery admission; see the [measurement contract](upload-measurement-source.md) |
 | `stream_v3_health_snapshot.py` | observability plane | last-known-good health and objective SLI snapshots |
 | `stream_v3_monitoring_watchdog.py` | observability plane | exporter, metric-contract, and snapshot freshness self-check |
 

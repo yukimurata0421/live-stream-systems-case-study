@@ -1,0 +1,35 @@
+[Unit]
+Description=Read-only upload measurement replica
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=@OBSERVER_USER@
+Group=@OBSERVER_GROUP@
+ExecStart=/usr/bin/python3 -I -B @BUNDLE@/ops/scripts/stream_v3_upload_measurement.py pull --directory @STATE_ROOT@/upload_measurement --source-host @SOURCE_HOST@ --ssh-host @SSH_HOST@ --remote-program @BUNDLE@/ops/scripts/stream_v3_upload_measurement.py --remote-directory @SOURCE_DIRECTORY@ --machine @SOURCE_MACHINE@
+Restart=on-failure
+RestartSec=10
+UMask=0022
+Nice=10
+CPUQuota=10%
+MemoryMax=96M
+TasksMax=24
+NoNewPrivileges=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectSystem=strict
+ProtectHome=read-only
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+RestrictRealtime=yes
+LockPersonality=yes
+CapabilityBoundingSet=
+ReadWritePaths=@STATE_ROOT@/upload_measurement
+InaccessiblePaths=-/run/stream-v3-control/effect.sock -/var/lib/stream-recovery-control
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+
+[Install]
+WantedBy=multi-user.target

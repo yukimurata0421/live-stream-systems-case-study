@@ -88,6 +88,11 @@ the native consumer. A real CLI in isolation retained that burn through missing
 observations. The correction changed no delivery function and did not send an
 additional production test message.
 
+Upload sampling now has an [independent read-only owner](upload-measurement-source.md).
+A recovery safety rejection cannot suppress physical measurement collection.
+Its current-source confirmation still leaves historical coverage and SLO values
+unchanged; the operated checkpoint is recorded in current status.
+
 The operated rollout first warmed producers, then enabled consumers. Effective
 systemd commands, process-visible files and the real service user's read-only
 mount were checked. A later drop-in and an environment file initially selected

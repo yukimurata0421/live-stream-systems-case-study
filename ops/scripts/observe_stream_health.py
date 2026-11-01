@@ -23,6 +23,7 @@ if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
 from stream_core.common.ffmpeg_restarts import summarize_ffmpeg_restart_attempts
+from stream_core.common import upload_samples
 from stream_core.ops_health.judgments import (
     api_report_judgment,
     encoder_gap_active,
@@ -537,7 +538,7 @@ def main() -> int:
         oh = str(item.get("oauth_healthy", "n/a")).lower()
         ytw_oauth_healthy_counts[oh] = ytw_oauth_healthy_counts.get(oh, 0) + 1
 
-    for item in iter_jsonl(FAST_RECOVERY_EVENTS):
+    for item in upload_samples.merge_events(STATE_BASE_DIR, iter_jsonl(FAST_RECOVERY_EVENTS)):
         ts = parse_utc(str(item.get("ts_utc", "")))
         if ts is None or ts < intervention_read_cutoff:
             continue
