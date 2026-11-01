@@ -24,13 +24,15 @@ def load_pull():
 
 
 @pytest.mark.parametrize('standalone', [False, True])
-def test_exporter_overlay_preserves_baseline_in_checkout_and_standalone_layout(tmp_path, monkeypatch, standalone):
+@pytest.mark.parametrize('thumbnail_http', [False, True])
+def test_exporter_overlay_preserves_baseline_in_checkout_and_standalone_layout(tmp_path, monkeypatch, standalone, thumbnail_http):
     root = Path(__file__).parents[1]
     script = root / 'ops/scripts/stream_v3_oci_monitor_exporter_overlay.py'
     if standalone:
         script = tmp_path / script.name
         script.write_bytes((root / 'ops/scripts' / script.name).read_bytes())
         (tmp_path / 'oci_monitor_metrics.py').write_bytes((root / 'src/stream_v3/oci_monitor_metrics.py').read_bytes())
+        (tmp_path / 'twitch_thumbnail_metrics.py').write_bytes((root / 'src/stream_v3/twitch_thumbnail_metrics.py').read_bytes())
     baseline = tmp_path / 'baseline.py'
     baseline.write_text(r"""class MetricWriter:
     def __init__(self): self.values = {}; self.lines=[];self.seen=set()
@@ -45,13 +47,28 @@ def main(): return MetricsCache().get()[0]
     monkeypatch.setenv('OCI_MONITOR_EXPORTER_BASELINE', str(baseline))
     monkeypatch.setenv('OCI_MONITOR_EXPORTER_BASELINE_SHA256', hashlib.sha256(baseline.read_bytes()).hexdigest())
     monkeypatch.setenv('OCI_MONITOR_OBSERVATION_FILE', str(state))
+    monkeypatch.delenv('TWITCH_THUMBNAIL_OBSERVATION_FILE',raising=False)
+    monkeypatch.delenv('TWITCH_THUMBNAIL_OBSERVATION_URL',raising=False)
+    server=None
+    if thumbnail_http:
+        from stream_v3.thumbnail_http import publication_server
+        from types import SimpleNamespace
+        server=publication_server(('127.0.0.1',0),SimpleNamespace(previous={
+            'schema':'stream_v3.twitch_thumbnail_observation.v1','checked_at_utc':utc_timestamp(time.time()),
+            'api_collected_at_utc':utc_timestamp(time.time()),'api_live':True,'capture_ok':True,'ocr_verified':True,
+            'display_clock_at_utc':utc_timestamp(time.time()-100)},last_cycle_monotonic=time.monotonic()))
+        monkeypatch.setenv('TWITCH_THUMBNAIL_OBSERVATION_URL','http://127.0.0.1:'+str(server.server_port)+'/observation')
     spec = importlib.util.spec_from_file_location('oci_monitor_overlay', script)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    metrics = module.main()
+    try:metrics = module.main()
+    finally:
+        if server:server.shutdown();server.server_close()
     assert 'legacy_metric 7' in metrics
     assert 'stream_v3_oci_monitor_capture_ok 0' in metrics
     assert 'stream_v3_youtube_fallback_monitor_expected_active -1' in metrics
+    if thumbnail_http:
+        assert 'stream_v3_twitch_thumbnail_clock_verified 1' in metrics
 
 
 def test_only_ram_accepts_normal_snapshots():

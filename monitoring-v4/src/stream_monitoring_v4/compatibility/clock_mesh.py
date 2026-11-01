@@ -45,7 +45,10 @@ def peer_view(value,model,now,*,cached=False):
             'source_age_upper_seconds':model.age_bounds(value['wall'],now=now)[1],
             'boot_id':model.boot_id,'wall_steps_total':value.get('wall_steps_total'),
             'maximum_error_seconds':value.get('maximum_error_seconds'),
-            'ntp':value.get('ntp',{}),**model.diagnostic(now=now)}
+            'ntp':value.get('ntp',{}),
+            'estimate':{key:getattr(model,key) for key in ('low','high','received_wall','received_mono',
+                'boot_id','machine','local_boot','network_rtt')},
+            **model.diagnostic(now=now)}
 
 
 def main():
@@ -78,16 +81,18 @@ def main():
                 peers['relay-host']=peer_view(value['clock_status'],model,clock.capture(),
                                                cached=clock.mono()-model.received_mono>75)
             except (OSError,ValueError,KeyError,TypeError):peers['relay-host']={'status':'UNKNOWN'}
+            own_synchronized = None
             try:
                 own=load('/run/stream-clock/status.json')
                 if own['boot_id']!=clock.identity()['boot_id'] or not 0<=clock.mono()-own['mono']<=45:
                     raise ValueError('local_clock_stale')
+                own_synchronized = own['synchronized']
                 peers['arena-monitoring-facts']={'status':'OBSERVED','synchronized':own['synchronized'],
                     'offset_seconds':0.,'uncertainty_seconds':0.,'source_age_upper_seconds':clock.mono()-own['mono'],
                     'maximum_error_seconds':own.get('maximum_error_seconds'),'ntp':own.get('ntp',{})}
             except (OSError,ValueError,KeyError):peers['arena-monitoring-facts']={'status':'UNKNOWN'}
             out={'schema':'stream.clock_mesh.v1','wall':time.time(),'mono':clock.mono(),
-                 'boot_id':clock.identity()['boot_id'],'peers':peers}
+                 'boot_id':clock.identity()['boot_id'],'clock_synchronized':own_synchronized,'peers':peers}
             tmp=args.output.with_suffix('.tmp');tmp.write_text(json.dumps(out,allow_nan=False));tmp.chmod(0o644);os.replace(tmp,args.output)
             stopped.wait(max(1,60-(clock.mono()-started['mono'])))
 

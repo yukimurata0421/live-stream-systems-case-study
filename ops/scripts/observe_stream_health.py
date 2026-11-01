@@ -1004,6 +1004,8 @@ def main() -> int:
         },
         "pass": not current_fail,
     }
+    from stream_core.common import observation_time
+    summary = observation_time.attach(summary, "observe_health")
     print(json.dumps(summary, ensure_ascii=False, separators=(",", ":")))
     return 0 if (strict_pass if args.strict_history else summary["pass"]) else 2
 

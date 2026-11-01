@@ -14,10 +14,20 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+try:
+    from . import notification_observation
+except ImportError:
+    import notification_observation
+
+try:
+    from .notification_heartbeat import read_heartbeat,write_heartbeat
+except ImportError:
+    from notification_heartbeat import read_heartbeat,write_heartbeat
+
 PROMETHEUS = 'http://127.0.0.1:9090/api/v1/alerts'
 DELIVERY = 'http://127.0.0.1:9116/twitch-delivery'
 JST = timezone(timedelta(hours=9))
-# Alert name -> (title, what it means). Only these alerts are delivered here.
+# Alert name -> (title, what it means); unlisted rules use their alert name.
 ALERTS = {
     'TwitchUnexpectedOffline': ('Twitch API and OCI output disagree', 'OCI input and Twitch output progress, but the API reports unplanned OFFLINE.'),
     'TwitchRelayNotProgressing': ('Twitch OCI delivery path is interrupted', 'The required OCI relay, input, or Twitch output has been interrupted for at least three minutes.'),
@@ -25,6 +35,32 @@ ALERTS = {
     'TwitchDeliveryObservationUnavailable': ('Twitch OCI delivery path cannot be assessed', 'OCI observations are unavailable or input/output counter deltas are not established.'),
     'StreamV4TwitchSliMeasurementUnavailable': ('Twitch SLI collection has stopped', 'Twitch SLI collection has not updated for at least three minutes.'),
     'StreamV4TwitchSloBreached': ('Twitch SLO is below target', 'The seven-day measurement is below its target.'),
+}
+ALERTS.update({
+    'YouTubeRelayNotProgressing':('OCI forwarding to YouTube has stopped','Progress on the primary delivery path cannot be confirmed.'),
+    'RelayObservationUnavailable':('OCI relay observation is unavailable','Evidence required to assess delivery is missing.'),
+    'RelayObserverUnavailable':('OCI observation service is unavailable','Check the OCI observation collection path.'),
+    'RelayMemoryPressure':('OCI relay memory is low','This resource warning affects the shared relay for YouTube and Twitch.'),
+    'RelayDiskSpaceLow':('OCI relay disk space is low','This resource warning affects the shared relay for YouTube and Twitch.'),
+})
+LEGACY_NAMES={'TwitchUnexpectedOffline','TwitchRelayNotProgressing','TwitchObservationUnavailable',
+              'TwitchDeliveryObservationUnavailable','StreamV4TwitchSliMeasurementUnavailable','StreamV4TwitchSloBreached'}
+IMMEDIATE_SLACK={'YouTubeRelayNotProgressing','RelayMemoryPressure','RelayDiskSpaceLow',
+    'StreamV3MonitoringWatchdogStale','StreamV3MonitoringWatchdogFailed','StreamV3ArenaMonitorExporterDown',
+    'StreamV3ArenaMonitorExporterFailing','StreamV3ExporterRefreshFailing','StreamV3ExporterCacheStale','StreamV3NotifyBacklog'}
+DELAYED_SLACK={'RelayObservationUnavailable':1800,'RelayObserverUnavailable':1800,'TwitchUnexpectedOffline':1800}
+DISCORD_ONLY={'StreamV4TwitchSloBreached','ReadsbServiceUnavailable','AirspyServiceUnavailable',
+              'StreamV3AdsbEvidenceMissingOrStale'}
+# Skip a duplicate only when the native owner has acknowledged the same problem.
+NATIVE_OWNERS={
+ 'StreamV3CurrentFail':('stream:current_fail',),'StreamV3HealthPassMissingOrFalse':('stream:current_fail',),
+ 'StreamV3SameUrlNotLive':('stream:current_fail','youtube:current'),
+ 'StreamV3IngestDisconnected':('stream:current_fail',),'StreamV3YouTubeWatchdogUnhealthy':('stream:current_fail','youtube:'),
+ 'StreamV3StreamWatchdogNotOk':('stream:current_fail',),'StreamV3NetworkObserverNotOk':('stream:current_fail',),
+ 'StreamV3MapDeliveryCriticalUnhealthy':('map:',),'StreamV3MapBrowserWebGLFailure':('map:',),
+ 'StreamV3MapPrecipitationUnavailable':('map:precipitation',),'StreamV3MapRuntimeContainerRestarted':('map:',),
+ 'StreamV3ViewerSyntheticSampleMissingOrStale':('viewer:',),'StreamV3ViewerSyntheticProbeFailed':('viewer:',),
+ 'StreamV3ViewerSyntheticVisualFailure':('viewer:',),
 }
 PATH_ALERTS = {'TwitchRelayNotProgressing', 'TwitchUnexpectedOffline'}
 SLI_TITLES = {
@@ -43,7 +79,7 @@ def alert_copy(name, labels):
 
 def key(alert: dict) -> str:
     labels = alert.get('labels') or {}
-    extra = ','.join(f'{k}={labels[k]}' for k in sorted(labels) if k in ('sli', 'window', 'provider'))
+    extra = ','.join(f'{k}={labels[k]}' for k in sorted(labels) if k in (('sli','window','provider') if labels.get('alertname') in LEGACY_NAMES else ('sli','window','provider','instance','job','target','scope','component')))
     return labels.get('alertname', '') + (f'[{extra}]' if extra else '')
 
 
@@ -53,7 +89,7 @@ def jst(ts: float) -> str:
 
 def duration(sec: float) -> str:
     sec = max(0, int(sec))
-    return f'{sec // 3600}h {sec % 3600 // 60}m' if sec >= 3600 else f'{sec // 60}m {sec % 60}s'
+    return f'{sec // 3600}h{sec % 3600 // 60}m' if sec >= 3600 else f'{sec // 60}m{sec % 60}s'
 
 
 def delivery_facts(value, now):
@@ -82,9 +118,9 @@ def delivery_facts(value, now):
 
 def context_text(value, now):
     facts = delivery_facts(value, now)
-    if not facts or not facts['oci_observed']: return 'OCI path: observation unavailable. Current delivery state cannot be assessed.'
+    if not facts or not facts['oci_observed']: return 'OCI path: unavailable. Current delivery cannot be assessed.'
     names = {'RUNNING':'running', 'STOPPED':'stopped', 'FLOWING':'progressing', 'STALLED':'stalled',
-             'DISCONNECTED':'disconnected', 'CONNECTED':'connected, progress unconfirmed', 'UNKNOWN':'unknown'}
+             'DISCONNECTED':'disconnected', 'CONNECTED':'connected; progress unconfirmed', 'UNKNOWN':'unknown'}
     relay = names.get(value['relay']['status'], 'unknown')
     incoming = names.get(value['input']['status'], 'unknown')
     outgoing = names.get(value['destinations']['twitch']['status'], 'unknown')
@@ -92,50 +128,93 @@ def context_text(value, now):
     return f'OCI relay: {relay} / Input: {incoming} / Twitch output: {outgoing} / API: {api}'
 
 
-def plan(alerts: list[dict], state: dict, now: float, *, repeat_sec: int, delivery=None, slo_repeat_sec: int = 86400):
+def _plan(alerts: list[dict], state: dict, now: float, *, repeat_sec: int, delivery=None, slo_repeat_sec: int = 86400, native_active=None, reading=None):
     """Plan channel-bound messages; retain open episodes until recovery is observed."""
     messages, current = [], {}
     context = context_text(delivery, now)
     facts = delivery_facts(delivery, now)
     def enqueue(k, channel, content):
-        messages.append({'key':k, 'channel':channel, 'content':content+'\n'+context})
+        messages.append({'key':k,'channel':channel,'content':content+('\n'+context if k.startswith(('Twitch','Relay','YouTube','StreamV4Twitch')) else '')})
     for alert in alerts:
         name = (alert.get('labels') or {}).get('alertname')
-        if name not in ALERTS or alert.get('state') != 'firing':
+        if not name or name=='StreamV3NotifyActiveIncident' or alert.get('state') != 'firing':
             continue
         k = key(alert)
         try:
             since = datetime.fromisoformat(str(alert.get('activeAt')).replace('Z', '+00:00')).timestamp()
         except ValueError:
             since = now
+        if since>now:since=now
         prev = state.get(k)
         labels = alert.get('labels') or {}
-        title, meaning = alert_copy(name, labels)
-        channel = 'slack' if labels.get('severity') == 'critical' or (prev and prev.get('channel') == 'slack') else 'discord'
-        icon = '\U0001f534' if labels.get('severity') == 'critical' else '\U0001f7e0' if labels.get('severity', 'warning') == 'warning' else '\u2139\ufe0f'
-        detail = f"\uff08{labels['sli']}\uff09" if labels.get('sli') else ''
+        if name in NATIVE_OWNERS and native_active is not None and any(
+            any(ident.startswith(prefix) for prefix in NATIVE_OWNERS[name])
+            and (row.get('slack_first_notified_ts') or row.get('discord_first_notified_ts'))
+            for ident,row in native_active.items()):
+            if prev:current[k]=prev
+            continue
+        if name=='StreamV3SubsystemsUnhealthy' and now-since<300:continue
+        if name in {'StreamV3YouTubeWatchdogUnhealthy','StreamV3HealthPassMissingOrFalse'} and now-since<600:continue
+        title,meaning=alert_copy(name,labels) if name in ALERTS else ('Monitoring alert: '+name,'Prometheus detected a sustained abnormal condition.')
+        mono_origin = reading.mono if reading is not None else None
+        if reading is not None and prev and prev.get('notification_boot') == reading.boot:
+            mono_origin = prev.get('notification_since_mono', reading.mono)
+        elapsed=(reading.mono-mono_origin) if reading is not None else now-(prev['since'] if prev else since)
+        priority=(labels.get('severity')=='critical' or name in IMMEDIATE_SLACK
+                  or name in DELAYED_SLACK and elapsed>=DELAYED_SLACK[name]
+                  or name!='StreamV4TwitchSloBreached' and elapsed>=7200)
+        channel='slack' if priority else 'discord'
+        if name in DISCORD_ONLY:channel='discord'
+        icon = '🔴' if labels.get('severity') == 'critical' else '🟠' if labels.get('severity', 'warning') == 'warning' else 'ℹ️'
+        detail = f"（{labels['sli']}）" if labels.get('sli') else ''
         historical_slo = name == 'StreamV4TwitchSloBreached'
         # Compare semantic states, not changing counters, timestamps or SLI values.
-        status = {'severity': labels.get('severity', 'warning'),
-                  'delivery_state': facts['state'] if facts else 'UNKNOWN'} if historical_slo else None
+        status = {'severity':labels.get('severity','warning')} if historical_slo else None
         # Older state files acquire a baseline without replaying an acknowledged alert.
-        changed = prev is not None and status is not None and prev.get('notification_status', status) != status
-        reminder_sec = slo_repeat_sec if historical_slo else repeat_sec
-        if prev is None or (channel == 'slack' and prev.get('channel', 'discord') != 'slack'):
+        changed = prev is not None and status is not None and {k:v for k,v in prev.get('notification_status',status).items() if k=='severity'} != status
+        reminder_sec = slo_repeat_sec if historical_slo else min(repeat_sec,1800) if channel=='slack' else repeat_sec
+        if prev is None or (channel == 'slack' and prev.get('preferred_channel',prev.get('channel','discord')) != 'slack'):
             enqueue(k, channel, f'{icon} {title}{detail}\n{meaning}\nStarted: {jst(since)}')
             current[k] = {'since': prev['since'] if prev else since, 'last_sent': now, 'name': name, 'title': title, 'channel':channel}
-        elif changed or now - prev['last_sent'] >= reminder_sec:
+        elif changed or ((reading.mono-prev.get('notification_last_sent_mono',reading.mono))
+                        if reading is not None and prev.get('notification_boot')==reading.boot else
+                        0 if reading is not None else now-prev['last_sent']) >= reminder_sec:
             prefix = 'State changed' if changed else 'Still firing'
-            enqueue(k, channel, f'{icon} {prefix}: {title}{detail}\n{meaning}\nOpen for {duration(now - prev["since"])}.')
+            enqueue(k, channel, f'{icon} {prefix}: {title}{detail}\n{meaning}\nElapsed: {duration(now - prev["since"])}')
             current[k] = {**prev, 'last_sent': now, 'title': title, 'channel':channel}
         else:
-            current[k] = {**prev, 'title': title, 'channel':channel}
+            current[k] = {**prev, 'title': title}
+        current[k]['preferred_channel']=channel
+        if reading is not None:
+            last_mono = prev.get('notification_last_sent_mono',reading.mono) if prev and prev.get('notification_boot')==reading.boot else reading.mono
+            if any(m['key']==k for m in messages):
+                last_mono=reading.mono
+            current[k].update(notification_boot=reading.boot,notification_since_mono=mono_origin,
+                              notification_last_sent_mono=last_mono)
         current[k].pop('recovery_candidate_at', None)
         if status is not None:
             current[k]['notification_status'] = status
     for k, prev in state.items():
         if k not in current:
             name = prev.get('name')
+            if name=='StreamV4TwitchSloBreached':
+                candidate=prev.get('recovery_candidate_at')
+                if candidate is None or now-candidate<300:
+                    current[k]={**prev,'recovery_candidate_at':now if candidate is None else candidate}
+                    continue
+            if name=='YouTubeRelayNotProgressing':
+                try:
+                    good=(delivery['source_fresh'] is True and 0<=now-datetime.fromisoformat(delivery['observed_at']).timestamp()<=180
+                          and delivery['relay']['status']=='RUNNING' and delivery['input']['status']=='FLOWING'
+                          and delivery['destinations']['youtube']['status']=='FLOWING')
+                except (KeyError,TypeError,ValueError):good=False
+                observed=datetime.fromisoformat(delivery['observed_at']).timestamp() if good else None
+                candidate=prev.get('recovery_candidate_at')
+                if not good or candidate is None or observed-candidate<45:
+                    current[k]={**prev,'recovery_candidate_at':observed if candidate is None or not good else candidate}
+                    continue
+            if name in {'RelayObserverUnavailable','RelayObservationUnavailable','RelayMemoryPressure','RelayDiskSpaceLow'} and (not facts or not facts['oci_observed']):
+                current[k]=prev;continue
             if name in PATH_ALERTS:
                 # A disappearing Prometheus series or planned renewal is not recovery.
                 if not facts or not facts['recovery_confirmed']:
@@ -156,7 +235,29 @@ def plan(alerts: list[dict], state: dict, now: float, *, repeat_sec: int, delive
             if not title:
                 labels = dict(part.split('=', 1) for part in k.partition('[')[2].rstrip(']').split(',') if '=' in part)
                 title = alert_copy(prev['name'], labels)[0] if prev.get('name') in ALERTS else k
-            enqueue(k, prev.get('channel', 'discord'), f'\u2705 Resolved: {title}\nDuration {duration(now - prev["since"])}')
+            enqueue(k, prev.get('channel', 'discord'), f'✅ Resolved: {title}\nDuration: {duration(now - prev["since"])}')
+    return messages, current
+
+
+def plan(alerts, state, now, *, repeat_sec, delivery=None, slo_repeat_sec=86400,
+         native_active=None, observation_evidence=None, reading=None):
+    if observation_evidence is None:
+        return _plan(alerts, state, now, repeat_sec=repeat_sec, delivery=delivery,
+                     slo_repeat_sec=slo_repeat_sec, native_active=native_active)
+    reading = notification_observation.timing.capture() if reading is None else reading
+    if hasattr(observation_evidence, 'at'):
+        observation_evidence=observation_evidence.at(reading)
+    allowed, previous, held = notification_observation.gate(alerts, state, now=reading,
+        evidence=observation_evidence, alert_key=key)
+    messages, current = _plan(allowed, previous, now, repeat_sec=repeat_sec, delivery=delivery,
+                            slo_repeat_sec=slo_repeat_sec, native_active=native_active, reading=reading)
+    current = notification_observation.decorate(current, held, observation_evidence, now=reading)
+    for notice in notification_observation.loss_messages(current, state, now=reading):
+        existing = next((m for m in messages if m['key'] == notice['key']), None)
+        if existing is not None:
+            existing['content'] += '\n' + notice['content']
+        else:
+            messages.append(notice)
     return messages, current
 
 
@@ -197,7 +298,44 @@ def deliver_plan(messages, next_state, previous, sender):
             k = message['key']
             if k in previous: result[k] = previous[k]
             else: result.pop(k, None)
+        elif message['key'] in result:
+            row=result[message['key']]
+            row['preferred_channel']=message['channel']
+            row['channel']=message.get('delivered_channel',message['channel'])
     return result
+
+
+def send_with_fallback(message,webhooks,username,*,sender=send,audit=None):
+    channel=message['channel']
+    ok=bool(webhooks.get(channel)) and sender(webhooks[channel],message['content'],username,channel)
+    actual=channel
+    if not ok and channel=='slack':
+        if audit:audit('slack_delivery_failed',alert_key=message['key'])
+        actual='discord'
+        ok=bool(webhooks.get('discord')) and sender(webhooks['discord'],'[Slack send failed; falling back to Discord]\n'+message['content'],username,'discord')
+    if ok:message['delivered_channel']=actual
+    if audit:audit('delivery',alert_key=message['key'],channel=actual,delivered=bool(ok))
+    return bool(ok)
+
+
+def health_watchdog_alerts(now, *, startup_at=None, previous_open=False):
+    try:
+        data=read_heartbeat(Path('/run/stream-notification-sources/health-heartbeat.json'),'notification_health') or {}
+        age=now-datetime.fromisoformat(data['checked_at_utc']).timestamp()
+        good=0<=age<=180
+    except (OSError,ValueError,KeyError,TypeError):good=False
+    if not good and startup_at is not None and now-startup_at<180 and not previous_open:return []
+    return [] if good else [{'labels':{'alertname':'NotificationHealthWatchdogUnavailable','severity':'critical'},
+                              'state':'firing','activeAt':datetime.fromtimestamp(now,timezone.utc).isoformat()}]
+
+
+def fetch_native_active():
+    try:
+        path=Path('/run/stream-notification-sources/arena/stream_notify_state.json')
+        data=json.loads(path.read_text())
+        stamp=datetime.fromisoformat(data['updated_ts_utc'].replace('Z','+00:00')).timestamp()
+        return data['active'] if 0<=time.time()-stamp<=180 else None
+    except (OSError,ValueError,KeyError,TypeError):return None
 
 
 def log(event: str, **fields):
@@ -211,30 +349,53 @@ def main() -> int:
     parser.add_argument('--repeat-sec', type=int, default=3600)
     parser.add_argument('--slo-repeat-sec', type=int, default=86400,
                         help='Repeat historical SLO warnings after this many seconds; current-failure alerts use --repeat-sec.')
+    parser.add_argument('--observation-root', type=Path,
+        default=Path(os.environ.get('STREAM_RUNTIME_STATE_DIR', '/run/stream-notification-sources/arena')))
     args = parser.parse_args()
     webhooks = {'discord':os.environ.get('STREAM_NOTIFY_DISCORD_WEBHOOK_URL', '').strip(),
                 'slack':os.environ.get('STREAM_NOTIFY_SLACK_WEBHOOK_URL', '').strip()}
+    if os.environ.get('STREAM_NOTIFY_SLACK_ENABLED','1').lower() in {'0','false','no'}:webhooks['slack']=''
     username = os.environ.get('STREAM_NOTIFY_USERNAME', '').strip() or 'ADS-B Stream Watchdog'
     state = json.loads(args.state.read_text()) if args.state.exists() else {}
     log('started', routes_configured={k:bool(v) for k,v in webhooks.items()}, tracked=len(state),
         repeat_sec=args.repeat_sec, slo_repeat_sec=args.slo_repeat_sec)
+    startup_at=time.time()
     while True:
+        now=time.time()
         try:
-            alerts = fetch_alerts()
+            alerts=fetch_alerts();prom_ok=True
         except Exception as error:
-            # Prometheus unavailable: keep the current state; do not report a resolution we did not observe.
-            log('prometheus_unavailable', error=type(error).__name__)
-            time.sleep(args.interval_sec)
-            continue
-        messages, next_state = plan(alerts, state, time.time(), repeat_sec=args.repeat_sec,
-                                    slo_repeat_sec=args.slo_repeat_sec, delivery=fetch_delivery())
+            log('prometheus_unavailable',error=type(error).__name__)
+            alerts=[];prom_ok=False
+        health=health_watchdog_alerts(now,startup_at=startup_at,previous_open=any(row.get('name')=='NotificationHealthWatchdogUnavailable' for row in state.values()))
+        if prom_ok:
+            reading = notification_observation.timing.capture()
+            names = {(a.get('labels') or {}).get('alertname') for a in alerts}
+            names.update(row.get('name') for row in state.values())
+            observations = notification_observation.read(args.observation_root, names, now=reading)
+            delivery=fetch_delivery()
+            native_active=fetch_native_active()
+            reading = notification_observation.timing.capture()
+            now=reading.wall
+            messages,next_state=plan(alerts+health,state,now,repeat_sec=args.repeat_sec,
+                slo_repeat_sec=args.slo_repeat_sec,delivery=delivery,native_active=native_active,
+                observation_evidence=observations, reading=reading)
+        else:
+            own={k:v for k,v in state.items() if v.get('name')=='NotificationHealthWatchdogUnavailable'}
+            messages,next_health=plan(health,own,now,repeat_sec=1800)
+            next_state={**{k:v for k,v in state.items() if k not in own},**next_health}
         def sender(message):
-            channel = message['channel']
-            ok = bool(webhooks[channel]) and send(webhooks[channel], message['content'], username, channel)
-            log('notify', delivered=ok, channel=channel, first_line=message['content'].splitlines()[0])
-            return ok
+            def audit(event,**fields):
+                record={'at':datetime.now(timezone.utc).isoformat(),'event':event,**fields}
+                with args.state.with_name('delivery-events.jsonl').open('a') as f:f.write(json.dumps(record)+'\n')
+                log(event,**fields)
+            return send_with_fallback(message,webhooks,username,audit=audit)
         state = deliver_plan(messages, next_state, state, sender)
         tmp = args.state.with_suffix('.tmp'); tmp.write_text(json.dumps(state)); os.replace(tmp, args.state)
+        heartbeat=Path('/run/stream-twitch-notification-health/status.json')
+        value={'checked_at_utc':datetime.now(timezone.utc).isoformat(),'prometheus_available':prom_ok}
+        temporary=heartbeat.with_suffix('.tmp');temporary.write_text(json.dumps(value));temporary.chmod(0o644);os.replace(temporary,heartbeat)
+        write_heartbeat(args.state.with_name('heartbeat.json'),'twitch_alert_notify',value)
         time.sleep(args.interval_sec)
 
 

@@ -922,6 +922,7 @@ def current_input_quality_crosscheck(
     raw_candidates.sort(key=lambda item: item[0])
     raw_ts = 0
     raw_state: dict = {}
+    raw_payload: dict = {}
     if raw_candidates:
         raw_ts, raw_payload = raw_candidates[-1]
         raw_state = classify_input_quality_sample(
@@ -967,6 +968,7 @@ def current_input_quality_crosscheck(
             "classification": raw_state.get("classification", ""),
             "eligible": raw_state.get("eligible") if raw_available else None,
             "good": raw_state.get("good") if raw_available else None,
+            "observation_time": raw_payload.get("oauth_observation_time"),
         },
         "prometheus_current": {
             "available": prom_available,

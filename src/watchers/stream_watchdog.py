@@ -11,6 +11,7 @@ import time
 import uuid
 import calendar
 from pathlib import Path
+from stream_core.common import observation_time
 
 try:
     import pwd
@@ -1177,7 +1178,7 @@ def load_pulse_health_state() -> dict[str, int]:
 
 
 def save_pulse_health_state(state: dict[str, int]) -> None:
-    write_json_file(PULSE_HEALTH_STATE_FILE, state)
+    write_json_file(PULSE_HEALTH_STATE_FILE, observation_time.attach(state, "audio_probe"))
 
 
 def _latency_usec_from_line(line: str, prefix: str) -> int:
@@ -1349,12 +1350,18 @@ def check_adsb_freshness(payload: dict, current_ts: int | None = None) -> tuple[
             "ts_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(now_ts)),
             "sample_ts": now_ts,
             "source_now": payload.get("now"),
+            "upstream_clock_host": env("STREAM_ADSB_SOURCE_CLOCK_HOST"),
             "source_messages": payload.get("messages"),
             "aircraft_count": len(payload.get("aircraft", [])) if isinstance(payload.get("aircraft"), list) else None,
             "status": "ok" if ok else "unhealthy",
             "reason": reason,
         }
     )
+    observed_state = observation_time.attach(observed_state, "adsb_overlay_probe")
+    bounds = observation_time.source_lag_bounds_at_collection(observed_state)
+    observed_state["source_heartbeat_ok"] = (True if bounds[1] <= ADSB_JSON_MAX_AGE_SEC else
+                                             False if bounds[0] > ADSB_JSON_MAX_AGE_SEC else None) if bounds else None
+    observed_state["source_lag_bounds_sec"] = bounds
     write_json_file(ADSB_FRESHNESS_STATE_FILE, observed_state)
     if event is not None:
         append_event("adsb_messages_counter_reset", **event)

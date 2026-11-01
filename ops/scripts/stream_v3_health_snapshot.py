@@ -54,6 +54,7 @@ def build_snapshots(
     windows: str,
     timeout_sec: float,
 ) -> dict[str, dict[str, Any]]:
+    from stream_core.common import observation_time
     cli = stream_cli(repo_root)
     health_command = [str(cli), "health-summary", "--windows", windows, "--json"]
     objective_command = [str(cli), "objective-sli", "--json", "--no-record"]
@@ -61,7 +62,7 @@ def build_snapshots(
     health = run_json(repo_root, state_root, health_command, timeout_sec=timeout_sec)
     objective = run_json(repo_root, state_root, objective_command, timeout_sec=timeout_sec)
     return {
-        HEALTH_SUMMARY_SNAPSHOT: snapshot_payload(health, command=health_command, snapshot_ts=snapshot_ts),
+        HEALTH_SUMMARY_SNAPSHOT: observation_time.attach(snapshot_payload(health, command=health_command, snapshot_ts=snapshot_ts), "health_snapshot"),
         OBJECTIVE_SLI_SNAPSHOT: snapshot_payload(objective, command=objective_command, snapshot_ts=snapshot_ts),
     }
 

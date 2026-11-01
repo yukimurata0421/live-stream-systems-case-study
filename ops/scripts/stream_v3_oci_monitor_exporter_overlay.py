@@ -25,7 +25,7 @@ def main():
     metrics_spec.loader.exec_module(metrics)
     write_metrics = metrics.write_metrics
     thumbnail_writer=None
-    if os.environ.get('TWITCH_THUMBNAIL_OBSERVATION_FILE'):
+    if os.environ.get('TWITCH_THUMBNAIL_OBSERVATION_FILE') or os.environ.get('TWITCH_THUMBNAIL_OBSERVATION_URL'):
         thumbnail_path=Path(__file__).with_name('twitch_thumbnail_metrics.py')
         if not thumbnail_path.is_file():thumbnail_path=Path(__file__).resolve().parents[2]/'src/stream_v3/twitch_thumbnail_metrics.py'
         thumbnail_spec=importlib.util.spec_from_file_location('twitch_thumbnail_metrics',thumbnail_path)
@@ -47,7 +47,9 @@ def main():
         write_metrics(writer, observation, now=time.time())
         if thumbnail_writer:
             now=time.time()
-            thumbnail=thumbnail_publication.read(os.environ['TWITCH_THUMBNAIL_OBSERVATION_FILE'],now=now)
+            endpoint=os.environ.get('TWITCH_THUMBNAIL_OBSERVATION_URL')
+            thumbnail=(thumbnail_publication.read_url(endpoint,now=now) if endpoint else
+                       thumbnail_publication.read(os.environ['TWITCH_THUMBNAIL_OBSERVATION_FILE'],now=now))
             thumbnail_writer(writer,thumbnail,now=now,last_cycle_epoch=thumbnail_publication.last_cycle_epoch)
         prefixes=('stream_v3_oci_monitor_','stream_v3_youtube_fallback_monitor_','stream_v3_monitor_probe_','stream_v3_twitch_thumbnail_')
         # Keep the existing collector cache; refresh only this small RAM-state projection.

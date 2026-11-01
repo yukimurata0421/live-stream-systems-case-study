@@ -12,6 +12,7 @@ import tempfile
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE = 'ops/selfheal/clock_contract.py'
 COPIES = (
+    'src/stream_core/common/clock_contract.py',
     'monitoring-v4/src/stream_monitoring_v4/compatibility/clock_contract.py',
     'ops/public-publisher/site/scripts/clock_contract.py',
 )
@@ -21,7 +22,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument('--check', action='store_true', help='Check copies without changing files (default)')
-    mode.add_argument('--write', action='store_true', help='Regenerate the two known dependency files')
+    mode.add_argument('--write', action='store_true', help='Regenerate the known dependency files')
     args = parser.parse_args()
     source = ROOT / SOURCE
     if source.is_symlink():

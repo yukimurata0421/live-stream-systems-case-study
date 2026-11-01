@@ -128,13 +128,22 @@ def notify_cli_context(ns):
 def notify_status_context(ns):
     from stream_core.notifications import status_loop
 
+    collected = {}
+
+    def collect(**kwargs):
+        rows = ns.collect_notification_incidents(**kwargs)
+        collected.clear()
+        if hasattr(rows, "observations"):
+            collected.update(rows.observations)
+        return rows
+
     return status_loop.NotifyStatusContext(
         notify_events_file=ns.NOTIFY_EVENTS_FILE,
         notify_outbox_file=ns.NOTIFY_OUTBOX_FILE,
         load_config=ns.load_stream_notify_config,
         load_state=ns.load_notify_state,
         save_state=ns.save_notify_state,
-        collect_incidents=ns.collect_notification_incidents,
+        collect_incidents=collect,
         recovery_observation_for_incident=ns.recovery_observation_for_incident,
         format_message=ns.format_discord_message,
         send_webhook=ns.send_discord_webhook,
@@ -144,6 +153,7 @@ def notify_status_context(ns):
         stream_watchdog_events_file=ns.LOG_BASE_DIR / "stream_watchdog_events.jsonl",
         runtime_state_base_dir=ns.STATE_BASE_DIR,
         send_slack_webhook=ns.send_slack_webhook,
+        observation_collection=lambda: collected or None,
     )
 
 

@@ -14,6 +14,7 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Sequence
+from stream_core.common import observation_time
 
 
 def default_repo_root() -> Path:
@@ -721,6 +722,7 @@ def history_row(payload: dict[str, Any]) -> dict[str, Any]:
     return {
         "schema": "stream_v3.map_runtime_monitor_history.v2",
         "checked_at_utc": payload.get("checked_at_utc"),
+        **({"observation_time": payload["observation_time"]} if "observation_time" in payload else {}),
         "status": payload.get("status"),
         "delivery_critical_ok": payload.get("delivery_critical_ok"),
         "weather_ok": payload.get("weather_ok"),
@@ -817,6 +819,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         }
         exit_code = 1
 
+    payload = observation_time.attach(payload, "map_runtime")
     atomic_json(args.state_file, payload)
     append_jsonl(args.history_file, history_row(payload))
     print(

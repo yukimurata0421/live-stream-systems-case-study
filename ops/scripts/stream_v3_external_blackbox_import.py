@@ -323,6 +323,8 @@ def main() -> int:
             "do_not_merge_with_internal_availability_sli": True,
         }
     status = add_status_continuity(status, read_previous_status(args.output), now_ts=now_ts)
+    from stream_core.common import observation_time
+    status = observation_time.attach(status, "external_blackbox")
     write_atomic(args.output, status)
     print(json.dumps(status, ensure_ascii=False, separators=(",", ":")))
     return 1 if status["status"] == "failed" else 0

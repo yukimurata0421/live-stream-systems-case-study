@@ -6,6 +6,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
 
+from stream_core.common import observation_time
+from stream_core.notifications import observation as notification_observation
+
 try:
     from stream_core.common.json_io import append_jsonl, iter_jsonl, read_json_file
     from stream_core.common.timeutil import parse_utc_ts, utc_now_text
@@ -37,6 +40,7 @@ class NotifyStatusContext:
     stream_watchdog_events_file: Path
     runtime_state_base_dir: Path
     send_slack_webhook: Callable[..., tuple[bool, str]] | None = None
+    observation_collection: Callable[[], dict | None] | None = None
 
 
 @dataclass(frozen=True)
@@ -669,13 +673,18 @@ def slack_priority(item: dict, state: dict, *, now_ts: int) -> bool:
     if is_critical_incident(item) or ident in {'youtube:enable_auto_stop_false_encoder_gap','external:blackbox_failed'} or ident.startswith('fast_recovery:recovery_unconfirmed:'):return True
     stored=active_incident_state(state,ident)
     first=int(stored.get('first_notified_ts',now_ts) or now_ts)
-    return item.get('severity')=='warning' and now_ts-first>=7200
+    elapsed=item.get('_active_for_sec',now_ts-first)
+    return item.get('severity')=='warning' and elapsed>=7200
 
 
 def slack_incident_due(item: dict, state: dict, cfg: dict, *, now_ts: int) -> bool:
     if not slack_priority(item,state,now_ts=now_ts):return False
     stored=active_incident_state(state,str(item.get('id','')))
     last=int(stored.get('slack_last_attempt_ts',stored.get('slack_last_notified_ts',0)) or 0)
+    current=state.get('notification_clock',{})
+    if current and stored.get('notification_boot_id')==current.get('boot_id'):
+        previous=stored.get('slack_last_attempt_mono')
+        return previous is None or current['mono']-previous>=int(cfg.get('slack_repeat_sec',1800))
     return last<=0 or now_ts-last>=int(cfg.get('slack_repeat_sec',1800))
 
 
@@ -889,6 +898,8 @@ def deliver_notify_messages(
                 if stored:
                     stored.setdefault('slack_first_queued_ts',now_ts)
                     stored['slack_last_attempt_ts']=now_ts
+                    if state.get('notification_clock'):
+                        stored['slack_last_attempt_mono']=state['notification_clock']['mono']
                     stored['slack_notified_severity']='critical'
     if slack_messages or (not dry_run and slack_cfg["enabled"] and slack_cfg["webhook_url"]):
         slack_send = ctx.send_slack_webhook or ctx.send_webhook
@@ -1003,9 +1014,15 @@ def notify_status(*, ctx: NotifyStatusContext, dry_run: bool = False, force_test
         report_stale_sec=int(cfg["report_stale_sec"]),
         startup_grace_sec=int(cfg.get("startup_grace_sec", 0) or 0),
     )
+    collection = ctx.observation_collection() if ctx.observation_collection is not None else None
+    decision_clock = observation_time.capture() if collection is not None else None
+    if collection is not None:
+        state['notification_clock']={'boot_id':decision_clock.boot,'mono':decision_clock.mono}
+        incidents = notification_observation.reconcile(incidents, active_state, state, collection,
+                                                       now=decision_clock, config=cfg)
     quality_id='reliability:youtube_input_quality_fast_feedback'
     candidate=next((x for x in incidents if x.get('id')==quality_id and x.get('severity')=='warning'),None)
-    if candidate:
+    if candidate and collection is None:
         prior=state.get('quality_warning_candidate',{})
         since=int(prior.get('since',now)) if 0<=now-int(prior.get('last_seen',now))<=180 else now
         state['quality_warning_candidate']={'since':since,'last_seen':now}
@@ -1038,6 +1055,16 @@ def notify_status(*, ctx: NotifyStatusContext, dry_run: bool = False, force_test
             "last_notified_ts": int(existing.get("last_notified_ts", 0) or 0),
             "last_incident": item,
         }
+        if decision_clock is not None:
+            stored=active_state[ident]
+            same_boot=existing.get('notification_boot_id')==decision_clock.boot
+            origin=existing.get('first_seen_mono') if same_boot else None
+            if not observation_time.finite(origin) or not 0<=origin<=decision_clock.mono:
+                origin=decision_clock.mono
+            last_mono=existing.get('last_notified_mono') if same_boot else None
+            stored.update(notification_boot_id=decision_clock.boot,first_seen_mono=origin,
+                          last_notified_mono=last_mono if observation_time.finite(last_mono) else decision_clock.mono)
+            item['_active_for_sec']=decision_clock.mono-origin
 
     if incidents:
         due_incidents: list[dict] = []
@@ -1050,7 +1077,8 @@ def notify_status(*, ctx: NotifyStatusContext, dry_run: bool = False, force_test
                 bool(cfg.get("slack_enabled") and cfg.get("slack_webhook_url"))
                 and slack_incident_due(item, state, cfg, now_ts=now)
             )
-            if ident in new_ids or last_notified <= 0 or critical_escalation or (now - last_notified) >= repeat_sec:
+            elapsed=(decision_clock.mono-stored['last_notified_mono']) if decision_clock is not None else now-last_notified
+            if ident in new_ids or last_notified <= 0 or critical_escalation or elapsed >= repeat_sec:
                 due_incidents.append(item)
         if due_incidents:
             phase = "detected" if new_ids else "status"
@@ -1059,6 +1087,8 @@ def notify_status(*, ctx: NotifyStatusContext, dry_run: bool = False, force_test
                 ident = str(item.get("id") or "")
                 if ident in active_state:
                     active_state[ident]["last_notified_ts"] = now
+                    if decision_clock is not None:
+                        active_state[ident]['last_notified_mono']=decision_clock.mono
             state["last_status_sent_ts"] = now
     if recovered_ids:
         recovered: list[dict] = []
@@ -1073,7 +1103,12 @@ def notify_status(*, ctx: NotifyStatusContext, dry_run: bool = False, force_test
             item["_slack_notified_severity"] = stored.get("slack_notified_severity")
             item["_discord_notified_ts"] = int(stored.get("discord_first_notified_ts", 0) or 0)
             item["_delivery_dead_lettered"] = bool(stored.get("delivery_dead_lettered"))
+            if decision_clock is not None and stored.get('notification_boot_id')==decision_clock.boot:
+                item['_active_for_sec']=max(0.,decision_clock.mono-stored.get('first_seen_mono',decision_clock.mono))
             recovered_ts, recovery_evidence = ctx.recovery_observation_for_incident(ident, now)
+            verified = state.get("observation_recoveries", {}).pop(ident, None)
+            if verified:
+                recovery_evidence = f"verified distinct normal observations; {verified}"
             item["_recovered_ts"] = recovered_ts
             item["_recovery_evidence"] = recovery_evidence
             recovered.append(item)

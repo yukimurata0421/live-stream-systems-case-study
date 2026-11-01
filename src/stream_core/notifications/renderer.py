@@ -107,7 +107,7 @@ def format_discord_message(*, phase: str, incidents: list[dict], state: dict, no
         last_bad = int(item.get("_last_bad_ts", active_state.get("last_bad_ts", item.get("observed_ts", 0))) or 0)
         recovered_ts = int(item.get("_recovered_ts", 0) or 0)
         end_ts = recovered_ts if phase == "recovered" and recovered_ts > 0 else now_ts
-        duration = seconds_to_human(end_ts - first_seen)
+        duration = seconds_to_human(item.get("_active_for_sec", end_ts - first_seen))
         window_end = jst_text_or_unknown(recovered_ts) if phase == "recovered" else "ongoing"
         evidence_label = "last_bad_evidence" if phase == "recovered" else "evidence"
         lines.extend(
@@ -123,6 +123,8 @@ def format_discord_message(*, phase: str, incidents: list[dict], state: dict, no
         )
         if item.get("diagnostic_context"):
             lines.append(f"  context={item.get('diagnostic_context')}")
+        if item.get("_observation_pending"):
+            lines.append("  current_observation=unknown (incident retained until recovery is verified)")
         if phase == "recovered":
             lines.append(f"  recovery_evidence={item.get('_recovery_evidence', '')}")
         lines.append(f"  follow_up={item.get('follow_up')}")

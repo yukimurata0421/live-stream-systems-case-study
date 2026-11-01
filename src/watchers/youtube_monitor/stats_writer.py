@@ -4,6 +4,7 @@ from collections.abc import Callable
 from typing import Any
 
 from .classifier import detect_transient_subkind
+from stream_core.common import observation_time
 
 
 def build_status_payload(
@@ -136,6 +137,7 @@ def record_status(
     write_stats: Callable[[dict], object],
     append_event: Callable[[dict], object],
     should_emit_ok_event: Callable[[], bool],
+    previous_stats: dict | None = None,
 ) -> None:
     payload = dict(payload)
     payload = enrich_status_with_recovery_context(payload)
@@ -145,6 +147,12 @@ def record_status(
     )
     payload["judgment"] = judgment
     payload["judgment_reason"] = judgment_reason
+    previous = previous_stats or {}
+    if payload.get("oauth_probe_performed") is True and payload.get("oauth_checked_ts_utc") != previous.get("oauth_checked_ts_utc"):
+        payload["oauth_observation_time"] = observation_time.attach({}, "youtube_oauth")["observation_time"]
+    elif isinstance(previous.get("oauth_observation_time"), dict):
+        payload["oauth_observation_time"] = previous["oauth_observation_time"]
+    payload = observation_time.attach(payload, "youtube_watchdog")
     write_stats(payload)
     if judgment in {"ok", "deferred"}:
         if should_emit_ok_event():

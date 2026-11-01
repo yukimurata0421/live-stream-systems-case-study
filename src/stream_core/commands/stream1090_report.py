@@ -438,6 +438,8 @@ def stream1090_report(
 ) -> int:
     payload = payload_func(base_url=base_url, sample_sec=sample_sec, timeout=timeout, visual=visual)
     payload["ts_utc"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    from stream_core.common import observation_time
+    payload = observation_time.attach(payload, "stream1090_overlay_report")
     payload["baseline"] = report_history_summary(
         ctx,
         ctx.stream1090_report_events_file,
@@ -477,6 +479,8 @@ def upstream_report(
     )
     payload["upstream_url"] = raw_url
     payload["ts_utc"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    from stream_core.common import observation_time
+    payload = observation_time.attach(payload, "stream1090_upstream_report")
     payload["baseline"] = report_history_summary(
         ctx,
         ctx.upstream_report_events_file,

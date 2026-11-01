@@ -55,7 +55,7 @@ class DecideTests(unittest.TestCase):
     def test_api_warning_explains_collection_gaps_on_start_repeat_and_resolution(self):
         a = alert('StreamV4TwitchSloBreached', sli='api_measurement', window='7d', severity='warning')
         msgs, state = decide([a], {}, T0, repeat_sec=3600)
-        self.assertTrue(msgs[0].startswith('\U0001f7e0'))
+        self.assertTrue(msgs[0].startswith('🟠'))
         self.assertIn('API observation', msgs[0])
         self.assertIn('missing', msgs[0])
         msgs, state = decide([a], state, T0+86400, repeat_sec=3600)
@@ -63,8 +63,10 @@ class DecideTests(unittest.TestCase):
         self.assertIn('missing', msgs[0])
         # A stored pre-upgrade state still gets the precise resolution title.
         del state[next(iter(state))]['title']
-        msgs, state = decide([], state, T0+86430, repeat_sec=3600)
-        self.assertIn('Resolved: Twitch API observation', msgs[0])
+        msgs,state=decide([],state,T0+86430,repeat_sec=3600)
+        self.assertEqual(msgs,[])
+        msgs,state=decide([],state,T0+86730,repeat_sec=3600)
+        self.assertIn('Resolved: Twitch API observation',msgs[0])
 
     def test_upgrade_keeps_active_alert_identity_without_duplicate_start(self):
         a = alert('StreamV4TwitchSloBreached', sli='api_measurement', window='7d')
@@ -89,8 +91,10 @@ class DecideTests(unittest.TestCase):
                 self.assertEqual(len(msgs), 1)
                 self.assertEqual(msgs[0]['channel'], 'discord')
                 self.assertIn('Still firing', msgs[0]['content'])
-                msgs, state = plan([], state, T0+86430, repeat_sec=3600, delivery=delivery(T0+86430))
-                self.assertEqual(len(msgs), 1)
+                msgs,state=plan([],state,T0+86430,repeat_sec=3600,delivery=delivery(T0+86430))
+                self.assertEqual(msgs,[])
+                msgs,state=plan([],state,T0+86730,repeat_sec=3600,delivery=delivery(T0+86730))
+                self.assertEqual(len(msgs),1)
                 self.assertIn('Resolved', msgs[0]['content'])
                 self.assertEqual(state, {})
 
@@ -104,39 +108,31 @@ class DecideTests(unittest.TestCase):
         self.assertEqual(msgs, [])
         self.assertEqual(state[k]['since'], before['since'])
         self.assertEqual(state[k]['last_sent'], before['last_sent'])
-        self.assertEqual(state[k]['notification_status']['delivery_state'], 'HEALTHY')
+        self.assertEqual(state[k]['notification_status'],{'severity':'warning'})
 
-    def test_slo_state_change_sends_immediately_and_restarts_reminder_interval(self):
-        a = alert('StreamV4TwitchSloBreached', sli='api_measurement', window='7d', severity='warning')
-        _, state = plan([a], {}, T0, repeat_sec=3600, delivery=delivery(T0))
-        msgs, candidate = plan([a], state, T0+30, repeat_sec=3600,
-                               delivery=delivery(T0+30, 'API_UNAVAILABLE', api='UNKNOWN'))
-        self.assertEqual(len(msgs), 1)
-        self.assertIn('State changed', msgs[0]['content'])
-        self.assertIn('API: UNKNOWN', msgs[0]['content'])
-        self.assertEqual(deliver_plan(msgs, candidate, state, lambda m: False), state)
-        msgs, state = plan([a], state, T0+60, repeat_sec=3600,
-                           delivery=delivery(T0+60, 'API_UNAVAILABLE', api='UNKNOWN'))
-        self.assertEqual(len(msgs), 1)  # failed state-change delivery is retried
-        msgs, state = plan([a], state, T0+90, repeat_sec=3600, delivery=delivery(T0+90))
-        self.assertEqual(len(msgs), 1)
-        self.assertIn('State changed', msgs[0]['content'])
-        self.assertNotIn('Resolved:', msgs[0]['content'])  # historical SLO is still breached
-        msgs, state = plan([a], state, T0+86400, repeat_sec=3600, delivery=delivery(T0+86400))
-        self.assertEqual(msgs, [])
-        msgs, state = plan([a], state, T0+86490, repeat_sec=3600, delivery=delivery(T0+86490))
-        self.assertIn('Still firing', msgs[0]['content'])
+    def test_slo_delivery_state_flaps_do_not_generate_state_change_messages(self):
+        a=alert('StreamV4TwitchSloBreached',sli='api_measurement',window='7d',severity='warning')
+        _,state=plan([a],{},T0,repeat_sec=3600,delivery=delivery(T0))
+        for elapsed in (30,60,90):
+            msgs,state=plan([a],state,T0+elapsed,repeat_sec=3600,
+                delivery=delivery(T0+elapsed,'API_UNAVAILABLE' if elapsed==60 else 'HEALTHY',api='UNKNOWN' if elapsed==60 else 'LIVE'))
+            self.assertEqual(msgs,[])
+        msgs,state=plan([a],state,T0+86400,repeat_sec=3600,delivery=delivery(T0+86400))
+        self.assertEqual(len(msgs),1)
+        self.assertIn('Still firing',msgs[0]['content'])
 
     def test_slo_severity_changes_do_not_wait_for_daily_reminder(self):
         warning = alert('StreamV4TwitchSloBreached', sli='api_measurement', window='7d', severity='warning')
         critical = alert('StreamV4TwitchSloBreached', sli='api_measurement', window='7d', severity='critical')
         _, state = plan([warning], {}, T0, repeat_sec=3600, delivery=delivery(T0))
         msgs, state = plan([critical], state, T0+30, repeat_sec=3600, delivery=delivery(T0+30))
-        self.assertEqual(msgs[0]['channel'], 'slack')
+        self.assertEqual(msgs[0]['channel'], 'discord')
         msgs, state = plan([warning], state, T0+60, repeat_sec=3600, delivery=delivery(T0+60))
         self.assertIn('State changed', msgs[0]['content'])
         msgs, state = plan([], state, T0+90, repeat_sec=3600, delivery=delivery(T0+90))
-        self.assertEqual(msgs[0]['channel'], 'slack')  # resolution follows the alerted route
+        self.assertEqual(msgs,[])
+        msgs,state=plan([],state,T0+390,repeat_sec=3600,delivery=delivery(T0+390))
+        self.assertEqual(msgs[0]['channel'],'discord')
 
     def test_current_path_and_api_failures_still_notify_and_repeat_hourly(self):
         slo = alert('StreamV4TwitchSloBreached', sli='api_measurement', window='7d', severity='warning')

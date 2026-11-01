@@ -248,6 +248,7 @@ def history_row(payload: dict[str, Any]) -> dict[str, Any]:
         for key in (
             "schema",
             "checked_at_utc",
+            "observation_time",
             "status",
             "video_id",
             "api_live_state",
@@ -310,6 +311,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         error=error,
         duration_sec=time.monotonic() - started,
     )
+    from stream_core.common import observation_time
+    payload = observation_time.attach(payload, "viewer_synthetic")
     atomic_json(args.state_file, payload)
     append_jsonl(args.history_file, history_row(payload))
     print(json.dumps(history_row(payload), ensure_ascii=False, sort_keys=True))

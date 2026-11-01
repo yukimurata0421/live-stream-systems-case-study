@@ -18,6 +18,7 @@ if str(SRC) not in sys.path:
 
 from stream_core.cli_support.sli_report import POLICIES, SliReportContext, build_sli_report
 from stream_core.common.json_io import iter_jsonl
+from stream_core.common import observation_time
 from stream_core.operational_reliability.evidence_store import (
     RETENTION_DAYS,
     backfill_same_url_events,
@@ -187,6 +188,8 @@ def run(args: argparse.Namespace) -> dict:
             "no_automatic_recovery": True,
             "formal_sli": False,
         }
+        payload["measurement_status_by_family"] = {family: measurement(report.get("windows", {}).get("1h", {}), family).get("measurement_status") for family in POLICIES}
+        payload = observation_time.attach(payload, "reliability_burn")
         write_json_atomic(args.output, payload)
         return payload
     hourly_rows = upsert_rollups(
@@ -241,6 +244,7 @@ def run(args: argparse.Namespace) -> dict:
         "multi_window_burn_alerts": multi_window_burn_alerts(report),
         "no_automatic_recovery": True,
     }
+    payload = observation_time.attach(payload, "reliability_rollup")
     write_json_atomic(args.output, payload)
     return payload
 

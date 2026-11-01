@@ -66,6 +66,8 @@ def load_stream_notify_config(ctx: NotifyCliContext) -> dict:
         "maintenance_repeat_sec": max(60, int(cfg.get("STREAM_NOTIFY_MAINTENANCE_REPEAT_SEC", "600") or "600")),
         "report_stale_sec": max(60, int(cfg.get("STREAM_NOTIFY_REPORT_STALE_SEC", "1800") or "1800")),
         "startup_grace_sec": max(0, int(cfg.get("STREAM_NOTIFY_STARTUP_GRACE_SEC", "300") or "300")),
+        "recovery_confirmation_sec": max(1, int(cfg.get("STREAM_NOTIFY_RECOVERY_CONFIRMATION_SEC", "45") or "45")),
+        "observation_lost_after_sec": max(60, int(cfg.get("STREAM_NOTIFY_OBSERVATION_LOST_AFTER_SEC", "300") or "300")),
         "username": cfg.get("STREAM_NOTIFY_USERNAME", "ADS-B Stream Watchdog").strip() or "ADS-B Stream Watchdog",
         "slack_enabled": slack_enabled,
         "slack_webhook_url": slack_webhook_url,

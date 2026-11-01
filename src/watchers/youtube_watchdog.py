@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import sys
 import time
+from pathlib import Path
 
 from maintenance_audit import audit_maintenance_decision
 
@@ -298,6 +299,7 @@ def should_emit_ok_event_safe() -> bool:
 
 
 def record_status(payload: dict) -> None:
+    from stream_core.common.json_io import read_json_file
     stats_writer.record_status(
         payload,
         enrich_status_with_recovery_context=enrich_status_with_recovery_context,
@@ -305,6 +307,7 @@ def record_status(payload: dict) -> None:
         write_stats=write_stats,
         append_event=append_event,
         should_emit_ok_event=should_emit_ok_event_safe,
+        previous_stats=read_json_file(Path(STATS_FILE)),
     )
 
 

@@ -41,19 +41,32 @@ def seconds_to_human(seconds: int | float | None) -> str:
 
 
 def latest_jsonl_item(path: Path, *, target: str = "", now_ts: int | None = None) -> tuple[dict, int | None]:
+    from stream_core.common import observation_time
+    reference = observation_time.capture()
     latest: dict = {}
     latest_ts = 0
+    latest_key = (-1, 0.)
     for item in iter_jsonl(path):
         if target and str(item.get("target", "")) != target:
             continue
-        ts = parse_utc_ts(str(item.get("ts_utc", "")))
-        if ts >= latest_ts:
+        ts = int(observation_time.epoch(item.get("ts_utc")) or 0)
+        key = (0, float(ts))
+        if "observation_time" in item:
+            sample = observation_time.qualify(item["observation_time"], now=reference, max_age=max(reference.mono, 0.))
+            if sample.valid:
+                key = (1, sample.source_mono)
+        if key >= latest_key:
+            latest_key = key
             latest_ts = ts
             latest = item
     if latest_ts <= 0:
         return {}, None
     now = int(time.time() if now_ts is None else now_ts)
-    return latest, max(0, now - latest_ts)
+    if "observation_time" in latest:
+        from stream_core.common import observation_time
+        sample = observation_time.qualify(latest["observation_time"], now=reference, max_age=7200.)
+        return latest, sample.age_upper if sample.valid else None
+    return latest, now-latest_ts if latest_ts<=now else None
 
 
 def report_incident_spec(
@@ -157,8 +170,14 @@ def compact_report_context(*, item: dict, age_sec: int | None, max_age_sec: int,
 
 
 def _status_age(payload: dict, now_ts: int) -> tuple[int, int | None]:
-    observed_ts = parse_utc_ts(str(payload.get("checked_at_utc") or payload.get("ts_utc") or ""))
-    return observed_ts, max(0, now_ts - observed_ts) if observed_ts > 0 else None
+    from stream_core.common import observation_time
+    observed_ts = int(observation_time.epoch(payload.get("checked_at_utc") or payload.get("ts_utc")) or 0)
+    if "observation_time" in payload:
+        from stream_core.common import observation_time
+        sample = observation_time.qualify(payload["observation_time"], max_age=7200.)
+        return observed_ts, sample.age_upper if sample.valid else None
+    # Legacy UTC-only samples cannot turn an arbitrary future into age zero.
+    return observed_ts, now_ts - observed_ts if 0 < observed_ts <= now_ts else None
 
 
 def _trailing_problem_duration(
@@ -170,21 +189,40 @@ def _trailing_problem_duration(
 ) -> tuple[int, int]:
     started_ts = 0
     latest_ts = 0
+    started_wall = 0
+    using_boot = None
+    from stream_core.common import observation_time
+    reference = observation_time.capture()
     for item in iter_jsonl(path):
-        ts = parse_utc_ts(str(item.get("checked_at_utc") or item.get("ts_utc") or ""))
-        if ts <= 0 or ts > now_ts + 60:
+        wall = int(observation_time.epoch(item.get("checked_at_utc") or item.get("ts_utc")) or 0)
+        boot_sample = "observation_time" in item
+        if boot_sample:
+            sample = observation_time.qualify(item["observation_time"], now=reference,
+                max_age=max(reference.mono, 0.), source="map_runtime")
+            if not sample.valid:
+                started_ts = latest_ts = 0
+                continue
+            ts = sample.source_mono
+        else:
+            ts = wall
+        if using_boot is not None and using_boot != boot_sample:
+            started_ts = latest_ts = 0
+        using_boot = boot_sample
+        if ts <= 0 or not boot_sample and ts > now_ts:
             continue
         if latest_ts and ts - latest_ts > max_sample_gap_sec:
             started_ts = 0
         if predicate(item):
             if started_ts <= 0:
                 started_ts = ts
+                started_wall = wall
         else:
             started_ts = 0
         latest_ts = ts
-    if started_ts <= 0 or latest_ts <= 0 or now_ts - latest_ts > max_sample_gap_sec:
+    current = reference.mono if using_boot else now_ts
+    if started_ts <= 0 or latest_ts <= 0 or current - latest_ts > max_sample_gap_sec:
         return 0, 0
-    return started_ts, max(0, latest_ts - started_ts)
+    return started_wall, max(0, latest_ts - started_ts)
 
 
 def map_runtime_incidents(
@@ -1125,8 +1163,10 @@ def collect_notification_incidents(
             "upstream readsb/tar1090/stream1090 report",
         ),
     )
+    report_samples = {}
     for ident, component, path, target, label in report_specs:
         item, age = latest_jsonl_item(path, target=target, now_ts=now)
+        report_samples[ident] = item
         if is_report_problem(item, age, max_age_sec=report_stale_sec):
             if bootstrap_grace_active and not item:
                 continue
@@ -1150,13 +1190,18 @@ def collect_notification_incidents(
                 )
             )
 
-    return deduplicate_incidents_by_id(
+    result = deduplicate_incidents_by_id(
         correlate_connectivity_incidents(
             incidents,
             state_file=fast_recovery_state_file,
             now_ts=now,
         )
     )
+    if runtime_state_base_dir is not None:
+        from stream_core.notifications import observation
+        return observation.collect(runtime_state_base_dir, result, payload, report_samples=report_samples,
+                                   execution_ok=not error and _rc in {0,2} and valid_verdict)
+    return result
 
 
 def recovery_observation_for_incident(

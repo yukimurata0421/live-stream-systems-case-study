@@ -21,6 +21,7 @@ if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
 from stream_core.k8s_gpu_guard import summarize_runtime_gpu
+from stream_core.common.adsb_timing import adsb_source_timing
 from stream_v3.oci_monitor_metrics import write_metrics as write_oci_monitor_metrics
 from stream_core.common.youtube_input_quality import (
     DEFAULT_INPUT_QUALITY_MAX_AGE_SEC,
@@ -1489,12 +1490,19 @@ def build_metrics(
         writer.metric("stream_v3_cgroup_swap_current_mib", payload.get("memory_swap_current_mb"), labels=labels, help_text="Cgroup current swap MiB.")
 
     adsb_last_change_age = optional_age_seconds(adsb_freshness.get("last_change_ts"), now=now)
-    adsb_sample_age = optional_age_seconds(
-        first_present(adsb_freshness.get("sample_ts"), adsb_freshness.get("ts_utc")),
-        now=now,
-    )
+    adsb_timing = adsb_source_timing(adsb_freshness, now=now)
+    try:
+        from stream_core.notifications.time_diagnostics import record
+        diagnostic_dir = os.environ.get("STREAM_NOTIFICATION_TIME_DIAGNOSTICS_DIR", "")
+        if diagnostic_dir:
+            record(Path(diagnostic_dir), "adsb_overlay_probe", adsb_freshness, result=adsb_timing)
+    except (OSError, ValueError, TypeError):
+        pass
+    typed_adsb = "observation_time" in adsb_freshness
+    adsb_sample_age = adsb_timing["sample_age"] if typed_adsb else optional_age_seconds(
+        first_present(adsb_freshness.get("sample_ts"), adsb_freshness.get("ts_utc")), now=now)
     adsb_rendering_evidence_age = subsystem_last_ok_age(rendering, now=now)
-    adsb_available = adsb_last_change_age is not None
+    adsb_available = adsb_timing["available"] if typed_adsb else adsb_last_change_age is not None
     adsb_source_status = str(adsb_freshness.get("status") or "").strip().lower()
     adsb_source_ok = adsb_available and adsb_source_status in {"", "ok", "healthy"}
     adsb_motion_ok = (
@@ -1503,6 +1511,7 @@ def build_metrics(
     )
     adsb_ok = (
         adsb_source_ok
+        and (not typed_adsb or adsb_timing["sample_fresh"] and adsb_timing["heartbeat_fresh"])
         and rendering.get("state") == "healthy"
         and boolish(rendering.get("aircraft_json_ok", True))
         and adsb_motion_ok

@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
+from stream_core.common import observation_time
 
 from .action_lock import FileActionLock
 from .aggregator import SubsystemAggregator
@@ -196,6 +197,7 @@ class ShadowPipeline:
     def _write_subsystems_status(self, *, now: datetime, objective_summary: dict[str, Any]) -> tuple[SubsystemsSnapshot, dict[str, Any]]:
         snapshot = self.aggregator.aggregate(self.reader.read(), now=now, objective_sli=objective_summary)
         payload = snapshot.to_dict()
+        payload = observation_time.attach(payload, "subsystems")
         atomic_write_json(self.config.subsystems_status_path, payload)
         append_jsonl(self.config.subsystems_status_log_path, payload)
         return snapshot, payload
@@ -206,6 +208,13 @@ class ShadowPipeline:
         action_plan = {**decision.execution_plan, "ts_utc": isoformat_utc(now), "event_id": decision.event.get("event_id", "")}
         atomic_write_json(self.config.recovery_action_plan_path, action_plan)
         append_jsonl(self.config.recovery_action_plan_log_path, action_plan)
+        # Publish a facts-only derivative; preserve the executable plan and its hashes.
+        try:
+            view = {key: action_plan.get(key) for key in ("ts_utc", "event_id", "action", "execute", "executable")}
+            atomic_write_json(self.config.recovery_action_plan_path.with_name("recovery_plan_observation.json"),
+                              observation_time.attach(view, "recovery_plan"))
+        except OSError:
+            pass  # Source TTL/observation-loss notification handles unavailable evidence.
         return decision, action_plan
 
     def _write_objective_sli(self, *, now: datetime, expected_video_id: str) -> dict[str, Any]:
