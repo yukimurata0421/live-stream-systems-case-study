@@ -162,7 +162,7 @@ flowchart LR
         IMP["Clock importer: bind source, deduplicate, join native facts"]
         NAT["Relay observer: per-destination forward counters"]
         API["Provider API collectors"]
-        THUMB["Thumbnail worker: Twitch image -> JST/UTC clock OCR"]
+        THUMB["K3s thumbnail Pod + PVC: Twitch image -> JST/UTC clock OCR"]
         PROM["Metrics and logs: Prometheus, Loki, Grafana"]
         ALERT["Warning rules -> notification loop"]
     end
@@ -171,12 +171,13 @@ flowchart LR
     PROBE -->|"signed snapshots, pulled over read-only SSH"| IMP
     MTX -->|"forward counters over the private tunnel"| NAT
     PLAT -->|"stream status"| API
-    API -->|"thumbnail URL via tmpfs"| THUMB
+    API -->|"coherent API/URL bundle via private Service"| THUMB
     PLAT -->|"thumbnail image"| THUMB
     IMP --> PROM
     NAT --> PROM
     API --> PROM
-    THUMB --> PROM
+    NAT -->|"fixed read-only facts Service"| THUMB
+    THUMB -->|"publication Service -> existing exporter"| PROM
     PROM --> ALERT
 ```
 
@@ -194,12 +195,15 @@ sender, scale a Deployment, switch a route or request a recovery action.
 The [clock contract](v3/relay-clock-monitor.md) separates returned video,
 per-destination byte progress, observation quality and public reception.
 
-An independent [thumbnail worker](v3/twitch-thumbnail-monitor.md) runs entirely on
-arena-server. An adapter reuses the existing Get Streams response and mirrors
-its URL into tmpfs; the worker fetches a bounded image once per minute, keeps
-ordinary images in RAM and joins paired-clock results with the existing API and
-native facts. Its scope is a provider thumbnail, not public-player reception.
-It adds no work to the Dell media path or OCI relay and has no recovery authority.
+The independent [thumbnail collector](v3/twitch-thumbnail-monitor.md) runs in
+arena-server's K3s. A host adapter reuses the existing Get Streams response and
+serves its API/URL pair over a private Service. Native facts cross a fixed GET-only
+boundary; the Pod never reads host files or localhost. Its PVC retains numeric
+state, history and bounded abnormal ROIs. The existing exporter reads the Pod's
+publication Service without changing metric/job labels. Helix, relay observation
+and the exporter remain host services. This does not move Dell's CRA processing
+or media path, add a second sender, or give the collector recovery authority.
+Its scope remains a provider thumbnail, not public-player reception.
 
 What each of these layers can and cannot establish is defined once in
 [observability](observability.md#video-observation-layers). Warning rules feed

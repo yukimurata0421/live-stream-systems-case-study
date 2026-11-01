@@ -1,0 +1,140 @@
+{
+  "schema": "public-source-port.thumbnail-public-completion.v1",
+  "date_jst": "2026-11-01",
+  "scope": "Public thumbnail collector/page/build/upload completion and retired installation examples only",
+  "files": [
+    {
+      "path": "README.md",
+      "source_sha256": "e8ad53fd1e34398253c585162a2f6dcda8703eb93cedf9ff68ecc85ed37db47f",
+      "public_sha256": "0b35cd6095473f0f81e8e1029dc7444aa9892ce337a18894d5f3cb18b972cc59",
+      "adaptation": "Public wiring and prose; generic SSH alias and uptime-check phrase retained"
+    },
+    {
+      "path": "docs/current-status.md",
+      "source_sha256": null,
+      "public_sha256": "9d1af0f8642a41c61a8aecfa11c0309a55acfd064ac59cde8fe6a3a7eede4059",
+      "adaptation": "Public wiring and prose; generic SSH alias and uptime-check phrase retained"
+    },
+    {
+      "path": "docs/v3/twitch-thumbnail-monitor.md",
+      "source_sha256": null,
+      "public_sha256": "35888bdbb412f8a38ca3d9db9ccf97a4f4f39ff5ce32e02e9ab94b5b8f826e86",
+      "adaptation": "Public wiring and prose; generic SSH alias and uptime-check phrase retained"
+    },
+    {
+      "path": "docs/v3/thumbnail-k3s-migration-2026-11-01.md",
+      "source_sha256": null,
+      "public_sha256": "81cf7cd71f8b4b45a3b10e6a2e222ee30a52d5529f4731cdbefdc6ecb154bb92",
+      "adaptation": "Public wiring and prose; generic SSH alias and uptime-check phrase retained"
+    },
+    {
+      "path": "ops/public-publisher/site/public/index.html",
+      "source_sha256": "845608c6de82ef080686ce83a8b858e9eb8ac8113a2260aff238d0a52d14493b",
+      "public_sha256": "b9eaa6cfd21061dd485382259ea0c62164a41fb10c24002d21871a35e6a18446",
+      "adaptation": "Public wiring and prose; generic SSH alias and uptime-check phrase retained"
+    },
+    {
+      "path": "ops/public-publisher/site/public/assets/ops-20261020.css",
+      "source_sha256": "356d84de419a82cdb1253bcf26e92799c22302b139c45d4018b37609c79c9887",
+      "public_sha256": "356d84de419a82cdb1253bcf26e92799c22302b139c45d4018b37609c79c9887",
+      "adaptation": "identical source"
+    },
+    {
+      "path": "ops/public-publisher/site/scripts/collect_clock_public.py",
+      "source_sha256": "d8e7615ba49b762810770700e6bd16571c2a4356693474a88143476705df301e",
+      "public_sha256": "a8a691eaa65c3d8233963053f2916c4612c938c76599bd03a455d411f0e0580a",
+      "adaptation": "Public wiring and prose; generic SSH alias and uptime-check phrase retained"
+    },
+    {
+      "path": "ops/public-publisher/site/scripts/build_public.py",
+      "source_sha256": "762888c36920348127a2001d315c5b186fcd0b64d82364ef524539e50d8fc07a",
+      "public_sha256": "f288306d639b25fa72bd7de648858b17ec849f9c77740db9cc1d4e24432785ed",
+      "adaptation": "Public wiring and prose; generic SSH alias and uptime-check phrase retained"
+    },
+    {
+      "path": "ops/public-publisher/site/scripts/push_to_gcs.py",
+      "source_sha256": "78b877a8b50687d651804b767335855ec248ca8c63b9c4b52eea68bcc4c10baa",
+      "public_sha256": "9864b4517e044fbaf872f67c247a6e55ad1d32bdbc55f6860b2117e033201bf1",
+      "adaptation": "Public wiring and prose; generic SSH alias and uptime-check phrase retained"
+    },
+    {
+      "path": "ops/public-publisher/site/systemd/stream-v3-public-publisher.env.example",
+      "source_sha256": "c22c95ed5ebd134763b794b14e7dbe601729f053a4640c137300cc5930b71ef7",
+      "public_sha256": "451c7d088e86e56d47cd2468e08e765879b406a128126f7a4d64b6c8a4924056",
+      "adaptation": "Public wiring and prose; generic SSH alias and uptime-check phrase retained"
+    },
+    {
+      "path": "tests/test_public_clock.py",
+      "source_sha256": "543a3ca0e7706fee21a1696857d366d5afaf493923aa9e31d2fe211196455a30",
+      "public_sha256": "543a3ca0e7706fee21a1696857d366d5afaf493923aa9e31d2fe211196455a30",
+      "adaptation": "identical source"
+    },
+    {
+      "path": "tests/test_public_publisher_build.py",
+      "source_sha256": "367d3bf6be98b02149da7e7775de31008639b550ea9f4f6e6b7e9d65540594c5",
+      "public_sha256": "47d118794d808e4b3f7cf890544d1878f447d016b664b2a5ccf0abdb0231bc5e",
+      "adaptation": "Public wiring and prose; generic SSH alias and uptime-check phrase retained"
+    }
+  ],
+  "retired_files": [
+    {
+      "path": "ops/systemd/stream-v3-twitch-thumbnail.service",
+      "reason": "Retired public systemd/file-input installation example; K3s manifest is the current entrypoint.",
+      "sha256": "91959219de608358e89927b53370b250a40e76ee0efde407a4e3b3a7776f02e2",
+      "recoverable_git_revision": "2ad9a158a2382f98d1ada932253b21469f1e879b",
+      "prior_source_map_entry": {
+        "path": "ops/systemd/stream-v3-twitch-thumbnail.service",
+        "before_sha256": "dcc4fea9792f2f3ac3b2f4725b8b438e1c9db4460546ae983d9245c86fe5654b",
+        "source_sha256": "1fd900ecf290d7422925673a0769076ea516d55693c03825436415a34619e75a",
+        "public_sha256": "91959219de608358e89927b53370b250a40e76ee0efde407a4e3b3a7776f02e2",
+        "source_role": "public-source-adaptation",
+        "decision": "Review fixes, English prose and existing public bindings; no deployment or unrelated working-copy edits.",
+        "thumbnail_clock_port": "2026-10-22 committed source through 740bcc00; concurrent review excluded.",
+        "pre_thumbnail_clock_public_sha256": null,
+        "pre_thumbnail_review_public_sha256": "dcc4fea9792f2f3ac3b2f4725b8b438e1c9db4460546ae983d9245c86fe5654b",
+        "thumbnail_review_port": "2026-10-22 stream rollover, bounded gaps and conservative OCR retry."
+      }
+    },
+    {
+      "path": "ops/config/twitch_thumbnail.example.json",
+      "reason": "Retired public systemd/file-input installation example; K3s manifest is the current entrypoint.",
+      "sha256": "cc53ca27e8c9ff00f566d940fcdf85ae6b6befd68b48d4e432316b46d4005605",
+      "recoverable_git_revision": "2ad9a158a2382f98d1ada932253b21469f1e879b",
+      "prior_source_map_entry": {
+        "path": "ops/config/twitch_thumbnail.example.json",
+        "before_sha256": "c59fc8e08693e87af6e88e0245e0aad8c1d987e5fed8c266e4814662f965189c",
+        "source_sha256": null,
+        "public_sha256": "cc53ca27e8c9ff00f566d940fcdf85ae6b6befd68b48d4e432316b46d4005605",
+        "source_role": "public-documentation-or-configuration",
+        "decision": "Additional conservative OCR, bounded ROI evidence and diagnostics; existing public bindings; source port only.",
+        "thumbnail_clock_port": "2026-10-22 committed source through 740bcc00; concurrent review excluded.",
+        "pre_thumbnail_clock_public_sha256": null,
+        "pre_thumbnail_review_public_sha256": "54584badd1a82c5346f575a3c34ec8bc80d80d8b171bf455d856af207c3a933c",
+        "thumbnail_review_port": "2026-10-22 stream rollover, bounded gaps and conservative OCR retry.",
+        "thumbnail_evidence_port": "2026-10-22 conservative OCR, bounded evidence, ROI comparison and diagnostics."
+      }
+    }
+  ],
+  "retained": {
+    "historical_port_records": "Original paths/hashes retain their as-of meaning; prior migration record is preserved in publication/history.",
+    "legacy_renderer": "Still referenced by a dated browser fixture and the 2026-10-20 case study.",
+    "runtime_file_compatibility": "Still needed by the deployed rollback path; no live files were changed."
+  },
+  "validation": {
+    "focused_tests_passed": 157,
+    "latest_publisher_entrypoint_subset_passed": 9,
+    "browser_fixture_checks_passed": 11,
+    "real_staged_entrypoint": "PASS with synthetic public responses, including missing and recovery",
+    "uptime_match": "Operational reliability retained",
+    "live_deployment_performed": false,
+    "commit_or_push_performed": false,
+    "scoped_public_port_issue_count": 0,
+    "scoped_language_errors": [],
+    "secrets_scan": "PASS",
+    "repository_wide_checkpoint": {
+      "public_port_issue_count": 8,
+      "language_error_count": 37,
+      "note": "Concurrent notification-observation port files were left untouched; this task validates its own allowlist separately."
+    }
+  }
+}

@@ -1,11 +1,60 @@
 # Current Status
 
-Last updated: 2026-10-31 JST.
+Last updated: 2026-11-01 JST.
 
 This is the only page that records state expected to change soon: what was
 changed recently, what has not been observed yet, and what is deliberately
 disabled. Other pages describe designs and dated evidence and link here instead
 of repeating these items.
+
+## Notification Observation Time (2026-11-01 JST)
+
+The [notification evidence contract](v3/notification-observation-time.md) binds
+freshness and recovery confirmation to producer host, boot and sample identity.
+Producers were upgraded before consumers.
+
+| Item | Observed checkpoint |
+| --- | --- |
+| Applied | Producers at 20:12 JST and consumers at 20:20 JST. A consumer-only SLO classification correction followed at 20:49 JST. |
+| Checks | The actual notifier UID and mount accepted the producer facts. The correction has isolated CLI coverage and one witnessed natural CLI cycle. The 20:24:52 JST Discord test received HTTP 204 with no pending delivery. |
+| Production | Native monitoring had no active incidents during the initial observation window. Media Pod/container identities and FFmpeg were preserved. |
+| Limits | Failure cases remain isolated evidence. Human message visibility and public-player continuity were not observed. |
+| Pending source correction | Compatibility continuity now uses each source's TTL; observation-loss warnings wait for the greater of that TTL and 300 seconds. Source-restoration confirmation survives a duplicate read in the same decision cycle. Development and public source are synchronized and tested, but this correction has not been deployed or sent a production notification. See the [source correction record](../publication/notification-source-timing-fix-20261101.json). |
+
+## Thumbnail Collector on K3s (2026-11-01 JST)
+
+The [migration record](v3/thumbnail-k3s-migration-2026-11-01.md) documents the
+Service boundaries and preserved state. Helix/relay observation and the exporter
+remain host services; Dell's media runtime and local CRA processing stay in place.
+
+| Item | Observed checkpoint |
+| --- | --- |
+| Applied | `arena-thumbnail/twitch-thumbnail`, manifest digest `053b9cbfcd73642e02cafb66260eca4651d05e12a4348b2176849246e2368673`; old worker inactive/disabled. |
+| Checks | 146 private / 139 public tests; state-file hashes identical across transfer; native image OCR passed. At 19:44 JST, fourteen of fifteen cycles verified three image clocks, with one initial DNS UNKNOWN and zero Pod restarts. |
+| Public result | The same open page recovered from UNKNOWN to FRESH and advanced Thumbnail age through 19:40 JST. The ten-minute maximum remained distinct from current picture age. |
+| Protected | Main/observer Pod/container identities, FFmpeg generation, Dell CRA/fallback process/release and ongoing native forward progress retained. |
+| Remaining | Existing host-observer and single-node dependencies; no production rollback/node-loss exercise, long-term qualification or public-player AV continuity claim. |
+
+## Public Page Wiring (2026-11-01 JST)
+
+The public checkout now includes the clock-projection collector, and the page,
+build and upload allowlist reference the current renderer. Retired public
+systemd/file-input thumbnail examples were removed; host rollback files and
+dated evidence remain intact. This is a source-tree change only: it does not
+redeploy the live publisher or change delivery or CRA.
+
+## Thumbnail Transfer Recovery (2026-11-01 JST)
+
+The [dated correction](v3/thumbnail-transfer-recovery-2026-11-01.md) separates
+acquisition from OCR and stops the age label from reusing an old bucket.
+
+| Item | Observed checkpoint |
+| --- | --- |
+| Applied | Thumbnail worker `worker-aeb8bae90961` at 18:32:58 JST; public renderer SHA-256 `691f352818056913feb7e8b29b1170d6ec550c67c7cbdb1e62ce01ce9711918a`. |
+| Checks | 94 candidate tests, 95 public tests and eleven Chromium fixture checks passed. Nineteen natural worker cycles accepted four distinct image clocks; longest cycle 38.599 s. |
+| Public result | Fresh public JSON and an already-open page changed from UNKNOWN to AGING/FRESH. The age graph gained 18:40 and 18:50 JST buckets; missing historical data stayed missing. |
+| Delivery protection | Main/observer Pod and container identities retained; FFmpeg PID730 predates this repair and runtime restart count remains zero. Existing monitoring parent and exporter retained. OCI forwarding and Twitch LIVE remained observed. |
+| Limits | Long-term CDN behavior, a future session renewal under this version and uninterrupted public-player video/audio were not qualified. The age graph is a ten-minute maximum, not an instantaneous value. |
 
 ## Fallback Decision Rule (2026-10-31 JST)
 

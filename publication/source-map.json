@@ -32,8 +32,8 @@
       "source_role": "optional-receiver-source-or-public-documentation",
       "decision": "Optional Airspy reception guard; preserve the durable one-extra-attempt cap, remove personal configuration writers and keep raw evidence private.",
       "before_sha256": "d2268fba12ef09d57e492f92569838989f651d84fc89d8e3d4d242420cac01ba",
-      "source_sha256": null,
-      "public_sha256": "b83530df3902aab260034c81c5afd9a6ac2064d62c614984d8146723ae1c5079",
+      "source_sha256": "e8ad53fd1e34398253c585162a2f6dcda8703eb93cedf9ff68ecc85ed37db47f",
+      "public_sha256": "6c28b134f7809d8b0877f94e780a38c3b4a8c80fa8fb706172a7ab3e5c8ccf07",
       "port_date_jst": "2026-10-30",
       "pre_documentation_restructure_sha256": "00b596e75b50eaedbd3bed4ebc79e71d882e7049e72516aec95dfc0860ed015e",
       "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json.",
@@ -58,7 +58,11 @@
       "before_route_transition_audit_sha256": "a8fdeca281734d4b87b7a1e4ec67adf412445628a0f5d90b8ef147f7680d004c",
       "route_transition_audit": "route-transition-audit-20261031",
       "before_boottime_media_health_sha256": "a0bc7547f82a6961e73c712f40a8ea118310737fa46d73ac9d9af0a4871c1da7",
-      "boottime_media_health": "boottime-media-health-20261031"
+      "boottime_media_health": "boottime-media-health-20261031",
+      "thumbnail_public_completion": "publication/thumbnail-public-completion-20261101.json",
+      "before_notification_observation_time_sha256": "0b35cd6095473f0f81e8e1029dc7444aa9892ce337a18894d5f3cb18b972cc59",
+      "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
+      "notification_observation_time_source_sha256": null
     },
     {
       "path": "configs/auto_dj_classification_overrides.json",
@@ -84,8 +88,11 @@
       "decision": "replace private workspace paths with /srv placeholders",
       "before_sha256": "fbfa1f76317a54e91b45a45b8520ef720474e48149ef6fa2de9478107fa289ca",
       "source_sha256": null,
-      "public_sha256": "c2124264082ec1bdf24bb3a0409e4342f87b1a20f5a3183c28d629cae09efe85",
-      "port_date_jst": "2026-10-22"
+      "public_sha256": "3b604868630c2530a7b3059d39aa238ebe89301d300b85a31cb280cb9249f9a9",
+      "port_date_jst": "2026-10-22",
+      "before_notification_observation_time_sha256": "c2124264082ec1bdf24bb3a0409e4342f87b1a20f5a3183c28d629cae09efe85",
+      "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
+      "notification_observation_time_source_sha256": "3030f66159c27740a88d7792e876ee7700e7e22a75d368143383b7823a7761e2"
     },
     {
       "path": "configs/v3.shadow.env.example",
@@ -228,10 +235,10 @@
     {
       "path": "docs/00_INDEX.md",
       "source_role": "public-documentation-with-fallback-clock-observations",
-      "decision": "Add one catalog link, preserving existing changes.",
+      "decision": "English contract, dated evidence and navigation for the bounded thumbnail-transfer and current-age display correction.",
       "before_sha256": "fd6b799844453cf83c05d47231eacc48eef92903c127698eed87cd2dd14bde5a",
-      "source_sha256": null,
-      "public_sha256": "3b50fe9e3cc95036c0743b750e39f9d0aea17612b1859162bd7426ce62cfe23f",
+      "source_sha256": "b744a45eaa29d812ec315d58c693d60a92cfa7fa66d5b8d8be0e4f49bd7b5d48",
+      "public_sha256": "9f7605e83cdf9ec60df73ebe3f2472cca9292c4e06ec6768621ce53026c0b82c",
       "prior_public_sha256": "fe88716f5d5bc1d647da6238b7379145730a61626ee01306ea8194c76066fbec",
       "localization": "English prose; control structures and machine identifiers preserved.",
       "pre_graph_display_sha256": "6a87a495eb3698b1a49e053ffcc109b28d94a59e9dd29cb3399a62279e196d3d",
@@ -244,7 +251,7 @@
       "twitch_sli_resilience": "Locally checked candidate only; production application held for fresh task.",
       "pre_pi_publisher_source_port_sha256": "1a57bd86d9466793daecec2756b29cd2ca24cad934a2dfd795a231e098a230e8",
       "pi_publisher_source_port": "2026-10-14 source reconciliation; portable English code and retained public protections; no live changes.",
-      "port_date_jst": "2026-10-30",
+      "port_date_jst": "2026-11-01",
       "pre_documentation_restructure_sha256": "3d45a66068211ff9944ba891a0017e9189c71daa1b0b4945ae1970f8c2b5c045",
       "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json.",
       "pre_twitch_observation_public_sha256": "c4d59eabef48c302df0d72b7ae0d6a6216f99e199f98e4c9c0a0b92631516c13",
@@ -288,7 +295,13 @@
       "before_route_transition_audit_sha256": "c9048a1a2281a5fe6d75412d378d85711bd89468923a2a6bc2f9917c8065a177",
       "route_transition_audit": "route-transition-audit-20261031",
       "before_boottime_media_health_sha256": "929bcd26a6fcf1c48523dda82211690dc5306887350d2b3d2daf7f32cf856d65",
-      "boottime_media_health": "boottime-media-health-20261031"
+      "boottime_media_health": "boottime-media-health-20261031",
+      "before_thumbnail_transfer_recovery_sha256": "3b50fe9e3cc95036c0743b750e39f9d0aea17612b1859162bd7426ce62cfe23f",
+      "thumbnail_transfer_recovery": "thumbnail-transfer-recovery-20261101",
+      "thumbnail_k3s_migration": "publication/thumbnail-k3s-migration-20261101.json",
+      "before_notification_observation_time_sha256": "5db0532f523efe442a4ead53d136350ef67ea6f8b6336489051218b783dede4a",
+      "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
+      "notification_observation_time_source_sha256": null
     },
     {
       "path": "docs/README.md",
@@ -323,7 +336,7 @@
       "decision": "Optional Airspy reception guard; preserve the durable one-extra-attempt cap, remove personal configuration writers and keep raw evidence private.",
       "before_sha256": "f5b4bb471cbc41668422f4ae9fdeff39e146dc528d0646540a39f23b0a348df5",
       "source_sha256": null,
-      "public_sha256": "de3dc74c3a8ca3b8620e97f57251a4b85d739927b0b9ec8f4250184b906cb4eb",
+      "public_sha256": "ae7e39d185704eed824fec533351f4713fa3369815ad95cb92647279e8304e7b",
       "port_date_jst": "2026-10-30",
       "pre_documentation_restructure_sha256": "5ae4f928c8d5f77be2e827787230606ffbf1e4d7c97d62b9d3afe0bf43048e93",
       "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json.",
@@ -347,16 +360,17 @@
       "before_route_transition_audit_sha256": "3e55a043c9bacc32c34e769b519f48277f2648cae8ed007c244aec9d04bdb2ce",
       "route_transition_audit": "route-transition-audit-20261031",
       "before_boottime_media_health_sha256": "d0b6ee5d2ccb5f92fcc4fc272002ee37d534b5348b6fec30e8de0125bfd9cbb9",
-      "boottime_media_health": "boottime-media-health-20261031"
+      "boottime_media_health": "boottime-media-health-20261031",
+      "thumbnail_k3s_migration": "publication/thumbnail-k3s-migration-20261101.json"
     },
     {
       "path": "docs/current-status.md",
       "source_role": "manual-maintenance-source-or-public-guide",
-      "decision": "Port manual maintenance with an English interface, canonical observer imports, configured host binding and no runtime secrets.",
+      "decision": "English contract, dated evidence and navigation for the bounded thumbnail-transfer and current-age display correction.",
       "before_sha256": "033b36e0cdb49457cb1521add7182355bf42aa5edf1051e6230d62c4d1e80a4b",
       "source_sha256": null,
-      "public_sha256": "b6d83960d01a581f4872f84424d270574822431c76634541af4f8077db1e1538",
-      "port_date_jst": "2026-10-30",
+      "public_sha256": "d0617bc3c85dd683ad3c9cd07df34d5865cd3deba34c6d5202d4e016e75edbc9",
+      "port_date_jst": "2026-11-01",
       "documentation_restructure": "New single page for volatile state.",
       "pre_twitch_observation_public_sha256": "040eac29174151f51e473f7f85e4aa23ff994be0079b3d4c011623b6ec7864ca",
       "pre_clock_monitor_public_sha256": "33263da6f88e0f7719830898ada90abd2a7e89c391a9684fdd7b604517bc020f",
@@ -403,7 +417,16 @@
       "before_route_transition_audit_sha256": "e1118c0a64fc4fdfaea784a221d7b867e8e2c1aa8a82dc2cdebe4c2e7d809df7",
       "route_transition_audit": "route-transition-audit-20261031",
       "before_boottime_media_health_sha256": "f3fb0c2ddfc0ca930ce698da92fe350ffdfa945982b69752925b941bf637ac3e",
-      "boottime_media_health": "boottime-media-health-20261031"
+      "boottime_media_health": "boottime-media-health-20261031",
+      "before_thumbnail_transfer_recovery_sha256": "b6d83960d01a581f4872f84424d270574822431c76634541af4f8077db1e1538",
+      "thumbnail_transfer_recovery": "thumbnail-transfer-recovery-20261101",
+      "thumbnail_k3s_migration": "publication/thumbnail-k3s-migration-20261101.json",
+      "thumbnail_public_completion": "publication/thumbnail-public-completion-20261101.json",
+      "before_notification_observation_time_sha256": "9d1af0f8642a41c61a8aecfa11c0309a55acfd064ac59cde8fe6a3a7eede4059",
+      "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
+      "notification_observation_time_source_sha256": null,
+      "before_notification_source_timing_fix_sha256": "3c4d04e26a7737925e1fcceeb11496513f8ee4dcb7bbc928c1da1e75b9826c14",
+      "notification_source_timing_fix": "publication/notification-source-timing-fix-20261101.json"
     },
     {
       "path": "docs/design-decisions-for-review.md",
@@ -955,9 +978,9 @@
       "path": "docs/v3/twitch-thumbnail-monitor.md",
       "before_sha256": "a941e0189515220a31aa989ab6f0290290183dcfb269a4d8de68e6661f668f88",
       "source_sha256": null,
-      "public_sha256": "c58ae36a1afd2266b8ccc7f84777b71478e990674934b5848c405128d16d564a",
+      "public_sha256": "35888bdbb412f8a38ca3d9db9ccf97a4f4f39ff5ce32e02e9ab94b5b8f826e86",
       "source_role": "public-documentation",
-      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "decision": "English contract, dated evidence and navigation for the bounded thumbnail-transfer and current-age display correction.",
       "thumbnail_clock_port": "2026-10-22 committed source through 740bcc00; concurrent review excluded.",
       "pre_thumbnail_clock_public_sha256": null,
       "pre_thumbnail_review_public_sha256": "4e1557062b137358c8ea048a378b171d32bd24785b4b0259f59647c8b062110f",
@@ -968,7 +991,11 @@
       "clock_documentation_review": "2026-10-22 observation-layer table, clock case study and current-status consolidation; no code or runtime change.",
       "thumbnail_evidence_port": "2026-10-22 conservative OCR, bounded evidence, ROI comparison and diagnostics.",
       "pre_observability_reconciliation_sha256": "13bcc67a50609e8535239afe86bf8b05619f0f416aab4bcfbdf7b832aa84ff1d",
-      "port_date_jst": "2026-10-23"
+      "port_date_jst": "2026-11-01",
+      "before_thumbnail_transfer_recovery_sha256": "c58ae36a1afd2266b8ccc7f84777b71478e990674934b5848c405128d16d564a",
+      "thumbnail_transfer_recovery": "thumbnail-transfer-recovery-20261101",
+      "thumbnail_k3s_migration": "publication/thumbnail-k3s-migration-20261101.json",
+      "thumbnail_public_completion": "publication/thumbnail-public-completion-20261101.json"
     },
     {
       "path": "examples/fifo-recovery/measurements-20261024.json",
@@ -1370,10 +1397,13 @@
       "decision": "Twitch observation and OCI-aware notifications; public bindings and English text retained",
       "before_sha256": null,
       "source_sha256": "a2775eb4335d0641a586f1cb74a73d775ae652da2974182c075ec56d790ced6e",
-      "public_sha256": "6fe8317ea778bfdeaaced4815422b7de17d82219379dd624831823654d0ff035",
+      "public_sha256": "b0825727e0abb53a413a45f1187546f2a64dc41b61985da2485d0df5255d9474",
       "port_date_jst": "2026-10-21",
       "pre_twitch_observation_public_sha256": "975734669111c3d64a85f1d95983d19b7f5d076befcbe51ebd369599746e7a03",
-      "pre_daily_reminder_public_sha256": "fdbad0e950af8f82ea903d8e8508db03abd44355f7a34865698f21200e638ed1"
+      "pre_daily_reminder_public_sha256": "fdbad0e950af8f82ea903d8e8508db03abd44355f7a34865698f21200e638ed1",
+      "before_notification_observation_time_sha256": "6fe8317ea778bfdeaaced4815422b7de17d82219379dd624831823654d0ff035",
+      "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
+      "notification_observation_time_source_sha256": "1c5143b5e6ea1e4e9e662729e4d0b8c885596fe247bfc019a08471d035c9e6fb"
     },
     {
       "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/twitch_public.py",
@@ -1721,10 +1751,13 @@
       "decision": "Twitch observation and OCI-aware notifications; public bindings and English text retained",
       "before_sha256": null,
       "source_sha256": "868661660744acba245000d26760ffa1b65244d6fc690f55fa0196bb0414b891",
-      "public_sha256": "d7f56704a6b7ebc440aa2fc79d725d2db4857607f0533f069fae121d0a37e633",
+      "public_sha256": "bfd201a8a738b83c1be1e6e9b4540b4885396edf1e921488cf3862d77d0936a5",
       "port_date_jst": "2026-10-21",
       "pre_twitch_observation_public_sha256": "beb21a3171439c36798a4b995cc8c4b4a36dc7f59a5abf1fda1ea985fdbbfe5a",
-      "pre_daily_reminder_public_sha256": "5622b008bf194b2fbc7304665b90f758c55fa6db7a07cac4f3ce77f7fb4cbfbf"
+      "pre_daily_reminder_public_sha256": "5622b008bf194b2fbc7304665b90f758c55fa6db7a07cac4f3ce77f7fb4cbfbf",
+      "before_notification_observation_time_sha256": "d7f56704a6b7ebc440aa2fc79d725d2db4857607f0533f069fae121d0a37e633",
+      "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
+      "notification_observation_time_source_sha256": "30d61340d27de04dd29f111a9fd7a1fad6f3364a27fbc28e9d6df3e147c6c8e0"
     },
     {
       "path": "monitoring-v4/tests/test_twitch_api_collector.py",
@@ -1820,19 +1853,6 @@
       "source_role": "public-deployment-example",
       "decision": "English prose; generic relay identity and operator configuration; algorithm and safety limits retained.",
       "port_date_jst": "2026-10-22"
-    },
-    {
-      "path": "ops/config/twitch_thumbnail.example.json",
-      "before_sha256": "c59fc8e08693e87af6e88e0245e0aad8c1d987e5fed8c266e4814662f965189c",
-      "source_sha256": null,
-      "public_sha256": "cc53ca27e8c9ff00f566d940fcdf85ae6b6befd68b48d4e432316b46d4005605",
-      "source_role": "public-documentation-or-configuration",
-      "decision": "Additional conservative OCR, bounded ROI evidence and diagnostics; existing public bindings; source port only.",
-      "thumbnail_clock_port": "2026-10-22 committed source through 740bcc00; concurrent review excluded.",
-      "pre_thumbnail_clock_public_sha256": null,
-      "pre_thumbnail_review_public_sha256": "54584badd1a82c5346f575a3c34ec8bc80d80d8b171bf455d856af207c3a933c",
-      "thumbnail_review_port": "2026-10-22 stream rollover, bounded gaps and conservative OCR retry.",
-      "thumbnail_evidence_port": "2026-10-22 conservative OCR, bounded evidence, ROI comparison and diagnostics."
     },
     {
       "path": "ops/fifo-lab/README.md",
@@ -2166,9 +2186,10 @@
       "source_role": "development-public-ui",
       "decision": "adapted",
       "before_sha256": "bab0d1b52ad3a7ad696a333d27c57c8e439bad9c2e05349373fa5025f50521d4",
-      "source_sha256": "9b4737034691f9fcb340a82c03da7860dbf2a2e8cfeba83452acdd004525c0cd",
-      "public_sha256": "9b4737034691f9fcb340a82c03da7860dbf2a2e8cfeba83452acdd004525c0cd",
-      "port_date_jst": "2026-10-20"
+      "source_sha256": "356d84de419a82cdb1253bcf26e92799c22302b139c45d4018b37609c79c9887",
+      "public_sha256": "356d84de419a82cdb1253bcf26e92799c22302b139c45d4018b37609c79c9887",
+      "port_date_jst": "2026-10-20",
+      "thumbnail_public_completion": "publication/thumbnail-public-completion-20261101.json"
     },
     {
       "path": "ops/public-publisher/site/public/assets/ops-20261020.js",
@@ -2275,21 +2296,23 @@
       "source_role": "development-public-ui",
       "decision": "adapted",
       "before_sha256": "c973cf759460ed3c823ccf9c2f07ddb9dafd607a1607266cc7c3d11c3ec924de",
-      "source_sha256": "5fb12a55fd3a7a65e081890b2808b5e1e70fddec5d5a5a5092092a814c4f5f64",
-      "public_sha256": "5fb12a55fd3a7a65e081890b2808b5e1e70fddec5d5a5a5092092a814c4f5f64",
+      "source_sha256": "845608c6de82ef080686ce83a8b858e9eb8ac8113a2260aff238d0a52d14493b",
+      "public_sha256": "b9eaa6cfd21061dd485382259ea0c62164a41fb10c24002d21871a35e6a18446",
       "pre_graph_display_sha256": "cfadf662a3455f92df0f7ad67f767a2835285aebe9d2068a3b8c8ce3ab4888a9",
       "graph_display_change": "Observed link arrows, explicit direct-path inference, and timestamp-preserving charts.",
       "pre_twitch_sli_resilience_sha256": "86762c0461a6249d1d652160906ad02ef8340f1b74f99c399e3a6253f19caed0",
       "twitch_sli_resilience": "Locally checked candidate only; production application held for fresh task.",
-      "port_date_jst": "2026-10-20"
+      "port_date_jst": "2026-10-20",
+      "thumbnail_public_completion": "publication/thumbnail-public-completion-20261101.json"
     },
     {
       "path": "ops/public-publisher/site/scripts/build_public.py",
       "source_role": "development-public-ui",
       "decision": "adapted",
       "before_sha256": "f4c2e3d4a85d4f8731e1e2934dfaa44a50af829c5d9cbe8a88d41ce7362f84e5",
-      "source_sha256": "ac4d7eff384f4b9fb29c0a9c0de762f079618d62307432492607c92125719fd2",
-      "public_sha256": "f0cab5bb2433422ec585ab0a2f9524baef8fa4281ed5a2e64ac752b0100c445f"
+      "source_sha256": "762888c36920348127a2001d315c5b186fcd0b64d82364ef524539e50d8fc07a",
+      "public_sha256": "f288306d639b25fa72bd7de648858b17ec849f9c77740db9cc1d4e24432785ed",
+      "thumbnail_public_completion": "publication/thumbnail-public-completion-20261101.json"
     },
     {
       "path": "ops/public-publisher/site/scripts/collect_relay_public.py",
@@ -2345,20 +2368,22 @@
       "source_role": "public-pi-publisher-port",
       "decision": "public-allowlist-for-versioned-assets",
       "before_sha256": "46fea0718b2e4ff11a8928af96753d68f37cb77329f7e20d6934da81dc092abd",
-      "source_sha256": null,
-      "public_sha256": "87ae86f56dbe7c43b94246e8d93486e4bef21f8a5c74b5011e210c611065e8c2",
+      "source_sha256": "78b877a8b50687d651804b767335855ec248ca8c63b9c4b52eea68bcc4c10baa",
+      "public_sha256": "9864b4517e044fbaf872f67c247a6e55ad1d32bdbc55f6860b2117e033201bf1",
       "pre_pi_publisher_source_port_sha256": "83a2b329123bf7f24e8e502b1e73e887d09c66424f019b1b0f1abe062c7559b7",
       "pi_publisher_source_port": "2026-10-14 source reconciliation; portable English code and retained public protections; no live changes.",
-      "port_date_jst": "2026-10-20"
+      "port_date_jst": "2026-10-20",
+      "thumbnail_public_completion": "publication/thumbnail-public-completion-20261101.json"
     },
     {
       "path": "ops/public-publisher/site/systemd/stream-v3-public-publisher.env.example",
       "source_role": "public-pi-publisher-port",
       "before_sha256": "09ee5602761e86922bdc7d3e5d8053643c9ab3f2648da4180338fd8e37d7d18e",
-      "source_sha256": null,
-      "public_sha256": "503b2276e213e6750e80cb53fb9e95b4f97f903f2f8a15d238b054fdc9f2b4f6",
+      "source_sha256": "c22c95ed5ebd134763b794b14e7dbe601729f053a4640c137300cc5930b71ef7",
+      "public_sha256": "451c7d088e86e56d47cd2468e08e765879b406a128126f7a4d64b6c8a4924056",
       "pi_publisher_source_port": "2026-10-14 source reconciliation; portable English code and retained public protections; no live changes.",
-      "decision": "Pi publisher source reconciliation, portable paths, English source guide, and mock-based validation."
+      "decision": "Pi publisher source reconciliation, portable paths, English source guide, and mock-based validation.",
+      "thumbnail_public_completion": "publication/thumbnail-public-completion-20261101.json"
     },
     {
       "path": "ops/public-publisher/site/tests/graphs-20261014.html",
@@ -2501,15 +2526,16 @@
     {
       "path": "ops/scripts/stream_v3_oci_monitor_exporter_overlay.py",
       "before_sha256": "f96019b548f2866bc3606c7ba0e4ba380de9951fe0ecb5bdea39ba7701efd9df",
-      "source_sha256": "848da939d0c2edeb9917926c8f0f53bcded997bd78e5ff8ce5d04b5ee49fa1dd",
-      "public_sha256": "c02bc63a9be50a14dc018e2c070690dfadd5308dbdaf0c64eea14f403dfae414",
+      "source_sha256": "73f401cd61059760baf04c926cac36afc1a7fffcb9ee824479a9bc7da6c02a91",
+      "public_sha256": "cf5f2fb200abf9f610a1bc8c6d1343081f2e9f833f73b0b2bf3495f086dc263c",
       "source_role": "public-source-adaptation",
       "decision": "Review fixes, English prose and existing public bindings; no deployment or unrelated working-copy edits.",
       "port_date_jst": "2026-10-22",
       "pre_thumbnail_clock_public_sha256": "ad866eb3c1fb85e27c480fba8ecc2a38e10e6cd6ccbfbbf7d2e6569519be65f2",
       "thumbnail_clock_port": "2026-10-22 committed source through 740bcc00; concurrent review excluded.",
       "pre_thumbnail_review_public_sha256": "f96019b548f2866bc3606c7ba0e4ba380de9951fe0ecb5bdea39ba7701efd9df",
-      "thumbnail_review_port": "2026-10-22 stream rollover, bounded gaps and conservative OCR retry."
+      "thumbnail_review_port": "2026-10-22 stream rollover, bounded gaps and conservative OCR retry.",
+      "thumbnail_k3s_migration": "publication/thumbnail-k3s-migration-20261101.json"
     },
     {
       "path": "ops/scripts/stream_v3_oci_monitor_native_facts.py",
@@ -2537,20 +2563,24 @@
       "path": "ops/scripts/stream_v3_prometheus_exporter.py",
       "before_sha256": "ec64855f4e88302ac5152ff4ce4f08e0fabaea9b1c6060f559eaf9915775d34e",
       "source_sha256": null,
-      "public_sha256": "90f13120181e53186d4c7d102a8a70513e746e8e027ca89b0f7f59d842ab2168",
+      "public_sha256": "60fc8ac2e4aabc99f5fd2487ba9495a0ffd5fa9ea01280c3fb4c999ca43b7eb3",
       "source_role": "public-adaptation",
       "decision": "Curated English public documentation/configuration or a public-binding regression; no live deployment.",
-      "port_date_jst": "2026-10-22"
+      "port_date_jst": "2026-10-22",
+      "before_notification_observation_time_sha256": "90f13120181e53186d4c7d102a8a70513e746e8e027ca89b0f7f59d842ab2168",
+      "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
+      "notification_observation_time_source_sha256": "d71f0f9299d56c86e20dc2f538d9ee097f07978d89175c73cf41c097e3119a1d"
     },
     {
       "path": "ops/scripts/stream_v3_twitch_thumbnail_source.py",
       "before_sha256": null,
-      "source_sha256": "0d7c02944df2278500fd99d4202ec617af476ba7d49e9cc32693249d583930d3",
-      "public_sha256": "78cbd1b06dad4f8d776180be39948ced6256daced614111016cb073734491ebd",
+      "source_sha256": "4c56123830730803c8af20a36d5ab87cdec6c97a48ed0a055c73e51a682bb40b",
+      "public_sha256": "0876fefd2e5cdf9be7ddaaa0c6b684cbaee6ca244727cf51327bb5608db81d25",
       "source_role": "public-source-adaptation",
       "decision": "English prose and reviewed public bindings; no live deployment, publisher/UI changes or concurrent review patch.",
       "thumbnail_clock_port": "2026-10-22 committed source through 740bcc00; concurrent review excluded.",
-      "pre_thumbnail_clock_public_sha256": null
+      "pre_thumbnail_clock_public_sha256": null,
+      "thumbnail_k3s_migration": "publication/thumbnail-k3s-migration-20261101.json"
     },
     {
       "path": "ops/scripts/validate_k3s_manifests.py",
@@ -2575,8 +2605,9 @@
       "decision": "scan every tracked or new file for the private workspace path against a reasoned allowlist",
       "before_sha256": "12b0443c3cde3796d076d1b056e6ade6d06e5a12cc6b711c9b7bda25720604d6",
       "source_sha256": null,
-      "public_sha256": "ab2039196052bad4809f26976773f4577fb8c9009548c76203d4ce0f55eae0cd",
-      "port_date_jst": "2026-10-22"
+      "public_sha256": "a2d3358e48a94ecb7de4dd032155cfc4ad39b52f0771028ff6d5bf67954188cc",
+      "port_date_jst": "2026-10-22",
+      "thumbnail_k3s_migration": "publication/thumbnail-k3s-migration-20261101.json"
     },
     {
       "path": "ops/selfheal/fallback_controller.py",
@@ -2889,18 +2920,6 @@
       "source_sha256": null,
       "public_sha256": "11b7cd05cd8e366e84174b6ee165892a7586cf5f86a3911026015e8df020fcfa",
       "port_date_jst": "2026-10-23"
-    },
-    {
-      "path": "ops/systemd/stream-v3-twitch-thumbnail.service",
-      "before_sha256": "dcc4fea9792f2f3ac3b2f4725b8b438e1c9db4460546ae983d9245c86fe5654b",
-      "source_sha256": "1fd900ecf290d7422925673a0769076ea516d55693c03825436415a34619e75a",
-      "public_sha256": "91959219de608358e89927b53370b250a40e76ee0efde407a4e3b3a7776f02e2",
-      "source_role": "public-source-adaptation",
-      "decision": "Review fixes, English prose and existing public bindings; no deployment or unrelated working-copy edits.",
-      "thumbnail_clock_port": "2026-10-22 committed source through 740bcc00; concurrent review excluded.",
-      "pre_thumbnail_clock_public_sha256": null,
-      "pre_thumbnail_review_public_sha256": "dcc4fea9792f2f3ac3b2f4725b8b438e1c9db4460546ae983d9245c86fe5654b",
-      "thumbnail_review_port": "2026-10-22 stream rollover, bounded gaps and conservative OCR retry."
     },
     {
       "path": "publication/continuity-checkpoint.json",
@@ -3754,9 +3773,12 @@
       "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
       "before_sha256": "31e3784424c19bb583b1d685f144833205571b1665a0afddebb431be0122c082",
       "source_sha256": "cac9b92a19defd114e177fd8e0ad966c8cf05b655805bf5b54db73bd3c06eaee",
-      "public_sha256": "9fd2785fb59b6c095f4f164def694fd1a9e6ccf79ab214610da67d9bb80d1b88",
+      "public_sha256": "34409b15582b374191e8114c25022ae91c0e754dc7c654565666ce8b56d3e88b",
       "port_date_jst": "2026-10-23",
-      "pre_observability_reconciliation_sha256": "c8fccee7c195cf44ba0c1265399b2334b8e94d881b4042c23be5d0fe62f6a686"
+      "pre_observability_reconciliation_sha256": "c8fccee7c195cf44ba0c1265399b2334b8e94d881b4042c23be5d0fe62f6a686",
+      "before_notification_observation_time_sha256": "9fd2785fb59b6c095f4f164def694fd1a9e6ccf79ab214610da67d9bb80d1b88",
+      "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
+      "notification_observation_time_source_sha256": "3be5c7e303a16ce6a9942dc94f098bb6c61670b32efba845761cf2f36c1539d0"
     },
     {
       "path": "src/stream_core/engine/config.py",
@@ -3837,7 +3859,10 @@
       "decision": "English prose and bounded Unicode data exceptions",
       "before_sha256": "17f96d6672c6019e36cc43f34c3c7b102b603eef5a67b8bcd8d306919ad79ddd",
       "source_sha256": null,
-      "public_sha256": "7f86d0c742b6718caa6eb7d1d01fd44b773375753bc4e2371d0e48da603daa6f"
+      "public_sha256": "619cca3ae90c52febe7f466fbf2d0d1e63082814c450c57a4254f324d1c08e0c",
+      "before_notification_observation_time_sha256": "7f86d0c742b6718caa6eb7d1d01fd44b773375753bc4e2371d0e48da603daa6f",
+      "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
+      "notification_observation_time_source_sha256": "78aa46ddd12596205147f328ce8b82f5bc3e8dcdb4a9f4c75d46cb866d45c3d9"
     },
     {
       "path": "src/stream_core/notifications/connectivity_correlation.py",
@@ -3853,11 +3878,14 @@
       "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
       "before_sha256": "9d13000b13e49fe1588cec2333948f8c790fa2c3b7006ca0e264f2cf612c42f1",
       "source_sha256": "e63b94f898789fbcb19b1782a4da84d5831f337d7d634cb05ee83eed96b693b4",
-      "public_sha256": "93e6534d8ae39c2daed447028b62611e5f9573a591a052e351cff8aaffdbd881",
+      "public_sha256": "a93c958f66ed34912714904b4dfc312a27273ee9e4d562e3dfa34a32acae9ca7",
       "prior_public_sha256": "3096bfd3e78e238408c2943bbcce22103618a5cacd3d80bb14be424366524d70",
       "localization": "English prose; control structures and machine identifiers preserved.",
       "pre_observability_reconciliation_sha256": "29068d15becd9d0df908c4c2095e77451a8c3c995ffeec4283e2434a4c2a67cd",
-      "port_date_jst": "2026-10-23"
+      "port_date_jst": "2026-10-23",
+      "before_notification_observation_time_sha256": "93e6534d8ae39c2daed447028b62611e5f9573a591a052e351cff8aaffdbd881",
+      "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
+      "notification_observation_time_source_sha256": "1694502be3a740cc6e1a86250a53ef97c61ad32b0a86c0dd362010d0d3298238"
     },
     {
       "path": "src/stream_core/notifications/outbox.py",
@@ -3874,9 +3902,12 @@
       "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
       "before_sha256": "9f53c130d71a55e2569392013a9bcbfd4c07afabbcc121032633a91964f79091",
       "source_sha256": "8dde8f6e5755fedfb7e38c91145bcb9175e00e30dd0a0c7998d417eac3242470",
-      "public_sha256": "e04fb45801678eafc391e82e1f758b0248d9dd07c6a076b1410ffd078eaae607",
+      "public_sha256": "a175e7cdd93c6751d629012a6d48afef662cbd328ae2bcbf0ec7285751c4a4ea",
       "pre_observability_reconciliation_sha256": "c292f4d317a38a2e2fa78be8a155ba07ee777509454f6e30c2c4bf469c646a4f",
-      "port_date_jst": "2026-10-23"
+      "port_date_jst": "2026-10-23",
+      "before_notification_observation_time_sha256": "e04fb45801678eafc391e82e1f758b0248d9dd07c6a076b1410ffd078eaae607",
+      "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
+      "notification_observation_time_source_sha256": "b45122b933b97efb3acc746ee1bd10060761f36488d0ce6418731e4f35cb7a5f"
     },
     {
       "path": "src/stream_core/notifications/status_loop.py",
@@ -3884,11 +3915,14 @@
       "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
       "before_sha256": "3ed318edb00f27873619f9d1ae6125dd4c79056a3de082c489fb88024da32df0",
       "source_sha256": "b7bdd17354cb23e4721cf86e1bcb36713d732bcb7076b51fb35ec07a44af0c89",
-      "public_sha256": "6cc423daecec5aa68c2991733761616b1c0e10300186a45580721b10f467b65b",
+      "public_sha256": "44b75f9fc9da73114b931e27e185391c196f9d24036b68f8ce880f38974fb984",
       "pre_observability_reconciliation_sha256": "5fbfef066cb27696f1df5e7d25d2555fa29e6e82cf03b282f1a45d8d691c7da7",
       "port_date_jst": "2026-10-23",
       "before_youtube_egress_fix_sha256": "50b64cea1e8ced643f193a67d0ba92f0eca25b0fd68277304127d7bc8f55d8b1",
-      "youtube_egress_reconciliation": "youtube-egress-fix-20261031"
+      "youtube_egress_reconciliation": "youtube-egress-fix-20261031",
+      "before_notification_observation_time_sha256": "6cc423daecec5aa68c2991733761616b1c0e10300186a45580721b10f467b65b",
+      "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
+      "notification_observation_time_source_sha256": "1aa5f23874b5460bc8248c0531bcb36649fe054177878b76ff6d18ad8a27f84a"
     },
     {
       "path": "src/stream_core/notifications/upload_source.py",
@@ -3985,17 +4019,19 @@
     {
       "path": "src/stream_v3/twitch_thumbnail.py",
       "before_sha256": "c720c2c193ee5a6752a9104d58478135296c98db1412b755552beefc172759ef",
-      "source_sha256": "28d44bd42690e02b26941f5294899839f15f1d995003013c864c28fb0aafc7cd",
-      "public_sha256": "28d44bd42690e02b26941f5294899839f15f1d995003013c864c28fb0aafc7cd",
+      "source_sha256": "a23cc03c783e364597e148cf549572adfbd8ee14fe2e66fa2d116de53dc1f1c4",
+      "public_sha256": "a23cc03c783e364597e148cf549572adfbd8ee14fe2e66fa2d116de53dc1f1c4",
       "source_role": "public-adapted-source-or-regression",
-      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "decision": "Selected thumbnail transfer deadlines, private transfer diagnostics and missing-current-value renderer regression; preserve provider identity, request cadence and historical gaps.",
       "thumbnail_clock_port": "2026-10-22 committed source through 740bcc00; concurrent review excluded.",
       "pre_thumbnail_clock_public_sha256": null,
       "pre_thumbnail_review_public_sha256": "355649aa69299e591079582144cd2c9e01ae93cc741dbdc6f2e0d6cfc306d730",
       "thumbnail_review_port": "2026-10-22 stream rollover, bounded gaps and conservative OCR retry.",
       "thumbnail_evidence_port": "2026-10-22 conservative OCR, bounded evidence, ROI comparison and diagnostics.",
       "pre_observability_reconciliation_sha256": "38698761e6567c9d606efc63781b752ee138d27c44aa42a6de3a8e3fccd03c20",
-      "port_date_jst": "2026-10-23"
+      "port_date_jst": "2026-11-01",
+      "before_thumbnail_transfer_recovery_sha256": "28d44bd42690e02b26941f5294899839f15f1d995003013c864c28fb0aafc7cd",
+      "thumbnail_transfer_recovery": "thumbnail-transfer-recovery-20261101"
     },
     {
       "path": "src/stream_v3/twitch_thumbnail_evidence.py",
@@ -4009,8 +4045,8 @@
     {
       "path": "src/stream_v3/twitch_thumbnail_metrics.py",
       "before_sha256": "66aeff09e88b66b30d513fa17cc560d222786484587f4a6745fd68ec7ba9425b",
-      "source_sha256": "fb976748d32ab423143be44fcd85c4a1efe359b3b6bf8617d561ea920d3ef566",
-      "public_sha256": "fb976748d32ab423143be44fcd85c4a1efe359b3b6bf8617d561ea920d3ef566",
+      "source_sha256": "559f5a7185ac1217081f59b90ce4d0752537500c091526e4464675e64fb1ba7a",
+      "public_sha256": "559f5a7185ac1217081f59b90ce4d0752537500c091526e4464675e64fb1ba7a",
       "source_role": "public-adapted-source-or-regression",
       "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
       "thumbnail_clock_port": "2026-10-22 committed source through 740bcc00; concurrent review excluded.",
@@ -4019,22 +4055,26 @@
       "thumbnail_review_port": "2026-10-22 stream rollover, bounded gaps and conservative OCR retry.",
       "thumbnail_evidence_port": "2026-10-22 conservative OCR, bounded evidence, ROI comparison and diagnostics.",
       "pre_observability_reconciliation_sha256": "f94d943b42d135b99a011dd6a62af53cfad5ef5970f01112ca49d929d0aa69df",
-      "port_date_jst": "2026-10-23"
+      "port_date_jst": "2026-10-23",
+      "thumbnail_k3s_migration": "publication/thumbnail-k3s-migration-20261101.json"
     },
     {
       "path": "src/stream_v3/twitch_thumbnail_worker.py",
       "before_sha256": "c8a2c94ba934da373b484cb6feeefb5c8bc06ffd6a83053491fdc813c0c61cb2",
-      "source_sha256": "96af0c3628018b1607c3d36b4e60e81801e37d5c8e2cdc68db7deb8250530759",
-      "public_sha256": "96af0c3628018b1607c3d36b4e60e81801e37d5c8e2cdc68db7deb8250530759",
+      "source_sha256": "5cb3ac4fc60d12aaaa0abcf1864ae15558375eadcd7f57b97665a57dfc3638bc",
+      "public_sha256": "5cb3ac4fc60d12aaaa0abcf1864ae15558375eadcd7f57b97665a57dfc3638bc",
       "source_role": "public-adapted-source-or-regression",
-      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "decision": "Selected thumbnail transfer deadlines, private transfer diagnostics and missing-current-value renderer regression; preserve provider identity, request cadence and historical gaps.",
       "thumbnail_clock_port": "2026-10-22 committed source through 740bcc00; concurrent review excluded.",
       "pre_thumbnail_clock_public_sha256": null,
       "pre_thumbnail_review_public_sha256": "dbb368d44d7294115c14d84cd5013421593177182fcb5c416f3d14b960bc5cac",
       "thumbnail_review_port": "2026-10-22 stream rollover, bounded gaps and conservative OCR retry.",
       "thumbnail_evidence_port": "2026-10-22 conservative OCR, bounded evidence, ROI comparison and diagnostics.",
       "pre_observability_reconciliation_sha256": "58350ba767ea614875cdc0f2d41daf4a3ecc9375aef02c4f206fa57081b73299",
-      "port_date_jst": "2026-10-23"
+      "port_date_jst": "2026-11-01",
+      "before_thumbnail_transfer_recovery_sha256": "96af0c3628018b1607c3d36b4e60e81801e37d5c8e2cdc68db7deb8250530759",
+      "thumbnail_transfer_recovery": "thumbnail-transfer-recovery-20261101",
+      "thumbnail_k3s_migration": "publication/thumbnail-k3s-migration-20261101.json"
     },
     {
       "path": "src/stream_v3/verified_clock.py",
@@ -4104,9 +4144,12 @@
       "source_role": "public-adapted-source-or-regression",
       "before_sha256": "13b14aaec86377f30a21cb7e86c28191c4f38f301c47f1ce9b89b460c9ffb8d8",
       "source_sha256": "031a7a70e1baa91cbba781bcf7a5ae0640116eb09d625f00599ac5c6237d8bd3",
-      "public_sha256": "c83824a45842eff8c4ccfb66d9370454890b99e509b4b017267a0f7d415dae76",
+      "public_sha256": "9e94aae3831aa301854668097881c503f605ecf7bdbc66f6a64a365eca63c98a",
       "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
-      "port_date_jst": "2026-10-23"
+      "port_date_jst": "2026-10-23",
+      "before_notification_observation_time_sha256": "c83824a45842eff8c4ccfb66d9370454890b99e509b4b017267a0f7d415dae76",
+      "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
+      "notification_observation_time_source_sha256": "b9724fa1f4facae7f5150d28f998bbf22d92c4ce6b42214214b3c0fffa93872e"
     },
     {
       "path": "src/watchers/youtube_watchdog_core/process.py",
@@ -4393,13 +4436,14 @@
     {
       "path": "tests/test_oci_monitor_probe.py",
       "before_sha256": null,
-      "source_sha256": "008cb9e39fae6587a863b7544647da08dcf6010d722b4ac30d5c2e6368696ae4",
-      "public_sha256": "008cb9e39fae6587a863b7544647da08dcf6010d722b4ac30d5c2e6368696ae4",
+      "source_sha256": "31b5582d4e24678dd34f6802f068970a5aa952a8acda8807918bb657c726d3c3",
+      "public_sha256": "0b7d2ea3b5f346f5ea172ba572df28fa36565636ecb270db6a5c44b458957aca",
       "source_role": "selected-development-source",
       "decision": "Native clock evidence and current-ROI-first UTC retry; preserve generic public host bindings, English prose, existing thresholds and unrelated edits.",
       "port_date_jst": "2026-10-23",
       "pre_relay_clock_native_fallback_sha256": "f56d56e38a1140d1916d3b82bbb8b6cdfb2ed668ac5ca1375d105e3cb3a72139",
-      "relay_clock_native_fallback_port": "2026-10-23 selected source and public-safe documentation; no deployment, commit or push."
+      "relay_clock_native_fallback_port": "2026-10-23 selected source and public-safe documentation; no deployment, commit or push.",
+      "thumbnail_k3s_migration": "publication/thumbnail-k3s-migration-20261101.json"
     },
     {
       "path": "tests/test_operational_replay_contracts.py",
@@ -4449,8 +4493,9 @@
       "source_role": "public-validation",
       "decision": "mock-all-provider-collectors-in-public-builder-test",
       "before_sha256": "e5c2656321f55acaa4d888549798e68b1e106cc44e11b9dfe25378cf0a86a7e8",
-      "source_sha256": null,
-      "public_sha256": "73576cbf8dff19446500943b95917c90341d0b2e0e1cdc57dd892026a5f35c55"
+      "source_sha256": "367d3bf6be98b02149da7e7775de31008639b550ea9f4f6e6b7e9d65540594c5",
+      "public_sha256": "47d118794d808e4b3f7cf890544d1878f447d016b664b2a5ccf0abdb0231bc5e",
+      "thumbnail_public_completion": "publication/thumbnail-public-completion-20261101.json"
     },
     {
       "path": "tests/test_public_relay.py",
@@ -4620,17 +4665,20 @@
     {
       "path": "tests/test_twitch_thumbnail.py",
       "before_sha256": "ac082248e6a972b6e2120a6e08a7157e1e81011d10d7778a95e11d444e39fd77",
-      "source_sha256": "4e4c318ba6db940102b4e1124b876f5cf5a544ea90bf95725ed5b92b1da2d5c2",
-      "public_sha256": "4e4c318ba6db940102b4e1124b876f5cf5a544ea90bf95725ed5b92b1da2d5c2",
+      "source_sha256": "6ca4f1a221350ce84b24cd9dec016a39ec5eec28586ec4d697ed5a89d84cf588",
+      "public_sha256": "6ca4f1a221350ce84b24cd9dec016a39ec5eec28586ec4d697ed5a89d84cf588",
       "source_role": "public-adapted-source-or-regression",
-      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "decision": "Selected thumbnail transfer deadlines, private transfer diagnostics and missing-current-value renderer regression; preserve provider identity, request cadence and historical gaps.",
       "thumbnail_clock_port": "2026-10-22 committed source through 740bcc00; concurrent review excluded.",
       "pre_thumbnail_clock_public_sha256": null,
       "pre_thumbnail_review_public_sha256": "5f63fb73846046c183ef5585db6410b3641532a194a6064883b6711a395a6f49",
       "thumbnail_review_port": "2026-10-22 stream rollover, bounded gaps and conservative OCR retry.",
       "thumbnail_evidence_port": "2026-10-22 conservative OCR, bounded evidence, ROI comparison and diagnostics.",
       "pre_observability_reconciliation_sha256": "e5d1a8f40488b2c6a911fccadd15a34834bd3bd37cd11abb9c94f7cb70cc0c69",
-      "port_date_jst": "2026-10-23"
+      "port_date_jst": "2026-11-01",
+      "before_thumbnail_transfer_recovery_sha256": "4e4c318ba6db940102b4e1124b876f5cf5a544ea90bf95725ed5b92b1da2d5c2",
+      "thumbnail_transfer_recovery": "thumbnail-transfer-recovery-20261101",
+      "thumbnail_k3s_migration": "publication/thumbnail-k3s-migration-20261101.json"
     },
     {
       "path": "tests/test_twitch_thumbnail_api_compatibility.py",
@@ -5178,10 +5226,14 @@
       "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/clock_mesh.py",
       "source_role": "public-clock-contract",
       "decision": "selected-clock-contract-port",
-      "public_sha256": "336b290c5391c63e8671bee74eba969072c819d426a5f73eca0421ca038571f6",
+      "public_sha256": "d237265b5c076cc6c5905192df7e0704ac8d8ff2b379511c9c141af55f6e4954",
       "clock_contract_port": "2026-10-31",
       "source_sha256": "292e54613a6d84cb717e91fe4e38156a1feee720085ca5c42cd05f413868b388",
-      "clock_contract_reconciliation": "clock-port-packaging-20261031"
+      "clock_contract_reconciliation": "clock-port-packaging-20261031",
+      "before_notification_observation_time_sha256": "336b290c5391c63e8671bee74eba969072c819d426a5f73eca0421ca038571f6",
+      "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
+      "notification_observation_time_source_sha256": "b06687ea8c361ebed770b743d8930bc47a4689808d7114a8f9c10e1783a0f444",
+      "public_aliases": "Generic identities and relay key match config/clock-mesh.example.json; private deployment aliases are intentionally excluded."
     },
     {
       "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/clock_contract.py",
@@ -5207,7 +5259,7 @@
       "path": "docs/v3/cross-host-observation-time.md",
       "source_role": "public-clock-contract",
       "decision": "selected-clock-contract-port",
-      "public_sha256": "e20bb1adea8fff5275d104ebe52f2e452dcd97c9ac27ca7b2f431fec82e36b8a",
+      "public_sha256": "43714144c9f6803618304734e1ae1cbe760fc1343a655c50ca87df3b6209bb60",
       "clock_contract_port": "2026-10-31",
       "source_sha256": null,
       "prior_public_sha256": "4f0ce257d46732d2dc2a7fc10220c72e409d898758e5ec552a2d686020dc646e",
@@ -5226,7 +5278,10 @@
       "before_route_transition_audit_sha256": "539ac80385e33febc137e28aafdaabfd085e68c76dfeeed455c2ab9133c51b52",
       "route_transition_audit": "route-transition-audit-20261031",
       "before_boottime_media_health_sha256": "d229856ccedf0c6fc46466e550ffd20188c8d325d1a685d14df5669f54a38330",
-      "boottime_media_health": "boottime-media-health-20261031"
+      "boottime_media_health": "boottime-media-health-20261031",
+      "before_notification_observation_time_sha256": "e20bb1adea8fff5275d104ebe52f2e452dcd97c9ac27ca7b2f431fec82e36b8a",
+      "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
+      "notification_observation_time_source_sha256": null
     },
     {
       "path": "publication/cross-host-clock-port-20261031.json",
@@ -5243,8 +5298,11 @@
       "path": "ops/scripts/sync_observation_clock.py",
       "source_role": "public-clock-packaging",
       "decision": "complete-public-clock-deployment-inputs",
-      "public_sha256": "ecba98e44693b48db4bffaac8078f3d5669bf953d5bbcf14995b0a0535957df9",
-      "clock_contract_reconciliation": "clock-port-packaging-20261031"
+      "public_sha256": "8d6644a4f24b4ffda6a8a63b3b04883dd761a12623857d0e273f9c2b951a4e1f",
+      "clock_contract_reconciliation": "clock-port-packaging-20261031",
+      "before_notification_observation_time_sha256": "ecba98e44693b48db4bffaac8078f3d5669bf953d5bbcf14995b0a0535957df9",
+      "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
+      "notification_observation_time_source_sha256": null
     },
     {
       "path": "monitoring-v4/deploy/systemd/stream-clock-mesh.service.in",
@@ -5673,6 +5731,407 @@
       "source_sha256": null,
       "public_sha256": "d79eded2b17012d022d316fff307f94c301724837b38e0d28172bd4792f3c0f4",
       "before_publication_check_sha256": null
+    },
+    {
+      "path": "ops/public-publisher/site/public/assets/ops-20261027-notices.js",
+      "source_role": "public-safe-source-or-dated-evidence",
+      "before_sha256": null,
+      "source_sha256": "691f352818056913feb7e8b29b1170d6ec550c67c7cbdb1e62ce01ce9711918a",
+      "public_sha256": "691f352818056913feb7e8b29b1170d6ec550c67c7cbdb1e62ce01ce9711918a",
+      "port_date_jst": "2026-11-01",
+      "thumbnail_transfer_recovery": "thumbnail-transfer-recovery-20261101",
+      "decision": "Selected thumbnail transfer deadlines, private transfer diagnostics and missing-current-value renderer regression; preserve provider identity, request cadence and historical gaps."
+    },
+    {
+      "path": "ops/public-publisher/site/tests/thumbnail-freshness-20261101.html",
+      "source_role": "public-safe-source-or-dated-evidence",
+      "before_sha256": null,
+      "source_sha256": "bbfd71e2dedfaebbd9e66c3970170708cf835ed3c2300a7d37e0b7e6e3adeaef",
+      "public_sha256": "bbfd71e2dedfaebbd9e66c3970170708cf835ed3c2300a7d37e0b7e6e3adeaef",
+      "port_date_jst": "2026-11-01",
+      "thumbnail_transfer_recovery": "thumbnail-transfer-recovery-20261101",
+      "decision": "Selected thumbnail transfer deadlines, private transfer diagnostics and missing-current-value renderer regression; preserve provider identity, request cadence and historical gaps."
+    },
+    {
+      "path": "docs/v3/thumbnail-transfer-recovery-2026-11-01.md",
+      "source_role": "public-safe-source-or-dated-evidence",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "a559b242a3b68391d3b4add9d0dbd534ace2fd668188190d201b6e41aebf4f61",
+      "port_date_jst": "2026-11-01",
+      "thumbnail_transfer_recovery": "thumbnail-transfer-recovery-20261101",
+      "decision": "English contract, dated evidence and navigation for the bounded thumbnail-transfer and current-age display correction."
+    },
+    {
+      "path": "docs/v3/thumbnail-k3s-migration-2026-11-01.md",
+      "source_role": "thumbnail-kubernetes-migration",
+      "decision": "selective-public-source-port",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "81cf7cd71f8b4b45a3b10e6a2e222ee30a52d5529f4731cdbefdc6ecb154bb92",
+      "thumbnail_k3s_migration": "publication/thumbnail-k3s-migration-20261101.json",
+      "thumbnail_public_completion": "publication/thumbnail-public-completion-20261101.json"
+    },
+    {
+      "path": "ops/kubernetes/twitch-thumbnail/Dockerfile",
+      "source_role": "thumbnail-kubernetes-migration",
+      "decision": "selective-public-source-port",
+      "before_sha256": null,
+      "source_sha256": "f722eb2270658678d0f3c32feebd7c39d744637ebbf983d168d9e793d74b72ca",
+      "public_sha256": "f722eb2270658678d0f3c32feebd7c39d744637ebbf983d168d9e793d74b72ca",
+      "thumbnail_k3s_migration": "publication/thumbnail-k3s-migration-20261101.json"
+    },
+    {
+      "path": "ops/kubernetes/twitch-thumbnail/README.md",
+      "source_role": "thumbnail-kubernetes-migration",
+      "decision": "selective-public-source-port",
+      "before_sha256": null,
+      "source_sha256": "e634f270f80297adfa257f2ce1dac66f1126afcfbff03504696805fde0aee017",
+      "public_sha256": "e634f270f80297adfa257f2ce1dac66f1126afcfbff03504696805fde0aee017",
+      "thumbnail_k3s_migration": "publication/thumbnail-k3s-migration-20261101.json"
+    },
+    {
+      "path": "ops/kubernetes/twitch-thumbnail/api-facts.conf.example",
+      "source_role": "thumbnail-kubernetes-migration",
+      "decision": "selective-public-source-port",
+      "before_sha256": null,
+      "source_sha256": "89cb65798bd934fc89051d7d61fbf7612403422a279a49e48bf0465ad421d057",
+      "public_sha256": "89cb65798bd934fc89051d7d61fbf7612403422a279a49e48bf0465ad421d057",
+      "thumbnail_k3s_migration": "publication/thumbnail-k3s-migration-20261101.json"
+    },
+    {
+      "path": "ops/kubernetes/twitch-thumbnail/exporter.conf.example",
+      "source_role": "thumbnail-kubernetes-migration",
+      "decision": "selective-public-source-port",
+      "before_sha256": null,
+      "source_sha256": "18cbd33b933efb4ae81c1c61b07e56fb8f8d343bef02f106594b9cbf19713fec",
+      "public_sha256": "18cbd33b933efb4ae81c1c61b07e56fb8f8d343bef02f106594b9cbf19713fec",
+      "thumbnail_k3s_migration": "publication/thumbnail-k3s-migration-20261101.json"
+    },
+    {
+      "path": "ops/kubernetes/twitch-thumbnail/manifest.json",
+      "source_role": "thumbnail-kubernetes-migration",
+      "decision": "selective-public-source-port",
+      "before_sha256": null,
+      "source_sha256": "eb6d5bc2abca3e7b07f40fa63e4cb8c61e0774b9f04b922884d1b3f2e0e2db26",
+      "public_sha256": "eb6d5bc2abca3e7b07f40fa63e4cb8c61e0774b9f04b922884d1b3f2e0e2db26",
+      "thumbnail_k3s_migration": "publication/thumbnail-k3s-migration-20261101.json"
+    },
+    {
+      "path": "ops/kubernetes/twitch-thumbnail/prepare_context.py",
+      "source_role": "thumbnail-kubernetes-migration",
+      "decision": "selective-public-source-port",
+      "before_sha256": null,
+      "source_sha256": "8942e5cf135254d82ddc9faa0c53ed4f93b88b11020d114f1faf4f9dacffde46",
+      "public_sha256": "8942e5cf135254d82ddc9faa0c53ed4f93b88b11020d114f1faf4f9dacffde46",
+      "thumbnail_k3s_migration": "publication/thumbnail-k3s-migration-20261101.json"
+    },
+    {
+      "path": "ops/kubernetes/twitch-thumbnail/render.py",
+      "source_role": "thumbnail-kubernetes-migration",
+      "decision": "selective-public-source-port",
+      "before_sha256": null,
+      "source_sha256": "5672a3866344e00ca133c1bb956668e05e7a5d665fc529738bee33a414027896",
+      "public_sha256": "5672a3866344e00ca133c1bb956668e05e7a5d665fc529738bee33a414027896",
+      "thumbnail_k3s_migration": "publication/thumbnail-k3s-migration-20261101.json"
+    },
+    {
+      "path": "src/stream_v3/thumbnail_http.py",
+      "source_role": "thumbnail-kubernetes-migration",
+      "decision": "selective-public-source-port",
+      "before_sha256": null,
+      "source_sha256": "fb95e136f0f99d4846c1b4681c5ac87cf8d821ce7b45c703127a8c75cc3a866e",
+      "public_sha256": "fb95e136f0f99d4846c1b4681c5ac87cf8d821ce7b45c703127a8c75cc3a866e",
+      "thumbnail_k3s_migration": "publication/thumbnail-k3s-migration-20261101.json"
+    },
+    {
+      "path": "tests/test_public_network_policy_templates.py",
+      "source_role": "thumbnail-kubernetes-migration",
+      "decision": "selective-public-source-port",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "c57e1f285e3940473a79c3c769b324dd4c62c3dddff9c3d69f3bcdd7f7a52a38",
+      "thumbnail_k3s_migration": "publication/thumbnail-k3s-migration-20261101.json"
+    },
+    {
+      "path": "tests/test_thumbnail_kubernetes.py",
+      "source_role": "thumbnail-kubernetes-migration",
+      "decision": "selective-public-source-port",
+      "before_sha256": null,
+      "source_sha256": "123fc3b69af6765f494612175c6b4e7412003220178a0104aeabeb081df48b70",
+      "public_sha256": "123fc3b69af6765f494612175c6b4e7412003220178a0104aeabeb081df48b70",
+      "thumbnail_k3s_migration": "publication/thumbnail-k3s-migration-20261101.json"
+    },
+    {
+      "path": "ops/public-publisher/site/scripts/collect_clock_public.py",
+      "source_role": "thumbnail-public-entrypoint",
+      "decision": "public-source-completion",
+      "before_sha256": null,
+      "source_sha256": "d8e7615ba49b762810770700e6bd16571c2a4356693474a88143476705df301e",
+      "public_sha256": "a8a691eaa65c3d8233963053f2916c4612c938c76599bd03a455d411f0e0580a",
+      "thumbnail_public_completion": "publication/thumbnail-public-completion-20261101.json"
+    },
+    {
+      "path": "tests/test_public_clock.py",
+      "source_role": "thumbnail-public-entrypoint",
+      "decision": "public-source-completion",
+      "before_sha256": null,
+      "source_sha256": "543a3ca0e7706fee21a1696857d366d5afaf493923aa9e31d2fe211196455a30",
+      "public_sha256": "543a3ca0e7706fee21a1696857d366d5afaf493923aa9e31d2fe211196455a30",
+      "thumbnail_public_completion": "publication/thumbnail-public-completion-20261101.json"
+    },
+    {
+      "path": "docs/v3/notification-observation-time.md",
+      "source_role": "notification-time-evidence",
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes.",
+      "source_sha256": null,
+      "public_sha256": "f0bafb97c2011fb8f476a59a778c9b3940720a99bea007ca80fef20d68c907ee",
+      "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
+      "notification_observation_time_source_sha256": null,
+      "before_notification_source_timing_fix_sha256": "9c23fb959cd8b40a78b106cd0c299954c0156c3f2b9ac845a3c08b905b9564f0",
+      "notification_source_timing_fix": "publication/notification-source-timing-fix-20261101.json"
+    },
+    {
+      "path": "src/stream_core/common/observation_time.py",
+      "source_role": "notification-time-evidence",
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes.",
+      "source_sha256": "05561e8568856d06dfa79a35b5ba0020589ae3d2efd339279d2e5384b6153900",
+      "public_sha256": "05561e8568856d06dfa79a35b5ba0020589ae3d2efd339279d2e5384b6153900",
+      "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
+      "notification_observation_time_source_sha256": "05561e8568856d06dfa79a35b5ba0020589ae3d2efd339279d2e5384b6153900"
+    },
+    {
+      "path": "src/stream_core/common/clock_contract.py",
+      "source_role": "notification-time-evidence",
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes.",
+      "source_sha256": "52f72bf2e46181a628063b5917a4caf55bb25312041a5d2188d3c0d3ddba7bb6",
+      "public_sha256": "52f72bf2e46181a628063b5917a4caf55bb25312041a5d2188d3c0d3ddba7bb6",
+      "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
+      "notification_observation_time_source_sha256": "52f72bf2e46181a628063b5917a4caf55bb25312041a5d2188d3c0d3ddba7bb6"
+    },
+    {
+      "path": "src/stream_core/common/adsb_timing.py",
+      "source_role": "notification-time-evidence",
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes.",
+      "source_sha256": "ef931dcb1f1a29c2642616238e0f78541a6b385546db6b4baa62d2d58e038ecc",
+      "public_sha256": "ef931dcb1f1a29c2642616238e0f78541a6b385546db6b4baa62d2d58e038ecc",
+      "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
+      "notification_observation_time_source_sha256": "ef931dcb1f1a29c2642616238e0f78541a6b385546db6b4baa62d2d58e038ecc"
+    },
+    {
+      "path": "src/stream_core/notifications/observation.py",
+      "source_role": "notification-time-evidence",
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes.",
+      "source_sha256": "67c46e1268d5cfd4681b02c0bce435dc8dddc2305a1836ec9ac6309f1af6abe3",
+      "public_sha256": "db7c560592e888dee495b81285ad2542991ef7bee0a18c0c80f04bff830d615a",
+      "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
+      "notification_observation_time_source_sha256": "276ae7acfbbbc1267c2765f6815bce1ee4bdfc76759238760192bb494089c098"
+    },
+    {
+      "path": "src/stream_core/notifications/time_diagnostics.py",
+      "source_role": "notification-time-evidence",
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes.",
+      "source_sha256": "653e1fa4cd4319949b4ec3450263d3d7a425bd72049da567f8a7a85466811322",
+      "public_sha256": "653e1fa4cd4319949b4ec3450263d3d7a425bd72049da567f8a7a85466811322",
+      "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
+      "notification_observation_time_source_sha256": "653e1fa4cd4319949b4ec3450263d3d7a425bd72049da567f8a7a85466811322"
+    },
+    {
+      "path": "src/stream_core/cli.py",
+      "source_role": "notification-time-evidence",
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes.",
+      "source_sha256": "02b832515ddcef1bd7c924b6d14d9d5c45c865840e2158aec88bfba8f9a0e01e",
+      "public_sha256": "44a049f45fc7f2c53f22f34df5dee6c704c9d7cbe7c915a1910dfa6ac84d54cc",
+      "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
+      "notification_observation_time_source_sha256": "02b832515ddcef1bd7c924b6d14d9d5c45c865840e2158aec88bfba8f9a0e01e"
+    },
+    {
+      "path": "src/stream_core/cli_support/contexts.py",
+      "source_role": "notification-time-evidence",
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes.",
+      "source_sha256": "533bfa6a52de17a767ec480e33005a9c2be0d5b3e8658429a4cb0b1cfab8a2ea",
+      "public_sha256": "533bfa6a52de17a767ec480e33005a9c2be0d5b3e8658429a4cb0b1cfab8a2ea",
+      "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
+      "notification_observation_time_source_sha256": "533bfa6a52de17a767ec480e33005a9c2be0d5b3e8658429a4cb0b1cfab8a2ea"
+    },
+    {
+      "path": "src/stream_core/commands/stream1090_report.py",
+      "source_role": "notification-time-evidence",
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes.",
+      "source_sha256": "ecf170e745555f3a57c933ad98fd5acffa344ef7fb40432ee1d7cbc75d58e93b",
+      "public_sha256": "ecf170e745555f3a57c933ad98fd5acffa344ef7fb40432ee1d7cbc75d58e93b",
+      "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
+      "notification_observation_time_source_sha256": "ecf170e745555f3a57c933ad98fd5acffa344ef7fb40432ee1d7cbc75d58e93b"
+    },
+    {
+      "path": "src/watchers/stream_watchdog.py",
+      "source_role": "notification-time-evidence",
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes.",
+      "source_sha256": "c846c96632c32031c475a6cb3beafbd2b2963c6571f0cc52fb82b89036f953c9",
+      "public_sha256": "d79ab4d506fa3995b75550b428b394feb17f77e0771a4adddd6d8f0bc37a9df4",
+      "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
+      "notification_observation_time_source_sha256": "c846c96632c32031c475a6cb3beafbd2b2963c6571f0cc52fb82b89036f953c9"
+    },
+    {
+      "path": "src/watchers/youtube_monitor/stats_writer.py",
+      "source_role": "notification-time-evidence",
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes.",
+      "source_sha256": "ad5a83634252a388495fe32f967bdf474d51a43650a97a09bf32853f397a2122",
+      "public_sha256": "ad5a83634252a388495fe32f967bdf474d51a43650a97a09bf32853f397a2122",
+      "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
+      "notification_observation_time_source_sha256": "ad5a83634252a388495fe32f967bdf474d51a43650a97a09bf32853f397a2122"
+    },
+    {
+      "path": "src/stream_v2/pipeline.py",
+      "source_role": "notification-time-evidence",
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes.",
+      "source_sha256": "9d80631ead26640a6fad82e687c295e107200899c3264ac9e308804ebdb341f6",
+      "public_sha256": "f7d021a5d96f3a6770777a437758da59878d04990c101c6bf6dd35aff376cc14",
+      "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
+      "notification_observation_time_source_sha256": "9d80631ead26640a6fad82e687c295e107200899c3264ac9e308804ebdb341f6"
+    },
+    {
+      "path": "ops/scripts/stream_v3_map_runtime_probe.py",
+      "source_role": "notification-time-evidence",
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes.",
+      "source_sha256": "86a778831f012b28cc5f86ecd000def1c0e083307853a48d416932ba7646d3a5",
+      "public_sha256": "0711ee256a2a225fc91bbb655a7d60c3a92239f71e2dc4b065aa506cc80e20b3",
+      "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
+      "notification_observation_time_source_sha256": "86a778831f012b28cc5f86ecd000def1c0e083307853a48d416932ba7646d3a5"
+    },
+    {
+      "path": "ops/scripts/stream_v3_viewer_synthetic_probe.py",
+      "source_role": "notification-time-evidence",
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes.",
+      "source_sha256": "f857fafa6c0ebc8d3ead83d99994da59ae8085face85130ba05b7f503b602552",
+      "public_sha256": "7fcd99b8cbe54de106f66f343bd9dff4a137eea76adacd93acc047f22c57a5e7",
+      "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
+      "notification_observation_time_source_sha256": "f857fafa6c0ebc8d3ead83d99994da59ae8085face85130ba05b7f503b602552"
+    },
+    {
+      "path": "ops/scripts/stream_v3_operational_reliability_rollup.py",
+      "source_role": "notification-time-evidence",
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes.",
+      "source_sha256": "ddc642415642bb694fe2e130e4ec0d4ed884e1b12e56a7077ff88ff3154d5bc4",
+      "public_sha256": "0381f2e16821dc35e705a8455c328e67f74c3a880e77f7459752310e0d765e7d",
+      "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
+      "notification_observation_time_source_sha256": "ddc642415642bb694fe2e130e4ec0d4ed884e1b12e56a7077ff88ff3154d5bc4"
+    },
+    {
+      "path": "ops/scripts/stream_v3_external_blackbox_import.py",
+      "source_role": "notification-time-evidence",
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes.",
+      "source_sha256": "823718d4d677d4c1158cb60aeb0cb4e4fa4f9bc341291046116633f25276cca1",
+      "public_sha256": "e07f52baa5c0a62c7f85d8de6aab6dc5743f1a6dc2298fe5dd4aaa438fa0929e",
+      "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
+      "notification_observation_time_source_sha256": "823718d4d677d4c1158cb60aeb0cb4e4fa4f9bc341291046116633f25276cca1"
+    },
+    {
+      "path": "ops/scripts/stream_v3_health_snapshot.py",
+      "source_role": "notification-time-evidence",
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes.",
+      "source_sha256": "4fa1cacf79a622de263aa411454e4efa0930ee11d50e7f1fbec58be47c722b3b",
+      "public_sha256": "6a1f0bbba03ca98a999279a75af3223e2be4ef0e234ac94d3921a234765ae069",
+      "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
+      "notification_observation_time_source_sha256": "4fa1cacf79a622de263aa411454e4efa0930ee11d50e7f1fbec58be47c722b3b"
+    },
+    {
+      "path": "ops/scripts/observe_stream_health.py",
+      "source_role": "notification-time-evidence",
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes.",
+      "source_sha256": "7aa103a8d3683dddb8893596de809abef5f68c3b451afb9cc70389b0999df65b",
+      "public_sha256": "4dcf8bfe884d57601fbd8e12e6996b476462753a0bc569e502d172d66fa9ea14",
+      "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
+      "notification_observation_time_source_sha256": "7aa103a8d3683dddb8893596de809abef5f68c3b451afb9cc70389b0999df65b"
+    },
+    {
+      "path": "ops/scripts/sync_observation_contract.py",
+      "source_role": "notification-time-evidence",
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes.",
+      "source_sha256": "f1e16aad8127f8754a4b433da5f5a5af3d159a8aef28eef3215fc48ad71e8916",
+      "public_sha256": "f1e16aad8127f8754a4b433da5f5a5af3d159a8aef28eef3215fc48ad71e8916",
+      "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
+      "notification_observation_time_source_sha256": "f1e16aad8127f8754a4b433da5f5a5af3d159a8aef28eef3215fc48ad71e8916"
+    },
+    {
+      "path": "tests/test_notification_observation_time.py",
+      "source_role": "notification-time-evidence",
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes.",
+      "source_sha256": "590e0ae7c414a1b9808783b5fa916ca77be5f1b1e67d699a8abef2fb9d9e3e65",
+      "public_sha256": "dca44e9b8bbec9f0ee3cb7fd4ed90225e198310471a9258498b392a3207bcbd1",
+      "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
+      "notification_observation_time_source_sha256": "68a58d1610f310a955f27f5dcafe4e95058b60512917b59c5a27f5f6fe2a9ddc"
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/observation_time.py",
+      "source_role": "notification-time-evidence",
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes.",
+      "source_sha256": "05561e8568856d06dfa79a35b5ba0020589ae3d2efd339279d2e5384b6153900",
+      "public_sha256": "05561e8568856d06dfa79a35b5ba0020589ae3d2efd339279d2e5384b6153900",
+      "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
+      "notification_observation_time_source_sha256": "05561e8568856d06dfa79a35b5ba0020589ae3d2efd339279d2e5384b6153900"
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/notification_observation.py",
+      "source_role": "notification-time-evidence",
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes.",
+      "source_sha256": "f1da6167fc8695233154d92dd59661afbbe2aa6a3ff9fcd7f3932008a70345b4",
+      "public_sha256": "e282bb647dec81cfbc5d61dfb3243445c48fa099f81bc2d56f3fb3a92f64bd30",
+      "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
+      "notification_observation_time_source_sha256": "f1da6167fc8695233154d92dd59661afbbe2aa6a3ff9fcd7f3932008a70345b4",
+      "before_notification_source_timing_fix_sha256": "3964b70c6105faa9fe87e831daae8f7220ecb357ed16b159591556ca9f4a8410",
+      "notification_source_timing_fix": "publication/notification-source-timing-fix-20261101.json"
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/notification_heartbeat.py",
+      "source_role": "notification-time-evidence",
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes.",
+      "source_sha256": "b3a5743eeeb2944b842c2d07ab028f47f0bc4209c00eaae2aa4b804b7acc3638",
+      "public_sha256": "b3a5743eeeb2944b842c2d07ab028f47f0bc4209c00eaae2aa4b804b7acc3638",
+      "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
+      "notification_observation_time_source_sha256": "b3a5743eeeb2944b842c2d07ab028f47f0bc4209c00eaae2aa4b804b7acc3638"
+    },
+    {
+      "path": "monitoring-v4/tests/test_compatibility_notification_observation_time.py",
+      "source_role": "notification-time-evidence",
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes.",
+      "source_sha256": "d2ceedc9dc19b92a20d7cc1fc3fbfb769e23deb4f67fc517b67bbc13bd7eb9a2",
+      "public_sha256": "94cfa7b6eaac40d7cdf28994d0201a9d0f730e0d929fc5a63c3820f26a5a5215",
+      "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
+      "notification_observation_time_source_sha256": "d2ceedc9dc19b92a20d7cc1fc3fbfb769e23deb4f67fc517b67bbc13bd7eb9a2"
+    },
+    {
+      "path": "publication/notification-observation-time-port-20261101.json",
+      "source_role": "public-port-record",
+      "decision": "Selected notification observation-time source, verification and operated checkpoint.",
+      "source_sha256": null,
+      "public_sha256": "059ad91b2b58dd1d3c7f7d044f8d6a5e9617cf8f68b42dcd1300f2f9a4fc60d7",
+      "before_notification_source_timing_fix_sha256": "ddce96644f29310cce37e289379beb0b5ac3db75cea00eeb7d8cb84fe123bc3e",
+      "notification_source_timing_fix": "publication/notification-source-timing-fix-20261101.json"
+    },
+    {
+      "path": "monitoring-v4/tests/test_notification_source_timing.py",
+      "source_role": "notification-source-timing-regression",
+      "decision": "Source-specific notification timing correction; no deployment or notification delivery.",
+      "public_sha256": "6b873bd0bf847d2fc0abc670fbd8fb6c98ea66e1138856966899168f3f2df341",
+      "source_sha256": "6b873bd0bf847d2fc0abc670fbd8fb6c98ea66e1138856966899168f3f2df341",
+      "notification_source_timing_fix": "publication/notification-source-timing-fix-20261101.json"
+    },
+    {
+      "path": "publication/notification-source-timing-fix-20261101.json",
+      "source_role": "public-port-record",
+      "decision": "Source-specific notification timing correction; no deployment or notification delivery.",
+      "public_sha256": "65307e610aad367b3b68aab0a72d53fb8417fcb0e981710fc9c4a88713d88c53",
+      "source_sha256": null,
+      "notification_source_timing_fix": "publication/notification-source-timing-fix-20261101.json"
+    },
+    {
+      "path": "monitoring-v4/tests/test_clock_mesh_configuration.py",
+      "source_role": "public-configuration-regression",
+      "decision": "Exercise the real mesh entrypoint with the bundled public example and reject peer drift without network activity.",
+      "source_sha256": null,
+      "public_sha256": "1e9971d1c747d489b45c0be1f61323b7cd04b5de8818a00e7518bc7fab2eb184",
+      "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json"
     }
   ],
   "omissions": [
@@ -5746,7 +6205,9 @@
     "publication/r2-publication-docs-20261027.json",
     "publication/transport-recorder-port-20261029.json",
     "publication/airspy-reception-port-20261030.json",
-    "publication/fallback-clock-port-20261030.json"
+    "publication/fallback-clock-port-20261030.json",
+    "publication/thumbnail-transfer-recovery-20261101.json",
+    "publication/notification-source-timing-fix-20261101.json"
   ],
   "evidence_checkpoint_cutoff_jst": "2026-10-14T00:04:57+09:00",
   "documentation_audience": "hiring and technical reviewers",
@@ -6096,5 +6557,24 @@
   "airspy_ci_clock_fixture": {
     "decision": "Use a fixture-local wall and monotonic clock, independent of runner uptime. Retain rejection of nonpositive or future invocation starts.",
     "production_behavior_changed": false
-  }
+  },
+  "thumbnail_transfer_recovery": {
+    "date_jst": "2026-11-01",
+    "record": "publication/thumbnail-transfer-recovery-20261101.json",
+    "scope": "Bounded thumbnail transfer and missing-current-age display; existing delivery, API collection, source binding and history retained."
+  },
+  "thumbnail_k3s_migration": {
+    "record": "publication/thumbnail-k3s-migration-20261101.json",
+    "scope": "Thumbnail acquisition/OCR on arena K3s; existing host observers/exporter, Dell delivery and local CRA retained",
+    "current_checkpoint": "docs/current-status.md#thumbnail-collector-on-k3s-2026-11-01-jst"
+  },
+  "thumbnail_public_completion": {
+    "record": "publication/thumbnail-public-completion-20261101.json",
+    "retired_files": [
+      "ops/config/twitch_thumbnail.example.json",
+      "ops/systemd/stream-v3-twitch-thumbnail.service"
+    ],
+    "scope": "Public thumbnail collector/page/build/upload completion and retired installation examples only"
+  },
+  "notification_source_timing_fix": "publication/notification-source-timing-fix-20261101.json"
 }

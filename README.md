@@ -89,7 +89,10 @@ Both home senders still depend on the Dell host and home uplink. A separate
 [clock monitor](docs/v3/relay-clock-monitor.md) checks returned relay/fallback
 video and keeps that evidence distinct from public-player reception.
 An independent [Twitch thumbnail monitor](docs/v3/twitch-thumbnail-monitor.md)
-adds provider-image clock checks on the monitoring host, using RAM for normal images.
+adds provider-image clock checks in the monitoring host's K3s, using RAM for
+normal images and a PVC for bounded observation state. The
+[collector definitions](ops/kubernetes/twitch-thumbnail/README.md) are the current
+entrypoint; Dell's media path and local CRA processing remain separate.
 
 ### Public status
 
@@ -114,6 +117,12 @@ while relay health is lost. These pieces use fixed thresholds and keep working
 when monitoring is down. The monitor on arena-server can only request a guarded
 runtime restart, and replacement-broadcast creation is disabled.
 [Architecture](docs/architecture.md#who-can-act-on-what) lists each actor's limits.
+
+Generic snapshot warnings judge freshness from
+[producer-bound time evidence](docs/v3/notification-observation-time.md): each
+fact carries host, boot and sample identity with UTC and boottime. For these
+warnings, recovery is announced only after continued healthy samples, and an
+unobservable producer is reported separately rather than as a failure or a recovery.
 
 An optional [Airspy reception guard](ops/airspy-reception/README.md) handles
 receiver startups that leave processes alive but positioned aircraft at zero.

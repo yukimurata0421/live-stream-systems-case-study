@@ -1,0 +1,72 @@
+{
+  "schema": "public-source-port.thumbnail-transfer-recovery.v1",
+  "date_jst": "2026-11-01",
+  "source_scope": [
+    "thumbnail image HTTP client",
+    "thumbnail worker budgets",
+    "public observation renderer",
+    "focused regressions and documentation"
+  ],
+  "files": [
+    {
+      "path": "src/stream_v3/twitch_thumbnail.py",
+      "source_sha256": "a23cc03c783e364597e148cf549572adfbd8ee14fe2e66fa2d116de53dc1f1c4",
+      "public_sha256": "a23cc03c783e364597e148cf549572adfbd8ee14fe2e66fa2d116de53dc1f1c4"
+    },
+    {
+      "path": "src/stream_v3/twitch_thumbnail_worker.py",
+      "source_sha256": "2663b17c133108918016e991efc3894e6e89b47f80b5b27c58a932c0c7524fa0",
+      "public_sha256": "2663b17c133108918016e991efc3894e6e89b47f80b5b27c58a932c0c7524fa0"
+    },
+    {
+      "path": "tests/test_twitch_thumbnail.py",
+      "source_sha256": "bce2f7f9c8b58e2ce43a47f5679d962dbcc033ee166268b64fc4ea7177cd25b5",
+      "public_sha256": "bce2f7f9c8b58e2ce43a47f5679d962dbcc033ee166268b64fc4ea7177cd25b5"
+    },
+    {
+      "path": "ops/public-publisher/site/public/assets/ops-20261027-notices.js",
+      "source_sha256": "691f352818056913feb7e8b29b1170d6ec550c67c7cbdb1e62ce01ce9711918a",
+      "public_sha256": "691f352818056913feb7e8b29b1170d6ec550c67c7cbdb1e62ce01ce9711918a"
+    },
+    {
+      "path": "ops/public-publisher/site/tests/thumbnail-freshness-20261101.html",
+      "source_sha256": "bbfd71e2dedfaebbd9e66c3970170708cf835ed3c2300a7d37e0b7e6e3adeaef",
+      "public_sha256": "bbfd71e2dedfaebbd9e66c3970170708cf835ed3c2300a7d37e0b7e6e3adeaef"
+    },
+    {
+      "path": "docs/v3/twitch-thumbnail-monitor.md",
+      "source_sha256": null,
+      "public_sha256": "d9eeb52ceea0fbc65b9bce3449f9083bd05475e4d18e667b491f9852d94caace"
+    },
+    {
+      "path": "docs/v3/thumbnail-transfer-recovery-2026-11-01.md",
+      "source_sha256": null,
+      "public_sha256": "a559b242a3b68391d3b4add9d0dbd534ace2fd668188190d201b6e41aebf4f61"
+    },
+    {
+      "path": "docs/current-status.md",
+      "source_sha256": null,
+      "public_sha256": "09b5bcc9d30b999f58b8c4668b4bf77a218105a4fbe75a7c927b701a26deeac0"
+    },
+    {
+      "path": "docs/00_INDEX.md",
+      "source_sha256": "b744a45eaa29d812ec315d58c693d60a92cfa7fa66d5b8d8be0e4f49bd7b5d48",
+      "public_sha256": "daec05496a0992b411e22a5211ecc901d1b9e5d2dd145dbbc08a48a841363514"
+    }
+  ],
+  "validation": {
+    "worker_candidate_tests_passed": 94,
+    "public_tests_passed": 95,
+    "browser_fixture_checks_passed": 11,
+    "production_checkpoint": "docs/current-status.md#thumbnail-transfer-recovery-2026-11-01-jst",
+    "natural_cycles_verified": 19,
+    "distinct_image_clocks": 4,
+    "public_graph_latest_bucket_jst": "2026-11-01T18:50:00+09:00"
+  },
+  "excluded": [
+    "credentials and channel-specific live configuration",
+    "raw observations and screenshots",
+    "host resolver settings and fixed CDN addresses",
+    "private deployment and rollback scripts"
+  ]
+}

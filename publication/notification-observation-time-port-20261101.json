@@ -1,0 +1,338 @@
+{
+  "schema": "stream.notification_observation_time_public_port.v1",
+  "prepared_at_jst": "2026-11-01T20:39:30.968408+09:00",
+  "scope": "public-checkout-only",
+  "commit_or_push_performed": false,
+  "private_runtime_changes_are_separate": true,
+  "operated_checkpoint": {
+    "producer_at_jst": "2026-11-01T20:12:31+09:00",
+    "consumer_at_jst": "2026-11-01T20:20:13+09:00",
+    "discord_test_at_jst": "2026-11-01T20:24:52+09:00",
+    "discord_provider_result": "http_204",
+    "receiver_visibility": "NOT_OBSERVED",
+    "runtime_identity_preserved_at_jst": "2026-11-01T20:30:18+09:00",
+    "production_fault_injection_performed": false,
+    "consumer_slo_correction_at_jst": "2026-11-01T20:49:19+09:00",
+    "additional_test_message_after_correction": false
+  },
+  "validation": {
+    "related_tests_passed": 168,
+    "subtests_passed": 61,
+    "observation_module_copies": "PASS",
+    "canonical_clock_dependencies": "PASS"
+  },
+  "boundaries": [
+    "No raw evidence, credentials, private addresses or installed configuration are ported.",
+    "Packaged clock contract is generated from the canonical clock source; public code requires no private checkout.",
+    "Existing dedicated notification owners and isolated-vs-production evidence remain distinct.",
+    "Optional exporter rotating diagnostics were not activated by the operated rollout."
+  ],
+  "files": [
+    {
+      "path": "README.md",
+      "public_sha256": "6c28b134f7809d8b0877f94e780a38c3b4a8c80fa8fb706172a7ab3e5c8ccf07",
+      "before_sha256": "0b35cd6095473f0f81e8e1029dc7444aa9892ce337a18894d5f3cb18b972cc59",
+      "source_sha256": null,
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes."
+    },
+    {
+      "path": "docs/00_INDEX.md",
+      "public_sha256": "9f7605e83cdf9ec60df73ebe3f2472cca9292c4e06ec6768621ce53026c0b82c",
+      "before_sha256": "5db0532f523efe442a4ead53d136350ef67ea6f8b6336489051218b783dede4a",
+      "source_sha256": null,
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes."
+    },
+    {
+      "path": "docs/current-status.md",
+      "public_sha256": "d0617bc3c85dd683ad3c9cd07df34d5865cd3deba34c6d5202d4e016e75edbc9",
+      "before_sha256": "9d1af0f8642a41c61a8aecfa11c0309a55acfd064ac59cde8fe6a3a7eede4059",
+      "source_sha256": null,
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes."
+    },
+    {
+      "path": "docs/v3/notification-observation-time.md",
+      "public_sha256": "f0bafb97c2011fb8f476a59a778c9b3940720a99bea007ca80fef20d68c907ee",
+      "before_sha256": null,
+      "source_sha256": null,
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes."
+    },
+    {
+      "path": "src/stream_core/common/observation_time.py",
+      "public_sha256": "05561e8568856d06dfa79a35b5ba0020589ae3d2efd339279d2e5384b6153900",
+      "before_sha256": null,
+      "source_sha256": "05561e8568856d06dfa79a35b5ba0020589ae3d2efd339279d2e5384b6153900",
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes."
+    },
+    {
+      "path": "src/stream_core/common/clock_contract.py",
+      "public_sha256": "52f72bf2e46181a628063b5917a4caf55bb25312041a5d2188d3c0d3ddba7bb6",
+      "before_sha256": null,
+      "source_sha256": "52f72bf2e46181a628063b5917a4caf55bb25312041a5d2188d3c0d3ddba7bb6",
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes."
+    },
+    {
+      "path": "src/stream_core/common/adsb_timing.py",
+      "public_sha256": "ef931dcb1f1a29c2642616238e0f78541a6b385546db6b4baa62d2d58e038ecc",
+      "before_sha256": null,
+      "source_sha256": "ef931dcb1f1a29c2642616238e0f78541a6b385546db6b4baa62d2d58e038ecc",
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes."
+    },
+    {
+      "path": "src/stream_core/notifications/observation.py",
+      "public_sha256": "db7c560592e888dee495b81285ad2542991ef7bee0a18c0c80f04bff830d615a",
+      "before_sha256": null,
+      "source_sha256": "276ae7acfbbbc1267c2765f6815bce1ee4bdfc76759238760192bb494089c098",
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes."
+    },
+    {
+      "path": "src/stream_core/notifications/time_diagnostics.py",
+      "public_sha256": "653e1fa4cd4319949b4ec3450263d3d7a425bd72049da567f8a7a85466811322",
+      "before_sha256": null,
+      "source_sha256": "653e1fa4cd4319949b4ec3450263d3d7a425bd72049da567f8a7a85466811322",
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes."
+    },
+    {
+      "path": "src/stream_core/notifications/incidents.py",
+      "public_sha256": "a93c958f66ed34912714904b4dfc312a27273ee9e4d562e3dfa34a32acae9ca7",
+      "before_sha256": "93e6534d8ae39c2daed447028b62611e5f9573a591a052e351cff8aaffdbd881",
+      "source_sha256": "1694502be3a740cc6e1a86250a53ef97c61ad32b0a86c0dd362010d0d3298238",
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes."
+    },
+    {
+      "path": "src/stream_core/notifications/status_loop.py",
+      "public_sha256": "44b75f9fc9da73114b931e27e185391c196f9d24036b68f8ce880f38974fb984",
+      "before_sha256": "6cc423daecec5aa68c2991733761616b1c0e10300186a45580721b10f467b65b",
+      "source_sha256": "1aa5f23874b5460bc8248c0531bcb36649fe054177878b76ff6d18ad8a27f84a",
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes."
+    },
+    {
+      "path": "src/stream_core/notifications/renderer.py",
+      "public_sha256": "a175e7cdd93c6751d629012a6d48afef662cbd328ae2bcbf0ec7285751c4a4ea",
+      "before_sha256": "e04fb45801678eafc391e82e1f758b0248d9dd07c6a076b1410ffd078eaae607",
+      "source_sha256": "b45122b933b97efb3acc746ee1bd10060761f36488d0ce6418731e4f35cb7a5f",
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes."
+    },
+    {
+      "path": "src/stream_core/notifications/cli_adapter.py",
+      "public_sha256": "619cca3ae90c52febe7f466fbf2d0d1e63082814c450c57a4254f324d1c08e0c",
+      "before_sha256": "7f86d0c742b6718caa6eb7d1d01fd44b773375753bc4e2371d0e48da603daa6f",
+      "source_sha256": "78aa46ddd12596205147f328ce8b82f5bc3e8dcdb4a9f4c75d46cb866d45c3d9",
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes."
+    },
+    {
+      "path": "src/stream_core/cli.py",
+      "public_sha256": "44a049f45fc7f2c53f22f34df5dee6c704c9d7cbe7c915a1910dfa6ac84d54cc",
+      "before_sha256": "10cd47ddb05228dbb4b70ef41ce407129f2f1494e34ee16912f65915117c0fd6",
+      "source_sha256": "02b832515ddcef1bd7c924b6d14d9d5c45c865840e2158aec88bfba8f9a0e01e",
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes."
+    },
+    {
+      "path": "src/stream_core/cli_support/contexts.py",
+      "public_sha256": "533bfa6a52de17a767ec480e33005a9c2be0d5b3e8658429a4cb0b1cfab8a2ea",
+      "before_sha256": "7704789e5cbde87c926ea5c59ee72d906b1cb0a2f6935ca101b2e43a93e9a98d",
+      "source_sha256": "533bfa6a52de17a767ec480e33005a9c2be0d5b3e8658429a4cb0b1cfab8a2ea",
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes."
+    },
+    {
+      "path": "src/stream_core/cli_support/sli_report.py",
+      "public_sha256": "34409b15582b374191e8114c25022ae91c0e754dc7c654565666ce8b56d3e88b",
+      "before_sha256": "9fd2785fb59b6c095f4f164def694fd1a9e6ccf79ab214610da67d9bb80d1b88",
+      "source_sha256": "3be5c7e303a16ce6a9942dc94f098bb6c61670b32efba845761cf2f36c1539d0",
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes."
+    },
+    {
+      "path": "src/stream_core/commands/stream1090_report.py",
+      "public_sha256": "ecf170e745555f3a57c933ad98fd5acffa344ef7fb40432ee1d7cbc75d58e93b",
+      "before_sha256": "98626296f2a8c8a2e6ff38f4bac81dfc6b87f99c56c93e36fa3bcbdd44f92f8c",
+      "source_sha256": "ecf170e745555f3a57c933ad98fd5acffa344ef7fb40432ee1d7cbc75d58e93b",
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes."
+    },
+    {
+      "path": "src/watchers/stream_watchdog.py",
+      "public_sha256": "d79ab4d506fa3995b75550b428b394feb17f77e0771a4adddd6d8f0bc37a9df4",
+      "before_sha256": "b4e7a178645f78f131e908d2bad34161522a2989057609c72d1cf9df7abdab19",
+      "source_sha256": "c846c96632c32031c475a6cb3beafbd2b2963c6571f0cc52fb82b89036f953c9",
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes."
+    },
+    {
+      "path": "src/watchers/youtube_watchdog.py",
+      "public_sha256": "9e94aae3831aa301854668097881c503f605ecf7bdbc66f6a64a365eca63c98a",
+      "before_sha256": "c83824a45842eff8c4ccfb66d9370454890b99e509b4b017267a0f7d415dae76",
+      "source_sha256": "b9724fa1f4facae7f5150d28f998bbf22d92c4ce6b42214214b3c0fffa93872e",
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes."
+    },
+    {
+      "path": "src/watchers/youtube_monitor/stats_writer.py",
+      "public_sha256": "ad5a83634252a388495fe32f967bdf474d51a43650a97a09bf32853f397a2122",
+      "before_sha256": "94699c0882910f079541576031068e78f8aac8c2f81be8f6a5f4c85c8e08d049",
+      "source_sha256": "ad5a83634252a388495fe32f967bdf474d51a43650a97a09bf32853f397a2122",
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes."
+    },
+    {
+      "path": "src/stream_v2/pipeline.py",
+      "public_sha256": "f7d021a5d96f3a6770777a437758da59878d04990c101c6bf6dd35aff376cc14",
+      "before_sha256": "75a8329b060cd55fb46cb2bbd9a8a50b515465d9b79c215afb7cbcd49833d94f",
+      "source_sha256": "9d80631ead26640a6fad82e687c295e107200899c3264ac9e308804ebdb341f6",
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes."
+    },
+    {
+      "path": "ops/scripts/stream_v3_map_runtime_probe.py",
+      "public_sha256": "0711ee256a2a225fc91bbb655a7d60c3a92239f71e2dc4b065aa506cc80e20b3",
+      "before_sha256": "b8cba226a4fe129ed90471f01dbf109aeaa2035e6ef4910687226f9f0e4fbd81",
+      "source_sha256": "86a778831f012b28cc5f86ecd000def1c0e083307853a48d416932ba7646d3a5",
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes."
+    },
+    {
+      "path": "ops/scripts/stream_v3_viewer_synthetic_probe.py",
+      "public_sha256": "7fcd99b8cbe54de106f66f343bd9dff4a137eea76adacd93acc047f22c57a5e7",
+      "before_sha256": "92e1dab2af534df9f682aa4ccb19ec7e05d820c5fed762427ac15e0eef9c3ef4",
+      "source_sha256": "f857fafa6c0ebc8d3ead83d99994da59ae8085face85130ba05b7f503b602552",
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes."
+    },
+    {
+      "path": "ops/scripts/stream_v3_operational_reliability_rollup.py",
+      "public_sha256": "0381f2e16821dc35e705a8455c328e67f74c3a880e77f7459752310e0d765e7d",
+      "before_sha256": "99f6a442c7a906ad165d68eff1b91e2d2ced0c232d82723fb45f962456cfeb7d",
+      "source_sha256": "ddc642415642bb694fe2e130e4ec0d4ed884e1b12e56a7077ff88ff3154d5bc4",
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes."
+    },
+    {
+      "path": "ops/scripts/stream_v3_external_blackbox_import.py",
+      "public_sha256": "e07f52baa5c0a62c7f85d8de6aab6dc5743f1a6dc2298fe5dd4aaa438fa0929e",
+      "before_sha256": "1106a85510ca5c1eabeaab221c00bf13e22c9fb884c0cb359e948ed3b772476f",
+      "source_sha256": "823718d4d677d4c1158cb60aeb0cb4e4fa4f9bc341291046116633f25276cca1",
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes."
+    },
+    {
+      "path": "ops/scripts/stream_v3_health_snapshot.py",
+      "public_sha256": "6a1f0bbba03ca98a999279a75af3223e2be4ef0e234ac94d3921a234765ae069",
+      "before_sha256": "1c14bef66006d1d558327f2c593025f366948d831cd2fb3e6616780d2bbc7431",
+      "source_sha256": "4fa1cacf79a622de263aa411454e4efa0930ee11d50e7f1fbec58be47c722b3b",
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes."
+    },
+    {
+      "path": "ops/scripts/stream_v3_prometheus_exporter.py",
+      "public_sha256": "60fc8ac2e4aabc99f5fd2487ba9495a0ffd5fa9ea01280c3fb4c999ca43b7eb3",
+      "before_sha256": "90f13120181e53186d4c7d102a8a70513e746e8e027ca89b0f7f59d842ab2168",
+      "source_sha256": "d71f0f9299d56c86e20dc2f538d9ee097f07978d89175c73cf41c097e3119a1d",
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes."
+    },
+    {
+      "path": "ops/scripts/observe_stream_health.py",
+      "public_sha256": "4dcf8bfe884d57601fbd8e12e6996b476462753a0bc569e502d172d66fa9ea14",
+      "before_sha256": "bb0a4cd3f4d956dcb5efcd18b22934bef4189536c2fa093f955f5df10e4a53c7",
+      "source_sha256": "7aa103a8d3683dddb8893596de809abef5f68c3b451afb9cc70389b0999df65b",
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes."
+    },
+    {
+      "path": "ops/scripts/sync_observation_contract.py",
+      "public_sha256": "f1e16aad8127f8754a4b433da5f5a5af3d159a8aef28eef3215fc48ad71e8916",
+      "before_sha256": null,
+      "source_sha256": "f1e16aad8127f8754a4b433da5f5a5af3d159a8aef28eef3215fc48ad71e8916",
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes."
+    },
+    {
+      "path": "ops/scripts/sync_observation_clock.py",
+      "public_sha256": "8d6644a4f24b4ffda6a8a63b3b04883dd761a12623857d0e273f9c2b951a4e1f",
+      "before_sha256": "ecba98e44693b48db4bffaac8078f3d5669bf953d5bbcf14995b0a0535957df9",
+      "source_sha256": null,
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes."
+    },
+    {
+      "path": "configs/production.env.example",
+      "public_sha256": "3b604868630c2530a7b3059d39aa238ebe89301d300b85a31cb280cb9249f9a9",
+      "before_sha256": "c2124264082ec1bdf24bb3a0409e4342f87b1a20f5a3183c28d629cae09efe85",
+      "source_sha256": "3030f66159c27740a88d7792e876ee7700e7e22a75d368143383b7823a7761e2",
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes."
+    },
+    {
+      "path": "tests/test_notification_observation_time.py",
+      "public_sha256": "dca44e9b8bbec9f0ee3cb7fd4ed90225e198310471a9258498b392a3207bcbd1",
+      "before_sha256": null,
+      "source_sha256": "68a58d1610f310a955f27f5dcafe4e95058b60512917b59c5a27f5f6fe2a9ddc",
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes."
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/observation_time.py",
+      "public_sha256": "05561e8568856d06dfa79a35b5ba0020589ae3d2efd339279d2e5384b6153900",
+      "before_sha256": null,
+      "source_sha256": "05561e8568856d06dfa79a35b5ba0020589ae3d2efd339279d2e5384b6153900",
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes."
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/notification_observation.py",
+      "public_sha256": "e282bb647dec81cfbc5d61dfb3243445c48fa099f81bc2d56f3fb3a92f64bd30",
+      "before_sha256": null,
+      "source_sha256": "f1da6167fc8695233154d92dd59661afbbe2aa6a3ff9fcd7f3932008a70345b4",
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes."
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/notification_heartbeat.py",
+      "public_sha256": "b3a5743eeeb2944b842c2d07ab028f47f0bc4209c00eaae2aa4b804b7acc3638",
+      "before_sha256": null,
+      "source_sha256": "b3a5743eeeb2944b842c2d07ab028f47f0bc4209c00eaae2aa4b804b7acc3638",
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes."
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/twitch_alert_notify.py",
+      "public_sha256": "b0825727e0abb53a413a45f1187546f2a64dc41b61985da2485d0df5255d9474",
+      "before_sha256": "6fe8317ea778bfdeaaced4815422b7de17d82219379dd624831823654d0ff035",
+      "source_sha256": "1c5143b5e6ea1e4e9e662729e4d0b8c885596fe247bfc019a08471d035c9e6fb",
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes."
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/clock_mesh.py",
+      "public_sha256": "d237265b5c076cc6c5905192df7e0704ac8d8ff2b379511c9c141af55f6e4954",
+      "before_sha256": "336b290c5391c63e8671bee74eba969072c819d426a5f73eca0421ca038571f6",
+      "source_sha256": "b06687ea8c361ebed770b743d8930bc47a4689808d7114a8f9c10e1783a0f444",
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes."
+    },
+    {
+      "path": "monitoring-v4/tests/test_compatibility_notification_observation_time.py",
+      "public_sha256": "94cfa7b6eaac40d7cdf28994d0201a9d0f730e0d929fc5a63c3820f26a5a5215",
+      "before_sha256": null,
+      "source_sha256": "d2ceedc9dc19b92a20d7cc1fc3fbfb769e23deb4f67fc517b67bbc13bd7eb9a2",
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes."
+    },
+    {
+      "path": "monitoring-v4/tests/test_twitch_alert_notify.py",
+      "public_sha256": "bfd201a8a738b83c1be1e6e9b4540b4885396edf1e921488cf3862d77d0936a5",
+      "before_sha256": "d7f56704a6b7ebc440aa2fc79d725d2db4857607f0533f069fae121d0a37e633",
+      "source_sha256": "30d61340d27de04dd29f111a9fd7a1fad6f3364a27fbc28e9d6df3e147c6c8e0",
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes."
+    },
+    {
+      "path": "docs/v3/cross-host-observation-time.md",
+      "public_sha256": "43714144c9f6803618304734e1ae1cbe760fc1343a655c50ca87df3b6209bb60",
+      "before_sha256": "e20bb1adea8fff5275d104ebe52f2e452dcd97c9ac27ca7b2f431fec82e36b8a",
+      "source_sha256": null,
+      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes."
+    },
+    {
+      "path": "monitoring-v4/tests/test_notification_source_timing.py",
+      "public_sha256": "6b873bd0bf847d2fc0abc670fbd8fb6c98ea66e1138856966899168f3f2df341",
+      "before_sha256": null,
+      "source_sha256": "6b873bd0bf847d2fc0abc670fbd8fb6c98ea66e1138856966899168f3f2df341",
+      "decision": "Regression coverage for source cadence, source-specific loss deadlines and source restoration."
+    },
+    {
+      "path": "monitoring-v4/tests/test_clock_mesh_configuration.py",
+      "public_sha256": "1e9971d1c747d489b45c0be1f61323b7cd04b5de8818a00e7518bc7fab2eb184",
+      "before_sha256": null,
+      "source_sha256": null,
+      "decision": "Public-only entrypoint regression: the bundled mesh example is accepted and an unexpected SSH peer is rejected without contacting a host."
+    }
+  ],
+  "revised_at_jst": "2026-11-01T20:52:55.600489+09:00",
+  "validation_scope": "Initial port validation before the source-cadence follow-up; the follow-up record contains its separate validation.",
+  "source_timing_followup": {
+    "record": "publication/notification-source-timing-fix-20261101.json",
+    "production_deployment_performed": false,
+    "notification_sent": false
+  },
+  "publication_preflight": {
+    "public_mesh_host_aliases": "Preserved generic public host identities and relay key; match the bundled example, independent of private deployment aliases.",
+    "entrypoint_regression_tests_passed": 2,
+    "production_deployment_performed": false
+  }
+}

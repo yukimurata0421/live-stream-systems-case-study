@@ -1,0 +1,164 @@
+{
+  "schema": "public-source-port.thumbnail-k3s-migration.v1",
+  "date_jst": "2026-11-01",
+  "scope": "Thumbnail acquisition/OCR on arena K3s; existing host observers/exporter, Dell delivery and local CRA retained",
+  "deployment_manifest_digest": "sha256:053b9cbfcd73642e02cafb66260eca4651d05e12a4348b2176849246e2368673",
+  "files": [
+    {
+      "path": "docs/00_INDEX.md",
+      "source_sha256": "b744a45eaa29d812ec315d58c693d60a92cfa7fa66d5b8d8be0e4f49bd7b5d48",
+      "public_sha256": "5db0532f523efe442a4ead53d136350ef67ea6f8b6336489051218b783dede4a",
+      "adaptation": "English documentation or public-specific validation/tests"
+    },
+    {
+      "path": "docs/architecture.md",
+      "source_sha256": null,
+      "public_sha256": "ae7e39d185704eed824fec533351f4713fa3369815ad95cb92647279e8304e7b",
+      "adaptation": "English documentation or public-specific validation/tests"
+    },
+    {
+      "path": "docs/current-status.md",
+      "source_sha256": null,
+      "public_sha256": "c294204078ca94307228aa8a1dcc705db0d4472148878c0c5aae14174bb3eb08",
+      "adaptation": "English documentation or public-specific validation/tests"
+    },
+    {
+      "path": "docs/v3/thumbnail-k3s-migration-2026-11-01.md",
+      "source_sha256": null,
+      "public_sha256": "74cb9b5f4ed3feb246c6b43cd36f82461cc864a4d78efadc7270ba70cc171738",
+      "adaptation": "English documentation or public-specific validation/tests"
+    },
+    {
+      "path": "docs/v3/twitch-thumbnail-monitor.md",
+      "source_sha256": null,
+      "public_sha256": "3e52063ed8c077ba6eeb3fc33c83f34eb635a0a0ce0c6747705f5a8a969c9bbc",
+      "adaptation": "English documentation or public-specific validation/tests"
+    },
+    {
+      "path": "ops/kubernetes/twitch-thumbnail/Dockerfile",
+      "source_sha256": "f722eb2270658678d0f3c32feebd7c39d744637ebbf983d168d9e793d74b72ca",
+      "public_sha256": "f722eb2270658678d0f3c32feebd7c39d744637ebbf983d168d9e793d74b72ca",
+      "adaptation": "identical source"
+    },
+    {
+      "path": "ops/kubernetes/twitch-thumbnail/README.md",
+      "source_sha256": "e634f270f80297adfa257f2ce1dac66f1126afcfbff03504696805fde0aee017",
+      "public_sha256": "e634f270f80297adfa257f2ce1dac66f1126afcfbff03504696805fde0aee017",
+      "adaptation": "identical source"
+    },
+    {
+      "path": "ops/kubernetes/twitch-thumbnail/api-facts.conf.example",
+      "source_sha256": "89cb65798bd934fc89051d7d61fbf7612403422a279a49e48bf0465ad421d057",
+      "public_sha256": "89cb65798bd934fc89051d7d61fbf7612403422a279a49e48bf0465ad421d057",
+      "adaptation": "identical source"
+    },
+    {
+      "path": "ops/kubernetes/twitch-thumbnail/exporter.conf.example",
+      "source_sha256": "18cbd33b933efb4ae81c1c61b07e56fb8f8d343bef02f106594b9cbf19713fec",
+      "public_sha256": "18cbd33b933efb4ae81c1c61b07e56fb8f8d343bef02f106594b9cbf19713fec",
+      "adaptation": "identical source"
+    },
+    {
+      "path": "ops/kubernetes/twitch-thumbnail/manifest.json",
+      "source_sha256": "eb6d5bc2abca3e7b07f40fa63e4cb8c61e0774b9f04b922884d1b3f2e0e2db26",
+      "public_sha256": "eb6d5bc2abca3e7b07f40fa63e4cb8c61e0774b9f04b922884d1b3f2e0e2db26",
+      "adaptation": "identical source"
+    },
+    {
+      "path": "ops/kubernetes/twitch-thumbnail/prepare_context.py",
+      "source_sha256": "8942e5cf135254d82ddc9faa0c53ed4f93b88b11020d114f1faf4f9dacffde46",
+      "public_sha256": "8942e5cf135254d82ddc9faa0c53ed4f93b88b11020d114f1faf4f9dacffde46",
+      "adaptation": "identical source"
+    },
+    {
+      "path": "ops/kubernetes/twitch-thumbnail/render.py",
+      "source_sha256": "5672a3866344e00ca133c1bb956668e05e7a5d665fc529738bee33a414027896",
+      "public_sha256": "5672a3866344e00ca133c1bb956668e05e7a5d665fc529738bee33a414027896",
+      "adaptation": "identical source"
+    },
+    {
+      "path": "ops/scripts/stream_v3_oci_monitor_exporter_overlay.py",
+      "source_sha256": "73f401cd61059760baf04c926cac36afc1a7fffcb9ee824479a9bc7da6c02a91",
+      "public_sha256": "cf5f2fb200abf9f610a1bc8c6d1343081f2e9f833f73b0b2bf3495f086dc263c",
+      "adaptation": "English documentation or public-specific validation/tests"
+    },
+    {
+      "path": "ops/scripts/stream_v3_twitch_thumbnail_source.py",
+      "source_sha256": "4c56123830730803c8af20a36d5ab87cdec6c97a48ed0a055c73e51a682bb40b",
+      "public_sha256": "0876fefd2e5cdf9be7ddaaa0c6b684cbaee6ca244727cf51327bb5608db81d25",
+      "adaptation": "English documentation or public-specific validation/tests"
+    },
+    {
+      "path": "ops/scripts/validate_public_port.py",
+      "source_sha256": null,
+      "public_sha256": "a2d3358e48a94ecb7de4dd032155cfc4ad39b52f0771028ff6d5bf67954188cc",
+      "adaptation": "English documentation or public-specific validation/tests"
+    },
+    {
+      "path": "src/stream_v3/thumbnail_http.py",
+      "source_sha256": "fb95e136f0f99d4846c1b4681c5ac87cf8d821ce7b45c703127a8c75cc3a866e",
+      "public_sha256": "fb95e136f0f99d4846c1b4681c5ac87cf8d821ce7b45c703127a8c75cc3a866e",
+      "adaptation": "identical source"
+    },
+    {
+      "path": "src/stream_v3/twitch_thumbnail_metrics.py",
+      "source_sha256": "559f5a7185ac1217081f59b90ce4d0752537500c091526e4464675e64fb1ba7a",
+      "public_sha256": "559f5a7185ac1217081f59b90ce4d0752537500c091526e4464675e64fb1ba7a",
+      "adaptation": "identical source"
+    },
+    {
+      "path": "src/stream_v3/twitch_thumbnail_worker.py",
+      "source_sha256": "5cb3ac4fc60d12aaaa0abcf1864ae15558375eadcd7f57b97665a57dfc3638bc",
+      "public_sha256": "5cb3ac4fc60d12aaaa0abcf1864ae15558375eadcd7f57b97665a57dfc3638bc",
+      "adaptation": "identical source"
+    },
+    {
+      "path": "tests/test_oci_monitor_probe.py",
+      "source_sha256": "31b5582d4e24678dd34f6802f068970a5aa952a8acda8807918bb657c726d3c3",
+      "public_sha256": "0b7d2ea3b5f346f5ea172ba572df28fa36565636ecb270db6a5c44b458957aca",
+      "adaptation": "English documentation or public-specific validation/tests"
+    },
+    {
+      "path": "tests/test_public_network_policy_templates.py",
+      "source_sha256": null,
+      "public_sha256": "c57e1f285e3940473a79c3c769b324dd4c62c3dddff9c3d69f3bcdd7f7a52a38",
+      "adaptation": "English documentation or public-specific validation/tests"
+    },
+    {
+      "path": "tests/test_thumbnail_kubernetes.py",
+      "source_sha256": "123fc3b69af6765f494612175c6b4e7412003220178a0104aeabeb081df48b70",
+      "public_sha256": "123fc3b69af6765f494612175c6b4e7412003220178a0104aeabeb081df48b70",
+      "adaptation": "identical source"
+    },
+    {
+      "path": "tests/test_twitch_thumbnail.py",
+      "source_sha256": "6ca4f1a221350ce84b24cd9dec016a39ec5eec28586ec4d697ed5a89d84cf588",
+      "public_sha256": "6ca4f1a221350ce84b24cd9dec016a39ec5eec28586ec4d697ed5a89d84cf588",
+      "adaptation": "identical source"
+    }
+  ],
+  "validation": {
+    "private_tests_passed": 146,
+    "public_tests_passed": 139,
+    "state_files_verified": 10,
+    "state_bytes_verified": 1793549,
+    "natural_cycles_at_checkpoint": 15,
+    "verified_cycles_at_checkpoint": 14,
+    "distinct_clock_values_at_checkpoint": 3,
+    "pod_restarts_at_checkpoint": 0,
+    "public_age_bucket_jst": "2026-11-01T19:40:00+09:00",
+    "production_checkpoint": "docs/current-status.md#thumbnail-collector-on-k3s-2026-11-01-jst",
+    "additional_compatibility_language_tests_passed": 7,
+    "public_port_issue_count": 0,
+    "public_language_status": "PASS",
+    "changed_markdown_links": "PASS"
+  },
+  "excluded": [
+    "credentials",
+    "private endpoints and live config",
+    "raw logs/evidence/images",
+    "workspace/runtime databases",
+    "production mutation scripts"
+  ],
+  "publication": "Public checkout port only; no commit/push performed"
+}

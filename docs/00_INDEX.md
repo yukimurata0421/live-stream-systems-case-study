@@ -16,7 +16,6 @@ start.
 ## Current System
 
 - `v3/clock-safe-media-progress.md`: [counter-proven clock holds, bounded alternating uncertainty, retained baselines and transition audit](v3/clock-safe-media-progress.md).
-
 - `v3/boottime-media-health.md`: [boottime media health, independent UTC diagnostics and removal of transition grace](v3/boottime-media-health.md).
 - `v3/fallback-decision-contract.md`: [when the direct YouTube backup starts and stops: evidence, decision table, timers, tradeoffs and evidence status](v3/fallback-decision-contract.md).
 - `v3/route-causality.md`: [durable cause identity and arena's secondary-recovery veto](v3/route-causality.md).
@@ -28,11 +27,9 @@ start.
 - `v3/fifo-timestamp-continuity-case-study.md`: [how same-process recovery carried old timestamps to YouTube, the per-connection origin fix, and the comparison that isolated it](v3/fifo-timestamp-continuity-case-study.md).
 - `v3/transport-flight-recorder.md`: [event windows of FIFO transport evidence in SQLite, recording triggers, missing-data rules and limits](v3/transport-flight-recorder.md).
 - `v3/route-baseline-retirement-decision.md`: [why the learned throughput baseline was retired, the data behind it, and when to revisit](v3/route-baseline-retirement-decision.md).
-
-- `v3/twitch-thumbnail-monitor.md`: [provider-image clocks, API reuse, RAM processing and warning scope](v3/twitch-thumbnail-monitor.md).
+- `v3/twitch-thumbnail-monitor.md`: [provider-image clocks, API reuse, the K3s collector and its Service boundaries, and warning scope](v3/twitch-thumbnail-monitor.md).
 - `v3/relay-clock-monitor.md`: [returned video, paired OCR, native evidence and bounded observer state](v3/relay-clock-monitor.md).
 - `v3/oci-backup-and-restore.md`: [encrypted relay backup, offline verification and files-only restore](v3/oci-backup-and-restore.md).
-
 - `architecture.md`: [hosts, data paths, who can act on what, failure domains](architecture.md).
 - `runtime-contract.md`: [delivery and monitoring runtimes, encoder, restart gates](runtime-contract.md).
 - `v3/self-healing-oci-fanout.md`: [the media route since 2026-10-20, its components, and the relay-stop drill](v3/self-healing-oci-fanout.md).
@@ -48,6 +45,7 @@ start.
 - `v3/connectivity-aware-delivery-recovery.md`: [suppressing restarts during a network outage](v3/connectivity-aware-delivery-recovery.md).
 - `v3/notification-and-auto-recovery.md`: [incident, restart, and recovery notifications](v3/notification-and-auto-recovery.md).
 - `v3/notification-diagnostic-boundary.md`: [what a notification can and cannot diagnose](v3/notification-diagnostic-boundary.md).
+- `v3/notification-observation-time.md`: [producer identity, UTC and boottime freshness, and recovery notifications](v3/notification-observation-time.md).
 - `v3/program-map.md`: [programs and their owning plane](v3/program-map.md).
 - `v3/decisions.md`: [accepted v3 design decisions](v3/decisions.md).
 - `design-decisions-for-review.md`: [compact decision ledger with rejected alternatives](design-decisions-for-review.md).
@@ -77,6 +75,8 @@ start.
 
 ## Case Studies (Dated)
 
+- `v3/thumbnail-k3s-migration-2026-11-01.md`: [Service-based thumbnail collection, retained state and public-screen verification](v3/thumbnail-k3s-migration-2026-11-01.md).
+- `v3/thumbnail-transfer-recovery-2026-11-01.md`: [slow thumbnail transfer, missing current values and verified public recovery](v3/thumbnail-transfer-recovery-2026-11-01.md).
 - `v3/tcp-stall-case-study.md`: [recurring upload stalls traced to the home network](v3/tcp-stall-case-study.md).
 - `v3/tcp-stall-resolution-depth.md`: [the finer-grained evidence ladder for those stalls](v3/tcp-stall-resolution-depth.md).
 - `v3/encoder-upload-case-study.md`: [NVENC CBR and the upload budget](v3/encoder-upload-case-study.md).

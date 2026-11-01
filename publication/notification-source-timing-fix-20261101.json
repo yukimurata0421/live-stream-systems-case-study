@@ -1,0 +1,76 @@
+{
+  "schema": "stream.notification_source_timing_fix.v1",
+  "prepared_at_jst": "2026-11-01T21:56:28.486650+09:00",
+  "scope": "development-and-public-source-only",
+  "production_deployment_performed": false,
+  "notification_sent": false,
+  "commit_or_push_performed": false,
+  "changes": [
+    "Use each mapped source TTL as the maximum continuity interval, instead of the common 180-second default.",
+    "Use max(300 seconds, source TTL) for observation-loss warnings and show the actual deadline in their text.",
+    "Preserve source restoration proved in the current planning cycle through duplicate decoration without asserting media recovery."
+  ],
+  "validation": {
+    "regression_cases": 21,
+    "before_fix": {
+      "passed": 5,
+      "failed": 16
+    },
+    "development": {
+      "passed": 66,
+      "subtests_passed": 4
+    },
+    "public": {
+      "passed": 107,
+      "subtests_passed": 4
+    },
+    "synchronization": {
+      "_timing_limits": true,
+      "_advance": true,
+      "gate": true,
+      "decorate": true,
+      "SPECS": true,
+      "whole_module_except_message_localization": true,
+      "regression_tests_byte_identical": true
+    },
+    "observation_contract_copies": "PASS",
+    "packaged_clock_contract_copies": "PASS",
+    "method": "Isolated execution of the real planner with synthetic producer facts and persisted JSON state; no delivery provider was called."
+  },
+  "limits": [
+    "This correction has not been deployed; the prior operated checkpoint predates these source changes.",
+    "These tests do not prove production delivery, receiver visibility or player continuity."
+  ],
+  "files": [
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/notification_observation.py",
+      "before_sha256": "3964b70c6105faa9fe87e831daae8f7220ecb357ed16b159591556ca9f4a8410",
+      "public_sha256": "e282bb647dec81cfbc5d61dfb3243445c48fa099f81bc2d56f3fb3a92f64bd30",
+      "source_sha256": "f1da6167fc8695233154d92dd59661afbbe2aa6a3ff9fcd7f3932008a70345b4"
+    },
+    {
+      "path": "monitoring-v4/tests/test_notification_source_timing.py",
+      "before_sha256": null,
+      "public_sha256": "6b873bd0bf847d2fc0abc670fbd8fb6c98ea66e1138856966899168f3f2df341",
+      "source_sha256": "6b873bd0bf847d2fc0abc670fbd8fb6c98ea66e1138856966899168f3f2df341"
+    },
+    {
+      "path": "docs/current-status.md",
+      "before_sha256": "3c4d04e26a7737925e1fcceeb11496513f8ee4dcb7bbc928c1da1e75b9826c14",
+      "public_sha256": "d0617bc3c85dd683ad3c9cd07df34d5865cd3deba34c6d5202d4e016e75edbc9",
+      "source_sha256": null
+    },
+    {
+      "path": "docs/v3/notification-observation-time.md",
+      "before_sha256": "9c23fb959cd8b40a78b106cd0c299954c0156c3f2b9ac845a3c08b905b9564f0",
+      "public_sha256": "f0bafb97c2011fb8f476a59a778c9b3940720a99bea007ca80fef20d68c907ee",
+      "source_sha256": null
+    },
+    {
+      "path": "publication/notification-observation-time-port-20261101.json",
+      "before_sha256": "ddce96644f29310cce37e289379beb0b5ac3db75cea00eeb7d8cb84fe123bc3e",
+      "public_sha256": "059ad91b2b58dd1d3c7f7d044f8d6a5e9617cf8f68b42dcd1300f2f9a4fc60d7",
+      "source_sha256": null
+    }
+  ]
+}

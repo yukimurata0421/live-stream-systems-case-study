@@ -1,7 +1,7 @@
 # Twitch Thumbnail Clock Observation
 
-The thumbnail monitor runs on the monitoring host beside the existing relay,
-native-forward and Twitch API observers. It checks the clock inside a provider
+The thumbnail collector runs in K3s on the monitoring host beside the existing
+host-based relay, native-forward and Twitch API observers. It checks the clock inside a provider
 image. It does not establish that the public video player or audio is healthy.
 
 This page is the stable contract. [Observability](../observability.md#video-observation-layers)
@@ -26,12 +26,14 @@ about the video CDN, player, audio or aircraft-data correctness.
 
 The [source adapter](../../ops/scripts/stream_v3_twitch_thumbnail_source.py)
 observes the existing collector's Get Streams response. It publishes the original
-API evidence first, unchanged, then mirrors the URL into a separate tmpfs file.
+API evidence first, unchanged, then publishes a coherent API/URL bundle over
+a private HTTP endpoint. A tmpfs mirror remains for legacy consumers and rollback.
 There is no additional Helix request, HLS extraction, embedded player or browser.
 An add-on write failure does not change a successful API observation into failure.
 
-The [worker](../../src/stream_v3/twitch_thumbnail_worker.py) joins that RAM source
-to the API evidence using host/boot, collector instance/revision, sequence,
+The [worker](../../src/stream_v3/twitch_thumbnail_worker.py) reads the bundle via
+a Kubernetes Service and joins its source to the API evidence using host/boot,
+collector instance/revision, sequence,
 channel/stream identity and timestamps. Only the API-supplied HTTPS template on
 the thumbnail host is accepted. Redirects, userinfo, queries and fragments are
 rejected. No fixed-channel or video-URL fallback is used.
@@ -53,7 +55,7 @@ the verified cache even for an identical JPEG.
 
 The thumbnail URL is channel-scoped and survives a stream-ID change, such as the
 daily Twitch session renewal. Clear the old ETag as soon as fresh API evidence
-identifies a new stream, even before the RAM sidecar is available. Fetch the body
+identifies a new stream, even before the matching source is available. Fetch the body
 first; a known pre-stream image can then remain in the explicit waiting state
 across 304 responses. Clear the ETag also when decode/analysis fails without a
 reusable clock cache.
@@ -68,8 +70,11 @@ failures receive no stream-start allowance.
 ## Clock Reading
 
 JST and UTC readings require confidence at least 70 and a nine-hour offset.
-Reads are tried in this order, within the 15-second cycle deadline and at most
-eight OCR calls:
+Acquisition has a 45-second total deadline. Once the image is available, OCR
+receives a separate 10-second budget, with at most two seconds per call and
+eight calls. The relay read retains its two-second timeout and polling remains
+once per minute. Body reads use the remaining acquisition deadline instead of
+inheriting the shorter connection timeout. Reads are tried in this order:
 
 1. The original clock regions.
 2. One alternate-contrast read.
@@ -191,37 +196,67 @@ Normal observations, failed captures and regions larger than 320x96 pixels are
 rejected. New archives identify `jst.pgm` and `utc.pgm`; legacy evidence stays
 unchanged. No normal image or full-frame archive is added.
 
-The [service template](../../ops/systemd/stream-v3-twitch-thumbnail.service) uses
-a separate non-root user, 0.2-core CPU quota, 256 MiB memory limit, no swap, a
-32 MiB temporary filesystem, no capabilities and process-group cleanup. It is
-independent of the delivery host and has no recovery privileges.
+The [K3s definitions](../../ops/kubernetes/twitch-thumbnail/README.md) use one
+Recreate Deployment, UID/GID 1000, a 200m CPU / 256Mi memory limit, a read-only root,
+a 32Mi tmpfs, no capabilities and no service-account token. Python, Pillow,
+Tesseract, English OCR data and tini are bundled in a manifest-digest-pinned image.
+No API or recovery credential is mounted. No hostPath or hostNetwork is used.
+
+The numeric state, polling cooldowns, verified anchors, counters and history move
+into a PVC with hashes verified at cutover. Retain its PV on rollback. Local-path
+storage requests do not enforce a filesystem quota or provide multi-host
+availability. The Pod remains pinned to the producer's node to retain boot binding.
+Readiness/liveness track monotonic loop progress, including UNKNOWN publications;
+a provider error alone does not restart a healthy collector loop.
+
+The existing Helix collector, relay observer and metrics exporter remain host
+services. A GET-only facts adapter contains their legacy paths and loopback
+boundary. This is a migration of thumbnail acquisition/OCR, not the entire
+monitoring stack. Dell's media path and local CRA processing are unchanged.
 
 ## Configuration And Credential-Free Checks
 
-Start from the [configuration example](../../ops/config/twitch_thumbnail.example.json).
-Replace the example account, calibrate the ROIs and prepare the immutable
-runtime release. The repository service file is the canonical unit: its command,
-Python path, libraries and the example OCR configuration use the root-owned
-`/opt/stream-v3-twitch-thumbnail/current` symlink. That symlink selects a release
-containing source, a venv, OCR runtime/data and a manifest. Install the unit
-unchanged and switch the symlink atomically after validation. Copying this
-checkout does not install the unit, select a release or enable a service. The
-example contains no production account, credentials or automatic installer.
+The [deployment template](../../ops/kubernetes/twitch-thumbnail/manifest.json)
+is rendered with an explicit account, private pod gateway and imported image
+manifest digest. Its default is zero replicas for state transfer. The current
+configuration uses `source_url` and `forward_url` Service endpoints. Retired
+systemd/file-input installation examples have been removed from the public tree.
+The runtime retains file-input compatibility for the deployed rollback path;
+the actual rollback source/unit/config remain on the host. Dated provenance keeps
+the original paths and hashes as historical records, not installation guidance.
 
-The source adapter uses `TWITCH_API_BASELINE` for the root-owned collector and
-`TWITCH_THUMBNAIL_SOURCE_FILE` for the tmpfs sidecar. Preserve the collector's
-existing arguments, service credentials and `monitoring_v4.twitch_api_evidence.v1`
-contract. Reconcile the adapter if that collector's CLI changes.
+The source adapter retains `TWITCH_API_BASELINE`, the collector's existing
+arguments/credentials and the original evidence contract. Its optional
+`TWITCH_THUMBNAIL_FACTS_BIND` listener binds only the pod gateway. `/bundle`
+returns a coherent pair, `/forward` relays only the fixed native observation,
+and neither renews timestamps or exposes a general proxy. HTTP failure stays
+UNKNOWN; there is no fallback to stale files. The old tmpfs mirror remains
+compatible but is not an input to the Pod.
 
-The exporter overlay accepts `TWITCH_THUMBNAIL_OBSERVATION_FILE`; it keeps the
-legacy expensive cache while refreshing the small observation each scrape.
-Scrape the new namespace in the existing clock job. Rule examples use that job's
-name and are not installed by copying this checkout.
+The public builder runs `collect_clock_public.py`; its SSH alias is configured
+with `STREAM_V3_CLOCK_SSH_TARGET` (falling back to the monitoring alias). It emits
+only the fixed numeric public schema and preserves an existing artifact's
+original timestamps on fetch failure. The page loads the current renderer, and
+the reference uploader includes that renderer and `clock-observation.json` in
+its explicit allowlist. No generated snapshots or credentials are shipped.
+
+The exporter overlay reads `TWITCH_THUMBNAIL_OBSERVATION_URL` from the private
+publication Service. It preserves the existing metric/job labels and historical
+series; `TWITCH_THUMBNAIL_OBSERVATION_FILE` remains a legacy option. HTTP errors
+or an old publication cannot manufacture a new cycle timestamp. NetworkPolicy
+limits the Pod's connections; node administrators remain trusted. Example
+resources include no live host addresses, credentials or runtime state.
+
+During rollback, confirm Pod termination and transfer its latest PVC state back
+before starting the old worker. Do not rewind last-request/cooldown timestamps
+or erase unknown history. The old source/unit/config remain available. Deployment
+measurements and the public-screen checkpoint are in the
+[dated migration record](thumbnail-k3s-migration-2026-11-01.md).
 
 ```bash
 PYTHONDONTWRITEBYTECODE=1 OMP_THREAD_LIMIT=1 python3 -m pytest -q -p no:cacheprovider \
   tests/test_twitch_thumbnail.py tests/test_twitch_thumbnail_evidence.py \
-  tests/test_clock_observation_alerts.py
+  tests/test_clock_observation_alerts.py tests/test_thumbnail_kubernetes.py
 promtool test rules ops/monitoring/prometheus/tests/twitch_thumbnail.yml
 ```
 
@@ -230,8 +265,13 @@ no provider requests, send no notifications and change no delivery services.
 
 ## Dated Records
 
+- [K3s collector migration](thumbnail-k3s-migration-2026-11-01.md): Service boundaries, preserved state, natural cycles and public-screen verification.
+
 Each record describes its own window and source selection; none shows deployment
 of this public checkout.
+
+- [Slow-transfer recovery and missing-age display](thumbnail-transfer-recovery-2026-11-01.md):
+  separate download/OCR budgets, transfer diagnostics and public-renderer verification.
 
 - [Initial source port](public-source-port-2026-10-22-thumbnail.md): first
   operated window, resolution calibration, resources and source boundary.

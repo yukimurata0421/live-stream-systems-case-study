@@ -57,7 +57,7 @@ are generated from that same source. Rebuild them together; do not maintain
 independent algorithm variants. The public monitoring adapter preserves its
 configured Twitch collector/user binding.
 
-`ops/scripts/sync_observation_clock.py --check` validates the two generated
+`ops/scripts/sync_observation_clock.py --check` validates the generated package, compatibility and publisher
 copies; its explicit `--write` mode regenerates only those files. CI checks
 this dependency boundary without installing or restarting services.
 
