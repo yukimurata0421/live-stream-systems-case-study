@@ -37,6 +37,13 @@ The maximum interval between normal observations follows the source's TTL.
 A slow producer can therefore confirm recovery at its normal cadence. Repeated
 reads still do not add observations or renew the observation-loss deadline.
 
+Viewer capture and visual health are separate facts. The shipped viewer producer
+uses `frame_ok`, failure counters and black/frozen flags; it does not require a
+`probe_ok` field. Both consumers share a checked predicate for that schema.
+A captured black or frozen frame remains a visual failure. Missing capture or
+incomplete visual evidence cannot confirm visual recovery. A verified failed
+measurement is still a measurement, so it does not become a missing-source event.
+
 ADS-B source-clock lag and snapshot retention are separate measurements.
 `STREAM_ADSB_SOURCE_CLOCK_HOST` identifies the host that generated the original
 `aircraft.json.now`, not a convenient proxy hostname. A lag interval crossing
@@ -57,9 +64,10 @@ using the common helper's default observation interval and loss deadline.
 The source correction applies each source's TTL to both continuity checks and
 the loss deadline. It also preserves source-restoration confirmation through a
 duplicate read in the same decision cycle, even if the media incident remains
-open. Development and public source are synchronized; this follow-up has not
-been deployed. The [current status](../current-status.md) separates it from the
-earlier operated rollout.
+open. A real-user preflight then exposed the viewer schema mismatch, which was
+corrected in both consumers before application. The follow-up is now deployed;
+the [current status](../current-status.md) separates its evidence from the earlier
+operated rollout.
 
 The public Python package also carries the canonical clock contract as a checked
 package module. An installed wheel does not need an operator's checkout or an
@@ -109,6 +117,13 @@ Provider acceptance does not prove that a person saw the message. Production
 failure injection was not performed; failure and recovery cases were exercised
 in isolation. The [current status](../current-status.md) records the latest
 operated checkpoint.
+
+The later correction also received Discord HTTP 204 for one labelled test using
+the standalone notifier's service UID and unchanged delivery function. It did
+not create a production incident. Two real viewer samples at the producer's
+normal cadence completed recovery in a separate, nondelivery planner state;
+rereading the first sample did not add a vote. Production failure injection was
+not used to establish that result.
 
 The day's 02:00–06:00 JST reboot interval was excluded from the historical
 notification analysis, not configured as a recurring mute. The remaining two

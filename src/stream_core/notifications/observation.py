@@ -6,6 +6,7 @@ import os
 
 from stream_core.common.json_io import read_json_file
 from stream_core.common import observation_time as timing
+from stream_core.common.viewer_evidence import probe_state, visual_state
 
 
 class Collection(list):
@@ -71,7 +72,7 @@ def complete(source, payload):
         return (payload.get("status") in ("healthy", "failed", "degraded")
                 and not payload.get("probe_errors") and type(payload.get("delivery_critical_ok")) is bool)
     if source == "viewer_synthetic":
-        return payload.get("probe_ok") is True or payload.get("status") in ("ok", "healthy", "visual_failure")
+        return probe_state(payload) is not None
     if source.startswith("reliability_"):
         return (isinstance(payload.get("multi_window_burn_alerts"), list)
                 and isinstance(payload.get("formal_gates", payload.get("fast_feedback")), dict))
@@ -122,7 +123,11 @@ def normal_for(ident, source, payload, observe):
             return payload.get("weather_ok") is True
         return payload.get("delivery_critical_ok") is True
     if source == "viewer_synthetic":
-        return payload.get("probe_ok") is True and payload.get("frame_ok") is True
+        if ident == "viewer:synthetic_missing_or_stale":
+            return probe_state(payload) is not None
+        if ident == "viewer:synthetic_probe_failed":
+            return probe_state(payload) is True
+        return visual_state(payload) is True
     if source.startswith("reliability_"):
         family = ident.removeprefix("reliability:").split("_multi_window_burn")[0].split("_coverage_or_freshness")[0]
         if ident.endswith("_multi_window_burn") and any(

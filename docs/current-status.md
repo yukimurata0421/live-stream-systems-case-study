@@ -19,7 +19,9 @@ Producers were upgraded before consumers.
 | Checks | The actual notifier UID and mount accepted the producer facts. The correction has isolated CLI coverage and one witnessed natural CLI cycle. The 20:24:52 JST Discord test received HTTP 204 with no pending delivery. |
 | Production | Native monitoring had no active incidents during the initial observation window. Media Pod/container identities and FFmpeg were preserved. |
 | Limits | Failure cases remain isolated evidence. Human message visibility and public-player continuity were not observed. |
-| Pending source correction | Compatibility continuity now uses each source's TTL; observation-loss warnings wait for the greater of that TTL and 300 seconds. Source-restoration confirmation survives a duplicate read in the same decision cycle. Development and public source are synchronized and tested, but this correction has not been deployed or sent a production notification. See the [source correction record](../publication/notification-source-timing-fix-20261101.json). |
+| Follow-up applied | The source-cadence and restoration correction was applied at 22:33:50 JST. Real-user preflight also exposed a viewer schema mismatch; both consumers now distinguish capture success from visual health using the shipped producer fields. |
+| Follow-up checks | A natural native CLI loaded the new consumer, and the standalone notifier advanced its heartbeat without automatic restarts. Two real viewer samples 305.6 seconds apart completed a nondelivery planner recovery check. A labelled Discord test at 22:38:33 JST received HTTP 204; its incident state was unchanged. |
+| Follow-up production | At 22:42 JST, standalone active 0 and outbox 0; the native owner retained one pre-existing historical SLO warning. Media identities and FFmpeg PID 730 were preserved, with YouTube live/active/good. See the [operated correction record](../publication/notification-source-timing-rollout-20261101.json). |
 
 ## Thumbnail Collector on K3s (2026-11-01 JST)
 

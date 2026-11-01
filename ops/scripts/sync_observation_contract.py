@@ -5,14 +5,18 @@ import hashlib
 
 
 def sync(v3, v4, *, check=False):
-    source = Path(v3) / "src/stream_core/common/observation_time.py"
-    target = Path(v4) / "src/stream_monitoring_v4/compatibility/observation_time.py"
-    if source.is_symlink() or target.is_symlink():
+    pairs = [(Path(v3) / "src/stream_core/common" / name,
+              Path(v4) / "src/stream_monitoring_v4/compatibility" / name)
+             for name in ("observation_time.py", "viewer_evidence.py")]
+    if any(source.is_symlink() or target.is_symlink() for source, target in pairs):
         raise ValueError("observation_contract_symlink")
-    expected = source.read_bytes()
-    equal = target.is_file() and target.read_bytes() == expected
-    if not equal and not check:
-        target.write_bytes(expected)
+    equal = True
+    for source, target in pairs:
+        expected = source.read_bytes()
+        matches = target.is_file() and target.read_bytes() == expected
+        equal = equal and matches
+        if not matches and not check:
+            target.write_bytes(expected)
     return equal if check else True
 
 

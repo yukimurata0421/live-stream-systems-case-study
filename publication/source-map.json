@@ -369,7 +369,7 @@
       "decision": "English contract, dated evidence and navigation for the bounded thumbnail-transfer and current-age display correction.",
       "before_sha256": "033b36e0cdb49457cb1521add7182355bf42aa5edf1051e6230d62c4d1e80a4b",
       "source_sha256": null,
-      "public_sha256": "d0617bc3c85dd683ad3c9cd07df34d5865cd3deba34c6d5202d4e016e75edbc9",
+      "public_sha256": "1beab3cd3e65147e0fa2d520275c2280dfa86884c6a345efefd32f2dc8469aed",
       "port_date_jst": "2026-11-01",
       "documentation_restructure": "New single page for volatile state.",
       "pre_twitch_observation_public_sha256": "040eac29174151f51e473f7f85e4aa23ff994be0079b3d4c011623b6ec7864ca",
@@ -426,7 +426,9 @@
       "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
       "notification_observation_time_source_sha256": null,
       "before_notification_source_timing_fix_sha256": "3c4d04e26a7737925e1fcceeb11496513f8ee4dcb7bbc928c1da1e75b9826c14",
-      "notification_source_timing_fix": "publication/notification-source-timing-fix-20261101.json"
+      "notification_source_timing_fix": "publication/notification-source-timing-fix-20261101.json",
+      "before_notification_source_timing_rollout_sha256": "d0617bc3c85dd683ad3c9cd07df34d5865cd3deba34c6d5202d4e016e75edbc9",
+      "notification_source_timing_rollout": "publication/notification-source-timing-rollout-20261101.json"
     },
     {
       "path": "docs/design-decisions-for-review.md",
@@ -5885,11 +5887,13 @@
       "source_role": "notification-time-evidence",
       "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes.",
       "source_sha256": null,
-      "public_sha256": "f0bafb97c2011fb8f476a59a778c9b3940720a99bea007ca80fef20d68c907ee",
+      "public_sha256": "1d37156850117a46cc6937e74ac9ff6486db682582606b6f16ae35dbb7538952",
       "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
       "notification_observation_time_source_sha256": null,
       "before_notification_source_timing_fix_sha256": "9c23fb959cd8b40a78b106cd0c299954c0156c3f2b9ac845a3c08b905b9564f0",
-      "notification_source_timing_fix": "publication/notification-source-timing-fix-20261101.json"
+      "notification_source_timing_fix": "publication/notification-source-timing-fix-20261101.json",
+      "before_notification_source_timing_rollout_sha256": "f0bafb97c2011fb8f476a59a778c9b3940720a99bea007ca80fef20d68c907ee",
+      "notification_source_timing_rollout": "publication/notification-source-timing-rollout-20261101.json"
     },
     {
       "path": "src/stream_core/common/observation_time.py",
@@ -5922,10 +5926,12 @@
       "path": "src/stream_core/notifications/observation.py",
       "source_role": "notification-time-evidence",
       "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes.",
-      "source_sha256": "67c46e1268d5cfd4681b02c0bce435dc8dddc2305a1836ec9ac6309f1af6abe3",
-      "public_sha256": "db7c560592e888dee495b81285ad2542991ef7bee0a18c0c80f04bff830d615a",
+      "source_sha256": "63368a51eb7962b65ebdf6a0b8a430d4c1e70ce873f8a5e673ab9803725614bb",
+      "public_sha256": "0001aa1a5d128883261eb3978dfef3303a9dccc10692a535cd647a05022099bb",
       "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
-      "notification_observation_time_source_sha256": "276ae7acfbbbc1267c2765f6815bce1ee4bdfc76759238760192bb494089c098"
+      "notification_observation_time_source_sha256": "276ae7acfbbbc1267c2765f6815bce1ee4bdfc76759238760192bb494089c098",
+      "before_notification_source_timing_rollout_sha256": "db7c560592e888dee495b81285ad2542991ef7bee0a18c0c80f04bff830d615a",
+      "notification_source_timing_rollout": "publication/notification-source-timing-rollout-20261101.json"
     },
     {
       "path": "src/stream_core/notifications/time_diagnostics.py",
@@ -6048,10 +6054,12 @@
       "path": "ops/scripts/sync_observation_contract.py",
       "source_role": "notification-time-evidence",
       "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes.",
-      "source_sha256": "f1e16aad8127f8754a4b433da5f5a5af3d159a8aef28eef3215fc48ad71e8916",
-      "public_sha256": "f1e16aad8127f8754a4b433da5f5a5af3d159a8aef28eef3215fc48ad71e8916",
+      "source_sha256": "9f9fea1abbf02f77e6ab09d49ef5fc2dc7151c6c096d611e15c7f0f6d4bb8987",
+      "public_sha256": "9f9fea1abbf02f77e6ab09d49ef5fc2dc7151c6c096d611e15c7f0f6d4bb8987",
       "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
-      "notification_observation_time_source_sha256": "f1e16aad8127f8754a4b433da5f5a5af3d159a8aef28eef3215fc48ad71e8916"
+      "notification_observation_time_source_sha256": "f1e16aad8127f8754a4b433da5f5a5af3d159a8aef28eef3215fc48ad71e8916",
+      "before_notification_source_timing_rollout_sha256": "f1e16aad8127f8754a4b433da5f5a5af3d159a8aef28eef3215fc48ad71e8916",
+      "notification_source_timing_rollout": "publication/notification-source-timing-rollout-20261101.json"
     },
     {
       "path": "tests/test_notification_observation_time.py",
@@ -6075,12 +6083,14 @@
       "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/notification_observation.py",
       "source_role": "notification-time-evidence",
       "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes.",
-      "source_sha256": "f1da6167fc8695233154d92dd59661afbbe2aa6a3ff9fcd7f3932008a70345b4",
-      "public_sha256": "e282bb647dec81cfbc5d61dfb3243445c48fa099f81bc2d56f3fb3a92f64bd30",
+      "source_sha256": "6567a697863f066507f5c398766d145dedc9b34b4d3130660d0f6b018c534c81",
+      "public_sha256": "70fd6f62a5c5e457e5bbb716070d175c6d8951ee015b2846eccbb8cd6a90fb49",
       "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
       "notification_observation_time_source_sha256": "f1da6167fc8695233154d92dd59661afbbe2aa6a3ff9fcd7f3932008a70345b4",
       "before_notification_source_timing_fix_sha256": "3964b70c6105faa9fe87e831daae8f7220ecb357ed16b159591556ca9f4a8410",
-      "notification_source_timing_fix": "publication/notification-source-timing-fix-20261101.json"
+      "notification_source_timing_fix": "publication/notification-source-timing-fix-20261101.json",
+      "before_notification_source_timing_rollout_sha256": "e282bb647dec81cfbc5d61dfb3243445c48fa099f81bc2d56f3fb3a92f64bd30",
+      "notification_source_timing_rollout": "publication/notification-source-timing-rollout-20261101.json"
     },
     {
       "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/notification_heartbeat.py",
@@ -6113,9 +6123,11 @@
       "path": "monitoring-v4/tests/test_notification_source_timing.py",
       "source_role": "notification-source-timing-regression",
       "decision": "Source-specific notification timing correction; no deployment or notification delivery.",
-      "public_sha256": "6b873bd0bf847d2fc0abc670fbd8fb6c98ea66e1138856966899168f3f2df341",
-      "source_sha256": "6b873bd0bf847d2fc0abc670fbd8fb6c98ea66e1138856966899168f3f2df341",
-      "notification_source_timing_fix": "publication/notification-source-timing-fix-20261101.json"
+      "public_sha256": "675d14867a3a092fef170bbe8090bde091ff1bd887a1775f3535f2e04914d999",
+      "source_sha256": "675d14867a3a092fef170bbe8090bde091ff1bd887a1775f3535f2e04914d999",
+      "notification_source_timing_fix": "publication/notification-source-timing-fix-20261101.json",
+      "before_notification_source_timing_rollout_sha256": "6b873bd0bf847d2fc0abc670fbd8fb6c98ea66e1138856966899168f3f2df341",
+      "notification_source_timing_rollout": "publication/notification-source-timing-rollout-20261101.json"
     },
     {
       "path": "publication/notification-source-timing-fix-20261101.json",
@@ -6132,6 +6144,38 @@
       "source_sha256": null,
       "public_sha256": "1e9971d1c747d489b45c0be1f61323b7cd04b5de8818a00e7518bc7fab2eb184",
       "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json"
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/viewer_evidence.py",
+      "source_role": "notification-evidence-contract",
+      "decision": "Align the notification consumers with shipped viewer capture and visual evidence.",
+      "public_sha256": "d1a404f93f1ad021a7792f5dc48a059735c97e2dffe042ac3df73c23cf829a18",
+      "source_sha256": "d1a404f93f1ad021a7792f5dc48a059735c97e2dffe042ac3df73c23cf829a18",
+      "notification_source_timing_rollout": "publication/notification-source-timing-rollout-20261101.json"
+    },
+    {
+      "path": "src/stream_core/common/viewer_evidence.py",
+      "source_role": "notification-evidence-contract",
+      "decision": "Align the notification consumers with shipped viewer capture and visual evidence.",
+      "public_sha256": "d1a404f93f1ad021a7792f5dc48a059735c97e2dffe042ac3df73c23cf829a18",
+      "source_sha256": "d1a404f93f1ad021a7792f5dc48a059735c97e2dffe042ac3df73c23cf829a18",
+      "notification_source_timing_rollout": "publication/notification-source-timing-rollout-20261101.json"
+    },
+    {
+      "path": "tests/test_notification_viewer_contract.py",
+      "source_role": "notification-evidence-contract",
+      "decision": "Align the notification consumers with shipped viewer capture and visual evidence.",
+      "public_sha256": "732890796e11a3825588022b43f2d86c06e4e605593a51e5a77a4128e6c9809f",
+      "source_sha256": "732890796e11a3825588022b43f2d86c06e4e605593a51e5a77a4128e6c9809f",
+      "notification_source_timing_rollout": "publication/notification-source-timing-rollout-20261101.json"
+    },
+    {
+      "path": "publication/notification-source-timing-rollout-20261101.json",
+      "source_role": "public-port-record",
+      "decision": "Align the notification consumers with shipped viewer capture and visual evidence.",
+      "public_sha256": "a94b23d69e97eb76b6690d97d5d2ad0c810a3cff6b60ceb38cdb5cf12a9d0107",
+      "source_sha256": null,
+      "notification_source_timing_rollout": "publication/notification-source-timing-rollout-20261101.json"
     }
   ],
   "omissions": [
@@ -6207,7 +6251,8 @@
     "publication/airspy-reception-port-20261030.json",
     "publication/fallback-clock-port-20261030.json",
     "publication/thumbnail-transfer-recovery-20261101.json",
-    "publication/notification-source-timing-fix-20261101.json"
+    "publication/notification-source-timing-fix-20261101.json",
+    "publication/notification-source-timing-rollout-20261101.json"
   ],
   "evidence_checkpoint_cutoff_jst": "2026-10-14T00:04:57+09:00",
   "documentation_audience": "hiring and technical reviewers",
@@ -6576,5 +6621,6 @@
     ],
     "scope": "Public thumbnail collector/page/build/upload completion and retired installation examples only"
   },
-  "notification_source_timing_fix": "publication/notification-source-timing-fix-20261101.json"
+  "notification_source_timing_fix": "publication/notification-source-timing-fix-20261101.json",
+  "notification_source_timing_rollout": "publication/notification-source-timing-rollout-20261101.json"
 }

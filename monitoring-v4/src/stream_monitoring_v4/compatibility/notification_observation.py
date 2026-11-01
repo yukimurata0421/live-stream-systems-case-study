@@ -11,8 +11,10 @@ from pathlib import Path
 
 try:
     from . import observation_time as timing
+    from .viewer_evidence import probe_state, visual_state
 except ImportError:
     import observation_time as timing
+    from viewer_evidence import probe_state, visual_state
 
 
 # Media snapshots use this gate. Independent notifier/exporter liveness rules
@@ -34,12 +36,17 @@ SPECS = {
     "StreamV3MapRuntimeContainerRestarted": ("map_runtime_status.json", "map_runtime", 360, "restart"),
     "StreamV3ViewerSyntheticSampleMissingOrStale": ("viewer_synthetic_status.json", "viewer_synthetic", 600, "monitor"),
     "StreamV3ViewerSyntheticProbeFailed": ("viewer_synthetic_status.json", "viewer_synthetic", 600, "probe_ok"),
-    "StreamV3ViewerSyntheticVisualFailure": ("viewer_synthetic_status.json", "viewer_synthetic", 600, "frame_ok"),
+    "StreamV3ViewerSyntheticVisualFailure": ("viewer_synthetic_status.json", "viewer_synthetic", 600, "visual"),
 }
 
 
 def assess(payload, condition, *, now=None):
-    if condition in {"healthy", "ingest_connected", "delivery_critical_ok", "weather_ok", "probe_ok", "frame_ok"}:
+    if condition in {"probe_ok", "visual"}:
+        if payload.get("probe_errors"):
+            return "UNKNOWN"
+        value = probe_state(payload) if condition == "probe_ok" else visual_state(payload)
+        return "GOOD" if value is True else "BAD" if value is False else "UNKNOWN"
+    if condition in {"healthy", "ingest_connected", "delivery_critical_ok", "weather_ok"}:
         if payload.get("probe_errors"):
             return "UNKNOWN"
         value = payload.get(condition)

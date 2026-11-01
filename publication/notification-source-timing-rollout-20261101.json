@@ -1,0 +1,118 @@
+{
+  "schema": "stream.notification_source_timing_rollout.v1",
+  "prepared_at_jst": "2026-11-01T22:46:30.581239+09:00",
+  "base_public_commit": "62adb4cad27541768b1e1c7e408e6ddd5e3411ea",
+  "scope": "Operated notification correction and sanitized public source follow-up; no public checkout is used as production authority.",
+  "production_deployment_performed": true,
+  "public_checkout_deployed": false,
+  "prior_source_only_records": [
+    "publication/notification-observation-time-port-20261101.json",
+    "publication/notification-source-timing-fix-20261101.json"
+  ],
+  "supersedes_current_source_pins_from_prior_records": true,
+  "operated_checkpoint": {
+    "applied_at_jst": "2026-11-01T22:33:50+09:00",
+    "standalone_adapter_sha256": "6567a697863f066507f5c398766d145dedc9b34b4d3130660d0f6b018c534c81",
+    "native_adapter_sha256": "63368a51eb7962b65ebdf6a0b8a430d4c1e70ce873f8a5e673ab9803725614bb",
+    "shared_viewer_predicate_sha256": "d1a404f93f1ad021a7792f5dc48a059735c97e2dffe042ac3df73c23cf829a18",
+    "standalone_notifier_restarted": true,
+    "native_monitor_parent_restarted": false,
+    "clock_mesh_restarted": false,
+    "media_runtime_restarted": false,
+    "notification_test_at_jst": "2026-11-01T22:38:33+09:00",
+    "test_messages": 1,
+    "provider_result": "Discord HTTP 204",
+    "resend_performed": false,
+    "test_incident_state_unchanged": true,
+    "human_visibility": "NOT_OBSERVED",
+    "closing_at_jst": "2026-11-01T22:42:02+09:00",
+    "standalone_active_incidents": 0,
+    "native_preexisting_historical_slo_incidents_retained": 1,
+    "outbox_bytes": 0,
+    "runtime_identity_preserved": true
+  },
+  "changes": [
+    "Apply source TTL to continuity and max(300 seconds, source TTL) to observation loss; preserve restoration through duplicate reads.",
+    "Read the actual v1/v2 viewer capture schema; known capture failures remain observations.",
+    "Separate capture success from visual health; captured black/frozen frames cannot close visual incidents."
+  ],
+  "validation": {
+    "development_native_tests_passed": 78,
+    "development_compatibility_tests_passed": 69,
+    "production_artifact_tests_passed": 52,
+    "production_artifact_subtests_passed": 4,
+    "public_related_tests_passed": 130,
+    "public_related_subtests_passed": 4,
+    "real_service_uid_and_mount": "PASS",
+    "native_natural_cli_witness": "PASS",
+    "real_viewer_source_interval_seconds": 305.5855008820072,
+    "real_viewer_receiver_interval_seconds": 260.9548552100023,
+    "real_viewer_planner_recovery": "PASS in separate nondelivery state; rereads did not vote",
+    "shared_module_copy_check": "checked separately by sync_observation_contract.py"
+  },
+  "preserved_failed_evidence": [
+    "Initial source-only candidate classified the live viewer schema as UNKNOWN and was not activated.",
+    "An immediate post-restart argv assertion raced process exec; observed state established application without repeating the restart. A bounded confirmation wait replaced the immediate assertion."
+  ],
+  "limits": [
+    "No production failure/recovery injection, public-player continuity qualification or new Slack delivery test.",
+    "Long-term false-notification rate and human message visibility remain unmeasured.",
+    "Earlier port records retain their original checkpoints; this follow-up supplies current source pins."
+  ],
+  "files": [
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/notification_observation.py",
+      "public_sha256": "70fd6f62a5c5e457e5bbb716070d175c6d8951ee015b2846eccbb8cd6a90fb49",
+      "source_sha256": "6567a697863f066507f5c398766d145dedc9b34b4d3130660d0f6b018c534c81",
+      "before_sha256": "e282bb647dec81cfbc5d61dfb3243445c48fa099f81bc2d56f3fb3a92f64bd30"
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/viewer_evidence.py",
+      "public_sha256": "d1a404f93f1ad021a7792f5dc48a059735c97e2dffe042ac3df73c23cf829a18",
+      "source_sha256": "d1a404f93f1ad021a7792f5dc48a059735c97e2dffe042ac3df73c23cf829a18",
+      "before_sha256": null
+    },
+    {
+      "path": "monitoring-v4/tests/test_notification_source_timing.py",
+      "public_sha256": "675d14867a3a092fef170bbe8090bde091ff1bd887a1775f3535f2e04914d999",
+      "source_sha256": "675d14867a3a092fef170bbe8090bde091ff1bd887a1775f3535f2e04914d999",
+      "before_sha256": "6b873bd0bf847d2fc0abc670fbd8fb6c98ea66e1138856966899168f3f2df341"
+    },
+    {
+      "path": "src/stream_core/common/viewer_evidence.py",
+      "public_sha256": "d1a404f93f1ad021a7792f5dc48a059735c97e2dffe042ac3df73c23cf829a18",
+      "source_sha256": "d1a404f93f1ad021a7792f5dc48a059735c97e2dffe042ac3df73c23cf829a18",
+      "before_sha256": null
+    },
+    {
+      "path": "src/stream_core/notifications/observation.py",
+      "public_sha256": "0001aa1a5d128883261eb3978dfef3303a9dccc10692a535cd647a05022099bb",
+      "source_sha256": "63368a51eb7962b65ebdf6a0b8a430d4c1e70ce873f8a5e673ab9803725614bb",
+      "before_sha256": "db7c560592e888dee495b81285ad2542991ef7bee0a18c0c80f04bff830d615a"
+    },
+    {
+      "path": "tests/test_notification_viewer_contract.py",
+      "public_sha256": "732890796e11a3825588022b43f2d86c06e4e605593a51e5a77a4128e6c9809f",
+      "source_sha256": "732890796e11a3825588022b43f2d86c06e4e605593a51e5a77a4128e6c9809f",
+      "before_sha256": null
+    },
+    {
+      "path": "ops/scripts/sync_observation_contract.py",
+      "public_sha256": "9f9fea1abbf02f77e6ab09d49ef5fc2dc7151c6c096d611e15c7f0f6d4bb8987",
+      "source_sha256": "9f9fea1abbf02f77e6ab09d49ef5fc2dc7151c6c096d611e15c7f0f6d4bb8987",
+      "before_sha256": "f1e16aad8127f8754a4b433da5f5a5af3d159a8aef28eef3215fc48ad71e8916"
+    },
+    {
+      "path": "docs/current-status.md",
+      "public_sha256": "1beab3cd3e65147e0fa2d520275c2280dfa86884c6a345efefd32f2dc8469aed",
+      "source_sha256": null,
+      "before_sha256": "d0617bc3c85dd683ad3c9cd07df34d5865cd3deba34c6d5202d4e016e75edbc9"
+    },
+    {
+      "path": "docs/v3/notification-observation-time.md",
+      "public_sha256": "1d37156850117a46cc6937e74ac9ff6486db682582606b6f16ae35dbb7538952",
+      "source_sha256": null,
+      "before_sha256": "f0bafb97c2011fb8f476a59a778c9b3940720a99bea007ca80fef20d68c907ee"
+    }
+  ]
+}

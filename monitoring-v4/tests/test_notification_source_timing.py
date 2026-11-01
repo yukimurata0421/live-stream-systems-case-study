@@ -124,3 +124,44 @@ def test_source_restoration_is_announced_while_the_media_incident_remains_bad():
     assert not state[key(alert(VIEWER))].get("observation_loss_notified")
     messages, _, _ = tick(VIEWER, 960, state, frame(VIEWER, 930))
     assert messages == []
+
+
+def viewer_frame(t, *, probe_failed=False, visual_failed=False):
+    return timing.attach({"schema": "stream_v3.viewer_synthetic.v2",
+        "status": "degraded" if probe_failed else "failed" if visual_failed else "healthy",
+        "frame_ok": not probe_failed, "black_detected": visual_failed, "freeze_detected": False,
+        "consecutive_probe_failures": 2 if probe_failed else 0,
+        "consecutive_visual_failures": 2 if visual_failed else 0}, "viewer_synthetic", now=reading(t))
+
+
+def test_actual_capture_schema_without_probe_ok_detects_failure_and_recovers_at_its_cadence():
+    messages, state, _ = tick(VIEWER, 0, {}, viewer_frame(0, probe_failed=True))
+    assert len(messages) == 1
+    for t, recovered in [(300, False), (600, True)]:
+        messages, state, _ = tick(VIEWER, t, state, viewer_frame(t), firing=False)
+        assert bool(messages) is recovered and (not state) is recovered
+
+
+def test_captured_black_frames_do_not_announce_visual_recovery_when_the_alert_disappears():
+    name = "StreamV3ViewerSyntheticVisualFailure"
+    messages, state, _ = tick(name, 0, {}, viewer_frame(0, visual_failed=True))
+    assert len(messages) == 1
+    for t in (300, 600):
+        messages, state, _ = tick(name, t, state, viewer_frame(t, visual_failed=True), firing=False)
+        assert messages == [] and key(alert(name)) in state
+    messages, state, _ = tick(name, 900, state, viewer_frame(900), firing=False)
+    assert messages == [] and state
+    messages, state, _ = tick(name, 1200, state, viewer_frame(1200), firing=False)
+    assert len(messages) == 1 and state == {}
+
+
+def test_missing_visual_fields_do_not_confirm_recovery_from_a_captured_frame():
+    name = "StreamV3ViewerSyntheticVisualFailure"
+    _, state, _ = tick(name, 0, {}, viewer_frame(0, visual_failed=True))
+    for t in (300, 600):
+        payload = viewer_frame(t)
+        for field in ("black_detected", "freeze_detected", "consecutive_visual_failures"):
+            payload.pop(field)
+        messages, state, _ = tick(name, t, state, payload, firing=False)
+        assert key(alert(name)) in state
+        assert not state[key(alert(name))].get("observation_restored")
