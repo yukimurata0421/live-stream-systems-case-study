@@ -108,6 +108,13 @@
       "public_sha256": "c74b2ff6c2fa50a992871dc63170bfc9f7ea0013a7bf0a1cb10e718f9312a794",
       "source_sha256": null,
       "adaptation": "English public contract and reader links; private deployment evidence excluded."
+    },
+    {
+      "path": "docs/current-status.md",
+      "before_public_sha256": "1beab3cd3e65147e0fa2d520275c2280dfa86884c6a345efefd32f2dc8469aed",
+      "public_sha256": "c4847e5744829973a918d13acbd64c0d30bda713352ee0b98208a1a2a639bf16",
+      "source_sha256": null,
+      "adaptation": "Operated checkpoint; private evidence and deployment configuration excluded."
     }
   ],
   "unchanged": [
@@ -121,7 +128,7 @@
       "passed": 209,
       "subtests_passed": 3
     },
-    "production": "Measurement producers and consumers applied; continuous qualification pending.",
+    "production": "APPLIED_AND_VERIFIED; raw and Prometheus sustained, existing warning closed naturally, real Discord recovery accepted.",
     "limits": [
       "No production fault injection",
       "No public-player video/audio continuity claim",
@@ -136,7 +143,44 @@
       "sender_sampler_at_jst": "2026-11-02T06:30:48+09:00",
       "monitor_consumers_at_jst": "2026-11-02T06:38:57+09:00",
       "sampler_user_mount_read_checks": "PASS; physical source readable, effect socket and recovery database inaccessible",
-      "continuous_freshness": "IN_PROGRESS; no fifteen-minute completion claim at this checkpoint"
+      "continuous_freshness": {
+        "result": "PASS",
+        "raw": "available, fresh and sustained",
+        "prometheus_window_start_jst": "2026-11-02T06:40:00+09:00",
+        "prometheus_window_end_jst": "2026-11-02T06:55:00+09:00",
+        "grid_points": 16,
+        "fresh_limit_seconds_unchanged": 180,
+        "job_instance_up": true,
+        "current_source": "RECOVERED",
+        "reason": "raw_and_prometheus_fresh_for_15m"
+      }
+    },
+    "natural_recovery": {
+      "at_jst": "2026-11-02T06:55:44+09:00",
+      "route": "discord",
+      "dry_run": false,
+      "attempt": 1,
+      "send_ok": true,
+      "send_reason": "http_204",
+      "active_incidents": 0,
+      "outbox_pending": 0,
+      "manual_incident_state_reset": false,
+      "extra_test_message": false,
+      "human_visibility": "UNOBSERVED"
+    },
+    "historical_formal_gate": {
+      "status": "unknown",
+      "reason": "source_freshness_not_met",
+      "rewritten": false
+    },
+    "implementation_ci": {
+      "commit": "1b644958ab841743b6e5718da87f7b1ec34d9793",
+      "url": "https://github.com/yukimurata0421/live-stream-systems-case-study/actions/runs/41353964407",
+      "jobs": {
+        "snapshot-check": "success",
+        "monitoring-v4-check": "success",
+        "recovery-control-check": "success"
+      }
     }
   }
 }

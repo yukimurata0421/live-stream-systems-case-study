@@ -1,11 +1,27 @@
 # Current Status
 
-Last updated: 2026-11-01 JST.
+Last updated: 2026-11-02 JST.
 
 This is the only page that records state expected to change soon: what was
 changed recently, what has not been observed yet, and what is deliberately
 disabled. Other pages describe designs and dated evidence and link here instead
 of repeating these items.
+
+## Independent Upload Measurement (2026-11-02 JST)
+
+The [measurement contract](v3/upload-measurement-source.md) separates physical
+counter collection from recovery admission. The missing protocol identity still
+blocks recovery; it no longer suppresses read-only measurement.
+
+| Item | Observed checkpoint |
+| --- | --- |
+| Applied | Sender sampler at 06:30:48 JST; monitor replica, native readers and exporter at 06:38:57 JST. Source journal is on HDD. Only the exporter was restarted; media and existing monitor/notifier parents were preserved. |
+| Qualified | Raw and Prometheus both sustained freshness. The 06:40–06:55 JST Prometheus window contained all sixteen required minute points, each within the unchanged 180-second bound with the existing job/instance up. Current source became `RECOVERED` / `raw_and_prometheus_fresh_for_15m`. |
+| Warning and delivery | The existing upload-source incident closed naturally at 06:55:44 JST. Its Discord recovery message received HTTP 204 on its first attempt; active incidents and pending deliveries were both zero. No manual state deletion or extra test message was used. |
+| Checks | Related public suite: 209 passed / 3 subtests. Full public suite: 2,045 passed / 9 skipped / 1,612 subtests. The implementation commit passed all three CI jobs. The actual sampler UID/mount could read physical telemetry and its journal while effect socket and recovery database remained inaccessible. |
+| Protected | Main Pod/container identity, FFmpeg PID 730 and generation retained; media container restart counts remained zero. Recovery guard source/config hashes and SLO values were preserved. A natural socket replacement reset the measurement baseline without breaking freshness. |
+| Historical scope | The formal upload gate still reports historical freshness loss. Its SLO values, missing intervals and original logs were not rewritten when the current-source incident recovered. |
+| Limits | No production fault injection, public-player video/audio continuity qualification or human message visibility claim. See the [dated source and verification record](../publication/independent-upload-measurement-20261102.json). |
 
 ## Notification Observation Time (2026-11-01 JST)
 
