@@ -40,6 +40,7 @@ class PublicPublisherBuildTests(unittest.TestCase):
             PUBLISHER / "site" / "systemd" / "yukimurata-public-push.timer",
         )
         self.assertTrue(all(path.is_file() for path in expected))
+        self.assertTrue((PUBLISHER / "site/scripts/collect_clock_public.py").is_file())
         self.assertFalse(any((PUBLISHER / "status").glob("*.json")))
         self.assertFalse(any((PUBLISHER / "site" / "public").glob("*.json")))
 
@@ -88,10 +89,10 @@ class PublicPublisherBuildTests(unittest.TestCase):
 
             collect.assert_called_once_with()
             reliability.assert_called_once_with()
-            self.assertEqual(providers.call_count, 3)
+            self.assertEqual(providers.call_count, 4)
             self.assertEqual(
                 [Path(call.args[0][1]).name for call in providers.call_args_list],
-                ["collect_twitch_public.py", "collect_relay_public.py", "collect_twitch_sli.py"],
+                ["collect_twitch_public.py", "collect_relay_public.py", "collect_twitch_sli.py", "collect_clock_public.py"],
             )
             self.assertEqual((public / "stream-v3-prometheus.json").read_text(), "{}\n")
             self.assertEqual((public / "stream-v3-loki.json").read_text(), "{}\n")
@@ -113,6 +114,9 @@ class PublicPublisherBuildTests(unittest.TestCase):
         push = load_script("push_to_gcs.py")
         html = (PUBLISHER / "site/public/index.html").read_text()
         assets = re.findall(r'(?:src|href)=["\']\./(assets/[^"\']+)["\']', html)
+        self.assertIn("assets/ops-20261027-notices.js", assets)
+        for element_id in ("clockTiles", "clockTimeline", "clockStamp", "reconChart"):
+            self.assertIn(f'id="{element_id}"', html)
         with tempfile.TemporaryDirectory() as directory:
             source = Path(directory) / "source"
             source.mkdir()
@@ -121,7 +125,7 @@ class PublicPublisherBuildTests(unittest.TestCase):
                 path = source / name
                 path.parent.mkdir(exist_ok=True)
                 shutil.copy2(PUBLISHER / "site/public" / name, path)
-            provider_files = ("twitch-observation.json", "relay-observation.json", "twitch-sli.json")
+            provider_files = ("twitch-observation.json", "relay-observation.json", "twitch-sli.json", "clock-observation.json")
             for name in (*push.REQUIRED_JSON, *provider_files):
                 (source / name).write_text(json.dumps({"generated_at": 1000}))
             (source / "raw-log.json").write_text("{}")

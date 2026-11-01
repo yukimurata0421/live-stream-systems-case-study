@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><title>Thumbnail observation freshness regression</title>
+<body>
+<button id="refresh">Refresh fixture</button>
+<div id="status"><span id="statusIcon"></span><span id="statusTitle"></span><ul id="statusReasons"></ul><span id="statusUpdated"></span></div>
+<div id="ytBadge"></div><div id="ytValue"></div><dl id="ytFacts"></dl>
+<div id="twBadge"></div><div id="twValue"></div><dl id="twFacts"></dl>
+<div id="routeBadge"></div><div id="routeValue"></div><div id="routeNote"></div><dl id="routeFacts"></dl>
+<svg id="pathSvg"></svg><div id="timeline"></div><div id="tooltip" hidden></div>
+<p id="clockStamp"></p><div id="clockTiles"></div><div id="clockTimeline"></div>
+<span id="transferBadge" hidden></span>
+<table><tbody id="relRows"></tbody></table><div id="relStamp"></div>
+<ul id="incidentList"></ul><div id="recChart"></div><div id="recTotal"></div><div id="recBreakdown"></div>
+<div id="checkGroups"></div><div id="checksSummary"></div><pre id="result">RUNNING</pre>
+<div hidden><div id="keyProjected"></div><div id="keyUsed"></div><div id="meterMax"></div><div id="meterMid"></div><div id="meterProjected"></div><div id="meterUsed"></div><div id="reconChart"></div><div id="reconNote"></div><div id="reconTotal"></div><div id="transferChart"></div><div id="transferDaysNote"></div><div id="transferFacts"></div><div id="transferMeter"></div><div id="transferMonth"></div><div id="transferQuota"></div><div id="transferStamp"></div><div id="transferValue"></div></div>
+<script>
+let clock = Date.now(); Date.now = () => clock;
+const sec = () => clock / 1000;
+const cells = fill => Array.from({length: 144}, (_, i) => fill(i));
+const reads = {observations: 3853, valid_clock: 2589, ocr_uncertain: 264, cadence_drift: 2};
+const fixture = () => ({schema: "stream.clock_observation_public.v1", generated_at: sec() - 10, bucket_start: sec() - sec() % 600 - 600 * 143, bucket_seconds: 600,
+  sources: [
+    {id: "oci_relay", state: "ADVANCING_CONFIRMED", classification: "target_good", reason: "ocr_time_advanced", heartbeat_ok: true, sample_age_seconds: 3.4,
+     clock_delay_seconds: 4.06, since_valid_seconds: 3.4, delay_p50_24h: 3.5, delay_p95_24h: 4.85, reads_24h: reads,
+     timeline: cells(i => i < 72 ? null : i === 100 ? {good: 0.5, bad: 0.5, unknown: 0, standby: 0} : {good: 1, bad: 0, unknown: 0, standby: 0}),
+     value_series: cells(i => i < 72 ? null : 4)},
+    {id: "youtube_fallback", state: "UNKNOWN", classification: "standby", reason: "fallback_inactive", expected_active: false, sample_age_seconds: null,
+     since_valid_seconds: 9600, reads_24h: {observations: null, valid_clock: null, ocr_uncertain: null, cadence_drift: null},
+     timeline: cells(() => ({good: 0, bad: 0, unknown: 0, standby: 1}))},
+    {id: "twitch_thumbnail", state: "AGING", api_live: true, clock_verified: true, progress_observed: true, image_unchanged: true,
+     frame_age_seconds: 420, since_valid_seconds: 40, samples_24h: 15, reads_24h: 6, retries_24h: 2,
+     timeline: cells(i => i < 134 ? null : {good: 1, bad: 0, unknown: 0, standby: 0}), value_series: cells(i => i < 134 ? null : 433)},
+  ]});
+let response = fixture();
+window.fetch = async url => ({ok: true, json: async () => String(url).includes("clock-observation.json") ? response : {}});
+window.fixtureErrors = [];
+const originalError = console.error;
+console.error = (...args) => { window.fixtureErrors.push(args.map(String).join(" ")); originalError(...args); };
+</script>
+<script src="../public/assets/ops-20261027-notices.js"></script>
+<script>
+const pause = () => new Promise(resolve => setTimeout(resolve, 30)), tests = [];
+function check(name, pass) { if (!pass) throw new Error(name); tests.push(name); }
+const badges = () => [...document.querySelectorAll("#clockTiles .badge")].map(b => `${b.dataset.state}:${b.textContent}`);
+const lanes = () => [...document.querySelectorAll("#clockTimeline .lane")];
+async function refresh(value) { response = value; document.getElementById("refresh").click(); await pause(); }
+(async () => {
+  await pause();
+  const thumbnail = () => document.querySelectorAll("#clockTiles .tile")[2];
+  const ageLane = () => lanes().find(row => row.querySelector(".lane-label").textContent.startsWith("Thumbnail age"));
+  check("verified thumbnail and current bucket show an age", thumbnail().textContent.includes("AGING")
+    && ageLane().querySelector(".lane-value").textContent === "7 min");
+  check("tile exposes the last successful clock read", thumbnail().textContent.includes("Last clock read"));
+  const missing = fixture();
+  Object.assign(missing.sources[2], {state: "UNKNOWN", clock_verified: false, progress_observed: false,
+    frame_age_seconds: null, image_unchanged: false, since_valid_seconds: 9000,
+    value_series: cells(i => i < 134 || i > 136 ? null : 433)});
+  await refresh(missing);
+  check("missing observation does not reuse an old age as current", ageLane().querySelector(".lane-value").textContent === "Not observed");
+  check("last success is visible beside the missing graph", ageLane().querySelector(".lane-label small").textContent.includes("last clock read"));
+  check("historical graph remains visible", ageLane().querySelector("path.line").getAttribute("d").length > 0);
+  check("unknown capture never claims a new image", thumbnail().textContent.includes("not observed") && !thumbnail().textContent.includes("new image"));
+  const gap = fixture(); gap.sources[2].value_series[143] = null;
+  await refresh(gap);
+  check("a missing latest bucket does not reuse an older bucket", ageLane().querySelector(".lane-value").textContent === "—");
+  await refresh(fixture());
+  check("fresh observations recover without reloading", thumbnail().textContent.includes("AGING")
+    && ageLane().querySelector(".lane-value").textContent === "7 min");
+  const isolated = fixture(); isolated.sources[2].value_series = cells(i => i === 143 ? 433 : null);
+  await refresh(isolated);
+  check("first recovered bucket is visible even without a line segment", !!ageLane().querySelector("circle.current-observation"));
+  check("the current graph states its bucket time", ageLane().querySelector(".lane-label small").textContent.includes("through"));
+  check("all sections render without errors", window.fixtureErrors.length === 0);
+  document.getElementById("result").textContent = JSON.stringify({status: "PASS", tests});
+})().catch(error => document.getElementById("result").textContent = JSON.stringify({status: "FAIL", error: error.message, tests}));
+</script>
+</body></html>

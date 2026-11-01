@@ -55,6 +55,7 @@ def main() -> int:
     subprocess.run([sys.executable,str(SITE_DIR/'scripts/collect_twitch_public.py')],check=True)
     subprocess.run([sys.executable,str(SITE_DIR/'scripts/collect_relay_public.py')],check=True)
     subprocess.run([sys.executable,str(SITE_DIR/'scripts/collect_twitch_sli.py')],check=True)
+    subprocess.run([sys.executable,str(SITE_DIR/'scripts/collect_clock_public.py')],check=True)
 
     copy_required("stream-v3-prometheus.json")
     copy_required("stream-v3-loki.json")

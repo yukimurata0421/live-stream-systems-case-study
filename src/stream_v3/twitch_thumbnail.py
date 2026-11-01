@@ -108,30 +108,49 @@ class ThumbnailHTTP:
     def __init__(self):
         self.opener=build_opener(ProxyHandler({}),NoRedirect());self.etag=None;self.cache_url=None
         self.retry_at=0.
+        self.last_attempt={}
 
     def get(self,url,*,deadline):
         if time.monotonic()<self.retry_at:raise ProbeError('thumbnail_retry_after')
+        started=time.monotonic()
+        self.last_attempt={'stage':'connect','download_bytes':0}
         headers={'User-Agent':'stream-v3-thumbnail-observer/1.0','Accept':'image/jpeg'}
         if url==self.cache_url and self.etag:headers['If-None-Match']=self.etag
         try:
-            with self.opener.open(Request(url,headers=headers),timeout=max(.1,min(6,deadline-time.monotonic()))) as response:
+            remaining=deadline-time.monotonic()
+            if remaining<=0:raise ProbeError('thumbnail_timeout')
+            with self.opener.open(Request(url,headers=headers),timeout=min(6,remaining)) as response:
+                self.last_attempt.update(stage='body',http_status=200,headers_seconds=round(time.monotonic()-started,3))
                 if response.headers.get_content_type()!='image/jpeg':raise ProbeError('thumbnail_content_type_invalid')
+                # CPython's HTTPResponse exposes its transport through fp.raw.
+                # Bound each body read by the remaining total deadline rather
+                # than reusing the short connection timeout after the headers.
+                transport=getattr(getattr(getattr(response,'fp',None),'raw',None),'_sock',None)
+                if transport is not None:
+                    self.last_attempt['peer_address']=str(transport.getpeername()[0])
                 chunks=[];size=0
                 while True:
-                    if time.monotonic()>=deadline:raise ProbeError('thumbnail_timeout')
+                    remaining=deadline-time.monotonic()
+                    if remaining<=0:raise ProbeError('thumbnail_timeout')
+                    if transport is not None:transport.settimeout(remaining)
                     data=response.read1(min(65536,2*1024*1024+1-size))
                     if not data:break
                     chunks.append(data);size+=len(data)
+                    self.last_attempt['download_bytes']=size
                     if size>2*1024*1024:raise ProbeError('thumbnail_too_large')
+                    if response.isclosed():break
                 body=b''.join(chunks)
                 tag=response.headers.get('ETag','')
                 self.etag=tag if len(tag)<=256 and all(32<=ord(c)<127 for c in tag) else None
                 self.cache_url=url
+                self.last_attempt['stage']='complete'
                 return body,{'http_status':200,'download_bytes':size,'cdn_age_seconds':cdn_age(response.headers)}
         except HTTPError as error:
             status=error.code
+            self.last_attempt['http_status']=status
             if status==304 and self.cache_url==url:
                 age=cdn_age(error.headers)
+                self.last_attempt['stage']='complete'
                 error.close();return None,{'http_status':304,'download_bytes':0,'cdn_age_seconds':age}
             if status in (429,503):
                 retry=error.headers.get('Retry-After','60')
@@ -141,7 +160,12 @@ class ThumbnailHTTP:
                     except (ValueError,TypeError,AttributeError,OverflowError):wait=60.
                 self.retry_at=time.monotonic()+min(86400,max(60,wait if math.isfinite(wait) else 60))
             error.close();raise ProbeError('thumbnail_rate_limited' if status==429 else 'thumbnail_http_failed') from None
-        except (TimeoutError,URLError,OSError):raise ProbeError('thumbnail_transport_failed') from None
+        except (TimeoutError,URLError,OSError) as error:
+            self.last_attempt['error_type']=type(getattr(error,'reason',error)).__name__
+            if time.monotonic()>=deadline:raise ProbeError('thumbnail_timeout') from None
+            raise ProbeError('thumbnail_transport_failed') from None
+        finally:
+            self.last_attempt['elapsed_seconds']=round(time.monotonic()-started,3)
 
 
 def decode_rois(body,config):

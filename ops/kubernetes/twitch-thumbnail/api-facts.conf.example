@@ -1,0 +1,6 @@
+[Service]
+# Bind only the arena pod gateway, never a public/LAN listener.
+Environment="TWITCH_THUMBNAIL_FACTS_BIND=__ARENA_POD_GATEWAY__:9124"
+Environment="TWITCH_THUMBNAIL_FORWARD_URL=http://127.0.0.1:9116/twitch-delivery"
+ExecStart=
+ExecStart=/usr/bin/python3 -B __THUMBNAIL_ADAPTER_RELEASE__/thumbnail_source.py --credentials-dir ${CREDENTIALS_DIRECTORY} --output-dir /var/lib/stream-v4-twitch-api --user-id __TWITCH_USER_ID__ --user-login __TWITCH_USER_LOGIN__ --interval-sec 60 --timeout-sec 5

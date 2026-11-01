@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Mirror a thumbnail URL from the existing Helix response into RAM without extra API requests."""
+"""Mirror the existing Helix response into a coherent private bundle without extra API requests."""
 import hashlib
 import importlib.util
 import json
@@ -7,6 +7,9 @@ import os
 from pathlib import Path
 import re
 import sys
+import threading
+from http.server import BaseHTTPRequestHandler, HTTPServer
+from urllib.request import HTTPHandler, HTTPDefaultErrorHandler, HTTPErrorProcessor, OpenerDirector
 from urllib.parse import urlsplit
 
 SCHEMA='stream_v3.twitch_thumbnail_source.v1'
@@ -31,7 +34,47 @@ def ram_path(path):
     return bool(mounts) and max(mounts)[1]=='tmpfs'
 
 
-def attach(baseline,path):
+def facts_server(address,forward_url):
+    """Bridge existing observations into the pod network; no credentials or control API.
+
+    The bundle is one immutable publication from the original Helix result. The
+    forward bridge retains the original observation timestamp and freshness flag.
+    Only this transitional host adapter knows the legacy loopback endpoint.
+    """
+    latest={};lock=threading.Lock()
+    opener=OpenerDirector()
+    for handler in (HTTPHandler(),HTTPDefaultErrorHandler(),HTTPErrorProcessor()):opener.add_handler(handler)
+    class Handler(BaseHTTPRequestHandler):
+        def setup(self):
+            super().setup();self.connection.settimeout(2)
+        def do_GET(self):
+            status=200
+            if self.path=='/bundle':
+                with lock:value=latest.copy()
+                if not value:status=503
+            elif self.path=='/forward':
+                try:
+                    with opener.open(forward_url,timeout=2) as response:raw=response.read(32769)
+                    if len(raw)>32768:raise ValueError('too_large')
+                    value=json.loads(raw)
+                    if not isinstance(value,dict) or value.get('schema')!='stream.relay_public.v1':raise ValueError('schema')
+                except Exception as error:
+                    if hasattr(error,'close'):error.close()
+                    status,value=503,{'error':'forward_unavailable'}
+            else:status,value=404,{'error':'not_found'}
+            raw=json.dumps(value,allow_nan=False).encode()
+            self.send_response(status);self.send_header('Content-Type','application/json')
+            self.send_header('Cache-Control','no-store');self.send_header('Content-Length',str(len(raw)))
+            self.end_headers();self.wfile.write(raw)
+        def log_message(self,*_):pass
+    server=HTTPServer(address,Handler)
+    def publish_bundle(api,source):
+        with lock:latest.update(schema='stream_v3.twitch_thumbnail_bundle.v1',api=api,source=source)
+    threading.Thread(target=server.serve_forever,daemon=True).start()
+    return server,publish_bundle
+
+
+def attach(baseline,path,*,publish_bundle=None):
     """Add-on failure never turns a successful Helix observation into failure."""
     if baseline.SCHEMA!='monitoring_v4.twitch_api_evidence.v1':raise ValueError('unsupported_api_contract')
     original_class,original_write=baseline.TwitchCollector,baseline.atomic_write
@@ -60,6 +103,7 @@ def attach(baseline,path):
             if payload.get('probe_status')=='ok' and payload.get('provider_state')=='OFFLINE':sidecar['thumbnail_status']='offline'
             elif payload.get('probe_status')=='ok' and payload.get('provider_state')=='LIVE' and thumbnail_template(url,payload.get('user_login','')):
                 sidecar.update(thumbnail_url=url,thumbnail_status='available')
+            if publish_bundle is not None:publish_bundle(payload,sidecar)
             if not ram_path(path):raise ValueError('thumbnail_source_requires_tmpfs')
             original_write(path,json.dumps(sidecar,sort_keys=True,allow_nan=False)+'\n')
         except Exception:
@@ -78,9 +122,15 @@ def main():
         if stat.st_uid!=0 or stat.st_mode&0o022:raise ValueError('api_baseline_not_root_owned')
     spec=importlib.util.spec_from_file_location('thumbnail_api_baseline',path)
     module=importlib.util.module_from_spec(spec);sys.modules[spec.name]=module;spec.loader.exec_module(module)
-    try:attach(module,Path(os.environ['TWITCH_THUMBNAIL_SOURCE_FILE']))
+    server=None;publish_bundle=None
+    if os.environ.get('TWITCH_THUMBNAIL_FACTS_BIND'):
+        host,port=os.environ['TWITCH_THUMBNAIL_FACTS_BIND'].rsplit(':',1)
+        server,publish_bundle=facts_server((host,int(port)),os.environ['TWITCH_THUMBNAIL_FORWARD_URL'])
+    try:attach(module,Path(os.environ['TWITCH_THUMBNAIL_SOURCE_FILE']),publish_bundle=publish_bundle)
     except Exception:print(json.dumps({'event':'thumbnail_source_extension_incompatible'}),flush=True)
-    return module.main()
+    try:return module.main()
+    finally:
+        if server:server.shutdown();server.server_close()
 
 
 if __name__=='__main__':raise SystemExit(main())

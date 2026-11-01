@@ -14,6 +14,8 @@ MAP = ROOT / "publication/source-map.json"
 ALLOWLIST = ROOT / "publication/private-path-allowlist.json"
 PRIVATE_HOME = re.compile("/home/" + r"yuki(?![A-Za-z0-9_.-])")
 PRIVATE_ADDRESS = re.compile(r"\b(?:10\.(?:\d{1,3}\.){2}\d{1,3}|192\.168\.(?:\d{1,3}\.)\d{1,3}|172\.(?:1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3})\b")
+# These are public RFC 1918 network definitions, not deployed host addresses.
+STANDARD_PRIVATE_CIDR = re.compile(r"(?<![0-9.])(?:10\.0\.0\.0/8|172\.16\.0\.0/12|192\.168\.0\.0/16)(?![0-9])")
 PRIVATE_KEY = re.compile("BEGIN " + r"(?:RSA |EC |OPENSSH )?PRIVATE KEY")
 FORBIDDEN_SUFFIXES = (".pyc", ".sqlite3", ".sqlite3-wal", ".sqlite3-shm", ".pcap", ".log", ".pem", ".key")
 
@@ -45,7 +47,8 @@ def validate() -> list[dict[str, str]]:
         for name, pattern in (("private_workspace_path", PRIVATE_HOME), ("private_address", PRIVATE_ADDRESS), ("private_key", PRIVATE_KEY)):
             if name == "private_workspace_path" and relative in allowlisted:
                 continue
-            if pattern.search(text):
+            scan_text = STANDARD_PRIVATE_CIDR.sub("<standard-private-network>", text) if name == "private_address" else text
+            if pattern.search(scan_text):
                 issues.append({"path": relative, "reason": name})
         if path.suffix == ".py":
             try:

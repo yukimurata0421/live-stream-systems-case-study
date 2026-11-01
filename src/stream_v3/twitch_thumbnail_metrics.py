@@ -3,6 +3,8 @@ from datetime import datetime
 import json
 import math
 from pathlib import Path
+from urllib.request import HTTPHandler, HTTPDefaultErrorHandler, HTTPErrorProcessor, OpenerDirector
+from urllib.parse import urlsplit
 
 
 def age(value,now):
@@ -15,7 +17,10 @@ def age(value,now):
 
 class PublicationReader:
     """Retain the last publication timestamp across read failures so gaps stay observable."""
-    def __init__(self,*,started_at):self.last_cycle_epoch=started_at
+    def __init__(self,*,started_at):
+        self.last_cycle_epoch=started_at
+        self.opener=OpenerDirector()
+        for handler in (HTTPHandler(),HTTPDefaultErrorHandler(),HTTPErrorProcessor()):self.opener.add_handler(handler)
 
     def read(self,path,*,now):
         try:
@@ -23,6 +28,22 @@ class PublicationReader:
             if len(raw)>65536:return {}
             value=json.loads(raw)
         except (OSError,ValueError):return {}
+        return self.accept(value,now=now)
+
+    def read_url(self,url,*,now):
+        """A ClusterIP endpoint replaces the host file without renewing its timestamp."""
+        try:
+            parsed=urlsplit(url)
+            if parsed.scheme!='http' or not parsed.hostname or parsed.username or parsed.password or parsed.query or parsed.fragment:return {}
+            with self.opener.open(url,timeout=2) as response:raw=response.read(65537)
+            if len(raw)>65536:return {}
+            value=json.loads(raw)
+        except (OSError,ValueError) as error:
+            if hasattr(error,'close'):error.close()
+            return {}
+        return self.accept(value,now=now)
+
+    def accept(self,value,*,now):
         if not isinstance(value,dict) or value.get('schema')!='stream_v3.twitch_thumbnail_observation.v1':return {}
         checked=age(value.get('checked_at_utc'),now)
         if checked is not None:self.last_cycle_epoch=now-checked

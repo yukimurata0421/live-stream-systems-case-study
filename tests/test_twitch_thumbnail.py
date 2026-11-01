@@ -258,7 +258,7 @@ def test_native_http_client_reuses_handlers_without_tls_and_recovers_from_errors
 def test_worker_keeps_one_native_http_client_across_polls(tmp_path,monkeypatch):
     module,worker,http,ocr,clock,publish=thumbnail_worker_fixture(tmp_path,monkeypatch)
     clients=[]
-    def forward(now,*,opener):clients.append(opener);return {}
+    def forward(now,*,opener,**kwargs):clients.append(opener);return {}
     monkeypatch.setattr(module,'native_forward',forward)
     for _ in range(3):
         publish();read=reading(clock[0]-100);ocr.read=lambda image,**kwargs:read(image)
@@ -685,6 +685,106 @@ def test_thumbnail_http_reports_cdn_age_for_200_and_304():
             state.update(etag='"b"',age='bogus');body,meta=http.get(url,deadline=time.monotonic()+5)
             assert body and meta['cdn_age_seconds'] is None
         finally:server.shutdown();thread.join(3)
+
+
+def test_http_body_deadline_also_bounds_a_blocked_read():
+    import threading
+    import time
+    from http.server import BaseHTTPRequestHandler, HTTPServer
+    from stream_v3.twitch_thumbnail import ThumbnailHTTP
+    from stream_v3.viewer_clock_capture import ProbeError
+    release=threading.Event()
+    class Handler(BaseHTTPRequestHandler):
+        def do_GET(self):
+            self.send_response(200);self.send_header('Content-Type','image/jpeg')
+            self.send_header('Content-Length','100');self.end_headers()
+            self.wfile.write(b'x');self.wfile.flush()
+            release.wait(2)
+        def log_message(self,*args):pass
+    with HTTPServer(('127.0.0.1',0),Handler) as server:
+        thread=threading.Thread(target=server.serve_forever,daemon=True);thread.start()
+        http=ThumbnailHTTP();started=time.monotonic()
+        try:
+            with pytest.raises(ProbeError,match='thumbnail_timeout'):
+                http.get(f'http://127.0.0.1:{server.server_port}/thumb.jpg',deadline=started+.25)
+            assert time.monotonic()-started<1
+            assert http.last_attempt['stage']=='body'
+            assert http.last_attempt['download_bytes']==1
+            assert http.last_attempt['error_type']=='TimeoutError'
+        finally:
+            release.set();server.shutdown();thread.join(3)
+
+
+def test_http_expired_budget_does_not_start_a_new_request(monkeypatch):
+    from stream_v3.twitch_thumbnail import ThumbnailHTTP
+    from stream_v3.viewer_clock_capture import ProbeError
+    import time
+    http=ThumbnailHTTP()
+    def unexpected(*args,**kwargs):raise AssertionError('request after deadline')
+    monkeypatch.setattr(http.opener,'open',unexpected)
+    with pytest.raises(ProbeError,match='thumbnail_timeout'):
+        http.get('https://static-cdn.jtvnw.net/',deadline=time.monotonic()-1)
+    assert http.last_attempt['stage']=='connect'
+    assert http.last_attempt['download_bytes']==0
+
+
+def test_body_stall_can_outlast_connect_timeout_within_total_budget(monkeypatch):
+    import stream_v3.twitch_thumbnail as module
+    from email.message import Message
+    monotonic=[100.]
+    monkeypatch.setattr(module.time,'monotonic',lambda:monotonic[0])
+    class Transport:
+        timeout=6
+        def getpeername(self):return ('192.0.2.10',443)
+        def settimeout(self,value):self.timeout=value
+    transport=Transport()
+    class Response:
+        headers=Message();headers['Content-Type']='image/jpeg'
+        fp=types.SimpleNamespace(raw=types.SimpleNamespace(_sock=transport))
+        delivered=False
+        def __enter__(self):return self
+        def __exit__(self,*args):pass
+        def isclosed(self):return self.delivered
+        def read1(self,maximum):
+            # A TCP body pause is longer than the connection timeout but fits
+            # inside the remaining total deadline. No real sleep is needed.
+            if transport.timeout<8:raise TimeoutError()
+            monotonic[0]+=8;self.delivered=True
+            return b'fixture-jpeg'
+    http=module.ThumbnailHTTP()
+    def open_request(request,*,timeout):
+        assert timeout==6
+        monotonic[0]+=.2
+        return Response()
+    http.opener=types.SimpleNamespace(open=open_request)
+    body,meta=http.get('https://static-cdn.jtvnw.net/',deadline=120.)
+    assert body==b'fixture-jpeg' and meta['download_bytes']==len(body)
+    assert transport.timeout>8 and http.last_attempt['stage']=='complete'
+
+
+@pytest.mark.parametrize('download_seconds',[19.,42.])
+def test_slow_image_download_leaves_a_separate_ocr_budget(tmp_path,monkeypatch,download_seconds):
+    module,worker,http,ocr,clock,publish=thumbnail_worker_fixture(tmp_path,monkeypatch)
+    monotonic=[100.]
+    monkeypatch.setattr(module.time,'monotonic',lambda:monotonic[0])
+    original=http.get
+    def slow_get(url,*,deadline):
+        assert deadline==145.
+        monotonic[0]+=download_seconds
+        return original(url,deadline=deadline)
+    http.get=slow_get
+    read=reading(clock[0]-30)
+    def after_download(image,*,deadline):
+        assert monotonic[0]<deadline<=monotonic[0]+2
+        return read(image)
+    ocr.read=after_download
+    publish();row=worker.once()
+    assert row['capture_ok'] and row['ocr_verified']
+    assert row['duration_seconds']==download_seconds
+    assert len(http.calls)==1
+    # The next request still waits for the existing 60-second cadence.
+    clock[0]+=30;publish();waiting=worker.once()
+    assert waiting['clock_state']=='WAITING_POLL' and len(http.calls)==1
 
 
 def timing_fixture(tmp_path,monkeypatch):

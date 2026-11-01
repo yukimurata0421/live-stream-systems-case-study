@@ -15,7 +15,7 @@
         <span><strong>Tokyo Flight Tracker</strong><small>ADS-B · Tsuchiura, Japan · 24/7 broadcast</small></span>
       </a>
       <nav aria-label="Sections">
-        <a href="#now">Now</a><a href="#day">24 hours</a><a href="#reliability">Reliability</a><a href="#incidents">Incidents</a><a href="#checks">Checks</a>
+        <a href="#now">Now</a><a href="#day">24 hours</a><a href="#clocks">Clocks</a><a href="#reliability">Reliability</a><a href="#incidents">Incidents</a><a href="#checks">Checks</a>
       </nav>
     </header>
 
@@ -69,8 +69,16 @@
       <div class="timeline" id="timeline"></div>
     </section>
 
+    <section id="clocks" aria-labelledby="clockTitle">
+      <div class="section-head"><h2 id="clockTitle">On-screen clock checks</h2><p id="clockStamp">—</p></div>
+      <p class="lead">The broadcast shows a JST and a UTC clock. Independent observers read both with OCR, check that they agree, and confirm they keep moving at three points along the path.</p>
+      <div class="now-grid" id="clockTiles"></div>
+      <div class="timeline clock-timeline" id="clockTimeline"></div>
+      <p class="fine">Strips use 10-minute buckets: green = clock moving, red/amber = a problem was seen, grey = not observed, light = standby. Clock delay is the age of the on-screen clock when the frame is decoded, so it includes encoder and decoder buffering, not only the network. The checks confirm the picture keeps moving; they do not measure what viewers receive.</p>
+    </section>
+
     <section id="reliability" aria-labelledby="relTitle">
-      <div class="section-head"><h2 id="relTitle">Operational reliability · rolling windows</h2><p id="relStamp">—</p></div>
+      <div class="section-head"><div><h2 id="relTitle">Operational reliability</h2><p>SLOs, quality indicators, and guardrails</p></div><p id="relStamp">—</p></div>
       <div class="table-wrap">
         <table class="rel-table">
           <thead><tr><th scope="col">Indicator</th><th scope="col">Window</th><th scope="col" class="num">Measured</th><th scope="col" class="num">Target</th><th scope="col">Against target <span class="muted">(bar 7 d · ○ 24 h · | target)</span></th><th scope="col">Status</th></tr></thead>
@@ -81,10 +89,11 @@
     </section>
 
     <section id="incidents" aria-labelledby="incTitle">
-      <div class="section-head"><h2 id="incTitle">Incidents &amp; recovery</h2><p>Active alerts and automatic recovery activity.</p></div>
+      <div class="section-head"><h2 id="incTitle">Incidents &amp; restarts</h2><p>Active alerts, process restarts, and output reconnects that kept the same process.</p></div>
       <div class="split">
         <article class="panel"><h3>Active alerts</h3><ul class="incident-list" id="incidentList"></ul></article>
-        <article class="panel"><h3>Automatic recoveries per day <span class="muted" id="recTotal"></span></h3><div id="recChart" class="bar-chart"></div><p class="fine" id="recBreakdown"></p></article>
+        <article class="panel"><h3>Process restart events per day <span class="muted" id="recTotal"></span></h3><div id="recChart" class="bar-chart"></div><p class="fine" id="recBreakdown"></p></article>
+        <article class="panel"><h3>Output reconnects per day <span class="muted" id="reconTotal"></span></h3><div id="reconChart" class="bar-chart"></div><p class="fine" id="reconNote"></p></article>
       </div>
     </section>
 
@@ -98,10 +107,10 @@
     <footer class="footer">
       <p>Tokyo Flight Tracker · ARENA receiver evaluation project · local ADS-B reception, not for navigation.</p>
       <p>Data path: arena-server → Raspberry Pi → GCS → Cloudflare. Raw data:
-        <a href="./stream-v3-prometheus.json">metrics</a> · <a href="./stream-v3-loki.json">events</a> · <a href="./reliability-indicators.json">reliability</a> · <a href="./relay-observation.json">relay</a> · <a href="./twitch-sli.json">Twitch SLI</a> · <a href="./classic.html">classic view</a> · <a href="https://github.com/yukimurata0421/arena-eval-engine" rel="noopener">project ↗</a></p>
+        <a href="./stream-v3-prometheus.json">metrics</a> · <a href="./stream-v3-loki.json">events</a> · <a href="./reliability-indicators.json">reliability</a> · <a href="./relay-observation.json">relay</a> · <a href="./twitch-sli.json">Twitch SLI</a> · <a href="./clock-observation.json">clock checks</a> · <a href="./classic.html">classic view</a> · <a href="https://github.com/yukimurata0421/arena-eval-engine" rel="noopener">project ↗</a></p>
     </footer>
   </div>
   <div class="tooltip" id="tooltip" role="tooltip" hidden></div>
-  <script src="./assets/ops-20261020.js"></script>
+  <script type="module" src="./assets/ops-20261027-notices.js"></script>
 </body>
 </html>

@@ -1,0 +1,6 @@
+[Service]
+# Preserve the loaded baseline arguments and its other overlays.
+UnsetEnvironment=TWITCH_THUMBNAIL_OBSERVATION_FILE
+Environment="TWITCH_THUMBNAIL_OBSERVATION_URL=http://__THUMBNAIL_SERVICE_IP__:9125/observation"
+ExecStart=
+ExecStart=__LOADED_EXPORTER_COMMAND_WITH_NEW_OVERLAY__

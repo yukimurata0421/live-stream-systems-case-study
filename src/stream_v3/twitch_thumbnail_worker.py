@@ -16,6 +16,7 @@ from .viewer_clock import utc_timestamp
 from .viewer_clock_capture import ProcessRunner,ProbeError,TesseractOCR
 from .viewer_clock_worker import append_history
 from .twitch_thumbnail_evidence import ThumbnailEvidenceStore
+from .thumbnail_http import http_opener, read_json, publication_server
 
 
 def publish(path,value):
@@ -29,6 +30,10 @@ def publish(path,value):
 
 IMAGE_KEYS=('image_changed_at_utc','image_changed_cdn_age_seconds')
 LAG_KEYS=('discovery_lag_seconds','cdn_age_at_discovery_seconds','origin_side_age_estimate_seconds')
+# Reserve 10 seconds for OCR, 2 for the relay read and 3 for publication within
+# the existing 60-second cadence. CDN body stalls can outlast a socket timeout.
+FETCH_BUDGET_SECONDS=45
+OCR_BUDGET_SECONDS=10
 
 
 def provider_timing(row,previous,*,digest,fetched_at):
@@ -66,11 +71,9 @@ def native_forward_opener():
     return opener
 
 
-def native_forward(now,*,opener):
+def native_forward(now,*,opener,url='http://127.0.0.1:9116/twitch-delivery'):
     try:
-        with opener.open('http://127.0.0.1:9116/twitch-delivery',timeout=2) as response:raw=response.read(32769)
-        if len(raw)>32768:return None
-        value=json.loads(raw);stamp=epoch(value.get('observed_at'))
+        value=read_json(url,opener=opener,limit=32768);stamp=epoch(value.get('observed_at'))
         if value.get('schema')!='stream.relay_public.v1' or value.get('source_fresh') is not True or stamp is None or not -2<=now-stamp<=90:return None
         states=(value['relay']['status'],value['input']['status'],value['destinations']['twitch']['status'])
         flowing=True if states==('RUNNING','FLOWING','FLOWING') else False if any(s in ('STOPPED','STALLED','DISCONNECTED') for s in states) else None
@@ -88,6 +91,8 @@ class Worker:
         except (OSError,ValueError,ProbeError):self.previous={}
         self.runner=ProcessRunner();self.http=http or ThumbnailHTTP()
         self.forward_opener=native_forward_opener()
+        self.source_opener=http_opener()
+        self.last_cycle_monotonic=time.monotonic()
         self.ocr=ocr or TesseractOCR(self.runner,binary=config['tesseract'],tessdata_dir=config['tessdata_dir'])
         self.analyzer=ThumbnailAnalyzer(config,self.previous)
         self.store=ThumbnailEvidenceStore(root/'evidence')
@@ -111,7 +116,13 @@ class Worker:
              'next_fetch_not_before_utc':self.previous.get('next_fetch_not_before_utc')}
         analysis_started=False;digest=None;fetched_at=now
         try:
-            api=load_json(self.config['api_file'])
+            bundle=None
+            if self.config.get('source_url'):
+                bundle=read_json(self.config['source_url'],opener=self.source_opener)
+                if bundle.get('schema')!='stream_v3.twitch_thumbnail_bundle.v1':raise ProbeError('source_schema_invalid')
+                api=bundle['api']
+                if not isinstance(api,dict):raise ProbeError('source_invalid')
+            else:api=load_json(self.config['api_file'])
             row['api_live']=api_status(api,self.config,now=now)
             if row['api_live'] is not None:row['api_collected_at_utc']=api['collected_at']
             if row['api_live'] is False:row['observation_required_since_utc']=None
@@ -128,7 +139,8 @@ class Worker:
                     started_at=epoch(api.get('started_at'))
                     # Restarting a worker on an old stream grants no new grace.
                     row['startup_grace_started_at_utc']=utc_timestamp(min(now,started_at) if started_at is not None else now)
-            source=load_json(self.config['source_file'])
+            source=bundle['source'] if bundle is not None else load_json(self.config['source_file'])
+            if not isinstance(source,dict):raise ProbeError('source_invalid')
             source=validate_source(source,api,self.config,now=now)
             if source is None:
                 row.update(clock_state='SOURCE_OFFLINE',reason='api_offline',api_live=False)
@@ -143,12 +155,14 @@ class Worker:
                 else:
                     row.update(last_request_at_utc=utc_timestamp(now),capture_attempted=True)
                     url=image_url(source['thumbnail_url'],source['user_login'],1920,1080)
-                    body,metadata=self.http.get(url,deadline=started+8)
+                    body,metadata=self.http.get(url,deadline=started+FETCH_BUDGET_SECONDS)
                     fetched_at=time.time();row['cdn_age_seconds']=metadata.get('cdn_age_seconds')
                     if body is not None:digest=hashlib.sha256(body).hexdigest()
-                    forward=native_forward(time.time(),opener=self.forward_opener) or {}
+                    forward=native_forward(time.time(),opener=self.forward_opener,
+                                           url=self.config.get('forward_url','http://127.0.0.1:9116/twitch-delivery')) or {}
                     analysis_started=True
-                    result=self.analyzer.observe(body,source,lambda image:self.ocr.read(image,deadline=min(started+15,time.monotonic()+2)),
+                    ocr_deadline=time.monotonic()+OCR_BUDGET_SECONDS
+                    result=self.analyzer.observe(body,source,lambda image:self.ocr.read(image,deadline=min(ocr_deadline,time.monotonic()+2)),
                                                  now=time.time(),forward_flowing=forward.get('flowing'))
                     row.update(result,**metadata,forward_observed_at_utc=forward.get('observed_at_utc'))
                     del body
@@ -158,6 +172,8 @@ class Worker:
             if retry>0:row['next_fetch_not_before_utc']=utc_timestamp(time.time()+retry)
         except (OSError,ValueError,TypeError,KeyError):row['reason']='thumbnail_source_or_storage_unavailable'
         except Exception:row['reason']='thumbnail_analysis_failed'
+        if row['capture_attempted'] and isinstance(getattr(self.http,'last_attempt',None),dict):
+            row['http_diagnostics']=dict(self.http.last_attempt)
         row.update(self.analyzer.ocr_counters)
         if analysis_started:row.update(self.analyzer.ocr_activity)
         if not row.get('ocr_verified') and row['clock_state'] not in ('WAITING_NEW_STREAM_THUMBNAIL','WAITING_POLL','WAITING_RETRY'):
@@ -183,17 +199,23 @@ class Worker:
         except (OSError,ValueError):row['evidence_status']='storage_unavailable'
         publish(self.state_file,row);append_history(self.root,row,max_bytes=1024*1024)
         self.previous=row
+        self.last_cycle_monotonic=time.monotonic()
         return row
 
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--config',type=Path,required=True);parser.add_argument('--state-root',type=Path,required=True);parser.add_argument('--once',action='store_true')
+    parser.add_argument('--listen',help='Private publication listener, HOST:PORT')
     args=parser.parse_args();config=load_json(args.config)
     config['boot_id']=Path('/proc/sys/kernel/random/boot_id').read_text().strip()
     args.state_root.mkdir(parents=True,exist_ok=True);lock=(args.state_root/'.worker.lock').open('a')
     fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
     worker=Worker(config,args.state_root);stop=threading.Event()
+    server=None
+    if args.listen:
+        host,port=args.listen.rsplit(':',1)
+        server=publication_server((host,int(port)),worker)
     def stopping(*_):stop.set();worker.runner.stopping=True
     signal.signal(signal.SIGTERM,stopping);signal.signal(signal.SIGINT,stopping)
     while not stop.is_set():
@@ -206,6 +228,7 @@ def main():
         except OSError:print(json.dumps({'event':'thumbnail_publication_failed'}),flush=True)
         if args.once:break
         stop.wait(max(1,60-(time.monotonic()-before)))
+    if server:server.shutdown();server.server_close()
 
 
 if __name__=='__main__':main()

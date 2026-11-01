@@ -36,6 +36,7 @@ ALLOWED_FILES = (
     "twitch-observation.json",
     "relay-observation.json",
     "twitch-sli.json",
+    "clock-observation.json",
     "assets/site.css",
     "assets/site.js",
     "assets/twitch-20261013.js",
@@ -56,6 +57,7 @@ ALLOWED_FILES = (
     "assets/sli-20261014-resilient.js",
     "assets/ops-20261020.css",
     "assets/ops-20261020.js",
+    "assets/ops-20261027-notices.js",
 )
 REQUIRED_JSON = ("stream-v3-prometheus.json", "stream-v3-loki.json", "reliability-indicators.json")
 MAXIMUM_FILE_BYTES = 8 * 1024 * 1024

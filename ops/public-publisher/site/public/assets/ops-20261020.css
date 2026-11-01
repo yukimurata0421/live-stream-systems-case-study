@@ -131,6 +131,12 @@ section { margin-top: 32px; }
 .axis-ticks span { position: absolute; transform: translateX(-50%); color: var(--muted); font-size: 11px; white-space: nowrap; }
 .cell { rx: 2; }
 .cell.good { fill: var(--good); } .cell.critical { fill: var(--critical); } .cell.unknown { fill: var(--unknown); } .cell.warning { fill: var(--warning); }
+.cell.standby { fill: var(--grid); }
+
+/* on-screen clock checks */
+.lead { margin: -4px 0 12px; color: var(--ink-2); font-size: 14px; max-width: 72ch; }
+.tile-sub { display: block; color: var(--muted); font-size: 12px; font-weight: 400; }
+.clock-timeline { margin-top: 14px; }
 .line { fill: none; stroke: var(--series); stroke-width: 2; }
 .ref { stroke: var(--reference); stroke-width: 1; stroke-dasharray: 4 4; }
 .gridline { stroke: var(--grid); stroke-width: 1; }
@@ -198,7 +204,7 @@ section { margin-top: 32px; }
 
 @media (max-width: 640px) {
   .lane, .axis-row { grid-template-columns: 110px 1fr 64px; gap: 8px; }
-  .axis-ticks span:nth-child(even) { display: none; }
+  .axis-ticks span:not(:nth-child(4n+1)) { display: none; }
   .rel-table th:nth-child(2), .rel-table td.window, .rel-table th:nth-child(5), .rel-table tr.row td:nth-child(5) { display: none; }
   .rel-table th, .rel-table td { padding: 9px 10px; }
   .status-banner h1 { font-size: 19px; }
