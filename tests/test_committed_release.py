@@ -1,5 +1,6 @@
 import importlib.util
 import json
+import os
 from pathlib import Path
 import subprocess
 
@@ -131,3 +132,37 @@ def test_partial_runtime_binding_cannot_be_activated(source, tmp_path):
         release.bind(root, [], m["artifact_sha256"])
     with pytest.raises(ValueError):
         release.bind(root, [("config", "relative")], m["artifact_sha256"])
+
+
+def test_deployment_entry_builds_only_without_touching_services_pointer_or_state(source, tmp_path):
+    repo, commit = source
+    root = Path(__file__).parents[1]
+    commands = tmp_path / "commands"
+    commands.mkdir()
+    effect_log = tmp_path / "unexpected-effects"
+    for name in ("sudo", "systemctl", "ssh", "kubectl", "docker"):
+        stub = commands / name
+        stub.write_text('#!/bin/sh\nprintf "%s\\n" "$0" >> "$EFFECT_LOG"\nexit 97\n')
+        stub.chmod(0o755)
+    previous = tmp_path / "previous"
+    previous.mkdir()
+    pointer = tmp_path / "current"
+    pointer.symlink_to(previous)
+    state_root = tmp_path / "state"
+    state_root.mkdir()
+    state = state_root / "history"
+    state.write_text("incident/outbox/receipt history")
+    output = tmp_path / "built"
+    env = dict(os.environ, PATH=str(commands) + os.pathsep + os.environ["PATH"],
+               EFFECT_LOG=str(effect_log), STREAM_V3_REPO_ROOT=str(repo), STREAM_V3_CURRENT_LINK=str(pointer),
+               STREAM_V3_RELEASE_ROOT=str(tmp_path / "releases"), STREAM_RUNTIME_STATE_DIR=str(state_root))
+    result = subprocess.run(["bash", str(root / "ops/scripts/deploy_stream_v3_monitoring_release.sh"),
+        str(repo), commit, "profile.json", str(output)], env=env, cwd=tmp_path,
+        capture_output=True, text=True, timeout=15)
+    assert result.returncode == 0, result.stderr
+    manifest = json.loads(result.stdout)
+    assert release.verify(output, manifest["artifact_sha256"])["commit"] == commit
+    assert pointer.resolve() == previous
+    assert state.read_text() == "incident/outbox/receipt history"
+    assert sorted(x.name for x in state_root.iterdir()) == ["history"]
+    assert not effect_log.exists()

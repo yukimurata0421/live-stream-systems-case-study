@@ -6881,8 +6881,8 @@
       "path": "tests/test_committed_release.py",
       "source_role": "observation-release-provenance",
       "decision": "portable-code-and-sanitized-qualification-record",
-      "source_sha256": "aae84ddd55ad5aefe96a931b5a6a9d8970e92696935b33b16926dfb9a7aab36f",
-      "public_sha256": "aae84ddd55ad5aefe96a931b5a6a9d8970e92696935b33b16926dfb9a7aab36f"
+      "source_sha256": "c096a24614d9bea0c7a37380ba98eaa9e8d28906a031b4683a1d13cffcff3b39",
+      "public_sha256": "c096a24614d9bea0c7a37380ba98eaa9e8d28906a031b4683a1d13cffcff3b39"
     },
     {
       "path": "tests/test_release_audit.py",

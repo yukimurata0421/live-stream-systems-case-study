@@ -30,5 +30,11 @@
     "executed": false,
     "gate": "Public player continuous AV remains unqualified."
   },
-  "secrets_or_raw_evidence_published": false
+  "secrets_or_raw_evidence_published": false,
+  "ci_first_attempt": {
+    "conclusion": "failure",
+    "old_deployment_text_assertions_failed": 4,
+    "correction": "Keep unit ownership checks and execute the real build-only wrapper with service-command traps, a fixed pointer and durable-state sentinels.",
+    "production_code_changed_for_test_compatibility": false
+  }
 }

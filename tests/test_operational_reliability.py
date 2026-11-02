@@ -254,19 +254,11 @@ class OperationalReliabilityTests(unittest.TestCase):
         self.assertEqual(len(matches), 1)
         self.assertIn("'15m': 2.0", matches[0]["evidence"])
 
-    def test_notification_release_keeps_inline_single_writer_and_arena_state(self) -> None:
-        deploy = (ROOT / "ops" / "scripts" / "deploy_stream_v3_monitoring_release.sh").read_text(
-            encoding="utf-8"
-        )
+    def test_notification_unit_keeps_shared_arena_state(self) -> None:
         unit = (ROOT / "ops" / "systemd" / "adsb-streamnew-notify.service").read_text(
             encoding="utf-8"
         )
 
-        self.assertIn("systemctl disable --now adsb-streamnew-notify.timer", deploy)
-        enable_block = deploy.split("sudo systemctl enable --now", 1)[1].split(
-            "sudo systemctl restart", 1
-        )[0]
-        self.assertNotIn("adsb-streamnew-notify.timer", enable_block)
         self.assertIn("EnvironmentFile=-/etc/default/adsb-streamnew-notify", unit)
         self.assertIn(
             "Environment=STREAM_RUNTIME_STATE_DIR=/var/lib/stream-v3/observability-monitor",
@@ -293,28 +285,12 @@ class OperationalReliabilityTests(unittest.TestCase):
             "sample_age=unknown source=operational_reliability_burn_status.json",
         })
 
-    def test_release_deploy_immediately_refreshes_rollup_burn_and_external_evidence(self) -> None:
-        deploy = (ROOT / "ops" / "scripts" / "deploy_stream_v3_monitoring_release.sh").read_text(
-            encoding="utf-8"
-        )
 
-        start_block = deploy.split("sudo systemctl start", 1)[1]
-        self.assertIn("stream-v3-operational-reliability-rollup.service", start_block)
-        self.assertIn("stream-v3-reliability-burn-evaluator.service", start_block)
-        self.assertIn("stream-v3-external-blackbox-import.service", start_block)
-
-    def test_release_deploy_pins_public_current_link_to_immutable_release(self) -> None:
-        deploy = (ROOT / "ops" / "scripts" / "deploy_stream_v3_monitoring_release.sh").read_text(
-            encoding="utf-8"
-        )
+    def test_observability_unit_uses_configured_release_cli(self) -> None:
         unit = (ROOT / "ops" / "systemd" / "stream-v3-observability-monitor.service").read_text(
             encoding="utf-8"
         )
 
-        self.assertIn('current_link="${STREAM_V3_CURRENT_LINK:-/opt/stream_v3}"', deploy)
-        self.assertIn('release_dir="${release_root}/${tag}"', deploy)
-        self.assertIn('ln -s "${release_dir}" "${temporary_link}"', deploy)
-        self.assertIn('mv -Tf "${temporary_link}" "${current_link}"', deploy)
         self.assertIn("Environment=STREAM_V3_REPO_DIR=/opt/stream_v3", unit)
         self.assertIn(
             'STREAM_V3_STREAM_CLI_BIN="$${STREAM_V3_STREAM_CLI_BIN:-$${STREAM_V3_REPO_DIR}/bin/stream-prod}"',
@@ -322,9 +298,6 @@ class OperationalReliabilityTests(unittest.TestCase):
         )
 
     def test_accepted_arena_host_unit_drift_is_captured_by_repository_contract(self) -> None:
-        deploy = (ROOT / "ops" / "scripts" / "deploy_stream_v3_monitoring_release.sh").read_text(
-            encoding="utf-8"
-        )
         systemd = ROOT / "ops" / "systemd"
         remote_recovery = (systemd / "stream-v3-remote-recovery.service").read_text(
             encoding="utf-8"
@@ -356,16 +329,10 @@ class OperationalReliabilityTests(unittest.TestCase):
         self.assertIn("STREAM_RUNTIME_STATE_DIR=/var/lib/stream-v3/observability-monitor", upstream)
         self.assertIn("stream1090-report --record --base-url", stream1090)
         self.assertIn("upstream-report --record --upstream-url", upstream)
-        self.assertIn("adsb-streamnew-stream1090-report.service", deploy)
-        self.assertIn("adsb-streamnew-stream1090-report.timer", deploy)
-        self.assertIn("adsb-streamnew-upstream-report.service", deploy)
-        self.assertIn("adsb-streamnew-upstream-report.timer", deploy)
         self.assertIn("STREAM_V3_REMOTE_RECOVERY_APPLY_ACTION_PLAN=0", remote_recovery)
         self.assertIn("STREAM_V3_REMOTE_RECOVERY_ACTION_PLAN_MAX_AGE_SEC=180", remote_recovery)
         self.assertIn("WAO_PERSISTENT_TRIGGER_WAN_SNAPSHOT=0", anchor_dropin)
         self.assertIn("WAO_PERSISTENT_TRIGGER_RTMPS_BURST=0", anchor_dropin)
-        self.assertIn("arena_anchor_dropin_dir", deploy)
-        self.assertIn("10-host-role.conf", deploy)
 
     def test_same_url_ledger_keeps_baseline_daily_checkpoint_and_transition_without_plain_url(self) -> None:
         with tempfile.TemporaryDirectory() as td:
