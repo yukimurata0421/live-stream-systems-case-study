@@ -1,0 +1,67 @@
+{
+  "schema": "stream.oci_external_watchdog.v1",
+  "date_jst": "2026-11-02",
+  "deployment_performed": true,
+  "new_compute_instances": 0,
+  "operated_route": [
+    "observation owner",
+    "OCI Monitoring",
+    "OCI Notifications",
+    "existing critical Slack"
+  ],
+  "sender_release": "fdac1083312380ad",
+  "cloud_query": "ObservationHeartbeat[1m]{monitor=\"observation-owner\"}.groupBy(monitor).absent(72h)",
+  "interval_sec": 60,
+  "pending_sec": 300,
+  "evaluation_slack_sec": 180,
+  "repeat_sec": 3600,
+  "absence_period_hours": 72,
+  "receiver_evidence": [
+    {
+      "type": "OK_TO_FIRING",
+      "at_jst": "2026-11-02T12:48:24+09:00",
+      "elapsed_from_last_confirmed_heartbeat_sec": 528.5
+    },
+    {
+      "type": "FIRING_TO_OK",
+      "at_jst": "2026-11-02T12:54:22+09:00",
+      "elapsed_from_first_resumed_heartbeat_sec": 262.0
+    }
+  ],
+  "validation_series_only_paused": true,
+  "production_heartbeat_continued": true,
+  "validation_resources_removed": true,
+  "write_scope": "dedicated namespace and compartment; METRIC_WRITE only",
+  "negative_authorization_tests": [
+    "metric read rejected",
+    "other namespace write rejected"
+  ],
+  "checks": {
+    "native_sender_tests": 13,
+    "development_tests": 15,
+    "public_tests": 15,
+    "subtests_each": 33,
+    "protected_pods_unchanged": 2,
+    "ffmpeg_generation_unchanged": true,
+    "send_ack_advanced": true,
+    "guard_hashes_unchanged": true
+  },
+  "limits": [
+    "same OCI provider and region correlation",
+    "long-absence RESET is not recovery; real 72-hour outage not exercised",
+    "human acknowledgment not observed",
+    "viewer continuity and media failover not tested",
+    "final state-neutral wording configuration verified but no new induced alarm for that wording",
+    "final sender includes suspend time; regression and natural send verified; cloud query and destination unchanged",
+    "final billing not verified"
+  ],
+  "preserved_failures": [
+    "compartment propagation rejected initial topic creation",
+    "incorrect SDK client rejected subscription before dispatch",
+    "identity domain required primary email",
+    "missing requests dependency and OCID validation fixed before final deployment",
+    "first metric response parsing failed on gzip",
+    "one in-flight validation send terminated with unknown outcome",
+    "initial cleanup guard rejected removal; exact hashes used before removing owned files"
+  ]
+}

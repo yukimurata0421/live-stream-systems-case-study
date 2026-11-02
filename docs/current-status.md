@@ -21,11 +21,27 @@ scraping, owner-side projection, warning continuity and common notification deli
 | Retirement | The former LAN upload exporter is disabled. Duplicate Kubernetes Prometheus/Grafana replicas are zero after watchdog migration; their storage/configuration remain. Host Prometheus and the protected media processes were retained. |
 | Regression | The isolated HTTP/Prometheus/projection pipeline passed and collected its owned children. Deployment rules cover healthy, mismatched, stopped and missing targets. Exact final test counts are recorded in the dated publication record. |
 | Receiver limit | The bounded YouTube browser probe initially advanced video, then displayed a player error. Continuous reception and audio are unqualified. Direct public-edge requests from this execution environment returned 403; publisher/R2 verification is separate evidence. |
-| Pending | Independent external heartbeat code and policy generation are prepared and local preflight passed. No external channel was registered; destination selection, activation and actual absence notification remain pending. Legacy multi-purpose exporter and raw history replication retain consumers. No production fault injection or day-long qualification was performed. |
+| Pending | Independent OCI heartbeat delivery is now enabled; see the external watchdog checkpoint below. Legacy multi-purpose exporter and raw history replication retain consumers. No production fault injection or day-long qualification was performed. |
 
 The earlier LAN cutover and its exact evidence are retained in
 [the first connection record](../publication/upload-direct-connection-20261102.json).
 The follow-up is recorded in [the completion checkpoint](../publication/observation-completion-20261102.json).
+
+## External Watchdog Connected (2026-11-02 JST)
+
+The [external watchdog](v3/external-watchdog.md) uses OCI Monitoring and Notifications
+with the existing critical Slack destination. No VM was created.
+
+| Item | Observed checkpoint |
+| --- | --- |
+| Sender | A new arena timer sends every 60 seconds only with gateway age at most 30 seconds, notification age at most 300 seconds, matching boot identity and ready Prometheus. Existing monitor and gateway processes were retained. |
+| Time and acceptance | Fresh OCI HTTPS Date supplies the metric and signature timestamp. Clock exchange is bounded to 5 seconds; local freshness is checked again before sending. HTTP and partial failures do not count as accepted points. |
+| Alarm | One-minute aggregation, 5-minute pending, the default 3-minute evaluation slack, hourly reminders and a 72-hour absence detection period. RESET after prolonged absence is not recovery. |
+| Authority | Dedicated namespace/compartment write-only identity. Real calls confirmed rejection of metric reads and writes to another namespace. No administrator credential was placed on the sender. |
+| Absence exercise | Only the validation series was paused. Slack displayed OK_TO_FIRING at 12:48:24 JST, approximately 528.5 seconds after the last confirmed heartbeat. The production alarm remained OK. |
+| Recovery exercise | Heartbeat emission resumed at 12:50:01 JST. Slack displayed FIRING_TO_OK at 12:54:22 JST, approximately 262 seconds later, matching the cloud transition and fresh metric data. The validation alarm, timer, unit and config were then removed; the production alarm remained enabled and OK. |
+| Final revision | The final sender includes suspend time in its clock-exchange budget; its regression and natural send passed. The shared message body was made state-neutral. That final wording was verified in the cloud configuration, not through another induced alarm. Query and destination are unchanged from the received test notifications. |
+| Tests and limits | Development and public targeted tests each passed 15 tests and 33 subtests, including the official SDK signature. Same-provider/region correlation and the long-absence reset remain limits. Human acknowledgment, player continuity and actual billing were not verified. |
 
 ## Independent Upload Measurement (2026-11-02 JST)
 

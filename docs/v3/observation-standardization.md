@@ -37,7 +37,7 @@ owner snapshots -> common adapters -> local Prometheus
 owner sources and Prometheus -> sanitized bundle -> publish-only host -> public objects
 existing incident owners -> common delivery gateway -> Slack / Discord
 independent local notification health -> existing direct provider delivery
-external heartbeat -> independent absence detector (activation pending)
+external heartbeat -> OCI Monitoring -> OCI Notifications -> critical Slack
 ```
 
 The sender adapter has no control methods, outbound fetches or credentials. Its
@@ -118,15 +118,19 @@ existing provider-acknowledgment and fallback semantics. Shared delivery is
 implemented; incident ownership has not been collapsed into a new policy engine.
 
 The external heartbeat checks fresh, same-boot gateway and natural notification
-cycles plus Prometheus readiness. Its prepared Cloud Monitoring absence policy
-requires an explicit project-bound notification channel. A local dry run is not an
-external deadman qualification. Activation requires a baseline point, independent
-absence detection and observed provider delivery. The
-[Cloud Monitoring API](https://docs.cloud.google.com/monitoring/api/ref_v3/rest/v3/projects.timeSeries/create)
-accepts heartbeat points; the
-[absence condition](https://docs.cloud.google.com/monitoring/api/ref_v3/rest/v3/projects.alertPolicies)
-is evaluated outside the monitored host. Credential, network and clock failures
-can also stop heartbeats; the resulting alert is about monitoring availability.
+cycles plus Prometheus readiness. The operated route is now OCI Monitoring to OCI
+Notifications to the existing critical Slack destination, independent of the
+observation owner's gateway. It creates no VM and never controls the media path.
+A dedicated identity can only post the watchdog namespace. Local freshness uses
+boottime; a bounded fresh HTTPS exchange with OCI supplies the metric and request
+signature time. A previous exchange's time is never reused.
+
+Missing heartbeats indicate unavailable monitoring evidence, which can also result
+from credentials, network or producer failures. They do not prove a stream outage.
+OCI's long-absence RESET is not recovery: recovery needs renewed heartbeat data.
+The [external watchdog contract and validation](external-watchdog.md) distinguishes
+local tests, cloud acceptance, alarm transitions and messages visible at the receiver.
+The earlier GCP sender remains an inactive alternative.
 
 ## Retirement and rollback
 
