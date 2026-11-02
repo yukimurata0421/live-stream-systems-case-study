@@ -57,6 +57,9 @@ jobs:
         run: |
           python ops/scripts/v3_shadow_acceptance.py
 
+      - name: Check recovery notification consistency
+        run: python -m pytest -q tests/test_notification_observation_time.py
+
       - name: Public test suite
         run: python -m pytest -q tests ops/public-publisher/status/tests
 

@@ -1,0 +1,35 @@
+{
+  "schema": "stream.recovery_notification_consistency.v1",
+  "date_jst": "2026-11-02",
+  "scope": "test and CI checks; production code unchanged",
+  "contracts": [
+    "Recovered items must not retain a true pending-observation marker.",
+    "Completed recovery payload current-state fields must not say unknown, pending, unconfirmed, unverified or the Japanese equivalent.",
+    "Historical last_bad_evidence may describe a previous unknown state.",
+    "Open incident messages may retain pending observation status."
+  ],
+  "checked_fields": [
+    "current_observation",
+    "current_status",
+    "recovery_status"
+  ],
+  "checks": {
+    "contract_tests": 34,
+    "related_development_tests": 66,
+    "related_public_tests": 66,
+    "deliberate_contradictory_payloads": 3,
+    "known_bug_reintroduced_process_exit": 1,
+    "known_bug_reintroduced_failed_tests": 7
+  },
+  "ci": {
+    "workflow": ".github/workflows/public-snapshot-check.yml",
+    "step": "Check recovery notification consistency",
+    "command": "python -m pytest -q tests/test_notification_observation_time.py"
+  },
+  "initial_test_failure": "The delivery layer caught the test assertion and queued retry, so the first negative tests did not receive the exception. The fixture now records consistency errors and fails after the owner returns.",
+  "limits": [
+    "Scenario-based CI assertions, not a runtime scanner of already delivered messages.",
+    "No production service, incident, notification route or SLO changes.",
+    "No external test notification sent."
+  ]
+}

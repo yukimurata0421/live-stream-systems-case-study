@@ -21,11 +21,12 @@
       "decision": "public-source-check-in-existing-CI",
       "before_sha256": "8cd9b2b664147a634dc5e11620f7dfebedcbbfd62722dbbe96125b0e064c549a",
       "source_sha256": null,
-      "public_sha256": "537d020e0ed25450241bc2833dbcad0a26a4fe384e79cfd7423885de7ff96ead",
-      "prior_public_sha256": "e44562a278f4d408c6f16747871d0f59a18094a653b1299a6d0882117b4c5575",
+      "public_sha256": "ec2886d1b37a6ebb24e61db53cebfb72f91c57c86f9d1e7c7c7c9a4457a455ab",
+      "prior_public_sha256": "537d020e0ed25450241bc2833dbcad0a26a4fe384e79cfd7423885de7ff96ead",
       "localization": "English prose; control structures and machine identifiers preserved.",
       "layout_update": "Current CRA and Stream support separation, 2026-10-26",
-      "clock_contract_reconciliation": "clock-port-packaging-20261031"
+      "clock_contract_reconciliation": "clock-port-packaging-20261031",
+      "notification_consistency_record": "publication/recovery-notification-consistency-20261102.json"
     },
     {
       "path": "README.md",
@@ -374,7 +375,7 @@
       "decision": "Record applied independent upload sampling, sustained current-source recovery and the natural notification result.",
       "before_sha256": "1beab3cd3e65147e0fa2d520275c2280dfa86884c6a345efefd32f2dc8469aed",
       "source_sha256": null,
-      "public_sha256": "7fc266a52f2335f942ad448a227567ad096e9ff01df49fd17fc0b47108bbe635",
+      "public_sha256": "2a96044dc37937840a6b354efd5456c3c19b05d3cad6665890358ae8cc5d29e2",
       "port_date_jst": "2026-11-02",
       "documentation_restructure": "New single page for volatile state.",
       "pre_twitch_observation_public_sha256": "040eac29174151f51e473f7f85e4aa23ff994be0079b3d4c011623b6ec7864ca",
@@ -397,7 +398,7 @@
       "pre_fifo_recovery_public_sha256": "f869fdb0929bc8925b2f9bdb799682d063dded38d8218d282597be95019c59b4",
       "pre_music_exclusion_port_sha256": "3b3e1db9dc83166e863412eec229fb03bcf8b6442798c06fb8ac6699a7d1dd4f",
       "port_record": "publication/upload-direct-connection-20261102.json",
-      "prior_public_sha256": "5a2a3ea845cd224497331942409891c22a31b661a8c1cad28c9d2845406a25a1",
+      "prior_public_sha256": "7fc266a52f2335f942ad448a227567ad096e9ff01df49fd17fc0b47108bbe635",
       "layout_update": "Current CRA and Stream support separation, 2026-10-26",
       "pre_twitch_api_deadline_public_sha256": "4998fd310833888def4533338a6dc712bfad0795ce48f6a923513130857a8ada",
       "pre_r2_publication_docs_sha256": "00626a6215b9f73779f63bb73816f98104c7e76a4fe83697f950276864458d3d",
@@ -439,7 +440,8 @@
       "before_upload_direct_connection_sha256": "b1bf37819d867ad8ec251791e2592b650207bb5b91825c928d386f9e477c7d01",
       "observation_completion_record": "publication/observation-completion-20261102.json",
       "external_watchdog_record": "publication/oci-external-watchdog-20261102.json",
-      "recovery_marker_record": "publication/recovery-notification-marker-20261102.json"
+      "recovery_marker_record": "publication/recovery-notification-marker-20261102.json",
+      "notification_consistency_record": "publication/recovery-notification-consistency-20261102.json"
     },
     {
       "path": "docs/design-decisions-for-review.md",
@@ -5923,7 +5925,7 @@
       "source_role": "public-measurement-documentation",
       "decision": "Describe independent upload observation and preserve the control and SLO boundaries.",
       "source_sha256": null,
-      "public_sha256": "cb56136fb73c3cf1949755458605c4e70a89569520adb69b2404c28259b2ea99",
+      "public_sha256": "8020848005bab03b2d685e65e1a2f60c7d270fda45c9dabb478997348721df5b",
       "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
       "notification_observation_time_source_sha256": null,
       "before_notification_source_timing_fix_sha256": "9c23fb959cd8b40a78b106cd0c299954c0156c3f2b9ac845a3c08b905b9564f0",
@@ -5933,8 +5935,9 @@
       "before_sha256": "1d37156850117a46cc6937e74ac9ff6486db682582606b6f16ae35dbb7538952",
       "port_date_jst": "2026-11-02",
       "port_record": "publication/independent-upload-measurement-20261102.json",
-      "prior_public_sha256": "4336b872c1bdc4de66fac59faaaa24da52a3eba50cecfd8803d715409678ed95",
-      "recovery_marker_record": "publication/recovery-notification-marker-20261102.json"
+      "prior_public_sha256": "cb56136fb73c3cf1949755458605c4e70a89569520adb69b2404c28259b2ea99",
+      "recovery_marker_record": "publication/recovery-notification-marker-20261102.json",
+      "notification_consistency_record": "publication/recovery-notification-consistency-20261102.json"
     },
     {
       "path": "src/stream_core/common/observation_time.py",
@@ -6111,12 +6114,13 @@
       "path": "tests/test_notification_observation_time.py",
       "source_role": "notification-time-evidence",
       "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes.",
-      "source_sha256": "8aae830a89909e59ac215e20af48b0e0c23c93e95b626e0e0f6d21e4aef8935f",
-      "public_sha256": "a3469992af7b540eab8f69a21c3ac28df12922120b3597d29f0bc573c4d10520",
+      "source_sha256": "cd844316dec7247fc0910d501a25f208ccef8ff261a36d6f197df81c9bec90f0",
+      "public_sha256": "e2f653b047549f083d0eef19805fbc91d328921817c36fa319e0db2e712221a9",
       "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
       "notification_observation_time_source_sha256": "68a58d1610f310a955f27f5dcafe4e95058b60512917b59c5a27f5f6fe2a9ddc",
-      "prior_public_sha256": "dca44e9b8bbec9f0ee3cb7fd4ed90225e198310471a9258498b392a3207bcbd1",
-      "recovery_marker_record": "publication/recovery-notification-marker-20261102.json"
+      "prior_public_sha256": "a3469992af7b540eab8f69a21c3ac28df12922120b3597d29f0bc573c4d10520",
+      "recovery_marker_record": "publication/recovery-notification-marker-20261102.json",
+      "notification_consistency_record": "publication/recovery-notification-consistency-20261102.json"
     },
     {
       "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/observation_time.py",
@@ -6915,7 +6919,8 @@
     "publication/notification-source-timing-fix-20261101.json",
     "publication/notification-source-timing-rollout-20261101.json",
     "publication/oci-external-watchdog-20261102.json",
-    "publication/recovery-notification-marker-20261102.json"
+    "publication/recovery-notification-marker-20261102.json",
+    "publication/recovery-notification-consistency-20261102.json"
   ],
   "evidence_checkpoint_cutoff_jst": "2026-10-14T00:04:57+09:00",
   "documentation_audience": "hiring and technical reviewers",

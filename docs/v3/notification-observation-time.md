@@ -30,7 +30,12 @@ subtracted directly.
 The pending-observation marker describes an open incident awaiting confirmation.
 Recovery assembly removes a retained marker, and recovery rendering excludes the
 pending label even when given an older saved incident. The last abnormal evidence
-and verified recovery evidence remain visible. This changes presentation without
+and verified recovery evidence remain visible. A dedicated CI step checks recovery
+assembly and the completed payload at the delivery boundary. It rejects unknown,
+pending, unconfirmed and localized unverified values in current-state fields.
+Historical `last_bad_evidence` is allowed to describe a previous unknown state.
+Deliberately contradictory payloads must be detected even when transport error
+handling catches the assertion and queues a retry. This changes presentation without
 changing the evidence required to close an incident.
 
 Duplicate samples, counter rollback, boot changes and delayed old samples cannot

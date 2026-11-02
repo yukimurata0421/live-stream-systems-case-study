@@ -3,6 +3,7 @@ from dataclasses import replace
 from datetime import datetime, timezone
 import json
 from pathlib import Path
+import re
 
 import pytest
 
@@ -258,9 +259,23 @@ def test_oauth_cache_retains_its_original_observation_identity():
     assert written[-1]["oauth_observation_time"]["sample_id"] != first["oauth_observation_time"]["sample_id"]
 
 
+def assert_notification_message_consistent(phase, content):
+    if phase != "recovered":
+        return
+    current_fields = {"current_observation", "current_status", "recovery_status"}
+    unconfirmed = re.compile(
+        r"\b(?:unknown|pending|unconfirmed|unverified)\b|not (?:yet )?(?:verified|confirmed)|\u5fa9\u65e7\u672a\u78ba\u8a8d",
+        re.IGNORECASE,
+    )
+    for line in content.splitlines():
+        field, separator, value = line.strip().partition("=")
+        if separator and field.strip() in current_fields:
+            assert not unconfirmed.search(value), "recovered notification contains an unconfirmed current state"
+
+
 @pytest.fixture
 def notifications(tmp_path, monkeypatch):
-    values = {"items": [], "data": {}, "now": reading()}
+    values = {"items": [], "data": {}, "now": reading(), "rendered_phases": {}, "consistency_errors": []}
     sent = []
     state_file = tmp_path / "state.json"
     config = {"enabled": True, "webhook_url": "fixture", "username": "fixture", "slack_enabled": False,
@@ -276,7 +291,19 @@ def notifications(tmp_path, monkeypatch):
         return {"sources": sources, "bad_ids": {x["id"] for x in values["items"]},
                 "observe": {"checks": {"current_fail": bool(values["items"])}}}
 
+    def format_message(**kwargs):
+        if kwargs["phase"] == "recovered":
+            assert all(not item.get("_observation_pending") for item in kwargs["incidents"]), "recovered item retains pending observation"
+        content = renderer.format_discord_message(**kwargs)
+        values["rendered_phases"][content] = kwargs["phase"]
+        return content
+
     def sender(_url, content, **_kwargs):
+        try:
+            assert_notification_message_consistent(values["rendered_phases"][content], content)
+        except AssertionError as exc:
+            values["consistency_errors"].append(str(exc))
+            raise
         sent.append(content)
         return True, "http_204"
 
@@ -286,7 +313,7 @@ def notifications(tmp_path, monkeypatch):
         save_state=lambda x: notify_state.save_notify_state(x, state_file),
         collect_incidents=lambda **_kw: values["items"], observation_collection=collection,
         recovery_observation_for_incident=lambda _id, now: (now, "legacy absence"),
-        format_message=renderer.format_discord_message, send_webhook=sender,
+        format_message=format_message, send_webhook=sender,
         maintenance_notification_incident=lambda _now: None, fast_recovery_events_file=tmp_path / "fast.jsonl",
         stream_engine_events_file=tmp_path / "engine.jsonl", stream_watchdog_events_file=tmp_path / "watchdog.jsonl",
         runtime_state_base_dir=tmp_path)
@@ -304,6 +331,7 @@ def notifications(tmp_path, monkeypatch):
             values["data"] = {"youtube_watchdog": {"observation_time": metadata(t=t, boot=boot),
                 "status": "warn" if bad else "ok", "healthy": not bad, "local_ok": not bad, "ingest_connected": not bad}}
         result = status_loop.notify_status(ctx=ctx, now_ts=int(values["now"].wall))
+        assert not values["consistency_errors"], "; ".join(values["consistency_errors"])
         return result
 
     return tick, sent, lambda: notify_state.load_notify_state(state_file), values
@@ -399,3 +427,30 @@ def test_pending_observation_label_is_only_for_an_open_incident():
     assert "recovery_evidence=verified normal observations" in message
     assert "last_bad_evidence=prior failure" in message
     assert item["_observation_pending"] is True
+
+
+@pytest.mark.parametrize("contradiction", [
+    "current_observation=unknown (incident retained until recovery is verified)",
+    "current_observation=\u5fa9\u65e7\u672a\u78ba\u8a8d",
+    "recovery_status = PENDING",
+])
+def test_recovery_message_gate_rejects_contradiction_at_delivery(notifications, monkeypatch, contradiction):
+    tick, sent, _, _ = notifications
+    original = renderer.format_discord_message
+
+    def contradictory_message(**kwargs):
+        content = original(**kwargs)
+        return content + "\n  " + contradiction if kwargs["phase"] == "recovered" else content
+
+    monkeypatch.setattr(renderer, "format_discord_message", contradictory_message)
+    tick(0, True)
+    tick(60, False, missing=True)
+    tick(120, False)
+    with pytest.raises(AssertionError, match="recovered notification contains an unconfirmed current state"):
+        tick(180, False)
+    assert len(sent) == 1
+
+
+def test_recovery_message_gate_allows_historical_failure_and_open_pending_state():
+    assert_notification_message_consistent("recovered", "last_bad_evidence=current_observation=unknown\nrecovery_evidence=verified normal observations")
+    assert_notification_message_consistent("status", "current_observation=unknown (recovery not yet verified)")
