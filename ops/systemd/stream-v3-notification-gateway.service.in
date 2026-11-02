@@ -1,0 +1,33 @@
+[Unit]
+Description=Shared Slack and Discord delivery boundary
+After=network-online.target
+
+[Service]
+Type=simple
+DynamicUser=yes
+User=stream-notification-gateway
+StateDirectory=stream-notification-gateway
+StateDirectoryMode=0700
+RuntimeDirectory=stream-notification-gateway
+RuntimeDirectoryMode=0755
+EnvironmentFile=@NOTIFICATION_ENV@
+ExecStart=/usr/bin/python3 -I -B @RELEASE@/gateway.py --socket /run/stream-notification-gateway/gateway.sock --database /var/lib/stream-notification-gateway/receipts.sqlite --allow-uid 0 --allow-user @MONITOR_USER@ --allow-user @ALERT_USER@
+Restart=on-failure
+RestartSec=10
+CPUQuota=5%
+MemoryMax=64M
+TasksMax=8
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+CapabilityBoundingSet=
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

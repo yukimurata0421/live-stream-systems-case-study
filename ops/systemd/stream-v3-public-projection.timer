@@ -1,0 +1,11 @@
+[Unit]
+Description=Refresh owner-generated public observations
+
+[Timer]
+OnBootSec=30
+OnUnitActiveSec=60
+AccuracySec=3
+Unit=stream-v3-public-projection.service
+
+[Install]
+WantedBy=timers.target

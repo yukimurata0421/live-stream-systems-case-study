@@ -376,7 +376,20 @@ def counts(db_path: Path) -> dict[str, int]:
 def same_url_ledger_evidence(db_path: Path, *, start_ts: int, end_ts: int) -> dict:
     if not db_path.exists():
         return {"available": False, "row_count": 0}
-    with connect(db_path) as db:
+    # A closed WAL database may have no sidecars. SQLite mode=ro then attempts
+    # to create them, which fails in the publisher's read-only mount. Read a
+    # guarded, checkpointed image in that case only; never ignore a live WAL.
+    db_path = db_path.resolve()
+    wal = db_path.with_name(db_path.name + '-wal')
+    def identity():
+        info = db_path.stat()
+        return info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns, info.st_ctime_ns
+    before = identity()
+    checkpointed = not wal.exists()
+    uri = db_path.as_uri() + ('?mode=ro&immutable=1' if checkpointed else '?mode=ro')
+    db = sqlite3.connect(uri, uri=True, timeout=3)
+    try:
+        db.execute('PRAGMA query_only=ON')
         rows = db.execute(
             """
             SELECT observed_ts, observed_day_jst, event_type, controlled,
@@ -387,6 +400,10 @@ def same_url_ledger_evidence(db_path: Path, *, start_ts: int, end_ts: int) -> di
             """,
             (start_ts, end_ts),
         ).fetchall()
+    finally:
+        db.close()
+    if checkpointed and (wal.exists() or identity() != before):
+        raise sqlite3.OperationalError('ledger_changed_during_read')
     days = {str(row[1]) for row in rows if row[1]}
     expected_days = max(1, (end_ts - start_ts + 86399) // 86400)
     transitions = [row for row in rows if row[2] == "url_transition"]

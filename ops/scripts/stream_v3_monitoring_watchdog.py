@@ -37,10 +37,10 @@ DEFAULT_MONITORING_V4_SENTINEL_FILE = Path(
         "/var/lib/stream-monitoring-v4/.state/sentinel/k3s-status.json",
     )
 )
-ARENA_GRAFANA_URL = "http://127.0.0.1:30300/grafana"
-ARENA_K3S_PROMETHEUS_URL = "http://127.0.0.1:19090"
-ARENA_GRAFANA_REPAIR = "k3s:arena-monitoring:arena-monitoring-grafana"
-ARENA_PROMETHEUS_REPAIR = "k3s:arena-monitoring:arena-monitoring-prometheus"
+ARENA_GRAFANA_URL = "http://127.0.0.1:3000/grafana"
+ARENA_PROMETHEUS_URL = "http://127.0.0.1:9090"
+ARENA_GRAFANA_REPAIR = "docker:grafana"
+ARENA_PROMETHEUS_REPAIR = "docker:prometheus"
 DEFAULT_ALERT_RULE_FILES = (
     Path(__file__).resolve().parents[1] / "monitoring" / "prometheus" / "rules" / "stream_v3.yml",
     Path(__file__).resolve().parents[1]
@@ -207,7 +207,7 @@ def alert_rule_contract_check(
         expected = set(source_alert_rule_names(paths))
     except (OSError, UnicodeError, ValueError) as exc:
         return Check("arena_alert_rule_contract_loaded", False, f"source error: {exc}")
-    ok, observed_names, error = prometheus_alert_rule_names(ARENA_K3S_PROMETHEUS_URL)
+    ok, observed_names, error = prometheus_alert_rule_names(ARENA_PROMETHEUS_URL)
     if not ok:
         return Check("arena_alert_rule_contract_loaded", False, f"rules API error: {error}")
     observed = set(observed_names)
@@ -331,10 +331,10 @@ def checks(
     else:
         out.append(Check("prometheus_ready", False, "container monitoring-prometheus is not running", "docker:prometheus"))
 
-    ok, text = fetch_text(f"{ARENA_K3S_PROMETHEUS_URL}/-/ready", timeout_sec=5)
+    ok, text = fetch_text(f"{ARENA_PROMETHEUS_URL}/-/ready", timeout_sec=5)
     out.append(
         Check(
-            "arena_k3s_prometheus_ready",
+            "arena_prometheus_ready",
             ok and "Ready" in text,
             text.strip()[:160],
             ARENA_PROMETHEUS_REPAIR,

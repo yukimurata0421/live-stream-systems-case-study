@@ -11,6 +11,10 @@ def send_slack_webhook(
     username: str = "ADS-B Stream Watchdog",
     timeout: float = 10.0,
 ) -> tuple[bool, str]:
+    import os
+    if os.environ.get('STREAM_NOTIFY_DELIVERY', 'gateway') != 'direct':
+        from stream_core.common.notification_gateway_client import send
+        return send('slack',content,username=username,timeout=timeout)
     payload = {"text": content}
     if username:
         payload["username"] = username

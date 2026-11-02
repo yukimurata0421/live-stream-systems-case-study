@@ -1,0 +1,11 @@
+[Unit]
+Description=Send the observation owner heartbeat periodically
+
+[Timer]
+OnBootSec=60
+OnUnitActiveSec=60
+AccuracySec=5
+Unit=stream-v3-external-watchdog.service
+
+[Install]
+WantedBy=timers.target

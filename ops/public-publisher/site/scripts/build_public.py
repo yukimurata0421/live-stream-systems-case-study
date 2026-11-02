@@ -15,32 +15,6 @@ PUBLIC_DIR = SITE_DIR / "public"
 STATUS_DIR = Path(os.environ.get("STATUS_DIR", str(SITE_DIR.parent / "status")))
 
 
-def run_collect() -> None:
-    collector = STATUS_DIR / "collect_stream_v3_public.py"
-    if not collector.exists():
-        raise FileNotFoundError(f"collector not found: {collector}")
-
-    subprocess.run([sys.executable, str(collector)], check=True)
-
-
-def run_reliability_collect() -> None:
-    collector = SITE_DIR / "scripts" / "collect_reliability.py"
-    if not collector.exists():
-        raise FileNotFoundError(f"reliability collector not found: {collector}")
-
-    subprocess.run([sys.executable, str(collector), "--force"], check=True)
-
-
-def copy_required(name: str) -> None:
-    src = STATUS_DIR / name
-    dst = PUBLIC_DIR / name
-    if not src.exists():
-        raise FileNotFoundError(f"required public source missing: {src}")
-
-    PUBLIC_DIR.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(src, dst)
-
-
 def copy_optional(name: str) -> None:
     src = STATUS_DIR / name
     if src.exists():
@@ -49,16 +23,8 @@ def copy_optional(name: str) -> None:
 
 
 def main() -> int:
-    run_collect()
-    run_reliability_collect()
-    # This fetches an already sanitized artifact; Twitch failure stays separate.
-    subprocess.run([sys.executable,str(SITE_DIR/'scripts/collect_twitch_public.py')],check=True)
-    subprocess.run([sys.executable,str(SITE_DIR/'scripts/collect_relay_public.py')],check=True)
-    subprocess.run([sys.executable,str(SITE_DIR/'scripts/collect_twitch_sli.py')],check=True)
-    subprocess.run([sys.executable,str(SITE_DIR/'scripts/collect_clock_public.py')],check=True)
-
-    copy_required("stream-v3-prometheus.json")
-    copy_required("stream-v3-loki.json")
+    subprocess.run([sys.executable, str(SITE_DIR/'scripts/collect_observation_bundle.py')], check=True)
+    # JSON generation is owned by arena. The publisher only fetches artifacts.
     copy_optional("stream-v3-prometheus.html")
     copy_optional("stream-v3-loki.html")
 

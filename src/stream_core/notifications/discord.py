@@ -5,6 +5,10 @@ import urllib.request
 
 
 def send_discord_webhook(webhook_url: str, content: str, *, username: str = "ADS-B Stream Watchdog", timeout: float = 10.0) -> tuple[bool, str]:
+    import os
+    if os.environ.get('STREAM_NOTIFY_DELIVERY', 'gateway') != 'direct':
+        from stream_core.common.notification_gateway_client import send
+        return send('discord',content,username=username,timeout=timeout)
     payload = json.dumps({"content": content, "username": username}, ensure_ascii=False).encode("utf-8")
     req = urllib.request.Request(
         webhook_url,

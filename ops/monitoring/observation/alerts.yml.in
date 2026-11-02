@@ -1,0 +1,37 @@
+groups:
+  - name: observation-deployment
+    interval: 15s
+    rules:
+      - alert: HostObservationExporterUnavailable
+        expr: |
+          (up{job=~"stream_v3_observation|stream_v3_monitor_observation"} == 0)
+          or absent(up{job="stream_v3_observation",instance="@UPLOAD_INSTANCE@"})
+          or absent(up{job="stream_v3_monitor_observation",instance="@MONITOR_INSTANCE@"})
+        for: 3m
+        labels:
+          severity: warning
+          scope: observation
+        annotations:
+          summary: A direct observation exporter cannot be scraped
+      - alert: HostObservationBuildMismatch
+        expr: |
+          (up{job="stream_v3_observation",instance="@UPLOAD_INSTANCE@"} == 1)
+          unless on(job,instance)
+          (stream_v3_observer_build_info{job="stream_v3_observation",instance="@UPLOAD_INSTANCE@",source_hash="@UPLOAD_SOURCE_HASH@",config_hash="@UPLOAD_CONFIG_HASH@"} == 1)
+        for: 5m
+        labels:
+          severity: warning
+          scope: observation
+        annotations:
+          summary: The upload observer differs from the deployed manifest
+      - alert: HostObservationBuildMismatch
+        expr: |
+          (up{job="stream_v3_monitor_observation",instance="@MONITOR_INSTANCE@"} == 1)
+          unless on(job,instance)
+          (stream_v3_observer_build_info{job="stream_v3_monitor_observation",instance="@MONITOR_INSTANCE@",source_hash="@MONITOR_SOURCE_HASH@",config_hash="@MONITOR_CONFIG_HASH@"} == 1)
+        for: 5m
+        labels:
+          severity: warning
+          scope: observation
+        annotations:
+          summary: The monitoring observer differs from the deployed manifest

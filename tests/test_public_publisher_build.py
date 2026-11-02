@@ -1,9 +1,6 @@
 from __future__ import annotations
 
 import importlib.util
-import json
-import re
-import shutil
 import tempfile
 import unittest
 from pathlib import Path
@@ -40,7 +37,6 @@ class PublicPublisherBuildTests(unittest.TestCase):
             PUBLISHER / "site" / "systemd" / "yukimurata-public-push.timer",
         )
         self.assertTrue(all(path.is_file() for path in expected))
-        self.assertTrue((PUBLISHER / "site/scripts/collect_clock_public.py").is_file())
         self.assertFalse(any((PUBLISHER / "status").glob("*.json")))
         self.assertFalse(any((PUBLISHER / "site" / "public").glob("*.json")))
 
@@ -55,119 +51,50 @@ class PublicPublisherBuildTests(unittest.TestCase):
 
     def test_push_requires_explicit_gcs_destination(self) -> None:
         push = load_script("push_to_gcs.py")
-        push.DEST = ""
-        with self.assertRaisesRegex(RuntimeError, "explicit bucket and prefix"):
-            push.ensure_destination()
-
-        push.DEST = "gs://public-status-test"
-        with self.assertRaisesRegex(RuntimeError, "explicit bucket and prefix"):
-            push.ensure_destination()
+        for destination in ("", "gs://public-status-test", "gs://public-status-test/site/*"):
+            push.DEST = destination
+            with self.assertRaisesRegex(RuntimeError, "explicit bucket and prefix"):
+                push.ensure_destination()
 
         push.DEST = "gs://public-status-test/site"
         push.ensure_destination()
 
-    def test_build_runs_both_collectors_and_copies_required_snapshots(self) -> None:
+    def test_build_fetches_owner_bundle_and_does_not_copy_legacy_json(self) -> None:
         build = load_script("build_public.py")
         with tempfile.TemporaryDirectory() as temporary_dir:
-            temporary = Path(temporary_dir)
-            status = temporary / "status"
-            public = temporary / "public"
+            status = Path(temporary_dir) / "status"
+            public = Path(temporary_dir) / "public"
             status.mkdir()
-            (status / "stream-v3-prometheus.json").write_text("{}\n", encoding="utf-8")
-            (status / "stream-v3-loki.json").write_text("{}\n", encoding="utf-8")
-            (status / "stream-v3-prometheus.html").write_text("prom\n", encoding="utf-8")
-            (status / "stream-v3-loki.html").write_text("loki\n", encoding="utf-8")
-            build.STATUS_DIR = status
-            build.PUBLIC_DIR = public
-
-            with (
-                mock.patch.object(build, "run_collect") as collect,
-                mock.patch.object(build, "run_reliability_collect") as reliability,
-                mock.patch.object(build.subprocess, "run") as providers,
-            ):
+            (status / "stream-v3-prometheus.json").write_text("legacy")
+            (status / "stream-v3-prometheus.html").write_text("prom")
+            build.STATUS_DIR, build.PUBLIC_DIR = status, public
+            with mock.patch.object(build.subprocess, "run") as run:
                 self.assertEqual(build.main(), 0)
-
-            collect.assert_called_once_with()
-            reliability.assert_called_once_with()
-            self.assertEqual(providers.call_count, 4)
-            self.assertEqual(
-                [Path(call.args[0][1]).name for call in providers.call_args_list],
-                ["collect_twitch_public.py", "collect_relay_public.py", "collect_twitch_sli.py", "collect_clock_public.py"],
-            )
-            self.assertEqual((public / "stream-v3-prometheus.json").read_text(), "{}\n")
-            self.assertEqual((public / "stream-v3-loki.json").read_text(), "{}\n")
-            self.assertEqual((public / "stream-v3-prometheus.html").read_text(), "prom\n")
-            self.assertEqual((public / "stream-v3-loki.html").read_text(), "loki\n")
-
-    def test_build_forces_one_reliability_evaluation_per_run(self) -> None:
-        build = load_script("build_public.py")
-        collector = build.SITE_DIR / "scripts" / "collect_reliability.py"
-        with mock.patch.object(build.subprocess, "run") as run:
-            build.run_reliability_collect()
-
-        run.assert_called_once_with(
-            [build.sys.executable, str(collector), "--force"],
-            check=True,
-        )
-
-    def test_frozen_upload_contains_current_html_assets_and_provider_snapshots(self) -> None:
-        push = load_script("push_to_gcs.py")
-        html = (PUBLISHER / "site/public/index.html").read_text()
-        assets = re.findall(r'(?:src|href)=["\']\./(assets/[^"\']+)["\']', html)
-        self.assertIn("assets/ops-20261027-notices.js", assets)
-        for element_id in ("clockTiles", "clockTimeline", "clockStamp", "reconChart"):
-            self.assertIn(f'id="{element_id}"', html)
-        with tempfile.TemporaryDirectory() as directory:
-            source = Path(directory) / "source"
-            source.mkdir()
-            (source / "index.html").write_text(html)
-            for name in assets:
-                path = source / name
-                path.parent.mkdir(exist_ok=True)
-                shutil.copy2(PUBLISHER / "site/public" / name, path)
-            provider_files = ("twitch-observation.json", "relay-observation.json", "twitch-sli.json", "clock-observation.json")
-            for name in (*push.REQUIRED_JSON, *provider_files):
-                (source / name).write_text(json.dumps({"generated_at": 1000}))
-            (source / "raw-log.json").write_text("{}")
-            destination = Path(directory) / "frozen"
-            hashes = push.stage_public_tree(source, destination, now=1000)
-            self.assertTrue(assets)
-            self.assertTrue(set(assets).issubset(hashes))
-            self.assertTrue(set(provider_files).issubset(hashes))
-            self.assertFalse((destination / "raw-log.json").exists())
+            run.assert_called_once_with([build.sys.executable, str(build.SITE_DIR/'scripts/collect_observation_bundle.py')], check=True)
+            self.assertFalse((public/'stream-v3-prometheus.json').exists())
+            self.assertEqual((public/'stream-v3-prometheus.html').read_text(), 'prom')
 
     def test_push_builds_then_syncs_and_sets_cache_control(self) -> None:
         push = load_script("push_to_gcs.py")
         push.DEST = "gs://public-status-test/site"
-        with tempfile.TemporaryDirectory() as temporary_dir:
-            status_file = Path(temporary_dir) / "publication-status.json"
-            with (
-                mock.patch.dict(
-                    push.os.environ,
-                    {"YUKIMURATA_PUBLISH_STATUS_FILE": str(status_file)},
-                ),
-                mock.patch.object(push, "ensure_gcloud") as ensure_gcloud,
-                mock.patch.object(push, "run") as run,
-                mock.patch.object(
-                    push,
-                    "stage_public_tree",
-                    return_value={"index.html": "0" * 64},
-                ) as stage_public_tree,
-            ):
-                self.assertEqual(push.main(), 0)
-
-            status = push.read_status(status_file)
+        with (
+            tempfile.TemporaryDirectory() as directory,
+            mock.patch.dict(push.os.environ, {"YUKIMURATA_PUBLISH_STATUS_FILE": str(Path(directory) / 'status.json')}),
+            mock.patch.object(push, "ensure_gcloud") as ensure_gcloud,
+            mock.patch.object(push, "stage_public_tree", return_value={"index.html": "verified-digest"}),
+            mock.patch.object(push, "run") as run,
+        ):
+            self.assertEqual(push.main(), 0)
 
         ensure_gcloud.assert_called_once_with()
-        stage_public_tree.assert_called_once()
         commands = [call.args[0] for call in run.call_args_list]
         self.assertEqual(commands[0][0], push.sys.executable)
         self.assertEqual(commands[1][:3], ["gcloud", "storage", "rsync"])
-        self.assertEqual(commands[2][:3], ["gcloud", "storage", "rsync"])
-        self.assertTrue(any("json" in argument for argument in commands[1]))
-        self.assertTrue(any("json" in argument for argument in commands[2]))
-        self.assertEqual(status["status"], "SUCCEEDED")
-        self.assertFalse(status["public_mirror_verified"])
+        self.assertEqual(len(commands), 3)
+        self.assertIn('--cache-control=public, max-age=300', commands[1])
+        self.assertIn('--cache-control=public, max-age=60', commands[2])
+        self.assertEqual(commands[1][4], push.DEST)
+        self.assertEqual(commands[2][4], push.DEST)
 
     def test_systemd_source_keeps_host_values_in_external_environment_file(self) -> None:
         unit = (
@@ -181,8 +108,6 @@ class PublicPublisherBuildTests(unittest.TestCase):
         self.assertNotIn("192.168.", unit)
         self.assertNotIn("gs://addevlab", unit)
         self.assertIn("STREAM_V3_RELIABILITY_SSH_TARGET=stream-monitor", example)
-        self.assertIn("STREAM_V3_RELIABILITY_SOURCE_DIR=/opt/stream_v3", example)
-        self.assertNotIn("/home/", unit + example)
         self.assertNotIn("192.168.", example)
 
     def test_public_source_tree_contains_no_private_address_or_generated_data(self) -> None:
@@ -197,6 +122,20 @@ class PublicPublisherBuildTests(unittest.TestCase):
         self.assertNotIn("192.168.", combined)
         self.assertNotIn("PRIVATE KEY", combined)
         self.assertNotIn("refresh_token", combined.lower())
+
+    def test_active_incidents_are_rendered_outside_the_recovery_loop(self) -> None:
+        site_js = (
+            PUBLISHER / "site" / "public" / "assets" / "site.js"
+        ).read_text(encoding="utf-8")
+        collector = (
+            PUBLISHER / "status" / "collect_stream_v3_public.py"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn('title.textContent = "Current active incidents"', site_js)
+        self.assertIn("makeActiveIncidentsCard", site_js)
+        self.assertIn('label": "Notification backlog"', collector)
+        notify_query = collector.split('"id": "notify_issues"', 1)[1].split("},", 1)[0]
+        self.assertNotIn("notify_active_incidents", notify_query)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,22 @@
+[Unit]
+Description=Heartbeat to an independent observation-owner absence detector
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=@USER@
+ExecStart=/usr/bin/python3 -I -B @SCRIPT@ --project @PROJECT@ --monitor @MONITOR@ --notification-state @STATE_ROOT@/stream_notify_state.json --send
+TimeoutStartSec=25
+CPUQuota=10%
+MemoryMax=192M
+TasksMax=16
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=yes
+PrivateDevices=yes
+CapabilityBoundingSet=
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+Environment=CLOUDSDK_CONFIG=@CLOUDSDK_CONFIG@
+Environment=CLOUDSDK_CORE_DISABLE_USAGE_REPORTING=true
+Environment=CLOUDSDK_CORE_DISABLE_FILE_LOGGING=true

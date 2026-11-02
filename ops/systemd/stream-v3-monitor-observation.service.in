@@ -1,0 +1,28 @@
+[Unit]
+Description=Read-only common monitoring observations
+After=network.target
+
+[Service]
+User=@USER@
+Group=@GROUP@
+ExecStart=/usr/bin/python3 -I -B @RELEASE@/ops/scripts/stream_v3_monitor_observation_exporter.py --state-root @STATE_ROOT@ --clock-mesh @CLOCK_MESH@ --source-host @SOURCE_HOST@ --port 9126 --manifest @RELEASE@/manifest.json
+Restart=on-failure
+RestartSec=10
+CPUQuota=10%
+MemoryMax=96M
+TasksMax=8
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_INET AF_UNIX
+IPAddressDeny=any
+IPAddressAllow=localhost
+CapabilityBoundingSet=
+
+[Install]
+WantedBy=multi-user.target

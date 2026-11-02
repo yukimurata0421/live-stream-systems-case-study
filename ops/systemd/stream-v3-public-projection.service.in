@@ -1,0 +1,24 @@
+[Unit]
+Description=Generate public-safe monitoring artifacts on the observation owner
+After=network.target
+
+[Service]
+Type=oneshot
+User=@USER@
+Group=@GROUP@
+StateDirectory=stream-v3-public-projection
+StateDirectoryMode=0750
+ExecStart=/usr/bin/python3 -I -B @RELEASE@/ops/scripts/stream_v3_public_projection.py build --state-root @STATE_ROOT@ --report-root @REPORT_ROOT@ --output /var/lib/stream-v3-public-projection/bundle.json
+TimeoutStartSec=110
+CPUQuota=25%
+MemoryMax=256M
+TasksMax=24
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=yes
+PrivateDevices=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+IPAddressDeny=any
+IPAddressAllow=localhost
+CapabilityBoundingSet=

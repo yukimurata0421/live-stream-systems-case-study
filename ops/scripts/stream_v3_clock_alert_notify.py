@@ -82,6 +82,24 @@ def main():
         raise ValueError('notification_baseline_changed')
     spec=importlib.util.spec_from_file_location('clock_notify_baseline',path)
     baseline=importlib.util.module_from_spec(spec);spec.loader.exec_module(baseline)
+    baseline.ALERTS.update({
+        'HostObservationBuildMismatch':('Observation deployment does not match','Compare loaded source/config with the expected deployment manifest. This is not a stream outage verdict.'),
+        'HostObservationExporterUnavailable':('Observation exporter is unavailable','Check the direct scrape path. This is not a stream outage verdict.'),
+    })
+    if os.environ.get('STREAM_NOTIFY_DELIVERY') == 'gateway':
+        import notification_gateway_client as gateway
+        connection=gateway.Connection(gateway.SOCKET,3)
+        try:
+            connection.request('GET','/health');response=connection.getresponse()
+            if response.status!=200:raise ValueError('notification_gateway_unavailable')
+            response.read(4096)
+        finally:connection.close()
+        print(json.dumps({'event':'shared_delivery_connected'}),flush=True)
+        original_delivery=baseline.send_with_fallback
+        def shared_delivery(message,webhooks,username,*,sender=None,audit=None):
+            return original_delivery(message,webhooks,username,audit=audit,
+                sender=lambda _url,content,user,channel:gateway.send(channel,content,username=user)[0])
+        baseline.send_with_fallback=shared_delivery
     original=baseline.plan
     def plan(alerts,state,now,**kwargs):
         clock_state={k:v for k,v in state.items() if v.get('name') in NAMES}
