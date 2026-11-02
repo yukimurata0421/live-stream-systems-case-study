@@ -1,0 +1,131 @@
+{
+  "schema": "public-source-port.observation-standardization.v1",
+  "date_jst": "2026-11-02",
+  "scope": "First direct-scrape observation slice; isolated development and public source only",
+  "production_deployed": false,
+  "commit_or_push_performed": false,
+  "source_worktree_dirty": true,
+  "files": [
+    {
+      "path": "src/stream_core/common/observation_contract.py",
+      "before_public_sha256": null,
+      "source_sha256": "39c28f54f9209931f96c40425f58fc5f5722a0fc09cebd82acdc15b707699fc1",
+      "public_sha256": "39c28f54f9209931f96c40425f58fc5f5722a0fc09cebd82acdc15b707699fc1",
+      "adaptation": "Identical implementation and tests."
+    },
+    {
+      "path": "src/stream_core/common/upload_observation.py",
+      "before_public_sha256": null,
+      "source_sha256": "93e9785d0e6ca92646c16d0bb550704fee7216de22b23abe85aad70198d505e5",
+      "public_sha256": "93e9785d0e6ca92646c16d0bb550704fee7216de22b23abe85aad70198d505e5",
+      "adaptation": "Identical implementation and tests."
+    },
+    {
+      "path": "src/stream_core/common/observation_projection.py",
+      "before_public_sha256": null,
+      "source_sha256": "a5aaeef29fe6a9bd66ac6f709e03d48f405a80d78447fd6524dae2648d157126",
+      "public_sha256": "a5aaeef29fe6a9bd66ac6f709e03d48f405a80d78447fd6524dae2648d157126",
+      "adaptation": "Identical implementation and tests."
+    },
+    {
+      "path": "ops/scripts/stream_v3_observation_exporter.py",
+      "before_public_sha256": null,
+      "source_sha256": "2b282dcf7a5dbaea31ab79aec015d88f2ffed54fc629848e5f9ce9055cce1f92",
+      "public_sha256": "2b282dcf7a5dbaea31ab79aec015d88f2ffed54fc629848e5f9ce9055cce1f92",
+      "adaptation": "Identical implementation and tests."
+    },
+    {
+      "path": "ops/scripts/stream_v3_observation_snapshot.py",
+      "before_public_sha256": null,
+      "source_sha256": "f290e9d2e9bc78b7529736b57aa851bf78211ebdb007c7a88d8131b0d1ec1772",
+      "public_sha256": "f290e9d2e9bc78b7529736b57aa851bf78211ebdb007c7a88d8131b0d1ec1772",
+      "adaptation": "Identical implementation and tests."
+    },
+    {
+      "path": "ops/scripts/check_observation_shadow.py",
+      "before_public_sha256": null,
+      "source_sha256": "555de7c1d462a5f39cff16e96883cf3ff9c04df56d4fb57890adf2d66106933c",
+      "public_sha256": "555de7c1d462a5f39cff16e96883cf3ff9c04df56d4fb57890adf2d66106933c",
+      "adaptation": "Identical implementation and tests."
+    },
+    {
+      "path": "ops/systemd/stream-v3-observation-exporter.service.in",
+      "before_public_sha256": null,
+      "source_sha256": "4379028c634acac9844ca5250d49ff957be4b732fc3d12b0681f53c33ee7a6e0",
+      "public_sha256": "4379028c634acac9844ca5250d49ff957be4b732fc3d12b0681f53c33ee7a6e0",
+      "adaptation": "Identical implementation and tests."
+    },
+    {
+      "path": "ops/monitoring/observation-shadow/prometheus.yml.in",
+      "before_public_sha256": null,
+      "source_sha256": "a77311d4eb08078514e5d029905f580d8b9760047b52fe4dddbbc2c9d1b3f95f",
+      "public_sha256": "a77311d4eb08078514e5d029905f580d8b9760047b52fe4dddbbc2c9d1b3f95f",
+      "adaptation": "Identical implementation and tests."
+    },
+    {
+      "path": "ops/monitoring/observation-shadow/rules.yml",
+      "before_public_sha256": null,
+      "source_sha256": "958f436bca4061bedc4fad5a520c45e4eeb58c580eb3a8924f058ce332592f2d",
+      "public_sha256": "958f436bca4061bedc4fad5a520c45e4eeb58c580eb3a8924f058ce332592f2d",
+      "adaptation": "Identical implementation and tests."
+    },
+    {
+      "path": "ops/monitoring/observation-shadow/rule-tests.yml",
+      "before_public_sha256": null,
+      "source_sha256": "56e7844d387d48e3c105bf42054548c8dac8df32ba5500387dc31c38f8a5bde7",
+      "public_sha256": "56e7844d387d48e3c105bf42054548c8dac8df32ba5500387dc31c38f8a5bde7",
+      "adaptation": "Identical implementation and tests."
+    },
+    {
+      "path": "tests/test_observation_standardization.py",
+      "before_public_sha256": null,
+      "source_sha256": "ec80d5452e56a3a22f5ef7ca7cbfacba974eba13dc98e2fcf0f1b3248f6c5c80",
+      "public_sha256": "ec80d5452e56a3a22f5ef7ca7cbfacba974eba13dc98e2fcf0f1b3248f6c5c80",
+      "adaptation": "Identical implementation and tests."
+    },
+    {
+      "path": "docs/v3/observation-standardization.md",
+      "before_public_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "11740bfa3d48e79fd84b50eae30acfcc0f813f03222a4c3f0651c5c731491c8f",
+      "adaptation": "English public description; no raw evidence or deployment identity."
+    },
+    {
+      "path": "docs/current-status.md",
+      "before_public_sha256": "c4847e5744829973a918d13acbd64c0d30bda713352ee0b98208a1a2a639bf16",
+      "source_sha256": null,
+      "public_sha256": "b1bf37819d867ad8ec251791e2592b650207bb5b91825c928d386f9e477c7d01",
+      "adaptation": "English public description; no raw evidence or deployment identity."
+    },
+    {
+      "path": "docs/00_INDEX.md",
+      "before_public_sha256": "62b67eeb9e9ce71b6ef55e8db07f608822991fe0cc3ade33a74f1ac3be5c539d",
+      "source_sha256": null,
+      "public_sha256": "cd2ae8032a1bb9ed4cdfa6c2d26156e144ae73726de6b1ea69791589244cdd75",
+      "adaptation": "English public description; no raw evidence or deployment identity."
+    }
+  ],
+  "validation": {
+    "prometheus_version": "3.5.0",
+    "recording_rule_scenarios": 9,
+    "development_loopback_scenarios": 7,
+    "production_shadow_comparison": false,
+    "production_control_or_notification_changes": false,
+    "development_tests": {
+      "passed": 175,
+      "subtests": 49
+    },
+    "public_tests": {
+      "passed": 154,
+      "subtests": 3
+    },
+    "public_loopback_scenarios": 7,
+    "old_new_reader_cases": 9
+  },
+  "limits": [
+    "No production deployment or retirement",
+    "No full observation migration",
+    "No live network or public-player qualification",
+    "Current raw-plus-Prometheus recovery condition retained"
+  ]
+}

@@ -7,6 +7,26 @@ changed recently, what has not been observed yet, and what is deliberately
 disabled. Other pages describe designs and dated evidence and link here instead
 of repeating these items.
 
+## Observation Paths and Delivery Connected (2026-11-02 JST)
+
+The [observation contract](v3/observation-standardization.md) now covers direct
+scraping, owner-side projection, warning continuity and common notification delivery.
+
+| Item | Observed checkpoint |
+| --- | --- |
+| Current source | Dedicated observation WireGuard replaced the temporary LAN target after 900 seconds of raw/direct-Prometheus qualification. The 180-second freshness bound, 900-second recovery proof, raw history and formal SLO are unchanged. Missing selection no longer silently selects legacy. |
+| Warning admission | Bad evidence accumulates for 180 seconds within 900 seconds; 180 seconds of stable good evidence clears admission history. An open source incident still needs the full recovery proof. Current measurement, replication and historical coverage are distinct. |
+| Public projection | Owner generation produced all eight allowlisted artifacts. Natural publisher cycles uploaded all eight successfully. A subsequent R2 transport error was retained and recovered by the next natural cycle with object reconciliation. Existing Reliability v6 semantics were preserved. The report reads its ledger without schema/database writes. |
+| Delivery | Native natural cycles loaded the new release. The standalone notifier uses the common Unix gateway. One labelled Slack test and one Discord test received provider acceptance; the gateway retained two DELIVERED receipts. Local independent delivery health had no active conditions. Human receipt was not observed. |
+| Retirement | The former LAN upload exporter is disabled. Duplicate Kubernetes Prometheus/Grafana replicas are zero after watchdog migration; their storage/configuration remain. Host Prometheus and the protected media processes were retained. |
+| Regression | The isolated HTTP/Prometheus/projection pipeline passed and collected its owned children. Deployment rules cover healthy, mismatched, stopped and missing targets. Exact final test counts are recorded in the dated publication record. |
+| Receiver limit | The bounded YouTube browser probe initially advanced video, then displayed a player error. Continuous reception and audio are unqualified. Direct public-edge requests from this execution environment returned 403; publisher/R2 verification is separate evidence. |
+| Pending | Independent external heartbeat code and policy generation are prepared and local preflight passed. No external channel was registered; destination selection, activation and actual absence notification remain pending. Legacy multi-purpose exporter and raw history replication retain consumers. No production fault injection or day-long qualification was performed. |
+
+The earlier LAN cutover and its exact evidence are retained in
+[the first connection record](../publication/upload-direct-connection-20261102.json).
+The follow-up is recorded in [the completion checkpoint](../publication/observation-completion-20261102.json).
+
 ## Independent Upload Measurement (2026-11-02 JST)
 
 The [measurement contract](v3/upload-measurement-source.md) separates physical

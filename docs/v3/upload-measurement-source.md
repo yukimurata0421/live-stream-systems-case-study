@@ -27,12 +27,15 @@ flowchart LR
     S["Independent read-only sampler"]
     J["Bounded source journal on HDD"]
     P["Monitor: read-only SSH pull and verified replica"]
-    E["Existing exporter and SLI readers"]
+    E["SLI and historical evidence readers"]
+    D["Host adapter: direct Prometheus scrape"]
     N["Existing source-recovery notification owner"]
     R --> C
     R --> S --> J
     J -. "nonce, machine, boot and original sample" .-> P
-    P --> E --> N
+    P --> E
+    P --> N
+    J --> D --> N
 ```
 
 `stream_v3_upload_measurement.py sample` reads the fixed
@@ -79,8 +82,10 @@ prove that a fresh rate sample exists.
 
 The current-source recovery rule is unchanged: raw and Prometheus evidence must
 remain fresh for 900 seconds, within the existing 180-second source bound. The
-Prometheus check requires the existing job and instance, `up == 1`, and every
-point on its one-minute grid. The exporter's separate five-minute latest-value
+Prometheus check requires the explicitly selected job and instance, `up == 1`,
+and every point on its one-minute grid. The
+[direct-scrape connection](observation-standardization.md#connecting-the-existing-consumer)
+changes that selection without replacing raw-history validation. The exporter's separate five-minute latest-value
 display bound is retained. No historical Prometheus values are inserted.
 
 ## History, failure and rollback

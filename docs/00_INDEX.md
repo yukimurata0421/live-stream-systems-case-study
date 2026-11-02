@@ -15,6 +15,7 @@ start.
 
 ## Current System
 
+- `v3/observation-standardization.md`: [shared observation meaning and the direct-scrape connection](v3/observation-standardization.md).
 - `v3/clock-safe-media-progress.md`: [counter-proven clock holds, bounded alternating uncertainty, retained baselines and transition audit](v3/clock-safe-media-progress.md).
 - `v3/boottime-media-health.md`: [boottime media health, independent UTC diagnostics and removal of transition grace](v3/boottime-media-health.md).
 - `v3/fallback-decision-contract.md`: [when the direct YouTube backup starts and stops: evidence, decision table, timers, tradeoffs and evidence status](v3/fallback-decision-contract.md).

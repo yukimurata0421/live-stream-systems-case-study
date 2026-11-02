@@ -237,9 +237,9 @@
       "source_role": "public-measurement-documentation",
       "decision": "Describe independent upload observation and preserve the control and SLO boundaries.",
       "before_sha256": "9f7605e83cdf9ec60df73ebe3f2472cca9292c4e06ec6768621ce53026c0b82c",
-      "source_sha256": null,
-      "public_sha256": "62b67eeb9e9ce71b6ef55e8db07f608822991fe0cc3ade33a74f1ac3be5c539d",
-      "prior_public_sha256": "fe88716f5d5bc1d647da6238b7379145730a61626ee01306ea8194c76066fbec",
+      "source_sha256": "b744a45eaa29d812ec315d58c693d60a92cfa7fa66d5b8d8be0e4f49bd7b5d48",
+      "public_sha256": "e71784d110b08225a9a320ecb03f999b60fa7f23b2503f2e6a3f80448620c9ed",
+      "prior_public_sha256": "e71784d110b08225a9a320ecb03f999b60fa7f23b2503f2e6a3f80448620c9ed",
       "localization": "English prose; control structures and machine identifiers preserved.",
       "pre_graph_display_sha256": "6a87a495eb3698b1a49e053ffcc109b28d94a59e9dd29cb3399a62279e196d3d",
       "graph_display_change": "Observed link arrows, explicit direct-path inference, and timestamp-preserving charts.",
@@ -271,7 +271,7 @@
       "relay_clock_native_fallback_port": "2026-10-23 selected source and public-safe documentation; no deployment, commit or push.",
       "pre_observability_reconciliation_sha256": "54c9f42cbd9e1b2bc054e380f4a7376df991333c1dc4ea31f191c48805d7703e",
       "pre_fifo_recovery_public_sha256": "09bb9c3529368d76bb7c107dc021db89519855c24c0f85b7a32e58fecd5fad0a",
-      "port_record": "publication/independent-upload-measurement-20261102.json",
+      "port_record": "publication/upload-direct-connection-20261102.json",
       "layout_update": "Current CRA and Stream support separation, 2026-10-26",
       "pre_r2_publication_docs_sha256": "3131adf3d66a0035b126f9002dff210aca8460683eabbc2adfdd517230846eb3",
       "r2_publication_documentation": "2026-10-27 English record only; no source or runtime change by this port.",
@@ -301,7 +301,11 @@
       "thumbnail_k3s_migration": "publication/thumbnail-k3s-migration-20261101.json",
       "before_notification_observation_time_sha256": "5db0532f523efe442a4ead53d136350ef67ea6f8b6336489051218b783dede4a",
       "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
-      "notification_observation_time_source_sha256": null
+      "notification_observation_time_source_sha256": null,
+      "before_observation_standardization_sha256": "62b67eeb9e9ce71b6ef55e8db07f608822991fe0cc3ade33a74f1ac3be5c539d",
+      "observation_standardization_port": "publication/observation-standardization-20261102.json",
+      "before_upload_direct_connection_sha256": "cd2ae8032a1bb9ed4cdfa6c2d26156e144ae73726de6b1ea69791589244cdd75",
+      "observation_completion_record": "publication/observation-completion-20261102.json"
     },
     {
       "path": "docs/README.md",
@@ -369,7 +373,7 @@
       "decision": "Record applied independent upload sampling, sustained current-source recovery and the natural notification result.",
       "before_sha256": "1beab3cd3e65147e0fa2d520275c2280dfa86884c6a345efefd32f2dc8469aed",
       "source_sha256": null,
-      "public_sha256": "c4847e5744829973a918d13acbd64c0d30bda713352ee0b98208a1a2a639bf16",
+      "public_sha256": "ca81736f9e52b70cc14ad92a8b4909b728c545cfc1d08a28bf0582eed9b248bf",
       "port_date_jst": "2026-11-02",
       "documentation_restructure": "New single page for volatile state.",
       "pre_twitch_observation_public_sha256": "040eac29174151f51e473f7f85e4aa23ff994be0079b3d4c011623b6ec7864ca",
@@ -391,8 +395,8 @@
       "documentation_structure_review": "2026-10-23: implementation/commit/deployment scopes, v7 transition scope, routing priority, quality comparison and runnable checks.",
       "pre_fifo_recovery_public_sha256": "f869fdb0929bc8925b2f9bdb799682d063dded38d8218d282597be95019c59b4",
       "pre_music_exclusion_port_sha256": "3b3e1db9dc83166e863412eec229fb03bcf8b6442798c06fb8ac6699a7d1dd4f",
-      "port_record": "publication/independent-upload-measurement-20261102.json",
-      "prior_public_sha256": "2faba1460a953a0f9e017a1f27e4c219fb2af29c59add2d9c52a971beac2adb0",
+      "port_record": "publication/upload-direct-connection-20261102.json",
+      "prior_public_sha256": "b0727b207bca57a63101d2013bb1e0907b3b1a2cc2b80ffe787d5fbb4c71501d",
       "layout_update": "Current CRA and Stream support separation, 2026-10-26",
       "pre_twitch_api_deadline_public_sha256": "4998fd310833888def4533338a6dc712bfad0795ce48f6a923513130857a8ada",
       "pre_r2_publication_docs_sha256": "00626a6215b9f73779f63bb73816f98104c7e76a4fe83697f950276864458d3d",
@@ -428,7 +432,11 @@
       "before_notification_source_timing_fix_sha256": "3c4d04e26a7737925e1fcceeb11496513f8ee4dcb7bbc928c1da1e75b9826c14",
       "notification_source_timing_fix": "publication/notification-source-timing-fix-20261101.json",
       "before_notification_source_timing_rollout_sha256": "d0617bc3c85dd683ad3c9cd07df34d5865cd3deba34c6d5202d4e016e75edbc9",
-      "notification_source_timing_rollout": "publication/notification-source-timing-rollout-20261101.json"
+      "notification_source_timing_rollout": "publication/notification-source-timing-rollout-20261101.json",
+      "before_observation_standardization_sha256": "c4847e5744829973a918d13acbd64c0d30bda713352ee0b98208a1a2a639bf16",
+      "observation_standardization_port": "publication/observation-standardization-20261102.json",
+      "before_upload_direct_connection_sha256": "b1bf37819d867ad8ec251791e2592b650207bb5b91825c928d386f9e477c7d01",
+      "observation_completion_record": "publication/observation-completion-20261102.json"
     },
     {
       "path": "docs/design-decisions-for-review.md",
@@ -2312,9 +2320,11 @@
       "source_role": "development-public-ui",
       "decision": "adapted",
       "before_sha256": "f4c2e3d4a85d4f8731e1e2934dfaa44a50af829c5d9cbe8a88d41ce7362f84e5",
-      "source_sha256": "762888c36920348127a2001d315c5b186fcd0b64d82364ef524539e50d8fc07a",
-      "public_sha256": "f288306d639b25fa72bd7de648858b17ec849f9c77740db9cc1d4e24432785ed",
-      "thumbnail_public_completion": "publication/thumbnail-public-completion-20261101.json"
+      "source_sha256": "74eeb3ce32578a4ecd2d115cadad28c75e96a55e21ea6f7c3284d794a17ce3cf",
+      "public_sha256": "c92f6fbe5e9aa2dec688fd5d405e82341b596145da93067a3179e5b6d8a99ca0",
+      "thumbnail_public_completion": "publication/thumbnail-public-completion-20261101.json",
+      "prior_public_sha256": "f288306d639b25fa72bd7de648858b17ec849f9c77740db9cc1d4e24432785ed",
+      "observation_completion_record": "publication/observation-completion-20261102.json"
     },
     {
       "path": "ops/public-publisher/site/scripts/collect_relay_public.py",
@@ -2516,14 +2526,16 @@
     {
       "path": "ops/scripts/stream_v3_clock_alert_notify.py",
       "before_sha256": "4d14a430511e6f100ba46bc7fbe2a6242e070a4f5cec36ffbc049591325801f7",
-      "source_sha256": "90a86d77a3bc7da31a5e685499dc7ae79572148d66d3a7ccc423b744f8910c9b",
-      "public_sha256": "1b29d820fe3a3caacdaf415b0fa6a423f89a20e7f56142728e34658a81043a9d",
+      "source_sha256": "1d05fc400e332a0403cbfcbfee4112b56724ed878dab3e453904596b8c3e79fc",
+      "public_sha256": "de8094a912a8bf2454df88a352e0410bebfdb1cadf5680514f8448ed0bdebada",
       "source_role": "public-source-adaptation",
       "decision": "Review fixes, English prose and existing public bindings; no deployment or unrelated working-copy edits.",
       "thumbnail_clock_port": "2026-10-22 committed source through 740bcc00; concurrent review excluded.",
       "pre_thumbnail_clock_public_sha256": null,
       "pre_thumbnail_review_public_sha256": "4d14a430511e6f100ba46bc7fbe2a6242e070a4f5cec36ffbc049591325801f7",
-      "thumbnail_review_port": "2026-10-22 stream rollover, bounded gaps and conservative OCR retry."
+      "thumbnail_review_port": "2026-10-22 stream rollover, bounded gaps and conservative OCR retry.",
+      "prior_public_sha256": "1b29d820fe3a3caacdaf415b0fa6a423f89a20e7f56142728e34658a81043a9d",
+      "observation_completion_record": "publication/observation-completion-20261102.json"
     },
     {
       "path": "ops/scripts/stream_v3_oci_monitor_exporter_overlay.py",
@@ -3880,15 +3892,16 @@
       "source_role": "public-adapted-source-or-regression",
       "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
       "before_sha256": "9d13000b13e49fe1588cec2333948f8c790fa2c3b7006ca0e264f2cf612c42f1",
-      "source_sha256": "e63b94f898789fbcb19b1782a4da84d5831f337d7d634cb05ee83eed96b693b4",
-      "public_sha256": "a93c958f66ed34912714904b4dfc312a27273ee9e4d562e3dfa34a32acae9ca7",
-      "prior_public_sha256": "3096bfd3e78e238408c2943bbcce22103618a5cacd3d80bb14be424366524d70",
+      "source_sha256": "8bc41cfe995883e6d7ea75f392007cdd426fb3f34c5449de6ba4270499910ce0",
+      "public_sha256": "24981ccdebb5e85923e649a993951e5bfb517f92b14844cdca74b4afe0491f89",
+      "prior_public_sha256": "a93c958f66ed34912714904b4dfc312a27273ee9e4d562e3dfa34a32acae9ca7",
       "localization": "English prose; control structures and machine identifiers preserved.",
       "pre_observability_reconciliation_sha256": "29068d15becd9d0df908c4c2095e77451a8c3c995ffeec4283e2434a4c2a67cd",
       "port_date_jst": "2026-10-23",
       "before_notification_observation_time_sha256": "93e6534d8ae39c2daed447028b62611e5f9573a591a052e351cff8aaffdbd881",
       "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
-      "notification_observation_time_source_sha256": "1694502be3a740cc6e1a86250a53ef97c61ad32b0a86c0dd362010d0d3298238"
+      "notification_observation_time_source_sha256": "1694502be3a740cc6e1a86250a53ef97c61ad32b0a86c0dd362010d0d3298238",
+      "observation_completion_record": "publication/observation-completion-20261102.json"
     },
     {
       "path": "src/stream_core/notifications/outbox.py",
@@ -3917,26 +3930,31 @@
       "source_role": "public-adapted-source-or-regression",
       "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
       "before_sha256": "3ed318edb00f27873619f9d1ae6125dd4c79056a3de082c489fb88024da32df0",
-      "source_sha256": "b7bdd17354cb23e4721cf86e1bcb36713d732bcb7076b51fb35ec07a44af0c89",
-      "public_sha256": "44b75f9fc9da73114b931e27e185391c196f9d24036b68f8ce880f38974fb984",
+      "source_sha256": "50b4c36f8e585892cf775cfd013b717d611c2274924f9b0542705ea6ab71ed68",
+      "public_sha256": "98f3b187e9ec57a3bda4015c9ba2613df76120c5c5bb5514ee1922fcbbf7e118",
       "pre_observability_reconciliation_sha256": "5fbfef066cb27696f1df5e7d25d2555fa29e6e82cf03b282f1a45d8d691c7da7",
       "port_date_jst": "2026-10-23",
       "before_youtube_egress_fix_sha256": "50b64cea1e8ced643f193a67d0ba92f0eca25b0fd68277304127d7bc8f55d8b1",
       "youtube_egress_reconciliation": "youtube-egress-fix-20261031",
       "before_notification_observation_time_sha256": "6cc423daecec5aa68c2991733761616b1c0e10300186a45580721b10f467b65b",
       "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
-      "notification_observation_time_source_sha256": "1aa5f23874b5460bc8248c0531bcb36649fe054177878b76ff6d18ad8a27f84a"
+      "notification_observation_time_source_sha256": "1aa5f23874b5460bc8248c0531bcb36649fe054177878b76ff6d18ad8a27f84a",
+      "prior_public_sha256": "44b75f9fc9da73114b931e27e185391c196f9d24036b68f8ce880f38974fb984",
+      "observation_completion_record": "publication/observation-completion-20261102.json"
     },
     {
       "path": "src/stream_core/notifications/upload_source.py",
       "source_role": "independent-upload-measurement",
       "decision": "Keep upload observation independent from control admission; retain public localization and compatibility.",
       "before_sha256": "665106b3c0ddcba07d65bc06daabca5229b0c9f5a69e3c79acf493e4c5ee8689",
-      "source_sha256": "ca1f901e0c794e4cc890a56f54e92940864f4ab5350c6757b6a70b4ce9e99cea",
-      "public_sha256": "a9ee39f0f786e3d97e8c7613793761a4bcd49a70fc9675e3013f60b8a794a9ce",
+      "source_sha256": "219b805ec0f86969508166c4ff3f1ab2f4c7cfaa7de81e27754ea1e86ac5a0ba",
+      "public_sha256": "219b805ec0f86969508166c4ff3f1ab2f4c7cfaa7de81e27754ea1e86ac5a0ba",
       "pre_observability_reconciliation_sha256": "b6ca4ac1875fe51a9d863b2c6ac8e8bd408d549585f103d2b846e4180c271cf6",
       "port_date_jst": "2026-11-02",
-      "port_record": "publication/independent-upload-measurement-20261102.json"
+      "port_record": "publication/upload-direct-connection-20261102.json",
+      "before_upload_direct_connection_sha256": "a9ee39f0f786e3d97e8c7613793761a4bcd49a70fc9675e3013f60b8a794a9ce",
+      "prior_public_sha256": "f0a18bbbbc685424158d11c4c6e3217ac0ee5378c2951f1f45795770d6b9aa81",
+      "observation_completion_record": "publication/observation-completion-20261102.json"
     },
     {
       "path": "src/stream_core/runtime_boundary_entrypoint.py",
@@ -4414,10 +4432,12 @@
       "path": "tests/test_notification_routing.py",
       "source_role": "public-adapted-source-or-regression",
       "before_sha256": null,
-      "source_sha256": "79c8fbf58a14b127679a39d23f1a992378391b593ec07a7183a3dbf452840268",
-      "public_sha256": "079870ad95bd51a147f9deffd1d75f85816c1411a2e78664c5288cbf8fcaee51",
+      "source_sha256": "4df5ec6cb6440462a6617f74c77f95165a61390096c955f65619ac21add2a2d9",
+      "public_sha256": "87e05cd1c5ccaf64270d03783a40e71f6a5dc5de718f19475eb5104662f85598",
       "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
-      "port_date_jst": "2026-10-23"
+      "port_date_jst": "2026-10-23",
+      "prior_public_sha256": "079870ad95bd51a147f9deffd1d75f85816c1411a2e78664c5288cbf8fcaee51",
+      "observation_completion_record": "publication/observation-completion-20261102.json"
     },
     {
       "path": "tests/test_oci_backup.py",
@@ -4497,9 +4517,11 @@
       "source_role": "public-validation",
       "decision": "mock-all-provider-collectors-in-public-builder-test",
       "before_sha256": "e5c2656321f55acaa4d888549798e68b1e106cc44e11b9dfe25378cf0a86a7e8",
-      "source_sha256": "367d3bf6be98b02149da7e7775de31008639b550ea9f4f6e6b7e9d65540594c5",
-      "public_sha256": "47d118794d808e4b3f7cf890544d1878f447d016b664b2a5ccf0abdb0231bc5e",
-      "thumbnail_public_completion": "publication/thumbnail-public-completion-20261101.json"
+      "source_sha256": "3f0177b81751e499d9ccd9b7967614f450ba2655758321a3bdf809c2bb914683",
+      "public_sha256": "1b199e2f3912447199bb891bc6da524d959e57dc3c10214e19c2e1c513f34a15",
+      "thumbnail_public_completion": "publication/thumbnail-public-completion-20261101.json",
+      "prior_public_sha256": "47d118794d808e4b3f7cf890544d1878f447d016b664b2a5ccf0abdb0231bc5e",
+      "observation_completion_record": "publication/observation-completion-20261102.json"
     },
     {
       "path": "tests/test_public_relay.py",
@@ -4708,10 +4730,12 @@
       "source_role": "public-adapted-source-or-regression",
       "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
       "before_sha256": null,
-      "source_sha256": "55f55289ff3f16b0bb878562a735e1bc00b6dbf11240fa97c70b602823c99931",
-      "public_sha256": "55f55289ff3f16b0bb878562a735e1bc00b6dbf11240fa97c70b602823c99931",
+      "source_sha256": "474a0315960d2dee886d09ddac0debfc36a02aefae05de5cbbce75159e4c404b",
+      "public_sha256": "474a0315960d2dee886d09ddac0debfc36a02aefae05de5cbbce75159e4c404b",
       "pre_observability_reconciliation_sha256": "da6513c0ab04e59b8b3494fca87716d2de6290dfc4a435c8ffe2a006915437f9",
-      "port_date_jst": "2026-10-23"
+      "port_date_jst": "2026-10-23",
+      "prior_public_sha256": "55f55289ff3f16b0bb878562a735e1bc00b6dbf11240fa97c70b602823c99931",
+      "observation_completion_record": "publication/observation-completion-20261102.json"
     },
     {
       "path": "tests/test_verified_clock.py",
@@ -5931,12 +5955,14 @@
       "path": "src/stream_core/notifications/observation.py",
       "source_role": "notification-time-evidence",
       "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes.",
-      "source_sha256": "63368a51eb7962b65ebdf6a0b8a430d4c1e70ce873f8a5e673ab9803725614bb",
-      "public_sha256": "0001aa1a5d128883261eb3978dfef3303a9dccc10692a535cd647a05022099bb",
+      "source_sha256": "927ff73bf96c00adb226633fd19fb1825dc26f79d947774780fcd99e88c68b1f",
+      "public_sha256": "794758933bbf1353c1b3e57852d497a2b0903c395bd6a5d07ffe6a918c163e95",
       "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
       "notification_observation_time_source_sha256": "276ae7acfbbbc1267c2765f6815bce1ee4bdfc76759238760192bb494089c098",
       "before_notification_source_timing_rollout_sha256": "db7c560592e888dee495b81285ad2542991ef7bee0a18c0c80f04bff830d615a",
-      "notification_source_timing_rollout": "publication/notification-source-timing-rollout-20261101.json"
+      "notification_source_timing_rollout": "publication/notification-source-timing-rollout-20261101.json",
+      "prior_public_sha256": "0001aa1a5d128883261eb3978dfef3303a9dccc10692a535cd647a05022099bb",
+      "observation_completion_record": "publication/observation-completion-20261102.json"
     },
     {
       "path": "src/stream_core/notifications/time_diagnostics.py",
@@ -6270,10 +6296,468 @@
       "source_role": "public-measurement-documentation",
       "decision": "Describe independent upload observation and preserve the control and SLO boundaries.",
       "before_sha256": null,
-      "public_sha256": "c74b2ff6c2fa50a992871dc63170bfc9f7ea0013a7bf0a1cb10e718f9312a794",
+      "public_sha256": "5c493cab07ddb7d73dfcd91489b4875eefdb9c799e013f587cccb9eddf6ca34a",
       "source_sha256": null,
       "port_date_jst": "2026-11-02",
-      "port_record": "publication/independent-upload-measurement-20261102.json"
+      "port_record": "publication/upload-direct-connection-20261102.json",
+      "before_upload_direct_connection_sha256": "c74b2ff6c2fa50a992871dc63170bfc9f7ea0013a7bf0a1cb10e718f9312a794",
+      "prior_public_sha256": "5c493cab07ddb7d73dfcd91489b4875eefdb9c799e013f587cccb9eddf6ca34a",
+      "observation_completion_record": "publication/observation-completion-20261102.json"
+    },
+    {
+      "path": "src/stream_core/common/observation_contract.py",
+      "source_role": "observation-shadow-source-or-documentation",
+      "decision": "Direct-scrape candidate only; preserve deployed measurement, notification and recovery contracts.",
+      "before_sha256": null,
+      "public_sha256": "39c28f54f9209931f96c40425f58fc5f5722a0fc09cebd82acdc15b707699fc1",
+      "source_sha256": "39c28f54f9209931f96c40425f58fc5f5722a0fc09cebd82acdc15b707699fc1",
+      "observation_standardization_port": "publication/observation-standardization-20261102.json",
+      "prior_public_sha256": "39c28f54f9209931f96c40425f58fc5f5722a0fc09cebd82acdc15b707699fc1",
+      "observation_completion_record": "publication/observation-completion-20261102.json"
+    },
+    {
+      "path": "src/stream_core/common/upload_observation.py",
+      "source_role": "observation-shadow-source-or-documentation",
+      "decision": "Direct-scrape candidate only; preserve deployed measurement, notification and recovery contracts.",
+      "before_sha256": null,
+      "public_sha256": "93e9785d0e6ca92646c16d0bb550704fee7216de22b23abe85aad70198d505e5",
+      "source_sha256": "93e9785d0e6ca92646c16d0bb550704fee7216de22b23abe85aad70198d505e5",
+      "observation_standardization_port": "publication/observation-standardization-20261102.json",
+      "prior_public_sha256": "93e9785d0e6ca92646c16d0bb550704fee7216de22b23abe85aad70198d505e5",
+      "observation_completion_record": "publication/observation-completion-20261102.json"
+    },
+    {
+      "path": "src/stream_core/common/observation_projection.py",
+      "source_role": "observation-shadow-source-or-documentation",
+      "decision": "Direct-scrape candidate only; preserve deployed measurement, notification and recovery contracts.",
+      "before_sha256": null,
+      "public_sha256": "a08341de68a05662665de83a9870664c4b8bcb391579f8fb92e219b1068a5ed3",
+      "source_sha256": "a08341de68a05662665de83a9870664c4b8bcb391579f8fb92e219b1068a5ed3",
+      "observation_standardization_port": "publication/observation-standardization-20261102.json",
+      "prior_public_sha256": "a5aaeef29fe6a9bd66ac6f709e03d48f405a80d78447fd6524dae2648d157126",
+      "observation_completion_record": "publication/observation-completion-20261102.json"
+    },
+    {
+      "path": "ops/scripts/stream_v3_observation_exporter.py",
+      "source_role": "observation-shadow-source-or-documentation",
+      "decision": "Direct-scrape candidate only; preserve deployed measurement, notification and recovery contracts.",
+      "before_sha256": null,
+      "public_sha256": "2b282dcf7a5dbaea31ab79aec015d88f2ffed54fc629848e5f9ce9055cce1f92",
+      "source_sha256": "2b282dcf7a5dbaea31ab79aec015d88f2ffed54fc629848e5f9ce9055cce1f92",
+      "observation_standardization_port": "publication/observation-standardization-20261102.json",
+      "prior_public_sha256": "2b282dcf7a5dbaea31ab79aec015d88f2ffed54fc629848e5f9ce9055cce1f92",
+      "observation_completion_record": "publication/observation-completion-20261102.json"
+    },
+    {
+      "path": "ops/scripts/stream_v3_observation_snapshot.py",
+      "source_role": "observation-shadow-source-or-documentation",
+      "decision": "Direct-scrape candidate only; preserve deployed measurement, notification and recovery contracts.",
+      "before_sha256": null,
+      "public_sha256": "3fb4d616e62b9c5c80b2c4587a5aa7932b98d97213251c08992ca6e164407c33",
+      "source_sha256": "3fb4d616e62b9c5c80b2c4587a5aa7932b98d97213251c08992ca6e164407c33",
+      "observation_standardization_port": "publication/observation-standardization-20261102.json",
+      "prior_public_sha256": "f290e9d2e9bc78b7529736b57aa851bf78211ebdb007c7a88d8131b0d1ec1772",
+      "observation_completion_record": "publication/observation-completion-20261102.json"
+    },
+    {
+      "path": "ops/scripts/check_observation_shadow.py",
+      "source_role": "observation-shadow-source-or-documentation",
+      "decision": "Direct-scrape candidate only; preserve deployed measurement, notification and recovery contracts.",
+      "before_sha256": null,
+      "public_sha256": "555de7c1d462a5f39cff16e96883cf3ff9c04df56d4fb57890adf2d66106933c",
+      "source_sha256": "555de7c1d462a5f39cff16e96883cf3ff9c04df56d4fb57890adf2d66106933c",
+      "observation_standardization_port": "publication/observation-standardization-20261102.json",
+      "prior_public_sha256": "555de7c1d462a5f39cff16e96883cf3ff9c04df56d4fb57890adf2d66106933c",
+      "observation_completion_record": "publication/observation-completion-20261102.json"
+    },
+    {
+      "path": "ops/systemd/stream-v3-observation-exporter.service.in",
+      "source_role": "observation-shadow-source-or-documentation",
+      "decision": "Direct-scrape candidate only; preserve deployed measurement, notification and recovery contracts.",
+      "before_sha256": null,
+      "public_sha256": "1507b0e8931111910ecceb8554e2a4cc3e964aee09c3c53587603190a41ca3c0",
+      "source_sha256": "1507b0e8931111910ecceb8554e2a4cc3e964aee09c3c53587603190a41ca3c0",
+      "observation_standardization_port": "publication/observation-standardization-20261102.json",
+      "before_upload_direct_connection_sha256": "4379028c634acac9844ca5250d49ff957be4b732fc3d12b0681f53c33ee7a6e0",
+      "port_record": "publication/upload-direct-connection-20261102.json",
+      "prior_public_sha256": "1507b0e8931111910ecceb8554e2a4cc3e964aee09c3c53587603190a41ca3c0",
+      "observation_completion_record": "publication/observation-completion-20261102.json"
+    },
+    {
+      "path": "ops/monitoring/observation-shadow/prometheus.yml.in",
+      "source_role": "observation-shadow-source-or-documentation",
+      "decision": "Direct-scrape candidate only; preserve deployed measurement, notification and recovery contracts.",
+      "before_sha256": null,
+      "public_sha256": "a77311d4eb08078514e5d029905f580d8b9760047b52fe4dddbbc2c9d1b3f95f",
+      "source_sha256": "a77311d4eb08078514e5d029905f580d8b9760047b52fe4dddbbc2c9d1b3f95f",
+      "observation_standardization_port": "publication/observation-standardization-20261102.json",
+      "prior_public_sha256": "a77311d4eb08078514e5d029905f580d8b9760047b52fe4dddbbc2c9d1b3f95f",
+      "observation_completion_record": "publication/observation-completion-20261102.json"
+    },
+    {
+      "path": "ops/monitoring/observation-shadow/rules.yml",
+      "source_role": "observation-shadow-source-or-documentation",
+      "decision": "Direct-scrape candidate only; preserve deployed measurement, notification and recovery contracts.",
+      "before_sha256": null,
+      "public_sha256": "39aa87ff8364ac1cd44b88391a6df0f9743fc1d52afe8b33073c3ff002188b76",
+      "source_sha256": "39aa87ff8364ac1cd44b88391a6df0f9743fc1d52afe8b33073c3ff002188b76",
+      "observation_standardization_port": "publication/observation-standardization-20261102.json",
+      "before_upload_direct_connection_sha256": "958f436bca4061bedc4fad5a520c45e4eeb58c580eb3a8924f058ce332592f2d",
+      "port_record": "publication/upload-direct-connection-20261102.json",
+      "prior_public_sha256": "3acc5cd147c6a4a1c59a1fddcd7577a46c1753648ed2b9fe3f05b31885c9f5c8",
+      "observation_completion_record": "publication/observation-completion-20261102.json"
+    },
+    {
+      "path": "ops/monitoring/observation-shadow/rule-tests.yml",
+      "source_role": "observation-shadow-source-or-documentation",
+      "decision": "Direct-scrape candidate only; preserve deployed measurement, notification and recovery contracts.",
+      "before_sha256": null,
+      "public_sha256": "56e7844d387d48e3c105bf42054548c8dac8df32ba5500387dc31c38f8a5bde7",
+      "source_sha256": "56e7844d387d48e3c105bf42054548c8dac8df32ba5500387dc31c38f8a5bde7",
+      "observation_standardization_port": "publication/observation-standardization-20261102.json",
+      "prior_public_sha256": "56e7844d387d48e3c105bf42054548c8dac8df32ba5500387dc31c38f8a5bde7",
+      "observation_completion_record": "publication/observation-completion-20261102.json"
+    },
+    {
+      "path": "tests/test_observation_standardization.py",
+      "source_role": "observation-shadow-source-or-documentation",
+      "decision": "Direct-scrape candidate only; preserve deployed measurement, notification and recovery contracts.",
+      "before_sha256": null,
+      "public_sha256": "ec80d5452e56a3a22f5ef7ca7cbfacba974eba13dc98e2fcf0f1b3248f6c5c80",
+      "source_sha256": "ec80d5452e56a3a22f5ef7ca7cbfacba974eba13dc98e2fcf0f1b3248f6c5c80",
+      "observation_standardization_port": "publication/observation-standardization-20261102.json",
+      "prior_public_sha256": "ec80d5452e56a3a22f5ef7ca7cbfacba974eba13dc98e2fcf0f1b3248f6c5c80",
+      "observation_completion_record": "publication/observation-completion-20261102.json"
+    },
+    {
+      "path": "docs/v3/observation-standardization.md",
+      "source_role": "observation-shadow-source-or-documentation",
+      "decision": "Direct-scrape candidate only; preserve deployed measurement, notification and recovery contracts.",
+      "before_sha256": null,
+      "public_sha256": "9289ebcf5916e40f0e0bdf81b9098f066b07bff194a325e53bd6bf8ccea77f81",
+      "source_sha256": null,
+      "observation_standardization_port": "publication/observation-standardization-20261102.json",
+      "before_upload_direct_connection_sha256": "11740bfa3d48e79fd84b50eae30acfcc0f813f03222a4c3f0651c5c731491c8f",
+      "port_record": "publication/upload-direct-connection-20261102.json",
+      "prior_public_sha256": "741ef856215b90710f9826e5ad09c414df849852b1368f25aa8d7468f9005d4d",
+      "observation_completion_record": "publication/observation-completion-20261102.json"
+    },
+    {
+      "path": "publication/observation-standardization-20261102.json",
+      "source_role": "observation-shadow-source-or-documentation",
+      "decision": "Direct-scrape candidate only; preserve deployed measurement, notification and recovery contracts.",
+      "before_sha256": null,
+      "public_sha256": "fee0d434a02bdcc53b039c3bce9e5d475f8ec5830ee945688adac91000908370",
+      "source_sha256": null,
+      "observation_standardization_port": "publication/observation-standardization-20261102.json",
+      "prior_public_sha256": "fee0d434a02bdcc53b039c3bce9e5d475f8ec5830ee945688adac91000908370",
+      "observation_completion_record": "publication/observation-completion-20261102.json"
+    },
+    {
+      "path": "src/stream_core/common/upload_prometheus_source.py",
+      "source_role": "observation-source-connection",
+      "decision": "Connect explicit direct-source recovery; preserve raw history and control boundaries.",
+      "before_sha256": null,
+      "public_sha256": "f0c03c639e0f1a9d633cd313ef011759175b94bbebaaa473e8c8715dca4dfd70",
+      "source_sha256": "f0c03c639e0f1a9d633cd313ef011759175b94bbebaaa473e8c8715dca4dfd70",
+      "port_record": "publication/upload-direct-connection-20261102.json",
+      "before_upload_direct_connection_sha256": "1cb737e1dca6893d0f179f993da4fc9717fe474b579dd9ebc459bd0c2a1bda35",
+      "prior_public_sha256": "1cb737e1dca6893d0f179f993da4fc9717fe474b579dd9ebc459bd0c2a1bda35",
+      "observation_completion_record": "publication/observation-completion-20261102.json"
+    },
+    {
+      "path": "tests/test_upload_direct_connection.py",
+      "source_role": "observation-source-connection",
+      "decision": "Connect explicit direct-source recovery; preserve raw history and control boundaries.",
+      "before_sha256": null,
+      "public_sha256": "166abd790c12542d67f4aeb9f08168b79bee06054da144838d79b1310fa12b54",
+      "source_sha256": "166abd790c12542d67f4aeb9f08168b79bee06054da144838d79b1310fa12b54",
+      "port_record": "publication/upload-direct-connection-20261102.json",
+      "before_upload_direct_connection_sha256": "4bbc16bac1dd3502064d60efa1dd47f660b56059f7bc07c55658c2f9cec7c21a",
+      "prior_public_sha256": "4bbc16bac1dd3502064d60efa1dd47f660b56059f7bc07c55658c2f9cec7c21a",
+      "observation_completion_record": "publication/observation-completion-20261102.json"
+    },
+    {
+      "path": "ops/monitoring/observation/scrape.yml.in",
+      "source_role": "observation-source-connection",
+      "decision": "Connect explicit direct-source recovery; preserve raw history and control boundaries.",
+      "before_sha256": null,
+      "public_sha256": "f41f397630f9c4e1bfe7524181705832fc5fb9cefb48b93e63c2cab9648becfe",
+      "source_sha256": "f41f397630f9c4e1bfe7524181705832fc5fb9cefb48b93e63c2cab9648becfe",
+      "port_record": "publication/upload-direct-connection-20261102.json",
+      "before_upload_direct_connection_sha256": "f41f397630f9c4e1bfe7524181705832fc5fb9cefb48b93e63c2cab9648becfe",
+      "prior_public_sha256": "f41f397630f9c4e1bfe7524181705832fc5fb9cefb48b93e63c2cab9648becfe",
+      "observation_completion_record": "publication/observation-completion-20261102.json"
+    },
+    {
+      "path": "ops/monitoring/observation/alerts.yml.in",
+      "source_role": "observation-contract-public-port",
+      "decision": "Port bounded observation contracts, connected delivery, public projection and reviewed verification evidence.",
+      "prior_public_sha256": null,
+      "public_sha256": "cb4fa1487b77d15475b518b93fe0560fec5427e3bf1e19e0d720a721fddc7caf",
+      "source_sha256": "cb4fa1487b77d15475b518b93fe0560fec5427e3bf1e19e0d720a721fddc7caf",
+      "observation_completion_record": "publication/observation-completion-20261102.json"
+    },
+    {
+      "path": "ops/public-publisher/site/scripts/collect_observation_bundle.py",
+      "source_role": "observation-contract-public-port",
+      "decision": "Port bounded observation contracts, connected delivery, public projection and reviewed verification evidence.",
+      "prior_public_sha256": null,
+      "public_sha256": "62ed74d4a74c149ceaf205675c0505f11f86f4433a6a66f59aacc3cfe0230233",
+      "source_sha256": "62ed74d4a74c149ceaf205675c0505f11f86f4433a6a66f59aacc3cfe0230233",
+      "observation_completion_record": "publication/observation-completion-20261102.json"
+    },
+    {
+      "path": "ops/public-publisher/site/scripts/reliability_projection.py",
+      "source_role": "observation-contract-public-port",
+      "decision": "Port bounded observation contracts, connected delivery, public projection and reviewed verification evidence.",
+      "prior_public_sha256": null,
+      "public_sha256": "3c5658299fd0e3acd5303b508ac543e35cabf7e66a7d375337df40ee9dc76e8c",
+      "source_sha256": "d3143096b15d66328e78f6ce5339bf602e701ef92faca5f4062c2ffda44516b2",
+      "observation_completion_record": "publication/observation-completion-20261102.json"
+    },
+    {
+      "path": "ops/scripts/stream_v3_external_watchdog_heartbeat.py",
+      "source_role": "observation-contract-public-port",
+      "decision": "Port bounded observation contracts, connected delivery, public projection and reviewed verification evidence.",
+      "prior_public_sha256": null,
+      "public_sha256": "f317bebe33c44fb01c9903dce757cb8930ff770eeb93ad9fd34ee1a551e8f7a4",
+      "source_sha256": "f317bebe33c44fb01c9903dce757cb8930ff770eeb93ad9fd34ee1a551e8f7a4",
+      "observation_completion_record": "publication/observation-completion-20261102.json"
+    },
+    {
+      "path": "ops/scripts/stream_v3_monitor_observation_exporter.py",
+      "source_role": "observation-contract-public-port",
+      "decision": "Port bounded observation contracts, connected delivery, public projection and reviewed verification evidence.",
+      "prior_public_sha256": null,
+      "public_sha256": "3547ac3d2dd86d95d2a04f0ffb69373bd8fd7b223e36b68a998a742be6944d48",
+      "source_sha256": "3547ac3d2dd86d95d2a04f0ffb69373bd8fd7b223e36b68a998a742be6944d48",
+      "observation_completion_record": "publication/observation-completion-20261102.json"
+    },
+    {
+      "path": "ops/scripts/stream_v3_monitoring_watchdog.py",
+      "source_role": "observation-contract-public-port",
+      "decision": "Port bounded observation contracts, connected delivery, public projection and reviewed verification evidence.",
+      "prior_public_sha256": null,
+      "public_sha256": "c4f38a93f7d88fced79de4205ffcb1a55804b65bf3ef626e0c7e8acb3cfdab37",
+      "source_sha256": "7e2fd265135455fc5abce3ad3e672773566b124a529beeb1fa68485331df4372",
+      "observation_completion_record": "publication/observation-completion-20261102.json"
+    },
+    {
+      "path": "ops/scripts/stream_v3_notification_gateway.py",
+      "source_role": "observation-contract-public-port",
+      "decision": "Port bounded observation contracts, connected delivery, public projection and reviewed verification evidence.",
+      "prior_public_sha256": null,
+      "public_sha256": "f944c62bf99969c598abdcc7eb019c4aefbe3c97e6fb17740b96c2229e87f318",
+      "source_sha256": "f944c62bf99969c598abdcc7eb019c4aefbe3c97e6fb17740b96c2229e87f318",
+      "observation_completion_record": "publication/observation-completion-20261102.json"
+    },
+    {
+      "path": "ops/scripts/stream_v3_notification_gateway_health.py",
+      "source_role": "observation-contract-public-port",
+      "decision": "Port bounded observation contracts, connected delivery, public projection and reviewed verification evidence.",
+      "prior_public_sha256": null,
+      "public_sha256": "80958dc67a7854a2b2ea4f29410ec0fca3aa6468918262e9ca62c0e6bf315d45",
+      "source_sha256": "4c9db49dbd2c595227700b9de1f387daf27b9cfe41bfb1fac037d06854a5223f",
+      "observation_completion_record": "publication/observation-completion-20261102.json"
+    },
+    {
+      "path": "ops/scripts/stream_v3_public_projection.py",
+      "source_role": "observation-contract-public-port",
+      "decision": "Port bounded observation contracts, connected delivery, public projection and reviewed verification evidence.",
+      "prior_public_sha256": null,
+      "public_sha256": "3caa0127e0646bb42918648944f09e9de605f2a536c4d944eecd23001f00645d",
+      "source_sha256": "3caa0127e0646bb42918648944f09e9de605f2a536c4d944eecd23001f00645d",
+      "observation_completion_record": "publication/observation-completion-20261102.json"
+    },
+    {
+      "path": "ops/systemd/stream-v3-external-watchdog.service.in",
+      "source_role": "observation-contract-public-port",
+      "decision": "Port bounded observation contracts, connected delivery, public projection and reviewed verification evidence.",
+      "prior_public_sha256": null,
+      "public_sha256": "1f55c84ad6f0e2e6ace067c6f20e3dc6fd2f358f4fc066b7039ba293c3e856b6",
+      "source_sha256": "1f55c84ad6f0e2e6ace067c6f20e3dc6fd2f358f4fc066b7039ba293c3e856b6",
+      "observation_completion_record": "publication/observation-completion-20261102.json"
+    },
+    {
+      "path": "ops/systemd/stream-v3-external-watchdog.timer",
+      "source_role": "observation-contract-public-port",
+      "decision": "Port bounded observation contracts, connected delivery, public projection and reviewed verification evidence.",
+      "prior_public_sha256": null,
+      "public_sha256": "15717776128b508957d4b35fcebcb895241e3aa929c50438ece46046e9d3337b",
+      "source_sha256": "15717776128b508957d4b35fcebcb895241e3aa929c50438ece46046e9d3337b",
+      "observation_completion_record": "publication/observation-completion-20261102.json"
+    },
+    {
+      "path": "ops/systemd/stream-v3-monitor-observation.service.in",
+      "source_role": "observation-contract-public-port",
+      "decision": "Port bounded observation contracts, connected delivery, public projection and reviewed verification evidence.",
+      "prior_public_sha256": null,
+      "public_sha256": "463f029f25db3bfba1738fe7ef7521c98c7fe312cb2196850378ce6b5e4e6e7d",
+      "source_sha256": "463f029f25db3bfba1738fe7ef7521c98c7fe312cb2196850378ce6b5e4e6e7d",
+      "observation_completion_record": "publication/observation-completion-20261102.json"
+    },
+    {
+      "path": "ops/systemd/stream-v3-notification-gateway.service.in",
+      "source_role": "observation-contract-public-port",
+      "decision": "Port bounded observation contracts, connected delivery, public projection and reviewed verification evidence.",
+      "prior_public_sha256": null,
+      "public_sha256": "29540fcf52d5c5a87d1cef1d991b9d90639e34a083f9f5a381bcd771f61d5854",
+      "source_sha256": "29540fcf52d5c5a87d1cef1d991b9d90639e34a083f9f5a381bcd771f61d5854",
+      "observation_completion_record": "publication/observation-completion-20261102.json"
+    },
+    {
+      "path": "ops/systemd/stream-v3-public-projection.service.in",
+      "source_role": "observation-contract-public-port",
+      "decision": "Port bounded observation contracts, connected delivery, public projection and reviewed verification evidence.",
+      "prior_public_sha256": null,
+      "public_sha256": "6b6dae7e33d7e79ff8db39b4569fe78114d2850a2f79c7a56fa4d24d93016ef3",
+      "source_sha256": "6b6dae7e33d7e79ff8db39b4569fe78114d2850a2f79c7a56fa4d24d93016ef3",
+      "observation_completion_record": "publication/observation-completion-20261102.json"
+    },
+    {
+      "path": "ops/systemd/stream-v3-public-projection.timer",
+      "source_role": "observation-contract-public-port",
+      "decision": "Port bounded observation contracts, connected delivery, public projection and reviewed verification evidence.",
+      "prior_public_sha256": null,
+      "public_sha256": "bd0a4899551c190af8c118d640b93620a5302a3acfa209dc69dc48e6d0a095a8",
+      "source_sha256": "bd0a4899551c190af8c118d640b93620a5302a3acfa209dc69dc48e6d0a095a8",
+      "observation_completion_record": "publication/observation-completion-20261102.json"
+    },
+    {
+      "path": "publication/upload-direct-connection-20261102.json",
+      "source_role": "observation-contract-public-port",
+      "decision": "Port bounded observation contracts, connected delivery, public projection and reviewed verification evidence.",
+      "prior_public_sha256": null,
+      "public_sha256": "e25efba5d7db4f253ed55cd86da21f605b49c56583616f035f611ecb12882ceb",
+      "source_sha256": null,
+      "observation_completion_record": "publication/observation-completion-20261102.json"
+    },
+    {
+      "path": "src/stream_core/common/monitor_observation.py",
+      "source_role": "observation-contract-public-port",
+      "decision": "Port bounded observation contracts, connected delivery, public projection and reviewed verification evidence.",
+      "prior_public_sha256": null,
+      "public_sha256": "a4b7ec0d26215c32f06ac651592c4dbaf978367cec1a56738c8e5ebe7faa6180",
+      "source_sha256": "a4b7ec0d26215c32f06ac651592c4dbaf978367cec1a56738c8e5ebe7faa6180",
+      "observation_completion_record": "publication/observation-completion-20261102.json"
+    },
+    {
+      "path": "src/stream_core/common/notification_gateway_client.py",
+      "source_role": "observation-contract-public-port",
+      "decision": "Port bounded observation contracts, connected delivery, public projection and reviewed verification evidence.",
+      "prior_public_sha256": null,
+      "public_sha256": "f1b3c1ec9cf593abf4477476761780f04d65fb9d2a8c847e1bee8e1fc328e314",
+      "source_sha256": "f1b3c1ec9cf593abf4477476761780f04d65fb9d2a8c847e1bee8e1fc328e314",
+      "observation_completion_record": "publication/observation-completion-20261102.json"
+    },
+    {
+      "path": "src/stream_core/notifications/discord.py",
+      "source_role": "observation-contract-public-port",
+      "decision": "Port bounded observation contracts, connected delivery, public projection and reviewed verification evidence.",
+      "prior_public_sha256": null,
+      "public_sha256": "d202ff828c851c1d70ef9924abef8dd3652bcfcd61f937a2597e7c923ed3c4a1",
+      "source_sha256": "d202ff828c851c1d70ef9924abef8dd3652bcfcd61f937a2597e7c923ed3c4a1",
+      "observation_completion_record": "publication/observation-completion-20261102.json"
+    },
+    {
+      "path": "src/stream_core/notifications/measurement_continuity.py",
+      "source_role": "observation-contract-public-port",
+      "decision": "Port bounded observation contracts, connected delivery, public projection and reviewed verification evidence.",
+      "prior_public_sha256": null,
+      "public_sha256": "a6d823ea01492f34d39ac95e9c8cd948be1e4c0fe40410f0a99f38af15c6dff6",
+      "source_sha256": "a6d823ea01492f34d39ac95e9c8cd948be1e4c0fe40410f0a99f38af15c6dff6",
+      "observation_completion_record": "publication/observation-completion-20261102.json"
+    },
+    {
+      "path": "src/stream_core/notifications/slack.py",
+      "source_role": "observation-contract-public-port",
+      "decision": "Port bounded observation contracts, connected delivery, public projection and reviewed verification evidence.",
+      "prior_public_sha256": null,
+      "public_sha256": "d36ca8b004a826ba58ebf85c346111336bc1707a9c2fc8c97c98767edd1f1b79",
+      "source_sha256": "d36ca8b004a826ba58ebf85c346111336bc1707a9c2fc8c97c98767edd1f1b79",
+      "observation_completion_record": "publication/observation-completion-20261102.json"
+    },
+    {
+      "path": "src/stream_core/operational_reliability/evidence_store.py",
+      "source_role": "observation-contract-public-port",
+      "decision": "Port bounded observation contracts, connected delivery, public projection and reviewed verification evidence.",
+      "prior_public_sha256": null,
+      "public_sha256": "f4f5208c2123d6d51e3960750da350bcc2e78df727aa61bd0842bd7f0027be7d",
+      "source_sha256": "f4f5208c2123d6d51e3960750da350bcc2e78df727aa61bd0842bd7f0027be7d",
+      "observation_completion_record": "publication/observation-completion-20261102.json"
+    },
+    {
+      "path": "tests/test_external_watchdog_heartbeat.py",
+      "source_role": "observation-contract-public-port",
+      "decision": "Port bounded observation contracts, connected delivery, public projection and reviewed verification evidence.",
+      "prior_public_sha256": null,
+      "public_sha256": "039344c85c140c1df6cd94bf4524da9fa05ab8f0051097e9d7ab94f3bc109660",
+      "source_sha256": "039344c85c140c1df6cd94bf4524da9fa05ab8f0051097e9d7ab94f3bc109660",
+      "observation_completion_record": "publication/observation-completion-20261102.json"
+    },
+    {
+      "path": "tests/test_ledger_report_readonly.py",
+      "source_role": "observation-contract-public-port",
+      "decision": "Port bounded observation contracts, connected delivery, public projection and reviewed verification evidence.",
+      "prior_public_sha256": null,
+      "public_sha256": "44df3fedfbe1bd1bd1fe1f49828fecee5284195162397dcda24a8d4cc35f8e16",
+      "source_sha256": "44df3fedfbe1bd1bd1fe1f49828fecee5284195162397dcda24a8d4cc35f8e16",
+      "observation_completion_record": "publication/observation-completion-20261102.json"
+    },
+    {
+      "path": "tests/test_measurement_continuity.py",
+      "source_role": "observation-contract-public-port",
+      "decision": "Port bounded observation contracts, connected delivery, public projection and reviewed verification evidence.",
+      "prior_public_sha256": null,
+      "public_sha256": "53f89c8d58358636aa857669eff2404551d9db7202b540d9146ab625e3012378",
+      "source_sha256": "53f89c8d58358636aa857669eff2404551d9db7202b540d9146ab625e3012378",
+      "observation_completion_record": "publication/observation-completion-20261102.json"
+    },
+    {
+      "path": "tests/test_monitor_observation.py",
+      "source_role": "observation-contract-public-port",
+      "decision": "Port bounded observation contracts, connected delivery, public projection and reviewed verification evidence.",
+      "prior_public_sha256": null,
+      "public_sha256": "21878523bdfe0cfe2647213bb9fae971f27f3718b5ffb3af9b9507f1e29c557c",
+      "source_sha256": "21878523bdfe0cfe2647213bb9fae971f27f3718b5ffb3af9b9507f1e29c557c",
+      "observation_completion_record": "publication/observation-completion-20261102.json"
+    },
+    {
+      "path": "tests/test_notification_gateway.py",
+      "source_role": "observation-contract-public-port",
+      "decision": "Port bounded observation contracts, connected delivery, public projection and reviewed verification evidence.",
+      "prior_public_sha256": null,
+      "public_sha256": "53910e2a17d7e6c98e5997b21e44ebc4e8670dea67508dfcbd0b778b516b7463",
+      "source_sha256": "53910e2a17d7e6c98e5997b21e44ebc4e8670dea67508dfcbd0b778b516b7463",
+      "observation_completion_record": "publication/observation-completion-20261102.json"
+    },
+    {
+      "path": "tests/test_observation_deployment_alerts.py",
+      "source_role": "observation-contract-public-port",
+      "decision": "Port bounded observation contracts, connected delivery, public projection and reviewed verification evidence.",
+      "prior_public_sha256": null,
+      "public_sha256": "5c91b6e1c5638e8675f37b9f92623584d7c457ec176b8abdf130c340125490c4",
+      "source_sha256": "5c91b6e1c5638e8675f37b9f92623584d7c457ec176b8abdf130c340125490c4",
+      "observation_completion_record": "publication/observation-completion-20261102.json"
+    },
+    {
+      "path": "tests/test_public_observation_bundle.py",
+      "source_role": "observation-contract-public-port",
+      "decision": "Port bounded observation contracts, connected delivery, public projection and reviewed verification evidence.",
+      "prior_public_sha256": null,
+      "public_sha256": "b56ffe0b2b862f96cdc63ced8207f0334b8a699b324b3ca4b85ef04c53564ef3",
+      "source_sha256": "b56ffe0b2b862f96cdc63ced8207f0334b8a699b324b3ca4b85ef04c53564ef3",
+      "observation_completion_record": "publication/observation-completion-20261102.json"
+    },
+    {
+      "path": "publication/observation-completion-20261102.json",
+      "source_role": "observation-contract-public-port",
+      "decision": "Port bounded observation contracts, connected delivery, public projection and reviewed verification evidence.",
+      "prior_public_sha256": null,
+      "public_sha256": "5144b48bc7a5c0dc86ac23f6082b7ee347f7b3f77fa831fbd835851e9bd06a69",
+      "source_sha256": null,
+      "observation_completion_record": "publication/observation-completion-20261102.json"
     }
   ],
   "omissions": [

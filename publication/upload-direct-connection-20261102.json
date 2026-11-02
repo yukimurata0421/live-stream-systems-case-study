@@ -1,0 +1,112 @@
+{
+  "schema": "public-source-port.upload-direct-connection.v1",
+  "date_jst": "2026-11-02",
+  "scope": "Direct upload observation and current recovery connection; preserve raw SLI history and delivery control",
+  "production_scrape_deployed": true,
+  "consumer_cutover_verified": true,
+  "commit_or_push_performed": false,
+  "files": [
+    {
+      "path": "src/stream_core/common/upload_prometheus_source.py",
+      "before_public_sha256": null,
+      "source_sha256": "1cb737e1dca6893d0f179f993da4fc9717fe474b579dd9ebc459bd0c2a1bda35",
+      "public_sha256": "1cb737e1dca6893d0f179f993da4fc9717fe474b579dd9ebc459bd0c2a1bda35"
+    },
+    {
+      "path": "src/stream_core/notifications/upload_source.py",
+      "before_public_sha256": "a9ee39f0f786e3d97e8c7613793761a4bcd49a70fc9675e3013f60b8a794a9ce",
+      "source_sha256": "f0a18bbbbc685424158d11c4c6e3217ac0ee5378c2951f1f45795770d6b9aa81",
+      "public_sha256": "f0a18bbbbc685424158d11c4c6e3217ac0ee5378c2951f1f45795770d6b9aa81"
+    },
+    {
+      "path": "tests/test_upload_direct_connection.py",
+      "before_public_sha256": null,
+      "source_sha256": "4bbc16bac1dd3502064d60efa1dd47f660b56059f7bc07c55658c2f9cec7c21a",
+      "public_sha256": "4bbc16bac1dd3502064d60efa1dd47f660b56059f7bc07c55658c2f9cec7c21a"
+    },
+    {
+      "path": "ops/monitoring/observation/scrape.yml.in",
+      "before_public_sha256": null,
+      "source_sha256": "f41f397630f9c4e1bfe7524181705832fc5fb9cefb48b93e63c2cab9648becfe",
+      "public_sha256": "f41f397630f9c4e1bfe7524181705832fc5fb9cefb48b93e63c2cab9648becfe"
+    },
+    {
+      "path": "ops/monitoring/observation-shadow/rules.yml",
+      "before_public_sha256": "958f436bca4061bedc4fad5a520c45e4eeb58c580eb3a8924f058ce332592f2d",
+      "source_sha256": "3acc5cd147c6a4a1c59a1fddcd7577a46c1753648ed2b9fe3f05b31885c9f5c8",
+      "public_sha256": "3acc5cd147c6a4a1c59a1fddcd7577a46c1753648ed2b9fe3f05b31885c9f5c8"
+    },
+    {
+      "path": "ops/systemd/stream-v3-observation-exporter.service.in",
+      "before_public_sha256": "4379028c634acac9844ca5250d49ff957be4b732fc3d12b0681f53c33ee7a6e0",
+      "source_sha256": "1507b0e8931111910ecceb8554e2a4cc3e964aee09c3c53587603190a41ca3c0",
+      "public_sha256": "1507b0e8931111910ecceb8554e2a4cc3e964aee09c3c53587603190a41ca3c0"
+    },
+    {
+      "path": "docs/v3/observation-standardization.md",
+      "before_public_sha256": "11740bfa3d48e79fd84b50eae30acfcc0f813f03222a4c3f0651c5c731491c8f",
+      "source_sha256": null,
+      "public_sha256": "741ef856215b90710f9826e5ad09c414df849852b1368f25aa8d7468f9005d4d",
+      "adaptation": "English public documentation; private deployment identities omitted."
+    },
+    {
+      "path": "docs/v3/upload-measurement-source.md",
+      "before_public_sha256": "c74b2ff6c2fa50a992871dc63170bfc9f7ea0013a7bf0a1cb10e718f9312a794",
+      "source_sha256": null,
+      "public_sha256": "5c493cab07ddb7d73dfcd91489b4875eefdb9c799e013f587cccb9eddf6ca34a",
+      "adaptation": "English public documentation; private deployment identities omitted."
+    },
+    {
+      "path": "docs/00_INDEX.md",
+      "before_public_sha256": "cd2ae8032a1bb9ed4cdfa6c2d26156e144ae73726de6b1ea69791589244cdd75",
+      "source_sha256": "b744a45eaa29d812ec315d58c693d60a92cfa7fa66d5b8d8be0e4f49bd7b5d48",
+      "public_sha256": "e71784d110b08225a9a320ecb03f999b60fa7f23b2503f2e6a3f80448620c9ed",
+      "adaptation": "English public documentation; private deployment identities omitted."
+    },
+    {
+      "path": "docs/current-status.md",
+      "before_public_sha256": "b1bf37819d867ad8ec251791e2592b650207bb5b91825c928d386f9e477c7d01",
+      "source_sha256": null,
+      "public_sha256": "b0727b207bca57a63101d2013bb1e0907b3b1a2cc2b80ffe787d5fbb4c71501d",
+      "adaptation": "English public documentation; private deployment identities omitted."
+    }
+  ],
+  "verification": {
+    "development_tests": 194,
+    "development_subtests": 49,
+    "public_tests": 173,
+    "public_subtests": 3,
+    "native_query_cases": 6,
+    "isolated_pipeline_cases": 7,
+    "production_prometheus_version": "3.11.3",
+    "continuous_window": {
+      "continuous_window_start_jst": "2026-11-02T07:58:33+09:00",
+      "continuous_window_end_jst": "2026-11-02T08:13:33+09:00",
+      "observed_fresh_for_sec": 900.0023127790046,
+      "polls": 21,
+      "raw_max_age_sec": 81.36131310462952,
+      "direct_max_age_sec": 81.13566255569458,
+      "minute_points": 16
+    },
+    "operated_result": {
+      "consumer_cutover_jst": "2026-11-02T08:13:52+09:00",
+      "natural_cycle_jst": "2026-11-02T08:14:15+09:00",
+      "source": {
+        "status": "RECOVERED",
+        "reason": "raw_and_prometheus_fresh_for_15m"
+      },
+      "active_incidents": 0,
+      "pending_notifications": 0,
+      "media_identity_and_guard_hashes_preserved": true,
+      "existing_monitor_pids_preserved": true,
+      "production_fault_injection": false,
+      "player_av_continuity_verified": false,
+      "notification_delivery_triggered": false
+    }
+  },
+  "retained_paths": [
+    "Authenticated raw replica for historical SLI and independent raw recovery evidence.",
+    "Legacy exporter still has other observers and remaining consumers.",
+    "Existing notification delivery and all media control owners."
+  ]
+}
