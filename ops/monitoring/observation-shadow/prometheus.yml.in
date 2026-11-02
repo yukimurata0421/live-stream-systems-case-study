@@ -1,0 +1,15 @@
+# Isolated comparison configuration. Never merge into production automatically.
+global:
+  scrape_interval: 15s
+  scrape_timeout: 3s
+  evaluation_interval: 15s
+rule_files:
+  - '@RULES_FILE@'
+scrape_configs:
+  - job_name: stream_v3_observation_shadow
+    honor_timestamps: false
+    sample_limit: 100
+    body_size_limit: 64KB
+    static_configs:
+      - targets: ['@OBSERVER_ADDRESS@']
+# No Alertmanager, remote_write, notification or control consumer in this phase.

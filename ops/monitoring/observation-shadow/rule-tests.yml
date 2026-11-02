@@ -1,0 +1,186 @@
+rule_files:
+- rules.yml
+evaluation_interval: 15s
+tests:
+- name: valid zero is still a measurement
+  interval: 15s
+  input_series:
+  - series: stream_v3_observation_validity{job="stream_v3_observation_shadow",instance="127.0.0.1:9120",host="encoder-host",source="upload",scope="encoder_tcp_send",validity="VALID"}
+    values: 1+0x64
+  - series: stream_v3_observation_source_age_seconds{job="stream_v3_observation_shadow",instance="127.0.0.1:9120",host="encoder-host",source="upload",scope="encoder_tcp_send"}
+    values: 10+0x64
+  - series: stream_v3_observation_max_age_seconds{job="stream_v3_observation_shadow",instance="127.0.0.1:9120",host="encoder-host",source="upload",scope="encoder_tcp_send"}
+    values: 180+0x64
+  - series: stream_v3_observation_upload_mbps{job="stream_v3_observation_shadow",instance="127.0.0.1:9120",host="encoder-host",source="upload",scope="encoder_tcp_send"}
+    values: 0+0x64
+  - series: up{job="stream_v3_observation_shadow",instance="127.0.0.1:9120"}
+    values: 1+0x64
+  promql_expr_test:
+  - expr: stream_v3:observation_fresh
+    eval_time: 30s
+    exp_samples:
+    - labels: stream_v3:observation_fresh{job="stream_v3_observation_shadow",instance="127.0.0.1:9120",host="encoder-host",source="upload",scope="encoder_tcp_send"}
+      value: 1
+  - expr: stream_v3:upload_observed_mbps
+    eval_time: 30s
+    exp_samples:
+    - labels: stream_v3:upload_observed_mbps{job="stream_v3_observation_shadow",instance="127.0.0.1:9120",host="encoder-host",source="upload",scope="encoder_tcp_send"}
+      value: 0
+- name: healthy through fifteen minutes
+  interval: 15s
+  input_series:
+  - series: stream_v3_observation_validity{job="stream_v3_observation_shadow",instance="127.0.0.1:9120",host="encoder-host",source="upload",scope="encoder_tcp_send",validity="VALID"}
+    values: 1+0x64
+  - series: stream_v3_observation_source_age_seconds{job="stream_v3_observation_shadow",instance="127.0.0.1:9120",host="encoder-host",source="upload",scope="encoder_tcp_send"}
+    values: 10+0x64
+  - series: stream_v3_observation_max_age_seconds{job="stream_v3_observation_shadow",instance="127.0.0.1:9120",host="encoder-host",source="upload",scope="encoder_tcp_send"}
+    values: 180+0x64
+  - series: stream_v3_observation_upload_mbps{job="stream_v3_observation_shadow",instance="127.0.0.1:9120",host="encoder-host",source="upload",scope="encoder_tcp_send"}
+    values: 0+0x64
+  - series: up{job="stream_v3_observation_shadow",instance="127.0.0.1:9120"}
+    values: 1+0x64
+  promql_expr_test:
+  - expr: stream_v3:observation_fresh
+    eval_time: 15m
+    exp_samples:
+    - labels: stream_v3:observation_fresh{job="stream_v3_observation_shadow",instance="127.0.0.1:9120",host="encoder-host",source="upload",scope="encoder_tcp_send"}
+      value: 1
+  - expr: stream_v3:upload_observed_mbps
+    eval_time: 15m
+    exp_samples:
+    - labels: stream_v3:upload_observed_mbps{job="stream_v3_observation_shadow",instance="127.0.0.1:9120",host="encoder-host",source="upload",scope="encoder_tcp_send"}
+      value: 0
+- name: exporter down overrides retained fresh samples
+  interval: 15s
+  input_series:
+  - series: stream_v3_observation_validity{job="stream_v3_observation_shadow",instance="127.0.0.1:9120",host="encoder-host",source="upload",scope="encoder_tcp_send",validity="VALID"}
+    values: 1+0x64
+  - series: stream_v3_observation_source_age_seconds{job="stream_v3_observation_shadow",instance="127.0.0.1:9120",host="encoder-host",source="upload",scope="encoder_tcp_send"}
+    values: 10+0x64
+  - series: stream_v3_observation_max_age_seconds{job="stream_v3_observation_shadow",instance="127.0.0.1:9120",host="encoder-host",source="upload",scope="encoder_tcp_send"}
+    values: 180+0x64
+  - series: stream_v3_observation_upload_mbps{job="stream_v3_observation_shadow",instance="127.0.0.1:9120",host="encoder-host",source="upload",scope="encoder_tcp_send"}
+    values: 0+0x64
+  - series: up{job="stream_v3_observation_shadow",instance="127.0.0.1:9120"}
+    values: 0+0x64
+  promql_expr_test:
+  - expr: stream_v3:observation_fresh
+    eval_time: 30s
+    exp_samples:
+    - labels: stream_v3:observation_fresh{job="stream_v3_observation_shadow",instance="127.0.0.1:9120",host="encoder-host",source="upload",scope="encoder_tcp_send"}
+      value: 0
+  - expr: stream_v3:upload_observed_mbps
+    eval_time: 30s
+    exp_samples: []
+- name: collector omitted series produce no current value
+  interval: 15s
+  input_series:
+  - series: stream_v3_observation_validity{job="stream_v3_observation_shadow",instance="127.0.0.1:9120",host="encoder-host",source="upload",scope="encoder_tcp_send",validity="VALID"}
+    values: 1+0x64
+  - series: stream_v3_observation_source_age_seconds{job="stream_v3_observation_shadow",instance="127.0.0.1:9120",host="encoder-host",source="upload",scope="encoder_tcp_send"}
+    values: 10 stale
+  - series: stream_v3_observation_max_age_seconds{job="stream_v3_observation_shadow",instance="127.0.0.1:9120",host="encoder-host",source="upload",scope="encoder_tcp_send"}
+    values: 180+0x64
+  - series: stream_v3_observation_upload_mbps{job="stream_v3_observation_shadow",instance="127.0.0.1:9120",host="encoder-host",source="upload",scope="encoder_tcp_send"}
+    values: 0 stale
+  - series: up{job="stream_v3_observation_shadow",instance="127.0.0.1:9120"}
+    values: 1+0x64
+  promql_expr_test:
+  - expr: stream_v3:observation_fresh
+    eval_time: 30s
+    exp_samples: []
+  - expr: stream_v3:upload_observed_mbps
+    eval_time: 30s
+    exp_samples: []
+- name: no exporter target cannot prove fresh data
+  interval: 15s
+  input_series:
+  - series: stream_v3_observation_validity{job="stream_v3_observation_shadow",instance="127.0.0.1:9120",host="encoder-host",source="upload",scope="encoder_tcp_send",validity="VALID"}
+    values: 1+0x64
+  - series: stream_v3_observation_source_age_seconds{job="stream_v3_observation_shadow",instance="127.0.0.1:9120",host="encoder-host",source="upload",scope="encoder_tcp_send"}
+    values: 10+0x64
+  - series: stream_v3_observation_max_age_seconds{job="stream_v3_observation_shadow",instance="127.0.0.1:9120",host="encoder-host",source="upload",scope="encoder_tcp_send"}
+    values: 180+0x64
+  - series: stream_v3_observation_upload_mbps{job="stream_v3_observation_shadow",instance="127.0.0.1:9120",host="encoder-host",source="upload",scope="encoder_tcp_send"}
+    values: 0+0x64
+  promql_expr_test:
+  - expr: stream_v3:observation_fresh
+    eval_time: 30s
+    exp_samples: []
+  - expr: stream_v3:upload_observed_mbps
+    eval_time: 30s
+    exp_samples: []
+- name: old counter interval expires between scrapes
+  interval: 15s
+  input_series:
+  - series: stream_v3_observation_validity{job="stream_v3_observation_shadow",instance="127.0.0.1:9120",host="encoder-host",source="upload",scope="encoder_tcp_send",validity="VALID"}
+    values: '1'
+  - series: stream_v3_observation_source_age_seconds{job="stream_v3_observation_shadow",instance="127.0.0.1:9120",host="encoder-host",source="upload",scope="encoder_tcp_send"}
+    values: '179'
+  - series: stream_v3_observation_max_age_seconds{job="stream_v3_observation_shadow",instance="127.0.0.1:9120",host="encoder-host",source="upload",scope="encoder_tcp_send"}
+    values: '180'
+  - series: stream_v3_observation_upload_mbps{job="stream_v3_observation_shadow",instance="127.0.0.1:9120",host="encoder-host",source="upload",scope="encoder_tcp_send"}
+    values: '4'
+  - series: up{job="stream_v3_observation_shadow",instance="127.0.0.1:9120"}
+    values: 1+0x64
+  promql_expr_test:
+  - expr: stream_v3:observation_fresh
+    eval_time: 15s
+    exp_samples:
+    - labels: stream_v3:observation_fresh{job="stream_v3_observation_shadow",instance="127.0.0.1:9120",host="encoder-host",source="upload",scope="encoder_tcp_send"}
+      value: 0
+  - expr: stream_v3:upload_observed_mbps
+    eval_time: 15s
+    exp_samples: []
+- name: sampler stops but exporter continues reporting age
+  interval: 15s
+  input_series:
+  - series: stream_v3_observation_validity{job="stream_v3_observation_shadow",instance="127.0.0.1:9120",host="encoder-host",source="upload",scope="encoder_tcp_send",validity="VALID"}
+    values: 1 0+0x63
+  - series: stream_v3_observation_source_age_seconds{job="stream_v3_observation_shadow",instance="127.0.0.1:9120",host="encoder-host",source="upload",scope="encoder_tcp_send"}
+    values: 179+15x64
+  - series: stream_v3_observation_max_age_seconds{job="stream_v3_observation_shadow",instance="127.0.0.1:9120",host="encoder-host",source="upload",scope="encoder_tcp_send"}
+    values: 180+0x64
+  - series: stream_v3_observation_upload_mbps{job="stream_v3_observation_shadow",instance="127.0.0.1:9120",host="encoder-host",source="upload",scope="encoder_tcp_send"}
+    values: 4 stale
+  - series: up{job="stream_v3_observation_shadow",instance="127.0.0.1:9120"}
+    values: 1+0x64
+  promql_expr_test:
+  - expr: stream_v3:observation_fresh
+    eval_time: 30s
+    exp_samples:
+    - labels: stream_v3:observation_fresh{job="stream_v3_observation_shadow",instance="127.0.0.1:9120",host="encoder-host",source="upload",scope="encoder_tcp_send"}
+      value: 0
+  - expr: stream_v3:upload_observed_mbps
+    eval_time: 30s
+    exp_samples: []
+- name: stopped scrape loop expires before Prometheus lookback
+  interval: 15s
+  input_series:
+  - series: stream_v3_observation_validity{job="stream_v3_observation_shadow",instance="127.0.0.1:9120",host="encoder-host",source="upload",scope="encoder_tcp_send",validity="VALID"}
+    values: '1'
+  - series: stream_v3_observation_source_age_seconds{job="stream_v3_observation_shadow",instance="127.0.0.1:9120",host="encoder-host",source="upload",scope="encoder_tcp_send"}
+    values: '1'
+  - series: stream_v3_observation_max_age_seconds{job="stream_v3_observation_shadow",instance="127.0.0.1:9120",host="encoder-host",source="upload",scope="encoder_tcp_send"}
+    values: '180'
+  - series: stream_v3_observation_upload_mbps{job="stream_v3_observation_shadow",instance="127.0.0.1:9120",host="encoder-host",source="upload",scope="encoder_tcp_send"}
+    values: '4'
+  - series: up{job="stream_v3_observation_shadow",instance="127.0.0.1:9120"}
+    values: '1'
+  promql_expr_test:
+  - expr: stream_v3:observation_fresh
+    eval_time: 1m
+    exp_samples: []
+  - expr: stream_v3:upload_observed_mbps
+    eval_time: 1m
+    exp_samples: []
+- name: all observations absent
+  interval: 15s
+  input_series: []
+  promql_expr_test:
+  - expr: stream_v3:observation_fresh
+    eval_time: 30s
+    exp_samples: []
+  - expr: stream_v3:upload_observed_mbps
+    eval_time: 30s
+    exp_samples: []

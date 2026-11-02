@@ -14,6 +14,9 @@ class UploadSourceTests(unittest.TestCase):
         self.tmp=tempfile.TemporaryDirectory();self.addCleanup(self.tmp.cleanup)
         self.root=Path(self.tmp.name);(self.root/'logs').mkdir()
         self.path=self.root/'logs/fast_recovery_events.jsonl';self.now=1791889800
+        (self.root/'upload_measurement').mkdir()
+        (self.root/'upload_measurement/prometheus-source.json').write_text(json.dumps(
+            {'schema':'stream.upload_prometheus_source.v1','mode':'legacy'}))
 
     def rows(self,times):
         self.path.write_text(''.join(json.dumps({'kind':'tcp_send_sample','ts_utc':datetime.fromtimestamp(t,timezone.utc).isoformat(),'mbps':3.6})+'\n' for t in times))

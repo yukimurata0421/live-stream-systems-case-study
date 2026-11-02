@@ -1020,6 +1020,10 @@ def notify_status(*, ctx: NotifyStatusContext, dry_run: bool = False, force_test
         state['notification_clock']={'boot_id':decision_clock.boot,'mono':decision_clock.mono}
         incidents = notification_observation.reconcile(incidents, active_state, state, collection,
                                                        now=decision_clock, config=cfg)
+    from . import measurement_continuity
+    incidents = measurement_continuity.apply(incidents, active_state, state,
+        root=ctx.runtime_state_base_dir,
+        now=decision_clock if decision_clock is not None else observation_time.capture())
     quality_id='reliability:youtube_input_quality_fast_feedback'
     candidate=next((x for x in incidents if x.get('id')==quality_id and x.get('severity')=='warning'),None)
     if candidate and collection is None:

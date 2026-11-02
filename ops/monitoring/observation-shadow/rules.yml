@@ -1,0 +1,23 @@
+groups:
+  - name: host-observation
+    interval: 15s
+    rules:
+      - record: stream_v3:observation_age_upper_seconds
+        expr: |
+          (
+            stream_v3_observation_source_age_seconds{job=~"stream_v3_(observation(_shadow)?|monitor_observation)"}
+            + time() - timestamp(stream_v3_observation_source_age_seconds{job=~"stream_v3_(observation(_shadow)?|monitor_observation)"})
+          )
+          and (time() - timestamp(stream_v3_observation_source_age_seconds{job=~"stream_v3_(observation(_shadow)?|monitor_observation)"}) >= 0)
+      - record: stream_v3:observation_fresh
+        expr: |
+          max without(validity) (stream_v3_observation_validity{job=~"stream_v3_(observation(_shadow)?|monitor_observation)",validity="VALID"})
+          * on(job,instance) group_left() (up{job=~"stream_v3_(observation(_shadow)?|monitor_observation)"} == bool 1)
+          * on(job,instance,host,source,scope)
+            (stream_v3:observation_age_upper_seconds <= bool stream_v3_observation_max_age_seconds{job=~"stream_v3_(observation(_shadow)?|monitor_observation)"})
+          and on(job,instance) (time() - timestamp(up{job=~"stream_v3_(observation(_shadow)?|monitor_observation)"}) <= 45)
+          and on(job,instance) (time() - timestamp(up{job=~"stream_v3_(observation(_shadow)?|monitor_observation)"}) >= 0)
+      - record: stream_v3:upload_observed_mbps
+        expr: |
+          stream_v3_observation_upload_mbps{job=~"stream_v3_(observation(_shadow)?|monitor_observation)"}
+          and on(job,instance,host,source,scope) (stream_v3:observation_fresh == 1)

@@ -745,19 +745,26 @@ def operational_reliability_incidents(*, status_file: Path | None, now_ts: int) 
             "coverage" in reason or "freshness" in reason for reason in reasons
         ))
         current_upload = current_upload_source(status_file.parent, now_ts) if family == "upload_ceiling" else {}
+        measurement = current_upload.get('measurement')
+        history = current_upload.get('history')
         # A rolling historical gap stays UNKNOWN in the formal gate. Its source
         # recovery incident closes only with sustained independent current evidence.
         historical_upload_recovered = (
             family == "upload_ceiling"
-            and current_upload.get("status") == "RECOVERED"
+            and (measurement.get('sustained') is True if isinstance(measurement,dict)
+                 else current_upload.get("status") == "RECOVERED")
             and bool(reasons)
             and set(reasons) <= {"source_freshness_not_met", "upload_source_freshness_unavailable"}
         )
         current_upload_failed = family == "upload_ceiling" and current_upload.get("status") in {"FAILED", "UNKNOWN", "RECOVERING"}
+        if isinstance(measurement,dict):
+            current_upload_failed = measurement.get('sustained') is not True
         if (historical_measurement_gap and not historical_upload_recovered) or current_upload_failed:
             results.append(
                 incident(
-                    ident=f"reliability:{family}_coverage_or_freshness",
+                    ident=(f"reliability:{family}_historical_coverage"
+                           if isinstance(measurement,dict) and not current_upload_failed
+                           else f"reliability:{family}_coverage_or_freshness"),
                     severity="warning",
                     component=f"{family}_measurement_coverage",
                     summary=("upload current measurement source requires attention" if current_upload_failed else f"{family} formal measurement is unknown"),
@@ -774,6 +781,15 @@ def operational_reliability_incidents(*, status_file: Path | None, now_ts: int) 
                     repeat_sec=3600,
                 )
             )
+        if isinstance(history,dict) and history.get('sustained') is not True:
+            results.append(incident(
+                ident='reliability:upload_history_replication', severity='warning',
+                component='upload_history_replication',
+                summary='upload measurement history replication requires attention',
+                evidence=f"available={history.get('available')} fresh={history.get('fresh')} sustained={history.get('sustained')}",
+                recovery_type='measurement_history_recovery',
+                follow_up='Restore raw history replication; preserve original samples and SLO denominators.',
+                observed_ts=now_ts,repeat_sec=3600))
         # YouTube input-quality raw/Prometheus differences retain
         # compliance=unknown and remain visible in the payload. They are not an
         # additional user-facing incident because that series is derived from

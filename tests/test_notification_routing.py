@@ -12,6 +12,9 @@ from stream_core.notifications import renderer, state as notify_state, status_lo
 
 @pytest.fixture
 def notifications(tmp_path: Path):
+    selection = tmp_path / "upload_measurement/prometheus-source.json"
+    selection.parent.mkdir(parents=True)
+    selection.write_text(json.dumps({"schema":"stream.upload_prometheus_source.v1","mode":"legacy"}))
     fixture = SimpleNamespace(incidents=[], sent={"slack": [], "discord": []}, fail_slack=False, fail_discord=False)
     config = {
         "enabled": True, "webhook_url": "https://discord.example/webhook", "username": "test",
@@ -293,3 +296,37 @@ def test_queued_recovery_follows_discord_fallback_even_if_slack_recovers_mid_flu
     assert len(attempts)==1
     assert len(n.sent['discord'])==2
     assert 'Incident detected' in n.sent['discord'][0] and 'Recovery follow-up' in n.sent['discord'][1]
+
+
+def test_measurement_admission_and_recovery_through_notification_outbox(notifications, monkeypatch):
+    from stream_core.common import observation_time, upload_prometheus_source
+    from stream_core.notifications import upload_source
+    n = notifications
+    root = n.ctx.runtime_state_base_dir
+    (root/'upload_measurement/prometheus-source.json').unlink()
+    # The actual owner assessment is a bounded external observation; exercise
+    # persistence, admission, routing and delivery through the real main loop.
+    current = {'measurement':{'fresh':False,'sustained':False},
+               'history':{'fresh':True,'sustained':True}}
+    monkeypatch.setattr(upload_source, 'current_upload_source', lambda *_: current)
+    ident = 'reliability:upload_ceiling_coverage_or_freshness'
+    for t in (0, 60, 120, 180):
+        monkeypatch.setattr(observation_time, 'capture', lambda: observation_time.Reading(
+            1800000000+t, 1000+t, 'local', 'boot', 'a'*64))
+        n.incidents = [incident(ident, 'warning', 1800000000+t)]
+        assert n.tick(1800000000+t) == 0
+    assert len(n.sent['discord']) == 1
+    last_bad = n.state()['active'][ident]['last_bad_ts']
+    current['measurement']['fresh'] = True
+    for t in (240, 300):
+        monkeypatch.setattr(observation_time, 'capture', lambda: observation_time.Reading(
+            1800000000+t, 1000+t, 'local', 'boot', 'a'*64))
+        n.incidents = [incident(ident, 'warning', 1800000000+t)]
+        assert n.tick(1800000000+t) == 0
+        assert n.state()['active'][ident]['last_bad_ts'] == last_bad
+    current['measurement']['sustained'] = True
+    n.incidents = []
+    assert n.tick(1800000360) == 0
+    assert ident not in n.state()['active']
+    assert len(n.sent['discord']) == 2
+    assert not n.sent['slack']

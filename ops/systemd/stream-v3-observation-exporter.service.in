@@ -1,0 +1,40 @@
+[Unit]
+Description=Read-only host observation exporter
+After=network.target
+
+[Service]
+Type=simple
+DynamicUser=yes
+User=@OBSERVER_USER@
+Group=@OBSERVER_GROUP@
+ExecStart=/usr/bin/python3 -I -B @BUNDLE@/ops/scripts/stream_v3_observation_exporter.py --directory @SOURCE_DIRECTORY@ --source-host @SOURCE_HOST@ --machine @SOURCE_MACHINE@ --listen @LISTEN_ADDRESS@ --port @PORT@
+Restart=on-failure
+RestartSec=10
+UMask=0022
+Nice=10
+CPUQuota=10%
+MemoryMax=96M
+TasksMax=8
+NoNewPrivileges=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+RestrictRealtime=yes
+LockPersonality=yes
+CapabilityBoundingSet=
+RestrictAddressFamilies=AF_INET
+IPAddressDeny=any
+IPAddressAllow=@SCRAPER_ADDRESS@
+ReadOnlyPaths=@SOURCE_DIRECTORY@
+InaccessiblePaths=-/run/stream-v3-control -/var/lib/stream-recovery-control
+SystemCallFilter=~@mount @reboot @module @raw-io
+# Bind to an explicitly selected private address. Only the configured scraper
+# can reach this service; verify the address filter on the deployed host.
+
+[Install]
+WantedBy=multi-user.target

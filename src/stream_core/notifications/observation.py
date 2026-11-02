@@ -53,7 +53,7 @@ def source_for(ident):
     if ident.startswith("reliability:"):
         # Formal coverage/current-source reconciliation has its own owner.
         # Measurement validity alone is not that owner's business verdict.
-        if ident.endswith(("_coverage_or_freshness", "_source_disagreement")):
+        if ident.endswith(("_coverage_or_freshness", "_source_disagreement", "_historical_coverage")) or ident == 'reliability:upload_history_replication':
             return None
         return "reliability_rollup" if ident.endswith("rollup_missing_or_stale") else "reliability_burn"
     if ident.startswith(("stream:", "youtube:", "resolver:", "public_probe:")):

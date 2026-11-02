@@ -1,0 +1,10 @@
+# Merge this job only after checking the target identity and rollback preimage.
+# Use ../observation-shadow/rules.yml for both comparison and operated records.
+job_name: stream_v3_observation
+scrape_interval: 15s
+scrape_timeout: 3s
+honor_timestamps: false
+sample_limit: 100
+body_size_limit: 64KB
+static_configs:
+  - targets: ['@OBSERVER_ADDRESS@']

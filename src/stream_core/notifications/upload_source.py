@@ -8,7 +8,7 @@ from datetime import datetime
 from pathlib import Path
 from urllib.parse import urlencode
 from urllib.request import ProxyHandler, build_opener
-from stream_core.common import upload_samples
+from stream_core.common import upload_samples, upload_prometheus_source
 
 RECOVERY_SECONDS = 900
 FRESH_SECONDS = 180
@@ -42,7 +42,6 @@ def _raw_times(path: Path, now: int) -> list[float]:
         if now-RECOVERY_SECONDS-FRESH_SECONDS<=t<=now:times.append(t)
     return times
 
-
 def _raw_summary(times: list[float], now: int) -> dict:
     result={'available':False,'fresh':False,'sustained':False,'latest_age_seconds':None}
     if not times:return result
@@ -51,7 +50,6 @@ def _raw_summary(times: list[float], now: int) -> dict:
                all(b-a<=FRESH_SECONDS for a,b in zip(times,times[1:])))
     result.update(available=True,fresh=fresh,sustained=sustained,latest_age_seconds=age)
     return result
-
 
 def raw_health(path: Path, now: int) -> dict:
     independent = upload_samples.current_times(path.parent.parent, now)
@@ -70,22 +68,24 @@ def raw_health(path: Path, now: int) -> dict:
         return _raw_summary(times,now)
     except (OSError,ValueError):return _raw_summary([],now)
 
-def fetch_prometheus(now: int) -> dict:
+def fetch_prometheus(now: int, source: dict | None = None) -> dict:
     end=now//60*60
-    query=urlencode({'query':QUERY,'start':end-RECOVERY_SECONDS,'end':end,'step':60})
+    query=urlencode({'query':QUERY if source is None else upload_prometheus_source.query(source),'start':end-RECOVERY_SECONDS,'end':end,'step':60})
     with build_opener(ProxyHandler({})).open('http://127.0.0.1:9090/api/v1/query_range?'+query,timeout=2) as response:
         raw=response.read(16385)
     if len(raw)>16384:raise ValueError()
     return json.loads(raw)
 
-def prom_health(payload: dict, now: int) -> dict:
+def prom_health(payload: dict, now: int, source: dict | None = None) -> dict:
     result={'available':False,'fresh':False,'sustained':False}
     try:
         if payload.get('status')!='success' or payload['data'].get('resultType')!='matrix':return result
         rows=payload['data']['result']
         if len(rows)!=1:return result
         metric=rows[0]['metric']
-        if metric.get('job')!='stream_v3_arena_monitor' or metric.get('instance')!='127.0.0.1:9108':return result
+        expected = ({'job':'stream_v3_arena_monitor','instance':'127.0.0.1:9108'}
+                    if source is None else upload_prometheus_source.expected_labels(source))
+        if any(metric.get(key)!=value for key,value in expected.items()):return result
         end=now//60*60;expected=set(range(end-RECOVERY_SECONDS,end+1,60));values={}
         for t,value in rows[0]['values']:
             t=float(t);age=float(value)
@@ -100,11 +100,20 @@ def prom_health(payload: dict, now: int) -> dict:
 
 def current_upload_source(state_root: Path, now: int) -> dict:
     raw=raw_health(state_root/'logs/fast_recovery_events.jsonl',now)
-    if not raw['available']:return {'status':'UNKNOWN','reason':'current_raw_upload_sample_unavailable'}
-    if not raw['fresh']:return {'status':'FAILED','reason':'current_raw_upload_sample_stale'}
-    try:prom=prom_health(fetch_prometheus(now),now)
+    # Current measurement and durable history are different failure domains.
+    # The combined qualification below still requires both original windows.
+    legacy=False
+    try:
+        source=upload_prometheus_source.selected(state_root)
+        legacy=source is None
+        prom=prom_health(fetch_prometheus(now,source),now,source)
     except (OSError,ValueError):prom={'available':False,'fresh':False,'sustained':False}
-    if not prom['available']:return {'status':'UNKNOWN','reason':'current_upload_prometheus_evidence_unavailable'}
-    if not prom['fresh']:return {'status':'FAILED','reason':'current_upload_prometheus_sample_stale'}
-    if not (raw['sustained'] and prom['sustained']):return {'status':'RECOVERING','reason':'upload_source_recovery_window_incomplete'}
-    return {'status':'RECOVERED','reason':'raw_and_prometheus_fresh_for_15m'}
+    if not raw['available']:status,reason='UNKNOWN','current_raw_upload_sample_unavailable'
+    elif not raw['fresh']:status,reason='FAILED','current_raw_upload_sample_stale'
+    elif not prom['available']:status,reason='UNKNOWN','current_upload_prometheus_evidence_unavailable'
+    elif not prom['fresh']:status,reason='FAILED','current_upload_prometheus_sample_stale'
+    elif not (raw['sustained'] and prom['sustained']):status,reason='RECOVERING','upload_source_recovery_window_incomplete'
+    else:status,reason='RECOVERED','raw_and_prometheus_fresh_for_15m'
+    result={'status':status,'reason':reason}
+    if not legacy:result.update(measurement=prom,history=raw)
+    return result
