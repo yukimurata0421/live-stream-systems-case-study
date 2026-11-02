@@ -1,0 +1,21 @@
+[Unit]
+Description=OCI heartbeat for independent observation-owner absence detection
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=@USER@
+ExecStart=@PYTHON@ -I -B @SCRIPT@ --config %d/oci-config --key-file %d/oci-api-key --notification-state @STATE_ROOT@/stream_notify_state.json --send
+LoadCredential=oci-config:@CONFIG@
+LoadCredential=oci-api-key:@KEY_FILE@
+TimeoutStartSec=25
+CPUQuota=10%
+MemoryMax=256M
+TasksMax=16
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=yes
+PrivateDevices=yes
+CapabilityBoundingSet=
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX

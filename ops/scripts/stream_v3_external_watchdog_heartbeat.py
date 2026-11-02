@@ -19,15 +19,28 @@ METRIC = 'custom.googleapis.com/stream_observation/heartbeat'
 
 
 def fresh(value, *, boot, mono, limit):
+    if not isinstance(value, dict):
+        return False
     stamp = value.get('mono')
     return (value.get('boot_id') == boot and type(stamp) in (int, float)
             and math.isfinite(stamp) and 0 <= mono - stamp <= limit)
 
 
 def ready(gateway, notification, *, boot, mono, prometheus_ready):
-    return (prometheus_ready and gateway.get('schema') == 'stream.notification_gateway.v1'
+    return (prometheus_ready is True and isinstance(gateway, dict) and isinstance(notification, dict)
+            and gateway.get('schema') == 'stream.notification_gateway.v1'
             and fresh(gateway, boot=boot, mono=mono, limit=30)
             and fresh(notification.get('notification_clock', {}), boot=boot, mono=mono, limit=300))
+
+
+def check_local(gateway_path, notification_path):
+    """Read current producer evidence; file copies do not renew its age."""
+    opener = build_opener(ProxyHandler({}))
+    with opener.open('http://127.0.0.1:9090/-/ready', timeout=3) as response:
+        prom_ok = response.status == 200 and b'Ready' in response.read(1024)
+    return ready(read(gateway_path), read(notification_path),
+                 boot=Path('/proc/sys/kernel/random/boot_id').read_text().strip(),
+                 mono=time.clock_gettime(time.CLOCK_BOOTTIME), prometheus_ready=prom_ok)
 
 
 def point(project, monitor, wall):
@@ -82,11 +95,7 @@ def main():
         return 0
     opener = build_opener(ProxyHandler({}))
     try:
-        with opener.open('http://127.0.0.1:9090/-/ready', timeout=3) as response:
-            prom_ok = response.status == 200 and b'Ready' in response.read(1024)
-        if not ready(read(args.gateway_state), read(args.notification_state),
-                     boot=Path('/proc/sys/kernel/random/boot_id').read_text().strip(),
-                     mono=time.clock_gettime(time.CLOCK_BOOTTIME), prometheus_ready=prom_ok):
+        if not check_local(args.gateway_state, args.notification_state):
             raise ValueError('local_evidence_unavailable')
         value = point(args.project, args.monitor, time.time())
         if not args.send:

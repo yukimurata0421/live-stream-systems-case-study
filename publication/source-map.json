@@ -6524,9 +6524,9 @@
       "path": "ops/scripts/stream_v3_external_watchdog_heartbeat.py",
       "source_role": "observation-contract-public-port",
       "decision": "Port bounded observation contracts, connected delivery, public projection and reviewed verification evidence.",
-      "prior_public_sha256": null,
-      "public_sha256": "f317bebe33c44fb01c9903dce757cb8930ff770eeb93ad9fd34ee1a551e8f7a4",
-      "source_sha256": "f317bebe33c44fb01c9903dce757cb8930ff770eeb93ad9fd34ee1a551e8f7a4",
+      "prior_public_sha256": "f317bebe33c44fb01c9903dce757cb8930ff770eeb93ad9fd34ee1a551e8f7a4",
+      "public_sha256": "a22872030bc8fcadd874e099b215883f39ee418105212d252f7c3c39a17d5dbc",
+      "source_sha256": "a22872030bc8fcadd874e099b215883f39ee418105212d252f7c3c39a17d5dbc",
       "observation_completion_record": "publication/observation-completion-20261102.json"
     },
     {
@@ -6771,6 +6771,46 @@
       "public_sha256": "d37513843a9d2ec52b8808a6eb94e630fefffad35a6a7b79c9a32072d1aef1b1",
       "source_sha256": "d37513843a9d2ec52b8808a6eb94e630fefffad35a6a7b79c9a32072d1aef1b1",
       "observation_completion_record": "publication/observation-completion-20261102.json"
+    },
+    {
+      "path": "ops/scripts/stream_v3_oci_watchdog.py",
+      "source_role": "external-watchdog-public-port",
+      "decision": "Same sender and alarm behavior; notification prose translated to English for the public port.",
+      "prior_public_sha256": null,
+      "public_sha256": "c67b2665b9f923f30685030d88a8b7975449f206b77d9330a98418e13962a465",
+      "source_sha256": "69d634fa5cbd59c1eb6c96ad9a08a90d4e77ae7938e4107a3146eb72e8fa2906"
+    },
+    {
+      "path": "ops/scripts/requirements-oci-watchdog.txt",
+      "source_role": "external-watchdog-public-port",
+      "decision": "Port independent heartbeat detection and reviewed operational limits.",
+      "prior_public_sha256": null,
+      "public_sha256": "53fe97a9ed3ba18939c49c4cf11308943d5900891e744e22c59ae1c74d0dc749",
+      "source_sha256": "53fe97a9ed3ba18939c49c4cf11308943d5900891e744e22c59ae1c74d0dc749"
+    },
+    {
+      "path": "ops/systemd/stream-v3-oci-watchdog.service.in",
+      "source_role": "external-watchdog-public-port",
+      "decision": "Port independent heartbeat detection and reviewed operational limits.",
+      "prior_public_sha256": null,
+      "public_sha256": "4ca4e77122a156049f3c62db8f6a5594a1f46826625b582f8638aacb5d411741",
+      "source_sha256": "4ca4e77122a156049f3c62db8f6a5594a1f46826625b582f8638aacb5d411741"
+    },
+    {
+      "path": "ops/systemd/stream-v3-oci-watchdog.timer",
+      "source_role": "external-watchdog-public-port",
+      "decision": "Port independent heartbeat detection and reviewed operational limits.",
+      "prior_public_sha256": null,
+      "public_sha256": "c2f946455401776f8c2bb8a8946d20ffa5803243085f8725500a6185ea204688",
+      "source_sha256": "c2f946455401776f8c2bb8a8946d20ffa5803243085f8725500a6185ea204688"
+    },
+    {
+      "path": "tests/test_oci_watchdog.py",
+      "source_role": "external-watchdog-public-port",
+      "decision": "Port independent heartbeat detection and reviewed operational limits.",
+      "prior_public_sha256": null,
+      "public_sha256": "b4a68d8ec4b24ca6373a75193e3ced3e726c1e57b3dade2d72bbb58f61b68112",
+      "source_sha256": "b4a68d8ec4b24ca6373a75193e3ced3e726c1e57b3dade2d72bbb58f61b68112"
     }
   ],
   "omissions": [

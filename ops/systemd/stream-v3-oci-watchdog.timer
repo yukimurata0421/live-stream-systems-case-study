@@ -1,0 +1,11 @@
+[Unit]
+Description=Send the OCI observation heartbeat every minute
+
+[Timer]
+OnBootSec=60
+OnUnitActiveSec=60
+AccuracySec=1
+Unit=stream-v3-oci-watchdog.service
+
+[Install]
+WantedBy=timers.target
