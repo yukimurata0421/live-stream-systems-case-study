@@ -4,6 +4,8 @@ The observation contract separates evidence validity from service health. Its
 current deployment checkpoint and verification limits are in
 [current status](../current-status.md). The [independent upload sampler](upload-measurement-source.md)
 remains the source for current measurements and historical SLI.
+The [committed release contract](observation-release-provenance.md) records source
+reproducibility and the gates for further migration.
 
 ## Meaning and ownership
 

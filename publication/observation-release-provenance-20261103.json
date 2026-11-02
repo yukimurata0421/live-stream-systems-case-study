@@ -1,0 +1,34 @@
+{
+  "schema": "stream.observation_release_checkpoint.v1",
+  "date_jst": "2026-11-03",
+  "scope": "Observation source reproducibility and qualification gates; no recovery policy or SLO change.",
+  "native": {
+    "commit": "45d90ac2d074bcb76a4760796769fe4ea6a2d899",
+    "artifact_sha256": "3f7925aa912d6bce078c8325728d16859545e004ec451ec20dfb662a56cf8c2d",
+    "matching_regular_files": 385,
+    "pointer_activation": true,
+    "service_restart": false,
+    "natural_notification_execution_verified": true
+  },
+  "source_inventory": {
+    "frozen_profiles": 19,
+    "build_commit": "14bad6cb66f868a6b6aec56dbeef3c2f967fb9ca",
+    "read_only_source_and_configured_entry_audit": "PASS",
+    "all_producers_redeployed": false,
+    "continuous_audit_metrics_connected": false
+  },
+  "player": {
+    "status": "UNKNOWN",
+    "required_continuous_av_seconds": 60,
+    "production_headless_verified_seconds": 37.7,
+    "official_sample_headless_verified_seconds": 34.6,
+    "production_headed_verified_seconds": 39.0,
+    "production_outage_proven": false,
+    "provider_failover_verified": false
+  },
+  "retirement": {
+    "executed": false,
+    "gate": "Public player continuous AV remains unqualified."
+  },
+  "secrets_or_raw_evidence_published": false
+}

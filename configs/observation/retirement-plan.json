@@ -1,0 +1,121 @@
+{
+  "schema": "stream.observation_retirement_plan.v1",
+  "review_dates_are_not_deletion_authority": true,
+  "entries": [
+    {
+      "id": "raw-history-ssh",
+      "state": "retained_by_design",
+      "owner": "measurement history",
+      "consumers": [
+        "raw source verification",
+        "historical SLI/coverage"
+      ],
+      "reason": "Current direct measurements and independent history serve different consumers.",
+      "acceptance": "Retain until a replacement proves both historical SLI continuity and independent source verification.",
+      "review_due_jst": "2026-11-10"
+    },
+    {
+      "id": "upload-legacy-reader",
+      "state": "removal_candidate",
+      "owner": "measurement source",
+      "consumers": [
+        "explicit rollback mode only"
+      ],
+      "reason": "Production selects direct mode; implicit legacy fallback was removed.",
+      "acceptance": "Verify every selector, a reference-free observation window, rollback from an older release and player qualification before removal. A date never triggers deletion.",
+      "review_due_jst": "2026-11-10"
+    },
+    {
+      "id": "multi-purpose-exporter",
+      "state": "pending",
+      "owner": "monitoring owner",
+      "consumers": [
+        "stream_v3_arena_monitor Prometheus job",
+        "stream_v3_clock_observer Prometheus job",
+        "Twitch thumbnail alerts"
+      ],
+      "reason": "The existing exporter still has active metric consumers.",
+      "acceptance": "Move consumers by metric family, preserving age, UNKNOWN and SLO semantics; prove no remaining consumer before stopping it.",
+      "review_due_jst": "2026-11-10"
+    },
+    {
+      "id": "fifo-and-egress-ssh-observers",
+      "state": "pending",
+      "owner": "transport observation",
+      "consumers": [
+        "stream_v3_fifo_transport",
+        "stream_v3_oci_egress"
+      ],
+      "reason": "Read-only transport evidence remains separate from recovery authority.",
+      "acceptance": "Qualify a read-only replacement with nonce, boot, generation and loss cases, then move consumers first.",
+      "review_due_jst": "2026-11-10"
+    },
+    {
+      "id": "native-and-twitch-incident-owners",
+      "state": "retained_by_design",
+      "owner": "notification owner",
+      "consumers": [
+        "native incident outbox",
+        "Twitch incident state"
+      ],
+      "reason": "Delivery is shared; incident state and outbox ownership remain separate.",
+      "acceptance": "Preserve pending and UNKNOWN receipts and provider acceptance; incident-owner consolidation needs a separate design.",
+      "review_due_jst": "2026-11-10"
+    },
+    {
+      "id": "independent-direct-health",
+      "state": "retained_by_design",
+      "owner": "notification health",
+      "consumers": [
+        "critical Slack"
+      ],
+      "reason": "The shared gateway cannot report its own complete failure.",
+      "acceptance": "Retain an independent direct provider path.",
+      "review_due_jst": "2026-11-10"
+    },
+    {
+      "id": "public-json-legacy-collectors",
+      "state": "pending",
+      "owner": "public projection owner",
+      "consumers": [
+        "images and historical artifacts outside current bundle"
+      ],
+      "reason": "The current bundle and image or historical publication have different consumers.",
+      "acceptance": "Inspect the loaded publisher and references; remove only migrated JSON paths while preserving the publish-only boundary.",
+      "review_due_jst": "2026-11-10"
+    },
+    {
+      "id": "k3s-prometheus-grafana",
+      "state": "disabled",
+      "owner": "monitoring owner",
+      "consumers": [
+        "rollback PVC/config only"
+      ],
+      "reason": "The old Kubernetes monitoring stack is scaled down; the active host stack is separate.",
+      "acceptance": "Keep rollback data and configuration; do not delete storage automatically.",
+      "review_due_jst": "2026-11-10"
+    },
+    {
+      "id": "dell-observer-cra-path",
+      "state": "retained_by_design",
+      "owner": "facts and recovery owners",
+      "consumers": [
+        "signed facts observation"
+      ],
+      "reason": "Physical colocation does not merge authority boundaries.",
+      "acceptance": "Consumer migration must retain the signed facts and recovery contracts under separate qualification.",
+      "review_due_jst": "2026-11-10"
+    },
+    {
+      "id": "gcp-heartbeat-candidate",
+      "state": "disabled",
+      "owner": "external watchdog",
+      "consumers": [
+        "none: sender not activated"
+      ],
+      "reason": "OCI is the active heartbeat path; GCP public blackbox checks have a different purpose.",
+      "acceptance": "Do not confuse an inactive heartbeat candidate with active public blackbox checks.",
+      "review_due_jst": "2026-11-10"
+    }
+  ]
+}

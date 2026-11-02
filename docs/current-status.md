@@ -1,11 +1,29 @@
 # Current Status
 
-Last updated: 2026-11-02 JST.
+Last updated: 2026-11-03 JST.
 
 This is the only page that records state expected to change soon: what was
 changed recently, what has not been observed yet, and what is deliberately
 disabled. Other pages describe designs and dated evidence and link here instead
 of repeating these items.
+
+## Observation Release Provenance (2026-11-03 JST)
+
+The [release contract](v3/observation-release-provenance.md) now builds only from a
+full commit and an explicit committed profile. Native source commit `45d90ac2d074`
+reproduced all 385 regular operated files. Activation changed the existing pointer;
+the monitor parent was not restarted and a natural notification child completed.
+
+Nineteen source profiles were rebuilt and a read-only audit matched their source
+files and configured entrypoints. This is not an all-producer redeployment or
+loaded-memory proof. The optional continuous source-audit metrics are implemented
+and tested, with production connection still gated.
+
+The public-player gate requires 60 seconds of continuous video and decoded audio.
+The production headless attempt reached 37.7 seconds, the official sample 34.6,
+and the repaired software-display attempt 39.0 before stopping. All remain UNKNOWN.
+Old-path retirement and remaining adapter cutovers have not been performed.
+See the [dated evidence record](../publication/observation-release-provenance-20261103.json).
 
 ## Observation Paths and Delivery Connected (2026-11-02 JST)
 

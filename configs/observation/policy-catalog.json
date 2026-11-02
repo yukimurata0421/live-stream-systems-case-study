@@ -1,0 +1,133 @@
+{
+  "schema": "stream.observation_policy_catalog.v1",
+  "purpose": "Inventory of values, meaning, rationale and ownership; never a shared control-policy override.",
+  "entries": [
+    {
+      "id": "source_max_age",
+      "value": 180,
+      "unit": "seconds",
+      "owner": "upload measurement",
+      "basis": "Policy: distinguish a short gap at the collection cadence from source loss.",
+      "source": {
+        "path": "src/stream_core/common/upload_samples.py",
+        "symbol": "FRESH_SECONDS"
+      }
+    },
+    {
+      "id": "source_recovery",
+      "value": 900,
+      "unit": "seconds",
+      "owner": "upload measurement",
+      "basis": "Policy: require sustained evidence before recovery.",
+      "source": {
+        "path": "src/stream_core/common/upload_samples.py",
+        "symbol": "RECOVERY_SECONDS"
+      }
+    },
+    {
+      "id": "warning_bad_budget",
+      "value": 180,
+      "unit": "seconds",
+      "owner": "measurement warning",
+      "basis": "Policy: do not open a new incident for a single missing sample.",
+      "source": {
+        "path": "src/stream_core/notifications/measurement_continuity.py",
+        "symbol": "BAD_SECONDS"
+      }
+    },
+    {
+      "id": "warning_window",
+      "value": 900,
+      "unit": "seconds",
+      "owner": "measurement warning",
+      "basis": "Policy: aggregate recurring gaps within a bounded observation window.",
+      "source": {
+        "path": "src/stream_core/notifications/measurement_continuity.py",
+        "symbol": "WINDOW_SECONDS"
+      }
+    },
+    {
+      "id": "warning_stable_reset",
+      "value": 180,
+      "unit": "seconds",
+      "owner": "measurement warning",
+      "basis": "Policy: stable normal observations close the previous bad budget.",
+      "source": {
+        "path": "src/stream_core/notifications/measurement_continuity.py",
+        "symbol": "STABLE_SECONDS"
+      }
+    },
+    {
+      "id": "warning_max_poll_gap",
+      "value": 120,
+      "unit": "seconds",
+      "owner": "measurement warning",
+      "basis": "Policy: unobserved intervals do not accumulate good or bad time.",
+      "source": {
+        "path": "src/stream_core/notifications/measurement_continuity.py",
+        "symbol": "MAX_GAP_SECONDS"
+      }
+    },
+    {
+      "id": "warning_max_points",
+      "value": 128,
+      "unit": "samples",
+      "owner": "measurement warning",
+      "basis": "Resource bound: prevent unbounded episode state.",
+      "source": {
+        "path": "src/stream_core/notifications/measurement_continuity.py",
+        "symbol": "MAX_POINTS"
+      }
+    },
+    {
+      "id": "prometheus_scrape_max_age",
+      "value": 45,
+      "unit": "seconds",
+      "owner": "measurement source",
+      "basis": "Policy: qualify the direct scrape independently of original source age.",
+      "source": {
+        "path": "src/stream_core/common/upload_prometheus_source.py"
+      }
+    },
+    {
+      "id": "prometheus_rule_max_age",
+      "value": 30,
+      "unit": "seconds",
+      "owner": "measurement source",
+      "basis": "Policy: verify that recording rules still execute.",
+      "source": {
+        "path": "src/stream_core/common/upload_prometheus_source.py"
+      }
+    },
+    {
+      "id": "notification_recovery_confirmation",
+      "value": 45,
+      "unit": "seconds",
+      "owner": "notification owner",
+      "basis": "Default: require distinct normal observations; source configuration may override it.",
+      "source": {
+        "path": "src/stream_core/notifications/observation.py"
+      }
+    },
+    {
+      "id": "oci_absence_pending",
+      "value": 300,
+      "unit": "seconds",
+      "owner": "OCI Monitoring alarm",
+      "basis": "Operational policy: aggregation, evaluation slack and delivery add separate latency.",
+      "source": {
+        "path": "ops/scripts/stream_v3_oci_watchdog.py"
+      }
+    },
+    {
+      "id": "oci_absence_horizon",
+      "value": 72,
+      "unit": "hours",
+      "owner": "OCI Monitoring alarm",
+      "basis": "Lookback horizon, not failure timeout; RESET is not recovery evidence.",
+      "source": {
+        "path": "ops/scripts/stream_v3_oci_watchdog.py"
+      }
+    }
+  ]
+}

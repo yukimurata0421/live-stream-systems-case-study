@@ -1,0 +1,15 @@
+{
+  "schema": "stream.release_profile.v1",
+  "name": "source-audit-example",
+  "files": [
+    {
+      "source": "ops/scripts/stream_v3_release.py",
+      "destination": "ops/scripts/stream_v3_release.py"
+    },
+    {
+      "source": "ops/scripts/stream_v3_release_audit.py",
+      "destination": "ops/scripts/stream_v3_release_audit.py"
+    }
+  ],
+  "runtime_bindings": []
+}

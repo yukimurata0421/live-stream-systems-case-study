@@ -238,8 +238,8 @@
       "source_role": "public-measurement-documentation",
       "decision": "Describe independent upload observation and preserve the control and SLO boundaries.",
       "before_sha256": "9f7605e83cdf9ec60df73ebe3f2472cca9292c4e06ec6768621ce53026c0b82c",
-      "source_sha256": "b744a45eaa29d812ec315d58c693d60a92cfa7fa66d5b8d8be0e4f49bd7b5d48",
-      "public_sha256": "1cb2d5ec320059b25ee7d76179db03de86f690934c406cb4b84590e124cf886e",
+      "source_sha256": "82074416718e1cdcc2556b3e59dcb3e931b4c5a5d534cf37e93856afdfa640a7",
+      "public_sha256": "4cbb480b6b1e4107dff586e731eacb9e976b8bcd27157a537705d961d2203db5",
       "prior_public_sha256": "e71784d110b08225a9a320ecb03f999b60fa7f23b2503f2e6a3f80448620c9ed",
       "localization": "English prose; control structures and machine identifiers preserved.",
       "pre_graph_display_sha256": "6a87a495eb3698b1a49e053ffcc109b28d94a59e9dd29cb3399a62279e196d3d",
@@ -375,7 +375,7 @@
       "decision": "Record applied independent upload sampling, sustained current-source recovery and the natural notification result.",
       "before_sha256": "1beab3cd3e65147e0fa2d520275c2280dfa86884c6a345efefd32f2dc8469aed",
       "source_sha256": null,
-      "public_sha256": "2a96044dc37937840a6b354efd5456c3c19b05d3cad6665890358ae8cc5d29e2",
+      "public_sha256": "dbb6ca11e9c670a8126be65f6a01cd495a8fe36470f57898bef7f088cf8890d2",
       "port_date_jst": "2026-11-02",
       "documentation_restructure": "New single page for volatile state.",
       "pre_twitch_observation_public_sha256": "040eac29174151f51e473f7f85e4aa23ff994be0079b3d4c011623b6ec7864ca",
@@ -6452,7 +6452,7 @@
       "source_role": "observation-shadow-source-or-documentation",
       "decision": "Direct-scrape candidate only; preserve deployed measurement, notification and recovery contracts.",
       "before_sha256": null,
-      "public_sha256": "2b548d5ec6fbc531b661be26b4f70d0b865481a5e5f0b7f677448121cbc5a343",
+      "public_sha256": "a558153451a51f1a650a90d5d0abc0b36b7382162aae9c25e4e646fba2c3d46f",
       "source_sha256": null,
       "observation_standardization_port": "publication/observation-standardization-20261102.json",
       "before_upload_direct_connection_sha256": "11740bfa3d48e79fd84b50eae30acfcc0f813f03222a4c3f0651c5c731491c8f",
@@ -6550,8 +6550,8 @@
       "source_role": "observation-contract-public-port",
       "decision": "Port bounded observation contracts, connected delivery, public projection and reviewed verification evidence.",
       "prior_public_sha256": null,
-      "public_sha256": "3547ac3d2dd86d95d2a04f0ffb69373bd8fd7b223e36b68a998a742be6944d48",
-      "source_sha256": "3547ac3d2dd86d95d2a04f0ffb69373bd8fd7b223e36b68a998a742be6944d48",
+      "public_sha256": "f8cf9f54b7ec53597068d7fb690c9e7d8b03eb1723f34dcf9978af8beba28ea2",
+      "source_sha256": "f8cf9f54b7ec53597068d7fb690c9e7d8b03eb1723f34dcf9978af8beba28ea2",
       "observation_completion_record": "publication/observation-completion-20261102.json"
     },
     {
@@ -6841,6 +6841,97 @@
       "public_sha256": "8ac1fa196dbef3a1a518bca5b0c341a6da50da806ba41d068764eb90975ef091",
       "source_sha256": null,
       "external_watchdog_record": "publication/oci-external-watchdog-20261102.json"
+    },
+    {
+      "path": "ops/scripts/stream_v3_release.py",
+      "source_role": "observation-release-provenance",
+      "decision": "portable-code-and-sanitized-qualification-record",
+      "source_sha256": "367e796492f9772c4f98d0b3cf3647d1487a9907086dbdc145fc31c21e529fec",
+      "public_sha256": "367e796492f9772c4f98d0b3cf3647d1487a9907086dbdc145fc31c21e529fec"
+    },
+    {
+      "path": "ops/scripts/stream_v3_release_audit.py",
+      "source_role": "observation-release-provenance",
+      "decision": "portable-code-and-sanitized-qualification-record",
+      "source_sha256": "06853826346b291d8bb7f9532dac8c25148d0103a27b391ac2bc8075632e68bd",
+      "public_sha256": "06853826346b291d8bb7f9532dac8c25148d0103a27b391ac2bc8075632e68bd"
+    },
+    {
+      "path": "ops/scripts/stream_v3_player_av_probe.py",
+      "source_role": "observation-release-provenance",
+      "decision": "portable-code-and-sanitized-qualification-record",
+      "source_sha256": "9e5c996b18289817c9e22120bd92cd566bb3792879a4a58b5d9576770c98b515",
+      "public_sha256": "9e5c996b18289817c9e22120bd92cd566bb3792879a4a58b5d9576770c98b515"
+    },
+    {
+      "path": "ops/scripts/check_observation_catalog.py",
+      "source_role": "observation-release-provenance",
+      "decision": "portable-code-and-sanitized-qualification-record",
+      "source_sha256": "8360192edf99158efbe9c19a4ded3f4c897bf7d5c238914aa766968d5e41411b",
+      "public_sha256": "8360192edf99158efbe9c19a4ded3f4c897bf7d5c238914aa766968d5e41411b"
+    },
+    {
+      "path": "ops/scripts/deploy_stream_v3_monitoring_release.sh",
+      "source_role": "observation-release-provenance",
+      "decision": "portable-code-and-sanitized-qualification-record",
+      "source_sha256": "ae6542db21c74621dbdc7f3649583658f544e994c5a83a0c82d7519b47db28c4",
+      "public_sha256": "ae6542db21c74621dbdc7f3649583658f544e994c5a83a0c82d7519b47db28c4"
+    },
+    {
+      "path": "tests/test_committed_release.py",
+      "source_role": "observation-release-provenance",
+      "decision": "portable-code-and-sanitized-qualification-record",
+      "source_sha256": "aae84ddd55ad5aefe96a931b5a6a9d8970e92696935b33b16926dfb9a7aab36f",
+      "public_sha256": "aae84ddd55ad5aefe96a931b5a6a9d8970e92696935b33b16926dfb9a7aab36f"
+    },
+    {
+      "path": "tests/test_release_audit.py",
+      "source_role": "observation-release-provenance",
+      "decision": "portable-code-and-sanitized-qualification-record",
+      "source_sha256": "cab5de5852f05327fd9d52551228053abb2c79add8a6c5acd060b78ed900186a",
+      "public_sha256": "cab5de5852f05327fd9d52551228053abb2c79add8a6c5acd060b78ed900186a"
+    },
+    {
+      "path": "tests/test_player_av_observation.py",
+      "source_role": "observation-release-provenance",
+      "decision": "portable-code-and-sanitized-qualification-record",
+      "source_sha256": "50a3a56a456dc9bb4e1f47465159e0eb9651b0fcf8f534446f3bb44fc5b1c7fc",
+      "public_sha256": "50a3a56a456dc9bb4e1f47465159e0eb9651b0fcf8f534446f3bb44fc5b1c7fc"
+    },
+    {
+      "path": "tests/test_observation_catalog.py",
+      "source_role": "observation-release-provenance",
+      "decision": "portable-code-and-sanitized-qualification-record",
+      "source_sha256": "3bc535f134c0752596fb98a4cf50e55050734288234b5a77f250a1320802fe89",
+      "public_sha256": "3bc535f134c0752596fb98a4cf50e55050734288234b5a77f250a1320802fe89"
+    },
+    {
+      "path": "configs/observation/policy-catalog.json",
+      "source_role": "observation-release-provenance",
+      "decision": "portable-code-and-sanitized-qualification-record",
+      "source_sha256": "8db261e76642effde56e1685274ebefa95567c607c3ba8cc8e0c5c229bbb67ac",
+      "public_sha256": "21f06a6fc8aee2f950368b15553666360a9c3bf97188b949f844e89337c04c4d"
+    },
+    {
+      "path": "configs/observation/retirement-plan.json",
+      "source_role": "observation-release-provenance",
+      "decision": "portable-code-and-sanitized-qualification-record",
+      "source_sha256": "ae8f193d9b2d0342db67f6696b44ce0bcd66498f951a32464eb409ce0e583d7e",
+      "public_sha256": "8b84ee2d0293daf5585336a020593fd2c82acd0a88daad5b7aa8be0e0f62bef6"
+    },
+    {
+      "path": "configs/releases/source-audit-example.json",
+      "source_role": "observation-release-provenance",
+      "decision": "portable-code-and-sanitized-qualification-record",
+      "source_sha256": null,
+      "public_sha256": "17916afa0f6d71f531603784d7e7a456622b437b28270febc376c8a5843a0459"
+    },
+    {
+      "path": "docs/v3/observation-release-provenance.md",
+      "source_role": "observation-release-provenance",
+      "decision": "portable-code-and-sanitized-qualification-record",
+      "source_sha256": null,
+      "public_sha256": "82d07e1ab07cbe1f83d7126efca0ca38b378addc4a62007c8c2e44e986b9964d"
     }
   ],
   "omissions": [
@@ -6920,7 +7011,8 @@
     "publication/notification-source-timing-rollout-20261101.json",
     "publication/oci-external-watchdog-20261102.json",
     "publication/recovery-notification-marker-20261102.json",
-    "publication/recovery-notification-consistency-20261102.json"
+    "publication/recovery-notification-consistency-20261102.json",
+    "publication/observation-release-provenance-20261103.json"
   ],
   "evidence_checkpoint_cutoff_jst": "2026-10-14T00:04:57+09:00",
   "documentation_audience": "hiring and technical reviewers",
@@ -7290,5 +7382,12 @@
     "scope": "Public thumbnail collector/page/build/upload completion and retired installation examples only"
   },
   "notification_source_timing_fix": "publication/notification-source-timing-fix-20261101.json",
-  "notification_source_timing_rollout": "publication/notification-source-timing-rollout-20261101.json"
+  "notification_source_timing_rollout": "publication/notification-source-timing-rollout-20261101.json",
+  "observation_release_provenance": {
+    "date_jst": "2026-11-03",
+    "record": "publication/observation-release-provenance-20261103.json",
+    "private_source_snapshots_omitted": true,
+    "player_gate": "UNKNOWN; no old-path retirement",
+    "live_control_or_slo_change": false
+  }
 }

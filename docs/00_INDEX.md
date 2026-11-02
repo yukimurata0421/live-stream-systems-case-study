@@ -16,6 +16,7 @@ start.
 ## Current System
 
 - `v3/observation-standardization.md`: [shared observation meaning and the direct-scrape connection](v3/observation-standardization.md).
+- `v3/observation-release-provenance.md`: [committed source releases, producer provenance and player qualification gates](v3/observation-release-provenance.md).
 - `v3/external-watchdog.md`: [independent heartbeat detection and direct notification delivery](v3/external-watchdog.md).
 - `v3/clock-safe-media-progress.md`: [counter-proven clock holds, bounded alternating uncertainty, retained baselines and transition audit](v3/clock-safe-media-progress.md).
 - `v3/boottime-media-health.md`: [boottime media health, independent UTC diagnostics and removal of transition grace](v3/boottime-media-health.md).
