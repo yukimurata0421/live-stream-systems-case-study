@@ -1057,13 +1057,15 @@
     {
       "path": "monitoring-v4/config/monitoring_v4_legacy_surface_contract.json",
       "source_role": "public-adapted-source-or-regression",
-      "source_sha256": "336fa6d69f84808d4a28bc67fce3883a62a7b97658a556e672e0f1a158af8fea",
+      "source_sha256": "636353a1ac32c6883d49f69c6ccea2609c51a16a81fa2c980e8710411dfa0e8c",
       "before_sha256": "de409abff3c3c7b1eb1bfd1c1e109162fb3293095cce8399f518592ccc79ceb0",
       "pre_monitoring_ci_repair_public_sha256": "de409abff3c3c7b1eb1bfd1c1e109162fb3293095cce8399f518592ccc79ceb0",
-      "public_sha256": "74b266bf6da89992172ff37704cb911d40f36265aaca9f154a7d6663ff743099",
+      "public_sha256": "f090899dd8a2ce87334c82962e44dc707915bebf7fdce169b18dcb6c1680271a",
       "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
       "port_date_jst": "2026-10-23",
-      "pre_observability_reconciliation_sha256": "46623169298d3c1092edb12cd08109a2542d91ce76afafceeb93c5341e77f7e4"
+      "pre_observability_reconciliation_sha256": "46623169298d3c1092edb12cd08109a2542d91ce76afafceeb93c5341e77f7e4",
+      "prior_public_sha256": "74b266bf6da89992172ff37704cb911d40f36265aaca9f154a7d6663ff743099",
+      "observation_completion_record": "publication/observation-completion-20261102.json"
     },
     {
       "path": "monitoring-v4/deploy/k3s/reporter.yaml",
@@ -1647,13 +1649,15 @@
     {
       "path": "monitoring-v4/tests/test_legacy_surface_inventory.py",
       "source_role": "public-adapted-source-or-regression",
-      "source_sha256": "e563c68f82029df1ea79e4272ca984d452a6d4ac4687b3f792d603ac941a2dd8",
+      "source_sha256": "04c38c8840f33a5746d2f985621f86a07321ff3970b334c77ba8a5bafee3ebb6",
       "before_sha256": "365ba61545cf22f474d5a59b3004b6f1007d0cc5aca053008aae400b9fb772bf",
       "pre_monitoring_ci_repair_public_sha256": "365ba61545cf22f474d5a59b3004b6f1007d0cc5aca053008aae400b9fb772bf",
-      "public_sha256": "45d02494cc43d10a7e5c50a5ed89a304554a23f2888a80ac9e3e60ee226b9bbb",
+      "public_sha256": "982084963b200e9624e26d26a45ba6709d502235f3d878318bda630fb5834ebc",
       "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
       "port_date_jst": "2026-10-23",
-      "pre_observability_reconciliation_sha256": "54421f909a3591bc4aa481dc1046519fc37006db0a4d7aea6e5c394ca4038189"
+      "pre_observability_reconciliation_sha256": "54421f909a3591bc4aa481dc1046519fc37006db0a4d7aea6e5c394ca4038189",
+      "prior_public_sha256": "45d02494cc43d10a7e5c50a5ed89a304554a23f2888a80ac9e3e60ee226b9bbb",
+      "observation_completion_record": "publication/observation-completion-20261102.json"
     },
     {
       "path": "monitoring-v4/tests/test_notifications.py",
@@ -6755,8 +6759,17 @@
       "source_role": "observation-contract-public-port",
       "decision": "Port bounded observation contracts, connected delivery, public projection and reviewed verification evidence.",
       "prior_public_sha256": null,
-      "public_sha256": "5144b48bc7a5c0dc86ac23f6082b7ee347f7b3f77fa831fbd835851e9bd06a69",
+      "public_sha256": "69eaa6b5b136d85ecaff483732a813e5709c96f72fc055830b8b99d27b35bc19",
       "source_sha256": null,
+      "observation_completion_record": "publication/observation-completion-20261102.json"
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/inventory/legacy_surface.py",
+      "source_role": "monitoring-inventory",
+      "decision": "Enumerate both conditional identifiers without evaluating or changing incident policy.",
+      "prior_public_sha256": null,
+      "public_sha256": "d37513843a9d2ec52b8808a6eb94e630fefffad35a6a7b79c9a32072d1aef1b1",
+      "source_sha256": "d37513843a9d2ec52b8808a6eb94e630fefffad35a6a7b79c9a32072d1aef1b1",
       "observation_completion_record": "publication/observation-completion-20261102.json"
     }
   ],

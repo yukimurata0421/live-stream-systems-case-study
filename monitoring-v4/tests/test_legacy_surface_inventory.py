@@ -40,8 +40,8 @@ class LegacySurfaceInventoryTests(unittest.TestCase):
         self.assertTrue(report["static_ok"], report)
         self.assertFalse(report["cutover_ready"])
         self.assertEqual(report["alert_count"], 42)
-        self.assertEqual(report["incident_template_count"], 31)
-        self.assertEqual(report["retained_v3_count"], 73)
+        self.assertEqual(report["incident_template_count"], 33)
+        self.assertEqual(report["retained_v3_count"], 75)
         self.assertEqual(report["missing_alerts"], [])
         self.assertEqual(report["unexpected_alerts"], [])
         self.assertEqual(report["missing_incident_templates"], [])
@@ -61,6 +61,7 @@ class LegacySurfaceInventoryTests(unittest.TestCase):
 def sample(family):
     incident(ident="constant:incident")
     incident(ident=f"family:{family}")
+    incident(ident="conditional:first" if family else (f"conditional:{family}" if other else "conditional:last"))
     report_specs = [
         ("report:constant", "unused"),
         (f"report:{family}", "unused"),
@@ -73,6 +74,9 @@ def sample(family):
             self.assertEqual(
                 scan_incident_templates(incidents),
                 (
+                    "conditional:first",
+                    "conditional:last",
+                    "conditional:{family}",
                     "constant:incident",
                     "family:{family}",
                     "report:constant",

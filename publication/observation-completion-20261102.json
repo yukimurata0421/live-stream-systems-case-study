@@ -388,10 +388,34 @@
       "before_public_sha256": "55f55289ff3f16b0bb878562a735e1bc00b6dbf11240fa97c70b602823c99931",
       "source_sha256": "474a0315960d2dee886d09ddac0debfc36a02aefae05de5cbbce75159e4c404b",
       "public_sha256": "474a0315960d2dee886d09ddac0debfc36a02aefae05de5cbbce75159e4c404b"
+    },
+    {
+      "path": "monitoring-v4/src/stream_monitoring_v4/inventory/legacy_surface.py",
+      "before_public_sha256": null,
+      "source_sha256": "d37513843a9d2ec52b8808a6eb94e630fefffad35a6a7b79c9a32072d1aef1b1",
+      "public_sha256": "d37513843a9d2ec52b8808a6eb94e630fefffad35a6a7b79c9a32072d1aef1b1"
+    },
+    {
+      "path": "monitoring-v4/config/monitoring_v4_legacy_surface_contract.json",
+      "before_public_sha256": "74b266bf6da89992172ff37704cb911d40f36265aaca9f154a7d6663ff743099",
+      "source_sha256": "636353a1ac32c6883d49f69c6ccea2609c51a16a81fa2c980e8710411dfa0e8c",
+      "public_sha256": "f090899dd8a2ce87334c82962e44dc707915bebf7fdce169b18dcb6c1680271a"
+    },
+    {
+      "path": "monitoring-v4/tests/test_legacy_surface_inventory.py",
+      "before_public_sha256": "45d02494cc43d10a7e5c50a5ed89a304554a23f2888a80ac9e3e60ee226b9bbb",
+      "source_sha256": "04c38c8840f33a5746d2f985621f86a07321ff3970b334c77ba8a5bafee3ebb6",
+      "public_sha256": "982084963b200e9624e26d26a45ba6709d502235f3d878318bda630fb5834ebc"
     }
   ],
   "public_followup_tests": {
     "passed": 31,
     "subtests_passed": 1240
+  },
+  "ci_followup": {
+    "initial_run": 41378175036,
+    "main_public_suite": "PASS",
+    "monitoring_inventory": "The new incident identifiers exposed an unsupported conditional expression in the inventory scanner. Both branches are now enumerated and the retained-v3 inventory includes history replication and historical coverage.",
+    "local_regression": "Public 3 passed, development 3 passed; deployment and incident policy unchanged"
   }
 }

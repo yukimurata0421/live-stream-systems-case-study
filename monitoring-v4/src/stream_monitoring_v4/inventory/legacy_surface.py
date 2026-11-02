@@ -39,6 +39,14 @@ def _template(value: ast.expr) -> str | None:
     return "".join(parts)
 
 
+def _templates(value: ast.expr) -> tuple[str, ...]:
+    # Enumerate both possible identifiers without evaluating runtime conditions.
+    if isinstance(value, ast.IfExp):
+        return _templates(value.body) + _templates(value.orelse)
+    template = _template(value)
+    return (template,) if template else ()
+
+
 def scan_incident_templates(path: Path) -> tuple[str, ...]:
     path = Path(path)
     if path.is_symlink() or not path.is_file():
@@ -53,8 +61,8 @@ def scan_incident_templates(path: Path) -> tuple[str, ...]:
             if name != "incident":
                 continue
             for keyword in node.keywords:
-                if keyword.arg == "ident" and (value := _template(keyword.value)):
-                    templates.add(value)
+                if keyword.arg == "ident":
+                    templates.update(_templates(keyword.value))
         if (
             isinstance(node, ast.Assign)
             and any(isinstance(target, ast.Name) and target.id == "report_specs" for target in node.targets)
@@ -62,9 +70,7 @@ def scan_incident_templates(path: Path) -> tuple[str, ...]:
         ):
             for row in node.value.elts:
                 if isinstance(row, (ast.List, ast.Tuple)) and row.elts:
-                    value = _template(row.elts[0])
-                    if value:
-                        templates.add(value)
+                    templates.update(_templates(row.elts[0]))
     return tuple(sorted(templates))
 
 
