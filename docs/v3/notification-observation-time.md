@@ -1,6 +1,6 @@
 # Producer Time and Notification Evidence
 
-Updated: 2026-11-01 JST. This is the current notification-evidence contract;
+Updated: 2026-11-02 JST. This is the current notification-evidence contract;
 delivery-path failover remains governed by the [fallback decision contract](fallback-decision-contract.md).
 
 ## Problem and decision
@@ -26,6 +26,12 @@ subtracted directly.
 | Distinct verified normal observations | Confirm recovery after at least two observations spanning 45 seconds on both producer and consumer clocks. |
 | Persistent observation loss | Emit a separate observation warning after the greater of 300 seconds and the source's existing TTL. It does not assert a media outage. |
 | UTC correction with valid local boottime evidence | Keep the causal freshness result and report clock quality separately. A wall-clock jump does not complete reminder or escalation timers. |
+
+The pending-observation marker describes an open incident awaiting confirmation.
+Recovery assembly removes a retained marker, and recovery rendering excludes the
+pending label even when given an older saved incident. The last abnormal evidence
+and verified recovery evidence remain visible. This changes presentation without
+changing the evidence required to close an incident.
 
 Duplicate samples, counter rollback, boot changes and delayed old samples cannot
 complete normal continuity. Missing evidence breaks that continuity. OAuth

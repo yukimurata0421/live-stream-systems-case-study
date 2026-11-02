@@ -315,12 +315,15 @@ def test_native_detection_recovery_outbox_and_one_missing_sample(notifications):
     assert len(sent) == 1 and "Incident detected" in sent[0]
     tick(60, False, missing=True)
     assert len(sent) == 1 and "stream:current_fail" in state()["active"]
+    assert state()["active"]["stream:current_fail"]["last_incident"]["_observation_pending"] is True
     tick(120, False)
     tick(150, False, repeat_sample=True)
     assert len(sent) == 1
     tick(180, False)
     assert len(sent) == 2 and "Recovery follow-up" in sent[1]
     assert "verified distinct normal observations" in sent[1]
+    assert "current_observation=unknown" not in sent[1]
+    assert "last_bad_evidence=fixture" in sent[1]
     assert state()["active"] == {}
 
 
@@ -382,3 +385,17 @@ def test_formal_slo_incidents_keep_the_existing_owner_verdict():
         assert observation.source_for(ident) is None
         item = {"id": ident, "severity": "warning"}
         assert observation.reconcile([item], {}, {}, {"sources": {}}, now=reading(), config={}) == [item]
+
+
+def test_pending_observation_label_is_only_for_an_open_incident():
+    item = {"id": "external:blackbox_failed", "component": "external_blackbox_evidence",
+            "severity": "warning", "summary": "external checker failure", "evidence": "prior failure",
+            "_observation_pending": True, "_recovery_evidence": "verified normal observations"}
+    for phase in ("detected", "status"):
+        message = renderer.format_discord_message(phase=phase, incidents=[item], state={"active": {}}, now_ts=int(WALL))
+        assert "current_observation=unknown" in message
+    message = renderer.format_discord_message(phase="recovered", incidents=[item], state={"active": {}}, now_ts=int(WALL))
+    assert "current_observation=unknown" not in message
+    assert "recovery_evidence=verified normal observations" in message
+    assert "last_bad_evidence=prior failure" in message
+    assert item["_observation_pending"] is True

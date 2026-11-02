@@ -1,0 +1,41 @@
+{
+  "schema": "stream.recovery_notification_marker.v1",
+  "date_jst": "2026-11-02",
+  "problem": "A retained pending marker contradicted verified recovery evidence in recovery messages.",
+  "changes": [
+    "Remove the pending marker when constructing a recovered item.",
+    "Render pending observation only outside the recovered phase."
+  ],
+  "source_files": [
+    "src/stream_core/notifications/status_loop.py",
+    "src/stream_core/notifications/renderer.py"
+  ],
+  "tests": {
+    "before_fix_regressions_failed": 2,
+    "development_passed": 62,
+    "public_passed": 62,
+    "operated_source_candidate_regressions_passed": 2
+  },
+  "deployment": {
+    "performed": true,
+    "release": "stream-v3-notification-recovery-20261102-5287d5b5ee3b",
+    "changed_runtime_files": 2,
+    "other_regular_files_compared": 383,
+    "natural_child_observed": true,
+    "natural_task_returncode": 0,
+    "natural_task_at_utc": "2026-11-02T10:36:56Z",
+    "monitor_parent_preserved": true,
+    "protected_media_identity_preserved": true,
+    "send_ack_advanced": true
+  },
+  "limits": [
+    "No production fault injection.",
+    "The corrected recovery message has not yet been observed through a natural external notification.",
+    "R2 transfer failures are outside this correction.",
+    "Prior incidents, messages, outbox and SLO history were retained."
+  ],
+  "evidence_helper_failures": [
+    "Child stdout is captured by the parent and was not available under the child journal PID.",
+    "Latest control state contains one batch, so final verification used the matching task in the control-loop history."
+  ]
+}

@@ -123,7 +123,7 @@ def format_discord_message(*, phase: str, incidents: list[dict], state: dict, no
         )
         if item.get("diagnostic_context"):
             lines.append(f"  context={item.get('diagnostic_context')}")
-        if item.get("_observation_pending"):
+        if phase != "recovered" and item.get("_observation_pending"):
             lines.append("  current_observation=unknown (incident retained until recovery is verified)")
         if phase == "recovered":
             lines.append(f"  recovery_evidence={item.get('_recovery_evidence', '')}")

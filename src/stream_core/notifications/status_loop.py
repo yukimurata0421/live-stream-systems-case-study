@@ -1099,6 +1099,7 @@ def notify_status(*, ctx: NotifyStatusContext, dry_run: bool = False, force_test
         for ident in sorted(recovered_ids):
             stored = active_state.get(ident, {})
             item = dict(stored.get("last_incident", {"id": ident, "summary": "recovered"}))
+            item.pop("_observation_pending", None)
             item["_first_seen_ts"] = int(stored.get("first_seen_ts", now) or now)
             item["_first_notified_ts"] = int(stored.get("first_notified_ts", item["_first_seen_ts"]) or item["_first_seen_ts"])
             item["_last_bad_ts"] = int(stored.get("last_bad_ts", 0) or 0)
