@@ -24,14 +24,22 @@ HTTP remains independent of background verification; old results expire after
 than 45 seconds. Mismatch and UNKNOWN share one episode until fresh positive
 confirmation; the 5-minute warning hold is unchanged.
 
-The public-player gate requires 60 seconds of continuous video and decoded audio.
-The production headless attempt reached 37.7 seconds, the official sample 34.6,
-and the repaired software-display attempt 39.0 before stopping. All remain UNKNOWN.
-A later private browser experiment passed 73.8 seconds, but its committed
-integration stopped after 37.2 seconds and failed cleanup. The operated probe
-therefore remains unqualified; that launch mode was not adopted.
-Old-path retirement and remaining adapter cutovers have not been performed.
-See the [dated evidence record](../publication/observation-release-provenance-20261103.json).
+The follow-up used code commit `24a3df8bb913` and the actual committed
+player profile. Official embed video, decoded audio and paired displayed clocks
+passed together for 119.17 seconds. The displayed-clock age upper bound was at
+most 30.242 seconds, below the validation-only 60-second ceiling. Existing OCR
+confidence 70 was retained. Observer NTP was synchronized and local clock steps
+were checked. This does not qualify watch-page automation, a scheduled probe,
+long-run reception or a production failover.
+
+Five existing unit base definitions and the effective audit-only override were
+reconciled with the private source baseline; no unit was installed or activated.
+The two packaged-unit test gaps are closed. The private frozen-checkout related
+suite passed 142 tests and development/public related suites each passed 144;
+13 native-only tests were skipped locally. Source/entrypoint audits still match,
+media identity is retained, and current legacy consumers remain active.
+See the [follow-up evidence](../publication/player-reception-qualification-20261103.json)
+and the [earlier checkpoint](../publication/observation-release-provenance-20261103.json).
 
 ## Observation Paths and Delivery Connected (2026-11-02 JST)
 

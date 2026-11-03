@@ -375,7 +375,7 @@
       "decision": "Record applied independent upload sampling, sustained current-source recovery and the natural notification result.",
       "before_sha256": "1beab3cd3e65147e0fa2d520275c2280dfa86884c6a345efefd32f2dc8469aed",
       "source_sha256": null,
-      "public_sha256": "c168fc0f309db52536802c36490c88b686be3cf3ec6e64e8c3c5f4ce34ba4b02",
+      "public_sha256": "675771db46064eb2b8b75f31eff01e6f53da82a105030dfef0af06995b33689f",
       "port_date_jst": "2026-11-02",
       "documentation_restructure": "New single page for volatile state.",
       "pre_twitch_observation_public_sha256": "040eac29174151f51e473f7f85e4aa23ff994be0079b3d4c011623b6ec7864ca",
@@ -441,7 +441,8 @@
       "observation_completion_record": "publication/observation-completion-20261102.json",
       "external_watchdog_record": "publication/oci-external-watchdog-20261102.json",
       "recovery_marker_record": "publication/recovery-notification-marker-20261102.json",
-      "notification_consistency_record": "publication/recovery-notification-consistency-20261102.json"
+      "notification_consistency_record": "publication/recovery-notification-consistency-20261102.json",
+      "qualification_follow_up": "publication/player-reception-qualification-20261103.json"
     },
     {
       "path": "docs/design-decisions-for-review.md",
@@ -6860,8 +6861,9 @@
       "path": "ops/scripts/stream_v3_player_av_probe.py",
       "source_role": "observation-release-provenance",
       "decision": "portable-code-and-sanitized-qualification-record",
-      "source_sha256": "7d96ae6d58b57fa076f0013ea89a7cf291f3ef053cc92c84ce1d0c266f0b489f",
-      "public_sha256": "7d96ae6d58b57fa076f0013ea89a7cf291f3ef053cc92c84ce1d0c266f0b489f"
+      "source_sha256": "fd5a0bb83c15324acf7280cccc90ef8d5b1e4b8443098342b6f656eccb6eb06d",
+      "public_sha256": "fd5a0bb83c15324acf7280cccc90ef8d5b1e4b8443098342b6f656eccb6eb06d",
+      "qualification_follow_up": "publication/player-reception-qualification-20261103.json"
     },
     {
       "path": "ops/scripts/check_observation_catalog.py",
@@ -6895,8 +6897,9 @@
       "path": "tests/test_player_av_observation.py",
       "source_role": "observation-release-provenance",
       "decision": "portable-code-and-sanitized-qualification-record",
-      "source_sha256": "50a3a56a456dc9bb4e1f47465159e0eb9651b0fcf8f534446f3bb44fc5b1c7fc",
-      "public_sha256": "50a3a56a456dc9bb4e1f47465159e0eb9651b0fcf8f534446f3bb44fc5b1c7fc"
+      "source_sha256": "0ddb602b4b4fccf551ac93e409a430bddffce2e60124e0383f0067c80b9c533f",
+      "public_sha256": "0ddb602b4b4fccf551ac93e409a430bddffce2e60124e0383f0067c80b9c533f",
+      "qualification_follow_up": "publication/player-reception-qualification-20261103.json"
     },
     {
       "path": "tests/test_observation_catalog.py",
@@ -6909,15 +6912,17 @@
       "path": "configs/observation/policy-catalog.json",
       "source_role": "observation-release-provenance",
       "decision": "portable-code-and-sanitized-qualification-record",
-      "source_sha256": "e0e82a3e2bb8eda02f0570b94cd7729b682ae2deea5ff590c8fc6f65e092ea63",
-      "public_sha256": "572f6e15efde9095b5227c6676c65de9687349327c2e5c2953b2b833f62e1ddd"
+      "source_sha256": "38571851a2505eb9242a947cfb776940428f97632db080e8176920d9a8dd2e90",
+      "public_sha256": "01594e1d17254763ad6c677d0874b1cd918b337a9fd7174feaca64a7e021b2ac",
+      "qualification_follow_up": "publication/player-reception-qualification-20261103.json"
     },
     {
       "path": "configs/observation/retirement-plan.json",
       "source_role": "observation-release-provenance",
       "decision": "portable-code-and-sanitized-qualification-record",
-      "source_sha256": "ae8f193d9b2d0342db67f6696b44ce0bcd66498f951a32464eb409ce0e583d7e",
-      "public_sha256": "8b84ee2d0293daf5585336a020593fd2c82acd0a88daad5b7aa8be0e0f62bef6"
+      "source_sha256": "5416bb1c95d09adce9352d2a1be3942f19eff4a21f8d8a6ac1bb48dba55043b1",
+      "public_sha256": "2b4757157d8fd9cdb01e25bd5ad6207f078319e7b2e3f22cb46bcc1e60d3a3a7",
+      "qualification_follow_up": "publication/player-reception-qualification-20261103.json"
     },
     {
       "path": "configs/releases/source-audit-example.json",
@@ -6931,7 +6936,8 @@
       "source_role": "observation-release-provenance",
       "decision": "portable-code-and-sanitized-qualification-record",
       "source_sha256": null,
-      "public_sha256": "f96599913942a8dbfb31b29595e58ab06de5542565ffa3ce831e8392b25f58e2"
+      "public_sha256": "6576fc86212efcb8471eab60d859f34db442ffbeaea984b59e366b06be6c74b2",
+      "qualification_follow_up": "publication/player-reception-qualification-20261103.json"
     },
     {
       "path": "ops/scripts/render_provenance_alert.py",
@@ -6960,6 +6966,14 @@
       "decision": "portable-code-and-sanitized-qualification-record",
       "source_sha256": "37004b5829d00ef83fadabc2fe1ef3e29384daa4b2035c2b5a5f274ee5f7406c",
       "public_sha256": "37004b5829d00ef83fadabc2fe1ef3e29384daa4b2035c2b5a5f274ee5f7406c"
+    },
+    {
+      "path": "configs/releases/public-player-probe.json",
+      "source_role": "public-player-qualification",
+      "decision": "portable-profile-and-clock-validation",
+      "public_sha256": "c00e056d67f67bd18670489ae97f36e492a754e585502ed75f9e2205ca2f0fe4",
+      "source_sha256": "c00e056d67f67bd18670489ae97f36e492a754e585502ed75f9e2205ca2f0fe4",
+      "qualification_follow_up": "publication/player-reception-qualification-20261103.json"
     }
   ],
   "omissions": [
@@ -7040,7 +7054,8 @@
     "publication/oci-external-watchdog-20261102.json",
     "publication/recovery-notification-marker-20261102.json",
     "publication/recovery-notification-consistency-20261102.json",
-    "publication/observation-release-provenance-20261103.json"
+    "publication/observation-release-provenance-20261103.json",
+    "publication/player-reception-qualification-20261103.json"
   ],
   "evidence_checkpoint_cutoff_jst": "2026-10-14T00:04:57+09:00",
   "documentation_audience": "hiring and technical reviewers",

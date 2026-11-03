@@ -61,32 +61,45 @@ are not automatic deletion authority. Raw history, independent notification
 health and separate incident owners serve different purposes and are retained.
 An active consumer is moved and qualified before its old path is stopped.
 
-## The player gate remains open
+## Player qualification and remaining limits
 
-`stream_v3_player_av_probe.py` observes an anonymous public player in a separate,
-bounded process. It binds evidence to the requested video, excludes advertisements,
-and checks advancing video frames, decoded audio bytes and a nonzero audio signal.
-A reset or error cannot join two shorter intervals into a successful observation.
-Network diagnostics retain status/error codes, not signed media URLs or cookies.
+`stream_v3_player_av_probe.py` separates anonymous watch-page diagnostics from
+observation of the official embedded player. It binds video identity, excludes
+advertisements, and requires advancing displayed frames, decoded audio and a
+nonzero audio signal in the same continuous interval. Resets cannot join shorter
+intervals. Network diagnostics retain codes, not signed URLs or credentials.
 
-The production player and an official YouTube sample both stopped in the same
-headless environment after initially decoding video and audio. A headed attempt
-first failed because its isolated virtual display loaded a GPU library that
-crashed. Disabling that extension for the probe allowed it to start, but playback
-still stopped. These results remain UNKNOWN; they do not establish a production
-outage or continuous viewer reception.
+The earlier watch-page and low-resolution failures remain evidence. Matching the
+browser version alone did not fix watch-page automation. The committed embedded
+probe now passes the bounded AV and displayed-clock conditions together; the
+[follow-up record](../../publication/player-reception-qualification-20261103.json)
+contains the actual window and measurements. The earlier
+[checkpoint](../../publication/observation-release-provenance-20261103.json)
+records the preceding unqualified state.
 
-A later separate-browser experiment observed a continuous interval of decoded
-video and audio. Its committed integration did not reproduce that result and had
-a cleanup failure. The experiment remains private and unqualified for continuous
-operation; the public probe receives only the screenshot-byte saving correction.
-A single successful experiment does not clear the operated-probe gate.
+AV progress alone does not prove that current content is being received. Native
+seekable ranges and a static player-duration value were rejected as freshness
+proofs. The final probe reuses the existing paired JST/UTC clock reader, keeps its
+confidence requirement, checks observer NTP and clock steps, and advances the
+original reading age. Clock and AV evidence must overlap. Clock uncertainty is
+not converted into media failure or a recovery action.
 
-Old-path retirement and remaining adapter cutovers therefore remain gated.
-Existing direct control facts, streaming processes, safety guards, SLO values and
-incident/outbox/receipt history are preserved. No production failure was injected.
+The [committed player profile](../../configs/releases/public-player-probe.json)
+includes the real clock dependency closure. An isolated cold-load test rejects a
+missing required module. Optional displayed-clock verification needs Playwright,
+a compatible Chromium, Pillow, Tesseract and its language data. The ephemeral
+loopback page serves only generated embed HTML and exits with the owned probe.
+No scheduled player service or new persistent listener was enabled.
 
-The probe uses the [YouTube player identity contract](https://developers.google.com/youtube/iframe_api_reference)
-and the browser's [media audio source](https://developer.mozilla.org/en-US/docs/Web/API/AudioContext/createMediaElementSource)
-for observation. Browser decoding is distinct from proving which ingest the
-provider selected, a real failover, perceptual audio quality or a long soak.
+The observed surface is the official embedded player. Watch-page automation is
+still unqualified. The time-of-day display does not independently prove a calendar
+date. This is not a long soak, zero-gap guarantee, human audio validation, provider
+ingest-selection proof or production failover qualification. Existing direct
+control facts, streaming processes, safety guards, SLOs and durable history remain
+unchanged. Current consumers must move and pass their checks before old paths stop.
+
+The probe uses the [official player API](https://developers.google.com/youtube/iframe_api_reference)
+for player identity and the browser's
+[media audio source](https://developer.mozilla.org/en-US/docs/Web/API/AudioContext/createMediaElementSource)
+for decoded audio observation. Browser/API time values remain diagnostics, not
+freshness authority.

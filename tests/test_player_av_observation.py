@@ -1,4 +1,5 @@
 import importlib.util
+import asyncio
 from pathlib import Path
 
 SPEC = importlib.util.spec_from_file_location("player_av", Path(__file__).parents[1] / "ops/scripts/stream_v3_player_av_probe.py")
@@ -39,3 +40,127 @@ def test_error_or_reset_does_not_join_discontinuous_intervals():
 def test_network_diagnostics_keep_error_codes_without_urls():
     assert probe.failure_code("net::ERR_ABORTED") == "net::ERR_ABORTED"
     assert probe.failure_code("net::ERR_FAILED https://example.invalid/?secret=x") == "unclassified"
+
+
+def test_access_rejection_is_not_a_stream_failure_or_a_pass():
+    report = {"status": "UNKNOWN", "network": [{"kind": "media", "status": 403}]}
+    assert probe.diagnostics(report) == "media_access_rejected"
+    assert report["status"] == "UNKNOWN"
+    assert probe.diagnostics(dict(report, error="TimeoutError")) == "probe_execution_incomplete"
+    assert probe.diagnostics(dict(report, status="PASS")) == "continuous_av_observed"
+    # An unrelated failed document or image is not evidence of media rejection.
+    assert probe.diagnostics({"network": [{"kind": "image", "status": 403}]}) == "continuous_av_unconfirmed"
+
+
+def test_embed_has_an_actual_loopback_origin_and_only_generated_html():
+    async def request():
+        server, origin = await probe.embed_server("abcdefghijk")
+        port = server.sockets[0].getsockname()[1]
+        try:
+            reader, writer = await asyncio.open_connection("127.0.0.1", port)
+            writer.write(b"GET /etc/passwd HTTP/1.1\r\nHost: localhost\r\n\r\n")
+            await writer.drain()
+            data = await reader.read()
+            writer.close()
+            await writer.wait_closed()
+            assert origin.encode() in data
+            assert b"https://www.youtube.com/embed/abcdefghijk?" in data
+            assert b"root:" not in data
+            assert b"Cache-Control: no-store" in data
+        finally:
+            server.close()
+            await server.wait_closed()
+        assert not server.is_serving()
+    asyncio.run(request())
+
+
+def test_embed_rejects_unbound_ids_and_origins():
+    import pytest
+    for video_id, origin in [("bad\"id", "http://127.0.0.1:123"),
+                             ("abcdefghijk", "https://example.invalid")]:
+        with pytest.raises(ValueError):
+            probe.embed_html(video_id, origin)
+
+
+def clock_rows():
+    return [dict(elapsed=i, ocr_verified=True, clock_pair_consistent=True,
+                 observer_timing_valid=True, display_age_seconds=30,
+                 clock_state="WARMUP" if i == 0 else "ADVANCING_CONFIRMED")
+            for i in range(0, 80, 10)]
+
+
+def test_advancing_video_and_audio_do_not_make_old_or_unverified_content_current():
+    av = probe.assess(samples(), "abcdefghijk")
+    rows = clock_rows()
+    assert probe.assess_displayed_clock(rows, av)["status"] == "PASS"
+    for field, value in [("display_age_seconds", 3600), ("display_age_seconds", float("nan")),
+                         ("display_age_seconds", -2), ("observer_timing_valid", False),
+                         ("clock_pair_consistent", False), ("ocr_verified", False),
+                         ("clock_state", "STALLED_SUSPECT"), ("clock_state", "WARMUP")]:
+        changed = [dict(r, **{field: value}) for r in rows]
+        assert probe.assess_displayed_clock(changed, av)["status"] == "UNKNOWN"
+    assert av["status"] == "PASS"  # Clock uncertainty is not a media failure.
+
+
+def test_clock_and_av_proof_must_cover_the_same_continuous_window():
+    av = probe.assess(samples(), "abcdefghijk")
+    rows = clock_rows()
+    rows[3] = dict(rows[3], ocr_verified=False)
+    assert probe.assess_displayed_clock(rows, av)["status"] == "UNKNOWN"
+    assert probe.assess_displayed_clock(clock_rows()[:3], av)["status"] == "UNKNOWN"
+    disjoint = dict(av, interval_start_elapsed=60, interval_end_elapsed=130)
+    assert probe.assess_displayed_clock(clock_rows(), disjoint)["status"] == "UNKNOWN"
+
+
+def test_reusing_a_clock_reading_keeps_increasing_its_original_age():
+    av = probe.assess(samples(), "abcdefghijk")
+    rows = [dict(r, display_age_seconds=58) for r in clock_rows()]
+    result = probe.assess_displayed_clock(rows, av)
+    assert result["current_age_upper_seconds"] == 63
+    assert result["status"] == "UNKNOWN"
+
+
+def test_committed_profile_cold_loads_its_real_clock_dependencies(tmp_path):
+    import json
+    import shutil
+    import subprocess
+    import sys
+
+    root = Path(__file__).parents[1]
+    profile_path = "configs/releases/public-player-probe.json"
+    profile = json.loads((root / profile_path).read_text())
+    source = tmp_path / "source"
+    source.mkdir()
+    for name in [profile_path, *[row["source"] for row in profile["files"]]]:
+        destination = source / name
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(root / name, destination)
+    def git(*args):
+        return subprocess.check_output(["git", "-C", str(source), *args], text=True).strip()
+    git("init", "-q")
+    git("add", ".")
+    git("-c", "user.name=yukimurata0421", "-c", "user.email=sss071137@gmail.com",
+        "commit", "-qm", "Freeze player fixture")
+    artifact = tmp_path / "artifact"
+    subprocess.run([sys.executable, str(root / "ops/scripts/stream_v3_release.py"), "build",
+                    "--repo", str(source), "--commit", git("rev-parse", "HEAD"),
+                    "--profile", profile_path, "--output", str(artifact)],
+                   check=True, capture_output=True, timeout=20)
+    entry = artifact / "ops/scripts/stream_v3_player_av_probe.py"
+    script = """import runpy, sys
+from types import SimpleNamespace
+from pathlib import Path
+module = runpy.run_path(sys.argv[1], run_name='cold_profile')
+reader = module['DisplayedClock'](SimpleNamespace(tesseract='unused', tessdata_dir=None))
+assert reader.clock.capture()['mono'] >= 0
+assert Path(reader.clock.__file__).is_relative_to(Path(sys.argv[1]).parents[2])
+print(getattr(reader.clock, '_source', reader.clock.__file__))
+"""
+    command = [sys.executable, "-I", "-B", "-c", script, str(entry)]
+    result = subprocess.run(command, check=True, capture_output=True, timeout=10)
+    # Resolve the required file through the real adapter. The portable copy and
+    # host-bound adapter can use different layouts; both must be self-contained.
+    required = Path(result.stdout.decode().strip())
+    assert required.is_relative_to(artifact)
+    required.unlink()
+    assert subprocess.run(command, capture_output=True, timeout=10).returncode != 0

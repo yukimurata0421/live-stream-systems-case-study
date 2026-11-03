@@ -1,0 +1,93 @@
+{
+  "schema": "stream.player_reception_qualification.v1",
+  "observed_window_jst": {
+    "start": "2026-11-03 10:48:45 JST",
+    "end": "2026-11-03 10:50:55 JST"
+  },
+  "scope": "Read-only on-demand public YouTube embed and paired displayed clocks; not a scheduled monitor or failover exercise.",
+  "code_commit": "24a3df8bb91318a36d843df348d399ecca689b0b",
+  "artifact_sha256": "c659a4a75421549e6f15bf14db14f2a67479b2ae30deafc7318170f152ced2f5",
+  "probe_sha256": "fd5a0bb83c15324acf7280cccc90ef8d5b1e4b8443098342b6f656eccb6eb06d",
+  "browser_version": "156.0.8078.4",
+  "result": {
+    "status": "PASS",
+    "av_seconds": 119.16960359099903,
+    "displayed_clock_seconds": 119.16960359099903,
+    "displayed_clock_age_upper_max_seconds": 30.242,
+    "displayed_clock_age_upper_at_interval_end_seconds": 29.617,
+    "clock_samples": 11,
+    "observer_ntp_synchronized": true,
+    "clock_confidence_minimum": 70,
+    "jst_confidence_observed_minimum": 91.618095,
+    "utc_confidence_observed_minimum": 95.265869,
+    "browser_error": null,
+    "live_edge_verified": false
+  },
+  "qualified_surface": {
+    "kind": "official iframe on a real ephemeral loopback origin",
+    "viewport_css": [
+      1280,
+      720
+    ],
+    "device_scale_factor": 1.5,
+    "captured_pixels": [
+      1920,
+      1080
+    ],
+    "required_flags": [
+      "--surface",
+      "embed",
+      "--verify-displayed-clock"
+    ],
+    "library": "existing paired JST/UTC clock reader; no lowered OCR confidence"
+  },
+  "preserved_failures": [
+    "Matching-browser watch page stopped after 39.5 seconds.",
+    "AV-only embed intervals passed without proving current content.",
+    "HTML seekable and static API duration were rejected as live-edge freshness proofs.",
+    "Low-resolution clock readings did not meet the existing confidence threshold.",
+    "The first full-artifact mount was unreadable before process entry.",
+    "A packaged clock adapter initially lacked its canonical runtime dependency; the cold-load regression now rejects that omission."
+  ],
+  "unit_reconciliation": {
+    "base_definitions_matched": 5,
+    "audit_only_override_recorded": true,
+    "production_unit_modified": false,
+    "old_packaged_unit_test_gaps_remaining": 0,
+    "public_recovery_disabled_default_preserved": true
+  },
+  "validation": {
+    "frozen_checkout_passed": 142,
+    "development_passed": 144,
+    "public_related_passed": 144,
+    "native_only_skipped": 13,
+    "cold_artifact_import_and_missing_dependency_rejection": true
+  },
+  "production": {
+    "media_pid_and_generation_retained": true,
+    "main_pod_uid_retained": true,
+    "container_restart_counts_unchanged": true,
+    "ack_advanced": true,
+    "sampler_fresh": true,
+    "source_groups_matched": 20,
+    "configured_entrypoints_matched": 15,
+    "monitor_parents_restarted": false,
+    "recovery_policy_or_slo_changed": false,
+    "new_persistent_daemons_or_timers": false,
+    "notification_sent": false
+  },
+  "migration": {
+    "old_paths_retired": false,
+    "reason": "Current Prometheus consumers remain on the multi-purpose, FIFO and OCI-egress paths. Consumer migration and rollback proof precede retirement.",
+    "all_producers_migrated": false
+  },
+  "limits": [
+    "The observed surface is the official embedded player; watch-page automation still fails.",
+    "A time-of-day display does not independently prove the calendar date.",
+    "This is not a long soak, a zero-gap guarantee, human audio validation, provider ingest-selection proof or production failover qualification.",
+    "No scheduled player monitoring was enabled.",
+    "Raw images, logs, local source snapshots and credentials are excluded from publication."
+  ],
+  "qualification_source": "Native private committed artifact. The portable profile is tested separately; this record does not yet claim a second native public-artifact run.",
+  "public_artifact_native_qualified": false
+}

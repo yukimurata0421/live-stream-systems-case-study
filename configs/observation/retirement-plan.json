@@ -36,7 +36,9 @@
       ],
       "reason": "The existing exporter still has active metric consumers.",
       "acceptance": "Move consumers by metric family, preserving age, UNKNOWN and SLO semantics; prove no remaining consumer before stopping it.",
-      "review_due_jst": "2026-11-10"
+      "review_due_jst": "2026-11-10",
+      "consumer_rechecked_on_jst": "2026-11-03",
+      "live_consumers_present": true
     },
     {
       "id": "fifo-and-egress-ssh-observers",
@@ -48,7 +50,9 @@
       ],
       "reason": "Read-only transport evidence remains separate from recovery authority.",
       "acceptance": "Qualify a read-only replacement with nonce, boot, generation and loss cases, then move consumers first.",
-      "review_due_jst": "2026-11-10"
+      "review_due_jst": "2026-11-10",
+      "consumer_rechecked_on_jst": "2026-11-03",
+      "live_consumers_present": true
     },
     {
       "id": "native-and-twitch-incident-owners",
@@ -117,5 +121,11 @@
       "acceptance": "Do not confuse an inactive heartbeat candidate with active public blackbox checks.",
       "review_due_jst": "2026-11-10"
     }
-  ]
+  ],
+  "player_qualification": {
+    "status": "PASS",
+    "scope": "bounded on-demand YouTube embed and paired displayed clocks",
+    "code_commit": "24a3df8bb91318a36d843df348d399ecca689b0b",
+    "scheduled_or_long_soak_qualified": false
+  }
 }

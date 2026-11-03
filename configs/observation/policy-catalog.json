@@ -161,6 +161,28 @@
         "path": "ops/scripts/render_provenance_alert.py",
         "symbol": "SCRAPE_MAX_AGE_SECONDS"
       }
+    },
+    {
+      "id": "player-continuous-av",
+      "owner": "public player validation",
+      "value": 60.0,
+      "unit": "seconds",
+      "basis": "Validation policy: require one continuous target-bound interval rather than isolated decoded frames. This is not an SLO or recovery input.",
+      "source": {
+        "path": "ops/scripts/stream_v3_player_av_probe.py",
+        "symbol": "MIN_CONTINUOUS_SECONDS"
+      }
+    },
+    {
+      "id": "player-displayed-clock-age",
+      "owner": "public player validation",
+      "value": 60.0,
+      "unit": "seconds",
+      "basis": "Validation policy for rejecting old displayed content, with one-second clock quantization and the existing paired-clock OCR confidence. This does not change a streaming SLO or authorize recovery.",
+      "source": {
+        "path": "ops/scripts/stream_v3_player_av_probe.py",
+        "symbol": "CONTENT_CLOCK_MAX_AGE_SECONDS"
+      }
     }
   ]
 }

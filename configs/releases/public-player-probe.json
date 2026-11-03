@@ -1,0 +1,39 @@
+{
+  "schema": "stream.release_profile.v1",
+  "name": "public-player-probe",
+  "files": [
+    {
+      "source": "ops/scripts/stream_v3_player_av_probe.py",
+      "destination": "ops/scripts/stream_v3_player_av_probe.py"
+    },
+    {
+      "source": "src/stream_v3/viewer_clock.py",
+      "destination": "src/stream_v3/viewer_clock.py"
+    },
+    {
+      "source": "src/stream_v3/viewer_clock_capture.py",
+      "destination": "src/stream_v3/viewer_clock_capture.py"
+    },
+    {
+      "source": "src/stream_v3/verified_clock.py",
+      "destination": "src/stream_v3/verified_clock.py"
+    },
+    {
+      "source": "src/stream_v3/__init__.py",
+      "destination": "src/stream_v3/__init__.py"
+    },
+    {
+      "source": "src/stream_core/common/__init__.py",
+      "destination": "src/stream_core/common/__init__.py"
+    },
+    {
+      "source": "src/stream_core/common/clock_contract.py",
+      "destination": "src/stream_core/common/clock_contract.py"
+    },
+    {
+      "source": "ops/selfheal/clock_contract.py",
+      "destination": "ops/selfheal/clock_contract.py"
+    }
+  ],
+  "runtime_bindings": []
+}
