@@ -31,7 +31,7 @@ read-only projection gains no delivery provider or recovery authority.
 | Dell workstation `delivery-host` | Video production and upload | Dell-side readsb and modified tar1090 endpoint; k3s `stream-v3-runtime` (map rendering, precipitation, PulseAudio, AutoDJ, FFmpeg/NVENC, fast recovery); the fallback Deployment and its controller; an independent RAM return-feed video observer; a separate host clock observer and explicit manual-maintenance command |
 | OCI VM | Media fan-out | MediaMTX relay, timestamp-rebasing YouTube copy and keeper; read-only facts endpoints and host clock observer |
 | Raspberry Pi `publisher-host` | Public status publisher | nginx `/grafana/` proxy to arena-server Grafana, snapshot collectors, host clock observer and static site build; the operated uploader targets private R2 |
-| Private R2 + Cloudflare Worker | Operated public static edge | Serves <https://yukimurata0421.dev/> from sanitized uploaded files; the public checkout retains the older GCS uploader example |
+| Private R2 + Cloudflare Worker | Operated public static edge | Serves <https://yukimurata0421.dev/> from sanitized uploaded files; the public checkout includes portable R2 and retained GCS examples |
 | `cra-01` | CRA central host | Policy/audit service and independent host clock observer; the public CRA remains `dry_run` and takes no part in the media route |
 
 Monitoring and ADS-B reception share the ProDesk; video production has the Dell
@@ -282,7 +282,8 @@ reach Grafana, Prometheus, Loki, raw logs, credentials, or the home network.
 Non-static operational access is outside this path and is not named here. The
 [publisher boundary](v3/public-publisher-boundary.md) lists what is allowed
 into the snapshot. The [R2 case study](v3/r2-publication-and-freshness-case-study.md)
-distinguishes the operated edge from the older uploader code retained publicly.
+records the operated migration. The [R2 transport guide](v3/r2-publication-transport.md)
+describes the later portable source without claiming a public-example deployment.
 
 ## Who Can Act On What
 

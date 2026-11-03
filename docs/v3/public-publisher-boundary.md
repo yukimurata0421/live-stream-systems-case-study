@@ -2,10 +2,11 @@
 
 The operated site moved to private R2 on 2026-10-27. The
 [dated migration and freshness record](r2-publication-and-freshness-case-study.md)
-describes its checks and a later clock-skew failure. The R2 uploader itself is
-documented there but not ported: the public source described below still
-represents the earlier GCS publisher. The collectors' timestamp validation from
-that record is ported, in `public_snapshot_time.py`.
+describes its checks and a later clock-skew failure. The November 3
+[R2 source port](r2-publication-transport.md) adds the uploader, Worker,
+durable receipts, IPv6 preference and isolated resolver examples. The earlier
+GCS example remains available. The collectors' timestamp validation from
+the dated record is ported in `public_snapshot_time.py`.
 
 The 2026-10-13 public source includes separate relay, Twitch API/reception, and
 Twitch SLI collectors plus updated static layout assets. Their public fields
@@ -31,8 +32,8 @@ private observability evidence
   -> publisher-initiated collection
   -> allowlisted and redacted JSON
   -> static site tree
-  -> outbound GCS synchronization
-  -> Cloudflare
+  -> outbound private R2 upload (or the retained GCS example)
+  -> Cloudflare Worker
   -> public browser
 ```
 
@@ -47,7 +48,7 @@ The public source is grouped under `ops/public-publisher/`:
 
 - `status/` collects reduced Prometheus and Loki views;
 - `site/scripts/` builds the static tree, creates reliability indicators, and
-  synchronizes to GCS;
+  uploads allowlisted objects to the selected store;
 - `site/public/` contains static HTML, CSS, and JavaScript;
 - `site/systemd/` contains an inert unit example and external environment
   template; and
@@ -64,7 +65,7 @@ The collectors enforce these public boundaries:
 - event and error text redacts secret assignments, bearer values, URLs, and IP
   addresses;
 - raw Loki queries are not published;
-- GCS destination and monitoring host values must come from an external
+- storage destination and monitoring host values must come from an external
   environment file;
 - no credential value is printed as part of validation; and
 - the reliability card is presented as measured evidence with reference lines,
@@ -75,7 +76,7 @@ last-good data. Only a first-run failure with no prior snapshot emits an empty
 `measurement unavailable` payload. Publisher success and each collected
 section's success therefore remain separate claims.
 
-The upload step now freezes only the fixed public allowlist into a private
+The retained GCS upload step freezes only the fixed public allowlist into a private
 temporary directory. It rejects links, non-regular or oversized files,
 duplicate JSON keys, non-finite timestamps, stale/future JSON, wildcard or
 root-only GCS destinations, and public-tree status paths. A bounded deadline
@@ -87,6 +88,14 @@ This hardening was ported from an uncommitted private worktree candidate whose
 `5378112b4043be6f281279db02402b1274006d86cfc333800807423b9160c5d6`.
 The source hash identifies the candidate; it is not deployment or external
 visibility evidence.
+
+The R2 uploader uses its own manifest for the packaged public assets. It
+checks each observation independently, so one stale supporting feed does not
+prevent fresh live-status feeds from advancing. A partially successful cycle
+is still recorded as `PARTIAL`. PUT acceptance requires readback; uncertain
+outcomes remain in a destination-bound private receipt until GET reconciliation.
+Connection fallback occurs before HTTP transmission, never by repeating an
+uncertain PUT. See the [transport contract](r2-publication-transport.md).
 
 ## Freshness And Cache Boundaries
 
@@ -110,3 +119,9 @@ generated-file exclusions, and the unit/timer contract:
 
 No test uploads a real object. The committed unit is a proposal and is not
 installed or enabled by public CI.
+
+R2 transport, receipt and publication tests live in
+`ops/public-publisher/site/tests/`; public integration checks are in
+`tests/test_public_r2_port.py`. Worker tests use an in-memory bucket under
+`ops/public-publisher/site/cloudflare-worker/tests/`. These checks do not
+qualify a live resolver, cloud deployment or external receiver.

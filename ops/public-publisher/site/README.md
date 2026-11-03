@@ -2,12 +2,15 @@
 
 This directory contains the public source for a Raspberry Pi publisher. It
 collects reduced monitoring evidence, builds static artifacts, and uploads an
-allowlisted tree to a configured GCS prefix. The publisher does not control the
-stream, select recovery actions, or store a monitoring database.
+allowlisted tree. The shipped unit uploads to a configured GCS prefix; the
+operated site uses a private R2 prefix, which is an explicit installation
+choice. The publisher does not control the stream, select recovery actions, or store a monitoring database.
 
 The [publisher boundary](../../../docs/v3/public-publisher-boundary.md) defines
 the data and upload limits. The [source-port record](../../../docs/v3/pi-publisher-source-port-2026-10-14.md)
 explains the differences imported from the publisher working tree.
+The [R2 transport guide](../../../docs/v3/r2-publication-transport.md) covers
+the later uploader, receipt reconciliation, IPv6 preference and private DNS.
 
 ## Source Layout
 
@@ -20,6 +23,9 @@ explains the differences imported from the publisher working tree.
 | `scripts/collect_twitch_sli.py` | Allowlisted arena-produced Twitch history; no local SLI reducer |
 | `scripts/build_public.py` | Collection order and static-artifact assembly |
 | `scripts/push_to_gcs.py` | Frozen upload allowlist, deadlines, and private publication status |
+| `scripts/push_to_r2.py` | Per-object readback, durable uncertain outcomes, independent feed publication |
+| `scripts/r2_network.py` | Two persistent HTTPS connections, IPv6 first and IPv4 fallback before HTTP |
+| `scripts/render_r2_resolver.py` | Publisher-only resolver configuration; no host DNS mutation |
 | `public/` | Static HTML, CSS, and JavaScript; generated live JSON is excluded |
 | `systemd/` | Inert service/timer and external-environment examples |
 | `cloudflare-worker/` | Edge source and an example routing configuration |
@@ -31,11 +37,13 @@ Run these commands from the repository root:
 ```bash
 python3 -m venv .venv
 .venv/bin/python -m pip install -e '.[dev]'
-.venv/bin/python -m pytest -q tests/test_public_*.py ops/public-publisher/status/tests
+.venv/bin/python -m pytest -q tests/test_public_*.py ops/public-publisher/status/tests ops/public-publisher/site/tests
+node --test ops/public-publisher/site/cloudflare-worker/tests/r2-worker.test.mjs
 .venv/bin/python ops/scripts/validate_public_port.py
 ```
 
-The publisher tests use synthetic data and mocked transports. They do not
+Use Node.js 22 for the Worker tests. The publisher tests use synthetic data,
+mocked transports and local TLS/DNS fixtures. They do not
 upload objects, contact providers, or install a service. The HTML fixtures in
 `tests/` exercise missing measurements and display recovery locally.
 
@@ -47,16 +55,22 @@ read-only monitoring SSH alias, the deployed source directory, and the persisten
 monitoring state directory. `STATUS_DIR` selects the adjacent status collector.
 Configure the existing provider collectors and their fixed read-only bridges
 for the intended installation. Keep credentials and actual host configuration
-outside this repository.
+outside this repository. For R2, merge
+`systemd/stream-v3-r2-publisher.env.example` into the external environment and
+follow the [R2 configuration guide](../../../docs/v3/r2-publication-transport.md#installation-example).
+The base service still selects GCS; R2 is an explicit installation choice.
 
 `scripts/build_public.py` performs real collection when invoked without mocks.
-`scripts/push_to_gcs.py` also performs a cloud upload. Review the unit examples,
+`scripts/push_to_gcs.py` and `scripts/push_to_r2.py` perform cloud uploads.
+Review the unit examples,
 destination, credentials, and read-only source binding before either command
 is used. Public CI does not perform these operations.
 
 The Worker source retains a published example origin. Replace its origin and
 the routes in `cloudflare-worker/wrangler.toml.example` for your deployment;
-the example is not evidence of a live Worker configuration.
+the example is not evidence of a live Worker configuration. The R2 Worker uses
+`src/r2.js` and `wrangler.r2.toml.example`, with an explicit private bucket
+binding and matching `public/` prefix instead of an origin fallback.
 
 ## Interpret the Evidence
 

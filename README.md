@@ -104,8 +104,8 @@ Public readers do not connect to the private monitoring services.
 flowchart TB
     GRAF["arena-server (HP ProDesk): private Grafana / Prometheus / Loki"] -->|"Pi-local Grafana proxy / read-only GET"| PI["Pi: snapshot collectors + filtered static files"]
     ARENA["arena-server: relay / Twitch observations"] -->|"read-only pull"| PI
-    PI -->|"outbound upload"| GCS["GCS"]
-    GCS --> CF["Cloudflare: public status"]
+    PI -->|"outbound upload"| STORE["Private R2 (operated store)"]
+    STORE --> CF["Cloudflare: public status"]
 ```
 
 ### Recovery

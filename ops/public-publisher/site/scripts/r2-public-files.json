@@ -1,0 +1,49 @@
+{
+  "files": [
+    "assets/dashboard-20261013.css",
+    "assets/dashboard-20261013.js",
+    "assets/graphs-20261014.css",
+    "assets/graphs-core-20261014.js",
+    "assets/operations-20261013.css",
+    "assets/operations-20261013.js",
+    "assets/operations-20261014.js",
+    "assets/ops-20261020.css",
+    "assets/ops-20261020.js",
+    "assets/ops-20261027-notices.js",
+    "assets/publication-freshness-20261027.js",
+    "assets/reliability-card-20261013.js",
+    "assets/reliability-unified-20261013.css",
+    "assets/site-20261013-unified.js",
+    "assets/site-20261014-graphs.js",
+    "assets/site.css",
+    "assets/site.js",
+    "assets/sli-20261013-unified.js",
+    "assets/sli-20261013.css",
+    "assets/sli-20261013.js",
+    "assets/sli-20261014-resilient.js",
+    "assets/twitch-20261013.js",
+    "clock-observation.json",
+    "index.html",
+    "oci-egress.json",
+    "relay-observation.json",
+    "reliability-indicators.json",
+    "site-release.json",
+    "stream-v3-loki.html",
+    "stream-v3-loki.json",
+    "stream-v3-prometheus.html",
+    "stream-v3-prometheus.json",
+    "twitch-observation.json",
+    "twitch-sli.json"
+  ],
+  "live": [
+    "stream-v3-prometheus.json",
+    "relay-observation.json",
+    "twitch-observation.json"
+  ],
+  "required": [
+    "index.html",
+    "reliability-indicators.json",
+    "stream-v3-loki.json",
+    "stream-v3-prometheus.json"
+  ]
+}

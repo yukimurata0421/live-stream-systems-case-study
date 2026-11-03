@@ -58,6 +58,7 @@ start.
 
 ## Public Status Page
 
+- `v3/r2-publication-transport.md`: [portable R2 publisher, durable receipts, IPv6 preference, IPv4 fallback and isolated DNS](v3/r2-publication-transport.md).
 - `v3/r2-publication-and-freshness-case-study.md`: [operated R2 migration, stale-data checks, archive verification, and the later clock-skew diagnosis](v3/r2-publication-and-freshness-case-study.md).
 - `v3/public-status-snapshot.md`: [what the public site shows and why it is static](v3/public-status-snapshot.md).
 - `v3/public-publisher-boundary.md`: [Raspberry Pi collectors, redaction, last-good, and cache](v3/public-publisher-boundary.md).

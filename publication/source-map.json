@@ -21,12 +21,15 @@
       "decision": "public-source-check-in-existing-CI",
       "before_sha256": "8cd9b2b664147a634dc5e11620f7dfebedcbbfd62722dbbe96125b0e064c549a",
       "source_sha256": null,
-      "public_sha256": "ec2886d1b37a6ebb24e61db53cebfb72f91c57c86f9d1e7c7c7c9a4457a455ab",
+      "public_sha256": "03d1152eb7302fb51b783d47b9f9eed8ead8c9af43d43e4811efd8a12156a7bf",
       "prior_public_sha256": "537d020e0ed25450241bc2833dbcad0a26a4fe384e79cfd7423885de7ff96ead",
       "localization": "English prose; control structures and machine identifiers preserved.",
       "layout_update": "Current CRA and Stream support separation, 2026-10-26",
       "clock_contract_reconciliation": "clock-port-packaging-20261031",
-      "notification_consistency_record": "publication/recovery-notification-consistency-20261102.json"
+      "notification_consistency_record": "publication/recovery-notification-consistency-20261102.json",
+      "before_r2_transport_port_sha256": "ec2886d1b37a6ebb24e61db53cebfb72f91c57c86f9d1e7c7c7c9a4457a455ab",
+      "r2_transport_source_sha256": null,
+      "r2_transport_port": "publication/r2-publication-transport-port-20261103.json"
     },
     {
       "path": "README.md",
@@ -34,7 +37,7 @@
       "decision": "Optional Airspy reception guard; preserve the durable one-extra-attempt cap, remove personal configuration writers and keep raw evidence private.",
       "before_sha256": "d2268fba12ef09d57e492f92569838989f651d84fc89d8e3d4d242420cac01ba",
       "source_sha256": "e8ad53fd1e34398253c585162a2f6dcda8703eb93cedf9ff68ecc85ed37db47f",
-      "public_sha256": "6c28b134f7809d8b0877f94e780a38c3b4a8c80fa8fb706172a7ab3e5c8ccf07",
+      "public_sha256": "4de3863cec5af4c8819ccc03948cb6d58150ca16885e6c5f951dda92702b2dd6",
       "port_date_jst": "2026-10-30",
       "pre_documentation_restructure_sha256": "00b596e75b50eaedbd3bed4ebc79e71d882e7049e72516aec95dfc0860ed015e",
       "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json.",
@@ -63,7 +66,10 @@
       "thumbnail_public_completion": "publication/thumbnail-public-completion-20261101.json",
       "before_notification_observation_time_sha256": "0b35cd6095473f0f81e8e1029dc7444aa9892ce337a18894d5f3cb18b972cc59",
       "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
-      "notification_observation_time_source_sha256": null
+      "notification_observation_time_source_sha256": null,
+      "before_r2_transport_port_sha256": "6c28b134f7809d8b0877f94e780a38c3b4a8c80fa8fb706172a7ab3e5c8ccf07",
+      "r2_transport_source_sha256": null,
+      "r2_transport_port": "publication/r2-publication-transport-port-20261103.json"
     },
     {
       "path": "configs/auto_dj_classification_overrides.json",
@@ -239,7 +245,7 @@
       "decision": "Describe independent upload observation and preserve the control and SLO boundaries.",
       "before_sha256": "9f7605e83cdf9ec60df73ebe3f2472cca9292c4e06ec6768621ce53026c0b82c",
       "source_sha256": "82074416718e1cdcc2556b3e59dcb3e931b4c5a5d534cf37e93856afdfa640a7",
-      "public_sha256": "4cbb480b6b1e4107dff586e731eacb9e976b8bcd27157a537705d961d2203db5",
+      "public_sha256": "73e22de84a201d71978a88beae0442ba7b243026e1fe91fe9aca63e74b892617",
       "prior_public_sha256": "e71784d110b08225a9a320ecb03f999b60fa7f23b2503f2e6a3f80448620c9ed",
       "localization": "English prose; control structures and machine identifiers preserved.",
       "pre_graph_display_sha256": "6a87a495eb3698b1a49e053ffcc109b28d94a59e9dd29cb3399a62279e196d3d",
@@ -307,7 +313,10 @@
       "observation_standardization_port": "publication/observation-standardization-20261102.json",
       "before_upload_direct_connection_sha256": "cd2ae8032a1bb9ed4cdfa6c2d26156e144ae73726de6b1ea69791589244cdd75",
       "observation_completion_record": "publication/observation-completion-20261102.json",
-      "external_watchdog_record": "publication/oci-external-watchdog-20261102.json"
+      "external_watchdog_record": "publication/oci-external-watchdog-20261102.json",
+      "before_r2_transport_port_sha256": "4cbb480b6b1e4107dff586e731eacb9e976b8bcd27157a537705d961d2203db5",
+      "r2_transport_source_sha256": null,
+      "r2_transport_port": "publication/r2-publication-transport-port-20261103.json"
     },
     {
       "path": "docs/README.md",
@@ -342,7 +351,7 @@
       "decision": "Describe independent upload observation and preserve the control and SLO boundaries.",
       "before_sha256": "ae7e39d185704eed824fec533351f4713fa3369815ad95cb92647279e8304e7b",
       "source_sha256": null,
-      "public_sha256": "63325eb09b905f71cccbe692fad231bcc1e1f6b396280159e3b8af40d29322da",
+      "public_sha256": "a2b2c8a4f0eabe2f57501ba23ead3934ff34f2d8da50329a070cd68848bccd82",
       "port_date_jst": "2026-11-02",
       "pre_documentation_restructure_sha256": "5ae4f928c8d5f77be2e827787230606ffbf1e4d7c97d62b9d3afe0bf43048e93",
       "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json.",
@@ -367,7 +376,10 @@
       "route_transition_audit": "route-transition-audit-20261031",
       "before_boottime_media_health_sha256": "d0b6ee5d2ccb5f92fcc4fc272002ee37d534b5348b6fec30e8de0125bfd9cbb9",
       "boottime_media_health": "boottime-media-health-20261031",
-      "thumbnail_k3s_migration": "publication/thumbnail-k3s-migration-20261101.json"
+      "thumbnail_k3s_migration": "publication/thumbnail-k3s-migration-20261101.json",
+      "before_r2_transport_port_sha256": "63325eb09b905f71cccbe692fad231bcc1e1f6b396280159e3b8af40d29322da",
+      "r2_transport_source_sha256": null,
+      "r2_transport_port": "publication/r2-publication-transport-port-20261103.json"
     },
     {
       "path": "docs/current-status.md",
@@ -375,7 +387,7 @@
       "decision": "Record applied independent upload sampling, sustained current-source recovery and the natural notification result.",
       "before_sha256": "1beab3cd3e65147e0fa2d520275c2280dfa86884c6a345efefd32f2dc8469aed",
       "source_sha256": null,
-      "public_sha256": "88cf15538f812400d98a54a2d33c6200276c1469cf44736909b91a3693cf3671",
+      "public_sha256": "ccc9615cc4661e494576084aa8219e6dff8db2724710ba35f754485366a45cbc",
       "port_date_jst": "2026-11-02",
       "documentation_restructure": "New single page for volatile state.",
       "pre_twitch_observation_public_sha256": "040eac29174151f51e473f7f85e4aa23ff994be0079b3d4c011623b6ec7864ca",
@@ -442,7 +454,10 @@
       "external_watchdog_record": "publication/oci-external-watchdog-20261102.json",
       "recovery_marker_record": "publication/recovery-notification-marker-20261102.json",
       "notification_consistency_record": "publication/recovery-notification-consistency-20261102.json",
-      "qualification_follow_up": "publication/player-reception-qualification-20261103.json"
+      "qualification_follow_up": "publication/player-reception-qualification-20261103.json",
+      "before_r2_transport_port_sha256": "88cf15538f812400d98a54a2d33c6200276c1469cf44736909b91a3693cf3671",
+      "r2_transport_source_sha256": null,
+      "r2_transport_port": "publication/r2-publication-transport-port-20261103.json"
     },
     {
       "path": "docs/design-decisions-for-review.md",
@@ -505,7 +520,7 @@
       "decision": "Selected FIFO recovery port; preserve public behavior, explicit observation injection, generic lab endpoints and English documentation.",
       "before_sha256": "869f1b5b8fd8415e3b291f85f0ee46c1b5d750e9a65500b8424ea32db17b5906",
       "source_sha256": null,
-      "public_sha256": "4fe2abe81ff620c2eb5d8a9e0bad0993d8d55a618e6a6c01741c97957d724a71",
+      "public_sha256": "8c043f60508c8b85c662a6034b6d779d87743cdec7c9019b6ba5e6be91b32c89",
       "pre_documentation_restructure_sha256": "dce4f788e0479398c6718742c679da57bc203509c7ea7e83fa93c477d8c6dfa4",
       "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json.",
       "pre_clock_monitor_public_sha256": "e61fbc6732027df3a0eb7832e3e28ab37e0914bda85305f3127caa2b64260a53",
@@ -518,7 +533,10 @@
       "prior_public_sha256": "f2bc8f368327a60f216fecac9837d1e7af1676d727d5030040ef97e0b7c0a674",
       "layout_update": "Current CRA and Stream support separation, 2026-10-26",
       "before_fallback_docs_sha256": "1e7534e464ec96e390b9d3bab735e87bc0399a3a2125b6179a8dea6e1c89f6bd",
-      "fallback_docs_reconciliation": "fallback-docs-consolidation-20261031"
+      "fallback_docs_reconciliation": "fallback-docs-consolidation-20261031",
+      "before_r2_transport_port_sha256": "4fe2abe81ff620c2eb5d8a9e0bad0993d8d55a618e6a6c01741c97957d724a71",
+      "r2_transport_source_sha256": null,
+      "r2_transport_port": "publication/r2-publication-transport-port-20261103.json"
     },
     {
       "path": "docs/observability.md",
@@ -596,10 +614,13 @@
       "decision": "Optional Airspy reception guard; preserve the durable one-extra-attempt cap, remove personal configuration writers and keep raw evidence private.",
       "before_sha256": "4fae26b5711f73bf3e22ab226e195aa28ada120f0c2cf7aa617ff6448c1ed27b",
       "source_sha256": null,
-      "public_sha256": "84638924d1155935fcdfca7de707fc481420b65687ad2e91b22c0879d21e9d27",
+      "public_sha256": "d91320ca7a445ab86e196dcd67649851f507b608a85a393baacc80f8e93ae723",
       "port_date_jst": "2026-10-30",
       "port_record": "publication/airspy-reception-port-20261030.json",
-      "prior_public_sha256": "4fae26b5711f73bf3e22ab226e195aa28ada120f0c2cf7aa617ff6448c1ed27b"
+      "prior_public_sha256": "4fae26b5711f73bf3e22ab226e195aa28ada120f0c2cf7aa617ff6448c1ed27b",
+      "before_r2_transport_port_sha256": "84638924d1155935fcdfca7de707fc481420b65687ad2e91b22c0879d21e9d27",
+      "r2_transport_source_sha256": null,
+      "r2_transport_port": "publication/r2-publication-transport-port-20261103.json"
     },
     {
       "path": "docs/runtime-contract.md",
@@ -807,13 +828,16 @@
       "decision": "Pi publisher source reconciliation, portable paths, English source guide, and mock-based validation.",
       "before_sha256": "13f8a22fed3663e4f423d8e86f22a6150437b99c59dc74f876c9b3bbd4dc202a",
       "source_sha256": null,
-      "public_sha256": "8607cf911dc854b305399d75060a3ad6a503d6be271c59e005aed06a0d1ae276",
+      "public_sha256": "e77a21be1494d1da81cb8f3d7038c8e58e7da712efade256006ffe6612a30653",
       "pre_pi_publisher_source_port_sha256": "9c7649fba1de17fa7cfbd9a5f19af6dd18d7be5c29f80b15f12ec50b512d88ec",
       "pi_publisher_source_port": "2026-10-14 source reconciliation; portable English code and retained public protections; no live changes.",
       "pre_r2_publication_docs_sha256": "2aaaa185daa40778e62f48afcff2a223d3cdc0e7ac0367f620bcd9d758c8493c",
       "r2_publication_documentation": "2026-10-27 English record only; no source or runtime change by this port.",
       "before_fallback_docs_sha256": "c2905c43fa4e1f0ab8052c9c385252eef19eefc0008274be68301f2333f263f3",
-      "fallback_docs_reconciliation": "fallback-docs-consolidation-20261031"
+      "fallback_docs_reconciliation": "fallback-docs-consolidation-20261031",
+      "before_r2_transport_port_sha256": "8607cf911dc854b305399d75060a3ad6a503d6be271c59e005aed06a0d1ae276",
+      "r2_transport_source_sha256": null,
+      "r2_transport_port": "publication/r2-publication-transport-port-20261103.json"
     },
     {
       "path": "docs/v3/public-source-port-2026-10-13.md",
@@ -2141,9 +2165,12 @@
       "source_role": "public-pi-publisher-port",
       "before_sha256": null,
       "source_sha256": null,
-      "public_sha256": "a880b9130ace2049cb9b57c03e7cd813b5f537fd47b5bb0e3982063a38454995",
+      "public_sha256": "784a9dd135ac25d1bae841618fa2496cba015a1951e9613bbf9269a667edbef5",
       "pi_publisher_source_port": "2026-10-14 source reconciliation; portable English code and retained public protections; no live changes.",
-      "decision": "Pi publisher source reconciliation, portable paths, English source guide, and mock-based validation."
+      "decision": "Pi publisher source reconciliation, portable paths, English source guide, and mock-based validation.",
+      "before_r2_transport_port_sha256": "a880b9130ace2049cb9b57c03e7cd813b5f537fd47b5bb0e3982063a38454995",
+      "r2_transport_source_sha256": null,
+      "r2_transport_port": "publication/r2-publication-transport-port-20261103.json"
     },
     {
       "path": "ops/public-publisher/site/public/assets/dashboard-20261013.css",
@@ -4330,14 +4357,15 @@
       "decision": "adapted-english-and-portable-bindings",
       "before_sha256": "f00a60e74106a91f741d481a5bdb6740868ce7ad8b7984b9ed3a568809c018cd",
       "source_sha256": "252ebbbed3ab9b440352c564d8cdbc7b62cc2de0e7a792c019dc1ecb41ab6161",
-      "public_sha256": "b7d7ea7bdf93f137bdc305752bff326bbce59a297d43bf46eb4307cd7bd3437b",
+      "public_sha256": "e6aeed831b5010b73f35f6bacb7cc82f350d49e5a5955cbd17dd1899b68b820d",
       "before_unicode_source_sha256": "ad687380f09c8a9fb2642a991732247c0a40a804df9838b2c4a1f5b9fa7fd070",
       "unicode_source_change": "English authored text; Unicode fixture values preserved with explicit escapes.",
       "port_date_jst": "2026-10-22",
       "pre_documentation_restructure_sha256": "c2478fad72d41ae4616ffca11e78f476a59408557864503a90e760b334268220",
       "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json.",
       "prior_public_sha256": "e141078da1ceb3cc82c5d67016949daad592bbf46d048c6dca33e42efbaa0dd9",
-      "layout_update": "Current CRA and Stream support separation, 2026-10-26"
+      "layout_update": "Current CRA and Stream support separation, 2026-10-26",
+      "r2_publication_record": "publication/r2-publication-transport-port-20261103.json"
     },
     {
       "path": "tests/test_encoder_rate_derivation.py",
@@ -4786,12 +4814,15 @@
       "before_sha256": null,
       "source_sha256": null,
       "pre_r2_publication_docs_sha256": null,
-      "public_sha256": "b2ab427cb4f5e8f36538dcb29d943daf3fc3542fce353b40272c06913ea3c98d",
+      "public_sha256": "9cfdb690c9c64956d3fc0203fe8cf9f8ffb29aac5e3b49433b63cdaecb799ab3",
       "r2_publication_documentation": "2026-10-27 English record only; no source or runtime change by this port.",
       "prior_public_sha256": "3b6c826051fe5160a485d2d0b00a1950f76ab2e8a042e24df076fabae5457269",
       "review_reconciliation": "clock-review-20261031",
       "before_fallback_docs_sha256": "6b0a98e45874b1a6a7876a720b3fe39003636c1d6ca92dbd0255a1341bdf42dc",
-      "fallback_docs_reconciliation": "fallback-docs-consolidation-20261031"
+      "fallback_docs_reconciliation": "fallback-docs-consolidation-20261031",
+      "before_r2_transport_port_sha256": "b2ab427cb4f5e8f36538dcb29d943daf3fc3542fce353b40272c06913ea3c98d",
+      "r2_transport_source_sha256": null,
+      "r2_transport_port": "publication/r2-publication-transport-port-20261103.json"
     },
     {
       "path": "publication/r2-publication-docs-20261027.json",
@@ -6974,6 +7005,204 @@
       "public_sha256": "c00e056d67f67bd18670489ae97f36e492a754e585502ed75f9e2205ca2f0fe4",
       "source_sha256": "c00e056d67f67bd18670489ae97f36e492a754e585502ed75f9e2205ca2f0fe4",
       "qualification_follow_up": "publication/player-reception-qualification-20261103.json"
+    },
+    {
+      "path": "docs/v3/r2-publication-transport.md",
+      "source_role": "public-r2-publication-port",
+      "decision": "selective-port-with-portable-configuration",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "c9286076e341973c636dd0f96946208d4c294da9e1dcafb9262041bb1db0c38a",
+      "r2_transport_port": "publication/r2-publication-transport-port-20261103.json"
+    },
+    {
+      "path": "ops/public-publisher/site/cloudflare-worker/src/r2.js",
+      "source_role": "public-r2-publication-port",
+      "decision": "selective-port-with-portable-configuration",
+      "before_sha256": null,
+      "source_sha256": "27309de05bc659ca689310b535501dbad55ad9a4b1f55537a706402fa19a42d0",
+      "public_sha256": "91b9237708efa92353f3042bc590b7f4edd55f9a59b31322157b3a19d6e34d63",
+      "r2_transport_port": "publication/r2-publication-transport-port-20261103.json"
+    },
+    {
+      "path": "ops/public-publisher/site/cloudflare-worker/tests/r2-worker.test.mjs",
+      "source_role": "public-r2-publication-port",
+      "decision": "selective-port-with-portable-configuration",
+      "before_sha256": null,
+      "source_sha256": "bd143f571d2a0ddefde122845650e2b19961a540bd66b59e6a66cea9ca86ec8e",
+      "public_sha256": "53e81894589f89fdd710b22dcdefc0f93e72b98c9b09e0f6c05c182a11128a97",
+      "r2_transport_port": "publication/r2-publication-transport-port-20261103.json"
+    },
+    {
+      "path": "ops/public-publisher/site/cloudflare-worker/wrangler.r2.toml.example",
+      "source_role": "public-r2-publication-port",
+      "decision": "selective-port-with-portable-configuration",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "794bd3fc7b7a9502a0b1c1158df60703977fca5d16f41b271f7613d14b1cbef2",
+      "r2_transport_port": "publication/r2-publication-transport-port-20261103.json"
+    },
+    {
+      "path": "ops/public-publisher/site/public/assets/publication-freshness-20261027.js",
+      "source_role": "public-r2-publication-port",
+      "decision": "selective-port-with-portable-configuration",
+      "before_sha256": null,
+      "source_sha256": "a7c6203ef69e6af52a23387193b60a455147a6558e3445a46b8eaedfc7869aca",
+      "public_sha256": "a7c6203ef69e6af52a23387193b60a455147a6558e3445a46b8eaedfc7869aca",
+      "r2_transport_port": "publication/r2-publication-transport-port-20261103.json"
+    },
+    {
+      "path": "ops/public-publisher/site/scripts/collect_oci_egress_public.py",
+      "source_role": "public-r2-publication-port",
+      "decision": "selective-port-with-portable-configuration",
+      "before_sha256": null,
+      "source_sha256": "39bf3db8301b009e7bd3e85c8b1e59ef4f17d2018452ea0f0f9b459895d6e057",
+      "public_sha256": "e2a3ff23469f72dda64ac2504797838671033d2b98f5b56e7dadb409b1a68612",
+      "r2_transport_port": "publication/r2-publication-transport-port-20261103.json"
+    },
+    {
+      "path": "ops/public-publisher/site/scripts/publication_receipts.py",
+      "source_role": "public-r2-publication-port",
+      "decision": "selective-port-with-portable-configuration",
+      "before_sha256": null,
+      "source_sha256": "12a3082d32179838fa342b3af77ca7c1c201f658da6ef82f05bec6e23c087dd3",
+      "public_sha256": "9d7f5e94d1799eb3dd29d3c2eaf96cab5500a45d0ae2088b0a1c88a31808447e",
+      "r2_transport_port": "publication/r2-publication-transport-port-20261103.json"
+    },
+    {
+      "path": "ops/public-publisher/site/scripts/push_to_r2.py",
+      "source_role": "public-r2-publication-port",
+      "decision": "selective-port-with-portable-configuration",
+      "before_sha256": null,
+      "source_sha256": "a1c5225c8a72eeafaea4eaee6bc229d1af9fefbc17991ef8bbe18c7ebf7ddc98",
+      "public_sha256": "4f2653a4dc52903188f441bdce44c893beab321da003530e8074b06409ea23ef",
+      "r2_transport_port": "publication/r2-publication-transport-port-20261103.json"
+    },
+    {
+      "path": "ops/public-publisher/site/scripts/r2-public-files.json",
+      "source_role": "public-r2-publication-port",
+      "decision": "selective-port-with-portable-configuration",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "fb149d9d88ee1294732c1300e7bbb3278ab70156e7f5bb99f72b04f6995b8525",
+      "r2_transport_port": "publication/r2-publication-transport-port-20261103.json"
+    },
+    {
+      "path": "ops/public-publisher/site/scripts/r2_network.py",
+      "source_role": "public-r2-publication-port",
+      "decision": "selective-port-with-portable-configuration",
+      "before_sha256": null,
+      "source_sha256": "5b0749a5d4605ed4ef9c88039cd222e30903b5b6ee86ec1764ae38d6f0d4c4d8",
+      "public_sha256": "5b0749a5d4605ed4ef9c88039cd222e30903b5b6ee86ec1764ae38d6f0d4c4d8",
+      "r2_transport_port": "publication/r2-publication-transport-port-20261103.json"
+    },
+    {
+      "path": "ops/public-publisher/site/scripts/render_r2_resolver.py",
+      "source_role": "public-r2-publication-port",
+      "decision": "selective-port-with-portable-configuration",
+      "before_sha256": null,
+      "source_sha256": "0431a0e1e7d66051bfd43b0ea078fa7411eed719ff9420fcaee85e607feb5f4a",
+      "public_sha256": "0431a0e1e7d66051bfd43b0ea078fa7411eed719ff9420fcaee85e607feb5f4a",
+      "r2_transport_port": "publication/r2-publication-transport-port-20261103.json"
+    },
+    {
+      "path": "ops/public-publisher/site/systemd/cloudflare-r2.env.example",
+      "source_role": "public-r2-publication-port",
+      "decision": "selective-port-with-portable-configuration",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "2f5a8b8be041347a3424508d1e7a6c64e780d6f11ca446ff613bc83102babfb7",
+      "r2_transport_port": "publication/r2-publication-transport-port-20261103.json"
+    },
+    {
+      "path": "ops/public-publisher/site/systemd/stream-v3-r2-publisher.env.example",
+      "source_role": "public-r2-publication-port",
+      "decision": "selective-port-with-portable-configuration",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "01d756b6447f9d10cdd26ffc739813eea17f3775e75188a42ef6890e10fa0341",
+      "r2_transport_port": "publication/r2-publication-transport-port-20261103.json"
+    },
+    {
+      "path": "ops/public-publisher/site/systemd/yukimurata-public-push.service.d/95-r2-network.conf",
+      "source_role": "public-r2-publication-port",
+      "decision": "selective-port-with-portable-configuration",
+      "before_sha256": null,
+      "source_sha256": "7b29ea2eb3c4fe24241ba54f050cd3811f1468fd1140db429203288e57bc906b",
+      "public_sha256": "33a1cf01f76245f48dfe9dfa07aab13f9cec9d7670420cfae4fd64c1a8ceef86",
+      "r2_transport_port": "publication/r2-publication-transport-port-20261103.json"
+    },
+    {
+      "path": "ops/public-publisher/site/systemd/yukimurata-public-push.service.d/96-r2-ipv6-preferred.conf",
+      "source_role": "public-r2-publication-port",
+      "decision": "selective-port-with-portable-configuration",
+      "before_sha256": null,
+      "source_sha256": "6ed531548aff5660a4d9d404ea27f83deebfbd7ee2daa734239a68a203ace8c4",
+      "public_sha256": "6ed531548aff5660a4d9d404ea27f83deebfbd7ee2daa734239a68a203ace8c4",
+      "r2_transport_port": "publication/r2-publication-transport-port-20261103.json"
+    },
+    {
+      "path": "ops/public-publisher/site/systemd/yukimurata-public-push.service.d/r2.conf.example",
+      "source_role": "public-r2-publication-port",
+      "decision": "selective-port-with-portable-configuration",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "6f856086e42a5223a040201b253217292eb1001e1c2e5e9827699ed3960ae7b7",
+      "r2_transport_port": "publication/r2-publication-transport-port-20261103.json"
+    },
+    {
+      "path": "ops/public-publisher/site/tests/test_publication_receipts.py",
+      "source_role": "public-r2-publication-port",
+      "decision": "selective-port-with-portable-configuration",
+      "before_sha256": null,
+      "source_sha256": "3d8e311774d3ad6e35d1001ff2c76bb9164c5a468b5e1c619010c69639762856",
+      "public_sha256": "c6db969da0a3c168215e17010967fa533f4a79510052c97836d28f74f530fb32",
+      "r2_transport_port": "publication/r2-publication-transport-port-20261103.json"
+    },
+    {
+      "path": "ops/public-publisher/site/tests/test_r2_network_publication.py",
+      "source_role": "public-r2-publication-port",
+      "decision": "selective-port-with-portable-configuration",
+      "before_sha256": null,
+      "source_sha256": "91fd736bcc806cfb3d58b83880ec503b2bec5109b523fc5c66c38e2861023eab",
+      "public_sha256": "c2c70d8099752e2b51e8d937eb8ea804223427876d4fc57f5c7ee952ad50543a",
+      "r2_transport_port": "publication/r2-publication-transport-port-20261103.json"
+    },
+    {
+      "path": "ops/public-publisher/site/tests/test_r2_publication.py",
+      "source_role": "public-r2-publication-port",
+      "decision": "selective-port-with-portable-configuration",
+      "before_sha256": null,
+      "source_sha256": "19a36334749509e6116240c55ae8c2924f985f570f336b392d96ca58da2e732d",
+      "public_sha256": "67cc0656bced169a4f0e5666523839397565a616174a170367d17ebeefcb928b",
+      "r2_transport_port": "publication/r2-publication-transport-port-20261103.json"
+    },
+    {
+      "path": "pyproject.toml",
+      "source_role": "public-r2-publication-port",
+      "decision": "selective-port-with-portable-configuration",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "400c00616608c2387ed85ab3315f2ece381efa38120e55d571152fd213441a03",
+      "r2_transport_port": "publication/r2-publication-transport-port-20261103.json"
+    },
+    {
+      "path": "tests/test_public_r2_port.py",
+      "source_role": "public-r2-publication-port",
+      "decision": "selective-port-with-portable-configuration",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "60a8396a646aff818832abebae8151701bf903bffa65546571a7f3c257fcece5",
+      "r2_transport_port": "publication/r2-publication-transport-port-20261103.json"
+    },
+    {
+      "path": "publication/r2-publication-transport-port-20261103.json",
+      "source_role": "public-r2-publication-port",
+      "decision": "selective-port-with-portable-configuration",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "be840971093c43323ea3fd6a64d0fd931a702ee8ad1f3ac72a1b5947278e6808",
+      "r2_transport_port": "publication/r2-publication-transport-port-20261103.json"
     }
   ],
   "omissions": [
@@ -7055,7 +7284,8 @@
     "publication/recovery-notification-marker-20261102.json",
     "publication/recovery-notification-consistency-20261102.json",
     "publication/observation-release-provenance-20261103.json",
-    "publication/player-reception-qualification-20261103.json"
+    "publication/player-reception-qualification-20261103.json",
+    "publication/r2-publication-transport-port-20261103.json"
   ],
   "evidence_checkpoint_cutoff_jst": "2026-10-14T00:04:57+09:00",
   "documentation_audience": "hiring and technical reviewers",
@@ -7434,5 +7664,13 @@
     "live_control_or_slo_change": false,
     "continuous_metrics_deployed": true,
     "control_or_slo_change": false
+  },
+  "r2_publication_transport_port": {
+    "record": "publication/r2-publication-transport-port-20261103.json",
+    "date_jst": "2026-11-03",
+    "scope": "public-checkout-only",
+    "deployment_performed": false,
+    "commit_or_push_performed": false,
+    "source_includes_uncommitted_candidates": true
   }
 }

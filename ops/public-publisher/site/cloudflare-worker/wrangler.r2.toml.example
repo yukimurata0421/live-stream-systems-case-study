@@ -1,0 +1,13 @@
+name = "public-status-r2"
+main = "src/r2.js"
+compatibility_date = "2026-06-06"
+
+# Match YUKIMURATA_R2_PREFIX in the publisher's private environment file.
+[vars]
+PUBLIC_R2_PREFIX = "public/"
+
+[[r2_buckets]]
+binding = "SITE_BUCKET"
+bucket_name = "replace-with-private-public-status-bucket"
+
+# Configure an operator-owned domain separately. No route is installed here.

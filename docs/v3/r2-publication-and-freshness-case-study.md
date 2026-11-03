@@ -2,11 +2,12 @@
 
 This is a dated record of the operated system on 2026-10-27 JST. It describes
 the storage migration, its verification, and a later clock-skew failure.
-The R2 migration itself is documented here; its uploader/Worker implementation,
-private operations records, generated snapshots, cloud identities and archive
-contents are not included. The snapshot timestamp repair is now also present
+The R2 migration itself is documented here. Private operations records,
+generated snapshots, cloud identities and archive contents are not included.
+The snapshot timestamp repair is now also present
 in the public Twitch/SLI collectors, as noted in the October 31 source update below.
-The public publisher source still represents its earlier GCS implementation.
+The uploader and Worker were initially excluded; their later November 3
+[source port](r2-publication-transport.md) is separate from this operated record.
 
 ## Storage Migration And Verification
 
@@ -201,9 +202,10 @@ Validation covered 19 publisher tests on both development and publisher hosts,
 18 tests against the deployed Worker bundle, 14 isolated browser cases, and
 three client-only fault/recovery cases through the deployed page. No server
 fault was injected. The natural external-result import remained healthy with
-three passing regions per target. The uploader and page changes in
-this section are documented only; their implementation is not ported here. The
-collector timestamp repair described below is ported.
+three passing regions per target. At this documentation checkpoint, the uploader
+and page changes in this section were documented only. The later R2 source
+port includes the uploader and Worker; it does not import all of the operated
+page changes. The collector timestamp repair described below is ported.
 
 At 11:56 JST, the persistent data-updates summary was removed following review
 of its usefulness to readers. Normal operation now adds no source-count panel;
@@ -225,8 +227,9 @@ the operated one-second future tolerance and 180-second freshness limit in this
 case study. Invalid values, excessive future time and stale source data fail
 closed; a failed fetch preserves the previous artifact bytes and timestamps.
 SLI history start is ordered against source generation, not the receiver's
-possibly different clock. This source repair is separate from the excluded R2
-uploader implementation and does not deploy a publisher.
+possibly different clock. At that checkpoint the R2 uploader implementation
+remained excluded. This collector repair did not deploy a publisher; the
+November 3 uploader port is recorded separately.
 
 The [October 31 clock contract](cross-host-observation-time.md) subsequently
 replaced the relay route-facts controller's provisional one-second rule with a

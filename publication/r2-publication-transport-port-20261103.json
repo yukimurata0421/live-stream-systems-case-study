@@ -1,0 +1,311 @@
+{
+  "schema": "stream.public_port_record.v1",
+  "port_date_jst": "2026-11-03",
+  "prepared_at_jst": "2026-11-03T21:39:50+09:00",
+  "scope": "Selected portable R2 publisher, receipts, IPv6 preference with IPv4 fallback, isolated resolver, private-bucket Worker, offline tests and documentation.",
+  "base_public_commit": "c5e31e334ce0fbeb9d16646a4beef1f55db6c581",
+  "development_base_commit": "656c15a6c0b21081d7413a29d03d0ec4111a19ad",
+  "source_includes_uncommitted_candidates": true,
+  "source_commit_alone_identifies_candidate": false,
+  "deployment_performed": false,
+  "remote_mutation_performed": false,
+  "cloud_requests_performed": false,
+  "host_dns_changed": false,
+  "production_runtime_changed": false,
+  "commit_performed": false,
+  "push_performed": false,
+  "notification_sent": false,
+  "original_source_cutoff_unchanged": true,
+  "configuration": {
+    "default_prefix": "public/",
+    "maximum_parallel_requests": 2,
+    "maximum_connections": 2,
+    "ipv6_tcp_tls_budget_seconds": 1.0,
+    "ipv4_fallback_before_http_only": true,
+    "uncertain_put_replayed": false,
+    "get_attempts_maximum": 3,
+    "cycle_budget_seconds": 240,
+    "source_age_limit_seconds": 180,
+    "credentials_external": true,
+    "public_generated_json_included": false,
+    "optional_health_url_external": true
+  },
+  "retained_boundaries": [
+    "Existing GCS source and default base-service entrypoint retained; R2 is an explicit installation choice.",
+    "DNS transport may use IPv4 while R2 connections prefer IPv6.",
+    "Publication health, strict observation completeness, provider acceptance and viewer reception remain distinct.",
+    "No unrelated browser, external importer or notification-policy implementation copied.",
+    "Historical failure counts, receipts and dated port records are not reset or rewritten."
+  ],
+  "validation": {
+    "status": "PASS",
+    "focused_python_passed": 74,
+    "focused_python_subtests_passed": 8,
+    "worker_tests_passed": 22,
+    "local_python": "3.14.4",
+    "worker_node": "22.14.0",
+    "initial_related_run": {
+      "passed": 166,
+      "failed_document_link_subtests": 2,
+      "reason": "New port-record links were checked before this record was written.",
+      "runtime_test_failures": 0,
+      "corrected_by": "Writing the new port record resolved both missing documentation links; the final related suite passed."
+    },
+    "cloud_provider_access": false,
+    "related_python_passed": 166,
+    "related_python_subtests_passed": 1326,
+    "port_boundary_issues": 0,
+    "public_language_errors": 0,
+    "gitleaks_findings": 0,
+    "whitespace_issues": 0,
+    "validated_at_jst": "2026-11-03T21:41:13+09:00"
+  },
+  "files": [
+    {
+      "path": ".github/workflows/public-snapshot-check.yml",
+      "before_public_sha256": "ec2886d1b37a6ebb24e61db53cebfb72f91c57c86f9d1e7c7c7c9a4457a455ab",
+      "source_sha256": null,
+      "public_sha256": "03d1152eb7302fb51b783d47b9f9eed8ead8c9af43d43e4811efd8a12156a7bf",
+      "adaptation": "Public-only configuration, manifest, documentation or validation integration."
+    },
+    {
+      "path": "README.md",
+      "before_public_sha256": "6c28b134f7809d8b0877f94e780a38c3b4a8c80fa8fb706172a7ab3e5c8ccf07",
+      "source_sha256": null,
+      "public_sha256": "4de3863cec5af4c8819ccc03948cb6d58150ca16885e6c5f951dda92702b2dd6",
+      "adaptation": "Public-only configuration, manifest, documentation or validation integration."
+    },
+    {
+      "path": "docs/00_INDEX.md",
+      "before_public_sha256": "4cbb480b6b1e4107dff586e731eacb9e976b8bcd27157a537705d961d2203db5",
+      "source_sha256": null,
+      "public_sha256": "73e22de84a201d71978a88beae0442ba7b243026e1fe91fe9aca63e74b892617",
+      "adaptation": "Public-only configuration, manifest, documentation or validation integration."
+    },
+    {
+      "path": "docs/architecture.md",
+      "before_public_sha256": "63325eb09b905f71cccbe692fad231bcc1e1f6b396280159e3b8af40d29322da",
+      "source_sha256": null,
+      "public_sha256": "a2b2c8a4f0eabe2f57501ba23ead3934ff34f2d8da50329a070cd68848bccd82",
+      "adaptation": "Public-only configuration, manifest, documentation or validation integration."
+    },
+    {
+      "path": "docs/current-status.md",
+      "before_public_sha256": "88cf15538f812400d98a54a2d33c6200276c1469cf44736909b91a3693cf3671",
+      "source_sha256": null,
+      "public_sha256": "ccc9615cc4661e494576084aa8219e6dff8db2724710ba35f754485366a45cbc",
+      "adaptation": "Public-only configuration, manifest, documentation or validation integration."
+    },
+    {
+      "path": "docs/implementation-review-map.md",
+      "before_public_sha256": "4fe2abe81ff620c2eb5d8a9e0bad0993d8d55a618e6a6c01741c97957d724a71",
+      "source_sha256": null,
+      "public_sha256": "8c043f60508c8b85c662a6034b6d779d87743cdec7c9019b6ba5e6be91b32c89",
+      "adaptation": "Public-only configuration, manifest, documentation or validation integration."
+    },
+    {
+      "path": "docs/public-release.md",
+      "before_public_sha256": "84638924d1155935fcdfca7de707fc481420b65687ad2e91b22c0879d21e9d27",
+      "source_sha256": null,
+      "public_sha256": "d91320ca7a445ab86e196dcd67649851f507b608a85a393baacc80f8e93ae723",
+      "adaptation": "Public-only configuration, manifest, documentation or validation integration."
+    },
+    {
+      "path": "docs/v3/public-publisher-boundary.md",
+      "before_public_sha256": "8607cf911dc854b305399d75060a3ad6a503d6be271c59e005aed06a0d1ae276",
+      "source_sha256": null,
+      "public_sha256": "e77a21be1494d1da81cb8f3d7038c8e58e7da712efade256006ffe6612a30653",
+      "adaptation": "Public-only configuration, manifest, documentation or validation integration."
+    },
+    {
+      "path": "docs/v3/r2-publication-and-freshness-case-study.md",
+      "before_public_sha256": "b2ab427cb4f5e8f36538dcb29d943daf3fc3542fce353b40272c06913ea3c98d",
+      "source_sha256": null,
+      "public_sha256": "9cfdb690c9c64956d3fc0203fe8cf9f8ffb29aac5e3b49433b63cdaecb799ab3",
+      "adaptation": "Public-only configuration, manifest, documentation or validation integration."
+    },
+    {
+      "path": "docs/v3/r2-publication-transport.md",
+      "before_public_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "c9286076e341973c636dd0f96946208d4c294da9e1dcafb9262041bb1db0c38a",
+      "adaptation": "Public-only configuration, manifest, documentation or validation integration."
+    },
+    {
+      "path": "ops/public-publisher/site/README.md",
+      "before_public_sha256": "a880b9130ace2049cb9b57c03e7cd813b5f537fd47b5bb0e3982063a38454995",
+      "source_sha256": null,
+      "public_sha256": "784a9dd135ac25d1bae841618fa2496cba015a1951e9613bbf9269a667edbef5",
+      "adaptation": "Public-only configuration, manifest, documentation or validation integration."
+    },
+    {
+      "path": "ops/public-publisher/site/cloudflare-worker/src/r2.js",
+      "before_public_sha256": null,
+      "source_sha256": "27309de05bc659ca689310b535501dbad55ad9a4b1f55537a706402fa19a42d0",
+      "public_sha256": "91b9237708efa92353f3042bc590b7f4edd55f9a59b31322157b3a19d6e34d63",
+      "adaptation": "Portable public prefix, external configuration, generic monitoring alias or public-tree integration."
+    },
+    {
+      "path": "ops/public-publisher/site/cloudflare-worker/tests/r2-worker.test.mjs",
+      "before_public_sha256": null,
+      "source_sha256": "bd143f571d2a0ddefde122845650e2b19961a540bd66b59e6a66cea9ca86ec8e",
+      "public_sha256": "53e81894589f89fdd710b22dcdefc0f93e72b98c9b09e0f6c05c182a11128a97",
+      "adaptation": "Portable public prefix, external configuration, generic monitoring alias or public-tree integration."
+    },
+    {
+      "path": "ops/public-publisher/site/cloudflare-worker/wrangler.r2.toml.example",
+      "before_public_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "794bd3fc7b7a9502a0b1c1158df60703977fca5d16f41b271f7613d14b1cbef2",
+      "adaptation": "Public-only configuration, manifest, documentation or validation integration."
+    },
+    {
+      "path": "ops/public-publisher/site/public/assets/publication-freshness-20261027.js",
+      "before_public_sha256": null,
+      "source_sha256": "a7c6203ef69e6af52a23387193b60a455147a6558e3445a46b8eaedfc7869aca",
+      "public_sha256": "a7c6203ef69e6af52a23387193b60a455147a6558e3445a46b8eaedfc7869aca",
+      "adaptation": "Identical selected development candidate."
+    },
+    {
+      "path": "ops/public-publisher/site/scripts/collect_oci_egress_public.py",
+      "before_public_sha256": null,
+      "source_sha256": "39bf3db8301b009e7bd3e85c8b1e59ef4f17d2018452ea0f0f9b459895d6e057",
+      "public_sha256": "e2a3ff23469f72dda64ac2504797838671033d2b98f5b56e7dadb409b1a68612",
+      "adaptation": "Portable public prefix, external configuration, generic monitoring alias or public-tree integration."
+    },
+    {
+      "path": "ops/public-publisher/site/scripts/publication_receipts.py",
+      "before_public_sha256": null,
+      "source_sha256": "12a3082d32179838fa342b3af77ca7c1c201f658da6ef82f05bec6e23c087dd3",
+      "public_sha256": "9d7f5e94d1799eb3dd29d3c2eaf96cab5500a45d0ae2088b0a1c88a31808447e",
+      "adaptation": "Portable public prefix, external configuration, generic monitoring alias or public-tree integration."
+    },
+    {
+      "path": "ops/public-publisher/site/scripts/push_to_r2.py",
+      "before_public_sha256": null,
+      "source_sha256": "a1c5225c8a72eeafaea4eaee6bc229d1af9fefbc17991ef8bbe18c7ebf7ddc98",
+      "public_sha256": "4f2653a4dc52903188f441bdce44c893beab321da003530e8074b06409ea23ef",
+      "adaptation": "Portable public prefix, external configuration, generic monitoring alias or public-tree integration."
+    },
+    {
+      "path": "ops/public-publisher/site/scripts/r2-public-files.json",
+      "before_public_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "fb149d9d88ee1294732c1300e7bbb3278ab70156e7f5bb99f72b04f6995b8525",
+      "adaptation": "Public-only configuration, manifest, documentation or validation integration."
+    },
+    {
+      "path": "ops/public-publisher/site/scripts/r2_network.py",
+      "before_public_sha256": null,
+      "source_sha256": "5b0749a5d4605ed4ef9c88039cd222e30903b5b6ee86ec1764ae38d6f0d4c4d8",
+      "public_sha256": "5b0749a5d4605ed4ef9c88039cd222e30903b5b6ee86ec1764ae38d6f0d4c4d8",
+      "adaptation": "Identical selected development candidate."
+    },
+    {
+      "path": "ops/public-publisher/site/scripts/render_r2_resolver.py",
+      "before_public_sha256": null,
+      "source_sha256": "0431a0e1e7d66051bfd43b0ea078fa7411eed719ff9420fcaee85e607feb5f4a",
+      "public_sha256": "0431a0e1e7d66051bfd43b0ea078fa7411eed719ff9420fcaee85e607feb5f4a",
+      "adaptation": "Identical selected development candidate."
+    },
+    {
+      "path": "ops/public-publisher/site/systemd/cloudflare-r2.env.example",
+      "before_public_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "2f5a8b8be041347a3424508d1e7a6c64e780d6f11ca446ff613bc83102babfb7",
+      "adaptation": "Public-only configuration, manifest, documentation or validation integration."
+    },
+    {
+      "path": "ops/public-publisher/site/systemd/stream-v3-r2-publisher.env.example",
+      "before_public_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "01d756b6447f9d10cdd26ffc739813eea17f3775e75188a42ef6890e10fa0341",
+      "adaptation": "Public-only configuration, manifest, documentation or validation integration."
+    },
+    {
+      "path": "ops/public-publisher/site/systemd/yukimurata-public-push.service.d/95-r2-network.conf",
+      "before_public_sha256": null,
+      "source_sha256": "7b29ea2eb3c4fe24241ba54f050cd3811f1468fd1140db429203288e57bc906b",
+      "public_sha256": "33a1cf01f76245f48dfe9dfa07aab13f9cec9d7670420cfae4fd64c1a8ceef86",
+      "adaptation": "Portable public prefix, external configuration, generic monitoring alias or public-tree integration."
+    },
+    {
+      "path": "ops/public-publisher/site/systemd/yukimurata-public-push.service.d/96-r2-ipv6-preferred.conf",
+      "before_public_sha256": null,
+      "source_sha256": "6ed531548aff5660a4d9d404ea27f83deebfbd7ee2daa734239a68a203ace8c4",
+      "public_sha256": "6ed531548aff5660a4d9d404ea27f83deebfbd7ee2daa734239a68a203ace8c4",
+      "adaptation": "Identical selected development candidate."
+    },
+    {
+      "path": "ops/public-publisher/site/systemd/yukimurata-public-push.service.d/r2.conf.example",
+      "before_public_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "6f856086e42a5223a040201b253217292eb1001e1c2e5e9827699ed3960ae7b7",
+      "adaptation": "Public-only configuration, manifest, documentation or validation integration."
+    },
+    {
+      "path": "ops/public-publisher/site/tests/test_publication_receipts.py",
+      "before_public_sha256": null,
+      "source_sha256": "3d8e311774d3ad6e35d1001ff2c76bb9164c5a468b5e1c619010c69639762856",
+      "public_sha256": "c6db969da0a3c168215e17010967fa533f4a79510052c97836d28f74f530fb32",
+      "adaptation": "Portable public prefix, external configuration, generic monitoring alias or public-tree integration."
+    },
+    {
+      "path": "ops/public-publisher/site/tests/test_r2_network_publication.py",
+      "before_public_sha256": null,
+      "source_sha256": "91fd736bcc806cfb3d58b83880ec503b2bec5109b523fc5c66c38e2861023eab",
+      "public_sha256": "c2c70d8099752e2b51e8d937eb8ea804223427876d4fc57f5c7ee952ad50543a",
+      "adaptation": "Portable public prefix, external configuration, generic monitoring alias or public-tree integration."
+    },
+    {
+      "path": "ops/public-publisher/site/tests/test_r2_publication.py",
+      "before_public_sha256": null,
+      "source_sha256": "19a36334749509e6116240c55ae8c2924f985f570f336b392d96ca58da2e732d",
+      "public_sha256": "67cc0656bced169a4f0e5666523839397565a616174a170367d17ebeefcb928b",
+      "adaptation": "Portable public prefix, external configuration, generic monitoring alias or public-tree integration."
+    },
+    {
+      "path": "pyproject.toml",
+      "before_public_sha256": "48acc17c35533bb3c0ef7654d868b0198dac33fe22645de0d6470ca716f0a87c",
+      "source_sha256": null,
+      "public_sha256": "400c00616608c2387ed85ab3315f2ece381efa38120e55d571152fd213441a03",
+      "adaptation": "Public-only configuration, manifest, documentation or validation integration."
+    },
+    {
+      "path": "tests/test_public_r2_port.py",
+      "before_public_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "60a8396a646aff818832abebae8151701bf903bffa65546571a7f3c257fcece5",
+      "adaptation": "Public-only configuration, manifest, documentation or validation integration."
+    },
+    {
+      "path": "tests/test_docs_structure.py",
+      "before_public_sha256": "b7d7ea7bdf93f137bdc305752bff326bbce59a297d43bf46eb4307cd7bd3437b",
+      "source_sha256": null,
+      "public_sha256": "e6aeed831b5010b73f35f6bacb7cc82f350d49e5a5955cbd17dd1899b68b820d",
+      "adaptation": "Retain publication-plane ownership checks and require the operated private R2 store rather than the historical GCS diagram label."
+    }
+  ],
+  "metadata_write_order": [
+    "publication/r2-publication-transport-port-20261103.json",
+    "publication/source-map.json"
+  ],
+  "operation_flags_scope": "Top-level operation flags describe preparation at prepared_at_jst. Later commits and remote refs record subsequent Git publication.",
+  "pre_push_validation": {
+    "date_jst": "2026-11-04",
+    "initial_documentation_failure": "The README diagram had moved to the operated R2 store, but one ownership test still required the historical GCS label.",
+    "correction": "Update that existing assertion to the operated private R2 store; preserve the remaining media, publication and private-boundary checks.",
+    "production_or_cloud_mutation": false,
+    "status": "PASS",
+    "checked_at_jst": "2026-11-04T07:05:43+09:00",
+    "focused_python_passed": 74,
+    "focused_python_subtests_passed": 14,
+    "documentation_boundary_passed": 31,
+    "documentation_boundary_subtests_passed": 1284,
+    "worker_tests_passed": 22,
+    "local_worker_node": "24.21.0",
+    "ci_worker_node": "22",
+    "source_map_and_port_record_digests": "PASS",
+    "public_language": "PASS"
+  }
+}

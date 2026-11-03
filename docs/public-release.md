@@ -55,8 +55,11 @@ these files or grant recovery authority.
   and rules, and Discord/Slack routing policy.
 - Durable operational reliability rollups, external public-video evidence,
   and the single-writer notification policy.
-- Public-safe Raspberry Pi publisher source, static assets, GCS command
-  construction, and Cloudflare Worker source under `ops/public-publisher/`.
+- Public-safe Raspberry Pi publisher source, static assets, R2 transport and
+  receipt reconciliation, retained GCS command construction, and Cloudflare
+  Worker source under `ops/public-publisher/`. The
+  [R2 guide](v3/r2-publication-transport.md) separates source validation from
+  installation and cloud publication.
 - Host-maintenance decision logic and inert unit examples for GPU startup,
   postboot readiness, and read-only NVIDIA package observation.
 - Connectivity-aware FFmpeg launch suppression, browser-only recovery, and

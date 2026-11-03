@@ -19,7 +19,8 @@ code path and regression tests. It does not require a complete repository tour.
 | How was YouTube checked during the October 13 manual Twitch renewal? | [Historical session reducer](../ops/relay/twitch_session.py), [adapter](../ops/relay/twitch_daily.py), and [tests](../tests/test_twitch_daily.py). The October 20 keeper is a different implementation. |
 | Why did a current warning close without repairing history? | [Upload-source classifier](../src/stream_core/notifications/upload_source.py) and [tests](../tests/test_upload_source_recovery.py). |
 | How are multiple probes combined without authorizing recovery? | [Route observer](../ops/scripts/route_network_observer.py) and [tests](../tests/test_route_network_observer.py). |
-| Are the current page's assets included in the staged public upload? | [Uploader](../ops/public-publisher/site/scripts/push_to_gcs.py) and [frozen-upload test](../tests/test_public_publisher_build.py). |
+| Are the current page's assets included in the staged public upload? | [R2 uploader](../ops/public-publisher/site/scripts/push_to_r2.py), [portable manifest test](../tests/test_public_r2_port.py), and [retained GCS checks](../tests/test_public_publisher_build.py). |
+| How does R2 prefer IPv6 without replaying an uncertain write? | [Transport](../ops/public-publisher/site/scripts/r2_network.py), [receipt tests](../ops/public-publisher/site/tests/test_publication_receipts.py), and [transport guide](v3/r2-publication-transport.md). |
 
 The remaining map is a detailed reference. Source tests and port checks remain
 separate from native qualification, deployed authority, and live reception.

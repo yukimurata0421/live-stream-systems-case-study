@@ -7,6 +7,21 @@ changed recently, what has not been observed yet, and what is deliberately
 disabled. Other pages describe designs and dated evidence and link here instead
 of repeating these items.
 
+## Public R2 Transport Source Port (2026-11-03 JST)
+
+The public checkout now includes the R2 uploader and Worker, destination-bound
+per-object receipts, bounded GET retries, independent publication of fresh
+feeds, and a two-connection HTTPS pool. New connections prefer IPv6 with a
+shared one-second TCP/TLS budget before IPv4 fallback. A service-only resolver
+example retains IPv4 DNS transport while allowing both connection families.
+
+The [transport guide](v3/r2-publication-transport.md) describes configuration,
+offline checks and remaining limits. The
+[port record](../publication/r2-publication-transport-port-20261103.json)
+identifies the selected source candidates and validation. This port changes
+the public source tree only; it does not deploy a service or Worker, upload
+objects, alter host DNS, or establish external viewer reception.
+
 ## Observation Release Provenance (2026-11-03 JST)
 
 The [release contract](v3/observation-release-provenance.md) now builds only from a
@@ -271,8 +286,8 @@ external-result import was also healthy with three passing regions per target.
 
 The [dated record](v3/r2-publication-and-freshness-case-study.md) separates the
 operated changes, subsequent diagnosis, status separation and response-time observations.
-This public update adds the record only; it does not transfer the matching R2
-code or deploy the public example.
+That October 27 public update added the record only. The later November 3
+R2 source port is listed above; neither source update deploys the public example.
 
 ## Production Route
 
