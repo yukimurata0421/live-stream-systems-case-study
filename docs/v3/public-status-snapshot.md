@@ -54,16 +54,15 @@ The production monitoring stack remains private. The public path is a reduced
 snapshot pipeline:
 
 1. Private Prometheus/Loki/Grafana evidence remains on `arena-server` (HP ProDesk).
-2. The Raspberry Pi-side collector initiates HTTP GETs to the Pi-local
-   `http://127.0.0.1:8088/grafana` path.
-3. Pi nginx proxies those requests to arena-server Grafana.
-4. arena-server Grafana serves datasource proxy JSON from private Prometheus/Loki
-   evidence, and the JSON response returns over the same Pi nginx path.
-5. A Raspberry Pi-side collector emits allowlisted JSON fields for public
-   display.
-6. Static assets and sanitized JSON are pushed outbound from Raspberry Pi to
-   GCS.
-7. Cloudflare serves the public domain and applies short cache lifetimes, so
+2. The owner-side projection queries private sources, sanitizes them, and records
+   allowlisted artifacts with their source boot identity and original age.
+3. The Raspberry Pi initiates an authenticated read-only SSH request for that
+   bundle, with a nonce-bound timing envelope.
+4. The Pi validates each schema and original-age proof. Invalid or missing
+   artifacts retain their previous bytes and age; a fetch does not renew them.
+5. Static assets and sanitized JSON are pushed outbound from Raspberry Pi to
+   private R2. GCS remains a retained installation example.
+6. The Cloudflare Worker reads that bucket and applies short cache lifetimes, so
    public status reads terminate at the static edge instead of consuming home
    uplink bandwidth.
 
@@ -71,6 +70,10 @@ There is no reason for public browsers to reach the home network, Grafana,
 Prometheus, Loki, or the k3s runtime directly. Generated JSON snapshots are also
 not committed to this repository; they are live artifacts with freshness
 semantics, not source files.
+
+The earlier Pi-local Grafana proxy and individual collectors remain in source
+as legacy paths. The current build fetches the owner-generated bundle instead;
+see the [projection contract](observation-standardization.md#public-projection).
 
 This boundary is specifically for `yukimurata0421.dev`. Non-static operational
 access is outside the static snapshot collector and the `yukimurata0421.dev`

@@ -148,8 +148,8 @@ snapshot; the path is described once in
 [architecture](architecture.md#public-status-path).
 
 The public status site at <https://yukimurata0421.dev/> is a separate,
-sanitized evidence surface. It shows a static GCS + Cloudflare snapshot with
-freshness, decision checks, guardrails, trends, and recovery-boundary summaries;
+sanitized evidence surface. It shows a static private R2 + Cloudflare Worker
+snapshot with freshness, decision checks, guardrails, trends, and recovery-boundary summaries;
 it does not expose Grafana, Prometheus, Loki, raw logs, credentials, or
 home-network ingress, and public readers do not consume the home uplink. The
 boundary is documented in

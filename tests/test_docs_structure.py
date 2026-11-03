@@ -360,7 +360,12 @@ class PublicDocsStructureTests(unittest.TestCase):
         for owner in ("HP ProDesk", "Dell", "NVENC", "RTMPS over a private tunnel", "OCI", "YouTube", "Twitch", "fallback only"):
             with self.subTest(media_owner=owner):
                 self.assertIn(owner, media)
-        for owner in ("Grafana", "Prometheus", "Loki", "Pi-local Grafana proxy", "arena-server", "snapshot collectors", "Private R2 (operated store)", "Cloudflare"):
+        for owner in (
+            "Grafana", "Prometheus", "Loki", "arena-server",
+            "owner-side queries and sanitization", "allowlisted projection bundle",
+            "Pi-initiated read-only SSH pull", "Pi: schema and original-age validation",
+            "Private R2 (operated store)", "Cloudflare",
+        ):
             with self.subTest(publication_owner=owner):
                 self.assertIn(owner, publication)
         self.assertNotIn("cra-01", media + publication)

@@ -99,8 +99,8 @@ route result, not a baseline for the changed uplink or OCI relay.
 [Encoder upload case study](v3/encoder-upload-case-study.md),
 [dated FPS comparison](v3/encoder-fps-tuning-2026-05-31.md).
 
-The Pi's publication to GCS and Cloudflare moves public status reads off the
-home uplink. OCI fanout addresses the cost of sending media separately to
+The Pi's publication to private R2 and the Cloudflare Worker moves public status
+reads off the home uplink. OCI fanout addresses the cost of sending media separately to
 YouTube and Twitch. These solve different constraints; static publication is
 not a video relay, and a shared relay adds a dependency. Recovery deployment
 and its limits are covered by the [current OCI delivery record](v3/self-healing-oci-fanout.md),

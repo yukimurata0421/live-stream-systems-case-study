@@ -96,14 +96,15 @@ entrypoint; Dell's media path and local CRA processing remain separate.
 
 ### Public status
 
-Internal monitoring stays private. Raspberry Pi's snapshot collectors pull
-filtered information, build static files, and upload them to the public edge.
-Public readers do not connect to the private monitoring services.
+Internal monitoring stays private. The observation owner on arena-server queries
+and sanitizes the source evidence. The Raspberry Pi pulls that projection bundle,
+validates its schemas and original age, assembles static files, and uploads them
+to the public edge. Public readers do not connect to private monitoring services.
 
 ```mermaid
 flowchart TB
-    GRAF["arena-server (HP ProDesk): private Grafana / Prometheus / Loki"] -->|"Pi-local Grafana proxy / read-only GET"| PI["Pi: snapshot collectors + filtered static files"]
-    ARENA["arena-server: relay / Twitch observations"] -->|"read-only pull"| PI
+    SOURCES["arena-server (HP ProDesk): private Grafana / Prometheus / Loki; relay / Twitch observations"] -->|"owner-side queries and sanitization"| BUNDLE["arena-server: allowlisted projection bundle"]
+    BUNDLE -->|"Pi-initiated read-only SSH pull"| PI["Pi: schema and original-age validation; static files"]
     PI -->|"outbound upload"| STORE["Private R2 (operated store)"]
     STORE --> CF["Cloudflare: public status"]
 ```

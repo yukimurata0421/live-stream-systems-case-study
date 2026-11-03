@@ -27,15 +27,19 @@ read-only projection gains no delivery provider or recovery authority.
 
 | Host or edge | Role | Runs |
 | --- | --- | --- |
-| HP ProDesk `arena-server` | ADS-B reception and monitoring | Airspy USB receiver, `airspy_adsb`, readsb; the monitor service `stream-v3-arena-monitor` (YouTube resolver and watchdog, stream watchdog, notifications, SLI, exporter); Prometheus, Loki, and Grafana in a local k3s; relay observation over the private tunnel; local host clock observer and read-only clock mesh |
+| HP ProDesk `arena-server` | ADS-B reception and monitoring | Airspy USB receiver, `airspy_adsb`, readsb; the monitor service `stream-v3-arena-monitor` (YouTube resolver and watchdog, stream watchdog, notifications, SLI, exporter); host monitoring stack with Prometheus, Loki, and Grafana; owner-side public projection; relay observation over the private tunnel; local host clock observer and read-only clock mesh |
 | Dell workstation `delivery-host` | Video production and upload | Dell-side readsb and modified tar1090 endpoint; k3s `stream-v3-runtime` (map rendering, precipitation, PulseAudio, AutoDJ, FFmpeg/NVENC, fast recovery); the fallback Deployment and its controller; an independent RAM return-feed video observer; a separate host clock observer and explicit manual-maintenance command |
 | OCI VM | Media fan-out | MediaMTX relay, timestamp-rebasing YouTube copy and keeper; read-only facts endpoints and host clock observer |
-| Raspberry Pi `publisher-host` | Public status publisher | nginx `/grafana/` proxy to arena-server Grafana, snapshot collectors, host clock observer and static site build; the operated uploader targets private R2 |
+| Raspberry Pi `publisher-host` | Public status publisher | Read-only projection-bundle fetch, schema and original-age validation, host clock observer and static site build; the operated uploader targets private R2 |
 | Private R2 + Cloudflare Worker | Operated public static edge | Serves <https://yukimurata0421.dev/> from sanitized uploaded files; the public checkout includes portable R2 and retained GCS examples |
 | `cra-01` | CRA central host | Policy/audit service and independent host clock observer; the public CRA remains `dry_run` and takes no part in the media route |
 
 Monitoring and ADS-B reception share the ProDesk; video production has the Dell
 to itself. The [hardware selection](hardware-selection.md) explains why.
+The [retirement checkpoint](v3/observation-standardization.md#retirement-and-rollback)
+records the former Kubernetes Prometheus/Grafana replicas at zero, with their
+storage and configuration retained. This did not retire the remaining Kubernetes
+observation workloads. Host monitoring configuration is under `ops/monitoring/`.
 
 ## Overview
 
@@ -268,14 +272,19 @@ cannot grant recovery authority or extend CRA authorization.
 ## Public Status Path
 
 ```text
-Pi collector -- HTTP GET --> Pi-local /grafana/ proxy --> arena-server Grafana
-             <-- datasource JSON (Prometheus / Loki) --
-Pi collector -- relay and Twitch observations, read-only pull --> arena-server
-Pi -> filtered static files -> private R2 -> Cloudflare Worker -> yukimurata0421.dev
+arena-server: private source queries -> sanitization -> allowlisted projection bundle
+Pi -- authenticated read-only SSH pull with nonce --> arena-server bundle reader
+Pi <-- bundle with source boot identity and original-age proof -- arena-server
+Pi: schema and age validation -> static files -> private R2 -> Cloudflare Worker
+Cloudflare Worker -> yukimurata0421.dev
 ```
 
-For public collection the Pi initiates every request; arena-server never pushes
-publication data to it. The separate read-only clock mesh can probe the Pi
+Source queries and JSON generation belong to arena-server. The Pi initiates the
+bundle request and validates the response; fetching an old artifact does not
+renew its age. The earlier Pi-local Grafana proxy and individual collector sources
+remain legacy references, outside the current `build_public.py` JSON path.
+Their presence in the checkout does not establish that they are loaded services.
+The separate read-only clock mesh can probe the Pi
 clock; that is not a publication or control channel. Public readers
 reach only the static edge, so they do not load the home uplink and cannot
 reach Grafana, Prometheus, Loki, raw logs, credentials, or the home network.
@@ -357,4 +366,4 @@ source or monitoring warning is not treated as a stream-restart condition.
 | `deploy/k3s/v2-state-mirror` | Optional read-only state mirror used during migration |
 | `ops/selfheal/` | Keeper, fallback controller, and example units |
 | `ops/monitoring/` | Prometheus, Loki, Grafana, and Alloy configuration |
-| `ops/public-publisher/` | Pi collectors, site, and uploader |
+| `ops/public-publisher/` | Shared projection helpers, Pi bundle validation, static site, and uploaders |

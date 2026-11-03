@@ -37,7 +37,7 @@
       "decision": "Optional Airspy reception guard; preserve the durable one-extra-attempt cap, remove personal configuration writers and keep raw evidence private.",
       "before_sha256": "d2268fba12ef09d57e492f92569838989f651d84fc89d8e3d4d242420cac01ba",
       "source_sha256": "e8ad53fd1e34398253c585162a2f6dcda8703eb93cedf9ff68ecc85ed37db47f",
-      "public_sha256": "4de3863cec5af4c8819ccc03948cb6d58150ca16885e6c5f951dda92702b2dd6",
+      "public_sha256": "4bd1ea4a6b709235b8e0b79e832d0f2757ad129565202d848c841c78a77d7c2b",
       "port_date_jst": "2026-10-30",
       "pre_documentation_restructure_sha256": "00b596e75b50eaedbd3bed4ebc79e71d882e7049e72516aec95dfc0860ed015e",
       "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json.",
@@ -69,7 +69,9 @@
       "notification_observation_time_source_sha256": null,
       "before_r2_transport_port_sha256": "6c28b134f7809d8b0877f94e780a38c3b4a8c80fa8fb706172a7ab3e5c8ccf07",
       "r2_transport_source_sha256": null,
-      "r2_transport_port": "publication/r2-publication-transport-port-20261103.json"
+      "r2_transport_port": "publication/r2-publication-transport-port-20261103.json",
+      "before_publication_documentation_reconciliation_sha256": "4de3863cec5af4c8819ccc03948cb6d58150ca16885e6c5f951dda92702b2dd6",
+      "publication_documentation_reconciliation": "2026-11-04"
     },
     {
       "path": "configs/auto_dj_classification_overrides.json",
@@ -351,7 +353,7 @@
       "decision": "Describe independent upload observation and preserve the control and SLO boundaries.",
       "before_sha256": "ae7e39d185704eed824fec533351f4713fa3369815ad95cb92647279e8304e7b",
       "source_sha256": null,
-      "public_sha256": "a2b2c8a4f0eabe2f57501ba23ead3934ff34f2d8da50329a070cd68848bccd82",
+      "public_sha256": "2632f00d808c94f7a433c35b5a4f7244e8162b70b28ae3a1bb2d9a5ee95c36aa",
       "port_date_jst": "2026-11-02",
       "pre_documentation_restructure_sha256": "5ae4f928c8d5f77be2e827787230606ffbf1e4d7c97d62b9d3afe0bf43048e93",
       "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json.",
@@ -379,7 +381,9 @@
       "thumbnail_k3s_migration": "publication/thumbnail-k3s-migration-20261101.json",
       "before_r2_transport_port_sha256": "63325eb09b905f71cccbe692fad231bcc1e1f6b396280159e3b8af40d29322da",
       "r2_transport_source_sha256": null,
-      "r2_transport_port": "publication/r2-publication-transport-port-20261103.json"
+      "r2_transport_port": "publication/r2-publication-transport-port-20261103.json",
+      "before_publication_documentation_reconciliation_sha256": "a2b2c8a4f0eabe2f57501ba23ead3934ff34f2d8da50329a070cd68848bccd82",
+      "publication_documentation_reconciliation": "2026-11-04"
     },
     {
       "path": "docs/current-status.md",
@@ -465,7 +469,7 @@
       "decision": "state the 2026-10-22 local reflex revision against the earlier CRA rationale",
       "before_sha256": "3d53842818d5b5f7edf48217b9e9d47ca07918644f151ddf519ee492a3a0e238",
       "source_sha256": null,
-      "public_sha256": "9bcee0fde7d6644a4b1fc7a194d5fe34b708fcd8d11335d946a29aefcf39ee98",
+      "public_sha256": "dbde90afda1b0488c1c2ccbb31be6d89e01ae385420efafe0fb4fce978aea806",
       "port_date_jst": "2026-10-22",
       "pre_documentation_restructure_sha256": "fdda563dc1d60d8b4bae0097ddf03f65e09ca4e594e397af5976808af0f57403",
       "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json.",
@@ -477,7 +481,9 @@
       "before_fallback_docs_sha256": "9cf6cc5eb1fedfc8e43c0adaa8cbc6de7d6479b03ce85366ccbf8543d3926209",
       "fallback_docs_reconciliation": "fallback-docs-consolidation-20261031",
       "before_boottime_media_health_sha256": "cd2c159b9e4261b397e85623ca4625f774f2539947cfc79fd2533edf35573f8b",
-      "boottime_media_health": "boottime-media-health-20261031"
+      "boottime_media_health": "boottime-media-health-20261031",
+      "before_publication_documentation_reconciliation_sha256": "9bcee0fde7d6644a4b1fc7a194d5fe34b708fcd8d11335d946a29aefcf39ee98",
+      "publication_documentation_reconciliation": "2026-11-04"
     },
     {
       "path": "docs/evolution.md",
@@ -494,9 +500,11 @@
       "decision": "English hardware selection retrospective; operator history, verified specifications, historical measurements, and untested options separated.",
       "before_sha256": null,
       "source_sha256": "fa63925672898c7afe5e3a70ae57173e46985694011bd808aeccb28850af4bde",
-      "public_sha256": "07b66c9eec496d793ac214204b9449d349a7d4e14b80e7f3f1cbea5f7eed2dfe",
+      "public_sha256": "82f682bca1f63edd724c54ebb6c33688bbd0ab317b9a66781b6f319a4032964c",
       "pre_documentation_restructure_sha256": "2b669cfabb84aba703fa8ea7d40ce86c16d888380b929dacdbb27f34b8350c4e",
-      "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json."
+      "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json.",
+      "before_publication_documentation_reconciliation_sha256": "07b66c9eec496d793ac214204b9449d349a7d4e14b80e7f3f1cbea5f7eed2dfe",
+      "publication_documentation_reconciliation": "2026-11-04"
     },
     {
       "path": "docs/hiring-reviewer-guide.md",
@@ -543,7 +551,7 @@
       "source_role": "public-documentation",
       "before_sha256": "66ab195158854e1ddbe4ba06dd63fce3442079021b33d759dc9e2f434ec93f2e",
       "pre_twitch_observation_public_sha256": "66ab195158854e1ddbe4ba06dd63fce3442079021b33d759dc9e2f434ec93f2e",
-      "public_sha256": "80c751de3628fee3db8e70c7be71d923a5a23ee6c22819f827cfa3a4b35fad07",
+      "public_sha256": "780f12590641484c2e11de38846deacc61e2a53d5e785eeabdb78e179cccb50c",
       "source_sha256": null,
       "port_date_jst": "2026-10-21",
       "decision": "Twitch observation and OCI-aware notifications; public bindings and English text retained",
@@ -551,7 +559,9 @@
       "clock_monitor_port": "2026-10-22 selected return-feed monitor / OCI files-only backup port; existing changes retained.",
       "pre_clock_documentation_review_public_sha256": "11334a65c761a119a04864c05446e1f99166b9b97ddf017fc1a4be354f20f02b",
       "clock_documentation_review": "2026-10-22 observation-layer table, clock case study and current-status consolidation; no code or runtime change.",
-      "port_record": "publication/youtube-timestamp-origin-docs-20261025.json"
+      "port_record": "publication/youtube-timestamp-origin-docs-20261025.json",
+      "before_publication_documentation_reconciliation_sha256": "80c751de3628fee3db8e70c7be71d923a5a23ee6c22819f827cfa3a4b35fad07",
+      "publication_documentation_reconciliation": "2026-11-04"
     },
     {
       "path": "docs/operational-case-studies.md",
@@ -828,7 +838,7 @@
       "decision": "Pi publisher source reconciliation, portable paths, English source guide, and mock-based validation.",
       "before_sha256": "13f8a22fed3663e4f423d8e86f22a6150437b99c59dc74f876c9b3bbd4dc202a",
       "source_sha256": null,
-      "public_sha256": "e77a21be1494d1da81cb8f3d7038c8e58e7da712efade256006ffe6612a30653",
+      "public_sha256": "cbf0b1b2d17ee1807961b818f29983c438acf16bd796bdf98623018f37260a0e",
       "pre_pi_publisher_source_port_sha256": "9c7649fba1de17fa7cfbd9a5f19af6dd18d7be5c29f80b15f12ec50b512d88ec",
       "pi_publisher_source_port": "2026-10-14 source reconciliation; portable English code and retained public protections; no live changes.",
       "pre_r2_publication_docs_sha256": "2aaaa185daa40778e62f48afcff2a223d3cdc0e7ac0367f620bcd9d758c8493c",
@@ -837,7 +847,9 @@
       "fallback_docs_reconciliation": "fallback-docs-consolidation-20261031",
       "before_r2_transport_port_sha256": "8607cf911dc854b305399d75060a3ad6a503d6be271c59e005aed06a0d1ae276",
       "r2_transport_source_sha256": null,
-      "r2_transport_port": "publication/r2-publication-transport-port-20261103.json"
+      "r2_transport_port": "publication/r2-publication-transport-port-20261103.json",
+      "before_publication_documentation_reconciliation_sha256": "e77a21be1494d1da81cb8f3d7038c8e58e7da712efade256006ffe6612a30653",
+      "publication_documentation_reconciliation": "2026-11-04"
     },
     {
       "path": "docs/v3/public-source-port-2026-10-13.md",
@@ -2165,12 +2177,14 @@
       "source_role": "public-pi-publisher-port",
       "before_sha256": null,
       "source_sha256": null,
-      "public_sha256": "784a9dd135ac25d1bae841618fa2496cba015a1951e9613bbf9269a667edbef5",
+      "public_sha256": "311ce49940d3f99753b8a8fa921e0c81c387f2a41a54f11cd09cc9bb334cdbc9",
       "pi_publisher_source_port": "2026-10-14 source reconciliation; portable English code and retained public protections; no live changes.",
       "decision": "Pi publisher source reconciliation, portable paths, English source guide, and mock-based validation.",
       "before_r2_transport_port_sha256": "a880b9130ace2049cb9b57c03e7cd813b5f537fd47b5bb0e3982063a38454995",
       "r2_transport_source_sha256": null,
-      "r2_transport_port": "publication/r2-publication-transport-port-20261103.json"
+      "r2_transport_port": "publication/r2-publication-transport-port-20261103.json",
+      "before_publication_documentation_reconciliation_sha256": "784a9dd135ac25d1bae841618fa2496cba015a1951e9613bbf9269a667edbef5",
+      "publication_documentation_reconciliation": "2026-11-04"
     },
     {
       "path": "ops/public-publisher/site/public/assets/dashboard-20261013.css",
@@ -4357,7 +4371,7 @@
       "decision": "adapted-english-and-portable-bindings",
       "before_sha256": "f00a60e74106a91f741d481a5bdb6740868ce7ad8b7984b9ed3a568809c018cd",
       "source_sha256": "252ebbbed3ab9b440352c564d8cdbc7b62cc2de0e7a792c019dc1ecb41ab6161",
-      "public_sha256": "e6aeed831b5010b73f35f6bacb7cc82f350d49e5a5955cbd17dd1899b68b820d",
+      "public_sha256": "c76230ad0af4be801cb0197b666dc6dc481dc1ab1e2e13d7a08c29716f6cbee5",
       "before_unicode_source_sha256": "ad687380f09c8a9fb2642a991732247c0a40a804df9838b2c4a1f5b9fa7fd070",
       "unicode_source_change": "English authored text; Unicode fixture values preserved with explicit escapes.",
       "port_date_jst": "2026-10-22",
@@ -4365,7 +4379,9 @@
       "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json.",
       "prior_public_sha256": "e141078da1ceb3cc82c5d67016949daad592bbf46d048c6dca33e42efbaa0dd9",
       "layout_update": "Current CRA and Stream support separation, 2026-10-26",
-      "r2_publication_record": "publication/r2-publication-transport-port-20261103.json"
+      "r2_publication_record": "publication/r2-publication-transport-port-20261103.json",
+      "before_publication_documentation_reconciliation_sha256": "e6aeed831b5010b73f35f6bacb7cc82f350d49e5a5955cbd17dd1899b68b820d",
+      "publication_documentation_reconciliation": "2026-11-04"
     },
     {
       "path": "tests/test_encoder_rate_derivation.py",
@@ -7012,8 +7028,10 @@
       "decision": "selective-port-with-portable-configuration",
       "before_sha256": null,
       "source_sha256": null,
-      "public_sha256": "c9286076e341973c636dd0f96946208d4c294da9e1dcafb9262041bb1db0c38a",
-      "r2_transport_port": "publication/r2-publication-transport-port-20261103.json"
+      "public_sha256": "1c94b29cd388359ff09baa81fd3b449f36065686bdd7dc24cb354c78d6647de0",
+      "r2_transport_port": "publication/r2-publication-transport-port-20261103.json",
+      "before_publication_documentation_reconciliation_sha256": "c9286076e341973c636dd0f96946208d4c294da9e1dcafb9262041bb1db0c38a",
+      "publication_documentation_reconciliation": "2026-11-04"
     },
     {
       "path": "ops/public-publisher/site/cloudflare-worker/src/r2.js",
@@ -7203,6 +7221,15 @@
       "source_sha256": null,
       "public_sha256": "be840971093c43323ea3fd6a64d0fd931a702ee8ad1f3ac72a1b5947278e6808",
       "r2_transport_port": "publication/r2-publication-transport-port-20261103.json"
+    },
+    {
+      "path": "docs/v3/public-status-snapshot.md",
+      "source_role": "public-documentation",
+      "source_sha256": null,
+      "decision": "Align the public snapshot boundary with owner-generated bundles and the operated private R2 path.",
+      "before_publication_documentation_reconciliation_sha256": "7a9d2af5b573aac982e2f8db4b222f70e15e01d15e4b1d4cb530b22eacaa0eb0",
+      "public_sha256": "fe9fa584be80be1a6caf5b602d121be6a21093269911c946c6303a4bd8da927f",
+      "publication_documentation_reconciliation": "2026-11-04"
     }
   ],
   "omissions": [
@@ -7672,5 +7699,20 @@
     "deployment_performed": false,
     "commit_or_push_performed": false,
     "source_includes_uncommitted_candidates": true
+  },
+  "publication_documentation_reconciliation": {
+    "date_jst": "2026-11-04",
+    "base_public_commit": "ecc1d4ee2e02888a8a71c333e8defdc7265ab06b",
+    "scope": "Public documentation, publication diagrams and their existing ownership regression; no runtime or installation configuration change.",
+    "corrections": [
+      "Host monitoring placement and retired Kubernetes Prometheus/Grafana replicas.",
+      "Owner-side JSON generation and Pi-side bundle validation instead of standalone Pi queries.",
+      "Fixed bundle reader, SSH alias and external machine fingerprint required for installation.",
+      "Operated private R2 path separated from retained GCS examples and dated records.",
+      "Current Reliability v6 bundle separated from the retained standalone v5 collector."
+    ],
+    "historical_records_preserved": true,
+    "deployment_performed": false,
+    "production_runtime_changed": false
   }
 }

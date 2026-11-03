@@ -25,30 +25,41 @@ pending delivery only. The [source guide](../../ops/public-publisher/site/README
 describes portable setup and offline validation. Live configuration, generated
 snapshots, and the older machine-specific Japanese operations notes are excluded.
 
+The later [observation contract](observation-standardization.md#public-projection)
+moves source queries, sanitization and JSON generation to arena-server. The
+current bundle preserves Reliability v6; the dated v5 port and individual
+collector sources remain historical references.
+
 ## Data Flow
 
 ```text
-private observability evidence
-  -> publisher-initiated collection
-  -> allowlisted and redacted JSON
-  -> static site tree
+arena-server: private evidence -> source queries and sanitization
+  -> allowlisted projection bundle with original-age proof
+  -> Pi-initiated read-only fetch, schema and age validation
+  -> static site tree on Pi
   -> outbound private R2 upload (or the retained GCS example)
   -> Cloudflare Worker
   -> public browser
 ```
 
 Public browsers never need a route to the home network or private monitoring
-services. The publisher owns the final transformation and static upload, so a
-change made only on another host can be overwritten by the next publisher
-cycle if the canonical publisher source is not updated as well.
+services. Arena-server owns evidence generation and sanitization; the Pi owns
+bundle validation, presentation timestamps derived from proved age, static
+assembly and upload. Changes must reach the source revision loaded by the
+affected owner. Editing a checkout or a generated artifact alone does not change
+the corresponding recurring job.
 
 ## Canonical Source
 
 The public source is grouped under `ops/public-publisher/`:
 
-- `status/` collects reduced Prometheus and Loki views;
-- `site/scripts/` builds the static tree, creates reliability indicators, and
-  uploads allowlisted objects to the selected store;
+- `status/` provides Prometheus/Loki sanitizers reused by the owner-side
+  projection and static HTML views; its earlier standalone collection path is
+  retained;
+- `site/scripts/collect_observation_bundle.py` fetches the owner-generated
+  bundle and validates schemas and original age;
+- `site/scripts/build_public.py` invokes that fetch and assembles static views;
+  uploader scripts send allowlisted objects to the selected store;
 - `site/public/` contains static HTML, CSS, and JavaScript;
 - `site/systemd/` contains an inert unit example and external environment
   template; and
@@ -56,25 +67,33 @@ The public source is grouped under `ops/public-publisher/`:
 
 Generated JSON, local state, logs, backups, credentials, `node_modules`, and
 Worker local state are not source artifacts and are excluded.
+The owner-side builder is `ops/scripts/stream_v3_public_projection.py`; it uses
+the projection and validation helpers under `site/scripts/`. Individual
+collector entrypoints remain available but are not invoked by the current
+publisher build. The [source guide](../../ops/public-publisher/site/README.md#bundle-source-binding)
+lists the bundle reader and external machine binding required for installation.
 
 ## Sanitization Contract
 
-The collectors enforce these public boundaries:
+Owner-side sanitizers, bundle validation and upload checks enforce these public
+boundaries:
 
 - metric labels use an allowlist rather than copying arbitrary labels;
 - event and error text redacts secret assignments, bearer values, URLs, and IP
   addresses;
 - raw Loki queries are not published;
-- storage destination and monitoring host values must come from an external
-  environment file;
+- storage destinations and credentials come from external configuration; the
+  bundle's fixed SSH alias, source paths and external machine fingerprint must
+  be reviewed for the installation;
 - no credential value is printed as part of validation; and
 - the reliability card is presented as measured evidence with reference lines,
   not a pass/fail guarantee.
 
-If the reliability source refresh fails, an existing snapshot is retained as
-last-good data. Only a first-run failure with no prior snapshot emits an empty
-`measurement unavailable` payload. Publisher success and each collected
-section's success therefore remain separate claims.
+If the reliability source refresh fails, the owner retains any prior artifact
+with its original generation receipt. With no prior artifact, the bundle omits
+that observation. The Pi retains its last accepted file; it does not turn a
+missing source into a newly healthy snapshot. Publisher success and each
+observation's freshness therefore remain separate claims.
 
 The retained GCS upload step freezes only the fixed public allowlist into a private
 temporary directory. It rejects links, non-regular or oversized files,

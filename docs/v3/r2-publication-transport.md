@@ -93,10 +93,16 @@ check; local fixture success cannot establish either.
 The shipped service still selects the retained GCS uploader. Installing R2 is
 an explicit operator action, outside public CI:
 
-1. Install the source beneath `/opt/stream-v3-public-publisher/`. Configure the
-   existing collectors using external environment values and read-only bridges
-   described in the [source guide](../../ops/public-publisher/site/README.md).
-   `STREAM_V3_EGRESS_SSH_TARGET` selects the egress projection's monitoring alias.
+1. Install the source beneath `/opt/stream-v3-public-publisher/` and provision
+   the owner-generated bundle described in the
+   [source binding](../../ops/public-publisher/site/README.md#bundle-source-binding).
+   The current build fetches through the fixed `arena-server` SSH alias and the
+   remote reader at `/opt/stream-v3-public-projection/current/ops/scripts/stream_v3_public_projection.py`.
+   The reader expects `/var/lib/stream-v3-public-projection/bundle.json`.
+   Supply the publisher user's external SSH configuration and an external
+   `site/scripts/clock-peers.json` with the intended owner's `arena_machine_sha256`.
+   Review these fixed bindings for the installation; older collector environment
+   variables, including `STREAM_V3_EGRESS_SSH_TARGET`, do not select this bundle.
 2. Merge `systemd/stream-v3-r2-publisher.env.example` into the service's existing
    `/etc/default/stream-v3-public-publisher` environment. Set the bucket, private
    status path and credential-file path. Keep the token in a separate mode-0600
