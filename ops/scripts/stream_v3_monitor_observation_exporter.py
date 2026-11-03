@@ -37,7 +37,7 @@ def main():
     effective=dict(vars(a))
     if a.release_registry:effective['release_registry_sha256']=hashlib.sha256(a.release_registry.read_bytes()).hexdigest()
     config=hashlib.sha256(json.dumps(effective,default=str,sort_keys=True).encode()).hexdigest()
-    release_audit=CachedAudit(a.release_registry) if a.release_registry else None
+    release_audit=CachedAudit(a.release_registry,background=True) if a.release_registry else None
     class Handler(exporter.BaseHTTPRequestHandler):
         def do_GET(self):
             if self.path!='/metrics':self.send_error(404);return
@@ -59,6 +59,8 @@ def main():
         def log_message(self,*_):pass
     server=exporter.Server(('127.0.0.1',a.port),Handler)
     print(json.dumps({'source_hash':digest,'config_hash':config,'port':server.server_address[1]}),flush=True)
-    server.serve_forever()
+    try:server.serve_forever()
+    finally:
+        if release_audit:release_audit.close()
 
 if __name__=='__main__':main()

@@ -15,7 +15,19 @@
     "build_commit": "14bad6cb66f868a6b6aec56dbeef3c2f967fb9ca",
     "read_only_source_and_configured_entry_audit": "PASS",
     "all_producers_redeployed": false,
-    "continuous_audit_metrics_connected": false
+    "continuous_audit_metrics_connected": true,
+    "continuous_source_groups": 20,
+    "configured_entrypoints": 15,
+    "audit_code_commit": "948a267996a5634f993b9390af8f9180a76499ae",
+    "config_commit": "0438b3bcfcc07a18e6c492197af72c690b3bdb4f",
+    "confirmation_rule_commit": "4246159a0f99feb611273e221e03e9f88c963355",
+    "background_verification": true,
+    "age_clock": "same-host CLOCK_BOOTTIME from audit start",
+    "stale_results_reused_as_positive": false,
+    "source_mismatch_and_unknown_share_one_episode": true,
+    "postdeployment_samples": 7,
+    "periodic_refresh_observed": true,
+    "continuous_metrics_status": "PASS; source and configured entrypoints only, not loaded-memory or service-health attestation"
   },
   "player": {
     "status": "UNKNOWN",
@@ -24,7 +36,19 @@
     "official_sample_headless_verified_seconds": 34.6,
     "production_headed_verified_seconds": 39.0,
     "production_outage_proven": false,
-    "provider_failover_verified": false
+    "provider_failover_verified": false,
+    "later_private_experiment": {
+      "verified_seconds": 73.8,
+      "status": "PASS",
+      "adopted": false
+    },
+    "committed_integration": {
+      "verified_seconds": 37.2,
+      "status": "UNKNOWN",
+      "cleanup_error": "OSError",
+      "adopted": false
+    },
+    "operated_probe_qualified": false
   },
   "retirement": {
     "executed": false,
@@ -36,5 +60,11 @@
     "old_deployment_text_assertions_failed": 4,
     "correction": "Keep unit ownership checks and execute the real build-only wrapper with service-command traps, a fixed pointer and durable-state sentinels.",
     "production_code_changed_for_test_compatibility": false
+  },
+  "validation": {
+    "native_confirmation_rule_scenarios": 9,
+    "media_process_restarted": false,
+    "slo_or_recovery_policy_changed": false,
+    "old_packaged_unit_contract_gaps": 2
   }
 }

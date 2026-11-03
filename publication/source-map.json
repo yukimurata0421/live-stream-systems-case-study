@@ -375,7 +375,7 @@
       "decision": "Record applied independent upload sampling, sustained current-source recovery and the natural notification result.",
       "before_sha256": "1beab3cd3e65147e0fa2d520275c2280dfa86884c6a345efefd32f2dc8469aed",
       "source_sha256": null,
-      "public_sha256": "dbb6ca11e9c670a8126be65f6a01cd495a8fe36470f57898bef7f088cf8890d2",
+      "public_sha256": "c168fc0f309db52536802c36490c88b686be3cf3ec6e64e8c3c5f4ce34ba4b02",
       "port_date_jst": "2026-11-02",
       "documentation_restructure": "New single page for volatile state.",
       "pre_twitch_observation_public_sha256": "040eac29174151f51e473f7f85e4aa23ff994be0079b3d4c011623b6ec7864ca",
@@ -6513,8 +6513,8 @@
       "source_role": "observation-contract-public-port",
       "decision": "Port bounded observation contracts, connected delivery, public projection and reviewed verification evidence.",
       "prior_public_sha256": null,
-      "public_sha256": "cb4fa1487b77d15475b518b93fe0560fec5427e3bf1e19e0d720a721fddc7caf",
-      "source_sha256": "cb4fa1487b77d15475b518b93fe0560fec5427e3bf1e19e0d720a721fddc7caf",
+      "public_sha256": "db1ddda73b88ad3fa1a26b335f17c7520edde9353726fd71010ddc62cb890585",
+      "source_sha256": "db1ddda73b88ad3fa1a26b335f17c7520edde9353726fd71010ddc62cb890585",
       "observation_completion_record": "publication/observation-completion-20261102.json"
     },
     {
@@ -6550,8 +6550,8 @@
       "source_role": "observation-contract-public-port",
       "decision": "Port bounded observation contracts, connected delivery, public projection and reviewed verification evidence.",
       "prior_public_sha256": null,
-      "public_sha256": "f8cf9f54b7ec53597068d7fb690c9e7d8b03eb1723f34dcf9978af8beba28ea2",
-      "source_sha256": "f8cf9f54b7ec53597068d7fb690c9e7d8b03eb1723f34dcf9978af8beba28ea2",
+      "public_sha256": "09b0c1a2eededdcc5aab2164b6e487c62dfafbc50d741c3670e9141337e2aa38",
+      "source_sha256": "09b0c1a2eededdcc5aab2164b6e487c62dfafbc50d741c3670e9141337e2aa38",
       "observation_completion_record": "publication/observation-completion-20261102.json"
     },
     {
@@ -6853,15 +6853,15 @@
       "path": "ops/scripts/stream_v3_release_audit.py",
       "source_role": "observation-release-provenance",
       "decision": "portable-code-and-sanitized-qualification-record",
-      "source_sha256": "06853826346b291d8bb7f9532dac8c25148d0103a27b391ac2bc8075632e68bd",
-      "public_sha256": "06853826346b291d8bb7f9532dac8c25148d0103a27b391ac2bc8075632e68bd"
+      "source_sha256": "ec7a27b05b26a7c791aa99f17e250a7d0f0f76196381680e996f90f5feed2dfc",
+      "public_sha256": "ec7a27b05b26a7c791aa99f17e250a7d0f0f76196381680e996f90f5feed2dfc"
     },
     {
       "path": "ops/scripts/stream_v3_player_av_probe.py",
       "source_role": "observation-release-provenance",
       "decision": "portable-code-and-sanitized-qualification-record",
-      "source_sha256": "9e5c996b18289817c9e22120bd92cd566bb3792879a4a58b5d9576770c98b515",
-      "public_sha256": "9e5c996b18289817c9e22120bd92cd566bb3792879a4a58b5d9576770c98b515"
+      "source_sha256": "7d96ae6d58b57fa076f0013ea89a7cf291f3ef053cc92c84ce1d0c266f0b489f",
+      "public_sha256": "7d96ae6d58b57fa076f0013ea89a7cf291f3ef053cc92c84ce1d0c266f0b489f"
     },
     {
       "path": "ops/scripts/check_observation_catalog.py",
@@ -6888,8 +6888,8 @@
       "path": "tests/test_release_audit.py",
       "source_role": "observation-release-provenance",
       "decision": "portable-code-and-sanitized-qualification-record",
-      "source_sha256": "cab5de5852f05327fd9d52551228053abb2c79add8a6c5acd060b78ed900186a",
-      "public_sha256": "cab5de5852f05327fd9d52551228053abb2c79add8a6c5acd060b78ed900186a"
+      "source_sha256": "6af55f4d1fb5e502ce6a978958b4a112e8ecff7addfa6bf7ffa37f68573aa7c0",
+      "public_sha256": "6af55f4d1fb5e502ce6a978958b4a112e8ecff7addfa6bf7ffa37f68573aa7c0"
     },
     {
       "path": "tests/test_player_av_observation.py",
@@ -6909,8 +6909,8 @@
       "path": "configs/observation/policy-catalog.json",
       "source_role": "observation-release-provenance",
       "decision": "portable-code-and-sanitized-qualification-record",
-      "source_sha256": "8db261e76642effde56e1685274ebefa95567c607c3ba8cc8e0c5c229bbb67ac",
-      "public_sha256": "21f06a6fc8aee2f950368b15553666360a9c3bf97188b949f844e89337c04c4d"
+      "source_sha256": "e0e82a3e2bb8eda02f0570b94cd7729b682ae2deea5ff590c8fc6f65e092ea63",
+      "public_sha256": "572f6e15efde9095b5227c6676c65de9687349327c2e5c2953b2b833f62e1ddd"
     },
     {
       "path": "configs/observation/retirement-plan.json",
@@ -6931,7 +6931,35 @@
       "source_role": "observation-release-provenance",
       "decision": "portable-code-and-sanitized-qualification-record",
       "source_sha256": null,
-      "public_sha256": "82d07e1ab07cbe1f83d7126efca0ca38b378addc4a62007c8c2e44e986b9964d"
+      "public_sha256": "f96599913942a8dbfb31b29595e58ab06de5542565ffa3ce831e8392b25f58e2"
+    },
+    {
+      "path": "ops/scripts/render_provenance_alert.py",
+      "source_role": "continuous-source-provenance",
+      "decision": "portable-code-and-sanitized-qualification-record",
+      "source_sha256": "731d9124dcf43d1d3ed4bbfa0819ed54a0e9f7e73632103ab9eb07cfb3ee8972",
+      "public_sha256": "731d9124dcf43d1d3ed4bbfa0819ed54a0e9f7e73632103ab9eb07cfb3ee8972"
+    },
+    {
+      "path": "ops/monitoring/observation/provenance-alerts.yml.in",
+      "source_role": "continuous-source-provenance",
+      "decision": "portable-code-and-sanitized-qualification-record",
+      "source_sha256": "8b21b2e52fdc883086ea0fe7c3d5e91876600580c1fcb45cafaf8e821f5b2d36",
+      "public_sha256": "8b21b2e52fdc883086ea0fe7c3d5e91876600580c1fcb45cafaf8e821f5b2d36"
+    },
+    {
+      "path": "ops/systemd/stream-v3-monitor-observation.service.d/50-source-provenance.conf.in",
+      "source_role": "continuous-source-provenance",
+      "decision": "portable-code-and-sanitized-qualification-record",
+      "source_sha256": "4263d19bbcf90975cf79a51f97632ae571d1570c16f4134d34ff08fe5c89ac3e",
+      "public_sha256": "4263d19bbcf90975cf79a51f97632ae571d1570c16f4134d34ff08fe5c89ac3e"
+    },
+    {
+      "path": "tests/test_source_provenance_alerts.py",
+      "source_role": "continuous-source-provenance",
+      "decision": "portable-code-and-sanitized-qualification-record",
+      "source_sha256": "37004b5829d00ef83fadabc2fe1ef3e29384daa4b2035c2b5a5f274ee5f7406c",
+      "public_sha256": "37004b5829d00ef83fadabc2fe1ef3e29384daa4b2035c2b5a5f274ee5f7406c"
     }
   ],
   "omissions": [
@@ -7387,7 +7415,9 @@
     "date_jst": "2026-11-03",
     "record": "publication/observation-release-provenance-20261103.json",
     "private_source_snapshots_omitted": true,
-    "player_gate": "UNKNOWN; no old-path retirement",
-    "live_control_or_slo_change": false
+    "player_gate": "Operated probe remains unqualified; old-path retirement and contract cutovers remain held",
+    "live_control_or_slo_change": false,
+    "continuous_metrics_deployed": true,
+    "control_or_slo_change": false
   }
 }

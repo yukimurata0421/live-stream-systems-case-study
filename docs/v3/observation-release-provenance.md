@@ -40,8 +40,12 @@ only generic source-audit tooling; it is not a production installation recipe.
 source/reference matches and configured entrypoints through the existing adapter.
 It distinguishes `committed-artifact` from `legacy-source-pinned`. A source match
 on disk is not proof of bytes loaded in memory, effective credentials, service
-health or viewer reception. The optional adapter connection is implemented and
-tested in isolation; its continuous production metrics remain gated.
+health or viewer reception. The existing adapter now exposes continuous source
+checks without adding a daemon or listener. Background verification cannot hold
+HTTP scrapes open. Age starts at the audit start on the same host boottime; expiry
+or failure removes positive cached results. A single unconfirmed episode remains
+open across mismatch and missing evidence, and clears only after fresh source,
+entrypoint, startup-build and scrape confirmation all succeed.
 
 ## Policy and retirement ownership
 
@@ -71,6 +75,12 @@ first failed because its isolated virtual display loaded a GPU library that
 crashed. Disabling that extension for the probe allowed it to start, but playback
 still stopped. These results remain UNKNOWN; they do not establish a production
 outage or continuous viewer reception.
+
+A later separate-browser experiment observed a continuous interval of decoded
+video and audio. Its committed integration did not reproduce that result and had
+a cleanup failure. The experiment remains private and unqualified for continuous
+operation; the public probe receives only the screenshot-byte saving correction.
+A single successful experiment does not clear the operated-probe gate.
 
 Old-path retirement and remaining adapter cutovers therefore remain gated.
 Existing direct control facts, streaming processes, safety guards, SLO values and

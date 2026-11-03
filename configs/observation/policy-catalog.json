@@ -128,6 +128,39 @@
       "source": {
         "path": "ops/scripts/stream_v3_oci_watchdog.py"
       }
+    },
+    {
+      "id": "release_audit_interval",
+      "value": 60,
+      "unit": "seconds",
+      "owner": "release provenance",
+      "basis": "Policy: background source verification must not delay HTTP scrapes.",
+      "source": {
+        "path": "ops/scripts/stream_v3_release_audit.py",
+        "symbol": "AUDIT_INTERVAL_SECONDS"
+      }
+    },
+    {
+      "id": "release_audit_max_age",
+      "value": 180,
+      "unit": "seconds",
+      "owner": "release provenance",
+      "basis": "Policy: expire evidence from the start of its audit; scrapes never renew it.",
+      "source": {
+        "path": "ops/scripts/stream_v3_release_audit.py",
+        "symbol": "AUDIT_MAX_AGE_SECONDS"
+      }
+    },
+    {
+      "id": "provenance_scrape_max_age",
+      "value": 45,
+      "unit": "seconds",
+      "owner": "release provenance",
+      "basis": "Policy: a frozen scrape cannot confirm producer identity.",
+      "source": {
+        "path": "ops/scripts/render_provenance_alert.py",
+        "symbol": "SCRAPE_MAX_AGE_SECONDS"
+      }
     }
   ]
 }

@@ -122,7 +122,7 @@ async def observe(a):
                     sample["elapsed"] = time.monotonic() - start
                     report["samples"].append(sample)
                     await asyncio.sleep(2)
-                await page.screenshot(path=str(output / "final.png"))
+                (output / "final.png").write_bytes(await page.screenshot())
             finally:
                 await browser.close()
     except Exception as e:

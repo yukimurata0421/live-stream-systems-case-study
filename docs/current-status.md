@@ -15,13 +15,21 @@ reproduced all 385 regular operated files. Activation changed the existing point
 the monitor parent was not restarted and a natural notification child completed.
 
 Nineteen source profiles were rebuilt and a read-only audit matched their source
-files and configured entrypoints. This is not an all-producer redeployment or
-loaded-memory proof. The optional continuous source-audit metrics are implemented
-and tested, with production connection still gated.
+files and configured entrypoints. The existing observer now continuously checks
+20 source groups and 15 configured entrypoints. Code commit `948a267996a5` and its
+committed configuration are deployed with the existing 10% CPU, 96 MiB and 8-task
+limits. This is not an all-producer redeployment or loaded-memory proof.
+HTTP remains independent of background verification; old results expire after
+180 seconds from audit start. The confirmation rule also rejects scrapes older
+than 45 seconds. Mismatch and UNKNOWN share one episode until fresh positive
+confirmation; the 5-minute warning hold is unchanged.
 
 The public-player gate requires 60 seconds of continuous video and decoded audio.
 The production headless attempt reached 37.7 seconds, the official sample 34.6,
 and the repaired software-display attempt 39.0 before stopping. All remain UNKNOWN.
+A later private browser experiment passed 73.8 seconds, but its committed
+integration stopped after 37.2 seconds and failed cleanup. The operated probe
+therefore remains unqualified; that launch mode was not adopted.
 Old-path retirement and remaining adapter cutovers have not been performed.
 See the [dated evidence record](../publication/observation-release-provenance-20261103.json).
 

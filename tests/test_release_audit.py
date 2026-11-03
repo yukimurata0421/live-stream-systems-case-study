@@ -5,6 +5,8 @@ import os
 import select
 import subprocess
 import sys
+import threading
+import time
 from urllib.request import urlopen
 
 import pytest
@@ -65,6 +67,38 @@ def test_pointer_drift_does_not_report_the_unused_old_source_as_current(tmp_path
     assert not module.audit(d)[0]["source_match"]
 
 
+def test_background_audit_never_blocks_http_or_rejuvenates_old_evidence(tmp_path, monkeypatch):
+    p, _ = registry(tmp_path)
+    original = module.audit
+    released = threading.Event()
+    started = threading.Event()
+    def blocked(value):
+        started.set()
+        assert released.wait(3)
+        return original(value)
+    monkeypatch.setattr(module, "audit", blocked)
+    reader = module.CachedAudit(p, background=True)
+    try:
+        assert started.wait(1)
+        before = time.monotonic()
+        assert "stream_v3_release_audit_available 0" in reader.read()
+        assert time.monotonic() - before < .2
+        assert "stream_v3_observed_release_source_match{" not in reader.read()
+        released.set()
+        deadline = time.monotonic() + 2
+        while reader.checked is None and time.monotonic() < deadline:
+            time.sleep(.01)
+        assert "stream_v3_release_audit_available 1" in reader.read()
+        with reader.lock:
+            reader.checked -= 181
+        stale = reader.read()
+        assert 'state="age_exceeded"' in stale
+        assert "stream_v3_observed_release_source_match{" not in stale
+    finally:
+        released.set()
+        reader.close()
+
+
 def test_registry_rejects_paths_and_caches_only_bounded_period(tmp_path):
     p, source = registry(tmp_path)
     reader = module.CachedAudit(p)
@@ -99,6 +133,11 @@ def test_real_adapter_http_reports_source_provenance_separately(tmp_path, case):
         port = json.loads(line)["port"]
         with urlopen(f"http://127.0.0.1:{port}/metrics", timeout=5) as response:
             text = response.read(128 * 1024).decode()
+        deadline = time.monotonic() + 3
+        while "stream_v3_release_audit_available 1" not in text and time.monotonic() < deadline:
+            time.sleep(.02)
+            with urlopen(f"http://127.0.0.1:{port}/metrics", timeout=5) as response:
+                text = response.read(128 * 1024).decode()
         assert 'stream_v3_observed_release_info{component="producer"' in text
         expected = int(case == "matching")
         assert f'stream_v3_observed_release_source_match{{component="producer"}} {expected}' in text

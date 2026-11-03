@@ -1,0 +1,27 @@
+groups:
+  - name: observation-source-provenance
+    interval: 15s
+    rules:
+      - alert: ObservationSourceProvenanceUnconfirmed
+        expr: |
+          vector(1)
+          unless on()
+          (
+            (count(stream_v3_observed_release_source_match{job="stream_v3_monitor_observation",instance="@MONITOR_INSTANCE@"}) == @PRODUCER_COUNT@)
+            and (min(stream_v3_observed_release_source_match{job="stream_v3_monitor_observation",instance="@MONITOR_INSTANCE@"}) == 1)
+            and (@ENTRYPOINT_CONFIRMATION@)
+            and (min(stream_v3_release_audit_available{job="stream_v3_monitor_observation",instance="@MONITOR_INSTANCE@"}) == 1)
+            and (max(stream_v3_release_audit_age_seconds{job="stream_v3_monitor_observation",instance="@MONITOR_INSTANCE@"} + time() - timestamp(stream_v3_release_audit_age_seconds{job="stream_v3_monitor_observation",instance="@MONITOR_INSTANCE@"})) <= @AUDIT_MAX_AGE@)
+            and (min(up{job="stream_v3_monitor_observation",instance="@MONITOR_INSTANCE@"}) == 1)
+            and ((time() - max(timestamp(up{job="stream_v3_monitor_observation",instance="@MONITOR_INSTANCE@"}))) >= 0)
+            and ((time() - max(timestamp(up{job="stream_v3_monitor_observation",instance="@MONITOR_INSTANCE@"}))) <= @SCRAPE_MAX_AGE@)
+            and (count(stream_v3_observer_build_info{job="stream_v3_monitor_observation",instance="@MONITOR_INSTANCE@",source_hash="@SOURCE_HASH@",config_hash="@CONFIG_HASH@"}) >= 1)
+          )
+        for: 5m
+        labels:
+          job: stream_v3_monitor_observation
+          instance: "@MONITOR_INSTANCE@"
+          severity: warning
+          scope: observation
+        annotations:
+          summary: The observation source inventory is not fully confirmed

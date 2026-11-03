@@ -1,0 +1,3 @@
+[Service]
+ExecStart=
+ExecStart=/usr/bin/python3 -I -B @RELEASE_ROOT@/ops/scripts/stream_v3_monitor_observation_exporter.py --state-root @STATE_ROOT@ --clock-mesh @CLOCK_MESH@ --source-host @SOURCE_HOST@ --port 9126 --manifest @RELEASE_ROOT@/release.json --release-registry @RELEASE_REGISTRY@

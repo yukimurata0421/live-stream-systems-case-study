@@ -7,7 +7,15 @@ import json
 from pathlib import Path
 import re
 import subprocess
+import threading
 import time
+
+AUDIT_INTERVAL_SECONDS = 60
+AUDIT_MAX_AGE_SECONDS = 180
+
+
+def boottime():
+    return time.clock_gettime(time.CLOCK_BOOTTIME)
 
 
 def sha(data):
@@ -101,15 +109,63 @@ def render(registry, rows):
 
 
 class CachedAudit:
-    def __init__(self, path, interval=60):
+    def __init__(self, path, interval=AUDIT_INTERVAL_SECONDS, *, background=False, max_age=AUDIT_MAX_AGE_SECONDS):
         self.registry = load(path)
         self.interval = interval
+        self.max_age = max_age
         self.checked = None
         self.metrics = ""
+        self.failed = False
+        self.background = background
+        self.lock = threading.Lock()
+        self.stopping = threading.Event()
+        rows = [{"name": c["name"], "kind": c["kind"], "commit": c.get("commit", self.registry["commit"]),
+                 "source_hash": sha(json.dumps(c["files"], sort_keys=True, separators=(",", ":")).encode()),
+                 "available": False, "source_match": False, "configured_entrypoint_match": None}
+                for c in self.registry["components"]]
+        self.expected = "\n".join(line for line in render(self.registry, rows).splitlines()
+                                  if line.startswith("#") or line.startswith("stream_v3_observed_release_info{")) + "\n"
+        self.worker = None
+        if background:
+            self.worker = threading.Thread(target=self.run, daemon=True, name="release-source-audit")
+            self.worker.start()
+
+    def refresh(self):
+        # Age starts at the oldest possible read, not completion or scrape time.
+        started = boottime()
+        metrics = render(self.registry, audit(self.registry))
+        with self.lock:
+            self.metrics, self.checked, self.failed = metrics, started, False
+
+    def run(self):
+        while not self.stopping.is_set():
+            try:
+                self.refresh()
+            except Exception:
+                with self.lock:
+                    self.failed = True
+            self.stopping.wait(self.interval)
 
     def read(self):
-        now = time.monotonic()
-        if self.checked is None or now - self.checked >= self.interval:
-            self.metrics = render(self.registry, audit(self.registry))
-            self.checked = now
-        return self.metrics
+        now = boottime()
+        if not self.background:
+            if self.checked is None or now - self.checked >= self.interval:
+                self.refresh()
+            return self.metrics
+        with self.lock:
+            checked, failed, metrics = self.checked, self.failed, self.metrics
+        age = None if checked is None else now - checked
+        available = age is not None and 0 <= age <= self.max_age and not failed
+        reason = ("audit_failed" if failed else "not_yet_checked" if age is None
+                  else "fresh" if available else "age_exceeded")
+        result = metrics if available else self.expected
+        result += f"stream_v3_release_audit_available {int(available)}\n"
+        result += f'stream_v3_release_audit_state{{state="{reason}"}} 1\n'
+        if age is not None:
+            result += f"stream_v3_release_audit_age_seconds {age:.6f}\n"
+        return result
+
+    def close(self):
+        self.stopping.set()
+        if self.worker:
+            self.worker.join(timeout=5)

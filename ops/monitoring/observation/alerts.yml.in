@@ -24,14 +24,3 @@ groups:
           scope: observation
         annotations:
           summary: The upload observer differs from the deployed manifest
-      - alert: HostObservationBuildMismatch
-        expr: |
-          (up{job="stream_v3_monitor_observation",instance="@MONITOR_INSTANCE@"} == 1)
-          unless on(job,instance)
-          (stream_v3_observer_build_info{job="stream_v3_monitor_observation",instance="@MONITOR_INSTANCE@",source_hash="@MONITOR_SOURCE_HASH@",config_hash="@MONITOR_CONFIG_HASH@"} == 1)
-        for: 5m
-        labels:
-          severity: warning
-          scope: observation
-        annotations:
-          summary: The monitoring observer differs from the deployed manifest
