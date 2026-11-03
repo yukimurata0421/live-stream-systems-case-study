@@ -77,6 +77,10 @@ contains the actual window and measurements. The earlier
 [checkpoint](../../publication/observation-release-provenance-20261103.json)
 records the preceding unqualified state.
 
+Both the private and portable committed profiles were exercised natively. The
+portable run had a shorter overlapping clock interval than its AV interval; the
+record keeps these windows separate.
+
 AV progress alone does not prove that current content is being received. Native
 seekable ranges and a static player-duration value were rejected as freshness
 proofs. The final probe reuses the existing paired JST/UTC clock reader, keeps its

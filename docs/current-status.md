@@ -24,13 +24,15 @@ HTTP remains independent of background verification; old results expire after
 than 45 seconds. Mismatch and UNKNOWN share one episode until fresh positive
 confirmation; the 5-minute warning hold is unchanged.
 
-The follow-up used code commit `24a3df8bb913` and the actual committed
-player profile. Official embed video, decoded audio and paired displayed clocks
-passed together for 119.17 seconds. The displayed-clock age upper bound was at
-most 30.242 seconds, below the validation-only 60-second ceiling. Existing OCR
-confidence 70 was retained. Observer NTP was synchronized and local clock steps
-were checked. This does not qualify watch-page automation, a scheduled probe,
-long-run reception or a production failover.
+Private code commit `24a3df8bb913` passed overlapping AV and displayed-clock
+verification for 119.17 seconds. The portable profile from public commit
+`8e0bdcdef0d5` then passed independently: AV progressed for 111.84 seconds and
+the overlapping displayed-clock interval covered 94.10 seconds. Its clock age upper
+bound at the interval end was 36.116 seconds, below the validation-only
+60-second ceiling. Existing OCR confidence 70 was retained. Observer NTP was
+synchronized and local clock steps were checked. Code CI passed all three jobs.
+This does not qualify watch-page automation, a scheduled probe, long-run reception
+or a production failover.
 
 Five existing unit base definitions and the effective audit-only override were
 reconciled with the private source baseline; no unit was installed or activated.

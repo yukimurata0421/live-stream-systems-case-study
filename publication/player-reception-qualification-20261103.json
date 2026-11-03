@@ -88,6 +88,26 @@
     "No scheduled player monitoring was enabled.",
     "Raw images, logs, local source snapshots and credentials are excluded from publication."
   ],
-  "qualification_source": "Native private committed artifact. The portable profile is tested separately; this record does not yet claim a second native public-artifact run.",
-  "public_artifact_native_qualified": false
+  "qualification_source": "Native private and portable committed artifacts were independently exercised on the protected receiver.",
+  "public_artifact_native_qualified": true,
+  "public_artifact_qualification": {
+    "code_commit": "8e0bdcdef0d5671361d2ad24e7d0b04bdfa25862",
+    "artifact_sha256": "aeb3b0fa48f4bebbf2ef59bf69cfe7fa2cfd4691928aad29ed5980a2e4bbd5ee",
+    "probe_sha256": "fd5a0bb83c15324acf7280cccc90ef8d5b1e4b8443098342b6f656eccb6eb06d",
+    "observed_window_jst": {
+      "start": "2026-11-03 10:57:12 JST",
+      "end": "2026-11-03 10:59:19 JST"
+    },
+    "status": "PASS",
+    "av_seconds": 111.83998049999354,
+    "overlapping_displayed_clock_seconds": 94.10273353100638,
+    "displayed_clock_age_upper_max_seconds": 26.951,
+    "displayed_clock_age_upper_at_interval_end_seconds": 36.116231774006735,
+    "clock_samples": 10,
+    "verified_clock_samples": 9,
+    "observer_ntp_synchronized": true,
+    "browser_error": null,
+    "code_ci_run": 41563032372,
+    "code_ci_conclusion": "success"
+  }
 }

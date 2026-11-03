@@ -375,7 +375,7 @@
       "decision": "Record applied independent upload sampling, sustained current-source recovery and the natural notification result.",
       "before_sha256": "1beab3cd3e65147e0fa2d520275c2280dfa86884c6a345efefd32f2dc8469aed",
       "source_sha256": null,
-      "public_sha256": "675771db46064eb2b8b75f31eff01e6f53da82a105030dfef0af06995b33689f",
+      "public_sha256": "88cf15538f812400d98a54a2d33c6200276c1469cf44736909b91a3693cf3671",
       "port_date_jst": "2026-11-02",
       "documentation_restructure": "New single page for volatile state.",
       "pre_twitch_observation_public_sha256": "040eac29174151f51e473f7f85e4aa23ff994be0079b3d4c011623b6ec7864ca",
@@ -6936,7 +6936,7 @@
       "source_role": "observation-release-provenance",
       "decision": "portable-code-and-sanitized-qualification-record",
       "source_sha256": null,
-      "public_sha256": "6576fc86212efcb8471eab60d859f34db442ffbeaea984b59e366b06be6c74b2",
+      "public_sha256": "2f8cadf2c39fc94f366e251b32ac491bb5d4a205c3719382bc7d515541f257d3",
       "qualification_follow_up": "publication/player-reception-qualification-20261103.json"
     },
     {
