@@ -1,15 +1,18 @@
 # Scoped Recovery Authority
 
-The current cross-host contract separates observation, authorization, and the
-physical FFmpeg effect. No public checkout, test, or example enables this path.
+The current contract separates observation, signed policy, local evaluation and
+the physical FFmpeg effect. The [CRA contract](../../recovery-control/docs/local-reflex-authority.md)
+owns the local reflex rule; this page describes its Stream integration boundary.
+No public checkout, test or example enables production effects.
 
 ## Responsibility split
 
 | Role | Owns | Must not own |
 | --- | --- | --- |
 | arena-server Monitoring | observation, current state, incident/parity evidence, and facts-only projection | recovery authorization, command delivery, final recovery verdict, or process signaling |
-| cra-01 Central Restart Authority | recovery policy, budget, cooldown, authorization, command lifecycle, and final verification | raw-source ownership or direct process signaling |
-| Dell delivery runtime | signed local facts and one exact, fenced FFmpeg-child effect | incident/SLO policy, action selection, or escalation to container, Pod, Deployment, or host restart |
+| cra-01 CRA central | signed policy versions, limits, audit intake and verification | per-action approval, raw-source ownership or direct process signaling |
+| Dell CRA agent | local evaluation of adopted policy, durable claims and limits, outcome queries | defining policy or sending requests in `dry_run` |
+| Dell Stream Executor | signed local facts and one exact, fenced FFmpeg-child effect | incident/SLO or stall-policy decisions; escalation to container, Pod, Deployment or host restart |
 | Raspberry Pi publisher | allowlisted static status publication | internal databases, credentials, incident judgment, or control feedback |
 
 The target identity is wider than a PID: host, boot, namespace, Pod UID,
@@ -20,10 +23,12 @@ automatic retry signal.
 ## Published integration status
 
 The integrated [`recovery-control/`](../../recovery-control/README.md)
-subproject contains the CRA, facts-only arena projection, Dell Agent, protocol
-schemas, durable fences, and isolated public tests. Its published policy keeps
-production behavior disabled. The reason for applying local transaction
-boundaries, effect fencing, and cross-host reconciliation is documented in
+subproject contains the local agent, signed-policy central service and their
+tests. The Stream tree owns the observer, protocol and physical Executor;
+they are not installed as part of CRA. The operated agent remains `dry_run`.
+The earlier central per-action authorization design is retained in
+[history](../../recovery-control/docs/history.md). The reason for applying local
+transaction boundaries and effect fencing is documented in
 [`why-cra.md`](../../recovery-control/docs/why-cra.md).
 
 The stream delivery tree now publishes the matching

@@ -33,3 +33,10 @@ support, and feature requests for unrelated deployments are out of scope.
 
 Design changes should include a short decision note that covers context,
 decision, consequences, evidence, and alternatives considered.
+
+For documentation, use the [page responsibilities](documentation-model.md).
+Update the owning contract and its entry links together; preserve dated results.
+The [catalog](00_INDEX.md) must include new Stream documents. Refresh the changed
+files' digests in `publication/source-map.json`, then run the documentation,
+public-boundary and language checks. Documentation-only changes do not require
+a live deployment or a new operational exercise.

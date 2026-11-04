@@ -1,0 +1,1089 @@
+{
+  "schema": "stream.documentation_design_review.v1",
+  "review_date_jst": "2026-11-04",
+  "base_public_commit": "8b3c467b4f2653f7399fb247747c3e9b682f5f84",
+  "scope": "Repository-wide Markdown structure and navigation; focused prose reconciliation at entrypoints, ownership contracts and current-status summaries.",
+  "reviewed_markdown_files": 150,
+  "changes": [
+    "Assign one primary role per Stream document in the catalog.",
+    "Keep the overview, rule owners, procedures and dated evidence distinct.",
+    "Preserve the prior status page in a dated archive and retain old section destinations.",
+    "Reconcile bounded player and watchdog results without upgrading earlier failed evidence.",
+    "Align CRA ownership summaries with the local reflex contract.",
+    "Replace opaque source-path listings with navigable implementation references.",
+    "Validate local section fragments and component documentation links."
+  ],
+  "archived_status": {
+    "path": "docs/status-history-2026-11-03.md",
+    "source_path": "docs/current-status.md",
+    "source_commit": "8b3c467b4f2653f7399fb247747c3e9b682f5f84",
+    "preservation": "Original body retained; title and archival-scope banner added."
+  },
+  "validation_boundary": "Documentation and source checks only; no new live service audit, qualification, deployment or provider operation.",
+  "commit_performed": false,
+  "push_performed": false,
+  "production_runtime_changed": false,
+  "files": [
+    {
+      "path": ".github/pull_request_template.md",
+      "title": "",
+      "primary_role": "Component procedure or governance",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "4d49e46f402736657772c4e745bcd850a5ee7059f931d34f7065d84e5d70edfc"
+    },
+    {
+      "path": "README.md",
+      "title": "stream_v3",
+      "primary_role": "Component guide or catalog",
+      "review_depth": "structure, links and focused prose reconciliation",
+      "sha256": "1b61116a0854b561c735266622164b279436815f815607133131772b8c44fb21"
+    },
+    {
+      "path": "deploy/k3s/README.md",
+      "title": "stream_v3 k3s Deployment",
+      "primary_role": "Component guide or catalog",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "aba5f5dda0249e60b1cd23811943db680dd3e47e30a8137bf0508291b9f6113a"
+    },
+    {
+      "path": "docs/00_INDEX.md",
+      "title": "Documentation Catalog",
+      "primary_role": "Component guide or catalog",
+      "review_depth": "structure, links and focused prose reconciliation",
+      "sha256": "b859a02ff2926d34b1347710ec642781a6981b3babd511a05b470d90509d58d5"
+    },
+    {
+      "path": "docs/README.md",
+      "title": "Documentation Guide",
+      "primary_role": "Start Here",
+      "review_depth": "structure, links and focused prose reconciliation",
+      "sha256": "ae0da87b5fdcb4bf6c87b9991eebc7edd9d8faec65a5f796895c39257080fe45"
+    },
+    {
+      "path": "docs/architecture.md",
+      "title": "Architecture",
+      "primary_role": "Current Contracts: Delivery And Authority",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "2632f00d808c94f7a433c35b5a4f7244e8162b70b28ae3a1bb2d9a5ee95c36aa"
+    },
+    {
+      "path": "docs/archive-note.md",
+      "title": "Archive Note",
+      "primary_role": "Governance And Documentation",
+      "review_depth": "structure, links and focused prose reconciliation",
+      "sha256": "f4bb4568f51d767794f33e29f3961add4a7a775a4658f516accf76e70006448d"
+    },
+    {
+      "path": "docs/compliance-and-licensing-boundary.md",
+      "title": "Compliance And Licensing Boundary",
+      "primary_role": "Governance And Documentation",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "065dab7c1c1197cc3c26049356c7fa21bd4f8447d1f16309b7f99ce92a21f91e"
+    },
+    {
+      "path": "docs/contributing.md",
+      "title": "Contributing",
+      "primary_role": "Governance And Documentation",
+      "review_depth": "structure, links and focused prose reconciliation",
+      "sha256": "efe87064ee6b3e932caec58c4f167160b7aefc72a5839ec036a83bd9e75a3116"
+    },
+    {
+      "path": "docs/current-status.md",
+      "title": "Current Status",
+      "primary_role": "Start Here",
+      "review_depth": "structure, links and focused prose reconciliation",
+      "sha256": "33ddb36c53e4018123457254f032e7e7d1e9a9dcc2f86b7b69f9eb7e52e55148"
+    },
+    {
+      "path": "docs/design-decisions-for-review.md",
+      "title": "Design Decisions For Review",
+      "primary_role": "Decisions And Rationale",
+      "review_depth": "structure, links and focused prose reconciliation",
+      "sha256": "fc71223132b1ea723d6244660fb03cfc1af45bbcaef554365f603113b44528d6"
+    },
+    {
+      "path": "docs/documentation-model.md",
+      "title": "Documentation Responsibilities",
+      "primary_role": "Governance And Documentation",
+      "review_depth": "structure, links and focused prose reconciliation",
+      "sha256": "ae1c19eccb0c7e9bd6840742656f4f84e699e881d7fa32d2adcda7dd6932e79d"
+    },
+    {
+      "path": "docs/evolution.md",
+      "title": "Evolution",
+      "primary_role": "History And Superseded Designs",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "1c835c6c98f4e8d7773eb17b2be79fc7d8c64db4c08a90983eb77e6d46c26566"
+    },
+    {
+      "path": "docs/hardware-selection.md",
+      "title": "Hardware Selection and Workload Separation",
+      "primary_role": "Decisions And Rationale",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "82f682bca1f63edd724c54ebb6c33688bbd0ab317b9a66781b6f319a4032964c"
+    },
+    {
+      "path": "docs/hiring-reviewer-guide.md",
+      "title": "Hiring Reviewer Guide",
+      "primary_role": "Start Here",
+      "review_depth": "structure, links and focused prose reconciliation",
+      "sha256": "5906abf303cee74e47b4c2fe212a4df1f31b9f9e2e79b04a7d9feccbbcc735ae"
+    },
+    {
+      "path": "docs/implementation-review-map.md",
+      "title": "Implementation Review Map",
+      "primary_role": "Start Here",
+      "review_depth": "structure, links and focused prose reconciliation",
+      "sha256": "c7dd3b436e65f1ef66cb635e565f2af3ba6678e99b661e4bd40cbedf6a688426"
+    },
+    {
+      "path": "docs/incident-review-template.md",
+      "title": "Incident Review Template",
+      "primary_role": "Governance And Documentation",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "e086dd603e28c51ee077bd93a411f220d61caf062c8c2d0d89ff1f803f5a5aad"
+    },
+    {
+      "path": "docs/observability.md",
+      "title": "Observability",
+      "primary_role": "Current Contracts: Observation And Publication",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "780f12590641484c2e11de38846deacc61e2a53d5e785eeabdb78e179cccb50c"
+    },
+    {
+      "path": "docs/operational-case-studies.md",
+      "title": "Operational Case Studies",
+      "primary_role": "Start Here",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "c95b2affabaca485544b9942336c5d7c2bd041d53824d5619ba9dbd52e8f3aef"
+    },
+    {
+      "path": "docs/operational-scorecard.md",
+      "title": "Operational Scorecard",
+      "primary_role": "Start Here",
+      "review_depth": "structure, links and focused prose reconciliation",
+      "sha256": "465a9feebe3494eb1a3e34f022330a61b3cd272a450ea007b99e94397eb521db"
+    },
+    {
+      "path": "docs/operations.md",
+      "title": "Operations",
+      "primary_role": "Procedures And Source Guides",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "76327c94ecd7a7369872fee968d760318cf71b4377d83b488713756325fce449"
+    },
+    {
+      "path": "docs/public-language-policy.md",
+      "title": "Public Source Language",
+      "primary_role": "Governance And Documentation",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "f640c1e9d01fc628879b7610f3d8674a595ca109af45839e2f77142568518a87"
+    },
+    {
+      "path": "docs/public-release.md",
+      "title": "Public Release Notes",
+      "primary_role": "Publication Records",
+      "review_depth": "structure, links and focused prose reconciliation",
+      "sha256": "c13eda5a16d02fa317d67a1070a9088a0ac918c90efa778f480b4f26096a745f"
+    },
+    {
+      "path": "docs/runtime-contract.md",
+      "title": "Runtime Contract",
+      "primary_role": "Current Contracts: Delivery And Authority",
+      "review_depth": "structure, links and focused prose reconciliation",
+      "sha256": "0c63f71b6fbee572498cb5db71f5ea970fa271009add4e0d1aec40d55bf23dd0"
+    },
+    {
+      "path": "docs/same-url-continuity-evidence.md",
+      "title": "Historical SLI And Same-URL Continuity Evidence",
+      "primary_role": "Measurements And Dated Evidence",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "b93b104c0a2a1f808054abbb9f9f8324b9d9e5655b78bf6c763a42be7f42ea34"
+    },
+    {
+      "path": "docs/security-and-secrets.md",
+      "title": "Security And Secrets",
+      "primary_role": "Governance And Documentation",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "8608130746b31145a0799562aec702694dc6951df59460b685d76814cae1d17b"
+    },
+    {
+      "path": "docs/sli-methodology.md",
+      "title": "SLI Methodology And Measured Baseline",
+      "primary_role": "Measurements And Dated Evidence",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "30062977b5702568556e6393fa534412a379c7161647d5f51dd162aaeedc0d55"
+    },
+    {
+      "path": "docs/status-history-2026-11-03.md",
+      "title": "Status Checkpoint Archive: 2026-11-03",
+      "primary_role": "History And Superseded Designs",
+      "review_depth": "structure, links and focused prose reconciliation",
+      "sha256": "89abc7a1f7fa991c96e47cb6e270c15169b981b1b65e6d9277bbde31b436bf87"
+    },
+    {
+      "path": "docs/support.md",
+      "title": "Support",
+      "primary_role": "Governance And Documentation",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "c4e5981cbad5aa56d5e4f98a7ac1920143bc38e8bfca22249f018f1cc3a1e6b1"
+    },
+    {
+      "path": "docs/test-strategy-and-safety-boundary.md",
+      "title": "Test Strategy And Safety Boundary",
+      "primary_role": "Governance And Documentation",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "988089d65709a68a00066add66ef7e46b92f86a762f1082aa725c755e88fc3b2"
+    },
+    {
+      "path": "docs/v2/README.md",
+      "title": "stream_v2 Historical Summary",
+      "primary_role": "History And Superseded Designs",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "3c742482a2fc525796b4dd0ab0f64cb31e81925a19b368c3461ece5f18cdd73a"
+    },
+    {
+      "path": "docs/v3/README.md",
+      "title": "stream_v3 Documentation Folder",
+      "primary_role": "Start Here",
+      "review_depth": "structure, links and focused prose reconciliation",
+      "sha256": "eac8ea3e78290f1d73dc03dc59278999efadedda416fac97e44b8b67e6316c84"
+    },
+    {
+      "path": "docs/v3/adsb-source-coverage.md",
+      "title": "ADS-B Source Evidence Coverage",
+      "primary_role": "Current Contracts: Observation And Publication",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "26021f12d437d350f9e4ddc3bb54f00ccf684568f067a9d272842c995a3d70e4"
+    },
+    {
+      "path": "docs/v3/airspy-reception-guard.md",
+      "title": "One bounded restart for an Airspy reception collapse",
+      "primary_role": "Procedures And Source Guides",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "7d6c867ddd7afa5409b42e2938a4c047f2bef40e230d55d0e3ade96a27a8c5e6"
+    },
+    {
+      "path": "docs/v3/boottime-media-health.md",
+      "title": "Boottime Media Health And Independent UTC Diagnostics",
+      "primary_role": "Measurements And Dated Evidence",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "5d9121b81b5ef57600adcd3bb7e9dafb5f93858861021745adb6d18e2c91993e"
+    },
+    {
+      "path": "docs/v3/clock-observation-case-study.md",
+      "title": "Clock Observation Case Study",
+      "primary_role": "Measurements And Dated Evidence",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "ce90442cf087b81e427860a4510c07cf98199e29fc2e7201d19eba8fefa47fd5"
+    },
+    {
+      "path": "docs/v3/clock-safe-media-progress.md",
+      "title": "Clock Labels, Missing Samples, And Bound Media Progress",
+      "primary_role": "Measurements And Dated Evidence",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "76ac76a1772d09de0c1518f9837d878d49f2bb9474c409ed75fbd0f8da67e425"
+    },
+    {
+      "path": "docs/v3/connectivity-aware-delivery-recovery.md",
+      "title": "Connectivity-Aware Delivery Recovery",
+      "primary_role": "Current Contracts: Delivery And Authority",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "88d623f51d9296016b927638853757f9c4c5e4f8fbb86165ba1e10b00a58c338"
+    },
+    {
+      "path": "docs/v3/cross-host-observation-time.md",
+      "title": "Cross-host observation time",
+      "primary_role": "Current Contracts: Observation And Publication",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "43714144c9f6803618304734e1ae1cbe760fc1343a655c50ca87df3b6209bb60"
+    },
+    {
+      "path": "docs/v3/decisions.md",
+      "title": "Decisions",
+      "primary_role": "Decisions And Rationale",
+      "review_depth": "structure, links and focused prose reconciliation",
+      "sha256": "1abfc05f204030d44d2e86f39f948b44f34019f703bf43e33f69c9cf6e9a0103"
+    },
+    {
+      "path": "docs/v3/encoder-fps-tuning-2026-05-31.md",
+      "title": "Encoder Fps Tuning 2026-05-31",
+      "primary_role": "Measurements And Dated Evidence",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "78315c45bade6247d259abc7fd20e360d687343337ffd6875edabf70afdb0933"
+    },
+    {
+      "path": "docs/v3/encoder-upload-case-study.md",
+      "title": "Encoder And Upload Budget Case Study",
+      "primary_role": "Measurements And Dated Evidence",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "f6c86ce171f914d624985671bc54e89a5619521964e63f6ebd309118315f280e"
+    },
+    {
+      "path": "docs/v3/external-watchdog.md",
+      "title": "An External Watchdog for the Observation Owner",
+      "primary_role": "Current Contracts: Observation And Publication",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "8ac1fa196dbef3a1a518bca5b0c341a6da50da806ba41d068764eb90975ef091"
+    },
+    {
+      "path": "docs/v3/failure-injection-and-chaos-draft.md",
+      "title": "Failure Injection And Chaos Testing Draft",
+      "primary_role": "Proposals",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "a6a882a3ec0a7ea60bc9180de225754ff6a3296174a54918c370770407946313"
+    },
+    {
+      "path": "docs/v3/failure-taxonomy.md",
+      "title": "Failure Taxonomy",
+      "primary_role": "Current Contracts: Delivery And Authority",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "8ee0574640481ff78d14e52e47a8ee61a63b98c17774a8b7aac07110c6daa92e"
+    },
+    {
+      "path": "docs/v3/fallback-clock-recording.md",
+      "title": "Fallback Clock Skew and Bounded Recording",
+      "primary_role": "Measurements And Dated Evidence",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "1b0349c842c871a9b3ba8a2a261bb591324f9dd355ea1ca325e1d9181aa93541"
+    },
+    {
+      "path": "docs/v3/fallback-decision-contract.md",
+      "title": "Fallback Decision Contract",
+      "primary_role": "Current Contracts: Delivery And Authority",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "ccf62b7efcc668da75a203f94a704dcb2c0229591c07231fe975d69b39c80895"
+    },
+    {
+      "path": "docs/v3/fallback-policy-revisions.md",
+      "title": "One Fallback Rule, Revised Under Test",
+      "primary_role": "Measurements And Dated Evidence",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "6e4bc7130ffc041d534415617c6369c7ed5d94af85091dfd8c902e3d3609c800"
+    },
+    {
+      "path": "docs/v3/fast-recovery-classifier-replay.md",
+      "title": "Fast-Recovery Classifier Replay",
+      "primary_role": "Measurements And Dated Evidence",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "8fcd290394b53c874d7afbaef19f16db4b027348dbf1a304a7b4c9efebd36238"
+    },
+    {
+      "path": "docs/v3/ffmpeg-fifo-measurements.md",
+      "title": "Measuring FIFO Recovery Before Replacing FFmpeg",
+      "primary_role": "Measurements And Dated Evidence",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "c6e23e2b5f3f7f89c3366245fa7b10fd0dc4c1c748f195d6e4387708ba792fec"
+    },
+    {
+      "path": "docs/v3/ffmpeg-fifo-recovery.md",
+      "title": "FFmpeg Connection Recovery With FIFO",
+      "primary_role": "Current Contracts: Delivery And Authority",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "412bf849c590050e9aaa061321d407d027ba130cdbb18ab95d09272e6b43a071"
+    },
+    {
+      "path": "docs/v3/fifo-timestamp-continuity-case-study.md",
+      "title": "Keeping The Encoder Also Kept Its Clock",
+      "primary_role": "Measurements And Dated Evidence",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "5391d3018847931f26abd0c6af88d7a999ca15981da630d0547a0035c31145a9"
+    },
+    {
+      "path": "docs/v3/manual-maintenance.md",
+      "title": "Manual Maintenance with a Cloud-Hosted Slate",
+      "primary_role": "Procedures And Source Guides",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "a618e3041273b51248cc8ca6a12be7c4394323fe83191dfcc7b72c3fce1b6748"
+    },
+    {
+      "path": "docs/v3/map-mobile-legibility-review.md",
+      "title": "Map Mobile Legibility Review",
+      "primary_role": "Proposals",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "cd443c6b9e0f1a0979492bf52e417b050d8a9eb44942a0d005558aa2675ccc88"
+    },
+    {
+      "path": "docs/v3/map-production-cutover-case-study.md",
+      "title": "Map Renderer Production Cutover Case Study",
+      "primary_role": "Measurements And Dated Evidence",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "7c5045d542c9ae4878ba8de6ee4a26a59d33c0e5a3b22381fc21570628842464"
+    },
+    {
+      "path": "docs/v3/map-rendering-and-monitoring.md",
+      "title": "Map Rendering And Monitoring Contract",
+      "primary_role": "Current Contracts: Delivery And Authority",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "22724ccc610dfba3759a5ad0712116b247981b94d2cbc77819d55f7aa1abd5f3"
+    },
+    {
+      "path": "docs/v3/memory-guard-case-study.md",
+      "title": "Memory Guard Case Study",
+      "primary_role": "Measurements And Dated Evidence",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "7c3bcba8e76d1fdcb5d9068fe2bce0f8cf0d6001c8f0e2afa0ff7ca1c13662d6"
+    },
+    {
+      "path": "docs/v3/migration-cutover-case-study.md",
+      "title": "Migration And Cutover Case Study",
+      "primary_role": "Measurements And Dated Evidence",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "37ddbaa603a63026fe356eefad7458cd31644db4e3bbb4a66852fda1ca2d5d71"
+    },
+    {
+      "path": "docs/v3/music-provider-and-loudness-contract.md",
+      "title": "Music Provider And Loudness Contract",
+      "primary_role": "Current Contracts: Delivery And Authority",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "92438f5971c7fe8c57b6eb2843772f1adb1052cbf7dc3c04e6b4ddeca96627fa"
+    },
+    {
+      "path": "docs/v3/notification-and-auto-recovery.md",
+      "title": "Notification And Auto-Recovery Events",
+      "primary_role": "Current Contracts: Observation And Publication",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "53d85f593f7addd255370c88bd0aa1bc492cbb2a3fad925fce5804f26681b855"
+    },
+    {
+      "path": "docs/v3/notification-diagnostic-boundary.md",
+      "title": "Notification Diagnostic Boundary",
+      "primary_role": "Current Contracts: Observation And Publication",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "56e2af7c3fe00772c9d08ff475cd392b8db09595cb0195ac13cc55ff65ffb62b"
+    },
+    {
+      "path": "docs/v3/notification-observation-time.md",
+      "title": "Producer Time and Notification Evidence",
+      "primary_role": "Current Contracts: Observation And Publication",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "8020848005bab03b2d685e65e1a2f60c7d270fda45c9dabb478997348721df5b"
+    },
+    {
+      "path": "docs/v3/observability-plane-self-check.md",
+      "title": "Observability Plane Self-Check",
+      "primary_role": "Current Contracts: Observation And Publication",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "21dbc3a8dd1d2c4687fba9f4f9b9a1604bb3ad57256b6954895e902f1e1df9bb"
+    },
+    {
+      "path": "docs/v3/observation-release-provenance.md",
+      "title": "Committed Observation Releases and Qualification Gates",
+      "primary_role": "Current Contracts: Observation And Publication",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "2f8cadf2c39fc94f366e251b32ac491bb5d4a205c3719382bc7d515541f257d3"
+    },
+    {
+      "path": "docs/v3/observation-standardization.md",
+      "title": "Observation Contracts and Connected Delivery",
+      "primary_role": "Current Contracts: Observation And Publication",
+      "review_depth": "structure, links and focused prose reconciliation",
+      "sha256": "ff59fa086f0dc8a1d0ac19621b21c77fc035c0d617ae3e962fb818fca80644be"
+    },
+    {
+      "path": "docs/v3/oci-backup-and-restore.md",
+      "title": "OCI Backup And Files-Only Restore",
+      "primary_role": "Procedures And Source Guides",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "e4650e70ba94ea96e49ded2bd9b1ae741dbe04271862715109c035fe4aed65b6"
+    },
+    {
+      "path": "docs/v3/oci-relay-and-twitch.md",
+      "title": "OCI Relay And Two Provider Outputs",
+      "primary_role": "History And Superseded Designs",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "edec34d520741ddebecc879b87da196df08d28b46eb0a48c3a7cfd5b20093629"
+    },
+    {
+      "path": "docs/v3/oci-route-simplification-decision.md",
+      "title": "Replacing An Unfinished OCI Recovery Design",
+      "primary_role": "Decisions And Rationale",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "e64a5188f657cdd851fdab3b1133eee66671d67eb44b8ed318bef5e52b5a4a1e"
+    },
+    {
+      "path": "docs/v3/operational-reliability-and-external-evidence.md",
+      "title": "Operational Reliability And External Evidence",
+      "primary_role": "Current Contracts: Observation And Publication",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "c9d9b8241eaf71c15ce49743fdbf493579dd29fc4d4bf92770383eee77529ea8"
+    },
+    {
+      "path": "docs/v3/pi-publisher-source-port-2026-10-14.md",
+      "title": "Raspberry Pi Publisher Source Port",
+      "primary_role": "Publication Records",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "a6b895472f8eec6fb1214e85a36a6de35bdd101f09a400703397ca5f6a6c3dd2"
+    },
+    {
+      "path": "docs/v3/program-map.md",
+      "title": "Program Map",
+      "primary_role": "Current Contracts: Delivery And Authority",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "1621887c0025ebf417651aff9dd8c57eebd0e1c82cb246e88cf4797ee86beb47"
+    },
+    {
+      "path": "docs/v3/public-diagram-and-trend-display.md",
+      "title": "Delivery Diagram and Trend Display",
+      "primary_role": "Current Contracts: Observation And Publication",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "f9dd31c84a51e64a904fd4c8abfe3338373e4641a9e5d63f377f7e7ec67a199a"
+    },
+    {
+      "path": "docs/v3/public-publisher-boundary.md",
+      "title": "Raspberry Pi Public Publisher Boundary",
+      "primary_role": "Current Contracts: Observation And Publication",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "cbf0b1b2d17ee1807961b818f29983c438acf16bd796bdf98623018f37260a0e"
+    },
+    {
+      "path": "docs/v3/public-source-port-2026-10-13.md",
+      "title": "Public Source Port: OCI, Twitch, And Route Evidence",
+      "primary_role": "Publication Records",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "48e404e524f77cece815a450a539b383c5752dc03ac6a8b84336d58a48edf604"
+    },
+    {
+      "path": "docs/v3/public-source-port-2026-10-20.md",
+      "title": "Public Source Port: Self-Healing OCI Fan-Out",
+      "primary_role": "Publication Records",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "817cb49661abea0c6e9a9fe556a2772300940e48a12e4026b74315b8b108aa55"
+    },
+    {
+      "path": "docs/v3/public-source-port-2026-10-22-thumbnail-evidence.md",
+      "title": "Public Source Port: Thumbnail OCR And Bounded Evidence",
+      "primary_role": "Publication Records",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "acc8d2c66c9e72db998a1b6604413acb3984af332f30a371b4b467bd15108558"
+    },
+    {
+      "path": "docs/v3/public-source-port-2026-10-22-thumbnail-review.md",
+      "title": "Public Source Port: Thumbnail Rollover And Missing Observations",
+      "primary_role": "Publication Records",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "867b47458a7c22d3344e4bfa68c1384716903bc41d833d46b7a44e048711c7d5"
+    },
+    {
+      "path": "docs/v3/public-source-port-2026-10-22-thumbnail.md",
+      "title": "Public Source Port: Provider Thumbnails And Clock Observation Gaps",
+      "primary_role": "Publication Records",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "738d488ae2a19cf7d159e7082c14dfd859314413f3f2269533c9a3ccd31b6cf9"
+    },
+    {
+      "path": "docs/v3/public-source-port-2026-10-22.md",
+      "title": "Public Source Port: Return-Feed Clock Monitoring And OCI Backup",
+      "primary_role": "Publication Records",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "9bf06b46c9e0e50863284de97a69683b7f7779cb9b710c8ce031980944ef1d2b"
+    },
+    {
+      "path": "docs/v3/public-source-port-2026-10-23-observability.md",
+      "title": "Observability Source Reconciliation",
+      "primary_role": "Publication Records",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "8e016cdf3b2d89bd001cfc815b348e24220f7099709c228e566ad15d77360ead"
+    },
+    {
+      "path": "docs/v3/public-source-port-2026-10-23-relay-clock.md",
+      "title": "Public Source Port: Relay Clock Evidence And UTC Fallback Read",
+      "primary_role": "Publication Records",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "5a09c61c3f0df18403fe2b2fb841b609e7dafdad198cd7931e90edceb8afaa5d"
+    },
+    {
+      "path": "docs/v3/public-status-page-2026-10-20.md",
+      "title": "Public Status Page Redesign: 2026-10-20",
+      "primary_role": "Measurements And Dated Evidence",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "5846ae45c3c2ffb6c593732c7e7bd0df35daa6f26d1967a0c1b8e41a6885214b"
+    },
+    {
+      "path": "docs/v3/public-status-snapshot.md",
+      "title": "Public Status Snapshot",
+      "primary_role": "Current Contracts: Observation And Publication",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "fe9fa584be80be1a6caf5b602d121be6a21093269911c946c6303a4bd8da927f"
+    },
+    {
+      "path": "docs/v3/r2-publication-and-freshness-case-study.md",
+      "title": "Moving Public Snapshots To R2 And Detecting Stale Evidence",
+      "primary_role": "Measurements And Dated Evidence",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "9cfdb690c9c64956d3fc0203fe8cf9f8ffb29aac5e3b49433b63cdaecb799ab3"
+    },
+    {
+      "path": "docs/v3/r2-publication-transport.md",
+      "title": "R2 Publication Transport",
+      "primary_role": "Procedures And Source Guides",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "1c94b29cd388359ff09baa81fd3b449f36065686bdd7dc24cb354c78d6647de0"
+    },
+    {
+      "path": "docs/v3/relay-clock-monitor.md",
+      "title": "Relay Return-Feed Clock Monitor",
+      "primary_role": "Current Contracts: Observation And Publication",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "dd98509474af36c116d93446f47f775d00971e390bdd2d23ed9e73aced4b9b8c"
+    },
+    {
+      "path": "docs/v3/relay-recovery-deadline.md",
+      "title": "Relay Stop Across FFmpeg Generations",
+      "primary_role": "Measurements And Dated Evidence",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "d5032d81a2617c5edade1a7a4d82dbb796f574c381ce90163c875f06bdb95275"
+    },
+    {
+      "path": "docs/v3/relay-stop-main-loop.md",
+      "title": "Initial Relay-Stop Validation",
+      "primary_role": "Measurements And Dated Evidence",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "c5efbcb694e0c4d125b2fff1048efd9f0be118da0c983f55a4210203fb88caca"
+    },
+    {
+      "path": "docs/v3/rolling-sli-error-budget-feedback.md",
+      "title": "Rolling SLI And Error-Budget Feedback",
+      "primary_role": "Measurements And Dated Evidence",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "cd1de3f0c3a2f3aeb2bfe4a6145a20e41ed8a69a34eaf2646475a16ea857b950"
+    },
+    {
+      "path": "docs/v3/route-baseline-retirement-decision.md",
+      "title": "Retiring The Learned Throughput Baseline",
+      "primary_role": "Decisions And Rationale",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "57bb7ad9222d5327c993063f3452c12f55d3af6fef8bbd5edf6feb848686924d"
+    },
+    {
+      "path": "docs/v3/route-causality.md",
+      "title": "Cause Identity And Secondary-Recovery Veto",
+      "primary_role": "Current Contracts: Delivery And Authority",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "19d9f403c66163e65467d3ae115a74574d06f389b7d6e85aa4bd11212cd4a75c"
+    },
+    {
+      "path": "docs/v3/route-failover-validation.md",
+      "title": "Fault Switching And Player Continuity: Automated Validation",
+      "primary_role": "Measurements And Dated Evidence",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "41c7c134a7f764e9026023545a8959aba3b2f289b4f59f00e01c4b34ea87bd80"
+    },
+    {
+      "path": "docs/v3/route-network-observation.md",
+      "title": "Route Network Observation And Baselines",
+      "primary_role": "History And Superseded Designs",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "03ee87ed204d739074b72c038552a8bdc1690932f110a283ce1922c5bc55941a"
+    },
+    {
+      "path": "docs/v3/runbook-validation.md",
+      "title": "Runbook Validation",
+      "primary_role": "Procedures And Source Guides",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "41a20490b8104201d3c2b84be993a39d528bad1e3ae012f01e60fcca021b62b3"
+    },
+    {
+      "path": "docs/v3/runbooks.md",
+      "title": "Runbooks",
+      "primary_role": "Procedures And Source Guides",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "7753d4bde0cd742c067ded9ffc2f83a5e3fce6614f30a1f894dad883da22e7af"
+    },
+    {
+      "path": "docs/v3/runtime-state-and-evidence.md",
+      "title": "Runtime State And Evidence",
+      "primary_role": "Current Contracts: Observation And Publication",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "f7a032e9fe246faf0d93ee8e8997239242fba6bb974b18fe06ee4b46c08f1f09"
+    },
+    {
+      "path": "docs/v3/scoped-recovery-authority.md",
+      "title": "Scoped Recovery Authority",
+      "primary_role": "Current Contracts: Delivery And Authority",
+      "review_depth": "structure, links and focused prose reconciliation",
+      "sha256": "853d365b13f2bb82b55d93471891bc8732fc843abfea6899256218b884d91699"
+    },
+    {
+      "path": "docs/v3/self-healing-oci-fanout.md",
+      "title": "Self-Healing OCI Fan-Out",
+      "primary_role": "Measurements And Dated Evidence",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "6ab1144dffc2214c92d8332a33e0f697cba2b0be7277505089ef9ec519f8a77f"
+    },
+    {
+      "path": "docs/v3/single-node-dr-case-study.md",
+      "title": "Single-Node DR Case Study",
+      "primary_role": "Measurements And Dated Evidence",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "2fb468fee87ffc453017e92ec0a78ebaf7ad85190095a471311c8a2963cb46e1"
+    },
+    {
+      "path": "docs/v3/sli-and-dashboard.md",
+      "title": "SLI And Dashboard Contract",
+      "primary_role": "Current Contracts: Observation And Publication",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "e413383f351377ab693ad73b99333cf4f621048feec91f59cfcaf623692058f1"
+    },
+    {
+      "path": "docs/v3/tcp-stall-case-study.md",
+      "title": "TCP Stall Root-Cause Case Study",
+      "primary_role": "Measurements And Dated Evidence",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "3fe0e4ebc4d38f5136773a719af7fdb51a8037749c651c58f63f49e4fecd048f"
+    },
+    {
+      "path": "docs/v3/tcp-stall-resolution-depth.md",
+      "title": "TCP Stall Resolution Depth",
+      "primary_role": "Measurements And Dated Evidence",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "ec69520f6947cdb08700fd4a4d7ca036c3dc7da3a0179dbe083f22f3e8e0463c"
+    },
+    {
+      "path": "docs/v3/three-host-source-consolidation.md",
+      "title": "Three-Host Source Consolidation",
+      "primary_role": "Measurements And Dated Evidence",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "e22ba38182794c9e364e80f3c942cf48f1ca99a57aa366281d9fee980db22292"
+    },
+    {
+      "path": "docs/v3/thumbnail-k3s-migration-2026-11-01.md",
+      "title": "Thumbnail Acquisition Moves to K3s",
+      "primary_role": "Measurements And Dated Evidence",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "81cf7cd71f8b4b45a3b10e6a2e222ee30a52d5529f4731cdbefdc6ecb154bb92"
+    },
+    {
+      "path": "docs/v3/thumbnail-ocr-rollout-2026-10-22.md",
+      "title": "Operated Thumbnail OCR Counter Rollout",
+      "primary_role": "Publication Records",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "c2f62117249e2e998c516d86a935502082c39d1dac58e69977e88e357b2d2d42"
+    },
+    {
+      "path": "docs/v3/thumbnail-transfer-recovery-2026-11-01.md",
+      "title": "Recovering Thumbnail Observation After Slow CDN Transfers",
+      "primary_role": "Measurements And Dated Evidence",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "a559b242a3b68391d3b4add9d0dbd534ace2fd668188190d201b6e41aebf4f61"
+    },
+    {
+      "path": "docs/v3/transport-flight-recorder.md",
+      "title": "Transport Flight Recorder",
+      "primary_role": "Current Contracts: Observation And Publication",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "2c4ffdfed052f6b0cbb1afb1b1870646b56e880b69d4d1c2b3c713b892267fc2"
+    },
+    {
+      "path": "docs/v3/twitch-session-renewal.md",
+      "title": "Twitch Session Renewal",
+      "primary_role": "History And Superseded Designs",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "e97dde6bcba3dcc61b5236a9a72ced429f83dd33b5ad29a83786dfb07e141367"
+    },
+    {
+      "path": "docs/v3/twitch-sli-resilience.md",
+      "title": "Twitch Reliability Collection and Missing Data",
+      "primary_role": "Measurements And Dated Evidence",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "c03c15975b3aba691ee2ce2074f3040c9b43069b66a446b0dab2ebca5d5e78e3"
+    },
+    {
+      "path": "docs/v3/twitch-thumbnail-monitor.md",
+      "title": "Twitch Thumbnail Clock Observation",
+      "primary_role": "Current Contracts: Observation And Publication",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "35888bdbb412f8a38ca3d9db9ccf97a4f4f39ff5ce32e02e9ab94b5b8f826e86"
+    },
+    {
+      "path": "docs/v3/upload-measurement-source.md",
+      "title": "Independent Upload Measurement",
+      "primary_role": "Current Contracts: Observation And Publication",
+      "review_depth": "structure, links and focused prose reconciliation",
+      "sha256": "6811d01e19dbc63f489e9cf07cc47685b874608ae51d4dbd133bb9be6ba018ff"
+    },
+    {
+      "path": "docs/v3/visual-audio-health-model.md",
+      "title": "Visual And Audio Health Model",
+      "primary_role": "Current Contracts: Delivery And Authority",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "1ffb0c890d78371812c98519133efd2919584ba06500405e698dacb861deaddf"
+    },
+    {
+      "path": "docs/v3/youtube-egress-failover.md",
+      "title": "Upstream ACKs Versus YouTube Route Confirmation",
+      "primary_role": "Measurements And Dated Evidence",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "3d14cd11981552984303e6bc39836dbc8fc14daee88edfe67ff4c6bb1b1911a0"
+    },
+    {
+      "path": "docs/v3/youtube-lifecycle-safety.md",
+      "title": "YouTube Lifecycle Safety",
+      "primary_role": "Current Contracts: Delivery And Authority",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "0b8007b1330dd5e0c0b2ff3ab5ac0e1fc9103259ac965d485428436a874c1488"
+    },
+    {
+      "path": "monitoring-v4/README.md",
+      "title": "Monitoring v4",
+      "primary_role": "Component guide or catalog",
+      "review_depth": "structure, links and focused prose reconciliation",
+      "sha256": "51a9a8f1e002f4f14e7513233e858c33eeec45f85846bba6f88a9a0a7bd66b62"
+    },
+    {
+      "path": "monitoring-v4/docs/architecture.md",
+      "title": "Architecture and safety boundaries",
+      "primary_role": "Component contract or rationale",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "dfceb053b7df2a0363a3e892467dfeda5dc430f541acfd9758c4ad274cbb5eba"
+    },
+    {
+      "path": "monitoring-v4/docs/failure-mode-mitigation-record.md",
+      "title": "Failure-mode mitigation record",
+      "primary_role": "Component dated evidence or history",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "705e212aa6c579c95effeb5cf6fb1f41e293ed159b867cc16601e84cbc01a9e8"
+    },
+    {
+      "path": "monitoring-v4/docs/hardening.md",
+      "title": "Responsibility refactor and failure hardening",
+      "primary_role": "Component contract or rationale",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "21d3cbf2e105cbf906452c1159b327c992ea55e0d8d2a746b299bf866281e578"
+    },
+    {
+      "path": "monitoring-v4/docs/harness-engineering-draft.md",
+      "title": "Monitoring v4 Harness Engineering Draft",
+      "primary_role": "Component proposal",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "d05768c2901a3fdc5afc238849f34739b924b48faebbb4df881f8e0c7acdad7c"
+    },
+    {
+      "path": "monitoring-v4/docs/history.md",
+      "title": "Reconstructed public history",
+      "primary_role": "Component dated evidence or history",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "bf20f6f411111342ef5e594c5cf6f6d2887e98fbdeb633b95f8113c72515ecb0"
+    },
+    {
+      "path": "monitoring-v4/docs/normal-monitoring-history.md",
+      "title": "Normal Monitoring And Verified History Copies",
+      "primary_role": "Component dated evidence or history",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "a8442233bf152366ae2ad7667becb16efa01e08da9e5e07abffc35983dcfe807"
+    },
+    {
+      "path": "monitoring-v4/docs/postgresql-k3s.md",
+      "title": "PostgreSQL and k3s subsystem",
+      "primary_role": "Component contract or rationale",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "ca6ef854bd7275e9141387ceeab934eece50ea669bd95f0cae47d2787ffd2d0e"
+    },
+    {
+      "path": "monitoring-v4/docs/public-language-policy.md",
+      "title": "Public Source Language",
+      "primary_role": "Component procedure or governance",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "f640c1e9d01fc628879b7610f3d8674a595ca109af45839e2f77142568518a87"
+    },
+    {
+      "path": "monitoring-v4/docs/public-release.md",
+      "title": "Public release boundary and provenance",
+      "primary_role": "Component procedure or governance",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "242712b3e2308ac26799ce788cc9549785a838baf6425b0468e81fca2a9b3f36"
+    },
+    {
+      "path": "monitoring-v4/docs/relay-provider-evidence.md",
+      "title": "Relay And Provider Evidence",
+      "primary_role": "Component dated evidence or history",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "422cc63e438bec5685b812d9102755960560c69ecbfc1ba4caa5e13a7b3b6499"
+    },
+    {
+      "path": "monitoring-v4/docs/soak-checkpoints.md",
+      "title": "Revision-bound soak checkpoints",
+      "primary_role": "Component implementation and evidence status",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "509ec30c005dd3ab278a905cb3d5c83a8610bcf8804ff75d90caf18ceb9f0051"
+    },
+    {
+      "path": "monitoring-v4/docs/source-aware-parity-hardening.md",
+      "title": "Source-aware parity convergence hardening",
+      "primary_role": "Component contract or rationale",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "594f9871bfe610a1e206ea4200d626c5986b10fa8b22937ba639f8000fd25349"
+    },
+    {
+      "path": "monitoring-v4/docs/stateful-harness-evidence.md",
+      "title": "Monitoring v4 stateful harness evidence",
+      "primary_role": "Component dated evidence or history",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "9d06fc1033e57409b50ec1e91a7456770606bd5e5a2393a85074f48d34714fab"
+    },
+    {
+      "path": "monitoring-v4/docs/status.md",
+      "title": "Implementation status",
+      "primary_role": "Component implementation and evidence status",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "abb77538749f538ed4da3ca463c39f6e7f2dfb00824a5029affc7867122bbe31"
+    },
+    {
+      "path": "ops/airspy-reception/README.md",
+      "title": "Optional Airspy reception guard",
+      "primary_role": "Component guide or catalog",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "910946c7438494fa717b6931ffc3fd050ee1cbe8755a978a92265c08e89e0281"
+    },
+    {
+      "path": "ops/airspy-reception/systemd_lab/README.md",
+      "title": "Isolated real-systemd reception tests",
+      "primary_role": "Component guide or catalog",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "4653f85bac1600ad1e0cde479abbe6d1d35c31018136d1fc30e09fe635701207"
+    },
+    {
+      "path": "ops/fifo-lab/README.md",
+      "title": "Isolated FFmpeg Restart And FIFO Measurements",
+      "primary_role": "Component guide or catalog",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "f565828b64d8bd868ed95b8382ac3e33c428cb0b33eef337ec08f7fbb609d727"
+    },
+    {
+      "path": "ops/host-maintenance/README.md",
+      "title": "Host Maintenance Helpers",
+      "primary_role": "Component guide or catalog",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "360eabd2db9b5aab3e047cc9326badb27f74a5d292bca4c9b29c6aafb1f31715"
+    },
+    {
+      "path": "ops/kubernetes/twitch-thumbnail/README.md",
+      "title": "Thumbnail collector on K3s",
+      "primary_role": "Component guide or catalog",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "e634f270f80297adfa257f2ce1dac66f1126afcfbff03504696805fde0aee017"
+    },
+    {
+      "path": "ops/oci-backup/README.md",
+      "title": "OCI relay restore bundle",
+      "primary_role": "Component guide or catalog",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "55809e70d6740cfe2fac621c29b4c76e5ac6958cc2578ed06209e49a75266ec0"
+    },
+    {
+      "path": "ops/prodesk-monitoring/README.md",
+      "title": "Prodesk Monitoring Extract",
+      "primary_role": "Component guide or catalog",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "dee2a58b1d31ca1d534ef1ee2b4d3372c8f54449165e878ea0d390d2498072c0"
+    },
+    {
+      "path": "ops/public-publisher/site/README.md",
+      "title": "Static Operations Publisher",
+      "primary_role": "Component guide or catalog",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "311ce49940d3f99753b8a8fa921e0c81c387f2a41a54f11cd09cc9bb334cdbc9"
+    },
+    {
+      "path": "recovery-control/README.md",
+      "title": "Central Restart Authority",
+      "primary_role": "Component guide or catalog",
+      "review_depth": "structure, links and focused prose reconciliation",
+      "sha256": "250bbe59ae378ab5c9e1fcbfc241ee9ee564ea80be5b636726522a44a88a322c"
+    },
+    {
+      "path": "recovery-control/docs/00_INDEX.md",
+      "title": "Documentation Index",
+      "primary_role": "Component guide or catalog",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "8ae98d1dc4eca49a81be7cc602f70ac8f602f6b19e9d9bdf84221ac3c61c8d4b"
+    },
+    {
+      "path": "recovery-control/docs/architecture.md",
+      "title": "CRA Architecture",
+      "primary_role": "Component contract or rationale",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "b0e675c586c648131ec6144c6e3baa9989a6cd8bdc285787aa9e53d9cfa7c62e"
+    },
+    {
+      "path": "recovery-control/docs/harness-trust.md",
+      "title": "Test Boundaries",
+      "primary_role": "Component contract or rationale",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "aa2edcf91f6efcb0a8c4b696accfb5777e9f9934be7f333e36eacf1d6bde39ca"
+    },
+    {
+      "path": "recovery-control/docs/history.md",
+      "title": "Historical CRA Design",
+      "primary_role": "Component dated evidence or history",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "796508f6901262cf30fe8f6b515bb60da44936f69647f26801bfe062652d0fd4"
+    },
+    {
+      "path": "recovery-control/docs/local-reflex-authority.md",
+      "title": "Local Reflex Authority",
+      "primary_role": "Component contract or rationale",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "02b2f011ad6164350f903d5b53869e82d32f769dcbd80b05b78c91f81b5ccf27"
+    },
+    {
+      "path": "recovery-control/docs/local-reflex-operations.md",
+      "title": "Local Reflex Operations",
+      "primary_role": "Component procedure or governance",
+      "review_depth": "structure, links and focused prose reconciliation",
+      "sha256": "06f621ac347bd1f0eec21b063d524dc3cc013e43bc62c1f842059d6082fe8261"
+    },
+    {
+      "path": "recovery-control/docs/local-reflex-records.md",
+      "title": "Local Reflex Records",
+      "primary_role": "Component dated evidence or history",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "64508e3eb6c78795340602c10046b1877446f8558333c65cc9d3c684c5139620"
+    },
+    {
+      "path": "recovery-control/docs/public-language-policy.md",
+      "title": "Public Source Language",
+      "primary_role": "Component procedure or governance",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "38741f2005d3b2cc3727ae0051a5872c1e2ef3e20860fd4535be2b4f1971f2ce"
+    },
+    {
+      "path": "recovery-control/docs/public-release.md",
+      "title": "Public Release Boundary",
+      "primary_role": "Component procedure or governance",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "ee59e7ad234982d332a6b4478222a0b0b7f4a52f480fcfbe5a78f0f89431b877"
+    },
+    {
+      "path": "recovery-control/docs/safety-model.md",
+      "title": "Safety Model",
+      "primary_role": "Component contract or rationale",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "f5e7750dc8fddc519242a6684e37a32007e5f9bc9dcadffbbd15172b20cb34ff"
+    },
+    {
+      "path": "recovery-control/docs/why-cra.md",
+      "title": "Why CRA Exists",
+      "primary_role": "Component contract or rationale",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "b3b978550dca016e45f882cd6d360f13fe5b31a31b27fdddd6b29f9f23a5eb19"
+    },
+    {
+      "path": "ui/overlay/adsb-map/ATTRIBUTION.md",
+      "title": "ADS-B map data and software attribution",
+      "primary_role": "Component procedure or governance",
+      "review_depth": "structure and links; historical content retained",
+      "sha256": "69bb4acddf663c41f4b92b41d732fa50f1050c4a521d7201f70a4970217b5de3"
+    }
+  ],
+  "validation": {
+    "focused_tests_passed": 31,
+    "subtests_passed": 1805,
+    "public_boundary_issue_count": 0,
+    "public_language_errors": 0,
+    "component_boundary_issue_count": 0,
+    "secret_scan_findings": 0,
+    "archived_status_body_matches_base": true,
+    "live_audit_performed": false
+  },
+  "operation_flags_scope": "Commit and push flags describe preparation of this review record. Subsequent Git publication is identified by repository commits and remote refs; it does not imply deployment."
+}

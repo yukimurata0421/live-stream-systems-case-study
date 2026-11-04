@@ -156,8 +156,11 @@ public nonce/replay/partial failure, delivery receipts and deployment alerts.
 Operated evidence separately records natural consumers, sustained raw/Prometheus
 freshness, publication cycles and real provider HTTP acceptance.
 
-The public browser probe received and advanced video, then showed a player error.
-It does not qualify continuous reception or audio, and does not establish that
-an internal service caused the player error. No production failure was injected.
-Full external deadman delivery and long-duration receiver qualification remain
-separate gates, not implied by source or unit-test success.
+The initial November 2 browser probe advanced video, then showed a player error;
+that attempt did not qualify continuous reception or audio. The later
+[embedded-player qualification](observation-release-provenance.md#player-qualification-and-remaining-limits)
+passed a bounded overlapping AV and displayed-clock window. It does not qualify
+watch-page automation, long-run reception or failover. The independent watchdog
+has its own [absence and recovery evidence](external-watchdog.md#validation-and-limits).
+These later results do not erase the initial failure or imply production fault
+injection. [Current status](../current-status.md) identifies each latest checkpoint.

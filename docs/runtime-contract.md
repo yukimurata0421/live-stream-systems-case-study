@@ -121,14 +121,17 @@ consumes budget or extends cooldown.
 
 ## CRA Contract (Production-Disabled)
 
-The CRA source defines a narrower recovery path. It is production-disabled and
-the current media route does not use it.
+The CRA source defines a narrower local reflex path under signed central policy.
+Its operated mode is `dry_run`; it sends no restart requests and the current
+media route does not depend on it. The
+[CRA contract](../recovery-control/docs/local-reflex-authority.md) owns its rules.
 
 | Role | Responsibility in the CRA source | Limit |
 | --- | --- | --- |
 | `arena-server` Monitoring v4 | Observation, current state, incident and parity evidence, notification intents, signed facts-only projection | No policy, command, final verdict, or process signaling |
-| `cra-01` CRA | Policy, budget, cooldown, authorization, command lifecycle, reconciliation, final verification | No raw-source ownership or direct process signaling |
-| Dell delivery | Signed local facts and one exact, target-wide fenced FFmpeg-child effect | No action selection or escalation to container, Pod, Deployment, or host restart |
+| `cra-01` CRA central | Signed policy versions and limits, audit intake and verification | No per-action approval or direct process signaling |
+| Dell CRA agent | Local evaluation of the signed policy, persisted claims and limits, outcome queries | No restart request in `dry_run`; no independent policy definition |
+| Dell Stream Executor | Signed local facts and one exact, target-wide fenced FFmpeg-child effect | No stall-policy decision or escalation to container, Pod, Deployment, or host restart |
 | Raspberry Pi | Allowlisted static publication | No database, incident judgment, credential, or control feedback |
 
 Host, boot, Pod, container, FFmpeg generation, and PID identity must agree

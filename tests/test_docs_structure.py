@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import re
 import json
+import subprocess
 import unittest
+from collections import Counter
 from datetime import datetime
 from pathlib import Path
 from urllib.parse import unquote
@@ -31,6 +33,43 @@ def markdown_files() -> list[Path]:
     return [README, *sorted(DOCS.rglob("*.md"))]
 
 
+def repository_markdown_files() -> list[Path]:
+    """Include component guides; omit ignored dependencies and generated files."""
+    result = subprocess.run(
+        ["git", "ls-files", "--cached", "--others", "--exclude-standard", "-z"],
+        cwd=ROOT, check=True, capture_output=True, timeout=30,
+    )
+    return sorted({ROOT / name.decode() for name in result.stdout.split(b"\0") if name.endswith(b".md")})
+
+
+def markdown_anchors(text: str) -> set[str]:
+    """Resolve the ATX headings and explicit anchors used by this repository."""
+    anchors = set(re.findall(r'<a\s+(?:id|name)=[\"\x27]([^\"\x27]+)', text))
+    seen: Counter[str] = Counter()
+    fence = ""
+    for line in text.splitlines():
+        marker = re.match(r"^\s{0,3}(`{3,}|~{3,})", line)
+        if marker:
+            token = marker.group(1)
+            if not fence:
+                fence = token
+            elif token[0] == fence[0] and len(token) >= len(fence):
+                fence = ""
+            continue
+        if fence:
+            continue
+        heading = re.match(r"^#{1,6}\s+(.+?)\s*#*$", line)
+        if not heading:
+            continue
+        title = re.sub(r"\[([^\]]+)\]\([^)]*\)", r"\1", heading.group(1))
+        title = re.sub(r"<[^>]*>", "", title)
+        slug = re.sub(r"[^\w\- ]", "", title.lower()).replace(" ", "-")
+        suffix = seen[slug]
+        seen[slug] += 1
+        anchors.add(slug + (f"-{suffix}" if suffix else ""))
+    return anchors
+
+
 def parse_assignment_lines(text: str, keys: tuple[str, ...]) -> dict[str, str]:
     pattern = re.compile(rf"^\s*({'|'.join(map(re.escape, keys))})\s*[:=]\s*(.+?)\s*$")
     values: dict[str, str] = {}
@@ -48,8 +87,10 @@ def local_link_target(source: Path, raw_target: str) -> Path | None:
     if target.startswith("<") and target.endswith(">"):
         target = target[1:-1]
     target = target.split(maxsplit=1)[0]
-    if not target or target.startswith(("#", "http://", "https://", "mailto:")):
+    if not target or target.startswith(("http://", "https://", "mailto:")):
         return None
+    if target.startswith("#"):
+        return source
     target = unquote(target.split("#", 1)[0].split("?", 1)[0])
     if not target:
         return None
@@ -107,23 +148,37 @@ class PublicDocsStructureTests(unittest.TestCase):
                 self.assertGreater(len(read(path).strip()), 80)
 
     def test_internal_markdown_links_resolve(self) -> None:
-        for source in markdown_files():
+        anchors: dict[Path, set[str]] = {}
+        for source in repository_markdown_files():
             for raw_target in MARKDOWN_LINK_RE.findall(read(source)):
                 target = local_link_target(source, raw_target)
                 if target is None:
                     continue
                 with self.subTest(source=source.relative_to(ROOT), target=raw_target):
                     self.assertTrue(target.exists(), f"broken local link: {raw_target}")
+                    if "#" in raw_target and target.suffix == ".md":
+                        fragment = unquote(raw_target.split("#", 1)[1].split()[0].rstrip(">"))
+                        if fragment:
+                            if target not in anchors:
+                                anchors[target] = markdown_anchors(read(target))
+                            self.assertIn(fragment, anchors[target], f"broken section link: {raw_target}")
+
+    def test_markdown_anchors_preserve_redirects_and_ignore_code(self) -> None:
+        text = '# Install and `validate`\n## Repeated\n## Repeated\n<a id="old-entry"></a>\n```md\n# Example only\n```\n'
+        self.assertEqual(markdown_anchors(text), {"install-and-validate", "repeated", "repeated-1", "old-entry"})
+        self.assertNotIn("local-validation", markdown_anchors(text))
 
     def test_docs_index_covers_every_document(self) -> None:
         index = read(DOCS / "00_INDEX.md")
-        indexed = set(re.findall(r"`([^`]+\.md)`", index))
+        entries = re.findall(r"`([^`]+\.md)`", index)
+        indexed = set(entries)
         expected = {
             str(path.relative_to(DOCS)).replace("\\", "/")
             for path in DOCS.rglob("*.md")
             if path.name != "00_INDEX.md"
         }
-        self.assertFalse(expected - indexed, f"unindexed docs: {sorted(expected - indexed)}")
+        self.assertEqual(expected, indexed, "catalog must cover existing documents exactly")
+        self.assertEqual(len(entries), len(indexed), "each document needs one primary catalog role")
 
     def test_readme_is_a_bounded_review_entrypoint(self) -> None:
         text = read(README)

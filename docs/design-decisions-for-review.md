@@ -35,7 +35,7 @@ The decisions that most shape the current system:
 | An unfinished recovery design was replaced after 104 qualification runs instead of being patched further. | [Media route](#media-route-and-delivery-recovery), [decision record](v3/oci-route-simplification-decision.md) |
 | A WAN gap reconnects only the FFmpeg output, in the same process; riding through on the old connection is deferred until a delivery judge can be calibrated. | [Media route](#media-route-and-delivery-recovery), [runtime contract](v3/ffmpeg-fifo-recovery.md) |
 | The public YouTube URL is a production invariant; replacement broadcasts are disabled. | [YouTube lifecycle](#youtube-lifecycle-and-identity) |
-| No single signal decides health, and no observation layer claims viewer playback. | [Observation](#observation-sli-and-notification) |
+| Each observation proves its measured layer: internal counters and provider snapshots do not establish public-player reception. | [Observation](#observation-sli-and-notification) |
 | A stricter central restart authority exists as a design and runs only in `dry_run`. | [Recovery authority design](#recovery-authority-design) |
 
 ## Architecture And Ownership

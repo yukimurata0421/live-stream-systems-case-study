@@ -84,7 +84,7 @@ The current-source recovery rule is unchanged: raw and Prometheus evidence must
 remain fresh for 900 seconds, within the existing 180-second source bound. The
 Prometheus check requires the explicitly selected job and instance, `up == 1`,
 and every point on its one-minute grid. The
-[direct-scrape connection](observation-standardization.md#connecting-the-existing-consumer)
+[direct-scrape connection](observation-standardization.md#connected-paths)
 changes that selection without replacing raw-history validation. The exporter's separate five-minute latest-value
 display bound is retained. No historical Prometheus values are inserted.
 

@@ -18,6 +18,8 @@ evidence windows, not current service-health guarantees.
 | Historical production fallback drill (2026-10-20, former policy) | Fallback started 52 seconds after a manual relay stop; it later stopped after sustained relay health. | The operator restarted the relay. Other failure modes and frame-level continuity were not tested. |
 | Fallback rule revisions (2026-10-30 to 10-31) | Isolated tests and review found gaps in successive revisions, including no backup within 75 s of a relay stop and no backup for 600 s with a stopped YouTube copy. Each was reproduced, kept as a regression and fixed. | [Revision history](v3/fallback-policy-revisions.md); failed results are retained in the dated records. |
 | Current fallback rule, isolated faults (2026-10-31) | The current consumer is checked with isolated media faults, clock faults and changing observation states. | [Evidence status](v3/fallback-decision-contract.md#evidence-status); production faults, YouTube backup selection and uninterrupted public playback remain unverified. |
+| Observation ownership and release provenance | [Observation contract](v3/observation-standardization.md) and [release evidence](v3/observation-release-provenance.md). | Source identity, natural publication and provider acceptance are separate checks; retained legacy consumers still need migration. |
+| Bounded embedded-player reception | [November 3 qualification](../publication/player-reception-qualification-20261103.json) records overlapping AV and displayed-clock evidence. | Does not qualify watch-page automation, long reception, human audio assessment or failover. |
 
 Read [the incident stories](operational-case-studies.md) for symptoms, actions,
 verification, and limits. Read [the continuity note](same-url-continuity-evidence.md)
@@ -115,17 +117,7 @@ Follow each link before applying a result to the current route.
 
 ## Smoke-Test Position
 
-The recommended live smoke-test window for v3-impacting runtime, encoder, or
-recovery changes is 24 hours. The rationale is narrow:
-
-- v2 already provided the long-running behavior baseline for the delivery
-  model;
-- v3 should prove that migration, k3s ownership, NVENC contract, watchdogs, and
-  public evidence still behave across one daily cycle;
-- a 24-hour window is long enough to cross routine monitoring, playlist,
-  YouTube quota-day, and WAN/session timing boundaries;
-- it is short enough to avoid pretending that a single migration gate proves a
-  long-window SLO.
-
-After a 24-hour smoke test, the system still needs normal 14-day or 28-day SLI
-review before making broad reliability claims.
+The [test strategy](test-strategy-and-safety-boundary.md#24-hour-smoke-test)
+owns the retained migration smoke-test rationale and scope. A bounded check,
+an ownership cutover and long-window SLI evidence answer different questions;
+passing one does not establish the others.

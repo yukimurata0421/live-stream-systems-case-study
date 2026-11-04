@@ -5,10 +5,13 @@ policy signed by the central service. The central service publishes policy and
 verifies the append-only audit. The existing Stream Effect Executor owns the
 physical effect, exact-target checks, and durable generation fence.
 
-The current implementation is **17 Python files, 2,535 lines** under `src/cra/`
-(including comments and blank lines). The operated release remains in
+The current implementation under `src/cra/` contains the local agent and the
+signed-policy/audit service. The operated release remains in
 `dry_run`: it records decisions and sends no restart requests. Publication,
 local tests, and elapsed runtime do not grant production authority.
+
+This is the CRA component guide. The [Stream documentation guide](../docs/README.md)
+describes the operated media route and its separate local fallback controller.
 
 ## Start here
 

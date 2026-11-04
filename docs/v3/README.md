@@ -5,7 +5,17 @@ records. They are listed by topic, with one line each, in the
 [documentation catalog](../00_INDEX.md); the
 [documentation guide](../README.md) suggests where to start.
 
-The pages most readers need from this folder:
+Choose the kind of answer needed:
+
+| Need | Start here |
+| --- | --- |
+| Current media decisions | [Fallback contract](fallback-decision-contract.md) and [FIFO recovery](ffmpeg-fifo-recovery.md) |
+| Observation and notification meaning | [Observation contract](observation-standardization.md) and [notification time](notification-observation-time.md) |
+| Source identity and operated evidence | [Release provenance](observation-release-provenance.md) and [current status](../current-status.md) |
+| Publication setup | [Publisher boundary](public-publisher-boundary.md) and [R2 source guide](r2-publication-transport.md) |
+| A historical failure and its correction | [Incident stories](../operational-case-studies.md) |
+
+Selected deeper paths:
 
 - [FIFO connection recovery](ffmpeg-fifo-recovery.md): why the output reconnects
   instead of riding through or restarting FFmpeg; its

@@ -13,6 +13,12 @@ study. It was imported from sanitized public snapshot
 `5e61e2b7dbbd09f014746c35e50c406ead755561`; it is not the production source
 of truth or a supported monitoring product.
 
+For the whole system, return to the [Stream documentation guide](../docs/README.md).
+The phase milestones below describe this subproject's shadow implementation.
+The later [observation contract](../docs/v3/observation-standardization.md) and
+[current checkpoints](../docs/current-status.md) describe connections operated
+outside that milestone; they do not complete its revision-bound phase gates.
+
 ## OCI And Twitch Source Update
 
 The 2026-10-13 source port adds configured read-only relay/API/reception
@@ -91,6 +97,8 @@ single-node k3s cluster highly available.
   read its internal database, or feed control decisions back to the arena.
 
 ## Run the tests
+
+From this `monitoring-v4/` directory, using its own development environment:
 
 ```bash
 python3 -m pip install -e '.[test]'

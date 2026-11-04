@@ -125,7 +125,7 @@ step of this procedure.
 ## Development checks
 
 From `recovery-control/`, the reflex tests are under `tests/reflex/` and run in
-the public suite described in the [README](../README.md#local-validation). The
+the public suite described in the [README](../README.md#install-and-validate). The
 CRA package is also checked directly:
 
 ```bash

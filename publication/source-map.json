@@ -37,7 +37,7 @@
       "decision": "Optional Airspy reception guard; preserve the durable one-extra-attempt cap, remove personal configuration writers and keep raw evidence private.",
       "before_sha256": "d2268fba12ef09d57e492f92569838989f651d84fc89d8e3d4d242420cac01ba",
       "source_sha256": "e8ad53fd1e34398253c585162a2f6dcda8703eb93cedf9ff68ecc85ed37db47f",
-      "public_sha256": "4bd1ea4a6b709235b8e0b79e832d0f2757ad129565202d848c841c78a77d7c2b",
+      "public_sha256": "1b61116a0854b561c735266622164b279436815f815607133131772b8c44fb21",
       "port_date_jst": "2026-10-30",
       "pre_documentation_restructure_sha256": "00b596e75b50eaedbd3bed4ebc79e71d882e7049e72516aec95dfc0860ed015e",
       "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json.",
@@ -71,7 +71,9 @@
       "r2_transport_source_sha256": null,
       "r2_transport_port": "publication/r2-publication-transport-port-20261103.json",
       "before_publication_documentation_reconciliation_sha256": "4de3863cec5af4c8819ccc03948cb6d58150ca16885e6c5f951dda92702b2dd6",
-      "publication_documentation_reconciliation": "2026-11-04"
+      "publication_documentation_reconciliation": "2026-11-04",
+      "before_documentation_design_sha256": "4bd1ea4a6b709235b8e0b79e832d0f2757ad129565202d848c841c78a77d7c2b",
+      "documentation_design_record": "publication/documentation-design-review-20261104.json"
     },
     {
       "path": "configs/auto_dj_classification_overrides.json",
@@ -247,7 +249,7 @@
       "decision": "Describe independent upload observation and preserve the control and SLO boundaries.",
       "before_sha256": "9f7605e83cdf9ec60df73ebe3f2472cca9292c4e06ec6768621ce53026c0b82c",
       "source_sha256": "82074416718e1cdcc2556b3e59dcb3e931b4c5a5d534cf37e93856afdfa640a7",
-      "public_sha256": "73e22de84a201d71978a88beae0442ba7b243026e1fe91fe9aca63e74b892617",
+      "public_sha256": "b859a02ff2926d34b1347710ec642781a6981b3babd511a05b470d90509d58d5",
       "prior_public_sha256": "e71784d110b08225a9a320ecb03f999b60fa7f23b2503f2e6a3f80448620c9ed",
       "localization": "English prose; control structures and machine identifiers preserved.",
       "pre_graph_display_sha256": "6a87a495eb3698b1a49e053ffcc109b28d94a59e9dd29cb3399a62279e196d3d",
@@ -318,7 +320,9 @@
       "external_watchdog_record": "publication/oci-external-watchdog-20261102.json",
       "before_r2_transport_port_sha256": "4cbb480b6b1e4107dff586e731eacb9e976b8bcd27157a537705d961d2203db5",
       "r2_transport_source_sha256": null,
-      "r2_transport_port": "publication/r2-publication-transport-port-20261103.json"
+      "r2_transport_port": "publication/r2-publication-transport-port-20261103.json",
+      "before_documentation_design_sha256": "73e22de84a201d71978a88beae0442ba7b243026e1fe91fe9aca63e74b892617",
+      "documentation_design_record": "publication/documentation-design-review-20261104.json"
     },
     {
       "path": "docs/README.md",
@@ -326,7 +330,7 @@
       "decision": "Selected FIFO recovery port; preserve public behavior, explicit observation injection, generic lab endpoints and English documentation.",
       "before_sha256": "0e2306b6149e8d3529e22ef67853b75aaf517b765a6ee4178f484e47d59e9a90",
       "source_sha256": null,
-      "public_sha256": "12467ef3c1ec74ee7e6603fbfdc91b037f16b0f363d7f2545035a2ff0aa26d7b",
+      "public_sha256": "ae0da87b5fdcb4bf6c87b9991eebc7edd9d8faec65a5f796895c39257080fe45",
       "pre_hardware_selection_sha256": "e1fcb50d004b1acf7c7c79d457c62952161d199e9727f7619bb7fce5cd1ae260",
       "hardware_selection_change": "Link the dated hardware selection retrospective from existing reviewer and topology routes.",
       "pre_documentation_restructure_sha256": "3a14b689ef3c2c1307a39e2f2f40e6267e2bbc507ae430f846d373c2f667b197",
@@ -345,7 +349,9 @@
       "before_fallback_docs_sha256": "3aee1a9156ffef2d78f126461d5ba029aaf0ca023dfd6a33e3dd3333107b9bd5",
       "fallback_docs_reconciliation": "fallback-docs-consolidation-20261031",
       "before_boottime_media_health_sha256": "64d12f218b0a8fdb31f7e8ed1ce1d651073d9d1c39e8e512c5579c29080f75bd",
-      "boottime_media_health": "boottime-media-health-20261031"
+      "boottime_media_health": "boottime-media-health-20261031",
+      "before_documentation_design_sha256": "12467ef3c1ec74ee7e6603fbfdc91b037f16b0f363d7f2545035a2ff0aa26d7b",
+      "documentation_design_record": "publication/documentation-design-review-20261104.json"
     },
     {
       "path": "docs/architecture.md",
@@ -391,7 +397,7 @@
       "decision": "Record applied independent upload sampling, sustained current-source recovery and the natural notification result.",
       "before_sha256": "1beab3cd3e65147e0fa2d520275c2280dfa86884c6a345efefd32f2dc8469aed",
       "source_sha256": null,
-      "public_sha256": "ccc9615cc4661e494576084aa8219e6dff8db2724710ba35f754485366a45cbc",
+      "public_sha256": "33ddb36c53e4018123457254f032e7e7d1e9a9dcc2f86b7b69f9eb7e52e55148",
       "port_date_jst": "2026-11-02",
       "documentation_restructure": "New single page for volatile state.",
       "pre_twitch_observation_public_sha256": "040eac29174151f51e473f7f85e4aa23ff994be0079b3d4c011623b6ec7864ca",
@@ -461,7 +467,9 @@
       "qualification_follow_up": "publication/player-reception-qualification-20261103.json",
       "before_r2_transport_port_sha256": "88cf15538f812400d98a54a2d33c6200276c1469cf44736909b91a3693cf3671",
       "r2_transport_source_sha256": null,
-      "r2_transport_port": "publication/r2-publication-transport-port-20261103.json"
+      "r2_transport_port": "publication/r2-publication-transport-port-20261103.json",
+      "before_documentation_design_sha256": "ccc9615cc4661e494576084aa8219e6dff8db2724710ba35f754485366a45cbc",
+      "documentation_design_record": "publication/documentation-design-review-20261104.json"
     },
     {
       "path": "docs/design-decisions-for-review.md",
@@ -469,7 +477,7 @@
       "decision": "state the 2026-10-22 local reflex revision against the earlier CRA rationale",
       "before_sha256": "3d53842818d5b5f7edf48217b9e9d47ca07918644f151ddf519ee492a3a0e238",
       "source_sha256": null,
-      "public_sha256": "dbde90afda1b0488c1c2ccbb31be6d89e01ae385420efafe0fb4fce978aea806",
+      "public_sha256": "fc71223132b1ea723d6244660fb03cfc1af45bbcaef554365f603113b44528d6",
       "port_date_jst": "2026-10-22",
       "pre_documentation_restructure_sha256": "fdda563dc1d60d8b4bae0097ddf03f65e09ca4e594e397af5976808af0f57403",
       "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json.",
@@ -483,7 +491,9 @@
       "before_boottime_media_health_sha256": "cd2c159b9e4261b397e85623ca4625f774f2539947cfc79fd2533edf35573f8b",
       "boottime_media_health": "boottime-media-health-20261031",
       "before_publication_documentation_reconciliation_sha256": "9bcee0fde7d6644a4b1fc7a194d5fe34b708fcd8d11335d946a29aefcf39ee98",
-      "publication_documentation_reconciliation": "2026-11-04"
+      "publication_documentation_reconciliation": "2026-11-04",
+      "before_documentation_design_sha256": "dbde90afda1b0488c1c2ccbb31be6d89e01ae385420efafe0fb4fce978aea806",
+      "documentation_design_record": "publication/documentation-design-review-20261104.json"
     },
     {
       "path": "docs/evolution.md",
@@ -512,7 +522,7 @@
       "decision": "hiring-reader-summary-with-dated-evidence",
       "before_sha256": "0f210c8e1dcd7c05aa26abf9b3020838ec3467f49a2b7bcedcf300cebed1d7e7",
       "source_sha256": null,
-      "public_sha256": "c0409c599760f9779b48926c0385dc381fd39d8540501bafb4a4f32fc4e5ca19",
+      "public_sha256": "5906abf303cee74e47b4c2fe212a4df1f31b9f9e2e79b04a7d9feccbbcc735ae",
       "pre_hardware_selection_sha256": "65ecbe14498fddd0c29a76f2ece43b367b7d94b12aa269295b256a7950dfbda4",
       "hardware_selection_change": "Link the dated hardware selection retrospective from existing reviewer and topology routes.",
       "pre_documentation_restructure_sha256": "bc1833f76dad6e07ba2b95f001528d7fdd9e3afd02b07581d7b740e2c1435a29",
@@ -520,7 +530,9 @@
       "before_fallback_docs_sha256": "50417db18d90e0ee79bc582430788a82f59f3c8ecf88257d594bb41248b47614",
       "fallback_docs_reconciliation": "fallback-docs-consolidation-20261031",
       "before_boottime_media_health_sha256": "df35579f38d3c5e70fa0dc6059686b2400601f77bc03f0a487342b5c974a1c7e",
-      "boottime_media_health": "boottime-media-health-20261031"
+      "boottime_media_health": "boottime-media-health-20261031",
+      "before_documentation_design_sha256": "c0409c599760f9779b48926c0385dc381fd39d8540501bafb4a4f32fc4e5ca19",
+      "documentation_design_record": "publication/documentation-design-review-20261104.json"
     },
     {
       "path": "docs/implementation-review-map.md",
@@ -528,7 +540,7 @@
       "decision": "Selected FIFO recovery port; preserve public behavior, explicit observation injection, generic lab endpoints and English documentation.",
       "before_sha256": "869f1b5b8fd8415e3b291f85f0ee46c1b5d750e9a65500b8424ea32db17b5906",
       "source_sha256": null,
-      "public_sha256": "8c043f60508c8b85c662a6034b6d779d87743cdec7c9019b6ba5e6be91b32c89",
+      "public_sha256": "c7dd3b436e65f1ef66cb635e565f2af3ba6678e99b661e4bd40cbedf6a688426",
       "pre_documentation_restructure_sha256": "dce4f788e0479398c6718742c679da57bc203509c7ea7e83fa93c477d8c6dfa4",
       "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json.",
       "pre_clock_monitor_public_sha256": "e61fbc6732027df3a0eb7832e3e28ab37e0914bda85305f3127caa2b64260a53",
@@ -544,7 +556,9 @@
       "fallback_docs_reconciliation": "fallback-docs-consolidation-20261031",
       "before_r2_transport_port_sha256": "4fe2abe81ff620c2eb5d8a9e0bad0993d8d55a618e6a6c01741c97957d724a71",
       "r2_transport_source_sha256": null,
-      "r2_transport_port": "publication/r2-publication-transport-port-20261103.json"
+      "r2_transport_port": "publication/r2-publication-transport-port-20261103.json",
+      "before_documentation_design_sha256": "8c043f60508c8b85c662a6034b6d779d87743cdec7c9019b6ba5e6be91b32c89",
+      "documentation_design_record": "publication/documentation-design-review-20261104.json"
     },
     {
       "path": "docs/observability.md",
@@ -590,7 +604,7 @@
       "decision": "Selected FIFO recovery port; preserve public behavior, explicit observation injection, generic lab endpoints and English documentation.",
       "before_sha256": "43cf38222db06bcfb4e31e343283be8073426ea13da3779fbf8bba15ef3d21e2",
       "source_sha256": null,
-      "public_sha256": "0790f598431be9fbae139e78a886ff61bc0e9a5d26c7d6f2c3dc203bfa386335",
+      "public_sha256": "465a9feebe3494eb1a3e34f022330a61b3cd272a450ea007b99e94397eb521db",
       "port_date_jst": "2026-10-24",
       "pre_documentation_restructure_sha256": "43b380c296bd113148adb6547477510fd2b6fb7f18a00534784320bfdf266013",
       "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json.",
@@ -606,7 +620,9 @@
       "before_fallback_docs_sha256": "389427530a54f38344704b3bcca1d750cbf92c3b0a7f2c943c2f5da0de5675c5",
       "fallback_docs_reconciliation": "fallback-docs-consolidation-20261031",
       "before_boottime_media_health_sha256": "cc41f873df4d575521513fb13891a2c1e2eba59f599c2f22c92c35c05a711b70",
-      "boottime_media_health": "boottime-media-health-20261031"
+      "boottime_media_health": "boottime-media-health-20261031",
+      "before_documentation_design_sha256": "0790f598431be9fbae139e78a886ff61bc0e9a5d26c7d6f2c3dc203bfa386335",
+      "documentation_design_record": "publication/documentation-design-review-20261104.json"
     },
     {
       "path": "docs/public-language-policy.md",
@@ -624,13 +640,15 @@
       "decision": "Optional Airspy reception guard; preserve the durable one-extra-attempt cap, remove personal configuration writers and keep raw evidence private.",
       "before_sha256": "4fae26b5711f73bf3e22ab226e195aa28ada120f0c2cf7aa617ff6448c1ed27b",
       "source_sha256": null,
-      "public_sha256": "d91320ca7a445ab86e196dcd67649851f507b608a85a393baacc80f8e93ae723",
+      "public_sha256": "c13eda5a16d02fa317d67a1070a9088a0ac918c90efa778f480b4f26096a745f",
       "port_date_jst": "2026-10-30",
       "port_record": "publication/airspy-reception-port-20261030.json",
       "prior_public_sha256": "4fae26b5711f73bf3e22ab226e195aa28ada120f0c2cf7aa617ff6448c1ed27b",
       "before_r2_transport_port_sha256": "84638924d1155935fcdfca7de707fc481420b65687ad2e91b22c0879d21e9d27",
       "r2_transport_source_sha256": null,
-      "r2_transport_port": "publication/r2-publication-transport-port-20261103.json"
+      "r2_transport_port": "publication/r2-publication-transport-port-20261103.json",
+      "before_documentation_design_sha256": "d91320ca7a445ab86e196dcd67649851f507b608a85a393baacc80f8e93ae723",
+      "documentation_design_record": "publication/documentation-design-review-20261104.json"
     },
     {
       "path": "docs/runtime-contract.md",
@@ -638,12 +656,14 @@
       "decision": "curated-current-contract-and-dated-evidence",
       "before_sha256": "371723464dd5e6e2fdfebf710221dc3dc642c2008fa096f1265c18e9cca2019f",
       "source_sha256": null,
-      "public_sha256": "ea1d00be70145582a40a0d9fcefb9df148fb8993b5cfae181901d8fef16846e5",
+      "public_sha256": "0c63f71b6fbee572498cb5db71f5ea970fa271009add4e0d1aec40d55bf23dd0",
       "port_date_jst": "2026-10-22",
       "pre_documentation_restructure_sha256": "b284f3bfe336d1eb81b49ce6039e5e1445cc17069f5ee3235ffcee796b3232a8",
       "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json.",
       "pre_clock_monitor_public_sha256": "d6f089ac8cb312df387fdd5a63502f77e402dcab489da344a5fbf6b81d3fd86a",
-      "clock_monitor_port": "2026-10-22 selected return-feed monitor / OCI files-only backup port; existing changes retained."
+      "clock_monitor_port": "2026-10-22 selected return-feed monitor / OCI files-only backup port; existing changes retained.",
+      "before_documentation_design_sha256": "ea1d00be70145582a40a0d9fcefb9df148fb8993b5cfae181901d8fef16846e5",
+      "documentation_design_record": "publication/documentation-design-review-20261104.json"
     },
     {
       "path": "docs/same-url-continuity-evidence.md",
@@ -671,7 +691,7 @@
       "decision": "Selected FIFO recovery port; preserve public behavior, explicit observation injection, generic lab endpoints and English documentation.",
       "before_sha256": "7260dabcdd49d2080223952d24250bb56cf68e3f82b4ad1daa9f00fccee362ab",
       "source_sha256": null,
-      "public_sha256": "0949492076683057b521e05979f3630e1ac6fce18eeae1f39a683ec3f5799a41",
+      "public_sha256": "eac8ea3e78290f1d73dc03dc59278999efadedda416fac97e44b8b67e6316c84",
       "port_date_jst": "2026-10-29",
       "pre_documentation_restructure_sha256": "05aaa171c0ae1542019467073dd5058d7301e5d83eec70c9d39b20d6c8d12c68",
       "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json.",
@@ -681,7 +701,9 @@
       "thumbnail_clock_port": "2026-10-22 committed source through 740bcc00; concurrent review excluded.",
       "pre_fifo_recovery_public_sha256": "7260dabcdd49d2080223952d24250bb56cf68e3f82b4ad1daa9f00fccee362ab",
       "port_record": "publication/transport-recorder-port-20261029.json",
-      "prior_public_sha256": "bc15110a6d74d005aa8a4d42e7f59d9136f4119b732ad8070b56db719b2a4372"
+      "prior_public_sha256": "bc15110a6d74d005aa8a4d42e7f59d9136f4119b732ad8070b56db719b2a4372",
+      "before_documentation_design_sha256": "0949492076683057b521e05979f3630e1ac6fce18eeae1f39a683ec3f5799a41",
+      "documentation_design_record": "publication/documentation-design-review-20261104.json"
     },
     {
       "path": "docs/v3/adsb-source-coverage.md",
@@ -721,10 +743,12 @@
       "decision": "curated-current-contract-and-dated-evidence",
       "before_sha256": "e4ded03e5912b5112c31a9e9474209c916191cfe799591f4f1fdb738cbaef9db",
       "source_sha256": null,
-      "public_sha256": "78cc6653daabc63daceb7d95c61622de27344c89f50b9c2a22cd38abae11a99a",
+      "public_sha256": "1abfc05f204030d44d2e86f39f948b44f34019f703bf43e33f69c9cf6e9a0103",
       "port_date_jst": "2026-10-22",
       "pre_combined_commit_review_public_sha256": "7049d5bebdd165c685dda9254e151ffb43f27b6e5f0463fd6f4fe41184e5bd0c",
-      "combined_commit_review": "2026-10-24 English, playback-exclusion and design review; preceding provenance retained."
+      "combined_commit_review": "2026-10-24 English, playback-exclusion and design review; preceding provenance retained.",
+      "before_documentation_design_sha256": "78cc6653daabc63daceb7d95c61622de27344c89f50b9c2a22cd38abae11a99a",
+      "documentation_design_record": "publication/documentation-design-review-20261104.json"
     },
     {
       "path": "docs/v3/encoder-fps-tuning-2026-05-31.md",
@@ -1089,12 +1113,14 @@
       "decision": "Selected Twitch API deadline and transport diagnostics port; retain configured public bindings and synthetic identities.",
       "before_sha256": "474b906aef2d61b33adc34cbe1a1eb86cfc88a0142e881af85f3b23f4f7fdc70",
       "source_sha256": null,
-      "public_sha256": "d2ba3ae4e49d6a724ce1933d38f1c5f1a74ce6ad5d8a6af8bff6fe9f61ae1668",
+      "public_sha256": "51a9a8f1e002f4f14e7513233e858c33eeec45f85846bba6f88a9a0a7bd66b62",
       "pre_twitch_observation_public_sha256": "ed3bb73f94d1501428678e0128eeef4988e6df6e622bf09414b1e282c58cd7ff",
       "port_date_jst": "2026-10-27",
       "pre_observability_reconciliation_sha256": "209603e882c772be3cfa5772783c19c6fbeece5b95526fe3bc0ba18abdaa6b20",
       "pre_twitch_api_deadline_public_sha256": "2de3603234a842bae7c2643ff56576e8f94d30c726be27f49701c0233f229e85",
-      "prior_public_sha256": "2de3603234a842bae7c2643ff56576e8f94d30c726be27f49701c0233f229e85"
+      "prior_public_sha256": "2de3603234a842bae7c2643ff56576e8f94d30c726be27f49701c0233f229e85",
+      "before_documentation_design_sha256": "d2ba3ae4e49d6a724ce1933d38f1c5f1a74ce6ad5d8a6af8bff6fe9f61ae1668",
+      "documentation_design_record": "publication/documentation-design-review-20261104.json"
     },
     {
       "path": "monitoring-v4/config/monitoring_v4_legacy_surface_contract.json",
@@ -3127,11 +3153,13 @@
       "decision": "state the 2026-10-22 local reflex revision against the earlier CRA rationale",
       "before_sha256": "08e41df8bece7eace8ddf3b6f01f30cc03451b045bd8b7cbe2fca4c6407bd378",
       "source_sha256": null,
-      "public_sha256": "c34c8981715a8999010ce1fb1737aabab06f8985f533ad0517477f77967990be",
+      "public_sha256": "250bbe59ae378ab5c9e1fcbfc241ee9ee564ea80be5b636726522a44a88a322c",
       "port_date_jst": "2026-10-22",
       "pre_concurrent_documentation_sha256": "1921fec43be14f8d43f3a58ea37c04f3b4750cfa362b84b229a8348c2931b1aa",
       "prior_public_sha256": "44d32ac857eb17a6bf30b882240cfcefa62490e70de93c5ad5dd388af50986be",
-      "layout_update": "Current CRA and Stream support separation, 2026-10-26"
+      "layout_update": "Current CRA and Stream support separation, 2026-10-26",
+      "before_documentation_design_sha256": "c34c8981715a8999010ce1fb1737aabab06f8985f533ad0517477f77967990be",
+      "documentation_design_record": "publication/documentation-design-review-20261104.json"
     },
     {
       "path": "recovery-control/docs/00_INDEX.md",
@@ -4371,7 +4399,7 @@
       "decision": "adapted-english-and-portable-bindings",
       "before_sha256": "f00a60e74106a91f741d481a5bdb6740868ce7ad8b7984b9ed3a568809c018cd",
       "source_sha256": "252ebbbed3ab9b440352c564d8cdbc7b62cc2de0e7a792c019dc1ecb41ab6161",
-      "public_sha256": "c76230ad0af4be801cb0197b666dc6dc481dc1ab1e2e13d7a08c29716f6cbee5",
+      "public_sha256": "bcacf13e68a9030f12102a67befbe2d72e00e86a39ba77dc1db38b2733940ae3",
       "before_unicode_source_sha256": "ad687380f09c8a9fb2642a991732247c0a40a804df9838b2c4a1f5b9fa7fd070",
       "unicode_source_change": "English authored text; Unicode fixture values preserved with explicit escapes.",
       "port_date_jst": "2026-10-22",
@@ -4381,7 +4409,9 @@
       "layout_update": "Current CRA and Stream support separation, 2026-10-26",
       "r2_publication_record": "publication/r2-publication-transport-port-20261103.json",
       "before_publication_documentation_reconciliation_sha256": "e6aeed831b5010b73f35f6bacb7cc82f350d49e5a5955cbd17dd1899b68b820d",
-      "publication_documentation_reconciliation": "2026-11-04"
+      "publication_documentation_reconciliation": "2026-11-04",
+      "before_documentation_design_sha256": "c76230ad0af4be801cb0197b666dc6dc481dc1ab1e2e13d7a08c29716f6cbee5",
+      "documentation_design_record": "publication/documentation-design-review-20261104.json"
     },
     {
       "path": "tests/test_encoder_rate_derivation.py",
@@ -6362,13 +6392,15 @@
       "source_role": "public-measurement-documentation",
       "decision": "Describe independent upload observation and preserve the control and SLO boundaries.",
       "before_sha256": null,
-      "public_sha256": "5c493cab07ddb7d73dfcd91489b4875eefdb9c799e013f587cccb9eddf6ca34a",
+      "public_sha256": "6811d01e19dbc63f489e9cf07cc47685b874608ae51d4dbd133bb9be6ba018ff",
       "source_sha256": null,
       "port_date_jst": "2026-11-02",
       "port_record": "publication/upload-direct-connection-20261102.json",
       "before_upload_direct_connection_sha256": "c74b2ff6c2fa50a992871dc63170bfc9f7ea0013a7bf0a1cb10e718f9312a794",
       "prior_public_sha256": "5c493cab07ddb7d73dfcd91489b4875eefdb9c799e013f587cccb9eddf6ca34a",
-      "observation_completion_record": "publication/observation-completion-20261102.json"
+      "observation_completion_record": "publication/observation-completion-20261102.json",
+      "before_documentation_design_sha256": "5c493cab07ddb7d73dfcd91489b4875eefdb9c799e013f587cccb9eddf6ca34a",
+      "documentation_design_record": "publication/documentation-design-review-20261104.json"
     },
     {
       "path": "src/stream_core/common/observation_contract.py",
@@ -6500,14 +6532,16 @@
       "source_role": "observation-shadow-source-or-documentation",
       "decision": "Direct-scrape candidate only; preserve deployed measurement, notification and recovery contracts.",
       "before_sha256": null,
-      "public_sha256": "a558153451a51f1a650a90d5d0abc0b36b7382162aae9c25e4e646fba2c3d46f",
+      "public_sha256": "ff59fa086f0dc8a1d0ac19621b21c77fc035c0d617ae3e962fb818fca80644be",
       "source_sha256": null,
       "observation_standardization_port": "publication/observation-standardization-20261102.json",
       "before_upload_direct_connection_sha256": "11740bfa3d48e79fd84b50eae30acfcc0f813f03222a4c3f0651c5c731491c8f",
       "port_record": "publication/upload-direct-connection-20261102.json",
       "prior_public_sha256": "9289ebcf5916e40f0e0bdf81b9098f066b07bff194a325e53bd6bf8ccea77f81",
       "observation_completion_record": "publication/observation-completion-20261102.json",
-      "external_watchdog_record": "publication/oci-external-watchdog-20261102.json"
+      "external_watchdog_record": "publication/oci-external-watchdog-20261102.json",
+      "before_documentation_design_sha256": "a558153451a51f1a650a90d5d0abc0b36b7382162aae9c25e4e646fba2c3d46f",
+      "documentation_design_record": "publication/documentation-design-review-20261104.json"
     },
     {
       "path": "publication/observation-standardization-20261102.json",
@@ -7230,6 +7264,69 @@
       "before_publication_documentation_reconciliation_sha256": "7a9d2af5b573aac982e2f8db4b222f70e15e01d15e4b1d4cb530b22eacaa0eb0",
       "public_sha256": "fe9fa584be80be1a6caf5b602d121be6a21093269911c946c6303a4bd8da927f",
       "publication_documentation_reconciliation": "2026-11-04"
+    },
+    {
+      "path": "docs/archive-note.md",
+      "source_role": "public-documentation-design",
+      "source_sha256": null,
+      "decision": "Document roles, navigation and evidence scopes reconciled without changing runtime behavior.",
+      "before_documentation_design_sha256": "b51033590f3f1974388504f3feda0182c38d5adb3a0c948fdca7db123bc34559",
+      "public_sha256": "f4bb4568f51d767794f33e29f3961add4a7a775a4658f516accf76e70006448d",
+      "documentation_design_record": "publication/documentation-design-review-20261104.json"
+    },
+    {
+      "path": "docs/contributing.md",
+      "source_role": "public-documentation-design",
+      "source_sha256": null,
+      "decision": "Document roles, navigation and evidence scopes reconciled without changing runtime behavior.",
+      "before_documentation_design_sha256": "f698d1e43396e188b53abdbed271c7d93017b7bf653e2c443242d7bd650fb6bb",
+      "public_sha256": "efe87064ee6b3e932caec58c4f167160b7aefc72a5839ec036a83bd9e75a3116",
+      "documentation_design_record": "publication/documentation-design-review-20261104.json"
+    },
+    {
+      "path": "docs/documentation-model.md",
+      "source_role": "public-documentation-design",
+      "source_sha256": null,
+      "decision": "Document roles, navigation and evidence scopes reconciled without changing runtime behavior.",
+      "before_documentation_design_sha256": null,
+      "public_sha256": "ae1c19eccb0c7e9bd6840742656f4f84e699e881d7fa32d2adcda7dd6932e79d",
+      "documentation_design_record": "publication/documentation-design-review-20261104.json"
+    },
+    {
+      "path": "docs/status-history-2026-11-03.md",
+      "source_role": "public-documentation-design",
+      "source_sha256": null,
+      "decision": "Document roles, navigation and evidence scopes reconciled without changing runtime behavior.",
+      "before_documentation_design_sha256": null,
+      "public_sha256": "89abc7a1f7fa991c96e47cb6e270c15169b981b1b65e6d9277bbde31b436bf87",
+      "documentation_design_record": "publication/documentation-design-review-20261104.json"
+    },
+    {
+      "path": "docs/v3/scoped-recovery-authority.md",
+      "source_role": "public-documentation-design",
+      "source_sha256": null,
+      "decision": "Document roles, navigation and evidence scopes reconciled without changing runtime behavior.",
+      "before_documentation_design_sha256": "8dc4ce4235f9fadef3faab999da64e8b3daf75a9e2dab864389b587a675ab0b6",
+      "public_sha256": "853d365b13f2bb82b55d93471891bc8732fc843abfea6899256218b884d91699",
+      "documentation_design_record": "publication/documentation-design-review-20261104.json"
+    },
+    {
+      "path": "publication/documentation-design-review-20261104.json",
+      "source_role": "public-documentation-design",
+      "source_sha256": null,
+      "decision": "Document roles, navigation and evidence scopes reconciled without changing runtime behavior.",
+      "before_documentation_design_sha256": null,
+      "public_sha256": "f74165b511a6b7a6893ca50a61412fbb9222d7ea67593b5b64b19be2656a1e4a",
+      "documentation_design_record": "publication/documentation-design-review-20261104.json"
+    },
+    {
+      "path": "recovery-control/docs/local-reflex-operations.md",
+      "source_role": "public-documentation-design",
+      "source_sha256": null,
+      "decision": "Document roles, navigation and evidence scopes reconciled without changing runtime behavior.",
+      "before_documentation_design_sha256": "622f91f985380ce8274733b48775dc051e3aafb85b339e672b9e92f87be0ffda",
+      "public_sha256": "06f621ac347bd1f0eec21b063d524dc3cc013e43bc62c1f842059d6082fe8261",
+      "documentation_design_record": "publication/documentation-design-review-20261104.json"
     }
   ],
   "omissions": [
@@ -7714,5 +7811,10 @@
     "historical_records_preserved": true,
     "deployment_performed": false,
     "production_runtime_changed": false
+  },
+  "documentation_design_review": {
+    "date_jst": "2026-11-04",
+    "record": "publication/documentation-design-review-20261104.json",
+    "scope": "Documentation, archive, navigation and link validation only; no runtime change."
   }
 }

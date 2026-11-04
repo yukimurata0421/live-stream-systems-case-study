@@ -32,9 +32,10 @@ measurements, and operational decisions behind that work. It is a small,
 single-operator system; its value is the handling of real failures and uncertain
 results, rather than service scale.
 
-For hiring review, start with the results below and
-[short incident stories](docs/operational-case-studies.md).
-Implementation details are available after that first pass.
+Start with the evidence below, then choose one
+[incident story](docs/operational-case-studies.md). The
+[documentation guide](docs/README.md) leads from a question to its contract,
+implementation and dated results.
 
 ## Evidence Snapshot
 
@@ -67,7 +68,7 @@ what changed, what was checked, and what remains unknown.
 
 Dell mirrors aircraft data through readsb / modified tar1090, renders the map,
 mixes music, and normally encodes one feed. OCI does the fan-out. During
-fallback and the five-minute recovery confirmation window, a separate CPU
+fallback and its recovery confirmation window, a separate CPU
 encoder and direct YouTube upload may run alongside the main GPU path.
 
 ```mermaid
@@ -119,27 +120,14 @@ when monitoring is down. The monitor on arena-server can only request a guarded
 runtime restart, and replacement-broadcast creation is disabled.
 [Architecture](docs/architecture.md#who-can-act-on-what) lists each actor's limits.
 
-Generic snapshot warnings judge freshness from
-[producer-bound time evidence](docs/v3/notification-observation-time.md): each
-fact carries host, boot and sample identity with UTC and boottime. For these
-warnings, recovery is announced only after continued healthy samples, and an
-unobservable producer is reported separately rather than as a failure or a recovery.
+The [observation contract](docs/v3/observation-standardization.md) separates
+missing evidence, target failure and expected standby. Public status and
+notification delivery do not grant recovery authority.
 
-An optional [Airspy reception guard](ops/airspy-reception/README.md) handles
-receiver startups that leave processes alive but positioned aircraft at zero.
-It persists a one-extra-restart budget across timeout and monitor death; the
-public unit starts in observation-only mode and leaves gain and power policy
-with the receiver operator.
-
-The repository also contains CRA (Central Restart Authority). Its current
-[local reflex implementation](recovery-control/README.md) is 17 Python files
-and 2,535 lines: Dell evaluates stalls under a policy signed by cra-01, and
-cra-01 verifies the audit. It runs only in `dry_run` and sends no restart requests.
-The Stream Effect Executor remains the physical boundary. The previous
-three-host authority and soak machinery are retained in
-[Git history](recovery-control/docs/history.md), rather than installed with CRA.
-The [decision record](docs/v3/oci-route-simplification-decision.md) explains the
-separate choice of the current media route.
+The repository also contains CRA (Central Restart Authority), whose
+[local reflex implementation](recovery-control/README.md) records decisions in
+`dry_run` without sending restart requests. Its signed-policy design and tests
+are separate from the operated media route.
 
 ## Key Design Decisions
 

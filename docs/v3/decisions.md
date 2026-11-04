@@ -1,5 +1,10 @@
 # Decisions
 
+These notes explain accepted choices and their consequences. The
+[reviewer ledger](../design-decisions-for-review.md) provides a compact entry;
+[architecture](../architecture.md) and the specialized contracts own current
+behavior. Dated migration gates below retain their original scope.
+
 ## Delivery / Observability Split
 
 Status: accepted
@@ -22,16 +27,18 @@ directly inspecting every in-Pod socket.
 Status: accepted as a public source contract; production-disabled in the
 published policy
 
-Monitoring v4 on `arena-server` owns observations, current state, incidents,
-parity, notification intents, and a facts-only projection. CRA on `cra-01` owns
-policy, budget, cooldown, authorization, one durable command lifecycle,
-reconciliation, and final verification. Dell owns signed local facts and one
-exact fenced FFmpeg-child effect. Raspberry Pi remains publish-only.
+The [current CRA contract](../../recovery-control/docs/local-reflex-authority.md)
+places signed-policy publication and audit verification on the central service.
+The delivery-host agent evaluates stalls and persists its limits; the Stream
+Effect Executor owns the exact fenced FFmpeg-child effect. The operated agent
+remains `dry_run`, with no restart requests. Monitoring supplies evidence and
+the Pi remains publish-only.
 
-This design applies transaction concepts to local intent/outbox, admission,
-and effect boundaries; it does not claim distributed ACID. An ambiguous
-response becomes `OUTCOME_UNKNOWN` and cannot be retried automatically under a
-new request ID.
+The earlier central command lifecycle and general three-host recovery design
+are retained in [history](../../recovery-control/docs/history.md). They are not
+the current CRA package or the owner of the local OCI fallback rule. An ambiguous
+effect result remains `OUTCOME_UNKNOWN`; a new request identity must not make
+it safe to repeat.
 
 Consequence: observed duplicate restart scopes are addressed at the physical
 effect boundary, while public tests still make no live-deployment, production

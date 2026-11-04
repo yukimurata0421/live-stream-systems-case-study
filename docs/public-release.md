@@ -4,6 +4,13 @@ This repository is a sanitized public snapshot of a personal 24/7 ADS-B
 streaming system. The goal is to show the architecture, code, tests, deployment
 contracts, and operational decisions without publishing runtime data or secrets.
 
+This page owns inclusion and exclusion policy. Dated port sections below explain
+how source entered the repository; [current status](current-status.md) owns the
+latest retained deployment and observation checkpoints. The
+[catalog](00_INDEX.md#publication-records) leads to individual port records, and
+`publication/source-map.json` identifies current public file digests. Historical
+records retain their original candidate hashes.
+
 ## Optional Airspy Reception Guard
 
 The [2026-10-30 receiver-side port](v3/airspy-reception-guard.md) includes

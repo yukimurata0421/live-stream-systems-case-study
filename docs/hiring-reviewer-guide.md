@@ -20,7 +20,7 @@ The key questions are straightforward:
 - What changed, and what evidence showed it helped?
 - What did the operator avoid claiming without enough evidence?
 
-The 160-day headline measures the same YouTube URL at reviewed checkpoints.
+The dated continuity headline measures the same YouTube URL at reviewed checkpoints.
 It does not say that every frame was delivered without interruption.
 
 ### Backend Or Infrastructure Reviewer
@@ -46,6 +46,7 @@ matters for the interview:
 | How was network failure distinguished from provider failure? | [TCP stall case study](v3/tcp-stall-case-study.md). |
 | How does the media route recover, and why without central authorization? | [Self-healing OCI fan-out](v3/self-healing-oci-fanout.md) and [decision record](v3/oci-route-simplification-decision.md). |
 | How should a failover act when its own observations are uncertain? | [One fallback rule, revised under test](v3/fallback-policy-revisions.md), then the [decision contract](v3/fallback-decision-contract.md). |
+| How are observation meaning, source identity and viewer evidence checked? | [Observation contract](v3/observation-standardization.md), [release provenance](v3/observation-release-provenance.md), then [current evidence](current-status.md). |
 | Why split observation from recovery authorization (design study, not enabled)? | [CRA rationale](../recovery-control/docs/why-cra.md) and [CRA architecture](../recovery-control/docs/architecture.md). |
 | What prevents uncertain actions from being retried? | [Harness and effect evidence](../recovery-control/docs/harness-trust.md). |
 | Who owns incident and measurement state? | [Monitoring architecture](../monitoring-v4/docs/architecture.md). |
