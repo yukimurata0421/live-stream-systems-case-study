@@ -85,18 +85,28 @@ def reconcile(items, active, state, *, now, conditions=None):
     return result
 
 
-def apply(items, active, state, *, root, now):
+def apply(items, active, state, *, root, now, deferred_ids=()):
     from stream_core.common import upload_prometheus_source
     from .upload_source import current_upload_source
+    deferred = set(deferred_ids)-set(active)
+    items = [item for item in items if item.get('id') not in deferred]
+    slots = state.get('measurement_continuity')
+    if isinstance(slots, dict):
+        for ident in deferred:
+            slots.pop(ident, None)
     try:
         if upload_prometheus_source.selected(root) is None:
             return items  # Only an explicit legacy selection retains old policy.
     except (OSError, ValueError):
         pass  # Missing selection is an observation failure, never legacy mode.
     assessment = current_upload_source(root, int(now.wall))
+    # A planned absence is neither BAD elapsed time nor a fabricated GOOD sample.
+    # Raw history and the formal SLO owner remain untouched.
     conditions = {}
     for ident, key in [('reliability:upload_ceiling_coverage_or_freshness','measurement'),
                        ('reliability:upload_history_replication','history')]:
+        if ident in deferred:
+            continue
         fact = assessment.get(key, {})
         conditions[ident] = {'fresh':fact.get('fresh') is True,
                              'recovered':fact.get('sustained') is True}

@@ -246,10 +246,10 @@
     {
       "path": "docs/00_INDEX.md",
       "source_role": "public-measurement-documentation",
-      "decision": "Describe independent upload observation and preserve the control and SLO boundaries.",
+      "decision": "Selected maintenance notification behavior; preserve public localization, generic delivery-host binding and existing formal SLI semantics.",
       "before_sha256": "9f7605e83cdf9ec60df73ebe3f2472cca9292c4e06ec6768621ce53026c0b82c",
-      "source_sha256": "82074416718e1cdcc2556b3e59dcb3e931b4c5a5d534cf37e93856afdfa640a7",
-      "public_sha256": "b859a02ff2926d34b1347710ec642781a6981b3babd511a05b470d90509d58d5",
+      "source_sha256": null,
+      "public_sha256": "a9e4093624b2b0daf4cc39c9242734a4c6790a0338e30b403e2f5d9155a1dd51",
       "prior_public_sha256": "e71784d110b08225a9a320ecb03f999b60fa7f23b2503f2e6a3f80448620c9ed",
       "localization": "English prose; control structures and machine identifiers preserved.",
       "pre_graph_display_sha256": "6a87a495eb3698b1a49e053ffcc109b28d94a59e9dd29cb3399a62279e196d3d",
@@ -322,7 +322,8 @@
       "r2_transport_source_sha256": null,
       "r2_transport_port": "publication/r2-publication-transport-port-20261103.json",
       "before_documentation_design_sha256": "73e22de84a201d71978a88beae0442ba7b243026e1fe91fe9aca63e74b892617",
-      "documentation_design_record": "publication/documentation-design-review-20261104.json"
+      "documentation_design_record": "publication/documentation-design-review-20261104.json",
+      "maintenance_notifications_port": "publication/maintenance-notifications-port-20261106.json"
     },
     {
       "path": "docs/README.md",
@@ -394,10 +395,10 @@
     {
       "path": "docs/current-status.md",
       "source_role": "manual-maintenance-source-or-public-guide",
-      "decision": "Record applied independent upload sampling, sustained current-source recovery and the natural notification result.",
+      "decision": "Selected maintenance notification behavior; preserve public localization, generic delivery-host binding and existing formal SLI semantics.",
       "before_sha256": "1beab3cd3e65147e0fa2d520275c2280dfa86884c6a345efefd32f2dc8469aed",
       "source_sha256": null,
-      "public_sha256": "33ddb36c53e4018123457254f032e7e7d1e9a9dcc2f86b7b69f9eb7e52e55148",
+      "public_sha256": "2e7d33b62f18704c2a34f2d3bd5358cb856ebacb6d22ce80fe851915d598d42f",
       "port_date_jst": "2026-11-02",
       "documentation_restructure": "New single page for volatile state.",
       "pre_twitch_observation_public_sha256": "040eac29174151f51e473f7f85e4aa23ff994be0079b3d4c011623b6ec7864ca",
@@ -469,7 +470,8 @@
       "r2_transport_source_sha256": null,
       "r2_transport_port": "publication/r2-publication-transport-port-20261103.json",
       "before_documentation_design_sha256": "ccc9615cc4661e494576084aa8219e6dff8db2724710ba35f754485366a45cbc",
-      "documentation_design_record": "publication/documentation-design-review-20261104.json"
+      "documentation_design_record": "publication/documentation-design-review-20261104.json",
+      "maintenance_notifications_port": "publication/maintenance-notifications-port-20261106.json"
     },
     {
       "path": "docs/design-decisions-for-review.md",
@@ -2640,15 +2642,16 @@
     {
       "path": "ops/scripts/stream_v3_oci_monitor_pull.py",
       "before_sha256": "746aa3000635b78934246efc29ca24580d0e0278e6e2619b87b31161d9625a27",
-      "source_sha256": "507641d48fc02e9c4921cf1c373f4022e64ee00401ea6b70d591880b3e6ca310",
-      "public_sha256": "89a9218075cffaa7242a9d667a2e3553d467d2d7499697d0b4348d3679639f0c",
+      "source_sha256": "59ef785c1ec970d044b11241f99ea8d214a90b824e447e46d056fd9fa1e6be1b",
+      "public_sha256": "fba40771e943931f23dc8fc5ac612c3a955b6498650653d6b670e098ab693752",
       "source_role": "selected-development-source",
-      "decision": "Native clock evidence and current-ROI-first UTC retry; preserve generic public host bindings, English prose, existing thresholds and unrelated edits.",
+      "decision": "Selected maintenance notification behavior; preserve public localization, generic delivery-host binding and existing formal SLI semantics.",
       "port_date_jst": "2026-10-23",
       "pre_thumbnail_clock_public_sha256": "746aa3000635b78934246efc29ca24580d0e0278e6e2619b87b31161d9625a27",
       "thumbnail_clock_port": "2026-10-22 committed source through 740bcc00; concurrent review excluded.",
       "pre_relay_clock_native_fallback_sha256": "91f0d2220d963a878797a4fe69507de00e70996fc7484752bcaa6f6d33121245",
-      "relay_clock_native_fallback_port": "2026-10-23 selected source and public-safe documentation; no deployment, commit or push."
+      "relay_clock_native_fallback_port": "2026-10-23 selected source and public-safe documentation; no deployment, commit or push.",
+      "maintenance_notifications_port": "publication/maintenance-notifications-port-20261106.json"
     },
     {
       "path": "ops/scripts/stream_v3_prometheus_exporter.py",
@@ -3864,15 +3867,16 @@
     {
       "path": "src/stream_core/cli_support/sli_report.py",
       "source_role": "public-adapted-source-or-regression",
-      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "decision": "Selected maintenance notification behavior; preserve public localization, generic delivery-host binding and existing formal SLI semantics.",
       "before_sha256": "31e3784424c19bb583b1d685f144833205571b1665a0afddebb431be0122c082",
-      "source_sha256": "cac9b92a19defd114e177fd8e0ad966c8cf05b655805bf5b54db73bd3c06eaee",
-      "public_sha256": "34409b15582b374191e8114c25022ae91c0e754dc7c654565666ce8b56d3e88b",
+      "source_sha256": "cfd6373d17250d631db5ca33da22b8561f60c253eff90097e29152b8b1ff22dd",
+      "public_sha256": "e4beb828a9b0c817def0f8cc0d7441b19f0502eb479c21b17c83c767a46a3643",
       "port_date_jst": "2026-10-23",
       "pre_observability_reconciliation_sha256": "c8fccee7c195cf44ba0c1265399b2334b8e94d881b4042c23be5d0fe62f6a686",
       "before_notification_observation_time_sha256": "9fd2785fb59b6c095f4f164def694fd1a9e6ccf79ab214610da67d9bb80d1b88",
       "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
-      "notification_observation_time_source_sha256": "3be5c7e303a16ce6a9942dc94f098bb6c61670b32efba845761cf2f36c1539d0"
+      "notification_observation_time_source_sha256": "3be5c7e303a16ce6a9942dc94f098bb6c61670b32efba845761cf2f36c1539d0",
+      "maintenance_notifications_port": "publication/maintenance-notifications-port-20261106.json"
     },
     {
       "path": "src/stream_core/engine/config.py",
@@ -3969,10 +3973,10 @@
     {
       "path": "src/stream_core/notifications/incidents.py",
       "source_role": "public-adapted-source-or-regression",
-      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "decision": "Selected maintenance notification behavior; preserve public localization, generic delivery-host binding and existing formal SLI semantics.",
       "before_sha256": "9d13000b13e49fe1588cec2333948f8c790fa2c3b7006ca0e264f2cf612c42f1",
-      "source_sha256": "8bc41cfe995883e6d7ea75f392007cdd426fb3f34c5449de6ba4270499910ce0",
-      "public_sha256": "24981ccdebb5e85923e649a993951e5bfb517f92b14844cdca74b4afe0491f89",
+      "source_sha256": "3c99d0b1cdf5651866cc2b99bc25bb13fba05b36695fecfb5ca7f0222437de61",
+      "public_sha256": "737fcda5ad12d0aa6d276de3452e699fccf4d19430f3241d5102981c46dba1ba",
       "prior_public_sha256": "a93c958f66ed34912714904b4dfc312a27273ee9e4d562e3dfa34a32acae9ca7",
       "localization": "English prose; control structures and machine identifiers preserved.",
       "pre_observability_reconciliation_sha256": "29068d15becd9d0df908c4c2095e77451a8c3c995ffeec4283e2434a4c2a67cd",
@@ -3980,7 +3984,8 @@
       "before_notification_observation_time_sha256": "93e6534d8ae39c2daed447028b62611e5f9573a591a052e351cff8aaffdbd881",
       "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
       "notification_observation_time_source_sha256": "1694502be3a740cc6e1a86250a53ef97c61ad32b0a86c0dd362010d0d3298238",
-      "observation_completion_record": "publication/observation-completion-20261102.json"
+      "observation_completion_record": "publication/observation-completion-20261102.json",
+      "maintenance_notifications_port": "publication/maintenance-notifications-port-20261106.json"
     },
     {
       "path": "src/stream_core/notifications/outbox.py",
@@ -4009,10 +4014,10 @@
     {
       "path": "src/stream_core/notifications/status_loop.py",
       "source_role": "public-adapted-source-or-regression",
-      "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
+      "decision": "Selected maintenance notification behavior; preserve public localization, generic delivery-host binding and existing formal SLI semantics.",
       "before_sha256": "3ed318edb00f27873619f9d1ae6125dd4c79056a3de082c489fb88024da32df0",
-      "source_sha256": "a035c1bd1692a9a36fc8ff13596328480f3ed0f23dabbc4d27d5dc3c067e1985",
-      "public_sha256": "c87c760ff035c5921efeaa360df12c2263a4e9f84b2a5897aa93d3ff33839150",
+      "source_sha256": "dd2524e9c3febc8cf02c1b3aea360fb166502f9500e60e423ec541dbf75c197d",
+      "public_sha256": "5dd37c3116f850a33e21ec473a24646896df635fd7bcd565d82fc4bc30d2e907",
       "pre_observability_reconciliation_sha256": "5fbfef066cb27696f1df5e7d25d2555fa29e6e82cf03b282f1a45d8d691c7da7",
       "port_date_jst": "2026-10-23",
       "before_youtube_egress_fix_sha256": "50b64cea1e8ced643f193a67d0ba92f0eca25b0fd68277304127d7bc8f55d8b1",
@@ -4022,7 +4027,8 @@
       "notification_observation_time_source_sha256": "1aa5f23874b5460bc8248c0531bcb36649fe054177878b76ff6d18ad8a27f84a",
       "prior_public_sha256": "98f3b187e9ec57a3bda4015c9ba2613df76120c5c5bb5514ee1922fcbbf7e118",
       "observation_completion_record": "publication/observation-completion-20261102.json",
-      "recovery_marker_record": "publication/recovery-notification-marker-20261102.json"
+      "recovery_marker_record": "publication/recovery-notification-marker-20261102.json",
+      "maintenance_notifications_port": "publication/maintenance-notifications-port-20261106.json"
     },
     {
       "path": "src/stream_core/notifications/upload_source.py",
@@ -5202,14 +5208,15 @@
     {
       "path": "docs/v3/manual-maintenance.md",
       "source_role": "manual-maintenance-source-or-public-guide",
-      "decision": "Port manual maintenance with an English interface, canonical observer imports, configured host binding and no runtime secrets.",
+      "decision": "Selected maintenance notification behavior; preserve public localization, generic delivery-host binding and existing formal SLI semantics.",
       "before_sha256": null,
       "source_sha256": null,
-      "public_sha256": "a618e3041273b51248cc8ca6a12be7c4394323fe83191dfcc7b72c3fce1b6748",
+      "public_sha256": "d94899e5a0c491765ffd1166e4638eea4b3d48756c37c85c62ba25c1118738b3",
       "port_record": "publication/manual-maintenance-port-20261030.json",
       "port_date_jst": "2026-10-30",
       "prior_public_sha256": "8373e427c4813f5e4f5d29ddbb153632255e9eb8d79085f45c8e250e44dc73e1",
-      "review_reconciliation": "clock-review-20261031"
+      "review_reconciliation": "clock-review-20261031",
+      "maintenance_notifications_port": "publication/maintenance-notifications-port-20261106.json"
     },
     {
       "path": "ops/scripts/stream_v3_fallback_clock_recorder.py",
@@ -6001,9 +6008,9 @@
     {
       "path": "docs/v3/notification-observation-time.md",
       "source_role": "public-measurement-documentation",
-      "decision": "Describe independent upload observation and preserve the control and SLO boundaries.",
+      "decision": "Selected maintenance notification behavior; preserve public localization, generic delivery-host binding and existing formal SLI semantics.",
       "source_sha256": null,
-      "public_sha256": "8020848005bab03b2d685e65e1a2f60c7d270fda45c9dabb478997348721df5b",
+      "public_sha256": "b21720964670f978ede99450718e040d61f8fe6f64ea75ae29c8f9d2fdbf3c30",
       "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
       "notification_observation_time_source_sha256": null,
       "before_notification_source_timing_fix_sha256": "9c23fb959cd8b40a78b106cd0c299954c0156c3f2b9ac845a3c08b905b9564f0",
@@ -6015,7 +6022,8 @@
       "port_record": "publication/independent-upload-measurement-20261102.json",
       "prior_public_sha256": "cb56136fb73c3cf1949755458605c4e70a89569520adb69b2404c28259b2ea99",
       "recovery_marker_record": "publication/recovery-notification-marker-20261102.json",
-      "notification_consistency_record": "publication/recovery-notification-consistency-20261102.json"
+      "notification_consistency_record": "publication/recovery-notification-consistency-20261102.json",
+      "maintenance_notifications_port": "publication/maintenance-notifications-port-20261106.json"
     },
     {
       "path": "src/stream_core/common/observation_time.py",
@@ -6047,15 +6055,16 @@
     {
       "path": "src/stream_core/notifications/observation.py",
       "source_role": "notification-time-evidence",
-      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes.",
-      "source_sha256": "927ff73bf96c00adb226633fd19fb1825dc26f79d947774780fcd99e88c68b1f",
-      "public_sha256": "794758933bbf1353c1b3e57852d497a2b0903c395bd6a5d07ffe6a918c163e95",
+      "decision": "Selected maintenance notification behavior; preserve public localization, generic delivery-host binding and existing formal SLI semantics.",
+      "source_sha256": "b8e35e0f3b2d342a8e85273def3c37ed58ff8d35f3a4762c589fcbb40486cc87",
+      "public_sha256": "573143de5511b0f7561431787aee9f96f8e7b5dce24a92ad4179fcd558231977",
       "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
       "notification_observation_time_source_sha256": "276ae7acfbbbc1267c2765f6815bce1ee4bdfc76759238760192bb494089c098",
       "before_notification_source_timing_rollout_sha256": "db7c560592e888dee495b81285ad2542991ef7bee0a18c0c80f04bff830d615a",
       "notification_source_timing_rollout": "publication/notification-source-timing-rollout-20261101.json",
       "prior_public_sha256": "0001aa1a5d128883261eb3978dfef3303a9dccc10692a535cd647a05022099bb",
-      "observation_completion_record": "publication/observation-completion-20261102.json"
+      "observation_completion_record": "publication/observation-completion-20261102.json",
+      "maintenance_notifications_port": "publication/maintenance-notifications-port-20261106.json"
     },
     {
       "path": "src/stream_core/notifications/time_diagnostics.py",
@@ -6141,11 +6150,12 @@
     {
       "path": "ops/scripts/stream_v3_operational_reliability_rollup.py",
       "source_role": "notification-time-evidence",
-      "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes.",
-      "source_sha256": "ddc642415642bb694fe2e130e4ec0d4ed884e1b12e56a7077ff88ff3154d5bc4",
-      "public_sha256": "0381f2e16821dc35e705a8455c328e67f74c3a880e77f7459752310e0d765e7d",
+      "decision": "Selected maintenance notification behavior; preserve public localization, generic delivery-host binding and existing formal SLI semantics.",
+      "source_sha256": "05573884d67323761c5ed9bdd2c1915514d827f4b3d966d8218dd10d21b17450",
+      "public_sha256": "05573884d67323761c5ed9bdd2c1915514d827f4b3d966d8218dd10d21b17450",
       "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
-      "notification_observation_time_source_sha256": "ddc642415642bb694fe2e130e4ec0d4ed884e1b12e56a7077ff88ff3154d5bc4"
+      "notification_observation_time_source_sha256": "ddc642415642bb694fe2e130e4ec0d4ed884e1b12e56a7077ff88ff3154d5bc4",
+      "maintenance_notifications_port": "publication/maintenance-notifications-port-20261106.json"
     },
     {
       "path": "ops/scripts/stream_v3_external_blackbox_import.py",
@@ -6765,11 +6775,12 @@
     {
       "path": "src/stream_core/notifications/measurement_continuity.py",
       "source_role": "observation-contract-public-port",
-      "decision": "Port bounded observation contracts, connected delivery, public projection and reviewed verification evidence.",
+      "decision": "Selected maintenance notification behavior; preserve public localization, generic delivery-host binding and existing formal SLI semantics.",
       "prior_public_sha256": null,
-      "public_sha256": "a6d823ea01492f34d39ac95e9c8cd948be1e4c0fe40410f0a99f38af15c6dff6",
-      "source_sha256": "a6d823ea01492f34d39ac95e9c8cd948be1e4c0fe40410f0a99f38af15c6dff6",
-      "observation_completion_record": "publication/observation-completion-20261102.json"
+      "public_sha256": "dad0a91e6baf6b8af06b664a607a619eb5a19f77d176971e400671347714a571",
+      "source_sha256": "dad0a91e6baf6b8af06b664a607a619eb5a19f77d176971e400671347714a571",
+      "observation_completion_record": "publication/observation-completion-20261102.json",
+      "maintenance_notifications_port": "publication/maintenance-notifications-port-20261106.json"
     },
     {
       "path": "src/stream_core/notifications/slack.py",
@@ -7327,6 +7338,46 @@
       "before_documentation_design_sha256": "622f91f985380ce8274733b48775dc051e3aafb85b339e672b9e92f87be0ffda",
       "public_sha256": "06f621ac347bd1f0eec21b063d524dc3cc013e43bc62c1f842059d6082fe8261",
       "documentation_design_record": "publication/documentation-design-review-20261104.json"
+    },
+    {
+      "path": "src/stream_core/common/manual_maintenance_facts.py",
+      "source_role": "maintenance-notification-source-port",
+      "public_sha256": "7f0e54a32f2caa50f27e1f3e8dceebea79c4532840f175688182cf386182c2b6",
+      "source_sha256": "1eaf043414d3ac83a9d11b5b0023bb683ad9727cf82a57734b16e45473200792",
+      "decision": "Selected maintenance notification behavior; preserve public localization, generic delivery-host binding and existing formal SLI semantics.",
+      "maintenance_notifications_port": "publication/maintenance-notifications-port-20261106.json"
+    },
+    {
+      "path": "src/stream_core/notifications/manual_maintenance.py",
+      "source_role": "maintenance-notification-source-port",
+      "public_sha256": "ee25cd217f5b70af2db55300d594cbb8f2683b35eadc3e2b50ef5cd0c457bae6",
+      "source_sha256": "bd6fdaa1e24793ee6ef473f0a7dfb1484d494e3464b2e1b73a045aa44f0a5e91",
+      "decision": "Selected maintenance notification behavior; preserve public localization, generic delivery-host binding and existing formal SLI semantics.",
+      "maintenance_notifications_port": "publication/maintenance-notifications-port-20261106.json"
+    },
+    {
+      "path": "src/stream_core/operational_reliability/maintenance_admission.py",
+      "source_role": "maintenance-notification-source-port",
+      "public_sha256": "51eff2b36dfe485e9d33ef597293080feab3522cbc824ae62a57fb14da994220",
+      "source_sha256": "51eff2b36dfe485e9d33ef597293080feab3522cbc824ae62a57fb14da994220",
+      "decision": "Selected maintenance notification behavior; preserve public localization, generic delivery-host binding and existing formal SLI semantics.",
+      "maintenance_notifications_port": "publication/maintenance-notifications-port-20261106.json"
+    },
+    {
+      "path": "tests/test_maintenance_residuals.py",
+      "source_role": "maintenance-notification-source-port",
+      "public_sha256": "f2fc7ca3a87c9b4e5dff29cfe263f55a565633e9a2d70d5ffdff517a60c030ec",
+      "source_sha256": "fc6ac18422f010b643097d58b0fb68e51759da401e1baf071a8a4bb2271a953d",
+      "decision": "Selected maintenance notification behavior; preserve public localization, generic delivery-host binding and existing formal SLI semantics.",
+      "maintenance_notifications_port": "publication/maintenance-notifications-port-20261106.json"
+    },
+    {
+      "path": "tests/test_manual_maintenance_notifications.py",
+      "source_role": "maintenance-notification-source-port",
+      "public_sha256": "474d511eab04bf355415f59bcedb0f44486d686d839b36782bce764d1b1dfe13",
+      "source_sha256": "1191c194ee53dd5929776b27592812875d7098c8f211b2c2a0ea400a86e6e568",
+      "decision": "Selected maintenance notification behavior; preserve public localization, generic delivery-host binding and existing formal SLI semantics.",
+      "maintenance_notifications_port": "publication/maintenance-notifications-port-20261106.json"
     }
   ],
   "omissions": [
@@ -7409,7 +7460,8 @@
     "publication/recovery-notification-consistency-20261102.json",
     "publication/observation-release-provenance-20261103.json",
     "publication/player-reception-qualification-20261103.json",
-    "publication/r2-publication-transport-port-20261103.json"
+    "publication/r2-publication-transport-port-20261103.json",
+    "publication/maintenance-notifications-port-20261106.json"
   ],
   "evidence_checkpoint_cutoff_jst": "2026-10-14T00:04:57+09:00",
   "documentation_audience": "hiring and technical reviewers",
@@ -7816,5 +7868,11 @@
     "date_jst": "2026-11-04",
     "record": "publication/documentation-design-review-20261104.json",
     "scope": "Documentation, archive, navigation and link validation only; no runtime change."
+  },
+  "maintenance_notifications_port": {
+    "record": "publication/maintenance-notifications-port-20261106.json",
+    "scope": "public-checkout-only",
+    "deployment_performed": false,
+    "raw_sli_and_history_preserved": true
   }
 }

@@ -63,7 +63,7 @@ Observation meaning, freshness and publication have separate owners from recover
 
 Commands and installation prerequisites are reference procedures, not authorization to operate the live system.
 
-- `v3/manual-maintenance.md`: [one-command planned maintenance, a relay-hosted slate, backup exclusion and explicit return gates](v3/manual-maintenance.md).
+- `v3/manual-maintenance.md`: [one-command planned maintenance, a relay-hosted slate, bounded notification classification and explicit return gates](v3/manual-maintenance.md).
 - `v3/airspy-reception-guard.md`: [optional receiver-host reception checks, a durable one-extra-restart cap, isolated real-systemd tests and publication limits](v3/airspy-reception-guard.md).
 - `v3/oci-backup-and-restore.md`: [encrypted relay backup, offline verification and files-only restore](v3/oci-backup-and-restore.md).
 - `operations.md`: [local checks, shadow mode, release provenance](operations.md).

@@ -113,6 +113,62 @@ these artifacts; merely placing them does not arm the slate. These are artifact
 and permission constraints, not a complete installation procedure or authority
 to run maintenance on another deployment.
 
+## Maintenance-aware notifications
+
+The [facts reader](../../src/stream_core/common/manual_maintenance_facts.py)
+exports a bounded projection of the root-owned session and up to 16 history files.
+It rejects unsafe ownership, writable or symlinked files, unresolved effects and
+machine/target mismatches. Host facts travel over the existing host-key-verified
+read-only SSH transport, separately from the observer Pod's HMAC. The public
+host identifier is `delivery-host`; deployments must keep producer and consumer
+identities consistent. No session credentials, media paths or complete raw
+session are exported.
+
+The [notification adapter](../../src/stream_core/notifications/manual_maintenance.py)
+requires fresh bound facts (35 seconds), an observed stopped main workload,
+a valid deadline and both existing relay outputs flowing before deferring new
+upload-measurement absence notices. It also recognizes only the allowlisted
+main-stop signatures in map readiness and stale YouTube-statistics notices.
+Existing incidents retain their original recovery requirements. Missing evidence,
+a failed slate/output, an expired deadline and independent faults remain visible.
+The receiver clock is captured after reading the atomically published bundle.
+
+The quick reliability evaluator can additionally produce a
+[notification-only assessment](../../src/stream_core/operational_reliability/maintenance_admission.py)
+for exactly these two residual incidents:
+
+- `reliability:audio_correctness_multi_window_burn`
+- `reliability:youtube_input_quality_coverage_or_freshness`
+
+Closed intervals require applied, target-bound stop/resume effects, an armed
+slate and a retained operator confirmation for both players. An open interval
+requires current verified maintenance output. The assessment examines the same
+raw events and Prometheus series used by the report, without extra queries.
+Every audio grid point outside those intervals must be present, fresh and good
+in the 15-minute, one-hour and six-hour windows. Every remaining YouTube second
+must be covered and eligible, with no bad interval. After return, current raw
+and Prometheus evidence must also agree and be good. A return gap extends only
+to the first fresh healthy post-resume observation, at most 300 seconds; missing
+return evidence does not grant an extension.
+
+The assessment is bound to the unmodified quick-report fields by a digest and
+expires after 600 seconds, covering the five-minute evaluator cadence. Missing,
+malformed, stale or mismatched assessments leave ordinary notifications enabled.
+The notifier still requires distinct normal observations before closing an active
+incident and labels that closure `planned_maintenance_reclassification`. That
+label describes notification classification, not repaired playback or a newly
+verified viewer recovery. The original burn rates, coverage, raw history, formal
+hourly report and SLO thresholds remain unchanged.
+
+[Session/notification tests](../../tests/test_manual_maintenance_notifications.py)
+and [residual tests](../../tests/test_maintenance_residuals.py) use synthetic
+fixtures, including failures outside maintenance, current disagreement, unsafe
+history, deadline expiry and a report-end minute boundary. The
+[public port record](../../publication/maintenance-notifications-port-20261106.json)
+records source validation; it does not attest a deployment, provider receipt or
+player result. Deployment still requires matching installed identities, the
+read-only facts transport and the actual quick-evaluator/notifier entrypoints.
+
 ## Boundaries and failure handling
 
 Only the main Deployment replica count, the fixed sender recovery timer/service

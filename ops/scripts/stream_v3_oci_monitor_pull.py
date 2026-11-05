@@ -17,6 +17,7 @@ from stream_v3.viewer_clock_capture import ProcessRunner
 from stream_v3.viewer_clock_worker import EvidenceStore,append_history,atomic_bytes,json_bytes
 from stream_v3.monitor_facts import native_facts,classify
 from stream_v3.verified_clock_evidence import ClockEvidenceStore,MAX_BUNDLE_BYTES
+from stream_core.common import manual_maintenance_facts, observation_time
 
 REMOTE_READ="""import base64,json,urllib.request,urllib.parse,subprocess,hashlib,re,copy,time
 from pathlib import Path
@@ -82,9 +83,21 @@ try:
 except Exception:pass
 cache={'checked_epoch':checked,'ssh_boot_id':boot,'pod_uid':source.get('pod_uid'),'fallback_peer_ip':peer,
        'observer_runtime':runtime,'fallback_status':fallback}
+maintenance=read_manual_maintenance()
+if maintenance.get('available') and maintenance.get('expected_main_stopped'):
+ try:
+  main=read('get','deployment','stream-v3-runtime')
+  live=read('get','pods','-l','app.kubernetes.io/name=stream-v3,app.kubernetes.io/component=runtime')['items']
+  maintenance['main_status']={'uid':main['metadata']['uid'],'replicas':main['spec']['replicas'],
+                            'active_pods':sum(p.get('status',{}).get('phase') in ('Running','Pending','Unknown') or bool(p['metadata'].get('deletionTimestamp')) for p in live)}
+ except Exception:
+  maintenance.update(available=False,reason='maintenance_main_status_unavailable')
 print(json.dumps({'signature':signature,'payload':base64.b64encode(payload).decode(),'ssh_boot_id':boot,
-                  'fallback_status':fallback,'observer_runtime':runtime,'runtime_cache':cache,'runtime_cache_reused':reuse}))
+                  'fallback_status':fallback,'observer_runtime':runtime,'runtime_cache':cache,'runtime_cache_reused':reuse,
+                  'manual_maintenance':maintenance}))
 """
+
+REMOTE_READ = manual_maintenance_facts.remote_reader_source() + REMOTE_READ
 
 
 def bind_fallback(row,status,config):
@@ -170,6 +183,18 @@ def collect(config,ram_root,state_file):
             native=json.loads(native_path.read_text())
         except (OSError,ValueError):native={}
         bundle['native_delivery']=native_facts(native,old.get('native_delivery',{}),now=time.time())
+        # These host facts arrive over verified SSH, separately from the Pod HMAC.
+        # Never refresh them from the runtime cache or from a previous bundle.
+        if 'manual_maintenance' in envelope:
+            maintenance = envelope['manual_maintenance']
+            if (not isinstance(maintenance,dict)
+                    or maintenance.get('schema') != manual_maintenance_facts.MAINTENANCE_FACT_SCHEMA
+                    or maintenance.get('source_host_id') != 'delivery-host'
+                    or maintenance.get('source_boot_id') != envelope.get('ssh_boot_id')
+                    or type(maintenance.get('observed_epoch')) not in (int,float)
+                    or not -1 <= time.time()-maintenance['observed_epoch'] <= 30):
+                maintenance = {'installed':True,'available':False,'reason':'maintenance_transport_binding_invalid'}
+            bundle['manual_maintenance']=observation_time.attach(maintenance,'manual_maintenance')
         for target,row in state['targets'].items():
             row['source_binding_ok']=bool(row.get('source_binding_ok',True) and (attested or legacy))
             if not row['source_binding_ok'] and row.get('expected_active') is not False:

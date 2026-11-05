@@ -973,8 +973,10 @@ def notify_status(*, ctx: NotifyStatusContext, dry_run: bool = False, force_test
     if force_test:
         messages.append(("test", []))
 
+    from . import manual_maintenance
+    manual_mode = manual_maintenance.owns_notifications(ctx.runtime_state_base_dir, state)
     maintenance_item = ctx.maintenance_notification_incident(now)
-    if maintenance_item is not None:
+    if maintenance_item is not None and not manual_mode:
         if notify_maintenance_message_due(
             state,
             maintenance_item,
@@ -1020,10 +1022,15 @@ def notify_status(*, ctx: NotifyStatusContext, dry_run: bool = False, force_test
         state['notification_clock']={'boot_id':decision_clock.boot,'mono':decision_clock.mono}
         incidents = notification_observation.reconcile(incidents, active_state, state, collection,
                                                        now=decision_clock, config=cfg)
-    from . import measurement_continuity
+    from . import measurement_continuity, manual_maintenance
+    maintenance_clock = decision_clock if decision_clock is not None else observation_time.capture()
+    incidents, deferred_measurements = manual_maintenance.apply(incidents, active_state, state,
+        root=ctx.runtime_state_base_dir)
+    if manual_mode:
+        state['maintenance_active'] = state['manual_maintenance_notifications'].get('phase') not in (None, 'NORMAL')
     incidents = measurement_continuity.apply(incidents, active_state, state,
         root=ctx.runtime_state_base_dir,
-        now=decision_clock if decision_clock is not None else observation_time.capture())
+        now=maintenance_clock, deferred_ids=deferred_measurements)
     quality_id='reliability:youtube_input_quality_fast_feedback'
     candidate=next((x for x in incidents if x.get('id')==quality_id and x.get('severity')=='warning'),None)
     if candidate and collection is None:
@@ -1114,6 +1121,9 @@ def notify_status(*, ctx: NotifyStatusContext, dry_run: bool = False, force_test
             verified = state.get("observation_recoveries", {}).pop(ident, None)
             if verified:
                 recovery_evidence = f"verified distinct normal observations; {verified}"
+                if verified.get('classification') == 'planned_maintenance_reclassification':
+                    item['recovery_type'] = 'planned_maintenance_reclassification'
+                    recovery_evidence = 'Reclassified as planned maintenance; distinct observations confirm normal evidence outside the planned intervals; ' + recovery_evidence
             item["_recovered_ts"] = recovered_ts
             item["_recovery_evidence"] = recovery_evidence
             recovered.append(item)

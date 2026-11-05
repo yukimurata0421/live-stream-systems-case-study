@@ -51,6 +51,8 @@ def source_for(ident):
     if ident.startswith("external:"):
         return "external_blackbox"
     if ident.startswith("reliability:"):
+        if ident == "reliability:youtube_input_quality_coverage_or_freshness":
+            return "reliability_burn"
         # Formal coverage/current-source reconciliation has its own owner.
         # Measurement validity alone is not that owner's business verdict.
         if ident.endswith(("_coverage_or_freshness", "_source_disagreement", "_historical_coverage")) or ident == 'reliability:upload_history_replication':
@@ -157,7 +159,10 @@ def _complete(source, payload):
         return False
 
 
-def _normal(ident, source, payload, observe):
+def _normal(ident, source, payload, observe, *, now=None):
+    from stream_core.operational_reliability.maintenance_admission import permits
+    if now is not None and permits(payload, ident, now=now):
+        return True
     try:
         return normal_for(ident, source, payload, observe)
     except (AttributeError, TypeError, ValueError, KeyError):
@@ -219,10 +224,10 @@ def evidence(collection, ident, *, now):
     if not sample.valid or not is_complete:
         return sample, "UNKNOWN"
     if ident in collection["bad_ids"]:
-        if _normal(ident, source, payload, collection["observe"]):
+        if _normal(ident, source, payload, collection["observe"], now=now.wall):
             return sample, "UNKNOWN"
         return sample, "BAD"
-    return sample, "GOOD" if _normal(ident, source, payload, collection["observe"]) else "UNKNOWN"
+    return sample, "GOOD" if _normal(ident, source, payload, collection["observe"], now=now.wall) else "UNKNOWN"
 
 
 def reconcile(items, active, state, collection, *, now, config):
@@ -262,6 +267,9 @@ def reconcile(items, active, state, collection, *, now, config):
         elif ident in active:
             recoveries[ident] = {"sample_id": sample.sample, "source": sample.source,
                                  "age_upper_sec": sample.age_upper, "utc_status": sample.utc_status}
+            from stream_core.operational_reliability.maintenance_admission import permits
+            if permits(collection['sources'][source_for(ident)][1], ident, now=now.wall):
+                recoveries[ident]['classification'] = 'planned_maintenance_reclassification'
         else:
             recoveries.pop(ident, None)
     # Track source loss independently of any particular media incident.

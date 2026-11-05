@@ -1306,6 +1306,7 @@ def build_sli_report(
     timeout_sec: float = 15.0,
     query_range: Callable[[str, str, int, int, int, float], list[dict]] = prometheus_query_range,
     now: Callable[[], float] = time.time,
+    notification_plan: dict | None = None,
 ) -> dict:
     specs = parse_windows(windows)
     end_ts = parse_end_time(end_time, now=now, step_sec=step_sec)
@@ -1372,7 +1373,7 @@ def build_sli_report(
             subsystem_events=subsystem_events,
             same_url_ledger=ledger_by_window.get(spec.label),
         )
-    return {
+    report = {
         "schema_version": 4,
         "source": "stream-prod sli-report",
         "generated_at_utc": utc_text_from_ts(end_ts),
@@ -1391,6 +1392,15 @@ def build_sli_report(
         "raw_watchdog_event_count": len(events),
         "windows": per_window,
     }
+
+    if notification_plan is not None:
+        from stream_core.operational_reliability.maintenance_admission import evaluate
+        try:
+            report['notification_maintenance'] = evaluate(metrics, events, notification_plan,
+                end=end_ts, step=step_sec)
+        except (ValueError, TypeError, KeyError, AttributeError, OverflowError):
+            report['notification_maintenance'] = None
+    return report
 
 
 def render_text(payload: dict) -> str:

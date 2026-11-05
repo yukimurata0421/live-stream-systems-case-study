@@ -151,3 +151,13 @@ on an operator-selected HDD path. A size bound does not promise a week of
 retention. That optional exporter logger was not activated during this rollout;
 private deployment evidence was retained on HDD. No raw logs, credentials,
 machine IDs or private deployment configuration are part of this public port.
+
+## Planned-maintenance classification
+
+The [maintenance notification contract](manual-maintenance.md#maintenance-aware-notifications)
+adds fresh session facts and a bounded audio/YouTube assessment to the existing
+observation rules. It preserves distinct-sample recovery confirmation and labels
+maintenance reclassification separately from media recovery. Historical formal
+SLI values and independent failures remain intact. See the
+[source-port record](../../publication/maintenance-notifications-port-20261106.json)
+for the public code and synthetic validation boundary.

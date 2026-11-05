@@ -824,7 +824,8 @@ def operational_reliability_incidents(*, status_file: Path | None, now_ts: int) 
                 observed_ts=observed_ts,
             )
         )
-    return results
+    from stream_core.operational_reliability.maintenance_admission import permits
+    return [item for item in results if not permits(payload, item['id'], now=now_ts)]
 
 
 def external_blackbox_incidents(*, status_file: Path | None, now_ts: int) -> list[dict]:
@@ -933,6 +934,10 @@ def collect_notification_incidents(
                 now_ts=now,
             )
         )
+    if operational_reliability_burn_status_file is not None:
+        from stream_core.operational_reliability.maintenance_admission import permits
+        assessment = read_json_file(operational_reliability_burn_status_file)
+        incidents = [item for item in incidents if not permits(assessment, item['id'], now=now)]
     if not bootstrap_grace_active or (
         external_blackbox_status_file is not None and external_blackbox_status_file.exists()
     ):

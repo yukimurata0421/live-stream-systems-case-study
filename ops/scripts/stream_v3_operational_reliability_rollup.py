@@ -19,6 +19,8 @@ if str(SRC) not in sys.path:
 from stream_core.cli_support.sli_report import POLICIES, SliReportContext, build_sli_report
 from stream_core.common.json_io import iter_jsonl
 from stream_core.common import observation_time
+from stream_core.notifications import manual_maintenance
+from stream_core.operational_reliability import maintenance_admission
 from stream_core.operational_reliability.evidence_store import (
     RETENTION_DAYS,
     backfill_same_url_events,
@@ -120,6 +122,7 @@ def latest_gate_status(report: dict) -> dict:
                 "coverage_pct",
                 "source_freshness_pct",
                 "source_disagreement",
+                "source_disagreement_current",
             )
         }
     return result
@@ -162,6 +165,7 @@ def run(args: argparse.Namespace) -> dict:
         windows=BURN_WINDOWS,
         end_time=str(report_end),
         prometheus_url=args.prometheus_url,
+        notification_plan=manual_maintenance.notification_plan(state_root) if args.quick else None,
     )
     if args.quick:
         input_feedback = measurement(report.get("windows", {}).get("1h", {}), "youtube_input_quality")
@@ -181,14 +185,22 @@ def run(args: argparse.Namespace) -> dict:
                         "coverage_pct",
                         "source_freshness_pct",
                         "source_disagreement",
+                        "source_disagreement_current",
+                        "current_crosscheck_reason",
+                        "raw_current",
+                        "prometheus_current",
                     )
                 }
             },
             "multi_window_burn_alerts": multi_window_burn_alerts(report),
             "no_automatic_recovery": True,
             "formal_sli": False,
+            "measurement_status_by_family": {
+                family: measurement(report.get("windows", {}).get("1h", {}), family).get("measurement_status")
+                for family in POLICIES
+            },
         }
-        payload["measurement_status_by_family"] = {family: measurement(report.get("windows", {}).get("1h", {}), family).get("measurement_status") for family in POLICIES}
+        payload = maintenance_admission.bind(payload, report.get('notification_maintenance'))
         payload = observation_time.attach(payload, "reliability_burn")
         write_json_atomic(args.output, payload)
         return payload
