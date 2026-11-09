@@ -42,6 +42,26 @@ The system avoids restarting the whole stream on a single low-energy sample.
 Track transitions and heartbeat-only now-playing updates can temporarily look
 like silence, so recovery is staged.
 
+### Reading Audio Checks on the Dashboard
+
+The public **Audio checks** row summarizes the monitoring layer's
+`stream_v3_audio_ok` values on a one-minute grid. The exporter counts an
+audio subsystem state of `unknown` or `degraded` as a fault, including
+states recorded while the sender is stopped for planned maintenance or while
+audio checks are resuming.
+
+**Coverage** is the share of expected grid points with a check value. Both
+healthy and failed checks count toward coverage. **Bad minutes** counts the
+one-minute points marked failed, and **Interruptions** groups consecutive
+failed points. Confirming how long viewers heard silence requires playback
+evidence from the same interval.
+
+[Maintenance-aware notification rules](manual-maintenance.md#maintenance-aware-notifications)
+can reclassify a warning when the evidence supports planned maintenance.
+The rolling Audio checks value retains those observations until they age out
+of the window. See the [November 9 audio example](rolling-sli-error-budget-feedback.md#november-9-audio-example)
+for a measured case.
+
 ## Recovery Boundaries
 
 | Symptom | First response | What it must not do |

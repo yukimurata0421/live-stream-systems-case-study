@@ -1,8 +1,8 @@
 # Rolling SLI And Error-Budget Feedback
 
 This page is a public-safe summary of point-in-time rolling SLI reviews. The
-first retained snapshot was 2026-06-13 JST, and the latest public-safe refresh
-in this file is 2026-07-24 JST. It is included because it shows how
+first retained snapshot was 2026-06-13 JST. The July 24 review covers several
+signals, and the November 9 example focuses on audio. These reviews show how
 `stream_v3` reads current dashboard windows without confusing them with the
 historical 14-day and 28-day case-study claims.
 
@@ -46,7 +46,9 @@ The 24-hour view was read as fast feedback, not as a long-window reliability
 claim. The available 30-day trend was also treated as trend-only when the
 retention coverage did not span a complete 30 days.
 
-## Latest Public-Safe Refresh
+<a id="latest-public-safe-refresh"></a>
+
+## July 24 Public-Safe Refresh
 
 Point-in-time review: `2026-07-24 JST`.
 
@@ -70,6 +72,20 @@ had moved from the earlier 08 JST morning family to an 11 JST family after
 `10:55-11:15 JST` as the primary validation window, while retaining
 `08:00-08:20 JST` for historical comparison. This is retained chronology, not
 a current incident schedule.
+
+## November 9 Audio Example
+
+In the seven-day window ending at 12:16 JST on 2026-11-09, **Audio checks**
+reported **99.702%** with **100% coverage**, against a **99.5% reference**.
+Of 10,081 one-minute points, 30 were marked failed. The five runs contained
+10, 14, 2, 2 and 2 points. The 24-hour value was **100%**.
+
+All five runs aligned with planned maintenance or the first monitoring samples
+after the sender resumed. The recorded audio subsystem state was `unknown`
+or `degraded`, while the audio failure and missing Pulse source counters
+in the corresponding history were zero. The 30 minutes therefore describe
+the check history. Viewer-side silence during those intervals was unverified.
+See [the Audio checks definition](visual-audio-health-model.md#reading-audio-checks-on-the-dashboard).
 
 ## Decision Rules
 
