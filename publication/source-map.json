@@ -3869,14 +3869,16 @@
       "source_role": "public-adapted-source-or-regression",
       "decision": "Selected maintenance notification behavior; preserve public localization, generic delivery-host binding and existing formal SLI semantics.",
       "before_sha256": "31e3784424c19bb583b1d685f144833205571b1665a0afddebb431be0122c082",
-      "source_sha256": "cfd6373d17250d631db5ca33da22b8561f60c253eff90097e29152b8b1ff22dd",
-      "public_sha256": "e4beb828a9b0c817def0f8cc0d7441b19f0502eb479c21b17c83c767a46a3643",
+      "source_sha256": "5eb1b36bc5ebf48b561d548f2f79b59c71cb4575b3f2045d1dbd1ef892fd7518",
+      "public_sha256": "c8ce005b7865d2b7957f7831809b53b727a5f30674554bcd445220461ae941a4",
       "port_date_jst": "2026-10-23",
       "pre_observability_reconciliation_sha256": "c8fccee7c195cf44ba0c1265399b2334b8e94d881b4042c23be5d0fe62f6a686",
       "before_notification_observation_time_sha256": "9fd2785fb59b6c095f4f164def694fd1a9e6ccf79ab214610da67d9bb80d1b88",
       "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
       "notification_observation_time_source_sha256": "3be5c7e303a16ce6a9942dc94f098bb6c61670b32efba845761cf2f36c1539d0",
-      "maintenance_notifications_port": "publication/maintenance-notifications-port-20261106.json"
+      "maintenance_notifications_port": "publication/maintenance-notifications-port-20261106.json",
+      "audio_maintenance_before_sha256": "e4beb828a9b0c817def0f8cc0d7441b19f0502eb479c21b17c83c767a46a3643",
+      "audio_maintenance_port": "Verified planned stops for the public audio reference. Preserve the formal report, notifications and generic public host binding."
     },
     {
       "path": "src/stream_core/engine/config.py",
@@ -6088,10 +6090,12 @@
       "path": "src/stream_core/cli_support/contexts.py",
       "source_role": "notification-time-evidence",
       "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes.",
-      "source_sha256": "533bfa6a52de17a767ec480e33005a9c2be0d5b3e8658429a4cb0b1cfab8a2ea",
-      "public_sha256": "533bfa6a52de17a767ec480e33005a9c2be0d5b3e8658429a4cb0b1cfab8a2ea",
+      "source_sha256": "844d0817b12910e384ec33c424bb76a25e31fad220a74d5682c3787d0f3b35f5",
+      "public_sha256": "844d0817b12910e384ec33c424bb76a25e31fad220a74d5682c3787d0f3b35f5",
       "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
-      "notification_observation_time_source_sha256": "533bfa6a52de17a767ec480e33005a9c2be0d5b3e8658429a4cb0b1cfab8a2ea"
+      "notification_observation_time_source_sha256": "533bfa6a52de17a767ec480e33005a9c2be0d5b3e8658429a4cb0b1cfab8a2ea",
+      "audio_maintenance_before_sha256": "533bfa6a52de17a767ec480e33005a9c2be0d5b3e8658429a4cb0b1cfab8a2ea",
+      "audio_maintenance_port": "Verified planned stops for the public audio reference. Preserve the formal report, notifications and generic public host binding."
     },
     {
       "path": "src/stream_core/commands/stream1090_report.py",
@@ -6623,9 +6627,11 @@
       "source_role": "observation-contract-public-port",
       "decision": "Port bounded observation contracts, connected delivery, public projection and reviewed verification evidence.",
       "prior_public_sha256": null,
-      "public_sha256": "3c5658299fd0e3acd5303b508ac543e35cabf7e66a7d375337df40ee9dc76e8c",
-      "source_sha256": "d3143096b15d66328e78f6ce5339bf602e701ef92faca5f4062c2ffda44516b2",
-      "observation_completion_record": "publication/observation-completion-20261102.json"
+      "public_sha256": "251eabe0fd8647ac0185adfc2dd134b9833c92288a6bf9ed884eb56875db22ca",
+      "source_sha256": "2e79f73e8d4a93005ced4e3033701364a1c596e747bb21a7e31bb84a5391d9dd",
+      "observation_completion_record": "publication/observation-completion-20261102.json",
+      "audio_maintenance_before_sha256": "3c5658299fd0e3acd5303b508ac543e35cabf7e66a7d375337df40ee9dc76e8c",
+      "audio_maintenance_port": "Verified planned stops for the public audio reference. Preserve the formal report, notifications and generic public host binding."
     },
     {
       "path": "ops/scripts/stream_v3_external_watchdog_heartbeat.py",
@@ -6678,9 +6684,11 @@
       "source_role": "observation-contract-public-port",
       "decision": "Port bounded observation contracts, connected delivery, public projection and reviewed verification evidence.",
       "prior_public_sha256": null,
-      "public_sha256": "3caa0127e0646bb42918648944f09e9de605f2a536c4d944eecd23001f00645d",
-      "source_sha256": "3caa0127e0646bb42918648944f09e9de605f2a536c4d944eecd23001f00645d",
-      "observation_completion_record": "publication/observation-completion-20261102.json"
+      "public_sha256": "01f96bd99f047f704c1aa3db2caadafea5d199f396708ff7d7ba36a711a67668",
+      "source_sha256": "6365529e7ca4b58b3497dc89e20538d23aa1ae95e9b6c8fc0e1e3d49b8a04f77",
+      "observation_completion_record": "publication/observation-completion-20261102.json",
+      "audio_maintenance_before_sha256": "3caa0127e0646bb42918648944f09e9de605f2a536c4d944eecd23001f00645d",
+      "audio_maintenance_port": "Verified planned stops for the public audio reference. Preserve the formal report, notifications and generic public host binding."
     },
     {
       "path": "ops/systemd/stream-v3-external-watchdog.service.in",
@@ -7359,18 +7367,22 @@
     {
       "path": "src/stream_core/common/manual_maintenance_facts.py",
       "source_role": "maintenance-notification-source-port",
-      "public_sha256": "7f0e54a32f2caa50f27e1f3e8dceebea79c4532840f175688182cf386182c2b6",
-      "source_sha256": "1eaf043414d3ac83a9d11b5b0023bb683ad9727cf82a57734b16e45473200792",
+      "public_sha256": "4484ad4d4d2f2fefdb024dfd683498bb4eb7be0c3c91dfe37b3721c3a755ca05",
+      "source_sha256": "6ef8b479ae1836debfc11407e2e35f92fa22c219994a35b01a35f2b602617e54",
       "decision": "Selected maintenance notification behavior; preserve public localization, generic delivery-host binding and existing formal SLI semantics.",
-      "maintenance_notifications_port": "publication/maintenance-notifications-port-20261106.json"
+      "maintenance_notifications_port": "publication/maintenance-notifications-port-20261106.json",
+      "audio_maintenance_before_sha256": "7f0e54a32f2caa50f27e1f3e8dceebea79c4532840f175688182cf386182c2b6",
+      "audio_maintenance_port": "Verified planned stops for the public audio reference. Preserve the formal report, notifications and generic public host binding."
     },
     {
       "path": "src/stream_core/notifications/manual_maintenance.py",
       "source_role": "maintenance-notification-source-port",
-      "public_sha256": "ee25cd217f5b70af2db55300d594cbb8f2683b35eadc3e2b50ef5cd0c457bae6",
-      "source_sha256": "bd6fdaa1e24793ee6ef473f0a7dfb1484d494e3464b2e1b73a045aa44f0a5e91",
+      "public_sha256": "62ffd317179150c6d55f2ba4a568a9eff2706ff34116fc8a6a69a4f06d5005ca",
+      "source_sha256": "a5f32cc67438c00f500f2eaa7f8ba690dc96e4c349c3fa73a72576f83623e0a7",
       "decision": "Selected maintenance notification behavior; preserve public localization, generic delivery-host binding and existing formal SLI semantics.",
-      "maintenance_notifications_port": "publication/maintenance-notifications-port-20261106.json"
+      "maintenance_notifications_port": "publication/maintenance-notifications-port-20261106.json",
+      "audio_maintenance_before_sha256": "ee25cd217f5b70af2db55300d594cbb8f2683b35eadc3e2b50ef5cd0c457bae6",
+      "audio_maintenance_port": "Verified planned stops for the public audio reference. Preserve the formal report, notifications and generic public host binding."
     },
     {
       "path": "src/stream_core/operational_reliability/maintenance_admission.py",
@@ -7395,6 +7407,15 @@
       "source_sha256": "1191c194ee53dd5929776b27592812875d7098c8f211b2c2a0ea400a86e6e568",
       "decision": "Selected maintenance notification behavior; preserve public localization, generic delivery-host binding and existing formal SLI semantics.",
       "maintenance_notifications_port": "publication/maintenance-notifications-port-20261106.json"
+    },
+    {
+      "path": "tests/test_public_audio_maintenance.py",
+      "source_role": "public-audio-maintenance-regression",
+      "before_sha256": null,
+      "audio_maintenance_before_sha256": null,
+      "source_sha256": "fd3c8fa0b86b729635262b0ce72aad73a4f0e33e51681ee14fc6f8b6376d9bf6",
+      "public_sha256": "fd3c8fa0b86b729635262b0ce72aad73a4f0e33e51681ee14fc6f8b6376d9bf6",
+      "audio_maintenance_port": "Verified planned stops for the public audio reference. Preserve the formal report, notifications and generic public host binding."
     }
   ],
   "omissions": [
@@ -7891,5 +7912,24 @@
     "scope": "public-checkout-only",
     "deployment_performed": false,
     "raw_sli_and_history_preserved": true
+  },
+  "audio_maintenance_port": {
+    "scope": "public-checkout-only",
+    "deployment_performed": false,
+    "measurement": "Normal operation and all-periods audio values use the same sample grid.",
+    "source_paths": [
+      "src/stream_core/common/manual_maintenance_facts.py",
+      "src/stream_core/notifications/manual_maintenance.py",
+      "src/stream_core/cli_support/contexts.py",
+      "src/stream_core/cli_support/sli_report.py",
+      "ops/public-publisher/site/scripts/reliability_projection.py",
+      "ops/scripts/stream_v3_public_projection.py",
+      "tests/test_public_audio_maintenance.py"
+    ],
+    "documentation": [
+      "docs/v3/visual-audio-health-model.md",
+      "docs/v3/rolling-sli-error-budget-feedback.md"
+    ],
+    "formal_audio_sli_preserved": true
   }
 }

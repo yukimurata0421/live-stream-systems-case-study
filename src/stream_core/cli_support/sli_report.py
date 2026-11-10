@@ -47,6 +47,7 @@ class SliReportContext:
     operational_reliability_db_file: Path | None = None
     viewer_synthetic_events_file: Path | None = None
     subsystems_status_events_file: Path | None = None
+    public_audio_maintenance_root: Path | None = None
 
 
 @dataclass(frozen=True)
@@ -276,9 +277,11 @@ def summarize_status(
     start_ts: int,
     end_ts: int,
     step_sec: int = DEFAULT_STEP_SEC,
+    expected_points: int | None = None,
 ) -> dict:
     selected = {ts: healthy for ts, healthy in status.items() if start_ts <= ts <= end_ts}
-    expected_points = (end_ts - start_ts) // step_sec + 1
+    if expected_points is None:
+        expected_points = (end_ts - start_ts) // step_sec + 1
     observed_points = len(selected)
     good_points = sum(1 for healthy in selected.values() if healthy)
     bad_points = observed_points - good_points
@@ -1296,6 +1299,48 @@ def _window_payload(
     }
 
 
+def normal_audio_measurement(metrics, scrapes, stops, *, window, end_ts, step_sec):
+    """Separate the normal-operation denominator from the official audio SLI."""
+    from stream_core.operational_reliability.maintenance_admission import RETURN_GRACE
+
+    start_ts = end_ts - window.duration_sec
+    grid = range(start_ts, end_ts + 1, step_sec)
+    audio = metrics.get('audio_ok', {})
+    excluded = set()
+    for stamp in grid:
+        scrape = scrapes.get(stamp)
+        if stamp not in audio:
+            # There was no scheduled normal-operation check during a verified stop.
+            covered = any(start <= stamp < stop for start, stop in stops)
+        else:
+            # Do not exclude a pre-stop observation or a new post-resume failure.
+            covered = (scrape is not None and 0 <= stamp - scrape <= AUDIO_SOURCE_MAX_AGE_SEC
+                       and any(start <= scrape < stop and stamp < stop + RETURN_GRACE
+                               for start, stop in stops))
+        if covered:
+            excluded.add(stamp)
+
+    status = {stamp: audio[stamp] >= 1 for stamp in grid if stamp in audio and stamp not in excluded}
+    summary = summarize_status(status, start_ts=start_ts, end_ts=end_ts, step_sec=step_sec,
+                               expected_points=len(grid) - len(excluded))
+    ages = {stamp: age for stamp, age in metrics.get('audio_evidence_age_seconds', {}).items()
+            if stamp not in excluded}
+    freshness = freshness_pct(ages, start_ts=start_ts, end_ts=end_ts,
+                              max_age_sec=AUDIO_SOURCE_MAX_AGE_SEC)
+    unknown = []
+    if freshness is None:
+        unknown.append('audio_source_freshness_unavailable')
+    if any(start_ts <= stamp <= end_ts and stamp not in excluded and value < 1
+           for stamp, value in metrics.get('audio_evidence_available', {}).items()):
+        unknown.append('audio_evidence_unavailable')
+    eligible = WindowSpec(window.label, max(0, window.duration_sec - len(excluded) * step_sec))
+    policy = {**POLICIES['audio_correctness'], 'official_window': 'sampled_checks'}
+    result = with_policy(summary, policy, eligible, source_freshness_pct=freshness,
+                         additional_unknown_reasons=unknown)
+    result['planned_maintenance_excluded_minutes'] = _round(len(excluded) * step_sec / 60)
+    return result
+
+
 def build_sli_report(
     ctx: SliReportContext,
     *,
@@ -1314,6 +1359,10 @@ def build_sli_report(
     endpoint = (prometheus_url or os.environ.get("STREAM_V3_PROMETHEUS_URL") or ctx.prometheus_url).rstrip("/")
     metrics: dict[str, dict[int, float]] = {}
     errors: dict[str, str] = {}
+    public_audio = None
+    if ctx.public_audio_maintenance_root is not None and step_sec == DEFAULT_STEP_SEC:
+        from stream_core.notifications.manual_maintenance import public_audio_stops
+        public_audio = public_audio_stops(ctx.public_audio_maintenance_root, end=end_ts)
     for name, query in METRIC_QUERIES.items():
         try:
             metrics[name] = fetch_metric_points(
@@ -1328,6 +1377,19 @@ def build_sli_report(
         except SliReportError as exc:
             metrics[name] = {}
             errors[name] = str(exc)
+    audio_scrapes = {}
+    if public_audio:
+        try:
+            # A sample must come from the unique audio series at its grid point.
+            audio_scrapes = fetch_metric_points(
+                endpoint, "timestamp(stream_v3_audio_ok) and on() (count(stream_v3_audio_ok) == 1)",
+                end_ts - 7 * 86400, end_ts, step_sec=step_sec, timeout_sec=timeout_sec,
+                query_range=query_range,
+            )
+        except SliReportError:
+            public_audio = None  # Fall back to all periods without stalling the public feed.
+        if not audio_scrapes and metrics['audio_ok']:
+            public_audio = None
     events = load_watchdog_events(
         ctx.youtube_watchdog_events_file,
         start_ts=earliest_ts - INPUT_QUALITY_MAX_SAMPLE_SPAN_SEC,
@@ -1373,6 +1435,10 @@ def build_sli_report(
             subsystem_events=subsystem_events,
             same_url_ledger=ledger_by_window.get(spec.label),
         )
+        if public_audio is not None and spec.label in ('24h', '7d'):
+            per_window[spec.label]['audio_normal_operation'] = normal_audio_measurement(
+                metrics, audio_scrapes, public_audio, window=spec, end_ts=end_ts, step_sec=step_sec,
+            )
     report = {
         "schema_version": 4,
         "source": "stream-prod sli-report",

@@ -85,7 +85,11 @@ after the sender resumed. The recorded audio subsystem state was `unknown`
 or `degraded`, while the audio failure and missing Pulse source counters
 in the corresponding history were zero. The 30 minutes therefore describe
 the check history. Viewer-side silence during those intervals was unverified.
-See [the Audio checks definition](visual-audio-health-model.md#reading-audio-checks-on-the-dashboard).
+A replay of the same window using the normal-operation denominator excluded
+30 points backed by verified maintenance evidence, including 22 failed points.
+The remaining 10,051 points included eight failures and yielded **99.920%**
+for normal operation. The all-periods value stayed **99.702%**. See the
+[Audio checks definition](visual-audio-health-model.md#reading-audio-checks-on-the-dashboard).
 
 ## Decision Rules
 

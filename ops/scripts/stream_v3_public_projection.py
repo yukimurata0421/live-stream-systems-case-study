@@ -90,7 +90,8 @@ def build(state_root, previous=None, *, report_root=ROOT):
         spec=json.dumps({'step':clocks.STEP,'buckets':clocks.BUCKETS,'instant':clocks.INSTANT,'range':clocks.RANGE})
         return clocks.build(command(['/usr/bin/python3','-I','-c',clocks.REMOTE,spec]),time.time())
     def reliability_value():
-        env={**os.environ,'STREAM_RUNTIME_STATE_DIR':str(state_root),'STREAM_RUNTIME_LOG_DIR':str(state_root/'logs')}
+        env={**os.environ,'STREAM_RUNTIME_STATE_DIR':str(state_root),'STREAM_RUNTIME_LOG_DIR':str(state_root/'logs'),
+             'STREAM_V3_PUBLIC_AUDIO_MAINTENANCE':'1'}
         raw=command([str(report_root/'bin/stream-prod'),'sli-report','--windows','24h,7d,30d','--json'],env=env,timeout=60,cwd=report_root)
         if raw.get('metric_errors'):raise ValueError('sli_report_incomplete')
         active=upload_samples.read_json(state_root/'stream_notify_state.json',2*1024*1024).get('active',{})

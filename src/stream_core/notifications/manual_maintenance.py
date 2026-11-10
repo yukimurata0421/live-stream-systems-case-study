@@ -7,7 +7,10 @@ from pathlib import Path
 import stat
 
 from stream_core.common import observation_time as timing
-from stream_core.common.manual_maintenance_facts import MAINTENANCE_FACT_SCHEMA
+from stream_core.common.manual_maintenance_facts import (
+    AUDIO_HISTORY_SECONDS, MAINTENANCE_FACT_SCHEMA, MAX_HISTORY_FILES,
+)
+from stream_core.common.timeutil import jst_text
 from stream_core.common.timeutil import jst_text
 
 DEFERRED_IDS = frozenset({'reliability:upload_ceiling_coverage_or_freshness',
@@ -218,3 +221,35 @@ def notification_plan(root):
         'active_verified':bool(deferred), 'observed_epoch':facts['observed_epoch'],
         'qualified_epoch':now.wall,
         'source_sample_id':facts['observation_time']['sample_id']}
+
+
+def public_audio_stops(root, *, end):
+    """Read the verified stop intervals for the public audio report only."""
+    bundle = _read_bundle(root)
+    now = timing.capture()
+    state = {}
+    deferred, alerts = assess(bundle, state, now=now)
+    phase = state.get('manual_maintenance_notifications', {}).get('phase')
+    if alerts or phase is None or not -1 <= now.wall - end <= 180:
+        return None
+    facts = bundle['manual_maintenance']
+    observed = facts.get('observed_epoch')
+    rows = facts.get('audio_maintenance_stops')
+    if (not timing.finite(observed) or not -1 <= now.wall - observed <= SOURCE_TTL
+            or not isinstance(rows, list) or len(rows) > MAX_HISTORY_FILES + 1):
+        return None
+    stops = []
+    for row in rows:
+        if not isinstance(row, dict):
+            return None
+        start, stop = row.get('start'), row.get('end')
+        if (not timing.finite(start) or not timing.finite(stop)
+                or not 0 < stop - start <= 86400
+                or not 0 <= observed - stop <= AUDIO_HISTORY_SECONDS):
+            return None
+        stops.append((start, stop))
+    if deferred and phase == 'MAINTENANCE' and facts.get('audio_slate_confirmed') is True:
+        stop = min(now.wall + 1, facts['deadline'])
+        if facts['source_stopped_at'] < stop:
+            stops.append((facts['source_stopped_at'], stop))
+    return tuple(stops)

@@ -216,6 +216,8 @@ def sli_report_context(ns):
         operational_reliability_db_file=ns.PATHS.state_base_dir / "operational_reliability.sqlite3",
         viewer_synthetic_events_file=ns.LOG_BASE_DIR / "viewer_synthetic_status.jsonl",
         subsystems_status_events_file=ns.PATHS.subsystems_status_events_file,
+        public_audio_maintenance_root=(ns.PATHS.state_base_dir
+                                       if os.environ.get('STREAM_V3_PUBLIC_AUDIO_MAINTENANCE') == '1' else None),
     )
 
 

@@ -16,10 +16,22 @@ import time
 MAINTENANCE_FACT_SCHEMA = 'stream_v3.manual_maintenance_facts.v1'
 MAINTENANCE_PHASES = {'NORMAL', 'PREPARING', 'AWAITING_SLATE_CONFIRMATION',
                       'MAINTENANCE', 'RESUMING', 'VERIFYING', 'RESTORING'}
+NOTIFICATION_HISTORY_SECONDS = 21900
+AUDIO_HISTORY_SECONDS = 7 * 86400 + 300
+MAX_HISTORY_FILES = 16
 
 
 def _maintenance_number(value):
     return type(value) in (int, float) and math.isfinite(value)
+
+
+def _slate_confirmed(value, stopped, end):
+    confirmation = value.get('slate_player_confirmation')
+    return (isinstance(confirmation, dict)
+            and confirmation.get('kind') == 'operator_attestation'
+            and confirmation.get('youtube') is True and confirmation.get('twitch') is True
+            and _maintenance_number(confirmation.get('at'))
+            and stopped <= confirmation['at'] <= end)
 
 
 def project_manual_maintenance(value, *, boot, machine_sha256, observed_epoch):
@@ -95,6 +107,8 @@ def project_manual_maintenance(value, *, boot, machine_sha256, observed_epoch):
                 or not 0 < deadline - stopped['at'] <= 86400):
             raise ValueError('maintenance_stop_not_bound')
         result.update(expected_main_stopped=True, source_stopped_at=stopped['at'])
+        if phase == 'MAINTENANCE' and not result['overdue']:
+            result['audio_slate_confirmed'] = _slate_confirmed(value, stopped['at'], observed_epoch)
     return result
 
 
@@ -121,8 +135,16 @@ def read_manual_maintenance(root=Path('/var/lib/stream-v3-manual-maintenance'), 
         machine = hashlib.sha256(Path('/etc/machine-id').read_text().strip().encode()).hexdigest()
         result = project_manual_maintenance(value, boot=boot, machine_sha256=machine, observed_epoch=now)
         result['state_sha256'] = hashlib.sha256(raw).hexdigest()
-        result['notification_stops'] = notification_stops(root, value, boot=boot,
-            machine_sha256=machine, observed_epoch=now, uid=uid)
+        stops = _verified_stops(root, value, boot=boot, machine_sha256=machine,
+                                observed_epoch=now, uid=uid, max_age=AUDIO_HISTORY_SECONDS)
+        result['notification_stops'] = [
+            {k: v for k, v in row.items() if k != 'deadline'} for row in stops
+            if now - row['source_resumed_at'] <= NOTIFICATION_HISTORY_SECONDS
+        ]
+        result['audio_maintenance_stops'] = [
+            {'start': row['source_stopped_at'], 'end': row['source_resumed_at']}
+            for row in stops if row['source_stopped_at'] < row['source_resumed_at'] <= row['deadline']
+        ]
         return result
     except FileNotFoundError:
         return {**unavailable, 'installed': root.exists(), 'reason': 'maintenance_not_installed_or_missing'}
@@ -131,13 +153,19 @@ def read_manual_maintenance(root=Path('/var/lib/stream-v3-manual-maintenance'), 
 
 
 def notification_stops(root, current, *, boot, machine_sha256, observed_epoch, uid=0):
+    return [{k: v for k, v in row.items() if k != 'deadline'} for row in _verified_stops(
+        root, current, boot=boot, machine_sha256=machine_sha256, observed_epoch=observed_epoch,
+        uid=uid, max_age=NOTIFICATION_HISTORY_SECONDS)]
+
+
+def _verified_stops(root, current, *, boot, machine_sha256, observed_epoch, uid, max_age):
     """Bounded root history; only armed, operator-confirmed, applied stop/resume."""
     values = [current]
     history = root/'history'
     try:
         info = history.lstat()
         if stat.S_ISDIR(info.st_mode) and info.st_uid == uid and not info.st_mode & 0o022:
-            paths = sorted(history.glob('*.json'), key=lambda p:p.lstat().st_mtime, reverse=True)[:16]
+            paths = sorted(history.glob('*.json'), key=lambda p:p.lstat().st_mtime, reverse=True)[:MAX_HISTORY_FILES]
             for path in paths:
                 fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
                 with os.fdopen(fd, 'rb') as file:
@@ -158,14 +186,10 @@ def notification_stops(root, current, *, boot, machine_sha256, observed_epoch, u
             f = project_manual_maintenance({**value, 'phase':'MAINTENANCE'},
                 boot=boot, machine_sha256=machine_sha256, observed_epoch=observed_epoch)
             resumed = f['source_resumed_at']
-            confirmation = value['slate_player_confirmation']
-            if (confirmation.get('kind') != 'operator_attestation'
-                    or confirmation.get('youtube') is not True or confirmation.get('twitch') is not True
-                    or not _maintenance_number(confirmation.get('at'))
-                    or not f['source_stopped_at'] <= confirmation['at'] <= resumed
-                    or not 0 <= observed_epoch-resumed <= 21900):
+            if (not _slate_confirmed(value, f['source_stopped_at'], resumed)
+                    or not 0 <= observed_epoch - resumed <= max_age):
                 continue
-            row = {k:f[k] for k in ('session_id','generation','source_stopped_at','source_resumed_at')}
+            row = {k:f[k] for k in ('session_id','generation','source_stopped_at','source_resumed_at','deadline')}
             stops[f['session_id']] = row
         except (ValueError, TypeError, KeyError, StopIteration, AttributeError):
             continue

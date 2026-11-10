@@ -44,7 +44,7 @@ like silence, so recovery is staged.
 
 ### Reading Audio Checks on the Dashboard
 
-The public **Audio checks** row summarizes the monitoring layer's
+The all-periods **Audio checks** value summarizes the monitoring layer's
 `stream_v3_audio_ok` values on a one-minute grid. The exporter counts an
 audio subsystem state of `unknown` or `degraded` as a fault, including
 states recorded while the sender is stopped for planned maintenance or while
@@ -56,11 +56,18 @@ one-minute points marked failed, and **Interruptions** groups consecutive
 failed points. Confirming how long viewers heard silence requires playback
 evidence from the same interval.
 
-[Maintenance-aware notification rules](manual-maintenance.md#maintenance-aware-notifications)
-can reclassify a warning when the evidence supports planned maintenance.
-The rolling Audio checks value retains those observations until they age out
-of the window. See the [November 9 audio example](rolling-sli-error-budget-feedback.md#november-9-audio-example)
-for a measured case.
+**Audio checks (normal operation)** uses the same grid for the 24-hour and
+seven-day windows. It excludes points from verified planned stops and briefly
+held copies of those stop samples after resume. Points newly sampled after
+resume stay in the normal-operation calculation. Coverage and the reference
+budget use the resulting denominator. The details show the all-periods result,
+all-periods bad minutes and the excluded minutes. If maintenance evidence
+cannot be verified, the card shows the all-periods result.
+
+The raw audio SLI, formal assessment and maintenance-aware notification rules
+keep their existing inputs and history. See the
+[notification rules](manual-maintenance.md#maintenance-aware-notifications)
+and the [November 9 audio example](rolling-sli-error-budget-feedback.md#november-9-audio-example).
 
 ## Recovery Boundaries
 

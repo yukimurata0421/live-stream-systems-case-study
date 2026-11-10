@@ -642,6 +642,27 @@ def quality_item(week: dict[str, Any], day: dict[str, Any], key: str, *, item_id
     )
 
 
+def audio_item(week: dict[str, Any], day: dict[str, Any]) -> dict[str, Any]:
+    normal = week.get("audio_normal_operation")
+    if normal is None:
+        return quality_item(
+            week, day, "audio_correctness", item_id="audio_check_samples", label="Audio checks",
+            note="Pulse monitor energy and audio fault evidence across all periods.", extra=[],
+        )
+    raw = week.get("audio_correctness") or {}
+    return quality_item(
+        week, day, "audio_normal_operation", item_id="audio_check_samples",
+        label="Audio checks (normal operation)",
+        note=("Uses the normal-operation denominator. Excludes points from verified planned stops "
+              "and briefly held copies of the same stop samples after resume."),
+        extra=[
+            fact("All periods", raw.get("sli_pct"), "%"),
+            fact("All periods bad minutes", raw.get("bad_minutes"), "min"),
+            fact("Verified planned maintenance excluded", normal.get("planned_maintenance_excluded_minutes"), "min"),
+        ],
+    )
+
+
 def build_public_payload(
     raw: dict[str, Any],
     *,
@@ -671,8 +692,7 @@ def build_public_payload(
         youtube_delivery_item(week, day),
         twitch_delivery_item(twitch_sli, now=current),
         picture_freshness_item(picture, now=current),
-        quality_item(week, day, "audio_correctness", item_id="audio_check_samples", label="Audio checks",
-                     note="Pulse monitor energy and audio fault evidence observed by the monitoring layer.", extra=[]),
+        audio_item(week, day),
         viewer_support_item(week.get("visual_correctness") or {}),
         quality_item(
             week, day, "youtube_input_quality", item_id="youtube_input_quality", label="YouTube input quality",
