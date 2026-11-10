@@ -95,6 +95,39 @@ a compatible Chromium, Pillow, Tesseract and its language data. The ephemeral
 loopback page serves only generated embed HTML and exits with the owned probe.
 No scheduled player service or new persistent listener was enabled.
 
+For a one-shot YouTube check on Dell, the
+[runtime-matched launcher](../../ops/scripts/stream_v3_matched_player_probe.py)
+reads the active runtime Pod and the SHA256 of its running Chrome executable.
+It copies the browser from the matching local image digest without starting a
+container or pulling an image. The probe checks that SHA256 before launch and
+checks the browser version before opening the embed. A Pod, container, or
+browser change during the check leaves the combined result unknown.
+
+On Dell, set up a local profile once using the
+[settings example](../../configs/matched-player.env.example). Store it as
+`~/.config/stream-v3/matched-player.env` with mode `0600`. Use a verified
+`public-player-probe` artifact, the local Playwright, Pillow and Tesseract
+dependencies, and an existing trusted evidence directory. The launcher uses the
+probe script alongside it and copies the clock readers from the verified artifact.
+
+```bash
+python3 -B ops/scripts/stream_v3_matched_player_probe.py
+```
+
+The launcher reads literal `KEY=value` settings and creates a private run
+directory for each invocation. Use `--env-file` for a different profile or
+`--video-id` to override the public video ID when the broadcast changes. The
+individual CLI options still work and take precedence. For an explicit
+`--output` directory, create its parent first and leave the final path unused.
+The Chrome version and executable digest are discovered each run. When a new
+runtime image is deployed, its exact digest must also be available in Dell's
+local Docker image store.
+
+The transient systemd unit uses an unprivileged user, a disposable profile,
+private devices, and CPU, memory, task, and runtime limits. Keep
+`binding.json` with `receiver/player/player.json` to distinguish the
+runtime-to-browser match from the public playback result.
+
 The observed surface is the official embedded player. Watch-page automation is
 still unqualified. The time-of-day display does not independently prove a calendar
 date. This is not a long soak, zero-gap guarantee, human audio validation, provider

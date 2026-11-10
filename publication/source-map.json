@@ -6954,8 +6954,23 @@
       "source_role": "observation-release-provenance",
       "decision": "portable-code-and-sanitized-qualification-record",
       "source_sha256": "fd5a0bb83c15324acf7280cccc90ef8d5b1e4b8443098342b6f656eccb6eb06d",
-      "public_sha256": "fd5a0bb83c15324acf7280cccc90ef8d5b1e4b8443098342b6f656eccb6eb06d",
-      "qualification_follow_up": "publication/player-reception-qualification-20261103.json"
+      "public_sha256": "708c56c058043d975060551b5ac03db2a74b6dbc49025956f89b2b995d901d42",
+      "qualification_follow_up": "publication/player-reception-qualification-20261103.json",
+      "before_runtime_matched_player_sha256": "fd5a0bb83c15324acf7280cccc90ef8d5b1e4b8443098342b6f656eccb6eb06d"
+    },
+    {
+      "path": "ops/scripts/stream_v3_matched_player_probe.py",
+      "source_role": "runtime-matched-public-player-observation",
+      "decision": "Run an isolated receiver with the executable identity of the active runtime browser.",
+      "source_sha256": null,
+      "public_sha256": "c47cc07a002dc65543635dd7e920566fe2755649efca93929cda81994c6a2017"
+    },
+    {
+      "path": "configs/matched-player.env.example",
+      "source_role": "runtime-matched-public-player-observation",
+      "decision": "Document the local settings interface with placeholders.",
+      "source_sha256": null,
+      "public_sha256": "0c0bfde26ce4838d85b727797e33d4ea145b7254ef3be5e0114483ee7c5092e2"
     },
     {
       "path": "ops/scripts/check_observation_catalog.py",
@@ -6990,8 +7005,9 @@
       "source_role": "observation-release-provenance",
       "decision": "portable-code-and-sanitized-qualification-record",
       "source_sha256": "0ddb602b4b4fccf551ac93e409a430bddffce2e60124e0383f0067c80b9c533f",
-      "public_sha256": "0ddb602b4b4fccf551ac93e409a430bddffce2e60124e0383f0067c80b9c533f",
-      "qualification_follow_up": "publication/player-reception-qualification-20261103.json"
+      "public_sha256": "e1b90bc7b1e1896664a8ed56cdd32e35aaa38ae7ed202654d5a36d41e4f36e48",
+      "qualification_follow_up": "publication/player-reception-qualification-20261103.json",
+      "before_runtime_matched_player_sha256": "0ddb602b4b4fccf551ac93e409a430bddffce2e60124e0383f0067c80b9c533f"
     },
     {
       "path": "tests/test_observation_catalog.py",
@@ -7028,8 +7044,9 @@
       "source_role": "observation-release-provenance",
       "decision": "portable-code-and-sanitized-qualification-record",
       "source_sha256": null,
-      "public_sha256": "2f8cadf2c39fc94f366e251b32ac491bb5d4a205c3719382bc7d515541f257d3",
-      "qualification_follow_up": "publication/player-reception-qualification-20261103.json"
+      "public_sha256": "aa987dd4ff5e4321cfc996149a62b10b15bac038661f39d6b012718ecb7c7808",
+      "qualification_follow_up": "publication/player-reception-qualification-20261103.json",
+      "before_runtime_matched_player_sha256": "2f8cadf2c39fc94f366e251b32ac491bb5d4a205c3719382bc7d515541f257d3"
     },
     {
       "path": "ops/scripts/render_provenance_alert.py",

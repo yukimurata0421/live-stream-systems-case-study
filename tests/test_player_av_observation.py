@@ -1,6 +1,13 @@
 import importlib.util
 import asyncio
+import hashlib
+import json
+import sys
 from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import AsyncMock
+
+import pytest
 
 SPEC = importlib.util.spec_from_file_location("player_av", Path(__file__).parents[1] / "ops/scripts/stream_v3_player_av_probe.py")
 probe = importlib.util.module_from_spec(SPEC)
@@ -50,6 +57,82 @@ def test_access_rejection_is_not_a_stream_failure_or_a_pass():
     assert probe.diagnostics(dict(report, status="PASS")) == "continuous_av_observed"
     # An unrelated failed document or image is not evidence of media rejection.
     assert probe.diagnostics({"network": [{"kind": "image", "status": 403}]}) == "continuous_av_unconfirmed"
+
+
+def test_wrong_browser_digest_stops_before_playwright(tmp_path, monkeypatch):
+    executable = tmp_path / "chrome"
+    executable.write_bytes(b"unmatched browser")
+    monkeypatch.setitem(sys.modules, "playwright.async_api", None)
+    args = SimpleNamespace(chromium=executable, expected_browser_sha256="0" * 64,
+                           expected_browser_version="157.0.8103.38", output=tmp_path / "result",
+                           video_id="abcdefghijk", surface="embed", seconds=65,
+                           verify_displayed_clock=False, headed=False)
+    assert asyncio.run(probe.observe(args)) == 2
+    report = json.loads((args.output / "player.json").read_text())
+    assert report["diagnosis"] == "browser_sha256_mismatch"
+    assert report["status"] == "UNKNOWN"
+    assert report["samples"] == []
+
+
+def test_wrong_running_version_closes_browser_without_opening_page(tmp_path, monkeypatch):
+    executable = tmp_path / "chrome"
+    executable.write_bytes(b"pinned browser")
+    browser = SimpleNamespace(version="156.0.8078.4", new_page=AsyncMock(), close=AsyncMock())
+    driver = AsyncMock()
+    driver.__aenter__.return_value = SimpleNamespace(chromium=SimpleNamespace(
+        launch=AsyncMock(return_value=browser)))
+    monkeypatch.setitem(sys.modules, "playwright.async_api", SimpleNamespace(async_playwright=lambda: driver))
+    args = SimpleNamespace(chromium=executable, expected_browser_sha256=hashlib.sha256(executable.read_bytes()).hexdigest(),
+                           expected_browser_version="157.0.8103.38", output=tmp_path / "result",
+                           video_id="abcdefghijk", surface="embed", seconds=65,
+                           verify_displayed_clock=False, headed=False, confined_no_sandbox=False)
+    assert asyncio.run(probe.observe(args)) == 2
+    browser.close.assert_awaited_once()
+    browser.new_page.assert_not_called()
+    report = json.loads((args.output / "player.json").read_text())
+    assert report["diagnosis"] == "browser_version_mismatch"
+    assert report["browser_version"] == "156.0.8078.4"
+
+
+def test_matched_launcher_loads_local_profile_and_cli_overrides(tmp_path, monkeypatch):
+    monkeypatch.syspath_prepend(str(Path(probe.__file__).parent))
+    import stream_v3_matched_player_probe as launcher
+
+    monkeypatch.setattr(launcher.Path, "home", classmethod(lambda cls: tmp_path))
+    config = tmp_path / ".config/stream-v3/matched-player.env"
+    config.parent.mkdir(parents=True)
+    config.write_text(
+        "PLAYER_VIDEO_ID=abcdefghijk\n"
+        f"PLAYER_ARTIFACT={tmp_path}/artifact\n"
+        f"PLAYER_ARTIFACT_SHA256={'0' * 64}\n"
+        f"PLAYER_PLAYWRIGHT_SITE={tmp_path}/playwright\n"
+        f"PLAYER_PILLOW_SITE={tmp_path}/pillow\n"
+        f"PLAYER_OCR_ROOT={tmp_path}/ocr\n"
+        f"PLAYER_OUTPUT_ROOT={tmp_path}\n"
+    )
+    defaults = launcher.parse_args([])
+    assert defaults.video_id == "abcdefghijk"
+    assert defaults.artifact == tmp_path / "artifact"
+    assert defaults.output_root == tmp_path
+    assert defaults.output is None
+    explicit = launcher.parse_args(["--video-id", "12345678901", "--output", str(tmp_path / "result")])
+    assert explicit.video_id == "12345678901"
+    assert explicit.output == tmp_path / "result"
+    assert explicit.output_root is None
+
+
+def test_matched_launcher_rejects_unrelated_settings_without_printing_values(tmp_path, monkeypatch, capsys):
+    monkeypatch.syspath_prepend(str(Path(probe.__file__).parent))
+    import stream_v3_matched_player_probe as launcher
+
+    config = tmp_path / "mixed.env"
+    config.write_text("UNRELATED_TOKEN=arbitrary-opaque-value\n")
+    with pytest.raises(SystemExit) as error:
+        launcher.parse_args(["--env-file", str(config)])
+    assert error.value.code == 2
+    stderr = capsys.readouterr().err
+    assert "expected a unique PLAYER_* assignment" in stderr
+    assert "arbitrary-opaque-value" not in stderr
 
 
 def test_embed_has_an_actual_loopback_origin_and_only_generated_html():

@@ -60,7 +60,7 @@ def failure_code(value):
 def diagnostics(report):
     """Separate viewer evidence from browser/provider access failures."""
     if report.get("error"):
-        return "probe_execution_incomplete"
+        return report.get("reason", "probe_execution_incomplete")
     if report.get("av_status") == "PASS" and report.get("displayed_clock", {}).get("status") != "PASS" and report.get("verify_displayed_clock"):
         return "displayed_clock_unconfirmed"
     if report.get("status") == "PASS":
@@ -226,8 +226,11 @@ class DisplayedClock:
         return row
 
 
+class BrowserPinMismatch(ValueError):
+    pass
+
+
 async def observe(a):
-    from playwright.async_api import async_playwright
     output = a.output
     output.mkdir(parents=True, exist_ok=False)
     report = {"schema": "stream.player_av_observation.v1", "video_id": a.video_id,
@@ -244,6 +247,16 @@ async def observe(a):
     server = None
     clock = None
     try:
+        if a.expected_browser_sha256:
+            with Path(a.chromium).open("rb") as executable:
+                actual_sha256 = hashlib.file_digest(executable, "sha256").hexdigest()
+            report["browser_sha256"] = actual_sha256
+            report["expected_browser_sha256"] = a.expected_browser_sha256
+            report["expected_browser_version"] = a.expected_browser_version
+            if actual_sha256 != a.expected_browser_sha256:
+                raise BrowserPinMismatch("browser_sha256_mismatch")
+        from playwright.async_api import async_playwright
+
         if a.verify_displayed_clock:
             clock = DisplayedClock(a)
         async with async_playwright() as p:
@@ -254,6 +267,8 @@ async def observe(a):
                 ignore_default_args=["--mute-audio"])
             report["browser_version"] = browser.version
             try:
+                if a.expected_browser_version and browser.version != a.expected_browser_version:
+                    raise BrowserPinMismatch("browser_version_mismatch")
                 page = await browser.new_page(
                     viewport={"width": 1280, "height": 720} if a.verify_displayed_clock else {"width": 960, "height": 540},
                     device_scale_factor=1.5 if a.verify_displayed_clock else 1)
@@ -302,6 +317,9 @@ async def observe(a):
                 (output / "final.png").write_bytes(await page.screenshot(timeout=5000))
             finally:
                 await browser.close()
+    except BrowserPinMismatch as e:
+        report["error"] = type(e).__name__
+        report["browser_pin_error"] = str(e)
     except Exception as e:
         # Do not store browser exception messages: they may contain signed media URLs.
         report["error"] = type(e).__name__
@@ -323,7 +341,8 @@ async def observe(a):
     report["request_failures"] = dict(failures)
     report["browser_mode"] = "headed" if a.headed else "headless"
     if report["error"]:
-        report.update(status="UNKNOWN", target_state="UNKNOWN", reason="probe_execution_incomplete")
+        report.update(status="UNKNOWN", target_state="UNKNOWN",
+                      reason=report.get("browser_pin_error", "probe_execution_incomplete"))
     report["diagnosis"] = diagnostics(report)
     report["finished_at_utc"] = datetime.now(timezone.utc).isoformat()
     (output / "player.json").write_text(json.dumps(report, indent=2) + "\n")
@@ -335,6 +354,8 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--video-id", required=True)
     p.add_argument("--chromium", required=True)
+    p.add_argument("--expected-browser-sha256")
+    p.add_argument("--expected-browser-version")
     p.add_argument("--seconds", type=int, default=75)
     p.add_argument("--output", type=Path, required=True)
     p.add_argument("--headed", action="store_true", help="use a separately confined display server")
@@ -350,6 +371,10 @@ def main():
         p.error("valid video ID and 65..120 seconds required")
     if a.verify_displayed_clock and a.surface != "embed":
         p.error("displayed-clock qualification requires --surface embed")
+    if a.expected_browser_sha256 is not None or a.expected_browser_version is not None:
+        if (not re.fullmatch(r"[a-f0-9]{64}", a.expected_browser_sha256 or "")
+                or not re.fullmatch(r"\d+\.\d+\.\d+\.\d+", a.expected_browser_version or "")):
+            p.error("both a lowercase SHA256 and a four-part browser version are required")
     raise SystemExit(asyncio.run(observe(a)))
 
 
