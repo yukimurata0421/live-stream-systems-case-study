@@ -151,6 +151,14 @@ with a 90 s grace yields no intervention candidates, so the agent is now insuran
 for a stall the engine does not resolve. Shortening the daily interruption itself
 is a delivery runtime question, not a reflex one.
 
+FIFO may reconnect without changing the FFmpeg generation or route. A change
+in the observed connection generation, socket cookie or inode resets the stall
+streak and start time, even when the ACK counter is unchanged. The dispatch
+guard checks the same identity before and after reserving the request. Missing
+and restored metadata also reset the baseline; inputs without any such metadata
+retain their existing legacy behavior. The [failure and correction](fifo-connection-grace.md)
+record the ten regression checks and the separately measured real-time window.
+
 ## Executor fence and authority
 
 Requests stay on `runtime.typed_effect_request.v2`, so `enforce` needs no Pod

@@ -91,12 +91,21 @@ class Observation:
 
     @property
     def transport_identity(self) -> tuple[Any, ...]:
+        transport = self.raw.get("delivery_transport")
+        tcp = transport.get("tcp_metrics") if isinstance(transport, dict) else self.raw.get("tcp_metrics")
+        # FIFO can replace the socket without replacing FFmpeg or changing the route.
+        # Equal ACK counters on different connections must never extend one stall.
+        connection = tuple(
+            tcp.get(name) if isinstance(tcp, dict) else None
+            for name in ("transport_connection_generation", "socket_cookie", "socket_inode")
+        )
         return (
             self.executor_instance_id,
             self.generation_key,
             self.raw.get("delivery_route"),
             self.raw.get("delivery_route_generation"),
             tuple(sorted(self.binding.items())) if self.binding else self.binding_status,
+            connection,
         )
 
 

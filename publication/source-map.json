@@ -251,7 +251,7 @@
       "decision": "Selected maintenance notification behavior; preserve public localization, generic delivery-host binding and existing formal SLI semantics.",
       "before_sha256": "9f7605e83cdf9ec60df73ebe3f2472cca9292c4e06ec6768621ce53026c0b82c",
       "source_sha256": null,
-      "public_sha256": "5cdbc34364ab140c5a77fb2f79f0980d5f9dc7bbb082be18d9876b771c2ab7d8",
+      "public_sha256": "c8be7d6acb963c54f9957fb4cf34b9e32a614207277862edc03f5c3bee73be44",
       "prior_public_sha256": "e71784d110b08225a9a320ecb03f999b60fa7f23b2503f2e6a3f80448620c9ed",
       "localization": "English prose; control structures and machine identifiers preserved.",
       "pre_graph_display_sha256": "6a87a495eb3698b1a49e053ffcc109b28d94a59e9dd29cb3399a62279e196d3d",
@@ -327,7 +327,9 @@
       "documentation_design_record": "publication/documentation-design-review-20261104.json",
       "maintenance_notifications_port": "publication/maintenance-notifications-port-20261106.json",
       "before_cra_observability_20261113_sha256": "a9e4093624b2b0daf4cc39c9242734a4c6790a0338e30b403e2f5d9155a1dd51",
-      "cra_observability_port": "publication/cra-observability-port-20261113.json"
+      "cra_observability_port": "publication/cra-observability-port-20261113.json",
+      "before_cra_fifo_grace_20261113_sha256": "5cdbc34364ab140c5a77fb2f79f0980d5f9dc7bbb082be18d9876b771c2ab7d8",
+      "cra_fifo_grace_port": "publication/cra-fifo-grace-port-20261113.json"
     },
     {
       "path": "docs/README.md",
@@ -404,7 +406,7 @@
       "decision": "Selected maintenance notification behavior; preserve public localization, generic delivery-host binding and existing formal SLI semantics.",
       "before_sha256": "1beab3cd3e65147e0fa2d520275c2280dfa86884c6a345efefd32f2dc8469aed",
       "source_sha256": null,
-      "public_sha256": "11f82a9c09568e15a5f4715b911e6de709cc2f9065328fcdb28bee2f503ff16c",
+      "public_sha256": "1fd8540154e7ffdcd527840b6ec0295a443a1c36117cc9538167c43f69c2f5d5",
       "port_date_jst": "2026-11-02",
       "documentation_restructure": "New single page for volatile state.",
       "pre_twitch_observation_public_sha256": "040eac29174151f51e473f7f85e4aa23ff994be0079b3d4c011623b6ec7864ca",
@@ -479,7 +481,9 @@
       "documentation_design_record": "publication/documentation-design-review-20261104.json",
       "maintenance_notifications_port": "publication/maintenance-notifications-port-20261106.json",
       "before_cra_observability_20261113_sha256": "2e7d33b62f18704c2a34f2d3bd5358cb856ebacb6d22ce80fe851915d598d42f",
-      "cra_observability_port": "publication/cra-observability-port-20261113.json"
+      "cra_observability_port": "publication/cra-observability-port-20261113.json",
+      "before_cra_fifo_grace_20261113_sha256": "11f82a9c09568e15a5f4715b911e6de709cc2f9065328fcdb28bee2f503ff16c",
+      "cra_fifo_grace_port": "publication/cra-fifo-grace-port-20261113.json"
     },
     {
       "path": "docs/design-decisions-for-review.md",
@@ -3190,7 +3194,7 @@
       "decision": "state the 2026-10-22 local reflex revision against the earlier CRA rationale",
       "before_sha256": "308d1be005d42e8bba37ef4c542272e6b700a5c0d84ec2a187526e8951550919",
       "source_sha256": null,
-      "public_sha256": "322cf9d1e5f0e4599f29a784cbf7721a9a36b4648c9d0841f5ae77183bd62ae6",
+      "public_sha256": "a5a605527c650ca2a631a5cbac68d31552520a4957d07c1dff56737157db619c",
       "prior_public_sha256": "c2810e6bae6039f34c37c8efe35863599f0f6ec9c4a8c4e15a662d302288cb3a",
       "localization": "English prose; control structures and machine identifiers preserved.",
       "before_unicode_source_sha256": "78957f166d15b800f5c88e8ef691af40e4642ef50c8d0df5520891325366ba92",
@@ -3199,7 +3203,9 @@
       "pre_concurrent_documentation_sha256": "6957eb9499bba90552c1b9f986ec80dfe05813d45c862524fa16edf6ece95e47",
       "layout_update": "Current CRA and Stream support separation, 2026-10-26",
       "before_cra_observability_20261113_sha256": "8ae98d1dc4eca49a81be7cc602f70ac8f602f6b19e9d9bdf84221ac3c61c8d4b",
-      "cra_observability_port": "publication/cra-observability-port-20261113.json"
+      "cra_observability_port": "publication/cra-observability-port-20261113.json",
+      "before_cra_fifo_grace_20261113_sha256": "322cf9d1e5f0e4599f29a784cbf7721a9a36b4648c9d0841f5ae77183bd62ae6",
+      "cra_fifo_grace_port": "publication/cra-fifo-grace-port-20261113.json"
     },
     {
       "path": "recovery-control/docs/architecture.md",
@@ -3225,13 +3231,15 @@
       "decision": "document the engine grace window and the relay output interruption record",
       "before_sha256": "af1ed32e7867436f9b63c84423c68226bff1b487158d050982b0241367bdca72",
       "source_sha256": null,
-      "public_sha256": "dcb5f9fcddfb2efa5e29079ad0a1cbffbe13f6fed2f11f5bfab3fe8d8d83ede4",
+      "public_sha256": "1723eb1c4bbb0618d71cb3487d30b617c00f0417a389e816c6bb86ef59da0313",
       "port_date_jst": "2026-10-23",
       "pre_concurrent_documentation_sha256": "a4260eac4e610eab885f15705093e8583642af41c82089b456095bd6f9597b14",
       "prior_public_sha256": "8395e8a2e60cb83bc99dbc9859aa4cf6c5e68989d7c06fc305999990694f20ec",
       "layout_update": "Current CRA and Stream support separation, 2026-10-26",
       "before_cra_observability_20261113_sha256": "02b2f011ad6164350f903d5b53869e82d32f769dcbd80b05b78c91f81b5ccf27",
-      "cra_observability_port": "publication/cra-observability-port-20261113.json"
+      "cra_observability_port": "publication/cra-observability-port-20261113.json",
+      "before_cra_fifo_grace_20261113_sha256": "dcb5f9fcddfb2efa5e29079ad0a1cbffbe13f6fed2f11f5bfab3fe8d8d83ede4",
+      "cra_fifo_grace_port": "publication/cra-fifo-grace-port-20261113.json"
     },
     {
       "path": "recovery-control/docs/public-language-policy.md",
@@ -3437,8 +3445,10 @@
       "decision": "verbatim",
       "before_sha256": "d0b194dc3f070165118c78b7ac4d0c5de5f7b27b341fbfc058b5137d2b1c765b",
       "source_sha256": "ff69faa43ef367e9b72558545c69d7d42bb26f2c9842a5a025135bd694045d38",
-      "public_sha256": "ff69faa43ef367e9b72558545c69d7d42bb26f2c9842a5a025135bd694045d38",
-      "port_date_jst": "2026-10-22"
+      "public_sha256": "98e1efe46917b759abf1be90a4f356a75f657f44cd23a62965b70d300acb63a9",
+      "port_date_jst": "2026-10-22",
+      "before_cra_fifo_grace_20261113_sha256": "ff69faa43ef367e9b72558545c69d7d42bb26f2c9842a5a025135bd694045d38",
+      "cra_fifo_grace_port": "publication/cra-fifo-grace-port-20261113.json"
     },
     {
       "path": "recovery-control/src/cra/policy.py",
@@ -7688,6 +7698,24 @@
       "source_sha256": "cd99392ed81cd1223eb6584df9e7bf18e23e84185b68a742e8089378b9fae124",
       "public_sha256": "e1fbbf25bf64e5c787bb1ca0f0c6d17dcde5220958c6af4e41dac63deb30266d",
       "decision": "Port CRA observation integration; use English prose/comments, generic public identities and existing shared FIFO behavior. Preserve dry-run public policy and exclude live state/credentials.",
+      "port_date_jst": "2026-11-13"
+    },
+    {
+      "source_role": "cra-fifo-grace-public-port",
+      "path": "recovery-control/docs/fifo-connection-grace.md",
+      "before_sha256": null,
+      "source_sha256": "e417dd7e37ceb5e3b7c95b7c80c410d53bb30f3bf7855c6bedaf6b5481a2abb4",
+      "public_sha256": "b3483a77c1ecb908b4b4c814de8ac78216308f6c760ca38c2bc42dfaffb408fd",
+      "decision": "Port the FIFO connection identity fix and regression checks; adapt public test imports and English evidence documentation without changing public activation defaults.",
+      "port_date_jst": "2026-11-13"
+    },
+    {
+      "source_role": "cra-fifo-grace-public-port",
+      "path": "recovery-control/tests/reflex/test_reflex_fifo_connection_grace.py",
+      "before_sha256": null,
+      "source_sha256": "02163f71aef95cc1d5fdb72e8661ef1b39b13d8583172d977aec150353f13ea0",
+      "public_sha256": "8201681ca17c4d72ec865731cc0a2fc1289158ecab19e9b13952fae158f4f449",
+      "decision": "Port the FIFO connection identity fix and regression checks; adapt public test imports and English evidence documentation without changing public activation defaults.",
       "port_date_jst": "2026-11-13"
     }
   ],

@@ -3,6 +3,7 @@
 - [Architecture](architecture.md): current services, ownership and the Stream Executor.
 - [Why CRA exists](why-cra.md): observed duplicate attempts and the authority choice.
 - [Current contract](local-reflex-authority.md): local decisions under signed policy.
+- [FIFO connection grace](fifo-connection-grace.md): reset stalled intervals on socket replacement and retain dispatch consumption.
 - [Operations](local-reflex-operations.md): inspection, evaluation, handover and rollback.
 - [Safety model](safety-model.md): persistent reservations, fences and unknown outcomes.
 - [Test boundaries](harness-trust.md): current unit and real-Executor integration checks.

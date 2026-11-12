@@ -1,0 +1,109 @@
+{
+  "schema": "stream.public_cra_fifo_grace_port.v1",
+  "date_jst": "2026-11-13",
+  "base_public_commit": "45d369e53d7764db4692a1b1c863643d1e6a194a",
+  "scope": "Reset CRA stall evidence and the grace window on FIFO connection replacement, and reject dispatch-time connection changes.",
+  "runtime_mutations_by_this_publication": false,
+  "external_notifications_by_this_publication": false,
+  "public_configuration_enables_production_effects": false,
+  "files": [
+    {
+      "path": "docs/00_INDEX.md",
+      "before_sha256": "5cdbc34364ab140c5a77fb2f79f0980d5f9dc7bbb082be18d9876b771c2ab7d8",
+      "source_sha256": null,
+      "public_sha256": "c8be7d6acb963c54f9957fb4cf34b9e32a614207277862edc03f5c3bee73be44",
+      "decision": "Port the FIFO connection identity fix and regression checks; adapt public test imports and English evidence documentation without changing public activation defaults."
+    },
+    {
+      "path": "docs/current-status.md",
+      "before_sha256": "11f82a9c09568e15a5f4715b911e6de709cc2f9065328fcdb28bee2f503ff16c",
+      "source_sha256": null,
+      "public_sha256": "1fd8540154e7ffdcd527840b6ec0295a443a1c36117cc9538167c43f69c2f5d5",
+      "decision": "Port the FIFO connection identity fix and regression checks; adapt public test imports and English evidence documentation without changing public activation defaults."
+    },
+    {
+      "path": "recovery-control/docs/00_INDEX.md",
+      "before_sha256": "322cf9d1e5f0e4599f29a784cbf7721a9a36b4648c9d0841f5ae77183bd62ae6",
+      "source_sha256": null,
+      "public_sha256": "a5a605527c650ca2a631a5cbac68d31552520a4957d07c1dff56737157db619c",
+      "decision": "Port the FIFO connection identity fix and regression checks; adapt public test imports and English evidence documentation without changing public activation defaults."
+    },
+    {
+      "path": "recovery-control/docs/fifo-connection-grace.md",
+      "before_sha256": null,
+      "source_sha256": "e417dd7e37ceb5e3b7c95b7c80c410d53bb30f3bf7855c6bedaf6b5481a2abb4",
+      "public_sha256": "b3483a77c1ecb908b4b4c814de8ac78216308f6c760ca38c2bc42dfaffb408fd",
+      "decision": "Port the FIFO connection identity fix and regression checks; adapt public test imports and English evidence documentation without changing public activation defaults."
+    },
+    {
+      "path": "recovery-control/docs/local-reflex-authority.md",
+      "before_sha256": "dcb5f9fcddfb2efa5e29079ad0a1cbffbe13f6fed2f11f5bfab3fe8d8d83ede4",
+      "source_sha256": null,
+      "public_sha256": "1723eb1c4bbb0618d71cb3487d30b617c00f0417a389e816c6bb86ef59da0313",
+      "decision": "Port the FIFO connection identity fix and regression checks; adapt public test imports and English evidence documentation without changing public activation defaults."
+    },
+    {
+      "path": "recovery-control/src/cra/observe.py",
+      "before_sha256": "ff69faa43ef367e9b72558545c69d7d42bb26f2c9842a5a025135bd694045d38",
+      "source_sha256": "98e1efe46917b759abf1be90a4f356a75f657f44cd23a62965b70d300acb63a9",
+      "public_sha256": "98e1efe46917b759abf1be90a4f356a75f657f44cd23a62965b70d300acb63a9",
+      "decision": "Port the FIFO connection identity fix and regression checks; adapt public test imports and English evidence documentation without changing public activation defaults."
+    },
+    {
+      "path": "recovery-control/tests/reflex/test_reflex_fifo_connection_grace.py",
+      "before_sha256": null,
+      "source_sha256": "02163f71aef95cc1d5fdb72e8661ef1b39b13d8583172d977aec150353f13ea0",
+      "public_sha256": "8201681ca17c4d72ec865731cc0a2fc1289158ecab19e9b13952fae158f4f449",
+      "decision": "Port the FIFO connection identity fix and regression checks; adapt public test imports and English evidence documentation without changing public activation defaults."
+    }
+  ],
+  "operated_checkpoint": {
+    "cutoff_jst": "2026-11-13T07:34:47+09:00",
+    "reported_from_retained_evidence": true,
+    "agent_update_jst": "2026-11-13T07:22:52+09:00",
+    "policy_mode": "enforce",
+    "policy_version": 3,
+    "new_regression_tests": 10,
+    "old_source_negative_control": {
+      "failed_as_expected": 9,
+      "passed": 1
+    },
+    "private_runtime_regression": {
+      "passed": 166,
+      "frozen_candidate_skipped": 6
+    },
+    "real_time_fixture": {
+      "duration_seconds": 172.00652169482782,
+      "new_connection_age_at_request_seconds": 90.000041,
+      "physical_effects": 0,
+      "real_network_probes": 0
+    },
+    "post_deployment_observation": {
+      "duration_seconds": 300.2794402970467,
+      "delivery_host_samples": 31,
+      "monitoring_host_samples": 11,
+      "issue_samples": 0,
+      "ack_delta_bytes": 158959745,
+      "new_enforce_requests": 0
+    },
+    "production_reconnection_after_fix_observed": false,
+    "public_player_continuous_av_observed": false
+  },
+  "public_validation": {
+    "status": "PASS",
+    "new_regression_passed": 10,
+    "old_public_source_negative_control": {
+      "failed_as_expected": 9,
+      "passed": 1
+    },
+    "cra_full_passed": 168,
+    "docs_tests_passed": 18,
+    "docs_subtests_passed": 1854,
+    "format_lint_types": "PASS",
+    "source_map_issues": 0,
+    "public_boundary_issues": 0,
+    "public_language": "English; validator PASS",
+    "external_sends": 0,
+    "production_mutations": false
+  }
+}

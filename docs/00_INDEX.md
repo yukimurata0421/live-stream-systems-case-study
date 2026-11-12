@@ -138,6 +138,9 @@ These describe proposed work or explicitly limited local checks.
 
 ## Publication Records
 
+- [CRA FIFO connection grace](../recovery-control/docs/fifo-connection-grace.md): connection-change resets, dispatch guards and dated validation.
+- [CRA FIFO grace port manifest](../publication/cra-fifo-grace-port-20261113.json): source digests and public validation.
+
 These identify selected source ports and validation, not automatic deployment.
 
 - `../publication/cra-observability-port-20261113.json`: [Pod API observer, fixed CRA facts, monitoring integration and four-host checkpoint](../publication/cra-observability-port-20261113.json).

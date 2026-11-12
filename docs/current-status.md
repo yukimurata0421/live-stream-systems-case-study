@@ -1,7 +1,7 @@
 # Current Status
 
-Last updated: 2026-11-13 JST (CRA observation source port and dated closure).
-Latest operated evidence summarized here: 2026-11-13 02:27 JST. This page is an
+Last updated: 2026-11-13 JST (CRA FIFO connection-grace source port).
+Latest operated evidence summarized here: 2026-11-13 07:34 JST. This page is an
 index of retained checkpoints, not a live health report. The CRA checkpoint
 advances only its named integration scope; earlier subsystem limits remain.
 Full earlier wording remains in the
@@ -11,6 +11,7 @@ Full earlier wording remains in the
 
 | Area | Latest retained result | Scope and remaining limit |
 | --- | --- | --- |
+| CRA FIFO connection grace | Connection generation, cookie and inode now reset stall evidence and restart the grace window. The corrected agent and its post-deployment state were checked on November 13. [Failure, correction and evidence](../recovery-control/docs/fifo-connection-grace.md). | New-connection timing was tested in isolation, including a real-time 90-second wait. No new production FIFO switch or real CRA intervention was observed by that checkpoint; public examples remain disabled. |
 | CRA migration | Signed policy v3 enforce on the existing typed v2 Executor, separate Pod API observer, Prometheus/Loki and four-host integration checked through November 13. [Checkpoint](v3/cra-observability-closure.md), [source guide](../monitoring-v4/docs/cra-observability.md). | Public examples remain disabled; real CRA intervention, continuous player AV and historical UNKNOWN reconciliation are not established. |
 | Maintenance notifications | The November 6 source port classifies planned audio/YouTube residuals using fresh maintenance facts and complete normal evidence outside the planned intervals. [Contract](v3/manual-maintenance.md#maintenance-aware-notifications), [port record](../publication/maintenance-notifications-port-20261106.json). | Synthetic source validation; formal SLI/history and independent alarms remain intact. This port performed no production deployment or provider/player verification. |
 | Public publication | The November 3 public source port includes the R2 uploader, receipts, bounded connection fallback and Worker. [Transport guide](v3/r2-publication-transport.md). | Source validation; the port did not deploy those examples. Earlier operated publication has its own [dated record](v3/r2-publication-and-freshness-case-study.md). |
