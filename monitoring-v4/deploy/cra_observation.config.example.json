@@ -1,0 +1,21 @@
+{
+  "port": 9130,
+  "state_dir": "/var/lib/stream-v4-cra-observation",
+  "log_path": "/var/log/cra-monitoring/events.jsonl",
+  "prometheus": "http://127.0.0.1:9090",
+  "gateway_socket": "/run/stream-notification-gateway/gateway.sock",
+  "initial_instance": "replace-with-confirmed-agent-instance",
+  "initial_after_seq": 0,
+  "sources": {
+    "dell": {
+      "ssh_host": "delivery-host",
+      "helper": "/srv/cra-monitoring/monitoring_facts.py",
+      "source_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "central": {
+      "ssh_host": "authority-host",
+      "helper": "/srv/cra-monitoring/monitoring_facts.py",
+      "source_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  }
+}

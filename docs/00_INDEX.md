@@ -38,6 +38,10 @@ These pages own present rules. A dated exercise inside one is evidence for its n
 
 Observation meaning, freshness and publication have separate owners from recovery decisions.
 
+- `v3/cra-observability-closure.md`: [CRA observation, retained failures and four-host closure](v3/cra-observability-closure.md).
+- [CRA monitoring guide](../monitoring-v4/docs/cra-observability.md): read-only facts, audit ingestion and route-specific notification delivery.
+- `../publication/cra-observability-port-20261113.json`: [sanitized source port and validation manifest](../publication/cra-observability-port-20261113.json).
+
 - `v3/observation-standardization.md`: [shared observation meaning and the direct-scrape connection](v3/observation-standardization.md).
 - `v3/observation-release-provenance.md`: [committed source releases, producer provenance and player qualification gates](v3/observation-release-provenance.md).
 - `v3/external-watchdog.md`: [independent heartbeat detection and direct notification delivery](v3/external-watchdog.md).
@@ -136,6 +140,8 @@ These describe proposed work or explicitly limited local checks.
 
 These identify selected source ports and validation, not automatic deployment.
 
+- `../publication/cra-observability-port-20261113.json`: [Pod API observer, fixed CRA facts, monitoring integration and four-host checkpoint](../publication/cra-observability-port-20261113.json).
+
 - `v3/public-source-port-2026-10-23-observability.md`: [thumbnail cache timing, current quality, notification delivery and Monitoring v4 history](v3/public-source-port-2026-10-23-observability.md).
 - `v3/public-source-port-2026-10-23-relay-clock.md`: [return-feed native clock evidence, non-monotonic ROI widening and a current-ROI-first UTC read](v3/public-source-port-2026-10-23-relay-clock.md).
 - `v3/thumbnail-ocr-rollout-2026-10-22.md`: [operated counter activation, live OCR evidence and preserved concurrent work](v3/thumbnail-ocr-rollout-2026-10-22.md).
@@ -167,7 +173,7 @@ branches from the Stream review, not additional required reading.
 
 | Component | Entry and scope |
 | --- | --- |
-| CRA | [Source guide](../recovery-control/README.md), [catalog](../recovery-control/docs/00_INDEX.md), [current contract](../recovery-control/docs/local-reflex-authority.md); local reflex remains `dry_run`. |
+| CRA | [Source guide](../recovery-control/README.md), [catalog](../recovery-control/docs/00_INDEX.md), [current contract](../recovery-control/docs/local-reflex-authority.md); public defaults remain `dry_run`, with a separately dated operated enforce checkpoint. |
 | Monitoring v4 | [Source guide](../monitoring-v4/README.md), [architecture](../monitoring-v4/docs/architecture.md), [status](../monitoring-v4/docs/status.md); read-only observation is distinct from recovery authority. |
 | Public publisher | [Bundle binding, upload and Worker setup](../ops/public-publisher/site/README.md). |
 | Kubernetes examples | [Manifest guide](../deploy/k3s/README.md). |

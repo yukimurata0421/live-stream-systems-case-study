@@ -1,0 +1,58 @@
+groups:
+- name: cra_observation
+  interval: 15s
+  rules:
+  - alert: CRAObservationUnavailable
+    expr: up{job="cra_observation"} == 0 or absent(up{job="cra_observation"}) or cra_source_available{job="cra_observation"} != 1 or time() - cra_source_timestamp_seconds{job="cra_observation"} > 60
+    for: 2m
+    labels: {severity: warning, scope: cra-observation, notification_owner: cra_monitoring}
+    annotations: {summary: "CRA read-only monitoring is unavailable"}
+  - alert: CRAAgentUnavailable
+    expr: cra_agent_service_up{job="cra_observation"} != 1 or time() - cra_agent_status_timestamp_seconds{job="cra_observation"} > 45 or cra_agent_local_stop{job="cra_observation"} != 0
+    for: 1m
+    labels: {severity: critical, scope: cra-observation, notification_owner: cra_monitoring}
+    annotations: {summary: "CRA agent operation or fresh status is unconfirmed"}
+  - alert: CRATargetObservationUnavailable
+    expr: cra_target_valid{job="cra_observation"} != 1 or time() - cra_target_observation_timestamp_seconds{job="cra_observation"} > 45
+    for: 1m
+    labels: {severity: warning, scope: cra-observation, notification_owner: cra_monitoring}
+    annotations: {summary: "CRA target observation is unavailable; execution is held"}
+  - alert: CRACentralVerificationFailed
+    expr: cra_central_verification_violations{job="cra_observation"} > 0 or cra_central_missing_sequences{job="cra_observation"} > 0 or cra_central_unresolved_gaps{job="cra_observation"} > 0 or cra_central_conflicts{job="cra_observation"} > 0
+    labels: {severity: critical, scope: cra-observation, notification_owner: cra_monitoring}
+    annotations: {summary: "CRA central audit found a violation, missing sequence or conflict"}
+  - alert: CRACentralVerificationStale
+    expr: cra_central_service_up{job="cra_observation"} != 1 or cra_central_verify_timer_up{job="cra_observation"} != 1 or time() - cra_central_verification_timestamp_seconds{job="cra_observation"} > 480
+    for: 1m
+    labels: {severity: critical, scope: cra-observation, notification_owner: cra_monitoring}
+    annotations: {summary: "CRA central verification is stopped or stale"}
+  - alert: CRAAuditReplicationLag
+    expr: cra_agent_audit_sequence{job="cra_observation"} > cra_central_audit_sequence{job="cra_observation"} or absent(cra_central_audit_sequence{job="cra_observation"})
+    for: 3m
+    labels: {severity: warning, scope: cra-observation, notification_owner: cra_monitoring}
+    annotations: {summary: "CRA audit replication is delayed"}
+  - alert: CRAUnresolvedExecution
+    expr: cra_unresolved_actions{job="cra_observation"} > 0 or cra_in_flight_requests{job="cra_observation"} > 0
+    for: 1m
+    labels: {severity: critical, scope: cra-observation, notification_owner: cra_monitoring}
+    annotations: {summary: "CRA execution has unresolved outcomes; reconcile without resending"}
+  - alert: CRAExecutorAuthorityMismatch
+    expr: cra_executor_authority_match{job="cra_observation"} != 1 or cra_agent_policy_mode{job="cra_observation",mode="enforce"} != 1 or cra_legacy_controller_active{job="cra_observation"} != 0 or max without(component) (cra_policy_version{job="cra_observation"}) != min without(component) (cra_policy_version{job="cra_observation"})
+    for: 1m
+    labels: {severity: critical, scope: cra-observation, notification_owner: cra_monitoring}
+    annotations: {summary: "CRA policy, Executor authority or legacy controller state is inconsistent"}
+  - alert: CRAObserverTimeouts
+    expr: increase(cra_pod_api_failed_reads_total{job="cra_observation"}[15m]) >= 3 or cra_pod_api_observer_available{job="cra_observation"} != 1
+    for: 1m
+    labels: {severity: warning, scope: cra-observation, notification_owner: cra_monitoring}
+    annotations: {summary: "CRA target observer has repeated missing observations"}
+  - alert: CRALogIngestionUnavailable
+    expr: cra_loki_query_available{job="cra_observation"} != 1 or time() - cra_loki_last_event_timestamp_seconds{job="cra_observation"} > 180
+    for: 3m
+    labels: {severity: warning, scope: cra-observation, notification_owner: cra_monitoring}
+    annotations: {summary: "CRA monitoring log ingestion into Loki is unconfirmed"}
+  - alert: CRANotificationMonitorUnavailable
+    expr: cra_notifier_available{job="cra_observation"} != 1 or time() - cra_notifier_timestamp_seconds{job="cra_observation"} > 90 or cra_notification_unconfirmed{job="cra_observation"} > 0 or cra_notification_pending{job="cra_observation"} > 0
+    for: 3m
+    labels: {severity: critical, scope: cra-observation, notification_owner: monitoring}
+    annotations: {summary: "CRA notification monitoring is unavailable or delivery is unconfirmed"}

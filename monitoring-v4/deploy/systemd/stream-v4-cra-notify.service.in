@@ -1,0 +1,22 @@
+[Unit]
+Description=CRA alert delivery through the shared Discord and Slack gateway
+After=network-online.target stream-v3-notification-gateway.service
+
+[Service]
+Type=simple
+User=@USER@
+ExecStart=/usr/bin/python3 -I -B @RELEASE@/cra_notify.py --config /etc/stream-v4-cra-observation/config.json
+Restart=on-failure
+RestartSec=10
+UMask=0027
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+NoNewPrivileges=true
+ReadWritePaths=/var/lib/stream-v4-cra-observation /var/log/cra-monitoring
+CPUQuota=10%
+MemoryMax=64M
+TasksMax=8
+
+[Install]
+WantedBy=multi-user.target

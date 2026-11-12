@@ -17,6 +17,10 @@ Choose the kind of answer needed:
 
 Selected deeper paths:
 
+- [CRA observation and four-host closure](cra-observability-closure.md):
+  separate Pod API authentication, monitoring, audit continuity and retained
+  failed/unknown outcomes; [source guide](../../monitoring-v4/docs/cra-observability.md).
+
 - [FIFO connection recovery](ffmpeg-fifo-recovery.md): why the output reconnects
   instead of riding through or restarting FFmpeg; its
   [measured comparison and rollout failure](ffmpeg-fifo-measurements.md), and

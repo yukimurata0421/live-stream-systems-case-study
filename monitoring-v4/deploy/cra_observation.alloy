@@ -1,0 +1,14 @@
+// /var/log is already mounted read-only in the running Alloy container.
+loki.source.file "cra_monitoring" {
+  targets = [{
+    __path__ = "/host/var/log/cra-monitoring/events*.jsonl",
+    app = "cra",
+    source = "cra_monitoring",
+  }]
+  forward_to = [loki.process.jsonl.receiver]
+  tail_from_end = false
+  file_match {
+    enabled = true
+    sync_period = "15s"
+  }
+}

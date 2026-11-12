@@ -25,7 +25,7 @@ automatic retry signal.
 The integrated [`recovery-control/`](../../recovery-control/README.md)
 subproject contains the local agent, signed-policy central service and their
 tests. The Stream tree owns the observer, protocol and physical Executor;
-they are not installed as part of CRA. The operated agent remains `dry_run`.
+they are not installed as part of CRA. Public examples remain `dry_run`; the [November 13 checkpoint](cra-observability-closure.md) records the separately authorized operated enforce path.
 The earlier central per-action authorization design is retained in
 [history](../../recovery-control/docs/history.md). The reason for applying local
 transaction boundaries and effect fencing is documented in

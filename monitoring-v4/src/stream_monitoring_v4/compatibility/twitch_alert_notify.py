@@ -25,6 +25,10 @@ except ImportError:
     from notification_heartbeat import read_heartbeat,write_heartbeat
 
 PROMETHEUS = 'http://127.0.0.1:9090/api/v1/alerts'
+CRA_OWNED = {'CRAObservationUnavailable', 'CRAAgentUnavailable',
+    'CRATargetObservationUnavailable', 'CRACentralVerificationFailed',
+    'CRACentralVerificationStale', 'CRAAuditReplicationLag', 'CRAUnresolvedExecution',
+    'CRAExecutorAuthorityMismatch', 'CRAObserverTimeouts', 'CRALogIngestionUnavailable'}
 DELIVERY = 'http://127.0.0.1:9116/twitch-delivery'
 JST = timezone(timedelta(hours=9))
 # Alert name -> (title, what it means); unlisted rules use their alert name.
@@ -37,6 +41,7 @@ ALERTS = {
     'StreamV4TwitchSloBreached': ('Twitch SLO is below target', 'The seven-day measurement is below its target.'),
 }
 ALERTS.update({
+    'CRANotificationMonitorUnavailable':('CRA notification status is unconfirmed','Reconcile worker health, Prometheus observation and uncertain delivery outcomes.'),
     'YouTubeRelayNotProgressing':('OCI forwarding to YouTube has stopped','Progress on the primary delivery path cannot be confirmed.'),
     'RelayObservationUnavailable':('OCI relay observation is unavailable','Evidence required to assess delivery is missing.'),
     'RelayObserverUnavailable':('OCI observation service is unavailable','Check the OCI observation collection path.'),
@@ -46,6 +51,7 @@ ALERTS.update({
 LEGACY_NAMES={'TwitchUnexpectedOffline','TwitchRelayNotProgressing','TwitchObservationUnavailable',
               'TwitchDeliveryObservationUnavailable','StreamV4TwitchSliMeasurementUnavailable','StreamV4TwitchSloBreached'}
 IMMEDIATE_SLACK={'YouTubeRelayNotProgressing','RelayMemoryPressure','RelayDiskSpaceLow',
+    'CRANotificationMonitorUnavailable',
     'StreamV3MonitoringWatchdogStale','StreamV3MonitoringWatchdogFailed','StreamV3ArenaMonitorExporterDown',
     'StreamV3ArenaMonitorExporterFailing','StreamV3ExporterRefreshFailing','StreamV3ExporterCacheStale','StreamV3NotifyBacklog'}
 DELAYED_SLACK={'RelayObservationUnavailable':1800,'RelayObserverUnavailable':1800,'TwitchUnexpectedOffline':1800}
@@ -137,6 +143,8 @@ def _plan(alerts: list[dict], state: dict, now: float, *, repeat_sec: int, deliv
         messages.append({'key':k,'channel':channel,'content':content+('\n'+context if k.startswith(('Twitch','Relay','YouTube','StreamV4Twitch')) else '')})
     for alert in alerts:
         name = (alert.get('labels') or {}).get('alertname')
+        if name in CRA_OWNED and (alert.get('labels') or {}).get('notification_owner') == 'cra_monitoring':
+            continue
         if not name or name=='StreamV3NotifyActiveIncident' or alert.get('state') != 'firing':
             continue
         k = key(alert)

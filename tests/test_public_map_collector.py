@@ -80,7 +80,7 @@ class PublicMapCollectorTests(unittest.TestCase):
             payload = collector.collect_prometheus()
 
         items = {item["id"]: item for item in payload["items"]}
-        self.assertEqual(payload["summary"]["total"], 23)
+        self.assertEqual(payload["summary"]["total"], 24)
         self.assertEqual(items["map_delivery_issue"]["state"], "ok")
         self.assertEqual(items["map_weather_issue"]["state"], "ok")
         self.assertEqual(items["map_sample_age"]["group"], "Map Runtime")

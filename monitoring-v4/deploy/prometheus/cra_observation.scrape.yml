@@ -1,0 +1,11 @@
+job_name: cra_observation
+scrape_interval: 15s
+scrape_timeout: 3s
+honor_timestamps: false
+sample_limit: 200
+body_size_limit: 128KB
+static_configs:
+- targets: [127.0.0.1:9130]
+  labels:
+    service: stream-v4-cra-observation
+    role: read-only-observation

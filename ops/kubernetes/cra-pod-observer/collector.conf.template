@@ -1,0 +1,9 @@
+[Unit]
+# A missing broker must produce INVALID snapshots, not skip the collector at boot.
+ConditionPathExists=
+
+[Service]
+Environment=PYTHONDONTWRITEBYTECODE=1
+InaccessiblePaths=/etc/stream-recovery-control/dell-target-observer.kubeconfig
+ExecStart=
+ExecStart=@COLLECTOR_RUNNER@ /usr/bin/python3 @OBSERVER_RELEASE@/pod_api_target_snapshot.py --output /var/lib/stream-recovery-control/dell/target_snapshot.json --journal /var/lib/stream-recovery-control/dell/target_snapshots.jsonl --host-id delivery-host --namespace stream-v3 --label-selector app.kubernetes.io/name=stream-v3,app.kubernetes.io/component=runtime --container-name stream-engine --ttl-seconds 20 --interval-seconds 5

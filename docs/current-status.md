@@ -1,15 +1,17 @@
 # Current Status
 
-Last updated: 2026-11-06 JST (maintenance notification source port).
-Latest operated evidence summarized here: 2026-11-03 JST. This page is an index
-of retained checkpoints, not a live health report. The November 6 edit adds
-public source validation without advancing the operated-evidence cutoff. Full earlier wording remains in the
+Last updated: 2026-11-13 JST (CRA observation source port and dated closure).
+Latest operated evidence summarized here: 2026-11-13 02:27 JST. This page is an
+index of retained checkpoints, not a live health report. The CRA checkpoint
+advances only its named integration scope; earlier subsystem limits remain.
+Full earlier wording remains in the
 [status archive](status-history-2026-11-03.md).
 
 ## Latest Evidence Checkpoints
 
 | Area | Latest retained result | Scope and remaining limit |
 | --- | --- | --- |
+| CRA migration | Signed policy v3 enforce on the existing typed v2 Executor, separate Pod API observer, Prometheus/Loki and four-host integration checked through November 13. [Checkpoint](v3/cra-observability-closure.md), [source guide](../monitoring-v4/docs/cra-observability.md). | Public examples remain disabled; real CRA intervention, continuous player AV and historical UNKNOWN reconciliation are not established. |
 | Maintenance notifications | The November 6 source port classifies planned audio/YouTube residuals using fresh maintenance facts and complete normal evidence outside the planned intervals. [Contract](v3/manual-maintenance.md#maintenance-aware-notifications), [port record](../publication/maintenance-notifications-port-20261106.json). | Synthetic source validation; formal SLI/history and independent alarms remain intact. This port performed no production deployment or provider/player verification. |
 | Public publication | The November 3 public source port includes the R2 uploader, receipts, bounded connection fallback and Worker. [Transport guide](v3/r2-publication-transport.md). | Source validation; the port did not deploy those examples. Earlier operated publication has its own [dated record](v3/r2-publication-and-freshness-case-study.md). |
 | Observation releases | Committed profiles reproduced operated files; source and configured-entrypoint audits matched. The existing observer continuously checks the selected source groups. [Release contract and records](v3/observation-release-provenance.md). | Not an all-producer redeployment or proof of loaded memory. Legacy consumers remain active. |
@@ -58,8 +60,10 @@ These gaps concern the scope named, even when a narrower check has passed:
 
 ## Deliberately Disabled
 
-- CRA production authority (`production_behavior_change_authorized=false`).
-  The local reflex agent runs only in `dry_run`.
+- Production effects in the public CRA configuration
+  (`production_behavior_change_authorized=false`, `dry_run`). The separately
+  authorized operated enforce checkpoint is dated above; this checkout does not
+  contain or grant that authority.
 - Automatic replacement-broadcast creation by the YouTube watchdog.
 - Automatic Twitch VOD publication, retained off after the dated audio notice.
 - Runtime and recovery authority in Monitoring v4. Its operated relay observer

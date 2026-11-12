@@ -60,7 +60,7 @@ class PublicMapCollectorTests(unittest.TestCase):
             payload = collector.collect_prometheus()
 
         items = {item["id"]: item for item in payload["items"]}
-        self.assertEqual(payload["summary"]["total"], 23)
+        self.assertEqual(payload["summary"]["total"], 24)
         self.assertEqual(items["map_delivery_issue"]["state"], "ok")
         self.assertEqual(items["map_weather_issue"]["state"], "ok")
         self.assertEqual(items["map_sample_age"]["group"], "Map Runtime")
@@ -71,7 +71,8 @@ class PublicMapCollectorTests(unittest.TestCase):
         self.assertNotIn("pod", items["map_runtime_restarts"]["series"][0]["metric"])
         self.assertNotIn("container", items["map_runtime_restarts"]["series"][0]["metric"])
 
-        self.assertEqual(items["restarts_1h"]["label"], "Fast Recovery dispatches 1h")
+        self.assertEqual(items["restarts_1h"]["label"], "Legacy Fast Recovery dispatches 1h")
+        self.assertEqual(items["cra_issue"]["label"], "CRA observation / audit issue")
         self.assertEqual(items["ffmpeg_clusters_1h"]["label"], "FFmpeg incident clusters 1h")
 
 

@@ -1,0 +1,23 @@
+[Unit]
+Description=Read-only CRA observation for Prometheus and Loki
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=@USER@
+ExecStart=/usr/bin/python3 -I -B @RELEASE@/cra_observation.py --config /etc/stream-v4-cra-observation/config.json
+Restart=on-failure
+RestartSec=10
+UMask=0027
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=true
+NoNewPrivileges=true
+ReadWritePaths=/var/lib/stream-v4-cra-observation /var/log/cra-monitoring
+CPUQuota=25%
+MemoryMax=128M
+TasksMax=24
+
+[Install]
+WantedBy=multi-user.target

@@ -32,7 +32,7 @@ read-only projection gains no delivery provider or recovery authority.
 | OCI VM | Media fan-out | MediaMTX relay, timestamp-rebasing YouTube copy and keeper; read-only facts endpoints and host clock observer |
 | Raspberry Pi `publisher-host` | Public status publisher | Read-only projection-bundle fetch, schema and original-age validation, host clock observer and static site build; the operated uploader targets private R2 |
 | Private R2 + Cloudflare Worker | Operated public static edge | Serves <https://yukimurata0421.dev/> from sanitized uploaded files; the public checkout includes portable R2 and retained GCS examples |
-| `cra-01` | CRA central host | Policy/audit service and independent host clock observer; the public CRA remains `dry_run` and takes no part in the media route |
+| `cra-01` | CRA central host | Policy/audit service and independent host clock observer; public examples remain `dry_run`; the operated enforce checkpoint is dated separately |
 
 Monitoring and ADS-B reception share the ProDesk; video production has the Dell
 to itself. The [hardware selection](hardware-selection.md) explains why.
@@ -311,7 +311,7 @@ describes the later portable source without claiming a public-example deployment
 | Return-feed video-clock observer on Dell / its importer on arena-server | Their bounded RAM snapshots, independent observation state and metrics | Senders, routes, replicas, provider lifecycle or recovery effects |
 | Monitor on arena-server | Requests a guarded runtime restart (budget, cooldown, 180-second convergence wait) | The FFmpeg process directly; replacement broadcasts (disabled) |
 | Raspberry Pi | Its own static output | Anything else; it receives no control feedback |
-| CRA agent / central | Observe decisions, sign policy and verify audit | `dry_run` sends no restart requests |
+| CRA agent / central | Evaluate signed policy locally; central signs policy and verifies audit | Exact FFmpeg-child effect under the operated enforce policy; public examples remain `dry_run` |
 
 Manual maintenance is an explicit, existing-authority operation with durable
 inhibition, shared locking, target binding and no resend of unknown effects.
@@ -330,8 +330,10 @@ Dell evaluates the managed FFmpeg child under centrally signed policy, while
 `cra-01` publishes policy and verifies the append-only audit. The agent persists
 limits and reservations; the Stream [Effect Executor](../src/runtime_boundary/)
 owns exact-target admission and the durable generation fence. Unknown execution
-is queried without resending the effect. CRA runs in `dry_run` and sends no
-restart requests; it does not carry the media route.
+is queried without resending the effect. Public policy examples stay in
+`dry_run`. The [November 13 operated checkpoint](v3/cra-observability-closure.md)
+records policy v3 enforce on the existing typed v2 boundary, distinct from this
+source publication. CRA does not carry the media route.
 
 The previous per-action central authorization, local fallback, leases, epochs
 and soak machinery are kept in [history](../recovery-control/docs/history.md).

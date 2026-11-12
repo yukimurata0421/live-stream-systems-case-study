@@ -28,6 +28,15 @@ credential, real delivery process, public publisher cutover, or runtime
 mutation authority is enabled. R2 and R3 remain incomplete until their elapsed
 live evidence gates are satisfied for one unchanged revision pair.
 
+## CRA compatibility observation addition (November 13)
+
+The [CRA observation guide](cra-observability.md) adds fixed read-only facts,
+Prometheus/Loki integration and a route-specific notification adapter for the
+existing gateway. The [dated operated checkpoint](../../docs/v3/cra-observability-closure.md)
+separates real provider acceptance and four-host checks from public source
+validation. This addition does not complete the earlier R5/R6 gates or enable
+credentials, recovery authority or a control path in public configuration.
+
 ## OCI/Twitch Source Addition
 
 Read-only relay/provider/API/reception projections are now available; see

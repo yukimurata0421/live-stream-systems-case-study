@@ -6,6 +6,8 @@
 - [Operations](local-reflex-operations.md): inspection, evaluation, handover and rollback.
 - [Safety model](safety-model.md): persistent reservations, fences and unknown outcomes.
 - [Test boundaries](harness-trust.md): current unit and real-Executor integration checks.
+- [CRA monitoring](../../monitoring-v4/docs/cra-observability.md): read-only facts, diagnostic audit copies and dual-route delivery.
+- [November 13 closure](../../docs/v3/cra-observability-closure.md): operated enforce checkpoint and four-host limits.
 - [Dated evidence](local-reflex-records.md): retained successes, failures and frozen candidates.
 - [Historical design](history.md): original three-host source and test machinery in Git.
 - [Public release boundary](public-release.md): provenance and source-only reorganization.

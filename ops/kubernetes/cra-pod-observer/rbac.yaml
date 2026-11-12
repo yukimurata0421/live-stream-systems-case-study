@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: cra-phase4-target-observer
+  namespace: stream-v3
+automountServiceAccountToken: false
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: cra-pod-read
+  namespace: stream-v3
+rules:
+- apiGroups: [""]
+  resources: [pods]
+  verbs: [list]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: cra-pod-read
+  namespace: stream-v3
+subjects:
+- kind: ServiceAccount
+  name: cra-phase4-target-observer
+  namespace: stream-v3
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: cra-pod-read

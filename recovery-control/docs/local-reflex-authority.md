@@ -12,15 +12,15 @@ dated implementation, verification and rollout evidence is in
 
 ## Current stage
 
-The path runs in production only as `dry_run`, beside the existing fast-recovery
-controller, which keeps Executor authority. A minimal `enforce` path that needs
-no change to the delivery Pod is implemented and verified in isolation. Handing
-authority over and switching to `enforce` are separate, explicitly approved
-steps that have not been taken.
+The [November 13 checkpoint](../../docs/v3/cra-observability-closure.md) records
+the operated policy v3 enforce path on the existing typed v2 Executor, with the
+legacy controller retired and CRA owning the exact child request. Public
+configuration remains `dry_run` and production-disabled. This dated observation
+does not grant activation permission or prove a real production intervention.
 
 | Item | Decision | Relation to what runs |
 | --- | --- | --- |
-| Asynchronous outcome query | Required. The same request is queried read-only and never resent. | Verified against the existing runtime in isolation; agent and central run in `dry_run`. |
+| Asynchronous outcome query | Required. The same request is queried read-only and never resent. | Verified against the existing runtime in isolation; the dated operated enforce checkpoint does not yet include a real fault intervention. |
 | Compatibility with the existing controller | Required while migrating and rolling back. | Its retirement-evidence correction is applied and kept. |
 | Signed audit acknowledgement | Kept as implemented; further extension frozen. | Running. It grants or removes no execution right. |
 | Causal successor evidence | Not a precondition for the minimal path; further adoption frozen. | Removed from agent and central requirements. The prototype and its records are kept. |

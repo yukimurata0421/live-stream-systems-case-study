@@ -11,6 +11,16 @@ latest retained deployment and observation checkpoints. The
 `publication/source-map.json` identifies current public file digests. Historical
 records retain their original candidate hashes.
 
+## CRA observation source update
+
+The [November 13 port](v3/cra-observability-closure.md) adds the separate Pod API
+observer, fixed read-only facts, Prometheus/Loki/Grafana integration, notification
+ownership and durable route-specific delivery, and the public CRA aggregate.
+Comments, docstrings and notifications are in English. The operated enforce
+checkpoint is a dated report; public policies remain `dry_run`. Unit/config
+examples contain no credentials and are not installed or enabled by this port.
+Raw host state, private identities and deployment scripts remain excluded.
+
 ## Optional Airspy Reception Guard
 
 The [2026-10-30 receiver-side port](v3/airspy-reception-guard.md) includes

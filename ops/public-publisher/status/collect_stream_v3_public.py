@@ -213,10 +213,18 @@ PROM_QUERIES: list[dict[str, Any]] = [
     {
         "id": "restarts_1h",
         "group": "Recovery",
-        "label": "Fast Recovery dispatches 1h",
+        "label": "Legacy Fast Recovery dispatches 1h",
         "unit": "count",
         "kind": "zero_ok",
         "query": 'max(stream_v3_fast_recovery_restart_count{job="stream_v3_arena_monitor",window_hours="1"})',
+    },
+    {
+        "id": "cra_issue",
+        "group": "Recovery",
+        "label": "CRA observation / audit issue",
+        "unit": "flag",
+        "kind": "zero_ok",
+        "query": 'max(cra_monitoring_issue{job="cra_observation"})',
     },
     {
         "id": "ffmpeg_clusters_1h",

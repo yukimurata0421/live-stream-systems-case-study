@@ -116,8 +116,9 @@ Production recovery is local and bounded. Fast recovery inside the Dell Pod
 replaces a failed FFmpeg child; the OCI relay restarts itself; a keeper
 re-creates failed forwards; and one controller adds the direct YouTube fallback
 while relay health is lost. These pieces use fixed thresholds and keep working
-when monitoring is down. The monitor on arena-server can only request a guarded
-runtime restart, and replacement-broadcast creation is disabled.
+when monitoring is down. The CRA monitoring integration on arena-server reports
+facts and notifications; it does not grant recovery authority.
+Replacement-broadcast creation is disabled.
 [Architecture](docs/architecture.md#who-can-act-on-what) lists each actor's limits.
 
 The [observation contract](docs/v3/observation-standardization.md) separates
@@ -125,9 +126,11 @@ missing evidence, target failure and expected standby. Public status and
 notification delivery do not grant recovery authority.
 
 The repository also contains CRA (Central Restart Authority), whose
-[local reflex implementation](recovery-control/README.md) records decisions in
-`dry_run` without sending restart requests. Its signed-policy design and tests
-are separate from the operated media route.
+[local reflex implementation](recovery-control/README.md) evaluates confirmed
+FFmpeg stalls under signed policy. The [November 13 checkpoint](docs/v3/cra-observability-closure.md)
+records its operated enforce path, Pod API observer, monitoring and four-host
+closure. Public policy examples remain `dry_run`; publishing them grants no
+production authority.
 
 ## Key Design Decisions
 

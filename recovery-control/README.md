@@ -6,9 +6,10 @@ verifies the append-only audit. The existing Stream Effect Executor owns the
 physical effect, exact-target checks, and durable generation fence.
 
 The current implementation under `src/cra/` contains the local agent and the
-signed-policy/audit service. The operated release remains in
-`dry_run`: it records decisions and sends no restart requests. Publication,
-local tests, and elapsed runtime do not grant production authority.
+signed-policy/audit service. Public examples stay in `dry_run` and send no
+restart requests. The [November 13 operated checkpoint](../docs/v3/cra-observability-closure.md)
+records the separately authorized enforce path and monitoring integration.
+Publication, local tests and elapsed runtime do not grant production authority.
 
 This is the CRA component guide. The [Stream documentation guide](../docs/README.md)
 describes the operated media route and its separate local fallback controller.

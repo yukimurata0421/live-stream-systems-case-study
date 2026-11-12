@@ -37,7 +37,7 @@
       "decision": "Optional Airspy reception guard; preserve the durable one-extra-attempt cap, remove personal configuration writers and keep raw evidence private.",
       "before_sha256": "d2268fba12ef09d57e492f92569838989f651d84fc89d8e3d4d242420cac01ba",
       "source_sha256": "e8ad53fd1e34398253c585162a2f6dcda8703eb93cedf9ff68ecc85ed37db47f",
-      "public_sha256": "1b61116a0854b561c735266622164b279436815f815607133131772b8c44fb21",
+      "public_sha256": "b697bbf6dc441398feaa33c3b893d8930e8b66609bf98bf2e177d220e72d4fa4",
       "port_date_jst": "2026-10-30",
       "pre_documentation_restructure_sha256": "00b596e75b50eaedbd3bed4ebc79e71d882e7049e72516aec95dfc0860ed015e",
       "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json.",
@@ -73,7 +73,9 @@
       "before_publication_documentation_reconciliation_sha256": "4de3863cec5af4c8819ccc03948cb6d58150ca16885e6c5f951dda92702b2dd6",
       "publication_documentation_reconciliation": "2026-11-04",
       "before_documentation_design_sha256": "4bd1ea4a6b709235b8e0b79e832d0f2757ad129565202d848c841c78a77d7c2b",
-      "documentation_design_record": "publication/documentation-design-review-20261104.json"
+      "documentation_design_record": "publication/documentation-design-review-20261104.json",
+      "before_cra_observability_20261113_sha256": "1b61116a0854b561c735266622164b279436815f815607133131772b8c44fb21",
+      "cra_observability_port": "publication/cra-observability-port-20261113.json"
     },
     {
       "path": "configs/auto_dj_classification_overrides.json",
@@ -249,7 +251,7 @@
       "decision": "Selected maintenance notification behavior; preserve public localization, generic delivery-host binding and existing formal SLI semantics.",
       "before_sha256": "9f7605e83cdf9ec60df73ebe3f2472cca9292c4e06ec6768621ce53026c0b82c",
       "source_sha256": null,
-      "public_sha256": "a9e4093624b2b0daf4cc39c9242734a4c6790a0338e30b403e2f5d9155a1dd51",
+      "public_sha256": "5cdbc34364ab140c5a77fb2f79f0980d5f9dc7bbb082be18d9876b771c2ab7d8",
       "prior_public_sha256": "e71784d110b08225a9a320ecb03f999b60fa7f23b2503f2e6a3f80448620c9ed",
       "localization": "English prose; control structures and machine identifiers preserved.",
       "pre_graph_display_sha256": "6a87a495eb3698b1a49e053ffcc109b28d94a59e9dd29cb3399a62279e196d3d",
@@ -323,7 +325,9 @@
       "r2_transport_port": "publication/r2-publication-transport-port-20261103.json",
       "before_documentation_design_sha256": "73e22de84a201d71978a88beae0442ba7b243026e1fe91fe9aca63e74b892617",
       "documentation_design_record": "publication/documentation-design-review-20261104.json",
-      "maintenance_notifications_port": "publication/maintenance-notifications-port-20261106.json"
+      "maintenance_notifications_port": "publication/maintenance-notifications-port-20261106.json",
+      "before_cra_observability_20261113_sha256": "a9e4093624b2b0daf4cc39c9242734a4c6790a0338e30b403e2f5d9155a1dd51",
+      "cra_observability_port": "publication/cra-observability-port-20261113.json"
     },
     {
       "path": "docs/README.md",
@@ -360,7 +364,7 @@
       "decision": "Describe independent upload observation and preserve the control and SLO boundaries.",
       "before_sha256": "ae7e39d185704eed824fec533351f4713fa3369815ad95cb92647279e8304e7b",
       "source_sha256": null,
-      "public_sha256": "2632f00d808c94f7a433c35b5a4f7244e8162b70b28ae3a1bb2d9a5ee95c36aa",
+      "public_sha256": "f39c2d2d310bc9d7ae78c6e45b3c8c0bfec7ed591ca1aae84c07dd2f37b7d278",
       "port_date_jst": "2026-11-02",
       "pre_documentation_restructure_sha256": "5ae4f928c8d5f77be2e827787230606ffbf1e4d7c97d62b9d3afe0bf43048e93",
       "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json.",
@@ -390,7 +394,9 @@
       "r2_transport_source_sha256": null,
       "r2_transport_port": "publication/r2-publication-transport-port-20261103.json",
       "before_publication_documentation_reconciliation_sha256": "a2b2c8a4f0eabe2f57501ba23ead3934ff34f2d8da50329a070cd68848bccd82",
-      "publication_documentation_reconciliation": "2026-11-04"
+      "publication_documentation_reconciliation": "2026-11-04",
+      "before_cra_observability_20261113_sha256": "2632f00d808c94f7a433c35b5a4f7244e8162b70b28ae3a1bb2d9a5ee95c36aa",
+      "cra_observability_port": "publication/cra-observability-port-20261113.json"
     },
     {
       "path": "docs/current-status.md",
@@ -398,7 +404,7 @@
       "decision": "Selected maintenance notification behavior; preserve public localization, generic delivery-host binding and existing formal SLI semantics.",
       "before_sha256": "1beab3cd3e65147e0fa2d520275c2280dfa86884c6a345efefd32f2dc8469aed",
       "source_sha256": null,
-      "public_sha256": "2e7d33b62f18704c2a34f2d3bd5358cb856ebacb6d22ce80fe851915d598d42f",
+      "public_sha256": "11f82a9c09568e15a5f4715b911e6de709cc2f9065328fcdb28bee2f503ff16c",
       "port_date_jst": "2026-11-02",
       "documentation_restructure": "New single page for volatile state.",
       "pre_twitch_observation_public_sha256": "040eac29174151f51e473f7f85e4aa23ff994be0079b3d4c011623b6ec7864ca",
@@ -471,7 +477,9 @@
       "r2_transport_port": "publication/r2-publication-transport-port-20261103.json",
       "before_documentation_design_sha256": "ccc9615cc4661e494576084aa8219e6dff8db2724710ba35f754485366a45cbc",
       "documentation_design_record": "publication/documentation-design-review-20261104.json",
-      "maintenance_notifications_port": "publication/maintenance-notifications-port-20261106.json"
+      "maintenance_notifications_port": "publication/maintenance-notifications-port-20261106.json",
+      "before_cra_observability_20261113_sha256": "2e7d33b62f18704c2a34f2d3bd5358cb856ebacb6d22ce80fe851915d598d42f",
+      "cra_observability_port": "publication/cra-observability-port-20261113.json"
     },
     {
       "path": "docs/design-decisions-for-review.md",
@@ -642,7 +650,7 @@
       "decision": "Optional Airspy reception guard; preserve the durable one-extra-attempt cap, remove personal configuration writers and keep raw evidence private.",
       "before_sha256": "4fae26b5711f73bf3e22ab226e195aa28ada120f0c2cf7aa617ff6448c1ed27b",
       "source_sha256": null,
-      "public_sha256": "c13eda5a16d02fa317d67a1070a9088a0ac918c90efa778f480b4f26096a745f",
+      "public_sha256": "ab21ca93739b2de50a39d5bf5977e67d6f7e0361e745d9fdc808f48a71802972",
       "port_date_jst": "2026-10-30",
       "port_record": "publication/airspy-reception-port-20261030.json",
       "prior_public_sha256": "4fae26b5711f73bf3e22ab226e195aa28ada120f0c2cf7aa617ff6448c1ed27b",
@@ -650,7 +658,9 @@
       "r2_transport_source_sha256": null,
       "r2_transport_port": "publication/r2-publication-transport-port-20261103.json",
       "before_documentation_design_sha256": "d91320ca7a445ab86e196dcd67649851f507b608a85a393baacc80f8e93ae723",
-      "documentation_design_record": "publication/documentation-design-review-20261104.json"
+      "documentation_design_record": "publication/documentation-design-review-20261104.json",
+      "before_cra_observability_20261113_sha256": "c13eda5a16d02fa317d67a1070a9088a0ac918c90efa778f480b4f26096a745f",
+      "cra_observability_port": "publication/cra-observability-port-20261113.json"
     },
     {
       "path": "docs/runtime-contract.md",
@@ -693,7 +703,7 @@
       "decision": "Selected FIFO recovery port; preserve public behavior, explicit observation injection, generic lab endpoints and English documentation.",
       "before_sha256": "7260dabcdd49d2080223952d24250bb56cf68e3f82b4ad1daa9f00fccee362ab",
       "source_sha256": null,
-      "public_sha256": "eac8ea3e78290f1d73dc03dc59278999efadedda416fac97e44b8b67e6316c84",
+      "public_sha256": "7e71e5b9c2fac18f48b03394d7bbf2e8c89d8b6b1d651315d44ab41d4e3be737",
       "port_date_jst": "2026-10-29",
       "pre_documentation_restructure_sha256": "05aaa171c0ae1542019467073dd5058d7301e5d83eec70c9d39b20d6c8d12c68",
       "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json.",
@@ -705,7 +715,9 @@
       "port_record": "publication/transport-recorder-port-20261029.json",
       "prior_public_sha256": "bc15110a6d74d005aa8a4d42e7f59d9136f4119b732ad8070b56db719b2a4372",
       "before_documentation_design_sha256": "0949492076683057b521e05979f3630e1ac6fce18eeae1f39a683ec3f5799a41",
-      "documentation_design_record": "publication/documentation-design-review-20261104.json"
+      "documentation_design_record": "publication/documentation-design-review-20261104.json",
+      "before_cra_observability_20261113_sha256": "eac8ea3e78290f1d73dc03dc59278999efadedda416fac97e44b8b67e6316c84",
+      "cra_observability_port": "publication/cra-observability-port-20261113.json"
     },
     {
       "path": "docs/v3/adsb-source-coverage.md",
@@ -1276,9 +1288,11 @@
       "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
       "before_sha256": "9868bd73c1548cf9567f8fdac4a99ddc72aa4e25f82518b88eeec10ca2f5977f",
       "source_sha256": null,
-      "public_sha256": "abb77538749f538ed4da3ca463c39f6e7f2dfb00824a5029affc7867122bbe31",
+      "public_sha256": "9ef19e51eff44dc9eddfe0c5e449e6011f18812cbde3458a1b215ba2ea36dcec",
       "pre_observability_reconciliation_sha256": "5639c695dc1591c8812b35d4c8cbc907969ab3fb3edd5cfb8c710868159d9496",
-      "port_date_jst": "2026-10-23"
+      "port_date_jst": "2026-10-23",
+      "before_cra_observability_20261113_sha256": "abb77538749f538ed4da3ca463c39f6e7f2dfb00824a5029affc7867122bbe31",
+      "cra_observability_port": "publication/cra-observability-port-20261113.json"
     },
     {
       "path": "monitoring-v4/ops/release/model.py",
@@ -1479,13 +1493,15 @@
       "decision": "Twitch observation and OCI-aware notifications; public bindings and English text retained",
       "before_sha256": null,
       "source_sha256": "a2775eb4335d0641a586f1cb74a73d775ae652da2974182c075ec56d790ced6e",
-      "public_sha256": "b0825727e0abb53a413a45f1187546f2a64dc41b61985da2485d0df5255d9474",
+      "public_sha256": "d4ad2c85e02bf48a927baae158ffc8c7f2b954e17a29d558f197cd493ad7df9d",
       "port_date_jst": "2026-10-21",
       "pre_twitch_observation_public_sha256": "975734669111c3d64a85f1d95983d19b7f5d076befcbe51ebd369599746e7a03",
       "pre_daily_reminder_public_sha256": "fdbad0e950af8f82ea903d8e8508db03abd44355f7a34865698f21200e638ed1",
       "before_notification_observation_time_sha256": "6fe8317ea778bfdeaaced4815422b7de17d82219379dd624831823654d0ff035",
       "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
-      "notification_observation_time_source_sha256": "1c5143b5e6ea1e4e9e662729e4d0b8c885596fe247bfc019a08471d035c9e6fb"
+      "notification_observation_time_source_sha256": "1c5143b5e6ea1e4e9e662729e4d0b8c885596fe247bfc019a08471d035c9e6fb",
+      "before_cra_observability_20261113_sha256": "b0825727e0abb53a413a45f1187546f2a64dc41b61985da2485d0df5255d9474",
+      "cra_observability_port": "publication/cra-observability-port-20261113.json"
     },
     {
       "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/twitch_public.py",
@@ -2509,9 +2525,11 @@
       "source_role": "public-pi-publisher-port",
       "before_sha256": "d26183a3cef74e0613df595f4178e8f0f3a7152173d5f6555f2e4982ce9b3add",
       "source_sha256": "8f52a02a979e79a7c9ab188d12bef402ff23a4e02fe7238149cdd00fba557c02",
-      "public_sha256": "8f52a02a979e79a7c9ab188d12bef402ff23a4e02fe7238149cdd00fba557c02",
+      "public_sha256": "cc348c9deb32aee1bcbc4ae9b4dc76dc27e07ef5117103a28747201bbeb20c0f",
       "pi_publisher_source_port": "2026-10-14 source reconciliation; portable English code and retained public protections; no live changes.",
-      "decision": "Pi publisher source reconciliation, portable paths, English source guide, and mock-based validation."
+      "decision": "Pi publisher source reconciliation, portable paths, English source guide, and mock-based validation.",
+      "before_cra_observability_20261113_sha256": "8f52a02a979e79a7c9ab188d12bef402ff23a4e02fe7238149cdd00fba557c02",
+      "cra_observability_port": "publication/cra-observability-port-20261113.json"
     },
     {
       "path": "ops/relay/operator_route.py",
@@ -3156,13 +3174,15 @@
       "decision": "state the 2026-10-22 local reflex revision against the earlier CRA rationale",
       "before_sha256": "08e41df8bece7eace8ddf3b6f01f30cc03451b045bd8b7cbe2fca4c6407bd378",
       "source_sha256": null,
-      "public_sha256": "250bbe59ae378ab5c9e1fcbfc241ee9ee564ea80be5b636726522a44a88a322c",
+      "public_sha256": "62f0da97fc64472bdb29589385ec248729d3a4c81d8f9d8bc1be5bae0f0dae99",
       "port_date_jst": "2026-10-22",
       "pre_concurrent_documentation_sha256": "1921fec43be14f8d43f3a58ea37c04f3b4750cfa362b84b229a8348c2931b1aa",
       "prior_public_sha256": "44d32ac857eb17a6bf30b882240cfcefa62490e70de93c5ad5dd388af50986be",
       "layout_update": "Current CRA and Stream support separation, 2026-10-26",
       "before_documentation_design_sha256": "c34c8981715a8999010ce1fb1737aabab06f8985f533ad0517477f77967990be",
-      "documentation_design_record": "publication/documentation-design-review-20261104.json"
+      "documentation_design_record": "publication/documentation-design-review-20261104.json",
+      "before_cra_observability_20261113_sha256": "250bbe59ae378ab5c9e1fcbfc241ee9ee564ea80be5b636726522a44a88a322c",
+      "cra_observability_port": "publication/cra-observability-port-20261113.json"
     },
     {
       "path": "recovery-control/docs/00_INDEX.md",
@@ -3170,14 +3190,16 @@
       "decision": "state the 2026-10-22 local reflex revision against the earlier CRA rationale",
       "before_sha256": "308d1be005d42e8bba37ef4c542272e6b700a5c0d84ec2a187526e8951550919",
       "source_sha256": null,
-      "public_sha256": "8ae98d1dc4eca49a81be7cc602f70ac8f602f6b19e9d9bdf84221ac3c61c8d4b",
+      "public_sha256": "322cf9d1e5f0e4599f29a784cbf7721a9a36b4648c9d0841f5ae77183bd62ae6",
       "prior_public_sha256": "c2810e6bae6039f34c37c8efe35863599f0f6ec9c4a8c4e15a662d302288cb3a",
       "localization": "English prose; control structures and machine identifiers preserved.",
       "before_unicode_source_sha256": "78957f166d15b800f5c88e8ef691af40e4642ef50c8d0df5520891325366ba92",
       "unicode_source_change": "English authored text; Unicode fixture values preserved with explicit escapes.",
       "port_date_jst": "2026-10-22",
       "pre_concurrent_documentation_sha256": "6957eb9499bba90552c1b9f986ec80dfe05813d45c862524fa16edf6ece95e47",
-      "layout_update": "Current CRA and Stream support separation, 2026-10-26"
+      "layout_update": "Current CRA and Stream support separation, 2026-10-26",
+      "before_cra_observability_20261113_sha256": "8ae98d1dc4eca49a81be7cc602f70ac8f602f6b19e9d9bdf84221ac3c61c8d4b",
+      "cra_observability_port": "publication/cra-observability-port-20261113.json"
     },
     {
       "path": "recovery-control/docs/architecture.md",
@@ -3203,11 +3225,13 @@
       "decision": "document the engine grace window and the relay output interruption record",
       "before_sha256": "af1ed32e7867436f9b63c84423c68226bff1b487158d050982b0241367bdca72",
       "source_sha256": null,
-      "public_sha256": "02b2f011ad6164350f903d5b53869e82d32f769dcbd80b05b78c91f81b5ccf27",
+      "public_sha256": "dcb5f9fcddfb2efa5e29079ad0a1cbffbe13f6fed2f11f5bfab3fe8d8d83ede4",
       "port_date_jst": "2026-10-23",
       "pre_concurrent_documentation_sha256": "a4260eac4e610eab885f15705093e8583642af41c82089b456095bd6f9597b14",
       "prior_public_sha256": "8395e8a2e60cb83bc99dbc9859aa4cf6c5e68989d7c06fc305999990694f20ec",
-      "layout_update": "Current CRA and Stream support separation, 2026-10-26"
+      "layout_update": "Current CRA and Stream support separation, 2026-10-26",
+      "before_cra_observability_20261113_sha256": "02b2f011ad6164350f903d5b53869e82d32f769dcbd80b05b78c91f81b5ccf27",
+      "cra_observability_port": "publication/cra-observability-port-20261113.json"
     },
     {
       "path": "recovery-control/docs/public-language-policy.md",
@@ -4594,9 +4618,11 @@
       "source_role": "public-pi-publisher-port",
       "before_sha256": "26156d58535da0f2cc29547c22704fc7d003fc260bd916d0356f3143067a7c21",
       "source_sha256": null,
-      "public_sha256": "ecbef4f1147e7547ed06bae7e16843babec653a61118bf86a24967bf618d9954",
+      "public_sha256": "a984504acbdc180b12b9743ae761913211b3ebaaf708a6b65292d4e49ae120ec",
       "pi_publisher_source_port": "2026-10-14 source reconciliation; portable English code and retained public protections; no live changes.",
-      "decision": "Pi publisher source reconciliation, portable paths, English source guide, and mock-based validation."
+      "decision": "Pi publisher source reconciliation, portable paths, English source guide, and mock-based validation.",
+      "before_cra_observability_20261113_sha256": "ecbef4f1147e7547ed06bae7e16843babec653a61118bf86a24967bf618d9954",
+      "cra_observability_port": "publication/cra-observability-port-20261113.json"
     },
     {
       "path": "tests/test_public_private_paths.py",
@@ -7343,8 +7369,10 @@
       "source_sha256": null,
       "decision": "Document roles, navigation and evidence scopes reconciled without changing runtime behavior.",
       "before_documentation_design_sha256": "8dc4ce4235f9fadef3faab999da64e8b3daf75a9e2dab864389b587a675ab0b6",
-      "public_sha256": "853d365b13f2bb82b55d93471891bc8732fc843abfea6899256218b884d91699",
-      "documentation_design_record": "publication/documentation-design-review-20261104.json"
+      "public_sha256": "25c139ec6481ea0ed917857b0658e92a2a19610fb38cefb8c605c053834c001f",
+      "documentation_design_record": "publication/documentation-design-review-20261104.json",
+      "before_cra_observability_20261113_sha256": "853d365b13f2bb82b55d93471891bc8732fc843abfea6899256218b884d91699",
+      "cra_observability_port": "publication/cra-observability-port-20261113.json"
     },
     {
       "path": "publication/documentation-design-review-20261104.json",
@@ -7361,8 +7389,10 @@
       "source_sha256": null,
       "decision": "Document roles, navigation and evidence scopes reconciled without changing runtime behavior.",
       "before_documentation_design_sha256": "622f91f985380ce8274733b48775dc051e3aafb85b339e672b9e92f87be0ffda",
-      "public_sha256": "06f621ac347bd1f0eec21b063d524dc3cc013e43bc62c1f842059d6082fe8261",
-      "documentation_design_record": "publication/documentation-design-review-20261104.json"
+      "public_sha256": "313ca6595d9e3c30ac642988ad8df65ae83de91e13742227512d1a39d3763263",
+      "documentation_design_record": "publication/documentation-design-review-20261104.json",
+      "before_cra_observability_20261113_sha256": "06f621ac347bd1f0eec21b063d524dc3cc013e43bc62c1f842059d6082fe8261",
+      "cra_observability_port": "publication/cra-observability-port-20261113.json"
     },
     {
       "path": "src/stream_core/common/manual_maintenance_facts.py",
@@ -7416,6 +7446,249 @@
       "source_sha256": "fd3c8fa0b86b729635262b0ce72aad73a4f0e33e51681ee14fc6f8b6376d9bf6",
       "public_sha256": "fd3c8fa0b86b729635262b0ce72aad73a4f0e33e51681ee14fc6f8b6376d9bf6",
       "audio_maintenance_port": "Verified planned stops for the public audio reference. Preserve the formal report, notifications and generic public host binding."
+    },
+    {
+      "source_role": "cra-observability-public-port",
+      "path": "docs/v3/cra-observability-closure.md",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "52edc29f38a02a4f6dfe0d572af66ab31eae66c1b536e97eac2a67ee6f9ca597",
+      "decision": "Port CRA observation integration; use English prose/comments, generic public identities and existing shared FIFO behavior. Preserve dry-run public policy and exclude live state/credentials.",
+      "port_date_jst": "2026-11-13"
+    },
+    {
+      "source_role": "cra-observability-public-port",
+      "path": "monitoring-v4/deploy/cra_observation.alloy",
+      "before_sha256": null,
+      "source_sha256": "4b6829bab978fa7f5f2b9f85209d388e14ea00484e7a89bca7448c02c12e034a",
+      "public_sha256": "4b6829bab978fa7f5f2b9f85209d388e14ea00484e7a89bca7448c02c12e034a",
+      "decision": "Port CRA observation integration; use English prose/comments, generic public identities and existing shared FIFO behavior. Preserve dry-run public policy and exclude live state/credentials.",
+      "port_date_jst": "2026-11-13"
+    },
+    {
+      "source_role": "cra-observability-public-port",
+      "path": "monitoring-v4/deploy/cra_observation.config.example.json",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "1be2149651ac075183a6cb8912604694841f3a463f846f5066ab92b25cb25431",
+      "decision": "Port CRA observation integration; use English prose/comments, generic public identities and existing shared FIFO behavior. Preserve dry-run public policy and exclude live state/credentials.",
+      "port_date_jst": "2026-11-13"
+    },
+    {
+      "source_role": "cra-observability-public-port",
+      "path": "monitoring-v4/deploy/grafana/cra-observation.json",
+      "before_sha256": null,
+      "source_sha256": "86b6614cdc809b0f2baac9dfd7be71e4424ffca2ddde67a31dde4d75cbcb45f0",
+      "public_sha256": "86b6614cdc809b0f2baac9dfd7be71e4424ffca2ddde67a31dde4d75cbcb45f0",
+      "decision": "Port CRA observation integration; use English prose/comments, generic public identities and existing shared FIFO behavior. Preserve dry-run public policy and exclude live state/credentials.",
+      "port_date_jst": "2026-11-13"
+    },
+    {
+      "source_role": "cra-observability-public-port",
+      "path": "monitoring-v4/deploy/prometheus/cra_observation.rules.yml",
+      "before_sha256": null,
+      "source_sha256": "0fe9fd89da028b3793307d21a264336e042df0bc0ea9719979d9f51f4b4f8bb6",
+      "public_sha256": "ce4534c45fee7ea93523e46132e4557de7784ebcdf6140268dd25a1fefbe54d9",
+      "decision": "Port CRA observation integration; use English prose/comments, generic public identities and existing shared FIFO behavior. Preserve dry-run public policy and exclude live state/credentials.",
+      "port_date_jst": "2026-11-13"
+    },
+    {
+      "source_role": "cra-observability-public-port",
+      "path": "monitoring-v4/deploy/prometheus/cra_observation.scrape.yml",
+      "before_sha256": null,
+      "source_sha256": "a031de09815fd3fee8a54005b8f15557c90a6c8c9770e87ec1da24af8ad7adbc",
+      "public_sha256": "a031de09815fd3fee8a54005b8f15557c90a6c8c9770e87ec1da24af8ad7adbc",
+      "decision": "Port CRA observation integration; use English prose/comments, generic public identities and existing shared FIFO behavior. Preserve dry-run public policy and exclude live state/credentials.",
+      "port_date_jst": "2026-11-13"
+    },
+    {
+      "source_role": "cra-observability-public-port",
+      "path": "monitoring-v4/deploy/systemd/stream-v4-cra-notify.service.in",
+      "before_sha256": null,
+      "source_sha256": "1c34fc095b63d0e6b8fb9bbf796e38f01ef54905309b9fb5b4b50a2ed0b55444",
+      "public_sha256": "1c34fc095b63d0e6b8fb9bbf796e38f01ef54905309b9fb5b4b50a2ed0b55444",
+      "decision": "Port CRA observation integration; use English prose/comments, generic public identities and existing shared FIFO behavior. Preserve dry-run public policy and exclude live state/credentials.",
+      "port_date_jst": "2026-11-13"
+    },
+    {
+      "source_role": "cra-observability-public-port",
+      "path": "monitoring-v4/deploy/systemd/stream-v4-cra-observation.service.in",
+      "before_sha256": null,
+      "source_sha256": "40f8fadd0a08ea8abef25c8695db951307b0969120094b2a2f631e477f6454a2",
+      "public_sha256": "40f8fadd0a08ea8abef25c8695db951307b0969120094b2a2f631e477f6454a2",
+      "decision": "Port CRA observation integration; use English prose/comments, generic public identities and existing shared FIFO behavior. Preserve dry-run public policy and exclude live state/credentials.",
+      "port_date_jst": "2026-11-13"
+    },
+    {
+      "source_role": "cra-observability-public-port",
+      "path": "monitoring-v4/docs/cra-observability.md",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "a71615b547d843552cbf22ad979a495efacde702ac594e65e1588d1cb0689024",
+      "decision": "Port CRA observation integration; use English prose/comments, generic public identities and existing shared FIFO behavior. Preserve dry-run public policy and exclude live state/credentials.",
+      "port_date_jst": "2026-11-13"
+    },
+    {
+      "source_role": "cra-observability-public-port",
+      "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/cra_monitoring_io.py",
+      "before_sha256": null,
+      "source_sha256": "a99c0ebef8861d4fbba5d183cc8af590d7609609e9276892e9de68b26e890bf2",
+      "public_sha256": "8a01edea81b72c18d7c4100da442b6861763de07eeba26956a5b506775d282a4",
+      "decision": "Port CRA observation integration; use English prose/comments, generic public identities and existing shared FIFO behavior. Preserve dry-run public policy and exclude live state/credentials.",
+      "port_date_jst": "2026-11-13"
+    },
+    {
+      "source_role": "cra-observability-public-port",
+      "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/cra_notify.py",
+      "before_sha256": null,
+      "source_sha256": "d7ad27b9354f13c2ecdd5875b36f8967b6567ffecf1391b8a2c61b7133bdc38a",
+      "public_sha256": "8cbfb8b9433391da297394d4da1c94d9d927cf5c7081e423ec12ee81b985cc92",
+      "decision": "Port CRA observation integration; use English prose/comments, generic public identities and existing shared FIFO behavior. Preserve dry-run public policy and exclude live state/credentials.",
+      "port_date_jst": "2026-11-13"
+    },
+    {
+      "source_role": "cra-observability-public-port",
+      "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/cra_observation.py",
+      "before_sha256": null,
+      "source_sha256": "3eed942bfb50a5dda26f4958e4ab0fe74f3bbba0b448dd03dffd5f3d374350f6",
+      "public_sha256": "3cdf32ca07a2d2992aa66019fe131d3cb85e574149f1db86fdba60a4aba8f81c",
+      "decision": "Port CRA observation integration; use English prose/comments, generic public identities and existing shared FIFO behavior. Preserve dry-run public policy and exclude live state/credentials.",
+      "port_date_jst": "2026-11-13"
+    },
+    {
+      "source_role": "cra-observability-public-port",
+      "path": "monitoring-v4/tests/test_cra_monitoring.py",
+      "before_sha256": null,
+      "source_sha256": "5b8abe724873f9c32f9f61166c525ef107f562fbe4d15c889804605caf815fb4",
+      "public_sha256": "1b3e56379bdb0145c5a46549f4ad5cd590e6ab04e37c0d0f82646f860143f69d",
+      "decision": "Port CRA observation integration; use English prose/comments, generic public identities and existing shared FIFO behavior. Preserve dry-run public policy and exclude live state/credentials.",
+      "port_date_jst": "2026-11-13"
+    },
+    {
+      "source_role": "cra-observability-public-port",
+      "path": "ops/kubernetes/cra-pod-observer/Dockerfile",
+      "before_sha256": null,
+      "source_sha256": "1dd08b893968cc77dbc159c5bd38d6b0860fe24902d24da55446f50eaf63619b",
+      "public_sha256": "1dd08b893968cc77dbc159c5bd38d6b0860fe24902d24da55446f50eaf63619b",
+      "decision": "Port CRA observation integration; use English prose/comments, generic public identities and existing shared FIFO behavior. Preserve dry-run public policy and exclude live state/credentials.",
+      "port_date_jst": "2026-11-13"
+    },
+    {
+      "source_role": "cra-observability-public-port",
+      "path": "ops/kubernetes/cra-pod-observer/README.md",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "cf1a465ff7ca4b71660c491b3f84977c59a2ae29ff971ba29d4beeaf393a9932",
+      "decision": "Port CRA observation integration; use English prose/comments, generic public identities and existing shared FIFO behavior. Preserve dry-run public policy and exclude live state/credentials.",
+      "port_date_jst": "2026-11-13"
+    },
+    {
+      "source_role": "cra-observability-public-port",
+      "path": "ops/kubernetes/cra-pod-observer/collector.conf.template",
+      "before_sha256": null,
+      "source_sha256": "d49c6a0c3debc58278bc6d65191c09e57a31169425664c72aba635d26d6c9052",
+      "public_sha256": "e01135e417531c9a6f496d3943bcbd7982fe7bb1009606ac94308de92b47ed05",
+      "decision": "Port CRA observation integration; use English prose/comments, generic public identities and existing shared FIFO behavior. Preserve dry-run public policy and exclude live state/credentials.",
+      "port_date_jst": "2026-11-13"
+    },
+    {
+      "source_role": "cra-observability-public-port",
+      "path": "ops/kubernetes/cra-pod-observer/qualify_cpu.py",
+      "before_sha256": null,
+      "source_sha256": "c1d1c7e10ff41d0a4ce8b98a28a8600bb9a26ccadc94c1b9ea7cf223f17b81a4",
+      "public_sha256": "2f63041a96b2d8ad3af492a8b2fc741f71a9c0f35a8d95c48d2779e5a443b026",
+      "decision": "Port CRA observation integration; use English prose/comments, generic public identities and existing shared FIFO behavior. Preserve dry-run public policy and exclude live state/credentials.",
+      "port_date_jst": "2026-11-13"
+    },
+    {
+      "source_role": "cra-observability-public-port",
+      "path": "ops/kubernetes/cra-pod-observer/rbac.yaml",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "b9e75de2a5cc0af2bf2e3e34a6a95f93727c29312d185807a5a58222248999d2",
+      "decision": "Port CRA observation integration; use English prose/comments, generic public identities and existing shared FIFO behavior. Preserve dry-run public policy and exclude live state/credentials.",
+      "port_date_jst": "2026-11-13"
+    },
+    {
+      "source_role": "cra-observability-public-port",
+      "path": "ops/kubernetes/cra-pod-observer/render.py",
+      "before_sha256": null,
+      "source_sha256": "27deabee065ce499b610b6308ae3915041ae15d93cb459ba6406c1e1bd3dc2a5",
+      "public_sha256": "ee0491195c096ef7356a4d9d37281b2fe3df38c48d158b818115076cafe8dc37",
+      "decision": "Port CRA observation integration; use English prose/comments, generic public identities and existing shared FIFO behavior. Preserve dry-run public policy and exclude live state/credentials.",
+      "port_date_jst": "2026-11-13"
+    },
+    {
+      "source_role": "cra-observability-public-port",
+      "path": "ops/kubernetes/cra-pod-observer/tmpfiles.conf",
+      "before_sha256": null,
+      "source_sha256": "9d7827c967887c3d2fba1ce705c7d73de855bb217a3f2a3f94fe66877473ed5f",
+      "public_sha256": "9d7827c967887c3d2fba1ce705c7d73de855bb217a3f2a3f94fe66877473ed5f",
+      "decision": "Port CRA observation integration; use English prose/comments, generic public identities and existing shared FIFO behavior. Preserve dry-run public policy and exclude live state/credentials.",
+      "port_date_jst": "2026-11-13"
+    },
+    {
+      "source_role": "cra-observability-public-port",
+      "path": "ops/public-publisher/status/tests/test_collect_stream_v3_public.py",
+      "before_sha256": "488d0fdb2645d1d59ecb1978109b8ed306c8d957366304f4276942c0cde48222",
+      "source_sha256": null,
+      "public_sha256": "3ec9f85ec68e5d867dc08d2f93227d4fb75d97a2803e700de236b9b92bea0abd",
+      "decision": "Port CRA observation integration; use English prose/comments, generic public identities and existing shared FIFO behavior. Preserve dry-run public policy and exclude live state/credentials.",
+      "port_date_jst": "2026-11-13"
+    },
+    {
+      "source_role": "cra-observability-public-port",
+      "path": "ops/selfheal/pod_api_health.py",
+      "before_sha256": null,
+      "source_sha256": "12f095fc2019ae677ece817a9a7777f99d9b63b46685aacd7a619311a373f725",
+      "public_sha256": "802ed2cd3a62bc5c66f405ec82826041b76ef90cba5bce6ba7008acc52f8e393",
+      "decision": "Port CRA observation integration; use English prose/comments, generic public identities and existing shared FIFO behavior. Preserve dry-run public policy and exclude live state/credentials.",
+      "port_date_jst": "2026-11-13"
+    },
+    {
+      "source_role": "cra-observability-public-port",
+      "path": "ops/selfheal/pod_api_observer.py",
+      "before_sha256": null,
+      "source_sha256": "1d1ec67d14a46f9f42694c4d78cbb268848f804e4ac8bdbe398b5c3036c5eac4",
+      "public_sha256": "6ed38b1f3d12b8fef46b4890e471ef4b4d5dc01d4c6615260157199b0c4ad48a",
+      "decision": "Port CRA observation integration; use English prose/comments, generic public identities and existing shared FIFO behavior. Preserve dry-run public policy and exclude live state/credentials.",
+      "port_date_jst": "2026-11-13"
+    },
+    {
+      "source_role": "cra-observability-public-port",
+      "path": "ops/selfheal/pod_api_target_snapshot.py",
+      "before_sha256": null,
+      "source_sha256": "dd3bf850b5680b4d10901727e74ff40060f3bce2099cdf01a8270452394f43d5",
+      "public_sha256": "9f3132e47ae8dcbaff48ef95bc15a6c7e8f5c4e5a49a4c9478d9aa0f68527f1f",
+      "decision": "Port CRA observation integration; use English prose/comments, generic public identities and existing shared FIFO behavior. Preserve dry-run public policy and exclude live state/credentials.",
+      "port_date_jst": "2026-11-13"
+    },
+    {
+      "source_role": "cra-observability-public-port",
+      "path": "recovery-control/tests/reflex/test_monitoring_facts.py",
+      "before_sha256": null,
+      "source_sha256": "f8d000f3e54be8131d322e4b76e60101295249404167cf7aa46deb19422d1d82",
+      "public_sha256": "802a319623403df4bedfa9a2ebfad16ce7dab5263884144155ad3129d43f8f83",
+      "decision": "Port CRA observation integration; use English prose/comments, generic public identities and existing shared FIFO behavior. Preserve dry-run public policy and exclude live state/credentials.",
+      "port_date_jst": "2026-11-13"
+    },
+    {
+      "source_role": "cra-observability-public-port",
+      "path": "recovery-control/tools/monitoring_facts.py",
+      "before_sha256": null,
+      "source_sha256": "02d722eaa5cf6814f3f8813c5cac560bc0c00487a3a97386dfdcb185a4d6ea9d",
+      "public_sha256": "09f3eddc10ba42a82bf3159a603ea58e772c0b3aea55532189a49ee2adb4c313",
+      "decision": "Port CRA observation integration; use English prose/comments, generic public identities and existing shared FIFO behavior. Preserve dry-run public policy and exclude live state/credentials.",
+      "port_date_jst": "2026-11-13"
+    },
+    {
+      "source_role": "cra-observability-public-port",
+      "path": "tests/test_pod_api_observer.py",
+      "before_sha256": null,
+      "source_sha256": "cd99392ed81cd1223eb6584df9e7bf18e23e84185b68a742e8089378b9fae124",
+      "public_sha256": "e1fbbf25bf64e5c787bb1ca0f0c6d17dcde5220958c6af4e41dac63deb30266d",
+      "decision": "Port CRA observation integration; use English prose/comments, generic public identities and existing shared FIFO behavior. Preserve dry-run public policy and exclude live state/credentials.",
+      "port_date_jst": "2026-11-13"
     }
   ],
   "omissions": [

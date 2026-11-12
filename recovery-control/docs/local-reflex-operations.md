@@ -1,5 +1,10 @@
 # Local Reflex Operations
 
+The [November 13 checkpoint](../../docs/v3/cra-observability-closure.md) records
+operated policy v3 enforce on the existing runtime. Public examples remain
+`dry_run`; the older observation context below is historical. The inspection,
+explicit handover, reconciliation and rollback boundaries remain applicable.
+
 The [local reflex contract](local-reflex-authority.md) owns what the path may
 do. This page is the single procedure for inspecting, evaluating, switching and
 stopping it. It grants no approval for a production change. The current
