@@ -48,6 +48,37 @@ published snapshot is fresh and the public-safe checks are currently OK; it does
 not claim that every private metric is exposed or that every delivered frame was
 audited.
 
+## System Check Details
+
+Each of the 24 checks can expand to show what it measures and its normal
+condition. Checks with a problem start expanded; Refresh preserves the reader's
+expanded rows. The planned-maintenance flag is shown as active or inactive.
+
+The Coverage check is named **Subsystem health**. Its aggregate degraded count
+is accompanied by a summary of affected components and these fixed public names:
+
+| Component | Public label |
+| --- | --- |
+| `rendering` | Map rendering |
+| `music` | Music / audio |
+| `local_delivery` | Local stream output |
+| `youtube_lifecycle` | YouTube broadcast lifecycle |
+| `monitoring` | Monitoring processes |
+
+The owner-side projection accepts component details only from a fresh,
+boot-qualified observation, at most 180 seconds old, whose fixed component
+states agree with the aggregate degraded count. Raw reasons, source paths,
+unknown component names and additional fields are not published. Missing,
+stale or inconsistent details are shown as unavailable; the page does not
+infer that every component is healthy from the count alone. Older snapshots
+without these optional fields remain readable.
+
+These are monitoring-layer classifications. Music / audio health does not
+prove listener audio, and a local output result does not prove public playback.
+The change adds detail to the public view without changing alert thresholds,
+SLI calculations or recovery authority. Source-port tests and browser fixtures
+do not establish current deployment health.
+
 ## Architecture Boundary
 
 The production monitoring stack remains private. The public path is a reduced

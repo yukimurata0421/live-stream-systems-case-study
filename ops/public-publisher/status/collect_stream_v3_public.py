@@ -237,7 +237,7 @@ PROM_QUERIES: list[dict[str, Any]] = [
     {
         "id": "subsystems_degraded",
         "group": "Coverage",
-        "label": "Subsystems degraded",
+        "label": "Subsystem health",
         "unit": "count",
         "kind": "zero_ok",
         "query": 'max(stream_v3_subsystems_degraded_count{job="stream_v3_arena_monitor"})',
@@ -251,6 +251,71 @@ PROM_QUERIES: list[dict[str, Any]] = [
         "query": 'max(stream_v3_maintenance_active{job="stream_v3_arena_monitor"})',
     },
 ]
+
+
+CHECK_DESCRIPTIONS = {
+    "current_fail_1h": "Failed stream health checks recorded during the last hour.",
+    "youtube_issue": "The latest public-live check for the expected YouTube broadcast.",
+    "ingest_issue": "The latest check of the input delivered to YouTube.",
+    "same_url_issue": "Whether the expected YouTube broadcast URL remains live.",
+    "network_issue": "The latest delivery-network health classification.",
+    "watchdog_issue": "The latest stream watchdog health classification.",
+    "upload_p95_1h": "The 95th-percentile upload bitrate over the last hour.",
+    "adsb_age": "Age of the latest ADS-B aircraft-data source evidence.",
+    "api_open_day_units": "YouTube Data API quota units used during the current Pacific-time day.",
+    "memory_guard_issue": "The latest memory guardrail check on the monitoring host.",
+    "map_sample_age": "Age of the latest map-runtime monitoring sample.",
+    "map_delivery_issue": "The map runtime's combined delivery-health check.",
+    "map_render_issue": "Whether the map's rendering heartbeat is progressing.",
+    "map_browser_issue": "The browser-rendering check for the broadcast map.",
+    "map_nvenc_issue": "The NVIDIA video-encoder check for the broadcast runtime.",
+    "map_rtmp_issue": "The runtime's RTMP output-transport check.",
+    "map_weather_issue": "The optional precipitation layer on the broadcast map.",
+    "map_runtime_restarts": "Container restart counts in the current runtime Pod. The count resets with a new Pod.",
+    "cra_issue": "CRA monitoring and audit health, including source freshness, execution authority, audit synchronization and notification delivery.",
+    "notify_issues": "Notifications waiting in the delivery outbox.",
+    "restarts_1h": "Legacy Fast Recovery dispatches recorded during the last hour. CRA actions have their own ledger.",
+    "ffmpeg_clusters_1h": "Related FFmpeg restart events grouped into incident clusters during the last hour.",
+    "subsystems_degraded": "Monitors map rendering, music/audio, local output, the YouTube broadcast lifecycle and monitoring processes.",
+    "maintenance_active": "Whether a planned-maintenance session is currently active.",
+}
+
+SUBSYSTEM_LABELS = {
+    "rendering": "Map rendering",
+    "music": "Music / audio",
+    "local_delivery": "Local stream output",
+    "youtube_lifecycle": "YouTube broadcast lifecycle",
+    "monitoring": "Monitoring processes",
+}
+
+
+def attach_subsystem_details(payload, source, *, qualified=False):
+    """Only fixed public names and states cross the publication boundary."""
+    item = next(row for row in payload['items'] if row['id'] == 'subsystems_degraded')
+    item['components'] = []
+    item['details_available'] = False
+    item['detail_summary'] = 'Component details are unavailable or do not match the aggregate count.'
+    if not qualified or not isinstance(source, dict):
+        return
+    overall = source.get('overall', {})
+    degraded = overall.get('degraded_subsystems') if isinstance(overall, dict) else None
+    if (not isinstance(degraded, list)
+            or any(not isinstance(x, str) or x not in SUBSYSTEM_LABELS for x in degraded)
+            or len(degraded) != len(set(degraded))
+            or item.get('value') != len(degraded)):
+        return
+    components = []
+    for name, label in SUBSYSTEM_LABELS.items():
+        row = source.get(name)
+        state = row.get('state') if isinstance(row, dict) else None
+        if state not in {'healthy', 'degraded', 'unknown', 'failed', 'stale', 'unavailable', 'starting', 'warming_up'}:
+            return
+        if (state == 'healthy') == (name in degraded):
+            return
+        components.append({'id': name, 'label': label, 'state': state})
+    affected = [SUBSYSTEM_LABELS[name] for name in degraded]
+    item.update(components=components, details_available=True,
+        detail_summary=('Affected components include '+', '.join(affected)+'.' if affected else 'All five monitored components are healthy.'))
 
 
 PROM_TRENDS: list[dict[str, Any]] = [
@@ -569,6 +634,14 @@ def collect_prometheus() -> dict[str, Any]:
 
     for query_def in PROM_QUERIES:
         item = {k: v for k, v in query_def.items() if k not in {"warn", "bad", "kind"}}
+        item['description'] = CHECK_DESCRIPTIONS[query_def['id']]
+        if query_def['kind'] == 'threshold':
+            unit = {'sec': 's', 'count': '', 'flag': ''}.get(query_def['unit'], query_def['unit'])
+            item['normal_condition'] = (f"Normal below {query_def['warn']} {unit}. "
+                f"Warning from {query_def['warn']} {unit}. Critical from {query_def['bad']} {unit}.")
+        else:
+            item['normal_condition'] = ('Inactive outside planned maintenance.'
+                if query_def['id'] == 'maintenance_active' else 'The normal value is 0.')
         try:
             result = prom_query(query_def["query"])
             value = numeric_value(result)

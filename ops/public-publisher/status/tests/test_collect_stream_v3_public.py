@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import unittest
 from datetime import datetime, timezone
 from pathlib import Path
@@ -61,6 +62,8 @@ class PublicMapCollectorTests(unittest.TestCase):
 
         items = {item["id"]: item for item in payload["items"]}
         self.assertEqual(payload["summary"]["total"], 24)
+        self.assertTrue(all(item["description"] and item["normal_condition"] for item in items.values()))
+        self.assertEqual(items["subsystems_degraded"]["label"], "Subsystem health")
         self.assertEqual(items["map_delivery_issue"]["state"], "ok")
         self.assertEqual(items["map_weather_issue"]["state"], "ok")
         self.assertEqual(items["map_sample_age"]["group"], "Map Runtime")
@@ -187,6 +190,53 @@ class RecoveryActivityTests(unittest.TestCase):
         }
 
         self.assertEqual(collector.recovery_action_for_event("stream_notify_runtime", event), "")
+
+
+class PublicSubsystemDetailsTests(unittest.TestCase):
+    def source(self, collector, degraded):
+        return {'overall': {'degraded_subsystems': degraded},
+                **{name: {'state': 'degraded' if name in degraded else 'healthy',
+                          'reason': 'private /home/user token=secret'}
+                   for name in collector.SUBSYSTEM_LABELS}}
+
+    def test_named_components_are_allowlisted_and_raw_reasons_are_removed(self):
+        collector=load_collector()
+        value={'items':[{'id':'subsystems_degraded','value':1}]}
+        source=self.source(collector,['music'])
+        source['private_extra']={'state':'failed','reason':'secret'}
+        collector.attach_subsystem_details(value,source,qualified=True)
+        row=value['items'][0]
+        self.assertTrue(row['details_available'])
+        self.assertEqual(len(row['components']),5)
+        self.assertIn('Music / audio',row['detail_summary'])
+        self.assertNotIn('secret',json.dumps(value))
+        self.assertNotIn('/home/',json.dumps(value))
+
+    def test_qualified_healthy_components_match_the_zero_aggregate(self):
+        collector = load_collector()
+        value = {"items": [{"id": "subsystems_degraded", "value": 0}]}
+        collector.attach_subsystem_details(value, self.source(collector, []), qualified=True)
+        row = value["items"][0]
+        self.assertTrue(row["details_available"])
+        self.assertEqual({item["state"] for item in row["components"]}, {"healthy"})
+        self.assertEqual(row["detail_summary"], "All five monitored components are healthy.")
+
+    def test_missing_stale_unknown_and_mismatched_details_do_not_claim_all_clear(self):
+        collector=load_collector()
+        for source,qualified in (({},False),(self.source(collector,[]),False),
+            (self.source(collector,['music']),True),
+            (self.source(collector,['private-component']),True)):
+            value={'items':[{'id':'subsystems_degraded','value':0}]}
+            collector.attach_subsystem_details(value,source,qualified=qualified)
+            self.assertFalse(value['items'][0]['details_available'])
+            self.assertEqual(value['items'][0]['components'],[])
+            self.assertNotIn('All five',value['items'][0]['detail_summary'])
+
+    def test_all_check_descriptions_have_a_defined_target(self):
+        collector=load_collector()
+        self.assertEqual(set(collector.CHECK_DESCRIPTIONS),{row['id'] for row in collector.PROM_QUERIES})
+        self.assertTrue(all(len(text)>20 for text in collector.CHECK_DESCRIPTIONS.values()))
+
 
 
 if __name__ == "__main__":

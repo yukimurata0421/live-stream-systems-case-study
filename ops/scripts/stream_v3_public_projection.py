@@ -86,6 +86,14 @@ def build(state_root, previous=None, *, report_root=ROOT):
         if v.get('status')!='success':raise ValueError('query_failed')
         return v['data']['result']
     legacy.loki_query=loki
+    def prometheus_value():
+        value = legacy.collect_prometheus()
+        source = upload_samples.read_json(state_root/'subsystems_status.json', MAX_BYTES)
+        if not isinstance(source, dict):
+            source = {}
+        qualified = timing.qualify(source.get('observation_time'), source='subsystems', max_age=180)
+        legacy.attach_subsystem_details(value, source, qualified=qualified.valid)
+        return value
     def clock_value():
         spec=json.dumps({'step':clocks.STEP,'buckets':clocks.BUCKETS,'instant':clocks.INSTANT,'range':clocks.RANGE})
         return clocks.build(command(['/usr/bin/python3','-I','-c',clocks.REMOTE,spec]),time.time())
@@ -101,7 +109,7 @@ def build(state_root, previous=None, *, report_root=ROOT):
         return reliability.build_public_payload(raw,active_incidents=reliability.normalize_active_incidents(rows),
             active_incidents_status='ok',twitch_sli=twitch_value,picture=picture,now=time.time())
     builders={
-      FILES[0]:legacy.collect_prometheus, FILES[1]:legacy.collect_loki,
+      FILES[0]:prometheus_value, FILES[1]:legacy.collect_loki,
       FILES[2]:reliability_value, FILES[3]:clock_value,
       FILES[4]:lambda:relay.validate(command(['/usr/bin/python3','-B','/opt/stream-v4-relay-public/current/relay_public.py']),time.time()),
       FILES[5]:lambda:twitch.validate(command(['/usr/bin/python3','-B','/opt/stream-v4-twitch-public/current/twitch_public.py'])),

@@ -2296,9 +2296,12 @@
       "decision": "adapted",
       "before_sha256": "bab0d1b52ad3a7ad696a333d27c57c8e439bad9c2e05349373fa5025f50521d4",
       "source_sha256": "356d84de419a82cdb1253bcf26e92799c22302b139c45d4018b37609c79c9887",
-      "public_sha256": "356d84de419a82cdb1253bcf26e92799c22302b139c45d4018b37609c79c9887",
+      "public_sha256": "efaf308aa4516530ab6eb552fb8a84a12866bd883eabb8bab3d2061e19905302",
       "port_date_jst": "2026-10-20",
-      "thumbnail_public_completion": "publication/thumbnail-public-completion-20261101.json"
+      "thumbnail_public_completion": "publication/thumbnail-public-completion-20261101.json",
+      "before_system_check_details_public_sha256": "356d84de419a82cdb1253bcf26e92799c22302b139c45d4018b37609c79c9887",
+      "system_check_details_port": "2026-11-14: selected System checks details, fixed component labels, original-age qualification and compatible optional public fields.",
+      "system_check_details_source_sha256": "efaf308aa4516530ab6eb552fb8a84a12866bd883eabb8bab3d2061e19905302"
     },
     {
       "path": "ops/public-publisher/site/public/assets/ops-20261020.js",
@@ -2529,11 +2532,14 @@
       "source_role": "public-pi-publisher-port",
       "before_sha256": "d26183a3cef74e0613df595f4178e8f0f3a7152173d5f6555f2e4982ce9b3add",
       "source_sha256": "8f52a02a979e79a7c9ab188d12bef402ff23a4e02fe7238149cdd00fba557c02",
-      "public_sha256": "cc348c9deb32aee1bcbc4ae9b4dc76dc27e07ef5117103a28747201bbeb20c0f",
+      "public_sha256": "2d3fed05fd490b611c76817480192ab63dc4648838a2344df957e6744c3d8e37",
       "pi_publisher_source_port": "2026-10-14 source reconciliation; portable English code and retained public protections; no live changes.",
       "decision": "Pi publisher source reconciliation, portable paths, English source guide, and mock-based validation.",
       "before_cra_observability_20261113_sha256": "8f52a02a979e79a7c9ab188d12bef402ff23a4e02fe7238149cdd00fba557c02",
-      "cra_observability_port": "publication/cra-observability-port-20261113.json"
+      "cra_observability_port": "publication/cra-observability-port-20261113.json",
+      "before_system_check_details_public_sha256": "cc348c9deb32aee1bcbc4ae9b4dc76dc27e07ef5117103a28747201bbeb20c0f",
+      "system_check_details_port": "2026-11-14: selected System checks details, fixed component labels, original-age qualification and compatible optional public fields.",
+      "system_check_details_source_sha256": "600ada5693da86d7a4d01915bab9f358064441edc4a37ee0ac406a4d403fcbf0"
     },
     {
       "path": "ops/relay/operator_route.py",
@@ -5900,10 +5906,13 @@
       "source_role": "public-safe-source-or-dated-evidence",
       "before_sha256": null,
       "source_sha256": "691f352818056913feb7e8b29b1170d6ec550c67c7cbdb1e62ce01ce9711918a",
-      "public_sha256": "691f352818056913feb7e8b29b1170d6ec550c67c7cbdb1e62ce01ce9711918a",
+      "public_sha256": "ea2f3ac35aa1d61f00422a84e46a7c4802d1ca79c8be818be379e2288c4bbe1a",
       "port_date_jst": "2026-11-01",
       "thumbnail_transfer_recovery": "thumbnail-transfer-recovery-20261101",
-      "decision": "Selected thumbnail transfer deadlines, private transfer diagnostics and missing-current-value renderer regression; preserve provider identity, request cadence and historical gaps."
+      "decision": "Selected thumbnail transfer deadlines, private transfer diagnostics and missing-current-value renderer regression; preserve provider identity, request cadence and historical gaps.",
+      "before_system_check_details_public_sha256": "691f352818056913feb7e8b29b1170d6ec550c67c7cbdb1e62ce01ce9711918a",
+      "system_check_details_port": "2026-11-14: selected System checks details, fixed component labels, original-age qualification and compatible optional public fields.",
+      "system_check_details_source_sha256": "e17506600624daaf72b212c226e8a189e8694e70e0bf73c289fbc1133fe4a0ea"
     },
     {
       "path": "ops/public-publisher/site/tests/thumbnail-freshness-20261101.html",
@@ -6720,11 +6729,14 @@
       "source_role": "observation-contract-public-port",
       "decision": "Port bounded observation contracts, connected delivery, public projection and reviewed verification evidence.",
       "prior_public_sha256": null,
-      "public_sha256": "01f96bd99f047f704c1aa3db2caadafea5d199f396708ff7d7ba36a711a67668",
+      "public_sha256": "cf54ee201831f112d11689d1d9341384e4892761a87cd8c5509ea6055a303433",
       "source_sha256": "6365529e7ca4b58b3497dc89e20538d23aa1ae95e9b6c8fc0e1e3d49b8a04f77",
       "observation_completion_record": "publication/observation-completion-20261102.json",
       "audio_maintenance_before_sha256": "3caa0127e0646bb42918648944f09e9de605f2a536c4d944eecd23001f00645d",
-      "audio_maintenance_port": "Verified planned stops for the public audio reference. Preserve the formal report, notifications and generic public host binding."
+      "audio_maintenance_port": "Verified planned stops for the public audio reference. Preserve the formal report, notifications and generic public host binding.",
+      "before_system_check_details_public_sha256": "01f96bd99f047f704c1aa3db2caadafea5d199f396708ff7d7ba36a711a67668",
+      "system_check_details_port": "2026-11-14: selected System checks details, fixed component labels, original-age qualification and compatible optional public fields.",
+      "system_check_details_source_sha256": "f66fa46daea403b223342528c9afb888b720715282bef028da8d7bc2da34b11a"
     },
     {
       "path": "ops/systemd/stream-v3-external-watchdog.service.in",
@@ -7334,8 +7346,10 @@
       "source_sha256": null,
       "decision": "Align the public snapshot boundary with owner-generated bundles and the operated private R2 path.",
       "before_publication_documentation_reconciliation_sha256": "7a9d2af5b573aac982e2f8db4b222f70e15e01d15e4b1d4cb530b22eacaa0eb0",
-      "public_sha256": "fe9fa584be80be1a6caf5b602d121be6a21093269911c946c6303a4bd8da927f",
-      "publication_documentation_reconciliation": "2026-11-04"
+      "public_sha256": "edaa64d6ce9cdf6f0267fd3054dc9de5b721f2753fbb38453b132d2c436d413e",
+      "publication_documentation_reconciliation": "2026-11-04",
+      "before_system_check_details_public_sha256": "fe9fa584be80be1a6caf5b602d121be6a21093269911c946c6303a4bd8da927f",
+      "system_check_details_port": "2026-11-14: selected System checks details, fixed component labels, original-age qualification and compatible optional public fields."
     },
     {
       "path": "docs/archive-note.md",
@@ -7642,9 +7656,12 @@
       "path": "ops/public-publisher/status/tests/test_collect_stream_v3_public.py",
       "before_sha256": "488d0fdb2645d1d59ecb1978109b8ed306c8d957366304f4276942c0cde48222",
       "source_sha256": null,
-      "public_sha256": "3ec9f85ec68e5d867dc08d2f93227d4fb75d97a2803e700de236b9b92bea0abd",
+      "public_sha256": "fdce7111b85481614bc5914629a97c734368682231455360048ebaf0cd820223",
       "decision": "Port CRA observation integration; use English prose/comments, generic public identities and existing shared FIFO behavior. Preserve dry-run public policy and exclude live state/credentials.",
-      "port_date_jst": "2026-11-13"
+      "port_date_jst": "2026-11-13",
+      "before_system_check_details_public_sha256": "3ec9f85ec68e5d867dc08d2f93227d4fb75d97a2803e700de236b9b92bea0abd",
+      "system_check_details_port": "2026-11-14: selected System checks details, fixed component labels, original-age qualification and compatible optional public fields.",
+      "system_check_details_source_sha256": "17756e0d96e6a93d07fea5098b38608181aabe81426f6794264fe26d4c80b3d5"
     },
     {
       "source_role": "cra-observability-public-port",
@@ -8232,5 +8249,37 @@
       "docs/v3/rolling-sli-error-budget-feedback.md"
     ],
     "formal_audio_sli_preserved": true
+  },
+  "system_check_details_port": {
+    "date_jst": "2026-11-14",
+    "scope": "public-checkout-only",
+    "runtime_deployment_performed": false,
+    "check_count": 24,
+    "fixed_subsystem_count": 5,
+    "source_max_age_seconds": 180,
+    "paths": [
+      "docs/v3/public-status-snapshot.md",
+      "ops/public-publisher/site/public/assets/ops-20261020.css",
+      "ops/public-publisher/site/public/assets/ops-20261027-notices.js",
+      "ops/public-publisher/status/collect_stream_v3_public.py",
+      "ops/public-publisher/status/tests/test_collect_stream_v3_public.py",
+      "ops/scripts/stream_v3_public_projection.py"
+    ],
+    "documentation": "docs/v3/public-status-snapshot.md#system-check-details",
+    "validation": {
+      "focused_tests_passed": 103,
+      "subtests_passed": 1854,
+      "local_browser_cases": [
+        "healthy",
+        "music_degraded_390px",
+        "legacy_optional_fields_missing"
+      ],
+      "refresh_preserves_expanded_checks": true
+    },
+    "excluded": [
+      "Live source registries and deployment bindings",
+      "Raw monitoring state, private reasons and operational evidence"
+    ],
+    "judgment_boundary": "Presentation-only detail. Preserve alert thresholds, SLI calculations and recovery authority."
   }
 }

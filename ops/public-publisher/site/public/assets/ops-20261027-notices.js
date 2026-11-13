@@ -965,6 +965,8 @@
     }
     function formatItem(i) {
       if (!finite(i?.value)) return "n/a";
+      if (i.id === "maintenance_active") return i.value > 0 ? "active" : "inactive";
+      if (i.id === "subsystems_degraded") return `${Math.round(i.value)} reported degraded`;
       if (i.unit === "flag") return i.value > 0 ? "issue" : "clear";
       if (i.unit === "sec") return `${Math.round(i.value)} s`;
       if (i.unit === "Mbps") return `${i.value.toFixed(2)} Mbps`;
@@ -977,7 +979,9 @@
         if (!groups.has(i.group)) groups.set(i.group, []);
         groups.get(i.group).push(i);
       }
-      const root = clear($("checkGroups"));
+      const root = $("checkGroups");
+      const expanded = new Map([...root.querySelectorAll("details[data-check]")].map(row => [row.dataset.check, row.open]));
+      clear(root);
       let ok = 0, total = 0;
       for (const [name, items] of groups) {
         const box = el("div");
@@ -988,7 +992,26 @@
           if (i.state === "ok") ok++;
           const st = i.state === "ok" ? "good" : i.state === "warn" ? "warning" : i.state === "bad" ? "serious" : "unknown";
           const li = el("li");
-          li.append(el("span", { class: `state ${st}` }, i.label), el("span", {}, formatItem(i)));
+          const detail = el("details", { class: "system-check", "data-check": i.id });
+          detail.open = expanded.has(i.id) ? expanded.get(i.id) : i.state !== "ok";
+          const heading = el("summary");
+          heading.append(el("span", { class: `state ${st}` }, i.label), el("span", { class: "check-value" }, formatItem(i)));
+          detail.append(heading);
+          detail.append(el("p", { class: "check-description" }, i.description || "Latest reported result for this check."));
+          if (i.normal_condition) detail.append(el("p", { class: "check-reference" }, i.normal_condition));
+          if (i.id === "subsystems_degraded") {
+            const components = el("ul", { class: "component-list" });
+            for (const component of i.components || []) {
+              const state = component.state === "healthy" ? "good" : component.state === "degraded" || component.state === "failed" ? "warning" : "unknown";
+              const row = el("li");
+              row.append(el("span", {}, component.label), el("span", { class: `state ${state}` }, String(component.state).replaceAll("_", " ")));
+              components.append(row);
+            }
+            detail.append(components);
+            li.append(detail, el("p", { class: "check-context" }, i.detail_summary || "Component details are unavailable."));
+          } else {
+            li.append(detail);
+          }
           ul.append(li);
         }
         box.append(ul);

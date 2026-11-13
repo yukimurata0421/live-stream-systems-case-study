@@ -196,6 +196,18 @@ section { margin-top: 32px; }
 .check-groups ul { list-style: none; margin: 0; padding: 0; font-size: 13.5px; }
 .check-groups li { display: flex; justify-content: space-between; gap: 10px; padding: 4px 0; border-bottom: 1px dotted var(--grid); }
 .check-groups li span:last-child { font-variant-numeric: tabular-nums; color: var(--ink-2); }
+.check-groups > div > ul > li { display: block; padding: 7px 0; }
+.system-check { min-width: 0; }
+.checks .system-check summary { display: flex; align-items: flex-start; gap: 8px; padding: 0; font-size: 13.5px; }
+.checks .system-check summary > .state { white-space: normal; min-width: 0; }
+.checks .system-check summary > .state::before { flex-shrink: 0; }
+.checks .system-check summary::after { content: "+"; font-size: 14px; }
+.checks .system-check[open] summary::after { content: "−"; }
+.check-value { margin-left: auto; white-space: nowrap; }
+.check-description, .check-reference, .check-context { margin: 6px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+.check-reference { color: var(--ink-2); }
+.component-list { margin-top: 8px !important; }
+.check-groups .component-list li { display: flex; font-size: 12px; border: 0; padding: 3px 0; }
 
 .footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
 .footer p { margin: 4px 0; }
