@@ -67,6 +67,12 @@ archive, preserve inbound anchors, and state the evidence cutoff independently
 of the edit date. An open gap closes only with evidence covering that same scope:
 an embedded-player test does not qualify a watch page or a failover.
 
+In publication records, separate preparation actions from observed Git
+publication in distinct objects. Bind publication evidence to a commit, its
+repository URL and the observation time; it says nothing about later edits or
+deployment. Retain dated review digests with their original snapshot identity;
+the [source map](../publication/source-map.json) owns current public-file digests.
+
 Before adding a page, choose its primary role and check whether an existing
 owner already answers the question. Add it to the catalog and link it from the
 relevant topic. Component READMEs own local setup; top-level guides link to them.

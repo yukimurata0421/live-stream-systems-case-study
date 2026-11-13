@@ -1,0 +1,11 @@
+[Unit]
+Description=Wait for confirmed normal delivery before the NVIDIA smoke campaign
+
+[Timer]
+OnBootSec=30
+OnUnitInactiveSec=30
+AccuracySec=1s
+Unit=stream-v3-nvidia-smoke-launch.service
+
+[Install]
+WantedBy=timers.target

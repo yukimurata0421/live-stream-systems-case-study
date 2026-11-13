@@ -70,6 +70,12 @@ frozen media/output counter reset the stability window. A confirmation taking
 longer than that gap also holds completion; rerun `off` to establish fresh
 stability and confirm again. Expiry does not release inhibition.
 
+For the separately armed NVIDIA smoke handoff, the optional
+[confirmation companion](nvidia-driver-smoke.md#optional-one-time-maintenance-handoff)
+continues the same pinned core's samples during the operator's input wait.
+It retains the gap and stability checks and requires that armed session;
+the original `off` implementation is unchanged.
+
 The lower-level commands remain available for diagnosis:
 
 ```bash

@@ -73,6 +73,7 @@ Commands and installation prerequisites are reference procedures, not authorizat
 - `operations.md`: [local checks, shadow mode, release provenance](operations.md).
 - `v3/runbooks.md`: [operator commands](v3/runbooks.md).
 - `v3/runbook-validation.md`: [how runbooks are checked by someone else](v3/runbook-validation.md).
+- `v3/nvidia-driver-smoke.md`: [48-hour NVIDIA observation, maintenance handoff, SQLite exclusion and bounded sampling](v3/nvidia-driver-smoke.md).
 - `v3/r2-publication-transport.md`: [portable R2 publisher, durable receipts, IPv6 preference, IPv4 fallback and isolated DNS](v3/r2-publication-transport.md).
 
 ## Decisions And Rationale

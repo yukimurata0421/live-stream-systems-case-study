@@ -1,5 +1,5 @@
 {
-  "schema": "stream.documentation_design_review.v1",
+  "schema": "stream.documentation_design_review.v2",
   "review_date_jst": "2026-11-04",
   "base_public_commit": "8b3c467b4f2653f7399fb247747c3e9b682f5f84",
   "scope": "Repository-wide Markdown structure and navigation; focused prose reconciliation at entrypoints, ownership contracts and current-status summaries.",
@@ -20,9 +20,31 @@
     "preservation": "Original body retained; title and archival-scope banner added."
   },
   "validation_boundary": "Documentation and source checks only; no new live service audit, qualification, deployment or provider operation.",
-  "commit_performed": false,
-  "push_performed": false,
-  "production_runtime_changed": false,
+  "preparation": {
+    "scope": "Actions during review preparation, before its first Git publication.",
+    "commit_performed": false,
+    "push_performed": false,
+    "production_runtime_changed": false
+  },
+  "git_publication": {
+    "scope": "The original v1 review snapshot at the named commit only; this does not cover subsequent edits or deployment.",
+    "status": "PUBLISHED",
+    "commit": "1c1d6f5e2d1ccd798735e3186d932a3b2a7eff75",
+    "url": "https://github.com/yukimurata0421/live-stream-systems-case-study/commit/1c1d6f5e2d1ccd798735e3186d932a3b2a7eff75",
+    "observed_at_jst": "2026-11-04T19:42:25+09:00",
+    "verification": "GitHub returned the published commit and the completed workflow jobs.",
+    "ci_run_url": "https://github.com/yukimurata0421/live-stream-systems-case-study/actions/runs/41752958124",
+    "ci_jobs": {
+      "snapshot-check": "success",
+      "monitoring-v4-check": "success",
+      "recovery-control-check": "success"
+    }
+  },
+  "reviewed_snapshot": {
+    "commit": "1c1d6f5e2d1ccd798735e3186d932a3b2a7eff75",
+    "scope": "The files inventory and validation results below retain the original review snapshot; they are not a review of later edits.",
+    "current_file_digests": "publication/source-map.json"
+  },
   "files": [
     {
       "path": ".github/pull_request_template.md",
@@ -1084,6 +1106,5 @@
     "secret_scan_findings": 0,
     "archived_status_body_matches_base": true,
     "live_audit_performed": false
-  },
-  "operation_flags_scope": "Commit and push flags describe preparation of this review record. Subsequent Git publication is identified by repository commits and remote refs; it does not imply deployment."
+  }
 }

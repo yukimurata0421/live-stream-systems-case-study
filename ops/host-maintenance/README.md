@@ -17,6 +17,19 @@ install, enable, or start any unit.
 - `bin/stream_v3_postboot_verify.py` correlates the current host boot ID, Pod
   boot annotations, container state, runtime readiness, `h264_nvenc`, and the
   RTMP/RTMPS socket after a reboot.
+- `bin/nvidia_driver_smoke.py` observes an explicitly installed R580 driver for
+  a fixed 48 hours alongside the normal stream, using shared read-only probes
+  and a durable SQLite campaign. It does not upgrade or recover the runtime.
+- `bin/nvidia_smoke_after_maintenance.py` starts one armed campaign only after
+  the same maintenance session has operator-confirmed normal delivery.
+- `bin/nvidia_smoke_finish_maintenance.py` keeps the pinned maintenance core's
+  verification running during public-player confirmation. Its expected core
+  hashes refer to the public source, not a private installed release.
+
+See the [smoke pipeline guide](../../docs/v3/nvidia-driver-smoke.md) for the
+supported deployment, release layout, explicit installation boundary, CLI,
+concurrency behavior and offline checks. The smoke units are not enabled by
+repository tests or CI.
 
 ## Explicit Installation Boundary
 

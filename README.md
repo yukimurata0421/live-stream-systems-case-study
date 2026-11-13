@@ -55,7 +55,7 @@ See [the dated evidence and counting method](docs/same-url-continuity-evidence.m
 | Preserve a usable public URL through changes and recovery | Same-URL checkpoints, retained migration evidence, and recovery guards. |
 | Diagnose faults across several layers | Network stalls, a watchdog that rejected a new relay port, and stale public-cache incidents. |
 | Correct recovery without hiding failed attempts | A Twitch renewal initially disrupted YouTube; the corrected bounded exercise was verified separately. |
-| Recognize when testing has not proved safety | The qualification harness failed to produce its results; native qualification remains unverified. |
+| Recognize when testing has not proved safety | The [October 13, 2026 native qualification campaign](docs/operational-case-studies.md#6-the-qualification-harness-did-not-produce-a-valid-result) produced no valid result; that campaign remains unverified. |
 | Recognize an unfinished design and change course | After 104 qualification runs, the redesigned migration and recovery system was still incomplete. A smaller route replaced it on October 20. |
 | Exercise recovery on purpose | A production relay-stop drill on 2026-10-20 started the backup in 52 seconds. When the rule was revised on October 30-31, isolated fault tests and review found gaps in the deployed rule without faulting production, and each was fixed; see [One fallback rule, revised under test](docs/v3/fallback-policy-revisions.md). |
 

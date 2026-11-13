@@ -1,0 +1,12 @@
+[Unit]
+Description=Sample NVIDIA smoke one minute after the previous invocation completes
+
+[Timer]
+OnBootSec=60
+# Count from completion: process startup jitter must not hit the CLI's 60s guard early.
+OnUnitInactiveSec=60
+AccuracySec=1s
+Unit=stream-v3-nvidia-smoke.service
+
+[Install]
+WantedBy=timers.target

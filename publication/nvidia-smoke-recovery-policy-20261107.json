@@ -1,0 +1,73 @@
+{
+  "schema": "stream.public_port_record.v1",
+  "port_date_jst": "2026-11-07",
+  "scope": "Public checkout only: record ordinary network recovery without invalidating the GPU driver trial.",
+  "policy": "driver_with_transport_recovery_v2",
+  "fixed_duration_sec": 172800,
+  "transport_recovery_limit_sec": 300,
+  "prior_port_record": "publication/nvidia-smoke-port-20261106.json",
+  "commit_performed": false,
+  "push_performed": false,
+  "deployment_performed": false,
+  "production_runtime_changed": false,
+  "physical_48_hour_qualification_performed": false,
+  "provider_or_player_verified": false,
+  "history_preserved": true,
+  "adaptations": [
+    "Persist recovery state, counter deltas/totals and episode counts in the existing observation transaction.",
+    "Accept validated unready JSON only for the smoke caller; retain all other readiness callers and public portable defaults.",
+    "Recoverable reconnect, queue full and per-attempt failures are recorded; persistent transport loss, counter regression, GPU/render faults and an unresolved fixed endpoint remain failures or unknown.",
+    "Preserve the original failed run and original public port record; do not splice missing or changed-target observations."
+  ],
+  "validation": {
+    "related_tests_passed": 157,
+    "subtests_passed": 58,
+    "simulated_48h_includes_both_days_recovery": true,
+    "public_port": {
+      "status": "PASS",
+      "issue_count": 0
+    },
+    "public_language": "PASS",
+    "docs": {
+      "status": "PASS",
+      "tests_passed": 31,
+      "subtests_passed": 1835
+    },
+    "secret_scan": {
+      "status": "PASS",
+      "tool": "gitleaks detect --no-git --redact",
+      "findings": 0
+    }
+  },
+  "files": [
+    {
+      "path": "ops/host-maintenance/bin/nvidia_driver_smoke.py",
+      "before_sha256": "39367fbf9fca457a894b1629d4fa7bb37499d539cc642728643aa0b4b98edc5b",
+      "source_sha256": "91067da044afc5b896559cb5bca6b565be79d3dbb21d111947f0d8c1d939aa12",
+      "public_sha256": "720274f2d1a1033749a7701fc84830d5089290751ee5b212acb053a059a0f6bc"
+    },
+    {
+      "path": "ops/scripts/stream_v3_map_runtime_probe.py",
+      "before_sha256": "0a0e11c8d74343397f614cbb589e7fc5067d8d25143ba460e31383e649b54c94",
+      "source_sha256": "9f878020529a5d6fb8005c8f137cc852e2c1fe00e13e03dcee381d3e49617594",
+      "public_sha256": "b058fd904be9c5fb094bc593639ce6765b3c315dd25764b66cd26a761ab242de"
+    },
+    {
+      "path": "tests/test_nvidia_driver_smoke.py",
+      "before_sha256": "aed355334054f7eee298201adcbb2a24b02f0a989c69b2f4fe3657fd8a55059a",
+      "source_sha256": "0581dc1c660c4ce210abc9756b241146679832bbf787b48dab8fc37aa902da0d",
+      "public_sha256": "0581dc1c660c4ce210abc9756b241146679832bbf787b48dab8fc37aa902da0d"
+    },
+    {
+      "path": "docs/v3/nvidia-driver-smoke.md",
+      "before_sha256": "33dd62836e9b8392ca8582e6c823d46341031d4f876bc63747e7cf78e3c6ba2a",
+      "source_sha256": null,
+      "public_sha256": "3790a3683cf87d563bf0828da6acc8453e8a232805aa5477c113ef3b704adf2d"
+    }
+  ],
+  "excluded": [
+    "Working identities, raw evidence, runtime databases, credentials and deployed release paths.",
+    "Driver installation, delivery/recovery changes, deployment, commit and push."
+  ],
+  "operation_flags_scope": "Commit, push, deployment and validation fields describe the dated port preparation only, before its Git publication. They do not describe later repository publication or runtime state. The file inventory retains that dated snapshot; current public-file digests are in publication/source-map.json."
+}

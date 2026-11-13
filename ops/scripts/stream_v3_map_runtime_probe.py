@@ -53,6 +53,8 @@ import struct
 import urllib.request
 from pathlib import Path
 
+SMOKE_ONLY = globals().get("SMOKE_ONLY", False)
+
 SWIFTSHADER_FLAGS = (
     "--enable-unsafe-swiftshader",
     "--use-gl=angle",
@@ -162,9 +164,45 @@ def precipitation_integrity(status_result):
         "total_bytes": total_bytes,
     }
 
-browser_main_count = 0
-swiftshader_main_count = 0
-adsb_map_main_count = 0
+def gpu_process_arguments(args):
+    # Chromium may flatten child arguments into argv[0] after startup.
+    return any("--type=gpu-process" in arg.split() for arg in args)
+
+def browser_snapshot(processes, nvidia_gpu_pids):
+    mains = {
+        pid: row["args"] for pid, row in processes.items()
+        if "chromium" in "\0".join(row["args"]).lower()
+        and any(arg.startswith("--app=") for arg in row["args"])
+    }
+    def belongs_to(pid, main):
+        seen = set()
+        for _ in range(32):
+            if pid == main:
+                return True
+            if pid in seen or pid not in processes:
+                return False
+            seen.add(pid)
+            pid = processes[pid]["parent"]
+        return False
+    vulkan_mains = sum(
+        "--use-gl=angle" in args and "--use-angle=vulkan" in args
+        and any("/adsb-map/" in arg for arg in args)
+        and any(belongs_to(pid, main) for pid in nvidia_gpu_pids)
+        for main, args in mains.items()
+    )
+    return {
+        "main_process_count": len(mains),
+        "swiftshader_main_process_count": sum(
+            all(flag in args for flag in SWIFTSHADER_FLAGS) for args in mains.values()
+        ),
+        "nvidia_vulkan_main_process_count": vulkan_mains,
+        "adsb_map_main_process_count": sum(
+            any("/adsb-map/" in arg for arg in args) for args in mains.values()
+        ),
+    }
+
+processes = {}
+nvidia_gpu_pids = set()
 for entry in Path("/proc").iterdir():
     if not entry.name.isdigit():
         continue
@@ -174,13 +212,20 @@ for entry in Path("/proc").iterdir():
     joined = "\0".join(args).lower()
     if "chromium" not in joined:
         continue
-    if not any(arg.startswith("--app=") for arg in args):
+    try:
+        raw = (entry / "stat").read_text()
+        parent = int(raw[raw.rfind(")") + 2:].split()[1])
+        pid = int(entry.name)
+        processes[pid] = {"args": args, "parent": parent}
+        if gpu_process_arguments(args):
+            with (entry / "maps").open("rb") as handle:
+                mapped = handle.read(1048577)
+            if (len(mapped) <= 1048576 and b"libEGL_nvidia" in mapped
+                    and b"libnvidia-glvkspirv" in mapped
+                    and b"libvk_swiftshader" not in mapped):
+                nvidia_gpu_pids.add(pid)
+    except (OSError, ValueError, IndexError):
         continue
-    browser_main_count += 1
-    if all(flag in args for flag in SWIFTSHADER_FLAGS):
-        swiftshader_main_count += 1
-    if any("/adsb-map/" in arg for arg in args):
-        adsb_map_main_count += 1
 
 browser_log = {
     "present": False,
@@ -189,7 +234,10 @@ browser_log = {
 }
 for candidate in (Path("/app/logs/browser.log"), Path("/state/logs/browser.log")):
     try:
-        tail = candidate.read_bytes()[-524288:].decode("utf-8", "replace")
+        with candidate.open("rb") as handle:
+            handle.seek(0, 2)
+            handle.seek(max(0, handle.tell() - 524288))
+            tail = handle.read(524288).decode("utf-8", "replace")
     except OSError:
         continue
     browser_log = {
@@ -199,18 +247,14 @@ for candidate in (Path("/app/logs/browser.log"), Path("/state/logs/browser.log")
     }
     break
 
-weather_status = http_json("/weather/status.json")
+weather_status = {} if SMOKE_ONLY else http_json("/weather/status.json")
 print(json.dumps({
-    "browser": {
-        "main_process_count": browser_main_count,
-        "swiftshader_main_process_count": swiftshader_main_count,
-        "adsb_map_main_process_count": adsb_map_main_count,
-    },
+    "browser": browser_snapshot(processes, nvidia_gpu_pids),
     "browser_log": browser_log,
     "render": http_json("/render/status.json"),
     "weather_status": weather_status,
-    "weather_health": http_json("/weather/health.json"),
-    "weather_integrity": precipitation_integrity(weather_status),
+    "weather_health": {} if SMOKE_ONLY else http_json("/weather/health.json"),
+    "weather_integrity": {} if SMOKE_ONLY else precipitation_integrity(weather_status),
 }, separators=(",", ":")))
 '''
 
@@ -349,6 +393,7 @@ def runtime_readiness(
     pod_name: str,
     *,
     timeout_sec: float,
+    allow_unready: bool = False,
 ) -> dict[str, Any]:
     completed = command(
         [
@@ -366,13 +411,20 @@ def runtime_readiness(
         ],
         timeout_sec=timeout_sec,
     )
-    if completed.returncode != 0:
+    if completed.returncode != 0 and not (allow_unready and completed.returncode == 1):
         detail = (completed.stderr or completed.stdout or "runtime readiness failed").strip()
         return {"ready": False, "reason": detail[-500:], "probe_error": True}
     try:
         payload = json.loads(completed.stdout.splitlines()[-1])
     except (IndexError, json.JSONDecodeError) as exc:
         return {"ready": False, "reason": f"invalid runtime readiness output: {exc}", "probe_error": True}
+    if completed.returncode == 1 and (
+        not isinstance(payload, dict)
+        or payload.get("schema") != "stream_v3_runtime_readiness.v1"
+        or payload.get("ready") is not False
+        or any(type(payload.get(k)) is not bool for k in ("gpu_ok", "nvenc_active", "rtmp_socket_established"))
+    ):
+        return {"ready": False, "probe_error": True, "reason": "invalid unready observation"}
     return payload if isinstance(payload, dict) else {"ready": False, "reason": "invalid runtime readiness payload"}
 
 
@@ -382,6 +434,7 @@ def process_snapshot(
     pod_name: str,
     *,
     timeout_sec: float,
+    gpu_only: bool = False,
 ) -> dict[str, Any]:
     return json_command(
         [
@@ -395,7 +448,7 @@ def process_snapshot(
             "--",
             "python3",
             "-c",
-            PROCESS_PROBE,
+            ("SMOKE_ONLY = True\n" if gpu_only else "") + PROCESS_PROBE,
         ],
         timeout_sec=timeout_sec,
     )
@@ -481,7 +534,10 @@ def evaluate_sample(
     )
     browser_contract_ok = bool(
         int(browser.get("main_process_count") or 0) >= 1
-        and int(browser.get("swiftshader_main_process_count") or 0) >= 1
+        and (
+            int(browser.get("swiftshader_main_process_count") or 0) >= 1
+            or int(browser.get("nvidia_vulkan_main_process_count") or 0) >= 1
+        )
         and int(browser.get("adsb_map_main_process_count") or 0) >= 1
         and browser_log.get("present") is True
         and browser_log.get("webgl2_blocklisted") is not True
@@ -619,7 +675,14 @@ def evaluate_sample(
         "pod": pod,
         "readiness": readiness,
         "render": {**render, "probe_error": render_error},
-        "browser": {**browser, **browser_log, "contract_ok": browser_contract_ok},
+        "browser": {
+            **browser, **browser_log, "contract_ok": browser_contract_ok,
+            "rendering_backend": (
+                "nvidia-vulkan" if int(browser.get("nvidia_vulkan_main_process_count") or 0) >= 1
+                else "swiftshader" if int(browser.get("swiftshader_main_process_count") or 0) >= 1
+                else "unknown"
+            ),
+        },
         "precipitation": {
             "status": weather_status,
             "health": weather_health,
@@ -741,6 +804,7 @@ def history_row(payload: dict[str, Any]) -> dict[str, Any]:
         "asset_revision": as_dict(render.get("asset_identity")).get("revision", ""),
         "webgl2_blocklisted": browser.get("webgl2_blocklisted"),
         "webgl_context_fatal": browser.get("context_fatal_failure"),
+        "browser_rendering_backend": browser.get("rendering_backend", "unknown"),
         "precipitation_observed_age_sec": precipitation.get("observed_age_sec"),
         "precipitation_data_ok": conditions.get("precipitation_data_ok"),
         "precipitation_generation_integrity": conditions.get("precipitation_generation_integrity"),

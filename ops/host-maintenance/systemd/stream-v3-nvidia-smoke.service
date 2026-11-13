@@ -1,0 +1,33 @@
+[Unit]
+Description=Observe the active NVIDIA 48-hour smoke campaign
+After=local-fs.target
+ConditionPathExists=/var/lib/stream-v3-nvidia-smoke/smoke.sqlite3
+
+[Service]
+Type=oneshot
+Environment=KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+ExecStart=/usr/bin/python3 -I -B /opt/stream-v3-nvidia-smoke/current/ops/host-maintenance/bin/nvidia_driver_smoke.py tick
+SuccessExitStatus=1
+StateDirectory=stream-v3-nvidia-smoke
+StateDirectoryMode=0700
+UMask=0077
+TimeoutStartSec=100
+Nice=10
+CPUQuota=10%
+MemoryMax=192M
+TasksMax=32
+LimitFSIZE=80M
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+CapabilityBoundingSet=
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+IPAddressDeny=any
+IPAddressAllow=localhost
+InaccessiblePaths=-/run/stream-v3-control -/run/credentials -/var/lib/stream-recovery-control
+# Only the existing observation export is read; no effect socket is exposed.
+ReadOnlyPaths=-/run/stream-v3-transport-export

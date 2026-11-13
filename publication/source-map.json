@@ -37,7 +37,7 @@
       "decision": "Optional Airspy reception guard; preserve the durable one-extra-attempt cap, remove personal configuration writers and keep raw evidence private.",
       "before_sha256": "d2268fba12ef09d57e492f92569838989f651d84fc89d8e3d4d242420cac01ba",
       "source_sha256": "e8ad53fd1e34398253c585162a2f6dcda8703eb93cedf9ff68ecc85ed37db47f",
-      "public_sha256": "b697bbf6dc441398feaa33c3b893d8930e8b66609bf98bf2e177d220e72d4fa4",
+      "public_sha256": "9ed4ed6051ff0924b8a9264d0270513f4223f0f12e2a836288f9c63fa3ac1daf",
       "port_date_jst": "2026-10-30",
       "pre_documentation_restructure_sha256": "00b596e75b50eaedbd3bed4ebc79e71d882e7049e72516aec95dfc0860ed015e",
       "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json.",
@@ -75,7 +75,9 @@
       "before_documentation_design_sha256": "4bd1ea4a6b709235b8e0b79e832d0f2757ad129565202d848c841c78a77d7c2b",
       "documentation_design_record": "publication/documentation-design-review-20261104.json",
       "before_cra_observability_20261113_sha256": "1b61116a0854b561c735266622164b279436815f815607133131772b8c44fb21",
-      "cra_observability_port": "publication/cra-observability-port-20261113.json"
+      "cra_observability_port": "publication/cra-observability-port-20261113.json",
+      "before_documentation_review_clarification_sha256": "1b61116a0854b561c735266622164b279436815f815607133131772b8c44fb21",
+      "documentation_review_clarification": "2026-11-04"
     },
     {
       "path": "configs/auto_dj_classification_overrides.json",
@@ -251,7 +253,7 @@
       "decision": "Selected maintenance notification behavior; preserve public localization, generic delivery-host binding and existing formal SLI semantics.",
       "before_sha256": "9f7605e83cdf9ec60df73ebe3f2472cca9292c4e06ec6768621ce53026c0b82c",
       "source_sha256": null,
-      "public_sha256": "c8be7d6acb963c54f9957fb4cf34b9e32a614207277862edc03f5c3bee73be44",
+      "public_sha256": "8069d52ff1b37bfd9fc95a5cffbe06a003440787cd0df8e67a063881a5d208e1",
       "prior_public_sha256": "e71784d110b08225a9a320ecb03f999b60fa7f23b2503f2e6a3f80448620c9ed",
       "localization": "English prose; control structures and machine identifiers preserved.",
       "pre_graph_display_sha256": "6a87a495eb3698b1a49e053ffcc109b28d94a59e9dd29cb3399a62279e196d3d",
@@ -329,7 +331,10 @@
       "before_cra_observability_20261113_sha256": "a9e4093624b2b0daf4cc39c9242734a4c6790a0338e30b403e2f5d9155a1dd51",
       "cra_observability_port": "publication/cra-observability-port-20261113.json",
       "before_cra_fifo_grace_20261113_sha256": "5cdbc34364ab140c5a77fb2f79f0980d5f9dc7bbb082be18d9876b771c2ab7d8",
-      "cra_fifo_grace_port": "publication/cra-fifo-grace-port-20261113.json"
+      "cra_fifo_grace_port": "publication/cra-fifo-grace-port-20261113.json",
+      "before_nvidia_smoke_port_sha256": "b859a02ff2926d34b1347710ec642781a6981b3babd511a05b470d90509d58d5",
+      "nvidia_smoke_port": "publication/nvidia-smoke-port-20261106.json",
+      "nvidia_smoke_source_sha256": "82074416718e1cdcc2556b3e59dcb3e931b4c5a5d534cf37e93856afdfa640a7"
     },
     {
       "path": "docs/README.md",
@@ -536,7 +541,7 @@
       "decision": "hiring-reader-summary-with-dated-evidence",
       "before_sha256": "0f210c8e1dcd7c05aa26abf9b3020838ec3467f49a2b7bcedcf300cebed1d7e7",
       "source_sha256": null,
-      "public_sha256": "5906abf303cee74e47b4c2fe212a4df1f31b9f9e2e79b04a7d9feccbbcc735ae",
+      "public_sha256": "a4026054b5cf725183bf5ebc4a8fbf36d67fbc6467762e5753fb5f68908401c4",
       "pre_hardware_selection_sha256": "65ecbe14498fddd0c29a76f2ece43b367b7d94b12aa269295b256a7950dfbda4",
       "hardware_selection_change": "Link the dated hardware selection retrospective from existing reviewer and topology routes.",
       "pre_documentation_restructure_sha256": "bc1833f76dad6e07ba2b95f001528d7fdd9e3afd02b07581d7b740e2c1435a29",
@@ -546,7 +551,9 @@
       "before_boottime_media_health_sha256": "df35579f38d3c5e70fa0dc6059686b2400601f77bc03f0a487342b5c974a1c7e",
       "boottime_media_health": "boottime-media-health-20261031",
       "before_documentation_design_sha256": "c0409c599760f9779b48926c0385dc381fd39d8540501bafb4a4f32fc4e5ca19",
-      "documentation_design_record": "publication/documentation-design-review-20261104.json"
+      "documentation_design_record": "publication/documentation-design-review-20261104.json",
+      "before_documentation_review_clarification_sha256": "5906abf303cee74e47b4c2fe212a4df1f31b9f9e2e79b04a7d9feccbbcc735ae",
+      "documentation_review_clarification": "2026-11-04"
     },
     {
       "path": "docs/implementation-review-map.md",
@@ -707,7 +714,7 @@
       "decision": "Selected FIFO recovery port; preserve public behavior, explicit observation injection, generic lab endpoints and English documentation.",
       "before_sha256": "7260dabcdd49d2080223952d24250bb56cf68e3f82b4ad1daa9f00fccee362ab",
       "source_sha256": null,
-      "public_sha256": "7e71e5b9c2fac18f48b03394d7bbf2e8c89d8b6b1d651315d44ab41d4e3be737",
+      "public_sha256": "2734088e4e466a8d46f22697c809d581b4a43e664b1b60bbb39ed3890451f6d6",
       "port_date_jst": "2026-10-29",
       "pre_documentation_restructure_sha256": "05aaa171c0ae1542019467073dd5058d7301e5d83eec70c9d39b20d6c8d12c68",
       "documentation_restructure": "2026-10-20 reader-structure revision; see publication/docs-restructure-20261020.json.",
@@ -721,7 +728,10 @@
       "before_documentation_design_sha256": "0949492076683057b521e05979f3630e1ac6fce18eeae1f39a683ec3f5799a41",
       "documentation_design_record": "publication/documentation-design-review-20261104.json",
       "before_cra_observability_20261113_sha256": "eac8ea3e78290f1d73dc03dc59278999efadedda416fac97e44b8b67e6316c84",
-      "cra_observability_port": "publication/cra-observability-port-20261113.json"
+      "cra_observability_port": "publication/cra-observability-port-20261113.json",
+      "before_nvidia_smoke_port_sha256": "eac8ea3e78290f1d73dc03dc59278999efadedda416fac97e44b8b67e6316c84",
+      "nvidia_smoke_port": "publication/nvidia-smoke-port-20261106.json",
+      "nvidia_smoke_source_sha256": null
     },
     {
       "path": "docs/v3/adsb-source-coverage.md",
@@ -5255,11 +5265,14 @@
       "decision": "Selected maintenance notification behavior; preserve public localization, generic delivery-host binding and existing formal SLI semantics.",
       "before_sha256": null,
       "source_sha256": null,
-      "public_sha256": "d94899e5a0c491765ffd1166e4638eea4b3d48756c37c85c62ba25c1118738b3",
+      "public_sha256": "0387fdf35e9b521ddc845bd4c9bd4bab34f80d3aaec3efd86145fe424449e49d",
       "port_record": "publication/manual-maintenance-port-20261030.json",
       "port_date_jst": "2026-10-30",
       "prior_public_sha256": "8373e427c4813f5e4f5d29ddbb153632255e9eb8d79085f45c8e250e44dc73e1",
       "review_reconciliation": "clock-review-20261031",
+      "before_nvidia_smoke_port_sha256": "a618e3041273b51248cc8ca6a12be7c4394323fe83191dfcc7b72c3fce1b6748",
+      "nvidia_smoke_port": "publication/nvidia-smoke-port-20261106.json",
+      "nvidia_smoke_source_sha256": null,
       "maintenance_notifications_port": "publication/maintenance-notifications-port-20261106.json"
     },
     {
@@ -6183,9 +6196,15 @@
       "source_role": "notification-time-evidence",
       "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes.",
       "source_sha256": "86a778831f012b28cc5f86ecd000def1c0e083307853a48d416932ba7646d3a5",
-      "public_sha256": "0711ee256a2a225fc91bbb655a7d60c3a92239f71e2dc4b065aa506cc80e20b3",
+      "public_sha256": "b058fd904be9c5fb094bc593639ce6765b3c315dd25764b66cd26a761ab242de",
       "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
-      "notification_observation_time_source_sha256": "86a778831f012b28cc5f86ecd000def1c0e083307853a48d416932ba7646d3a5"
+      "notification_observation_time_source_sha256": "86a778831f012b28cc5f86ecd000def1c0e083307853a48d416932ba7646d3a5",
+      "before_nvidia_smoke_port_sha256": "0711ee256a2a225fc91bbb655a7d60c3a92239f71e2dc4b065aa506cc80e20b3",
+      "nvidia_smoke_port": "publication/nvidia-smoke-port-20261106.json",
+      "nvidia_smoke_source_sha256": "a982179f92cf95c15f018b3b58d667035b986b03a1d603ea0576fd560575e265",
+      "before_nvidia_recovery_policy_sha256": "0a0e11c8d74343397f614cbb589e7fc5067d8d25143ba460e31383e649b54c94",
+      "nvidia_recovery_policy_record": "publication/nvidia-smoke-recovery-policy-20261107.json",
+      "nvidia_recovery_policy_source_sha256": "9f878020529a5d6fb8005c8f137cc852e2c1fe00e13e03dcee381d3e49617594"
     },
     {
       "path": "ops/scripts/stream_v3_viewer_synthetic_probe.py",
@@ -7375,8 +7394,10 @@
       "source_sha256": null,
       "decision": "Document roles, navigation and evidence scopes reconciled without changing runtime behavior.",
       "before_documentation_design_sha256": null,
-      "public_sha256": "ae1c19eccb0c7e9bd6840742656f4f84e699e881d7fa32d2adcda7dd6932e79d",
-      "documentation_design_record": "publication/documentation-design-review-20261104.json"
+      "public_sha256": "a735977852e57ec95e8d3cc211694236ba5d625acf6707a7b98db05099ba7e4f",
+      "documentation_design_record": "publication/documentation-design-review-20261104.json",
+      "before_documentation_review_clarification_sha256": "ae1c19eccb0c7e9bd6840742656f4f84e699e881d7fa32d2adcda7dd6932e79d",
+      "documentation_review_clarification": "2026-11-04"
     },
     {
       "path": "docs/status-history-2026-11-03.md",
@@ -7404,8 +7425,10 @@
       "source_sha256": null,
       "decision": "Document roles, navigation and evidence scopes reconciled without changing runtime behavior.",
       "before_documentation_design_sha256": null,
-      "public_sha256": "f74165b511a6b7a6893ca50a61412fbb9222d7ea67593b5b64b19be2656a1e4a",
-      "documentation_design_record": "publication/documentation-design-review-20261104.json"
+      "public_sha256": "fb7d695c6d10e385510019b72da215b0917d46c4021fc008381d02629fb3ee1c",
+      "documentation_design_record": "publication/documentation-design-review-20261104.json",
+      "before_documentation_review_clarification_sha256": "f74165b511a6b7a6893ca50a61412fbb9222d7ea67593b5b64b19be2656a1e4a",
+      "documentation_review_clarification": "2026-11-04"
     },
     {
       "path": "recovery-control/docs/local-reflex-operations.md",
@@ -7734,6 +7757,154 @@
       "public_sha256": "8201681ca17c4d72ec865731cc0a2fc1289158ecab19e9b13952fae158f4f449",
       "decision": "Port the FIFO connection identity fix and regression checks; adapt public test imports and English evidence documentation without changing public activation defaults.",
       "port_date_jst": "2026-11-13"
+    },
+    {
+      "path": "ops/host-maintenance/bin/nvidia_driver_smoke.py",
+      "source_role": "nvidia-smoke-source-test-or-guide",
+      "before_sha256": null,
+      "source_sha256": "c90a008776082f7820dc29ed34b6424e5695541e372c52c3b2f98ab1c2b6947a",
+      "public_sha256": "38367cbefd4565cfe926d170d6c1f68da3130d02940168ddd4768afa7f3d33fe",
+      "decision": "Port the bounded 48-hour observer and maintenance handoff; retain public defaults, English prose, fixed window, durable history and fail-closed checks.",
+      "port_record": "publication/nvidia-smoke-port-20261106.json",
+      "port_date_jst": "2026-11-06",
+      "before_nvidia_recovery_policy_sha256": "39367fbf9fca457a894b1629d4fa7bb37499d539cc642728643aa0b4b98edc5b",
+      "nvidia_recovery_policy_record": "publication/nvidia-smoke-recovery-policy-20261107.json",
+      "nvidia_recovery_policy_source_sha256": "91067da044afc5b896559cb5bca6b565be79d3dbb21d111947f0d8c1d939aa12",
+      "before_nvidia_pod_transitions_sha256": "720274f2d1a1033749a7701fc84830d5089290751ee5b212acb053a059a0f6bc",
+      "nvidia_pod_transitions_record": "publication/nvidia-smoke-pod-transitions-20261107.json",
+      "nvidia_pod_transitions_source_sha256": "75da18c9c5ccaca093a206e837ab70a68ef94870110438baa4c6537d34200a8b"
+    },
+    {
+      "path": "ops/host-maintenance/bin/nvidia_smoke_after_maintenance.py",
+      "source_role": "nvidia-smoke-source-test-or-guide",
+      "before_sha256": null,
+      "source_sha256": "c5e8103735ef7a3b2350181df00ee31c0c5cd97f4ebb561809f441bfff24dee4",
+      "public_sha256": "a095e68be9193c825ae884f040e481edbc2fde4fcbb3b361c1f12139d7df2f05",
+      "decision": "Port the bounded 48-hour observer and maintenance handoff; retain public defaults, English prose, fixed window, durable history and fail-closed checks.",
+      "port_record": "publication/nvidia-smoke-port-20261106.json",
+      "port_date_jst": "2026-11-06"
+    },
+    {
+      "path": "ops/host-maintenance/bin/nvidia_smoke_finish_maintenance.py",
+      "source_role": "nvidia-smoke-source-test-or-guide",
+      "before_sha256": null,
+      "source_sha256": "d95d4034c4afe015842166b16f1ac247c7bbe6943c850407ff1bf2b765f3ded1",
+      "public_sha256": "fa5e7f8491fff89ec7b54235cc6f5afc0a3ab8dd2ce30541bba2480a91a20b78",
+      "decision": "Port the bounded 48-hour observer and maintenance handoff; retain public defaults, English prose, fixed window, durable history and fail-closed checks.",
+      "port_record": "publication/nvidia-smoke-port-20261106.json",
+      "port_date_jst": "2026-11-06"
+    },
+    {
+      "path": "ops/host-maintenance/systemd/stream-v3-nvidia-smoke.service",
+      "source_role": "nvidia-smoke-source-test-or-guide",
+      "before_sha256": null,
+      "source_sha256": "68bb1df2643c4e103dd8a2a49b3ea692420c53b0e873682a83f77d00d94f0c3c",
+      "public_sha256": "58a5783af2b17e9fcaeab57c9e73731c5167f752d89075faa918b0768b62d721",
+      "decision": "Port the bounded 48-hour observer and maintenance handoff; retain public defaults, English prose, fixed window, durable history and fail-closed checks.",
+      "port_record": "publication/nvidia-smoke-port-20261106.json",
+      "port_date_jst": "2026-11-06"
+    },
+    {
+      "path": "ops/host-maintenance/systemd/stream-v3-nvidia-smoke.timer",
+      "source_role": "nvidia-smoke-source-test-or-guide",
+      "before_sha256": null,
+      "source_sha256": "0a2798535e3112e3ae6717f40b1fbc5b3dcca0c3370ae757c86a63a67bf0d750",
+      "public_sha256": "0a2798535e3112e3ae6717f40b1fbc5b3dcca0c3370ae757c86a63a67bf0d750",
+      "decision": "Port the bounded 48-hour observer and maintenance handoff; retain public defaults, English prose, fixed window, durable history and fail-closed checks.",
+      "port_record": "publication/nvidia-smoke-port-20261106.json",
+      "port_date_jst": "2026-11-06"
+    },
+    {
+      "path": "ops/host-maintenance/systemd/stream-v3-nvidia-smoke-launch.service",
+      "source_role": "nvidia-smoke-source-test-or-guide",
+      "before_sha256": null,
+      "source_sha256": "5232d8cabd7a53c45fc5f548f4aa004583310901d3f318543768adbbbbdc3ccc",
+      "public_sha256": "ddcc2b5c862e21452569b714ad622b9ea86978cb0ce7fbce9a396425d23a8570",
+      "decision": "Port the bounded 48-hour observer and maintenance handoff; retain public defaults, English prose, fixed window, durable history and fail-closed checks.",
+      "port_record": "publication/nvidia-smoke-port-20261106.json",
+      "port_date_jst": "2026-11-06"
+    },
+    {
+      "path": "ops/host-maintenance/systemd/stream-v3-nvidia-smoke-launch.timer",
+      "source_role": "nvidia-smoke-source-test-or-guide",
+      "before_sha256": null,
+      "source_sha256": "213a36eba01d2af732c8c3df62864e901a2f8fbea5c64d0cba51c4f6c4a58d1c",
+      "public_sha256": "213a36eba01d2af732c8c3df62864e901a2f8fbea5c64d0cba51c4f6c4a58d1c",
+      "decision": "Port the bounded 48-hour observer and maintenance handoff; retain public defaults, English prose, fixed window, durable history and fail-closed checks.",
+      "port_record": "publication/nvidia-smoke-port-20261106.json",
+      "port_date_jst": "2026-11-06"
+    },
+    {
+      "path": "tests/test_nvidia_driver_smoke.py",
+      "source_role": "nvidia-smoke-source-test-or-guide",
+      "before_sha256": null,
+      "source_sha256": "aed355334054f7eee298201adcbb2a24b02f0a989c69b2f4fe3657fd8a55059a",
+      "public_sha256": "acfc7b83a348167ef9f00d6f5a299ad8b3fe07ee10bfba15665da1acc0101256",
+      "decision": "Port the bounded 48-hour observer and maintenance handoff; retain public defaults, English prose, fixed window, durable history and fail-closed checks.",
+      "port_record": "publication/nvidia-smoke-port-20261106.json",
+      "port_date_jst": "2026-11-06",
+      "before_nvidia_recovery_policy_sha256": "aed355334054f7eee298201adcbb2a24b02f0a989c69b2f4fe3657fd8a55059a",
+      "nvidia_recovery_policy_record": "publication/nvidia-smoke-recovery-policy-20261107.json",
+      "nvidia_recovery_policy_source_sha256": "0581dc1c660c4ce210abc9756b241146679832bbf787b48dab8fc37aa902da0d",
+      "before_nvidia_pod_transitions_sha256": "0581dc1c660c4ce210abc9756b241146679832bbf787b48dab8fc37aa902da0d",
+      "nvidia_pod_transitions_record": "publication/nvidia-smoke-pod-transitions-20261107.json",
+      "nvidia_pod_transitions_source_sha256": "acfc7b83a348167ef9f00d6f5a299ad8b3fe07ee10bfba15665da1acc0101256"
+    },
+    {
+      "path": "tests/test_nvidia_smoke_after_maintenance.py",
+      "source_role": "nvidia-smoke-source-test-or-guide",
+      "before_sha256": null,
+      "source_sha256": "3fbcbceaaaf3deba4312bd089b13c8de4bdff208a6bbdd1e8a09097fc93cecad",
+      "public_sha256": "3fbcbceaaaf3deba4312bd089b13c8de4bdff208a6bbdd1e8a09097fc93cecad",
+      "decision": "Port the bounded 48-hour observer and maintenance handoff; retain public defaults, English prose, fixed window, durable history and fail-closed checks.",
+      "port_record": "publication/nvidia-smoke-port-20261106.json",
+      "port_date_jst": "2026-11-06"
+    },
+    {
+      "path": "tests/test_nvidia_smoke_finish_maintenance.py",
+      "source_role": "nvidia-smoke-source-test-or-guide",
+      "before_sha256": null,
+      "source_sha256": "100c2d196b324d8fdebd9705e0266f11148c0a234683f5f342dcbd3dc352235f",
+      "public_sha256": "27c01b0638de049db9202155dbe77cd5d9bef27a0dee20490cd7b5fc1728818c",
+      "decision": "Port the bounded 48-hour observer and maintenance handoff; retain public defaults, English prose, fixed window, durable history and fail-closed checks.",
+      "port_record": "publication/nvidia-smoke-port-20261106.json",
+      "port_date_jst": "2026-11-06"
+    },
+    {
+      "path": "tests/test_map_gpu_observation.py",
+      "source_role": "nvidia-smoke-source-test-or-guide",
+      "before_sha256": null,
+      "source_sha256": "add04dd3177f5e20e30664db3822f4052f29f86693e890e089cad7ca2652b764",
+      "public_sha256": "add04dd3177f5e20e30664db3822f4052f29f86693e890e089cad7ca2652b764",
+      "decision": "Port the bounded 48-hour observer and maintenance handoff; retain public defaults, English prose, fixed window, durable history and fail-closed checks.",
+      "port_record": "publication/nvidia-smoke-port-20261106.json",
+      "port_date_jst": "2026-11-06"
+    },
+    {
+      "path": "docs/v3/nvidia-driver-smoke.md",
+      "source_role": "nvidia-smoke-source-test-or-guide",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "5deb9433ef61cb76c33c8755eebc6386eb18897266191d732fe847ea001cf736",
+      "decision": "Port the bounded 48-hour observer and maintenance handoff; retain public defaults, English prose, fixed window, durable history and fail-closed checks.",
+      "port_record": "publication/nvidia-smoke-port-20261106.json",
+      "port_date_jst": "2026-11-06",
+      "before_nvidia_recovery_policy_sha256": "33dd62836e9b8392ca8582e6c823d46341031d4f876bc63747e7cf78e3c6ba2a",
+      "nvidia_recovery_policy_record": "publication/nvidia-smoke-recovery-policy-20261107.json",
+      "nvidia_recovery_policy_source_sha256": null,
+      "before_nvidia_pod_transitions_sha256": "3790a3683cf87d563bf0828da6acc8453e8a232805aa5477c113ef3b704adf2d",
+      "nvidia_pod_transitions_record": "publication/nvidia-smoke-pod-transitions-20261107.json",
+      "nvidia_pod_transitions_source_sha256": null
+    },
+    {
+      "path": "ops/host-maintenance/README.md",
+      "source_role": "nvidia-smoke-source-test-or-guide",
+      "before_sha256": "360eabd2db9b5aab3e047cc9326badb27f74a5d292bca4c9b29c6aafb1f31715",
+      "source_sha256": null,
+      "public_sha256": "c3804c340dfd61460c1f6283ecedd8f46c10821d8252d2f76a8daca99a7f5e4c",
+      "decision": "Port the bounded 48-hour observer and maintenance handoff; retain public defaults, English prose, fixed window, durable history and fail-closed checks.",
+      "port_record": "publication/nvidia-smoke-port-20261106.json",
+      "port_date_jst": "2026-11-06"
     }
   ],
   "omissions": [
@@ -7817,7 +7988,10 @@
     "publication/observation-release-provenance-20261103.json",
     "publication/player-reception-qualification-20261103.json",
     "publication/r2-publication-transport-port-20261103.json",
-    "publication/maintenance-notifications-port-20261106.json"
+    "publication/nvidia-smoke-port-20261106.json",
+    "publication/maintenance-notifications-port-20261106.json",
+    "publication/nvidia-smoke-recovery-policy-20261107.json",
+    "publication/nvidia-smoke-pod-transitions-20261107.json"
   ],
   "evidence_checkpoint_cutoff_jst": "2026-10-14T00:04:57+09:00",
   "documentation_audience": "hiring and technical reviewers",
@@ -8281,5 +8455,33 @@
       "Raw monitoring state, private reasons and operational evidence"
     ],
     "judgment_boundary": "Presentation-only detail. Preserve alert thresholds, SLI calculations and recovery authority."
+  },
+  "nvidia_smoke_port": {
+    "date_jst": "2026-11-06",
+    "record": "publication/nvidia-smoke-port-20261106.json",
+    "scope": "public-checkout-only",
+    "deployment_performed": false,
+    "production_runtime_changed": false,
+    "physical_48_hour_qualification_performed": false,
+    "commit_or_push_performed": false,
+    "operation_flags_scope": "Flags describe the dated port preparation before Git publication; later Git history records publication separately."
+  },
+  "nvidia_smoke_recovery_policy": {
+    "record": "publication/nvidia-smoke-recovery-policy-20261107.json",
+    "date_jst": "2026-11-07",
+    "scope": "public-checkout-only",
+    "policy": "driver_with_transport_recovery_v2",
+    "deployment_performed": false,
+    "commit_or_push_performed": false,
+    "operation_flags_scope": "Flags describe the dated port preparation before Git publication; later Git history records publication separately."
+  },
+  "nvidia_smoke_pod_transitions": {
+    "record": "publication/nvidia-smoke-pod-transitions-20261107.json",
+    "date_jst": "2026-11-07",
+    "scope": "public-checkout-only",
+    "policy": "driver_with_runtime_transitions_v3",
+    "deployment_performed": false,
+    "commit_or_push_performed": false,
+    "operation_flags_scope": "Flags describe the dated port preparation before Git publication; later Git history records publication separately."
   }
 }

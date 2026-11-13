@@ -1,0 +1,68 @@
+{
+  "schema": "stream.public_port_record.v1",
+  "port_date_jst": "2026-11-07",
+  "scope": "Public checkout only: owned Pod/container/encoder transitions in a fixed driver-observation window.",
+  "policy": "driver_with_runtime_transitions_v3",
+  "fixed_duration_sec": 172800,
+  "runtime_transition_limit_sec": 300,
+  "predecessor_record": "publication/nvidia-smoke-recovery-policy-20261107.json",
+  "commit_performed": false,
+  "push_performed": false,
+  "deployment_performed": false,
+  "production_runtime_changed": false,
+  "physical_pod_update_test_performed": false,
+  "physical_48_hour_qualification_performed": false,
+  "provider_or_player_verified": false,
+  "contract": [
+    "Keep host, boot, GPU UUID and driver/package binding; verify ReplicaSet-to-Deployment ownership and node before following a successor.",
+    "Observe ready old Pods during overlap; require two valid progressing successor observations before accepting a new runtime epoch.",
+    "Record immutable runtime segments, counter-epoch resets, validated runtime and unverified startup time; do not claim uninterrupted encoding.",
+    "Keep finite transition deadlines across flapping Pods and network outages; reject unresolved transitions at the original 48-hour endpoint.",
+    "An exact-source v2-to-v3 observer handoff appends lineage without replacing previous samples or changing run start/deadline; reject terminal/stale runs and replay."
+  ],
+  "validation": {
+    "related_tests_passed": 170,
+    "subtests_passed": 55,
+    "simulated_48h_includes_both_days_pod_updates": true,
+    "public_port": {
+      "status": "PASS",
+      "issue_count": 0
+    },
+    "public_language": "PASS",
+    "documentation": {
+      "status": "PASS",
+      "tests_passed": 31,
+      "subtests_passed": 1835
+    },
+    "secret_scan": {
+      "status": "PASS",
+      "tool": "gitleaks detect --no-git --redact",
+      "findings": 0
+    }
+  },
+  "excluded": [
+    "Runtime data, raw evidence, credentials, working machine/GPU/boot/Pod/session identities and installed release paths.",
+    "Production rollout, fault injection, controller/policy changes and publication."
+  ],
+  "files": [
+    {
+      "path": "ops/host-maintenance/bin/nvidia_driver_smoke.py",
+      "before_sha256": "720274f2d1a1033749a7701fc84830d5089290751ee5b212acb053a059a0f6bc",
+      "source_sha256": "75da18c9c5ccaca093a206e837ab70a68ef94870110438baa4c6537d34200a8b",
+      "public_sha256": "38367cbefd4565cfe926d170d6c1f68da3130d02940168ddd4768afa7f3d33fe"
+    },
+    {
+      "path": "tests/test_nvidia_driver_smoke.py",
+      "before_sha256": "0581dc1c660c4ce210abc9756b241146679832bbf787b48dab8fc37aa902da0d",
+      "source_sha256": "acfc7b83a348167ef9f00d6f5a299ad8b3fe07ee10bfba15665da1acc0101256",
+      "public_sha256": "acfc7b83a348167ef9f00d6f5a299ad8b3fe07ee10bfba15665da1acc0101256"
+    },
+    {
+      "path": "docs/v3/nvidia-driver-smoke.md",
+      "before_sha256": "3790a3683cf87d563bf0828da6acc8453e8a232805aa5477c113ef3b704adf2d",
+      "source_sha256": null,
+      "public_sha256": "5deb9433ef61cb76c33c8755eebc6386eb18897266191d732fe847ea001cf736"
+    }
+  ],
+  "operation_flags_scope": "Commit, push, deployment and validation fields describe the dated port preparation only, before its Git publication. They do not describe later repository publication or runtime state. The file inventory retains that dated snapshot; current public-file digests are in publication/source-map.json."
+}

@@ -1,0 +1,32 @@
+[Unit]
+Description=Start NVIDIA smoke once after confirmed maintenance recovery
+After=local-fs.target
+ConditionPathExists=/var/lib/stream-v3-nvidia-smoke/launch.json
+
+[Service]
+Type=oneshot
+Environment=KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+ExecStart=/usr/bin/python3 -I -B /opt/stream-v3-nvidia-smoke/current/ops/host-maintenance/bin/nvidia_smoke_after_maintenance.py tick
+StateDirectory=stream-v3-nvidia-smoke
+StateDirectoryMode=0700
+UMask=0077
+SuccessExitStatus=1
+TimeoutStartSec=110
+KillMode=control-group
+Nice=10
+CPUQuota=10%
+MemoryMax=192M
+TasksMax=32
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+CapabilityBoundingSet=
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+IPAddressDeny=any
+IPAddressAllow=localhost
+ReadOnlyPaths=/var/lib/stream-v3-manual-maintenance
+InaccessiblePaths=-/run/stream-v3-control -/run/credentials -/var/lib/stream-recovery-control

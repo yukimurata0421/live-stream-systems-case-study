@@ -1,0 +1,272 @@
+{
+  "schema": "stream.public_port_record.v1",
+  "port_date_jst": "2026-11-06",
+  "scope": "Public checkout only: NVIDIA R580 48-hour read-only observation, bounded timers, one-time maintenance handoff, confirmation companion and regressions.",
+  "prior_public_head": "1c1d6f5e2d1ccd798735e3186d932a3b2a7eff75",
+  "development_source_commit": "656c15a6c0b21081d7413a29d03d0ec4111a19ad",
+  "source_includes_uncommitted_changes": true,
+  "commit_performed": false,
+  "push_performed": false,
+  "deployment_performed": false,
+  "production_runtime_changed": false,
+  "physical_48_hour_qualification_performed": false,
+  "provider_or_player_verified": false,
+  "adaptations": [
+    "Preserve the public map probe repository/state defaults; merge NVIDIA process/library recognition and GPU-only bounded reads.",
+    "Reuse the public transport and observation-time parsers without replacing their localized public versions.",
+    "Replace the private maintenance release path with the explicit public installation path; verify four pins against public repository bytes.",
+    "Always test the public maintenance core, without importing the installed host release.",
+    "Translate public prose and prompts to English; keep machine identifiers and state checks.",
+    "Keep 172800-second duration, 150-second maximum gap and completion-based 60-second timer."
+  ],
+  "excluded": [
+    "Working credentials, provider destinations, machine/GPU/boot/session identities and live configuration.",
+    "Runtime databases, raw logs/evidence, package archives, driver-install/module-reload scripts and the operated run history.",
+    "Unrelated pending public documentation changes, production deployment, timer activation and external publication."
+  ],
+  "validation": {
+    "targeted_tests": {
+      "passed": 151,
+      "subtests_passed": 58,
+      "command": "python3 -B -m pytest -q tests/test_nvidia_driver_smoke.py tests/test_nvidia_smoke_after_maintenance.py tests/test_nvidia_smoke_finish_maintenance.py tests/test_map_gpu_observation.py tests/test_stream_v3_map_runtime_probe.py tests/test_transport_recorder.py tests/test_manual_maintenance.py"
+    },
+    "public_port": {
+      "status": "PASS",
+      "issue_count": 0
+    },
+    "public_language": {
+      "status": "PASS",
+      "unreviewed_prose_errors": 0
+    },
+    "documentation_regressions": {
+      "status": "PASS",
+      "tests_passed": 31,
+      "subtests_passed": 1825
+    },
+    "secret_scan": {
+      "status": "PASS",
+      "tool": "gitleaks detect --no-git --redact",
+      "scope": "Selected public payload, including source map and port record",
+      "findings": 0
+    },
+    "systemd_units": {
+      "status": "PASS",
+      "exit_code": 0,
+      "installed_or_started": false,
+      "notes": "Only existing host xfs unit deprecation notices; no target-unit error."
+    },
+    "clock_dependency_sync": "PASS",
+    "unrelated_existing_changes_preserved": true
+  },
+  "files": [
+    {
+      "path": "ops/host-maintenance/bin/nvidia_driver_smoke.py",
+      "source_role": "nvidia-smoke-source-test-or-guide",
+      "before_sha256": null,
+      "source_sha256": "c90a008776082f7820dc29ed34b6424e5695541e372c52c3b2f98ab1c2b6947a",
+      "public_sha256": "39367fbf9fca457a894b1629d4fa7bb37499d539cc642728643aa0b4b98edc5b",
+      "decision": "Port the bounded 48-hour observer and maintenance handoff; retain public defaults, English prose, fixed window, durable history and fail-closed checks.",
+      "port_record": "publication/nvidia-smoke-port-20261106.json",
+      "port_date_jst": "2026-11-06"
+    },
+    {
+      "path": "ops/host-maintenance/bin/nvidia_smoke_after_maintenance.py",
+      "source_role": "nvidia-smoke-source-test-or-guide",
+      "before_sha256": null,
+      "source_sha256": "c5e8103735ef7a3b2350181df00ee31c0c5cd97f4ebb561809f441bfff24dee4",
+      "public_sha256": "a095e68be9193c825ae884f040e481edbc2fde4fcbb3b361c1f12139d7df2f05",
+      "decision": "Port the bounded 48-hour observer and maintenance handoff; retain public defaults, English prose, fixed window, durable history and fail-closed checks.",
+      "port_record": "publication/nvidia-smoke-port-20261106.json",
+      "port_date_jst": "2026-11-06"
+    },
+    {
+      "path": "ops/host-maintenance/bin/nvidia_smoke_finish_maintenance.py",
+      "source_role": "nvidia-smoke-source-test-or-guide",
+      "before_sha256": null,
+      "source_sha256": "d95d4034c4afe015842166b16f1ac247c7bbe6943c850407ff1bf2b765f3ded1",
+      "public_sha256": "fa5e7f8491fff89ec7b54235cc6f5afc0a3ab8dd2ce30541bba2480a91a20b78",
+      "decision": "Port the bounded 48-hour observer and maintenance handoff; retain public defaults, English prose, fixed window, durable history and fail-closed checks.",
+      "port_record": "publication/nvidia-smoke-port-20261106.json",
+      "port_date_jst": "2026-11-06"
+    },
+    {
+      "path": "ops/host-maintenance/systemd/stream-v3-nvidia-smoke.service",
+      "source_role": "nvidia-smoke-source-test-or-guide",
+      "before_sha256": null,
+      "source_sha256": "68bb1df2643c4e103dd8a2a49b3ea692420c53b0e873682a83f77d00d94f0c3c",
+      "public_sha256": "68bb1df2643c4e103dd8a2a49b3ea692420c53b0e873682a83f77d00d94f0c3c",
+      "decision": "Port the bounded 48-hour observer and maintenance handoff; retain public defaults, English prose, fixed window, durable history and fail-closed checks.",
+      "port_record": "publication/nvidia-smoke-port-20261106.json",
+      "port_date_jst": "2026-11-06"
+    },
+    {
+      "path": "ops/host-maintenance/systemd/stream-v3-nvidia-smoke.timer",
+      "source_role": "nvidia-smoke-source-test-or-guide",
+      "before_sha256": null,
+      "source_sha256": "0a2798535e3112e3ae6717f40b1fbc5b3dcca0c3370ae757c86a63a67bf0d750",
+      "public_sha256": "0a2798535e3112e3ae6717f40b1fbc5b3dcca0c3370ae757c86a63a67bf0d750",
+      "decision": "Port the bounded 48-hour observer and maintenance handoff; retain public defaults, English prose, fixed window, durable history and fail-closed checks.",
+      "port_record": "publication/nvidia-smoke-port-20261106.json",
+      "port_date_jst": "2026-11-06"
+    },
+    {
+      "path": "ops/host-maintenance/systemd/stream-v3-nvidia-smoke-launch.service",
+      "source_role": "nvidia-smoke-source-test-or-guide",
+      "before_sha256": null,
+      "source_sha256": "5232d8cabd7a53c45fc5f548f4aa004583310901d3f318543768adbbbbdc3ccc",
+      "public_sha256": "5232d8cabd7a53c45fc5f548f4aa004583310901d3f318543768adbbbbdc3ccc",
+      "decision": "Port the bounded 48-hour observer and maintenance handoff; retain public defaults, English prose, fixed window, durable history and fail-closed checks.",
+      "port_record": "publication/nvidia-smoke-port-20261106.json",
+      "port_date_jst": "2026-11-06"
+    },
+    {
+      "path": "ops/host-maintenance/systemd/stream-v3-nvidia-smoke-launch.timer",
+      "source_role": "nvidia-smoke-source-test-or-guide",
+      "before_sha256": null,
+      "source_sha256": "213a36eba01d2af732c8c3df62864e901a2f8fbea5c64d0cba51c4f6c4a58d1c",
+      "public_sha256": "213a36eba01d2af732c8c3df62864e901a2f8fbea5c64d0cba51c4f6c4a58d1c",
+      "decision": "Port the bounded 48-hour observer and maintenance handoff; retain public defaults, English prose, fixed window, durable history and fail-closed checks.",
+      "port_record": "publication/nvidia-smoke-port-20261106.json",
+      "port_date_jst": "2026-11-06"
+    },
+    {
+      "path": "tests/test_nvidia_driver_smoke.py",
+      "source_role": "nvidia-smoke-source-test-or-guide",
+      "before_sha256": null,
+      "source_sha256": "aed355334054f7eee298201adcbb2a24b02f0a989c69b2f4fe3657fd8a55059a",
+      "public_sha256": "aed355334054f7eee298201adcbb2a24b02f0a989c69b2f4fe3657fd8a55059a",
+      "decision": "Port the bounded 48-hour observer and maintenance handoff; retain public defaults, English prose, fixed window, durable history and fail-closed checks.",
+      "port_record": "publication/nvidia-smoke-port-20261106.json",
+      "port_date_jst": "2026-11-06"
+    },
+    {
+      "path": "tests/test_nvidia_smoke_after_maintenance.py",
+      "source_role": "nvidia-smoke-source-test-or-guide",
+      "before_sha256": null,
+      "source_sha256": "3fbcbceaaaf3deba4312bd089b13c8de4bdff208a6bbdd1e8a09097fc93cecad",
+      "public_sha256": "3fbcbceaaaf3deba4312bd089b13c8de4bdff208a6bbdd1e8a09097fc93cecad",
+      "decision": "Port the bounded 48-hour observer and maintenance handoff; retain public defaults, English prose, fixed window, durable history and fail-closed checks.",
+      "port_record": "publication/nvidia-smoke-port-20261106.json",
+      "port_date_jst": "2026-11-06"
+    },
+    {
+      "path": "tests/test_nvidia_smoke_finish_maintenance.py",
+      "source_role": "nvidia-smoke-source-test-or-guide",
+      "before_sha256": null,
+      "source_sha256": "100c2d196b324d8fdebd9705e0266f11148c0a234683f5f342dcbd3dc352235f",
+      "public_sha256": "27c01b0638de049db9202155dbe77cd5d9bef27a0dee20490cd7b5fc1728818c",
+      "decision": "Port the bounded 48-hour observer and maintenance handoff; retain public defaults, English prose, fixed window, durable history and fail-closed checks.",
+      "port_record": "publication/nvidia-smoke-port-20261106.json",
+      "port_date_jst": "2026-11-06"
+    },
+    {
+      "path": "tests/test_map_gpu_observation.py",
+      "source_role": "nvidia-smoke-source-test-or-guide",
+      "before_sha256": null,
+      "source_sha256": "add04dd3177f5e20e30664db3822f4052f29f86693e890e089cad7ca2652b764",
+      "public_sha256": "add04dd3177f5e20e30664db3822f4052f29f86693e890e089cad7ca2652b764",
+      "decision": "Port the bounded 48-hour observer and maintenance handoff; retain public defaults, English prose, fixed window, durable history and fail-closed checks.",
+      "port_record": "publication/nvidia-smoke-port-20261106.json",
+      "port_date_jst": "2026-11-06"
+    },
+    {
+      "path": "docs/v3/nvidia-driver-smoke.md",
+      "source_role": "nvidia-smoke-source-test-or-guide",
+      "before_sha256": null,
+      "source_sha256": null,
+      "public_sha256": "33dd62836e9b8392ca8582e6c823d46341031d4f876bc63747e7cf78e3c6ba2a",
+      "decision": "Port the bounded 48-hour observer and maintenance handoff; retain public defaults, English prose, fixed window, durable history and fail-closed checks.",
+      "port_record": "publication/nvidia-smoke-port-20261106.json",
+      "port_date_jst": "2026-11-06"
+    },
+    {
+      "path": "ops/scripts/stream_v3_map_runtime_probe.py",
+      "source_role": "nvidia-smoke-source-test-or-guide",
+      "before_sha256": "0711ee256a2a225fc91bbb655a7d60c3a92239f71e2dc4b065aa506cc80e20b3",
+      "source_sha256": "a982179f92cf95c15f018b3b58d667035b986b03a1d603ea0576fd560575e265",
+      "public_sha256": "0a0e11c8d74343397f614cbb589e7fc5067d8d25143ba460e31383e649b54c94",
+      "decision": "Port the bounded 48-hour observer and maintenance handoff; retain public defaults, English prose, fixed window, durable history and fail-closed checks.",
+      "port_record": "publication/nvidia-smoke-port-20261106.json",
+      "port_date_jst": "2026-11-06"
+    },
+    {
+      "path": "ops/host-maintenance/README.md",
+      "source_role": "nvidia-smoke-source-test-or-guide",
+      "before_sha256": "360eabd2db9b5aab3e047cc9326badb27f74a5d292bca4c9b29c6aafb1f31715",
+      "source_sha256": null,
+      "public_sha256": "c3804c340dfd61460c1f6283ecedd8f46c10821d8252d2f76a8daca99a7f5e4c",
+      "decision": "Port the bounded 48-hour observer and maintenance handoff; retain public defaults, English prose, fixed window, durable history and fail-closed checks.",
+      "port_record": "publication/nvidia-smoke-port-20261106.json",
+      "port_date_jst": "2026-11-06"
+    },
+    {
+      "path": "docs/v3/manual-maintenance.md",
+      "source_role": "nvidia-smoke-source-test-or-guide",
+      "before_sha256": "a618e3041273b51248cc8ca6a12be7c4394323fe83191dfcc7b72c3fce1b6748",
+      "source_sha256": null,
+      "public_sha256": "54adf5b12efeb8a66fabd2ef3692971aa0698309e96ef75ea944f8f53491af55",
+      "decision": "Port the bounded 48-hour observer and maintenance handoff; retain public defaults, English prose, fixed window, durable history and fail-closed checks.",
+      "port_record": "publication/nvidia-smoke-port-20261106.json",
+      "port_date_jst": "2026-11-06"
+    },
+    {
+      "path": "docs/00_INDEX.md",
+      "source_role": "nvidia-smoke-source-test-or-guide",
+      "before_sha256": "b859a02ff2926d34b1347710ec642781a6981b3babd511a05b470d90509d58d5",
+      "source_sha256": "82074416718e1cdcc2556b3e59dcb3e931b4c5a5d534cf37e93856afdfa640a7",
+      "public_sha256": "422cb75a196717c6cc450b22b095fa84b9b048473e8d45cf5e7faa758eb32040",
+      "decision": "Port the bounded 48-hour observer and maintenance handoff; retain public defaults, English prose, fixed window, durable history and fail-closed checks.",
+      "port_record": "publication/nvidia-smoke-port-20261106.json",
+      "port_date_jst": "2026-11-06"
+    },
+    {
+      "path": "docs/v3/README.md",
+      "source_role": "nvidia-smoke-source-test-or-guide",
+      "before_sha256": "eac8ea3e78290f1d73dc03dc59278999efadedda416fac97e44b8b67e6316c84",
+      "source_sha256": null,
+      "public_sha256": "e2454215d6c8d009097f4e910aac9bb3eae346984a9e8ca47c2157adeca00ffd",
+      "decision": "Port the bounded 48-hour observer and maintenance handoff; retain public defaults, English prose, fixed window, durable history and fail-closed checks.",
+      "port_record": "publication/nvidia-smoke-port-20261106.json",
+      "port_date_jst": "2026-11-06"
+    }
+  ],
+  "unchanged_dependency_bindings": [
+    {
+      "path": "ops/scripts/stream_v3_transport_recorder.py",
+      "public_sha256": "8218758a3e87661cfb3bfd979966548555caf803c1add5c0d2ffdcafe2b2f6a4"
+    },
+    {
+      "path": "src/stream_core/common/observation_time.py",
+      "public_sha256": "05561e8568856d06dfa79a35b5ba0020589ae3d2efd339279d2e5384b6153900"
+    },
+    {
+      "path": "src/stream_core/common/__init__.py",
+      "public_sha256": "c894d981adb945ce9d2b6d0e950166ac5347c582a942b33c339eba298391a2ba"
+    },
+    {
+      "path": "tests/test_stream_v3_map_runtime_probe.py",
+      "public_sha256": "0f736a3b770ac4fafde55e8a5ae9acd7b700a8e7ccbef0ca8ecaa37ea7b91a39"
+    },
+    {
+      "path": "tests/test_manual_maintenance.py",
+      "public_sha256": "11d495f587202b1742a2a922085f142eebd2d21cd696cc57033454bffc5c2bde"
+    },
+    {
+      "path": "ops/selfheal/manual_maintenance.py",
+      "public_sha256": "e1333cd2161eac220d5417e569effebb6cef75fb728430a4e0f30cb384664125"
+    },
+    {
+      "path": "ops/selfheal/maintenance_host.py",
+      "public_sha256": "af65d55ab88a36475f93c1fec97ca4e013dc3a1b5797b30e82489c29c592f13c"
+    },
+    {
+      "path": "ops/selfheal/maintenance_state.py",
+      "public_sha256": "aa7e1222767254651a46b46ec8422dc39ccf40c54cda88735f9a5c22a68531e9"
+    },
+    {
+      "path": "ops/selfheal/stream-v3-maintenance",
+      "public_sha256": "2980febf7aa3ddb52d723fb2b55295f48e885fab4eed3acc7c5b3c5de4adbabe"
+    }
+  ],
+  "operation_flags_scope": "Commit, push, deployment and validation fields describe the dated port preparation only, before its Git publication. They do not describe later repository publication or runtime state. The file inventory retains that dated snapshot; current public-file digests are in publication/source-map.json."
+}

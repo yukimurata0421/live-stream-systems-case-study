@@ -48,12 +48,34 @@ matters for the interview:
 | How should a failover act when its own observations are uncertain? | [One fallback rule, revised under test](v3/fallback-policy-revisions.md), then the [decision contract](v3/fallback-decision-contract.md). |
 | How are observation meaning, source identity and viewer evidence checked? | [Observation contract](v3/observation-standardization.md), [release provenance](v3/observation-release-provenance.md), then [current evidence](current-status.md). |
 | Why split observation from recovery authorization (design study, not enabled)? | [CRA rationale](../recovery-control/docs/why-cra.md) and [CRA architecture](../recovery-control/docs/architecture.md). |
-| What prevents uncertain actions from being retried? | [Harness and effect evidence](../recovery-control/docs/harness-trust.md). |
+| What prevents uncertain actions from being retried? | [Local reflex invariants](../recovery-control/docs/local-reflex-authority.md#invariants), then the [implementation and test path below](#no-retry-review-path). |
 | Who owns incident and measurement state? | [Monitoring architecture](../monitoring-v4/docs/architecture.md). |
 | Why are the uptime and URL-continuity claims different? | [Dated continuity evidence](same-url-continuity-evidence.md). |
 
 Choose one failure to explore in depth. The record includes operational failures,
 a failed test harness, and corrected observations; these have different meanings.
+
+## No-Retry Review Path
+
+Follow the rule through its implementation before assessing the test evidence:
+
+1. **Contract:** [Local Reflex Authority](../recovery-control/docs/local-reflex-authority.md#conditions-for-a-restart)
+   defines durable claims, generation limits, and read-only queries for unknown outcomes.
+2. **Implementation:** the [agent store](../recovery-control/src/cra/store.py)
+   reserves an attempt before sending; [request construction](../recovery-control/src/cra/effect.py)
+   derives its identity from the target generation. The
+   [runtime boundary](../src/runtime_boundary/server.py) and
+   [EffectLedger](../src/runtime_boundary/ledger.py) enforce admission and persistent fences.
+3. **Tests and limits:** [executor compatibility tests](../recovery-control/tests/reflex/test_reflex_executor_compat.py)
+   exercise duplicate requests and lost replies;
+   [fence reconciliation tests](../recovery-control/tests/reflex/test_reflex_executor_fence_reconciliation.py)
+   check the transition to a distinct successor. [Harness trust](../recovery-control/docs/harness-trust.md)
+   explains the isolated effect boundary and what these tests cannot establish.
+
+The shipped public configuration remains `dry_run` and production-disabled.
+The [dated operated checkpoint](../recovery-control/docs/local-reflex-authority.md)
+is separate from these source and test paths, which do not establish new
+production `enforce` authority or viewer recovery.
 
 ## Evaluation Rubric
 

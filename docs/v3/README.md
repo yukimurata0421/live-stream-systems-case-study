@@ -42,6 +42,9 @@ Selected deeper paths:
   [why the learned throughput baseline was retired](route-baseline-retirement-decision.md).
 - [YouTube lifecycle safety](youtube-lifecycle-safety.md): what must be true
   before a destructive YouTube action.
+- [NVIDIA driver smoke pipeline](nvidia-driver-smoke.md): a fixed 48-hour
+  read-only observation campaign, serialized SQLite writers and an optional
+  operator-confirmed maintenance handoff.
 
 Superseded pages open with a banner that names the replacement. Hosts and data
 paths are described once in
