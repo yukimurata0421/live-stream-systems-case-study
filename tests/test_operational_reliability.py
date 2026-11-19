@@ -762,7 +762,7 @@ class OperationalReliabilityTests(unittest.TestCase):
             return {
                 "timeSeries": [
                     {
-                        "metric": {"labels": {"checker_location": f"region-{index}"}},
+                        "metric": {"labels": {"check_id": "fixture-check", "checker_location": f"region-{index}"}},
                         "points": [
                             {
                                 "interval": {"endTime": "2026-08-10T00:09:00Z"},
@@ -795,7 +795,7 @@ class OperationalReliabilityTests(unittest.TestCase):
         payload = {
             "timeSeries": [
                 {
-                    "metric": {"labels": {"checker_location": "region-1"}},
+                    "metric": {"labels": {"check_id": "fixture-check", "checker_location": "region-1"}},
                     "points": [
                         {
                             "interval": {"endTime": "2026-08-10T00:09:00Z"},
@@ -824,7 +824,7 @@ class OperationalReliabilityTests(unittest.TestCase):
         payload = {
             "timeSeries": [
                 {
-                    "metric": {"labels": {"checker_location": f"region-{index}"}},
+                    "metric": {"labels": {"check_id": "fixture-check", "checker_location": f"region-{index}"}},
                     "points": [
                         {
                             "interval": {"endTime": "2026-08-10T00:09:00Z"},
@@ -851,7 +851,7 @@ class OperationalReliabilityTests(unittest.TestCase):
         payload = {
             "timeSeries": [
                 {
-                    "metric": {"labels": {"checker_location": f"region-{index}"}},
+                    "metric": {"labels": {"check_id": "fixture-check", "checker_location": f"region-{index}"}},
                     "points": [
                         {
                             "interval": {"endTime": "2026-08-10T00:09:00Z"},

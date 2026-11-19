@@ -37,6 +37,18 @@ def parse_target(value: str) -> tuple[str, str]:
     return name.strip(), host.strip().lower()
 
 
+def target_options(values: list[str], targets: dict[str, str]) -> dict[str, str]:
+    options = {}
+    for value in values:
+        name, separator, setting = value.partition("=")
+        if not separator or name not in targets or not setting.strip():
+            raise ValueError(f"expected configured target=setting, got {value!r}")
+        if name in options and options[name] != setting:
+            raise ValueError(f"conflicting settings for {name!r}")
+        options[name] = setting
+    return options
+
+
 def access_token(gcloud_bin: str, *, timeout_sec: float) -> str:
     try:
         completed = subprocess.run(
@@ -63,33 +75,38 @@ def fetch_time_series(
     start_ts: int,
     end_ts: int,
     timeout_sec: float,
+    check_id: str | None = None,
+    metric_type: str = METRIC_TYPE,
 ) -> dict:
-    query = urllib.parse.urlencode(
-        {
-            "filter": (
-                f'metric.type="{METRIC_TYPE}" '
-                f'AND resource.type="uptime_url" '
-                f'AND resource.labels.host="{host}"'
-            ),
-            "interval.startTime": iso_utc(start_ts),
-            "interval.endTime": iso_utc(end_ts),
-            "view": "FULL",
-            "pageSize": 100,
-        }
-    )
-    url = f"https://monitoring.googleapis.com/v3/projects/{urllib.parse.quote(project, safe='')}/timeSeries?{query}"
-    request = urllib.request.Request(
-        url,
-        headers={
-            "Authorization": f"Bearer {token}",
-            "Accept": "application/json",
-            "User-Agent": "stream-v3-arena-gcp-blackbox-import/1.0",
-            "X-Goog-User-Project": project,
-        },
-    )
+    selector = (f'metric.type={json.dumps(metric_type)} AND resource.type="uptime_url" '
+                f'AND resource.labels.host={json.dumps(host)}')
+    if check_id:
+        selector += f' AND metric.labels.check_id={json.dumps(check_id)}'
+    params = {"filter": selector, "interval.startTime": iso_utc(start_ts),
+              "interval.endTime": iso_utc(end_ts), "view": "FULL", "pageSize": "100"}
+    endpoint = f"https://monitoring.googleapis.com/v3/projects/{urllib.parse.quote(project, safe='')}/timeSeries"
+    headers = {"Authorization": f"Bearer {token}", "Accept": "application/json",
+               "User-Agent": "stream-v3-arena-gcp-blackbox-import/1.0", "X-Goog-User-Project": project}
+    series = []
+    seen_tokens = set()
     try:
-        with urllib.request.urlopen(request, timeout=timeout_sec) as response:
-            return json.load(response)
+        while True:
+            request = urllib.request.Request(f"{endpoint}?{urllib.parse.urlencode(params)}", headers=headers)
+            with urllib.request.urlopen(request, timeout=timeout_sec) as response:
+                page = json.load(response)
+            if not isinstance(page, dict) or page.get("executionErrors") or page.get("unreachable"):
+                raise RuntimeError("monitoring_api:incomplete_response")
+            rows = page.get("timeSeries", [])
+            if not isinstance(rows, list):
+                raise RuntimeError("monitoring_api:invalid_time_series")
+            series.extend(rows)
+            token_next = page.get("nextPageToken")
+            if not token_next:
+                return {"timeSeries": series}
+            if not isinstance(token_next, str) or token_next in seen_tokens:
+                raise RuntimeError("monitoring_api:invalid_page_token")
+            seen_tokens.add(token_next)
+            params["pageToken"] = token_next
     except urllib.error.HTTPError as exc:
         try:
             detail = exc.read(512).decode("utf-8", errors="replace")
@@ -100,15 +117,16 @@ def fetch_time_series(
         raise RuntimeError(f"monitoring_api:{type(exc).__name__}:{str(exc)[:160]}") from exc
 
 
-def latest_location_samples(payload: dict) -> dict[str, dict]:
+def latest_location_samples(series_list: list[dict]) -> dict[str, dict]:
     latest: dict[str, dict] = {}
-    series_list = payload.get("timeSeries") if isinstance(payload.get("timeSeries"), list) else []
     for series in series_list:
         if not isinstance(series, dict):
             continue
         metric = series.get("metric") if isinstance(series.get("metric"), dict) else {}
         labels = metric.get("labels") if isinstance(metric.get("labels"), dict) else {}
-        location = str(labels.get("checker_location") or "unknown")
+        location = labels.get("checker_location")
+        if not isinstance(location, str) or not location:
+            continue
         points = series.get("points") if isinstance(series.get("points"), list) else []
         for point in points:
             if not isinstance(point, dict):
@@ -133,8 +151,21 @@ def assess_target(
     stale_sec: int,
     minimum_locations: int,
     minimum_pass_ratio: float,
+    check_id: str | None = None,
+    expected_locations: tuple[str, ...] = (),
 ) -> dict:
-    samples = latest_location_samples(payload)
+    groups: dict[str, list] = {}
+    series_list = payload.get("timeSeries", [])
+    if not isinstance(series_list, list):
+        series_list = []
+    for series in series_list:
+        if isinstance(series, dict):
+            metric = series.get("metric")
+            labels = metric.get("labels") if isinstance(metric, dict) else None
+            series_id = str(labels.get("check_id") or "") if isinstance(labels, dict) else ""
+            groups.setdefault(series_id, []).append(series)
+    selected_id = check_id or (next(iter(groups)) if len(groups) == 1 else None)
+    samples = latest_location_samples(groups.get(selected_id, []) if selected_id else [])
     fresh = {
         location: sample
         for location, sample in samples.items()
@@ -142,8 +173,17 @@ def assess_target(
     }
     passed_locations = sum(1 for sample in fresh.values() if sample["passed"] is True)
     pass_ratio = passed_locations / len(fresh) if fresh else None
-    latest_ts = max((int(sample["sample_ts"]) for sample in samples.values()), default=0)
-    if len(fresh) < minimum_locations:
+    latest_ts = max((s["sample_ts"] for s in samples.values() if s["sample_ts"] <= now_ts), default=0)
+    if payload.get("import_error"):
+        status = "unknown"
+        reason = "external_evidence_import_unavailable"
+    elif not check_id and len(groups) > 1:
+        status = "unknown"
+        reason = "ambiguous_external_check_id"
+    elif groups and not selected_id:
+        status = "unknown"
+        reason = "external_check_id_missing"
+    elif len(fresh) < minimum_locations:
         status = "unknown"
         reason = "minimum_fresh_checker_locations_not_met"
     elif pass_ratio is not None and pass_ratio >= minimum_pass_ratio:
@@ -159,19 +199,30 @@ def assess_target(
         "status": status,
         "reason": reason,
         "host": host,
+        "configured_check_id": check_id,
+        "check_id": selected_id or None,
+        "observed_check_ids": sorted(key for key in groups if key),
+        "import_error": payload.get("import_error"),
         "latest_sample_at_utc": iso_utc(latest_ts) if latest_ts else None,
         "sample_age_seconds": max(0, now_ts - latest_ts) if latest_ts else None,
         "observed_locations": len(samples),
         "fresh_locations": len(fresh),
         "passed_locations": passed_locations,
+        "failed_locations": len(fresh) - passed_locations,
+        "nonfresh_locations": len(samples) - len(fresh),
+        "quorum_shortfall": max(0, minimum_locations - len(fresh)),
+        "missing_fresh_locations": sorted(set(expected_locations) - fresh.keys()) if expected_locations else None,
+        "fresh_from_utc": iso_utc(min(s["sample_ts"] for s in fresh.values())) if fresh else None,
+        "fresh_through_utc": iso_utc(max(s["sample_ts"] for s in fresh.values())) if fresh else None,
         "pass_ratio": round(pass_ratio, 6) if pass_ratio is not None else None,
         "minimum_locations": minimum_locations,
         "minimum_pass_ratio": minimum_pass_ratio,
         "locations": {
             location: {
                 "passed": sample["passed"],
+                "fresh": location in fresh,
                 "sample_at_utc": iso_utc(int(sample["sample_ts"])),
-                "sample_age_seconds": max(0, now_ts - int(sample["sample_ts"])),
+                "sample_age_seconds": now_ts - int(sample["sample_ts"]),
             }
             for location, sample in sorted(samples.items())
         },
@@ -186,6 +237,8 @@ def build_status(
     stale_sec: int,
     minimum_locations: int,
     minimum_pass_ratio: float,
+    check_ids: dict[str, str] | None = None,
+    expected_locations: dict[str, tuple[str, ...]] | None = None,
 ) -> dict:
     targets = {
         name: assess_target(
@@ -195,6 +248,8 @@ def build_status(
             stale_sec=stale_sec,
             minimum_locations=minimum_locations,
             minimum_pass_ratio=minimum_pass_ratio,
+            check_id=(check_ids or {}).get(name),
+            expected_locations=(expected_locations or {}).get(name, ()),
         )
         for name, (host, payload) in target_payloads.items()
     }
@@ -273,6 +328,8 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--project", default=os.environ.get("STREAM_V3_GCP_MONITORING_PROJECT", ""))
     parser.add_argument("--target", action="append", default=[])
+    parser.add_argument("--check-id", action="append", default=[], metavar="TARGET=ID")
+    parser.add_argument("--expected-locations", action="append", default=[], metavar="TARGET=LOC,LOC")
     parser.add_argument("--gcloud-bin", default="/usr/bin/gcloud")
     parser.add_argument("--timeout-sec", type=float, default=20.0)
     parser.add_argument("--lookback-sec", type=int, default=1200)
@@ -287,21 +344,30 @@ def main() -> int:
     now_ts = args.now or int(datetime.now(timezone.utc).timestamp())
     try:
         targets = dict(parse_target(value) for value in (args.target or DEFAULT_TARGETS))
+        check_ids = target_options(os.environ.get("STREAM_V3_BLACKBOX_CHECK_IDS", "").split() + args.check_id, targets)
+        inventory = target_options(os.environ.get("STREAM_V3_BLACKBOX_EXPECTED_LOCATIONS", "").split()
+                                   + args.expected_locations, targets)
+        expected = {name: tuple(value.split(",")) for name, value in inventory.items()}
+        if any("" in locations for locations in expected.values()):
+            raise ValueError("empty expected checker location")
+        if args.minimum_locations < 1 or not 0 < args.minimum_pass_ratio <= 1 or args.stale_sec < 0:
+            raise ValueError("invalid regional quorum or freshness setting")
         token = access_token(args.gcloud_bin, timeout_sec=args.timeout_sec)
-        payloads = {
-            name: (
-                host,
-                fetch_time_series(
+        payloads = {}
+        for name, host in targets.items():
+            try:
+                payload = fetch_time_series(
                     project=args.project,
                     host=host,
                     token=token,
                     start_ts=now_ts - args.lookback_sec,
                     end_ts=now_ts,
                     timeout_sec=args.timeout_sec,
-                ),
-            )
-            for name, host in targets.items()
-        }
+                    check_id=check_ids.get(name),
+                )
+            except RuntimeError as exc:
+                payload = {"import_error": str(exc)[:240]}
+            payloads[name] = (host, payload)
         status = build_status(
             payloads,
             project=args.project,
@@ -309,6 +375,8 @@ def main() -> int:
             stale_sec=args.stale_sec,
             minimum_locations=args.minimum_locations,
             minimum_pass_ratio=args.minimum_pass_ratio,
+            check_ids=check_ids,
+            expected_locations=expected,
         )
     except (RuntimeError, ValueError) as exc:
         status = {

@@ -7,6 +7,7 @@ import os
 from stream_core.common.json_io import read_json_file
 from stream_core.common import observation_time as timing
 from stream_core.common.viewer_evidence import probe_state, visual_state
+from stream_core.notifications.incidents import public_status_region_summary
 
 
 class Collection(list):
@@ -267,6 +268,11 @@ def reconcile(items, active, state, collection, *, now, config):
         elif ident in active:
             recoveries[ident] = {"sample_id": sample.sample, "source": sample.source,
                                  "age_upper_sec": sample.age_upper, "utc_status": sample.utc_status}
+            if sample.source == "external_blackbox":
+                # Report the payload used to qualify this recovery, even if the file changes before delivery.
+                detail = public_status_region_summary(collection["sources"][sample.source][1])
+                if detail:
+                    recoveries[ident]["checker_result"] = detail
             from stream_core.operational_reliability.maintenance_admission import permits
             if permits(collection['sources'][source_for(ident)][1], ident, now=now.wall):
                 recoveries[ident]['classification'] = 'planned_maintenance_reclassification'

@@ -429,6 +429,24 @@ def test_pending_observation_label_is_only_for_an_open_incident():
     assert item["_observation_pending"] is True
 
 
+def test_public_status_recovery_reports_the_verified_import(tmp_path):
+    ident = "external:blackbox_failed"
+    state = {}
+    active = {ident: {"last_incident": {"id": ident}}}
+    target = {"status": "ok", "check_id": "status-id", "passed_locations": 3, "failed_locations": 0,
+              "nonfresh_locations": 0, "quorum_shortfall": 0}
+    for t in (10, 60):
+        sample = timing.attach({"status": "ok", "targets": {"public_status": target}}, "external_blackbox", now=reading(t))
+        (tmp_path / "external_blackbox_status.json").write_text(json.dumps(sample))
+        rows = observation.collect(tmp_path, [], {}, now=reading(t))
+        observation.reconcile([], active, state, rows.observations, now=reading(t), config={})
+        if t == 10:
+            assert ident not in state["observation_recoveries"]
+    recovery = state["observation_recoveries"][ident]
+    assert recovery["sample_id"] == sample["observation_time"]["sample_id"]
+    assert "check_id=status-id pass=3 fail=0" in recovery["checker_result"]
+
+
 @pytest.mark.parametrize("contradiction", [
     "current_observation=unknown (incident retained until recovery is verified)",
     "current_observation=\u5fa9\u65e7\u672a\u78ba\u8a8d",

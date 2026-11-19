@@ -4028,7 +4028,7 @@
       "decision": "Selected maintenance notification behavior; preserve public localization, generic delivery-host binding and existing formal SLI semantics.",
       "before_sha256": "9d13000b13e49fe1588cec2333948f8c790fa2c3b7006ca0e264f2cf612c42f1",
       "source_sha256": "3c99d0b1cdf5651866cc2b99bc25bb13fba05b36695fecfb5ca7f0222437de61",
-      "public_sha256": "737fcda5ad12d0aa6d276de3452e699fccf4d19430f3241d5102981c46dba1ba",
+      "public_sha256": "ef1ef96823013c181a4dfe38c4ed6cfa68ba4db5ddec9bf02fa4040e85084861",
       "prior_public_sha256": "a93c958f66ed34912714904b4dfc312a27273ee9e4d562e3dfa34a32acae9ca7",
       "localization": "English prose; control structures and machine identifiers preserved.",
       "pre_observability_reconciliation_sha256": "29068d15becd9d0df908c4c2095e77451a8c3c995ffeec4283e2434a4c2a67cd",
@@ -4037,7 +4037,8 @@
       "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
       "notification_observation_time_source_sha256": "1694502be3a740cc6e1a86250a53ef97c61ad32b0a86c0dd362010d0d3298238",
       "observation_completion_record": "publication/observation-completion-20261102.json",
-      "maintenance_notifications_port": "publication/maintenance-notifications-port-20261106.json"
+      "maintenance_notifications_port": "publication/maintenance-notifications-port-20261106.json",
+      "external_blackbox_review": "Public checkout change for uptime-check identity and regional evidence."
     },
     {
       "path": "src/stream_core/notifications/outbox.py",
@@ -4054,14 +4055,15 @@
       "decision": "Selected observability reconciliation; preserve English text, generic public bindings and existing ADS-B behavior.",
       "before_sha256": "9f53c130d71a55e2569392013a9bcbfd4c07afabbcc121032633a91964f79091",
       "source_sha256": "e3ca70b0c3bb8b5f14ea3f0b09d138b316b2b5d5a7cee872b784180dfab5971d",
-      "public_sha256": "bd39efa6378d7df4ff8b71c030000bcdf3e36c6e73d9e6b9f4f635cb63c41ae9",
+      "public_sha256": "94adf2bdcb8c27ca858890cf5de12918bfde69e71952e0ce3a4191904945cdff",
       "pre_observability_reconciliation_sha256": "c292f4d317a38a2e2fa78be8a155ba07ee777509454f6e30c2c4bf469c646a4f",
       "port_date_jst": "2026-10-23",
       "before_notification_observation_time_sha256": "e04fb45801678eafc391e82e1f758b0248d9dd07c6a076b1410ffd078eaae607",
       "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
       "notification_observation_time_source_sha256": "b45122b933b97efb3acc746ee1bd10060761f36488d0ce6418731e4f35cb7a5f",
       "prior_public_sha256": "a175e7cdd93c6751d629012a6d48afef662cbd328ae2bcbf0ec7285751c4a4ea",
-      "recovery_marker_record": "publication/recovery-notification-marker-20261102.json"
+      "recovery_marker_record": "publication/recovery-notification-marker-20261102.json",
+      "external_blackbox_review": "Public checkout change for uptime-check identity and regional evidence."
     },
     {
       "path": "src/stream_core/notifications/status_loop.py",
@@ -6117,14 +6119,15 @@
       "source_role": "notification-time-evidence",
       "decision": "Selected maintenance notification behavior; preserve public localization, generic delivery-host binding and existing formal SLI semantics.",
       "source_sha256": "b8e35e0f3b2d342a8e85273def3c37ed58ff8d35f3a4762c589fcbb40486cc87",
-      "public_sha256": "573143de5511b0f7561431787aee9f96f8e7b5dce24a92ad4179fcd558231977",
+      "public_sha256": "e73b2b39ec721da5c75fb769f81328873c097e4846560736e1fbe20ecfee6945",
       "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
       "notification_observation_time_source_sha256": "276ae7acfbbbc1267c2765f6815bce1ee4bdfc76759238760192bb494089c098",
       "before_notification_source_timing_rollout_sha256": "db7c560592e888dee495b81285ad2542991ef7bee0a18c0c80f04bff830d615a",
       "notification_source_timing_rollout": "publication/notification-source-timing-rollout-20261101.json",
       "prior_public_sha256": "0001aa1a5d128883261eb3978dfef3303a9dccc10692a535cd647a05022099bb",
       "observation_completion_record": "publication/observation-completion-20261102.json",
-      "maintenance_notifications_port": "publication/maintenance-notifications-port-20261106.json"
+      "maintenance_notifications_port": "publication/maintenance-notifications-port-20261106.json",
+      "external_blackbox_review": "Public checkout change for uptime-check identity and regional evidence."
     },
     {
       "path": "src/stream_core/notifications/time_diagnostics.py",
@@ -6230,9 +6233,10 @@
       "source_role": "notification-time-evidence",
       "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes.",
       "source_sha256": "823718d4d677d4c1158cb60aeb0cb4e4fa4f9bc341291046116633f25276cca1",
-      "public_sha256": "e07f52baa5c0a62c7f85d8de6aab6dc5743f1a6dc2298fe5dd4aaa438fa0929e",
+      "public_sha256": "ee3dae415d65b9db321bc68733dfec632b60e36a7ea816d548894c7c71aa580a",
       "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
-      "notification_observation_time_source_sha256": "823718d4d677d4c1158cb60aeb0cb4e4fa4f9bc341291046116633f25276cca1"
+      "notification_observation_time_source_sha256": "823718d4d677d4c1158cb60aeb0cb4e4fa4f9bc341291046116633f25276cca1",
+      "external_blackbox_review": "Public checkout change for uptime-check identity and regional evidence."
     },
     {
       "path": "ops/scripts/stream_v3_health_snapshot.py",
@@ -6271,12 +6275,13 @@
       "source_role": "notification-time-evidence",
       "decision": "Selected producer/consumer timing integration; preserve existing public localization and unrelated changes.",
       "source_sha256": "cd844316dec7247fc0910d501a25f208ccef8ff261a36d6f197df81c9bec90f0",
-      "public_sha256": "e2f653b047549f083d0eef19805fbc91d328921817c36fa319e0db2e712221a9",
+      "public_sha256": "c5350b6b548c46b9897a9209e4ae163d3531a49ab91b44ef8c60e864049bbb53",
       "notification_observation_time_port": "publication/notification-observation-time-port-20261101.json",
       "notification_observation_time_source_sha256": "68a58d1610f310a955f27f5dcafe4e95058b60512917b59c5a27f5f6fe2a9ddc",
       "prior_public_sha256": "a3469992af7b540eab8f69a21c3ac28df12922120b3597d29f0bc573c4d10520",
       "recovery_marker_record": "publication/recovery-notification-marker-20261102.json",
-      "notification_consistency_record": "publication/recovery-notification-consistency-20261102.json"
+      "notification_consistency_record": "publication/recovery-notification-consistency-20261102.json",
+      "external_blackbox_review": "Public checkout change for uptime-check identity and regional evidence."
     },
     {
       "path": "monitoring-v4/src/stream_monitoring_v4/compatibility/observation_time.py",

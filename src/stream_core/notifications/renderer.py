@@ -92,6 +92,12 @@ def format_discord_message(*, phase: str, incidents: list[dict], state: dict, no
         "recovered": "Recovery follow-up",
         "test": "Notification test",
     }.get(phase, phase)
+    if len(incidents) == 1 and incidents[0].get("blackbox_scope") == "public_status":
+        title = {
+            "detected": "Public status endpoint check failed",
+            "status": "Public status endpoint check follow-up",
+            "recovered": "Public status endpoint check recovered",
+        }.get(phase, title)
     active = state.get("active") if isinstance(state.get("active"), dict) else {}
     active_count = len(active)
     lines = [f"[ADS-B Stream] {title}", f"time={jst_text(now_ts)}", f"active_incidents={active_count}"]
