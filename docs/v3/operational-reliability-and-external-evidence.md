@@ -39,6 +39,63 @@ The importer is implemented in
 `ops/scripts/stream_v3_external_blackbox_import.py`. Its default project is
 empty in the public repository and must be supplied externally.
 
+### Identify the deployed check
+
+Match the importer's target names to the operated project's uptime-check IDs.
+Inspect the effective service with `systemctl cat stream-v3-external-blackbox-import.service`
+and `systemctl show -p ExecStart -p DropInPaths stream-v3-external-blackbox-import.service`.
+Record the deployed importer revision or digest. In the same project, inspect
+`gcloud monitoring uptime list-configs` and `gcloud monitoring uptime describe CHECK_ID`
+for the host, path, HTTP/content conditions, timeout, period and selected regions.
+For an older event use the configuration revision effective at the event time.
+A notification label alone cannot identify which URL or response condition ran.
+
+Set `STREAM_V3_BLACKBOX_CHECK_IDS` in the import service's existing environment
+file. Its value is a space-separated list such as
+`public_status=STATUS_CHECK_ID youtube_public_video=VIDEO_CHECK_ID`. Use the
+actual target names if the installed command supplies `--target`. The equivalent
+CLI flag is repeatable, for example `--check-id public_status=STATUS_CHECK_ID`.
+With no pin, a single labelled check can be used. Multiple IDs in the lookback
+produce `ambiguous_external_check_id`; an unlabelled series alone produces
+`external_check_id_missing`. A pin with no matching observations stays unknown.
+
+An optional inventory uses exact `checker_location` labels. For example,
+`STREAM_V3_BLACKBOX_EXPECTED_LOCATIONS="public_status=LOCATION_A,LOCATION_B,LOCATION_C"`.
+This is diagnostic metadata. The journal keeps pass/fail, original sample time
+and freshness per observed location. The alert gives fresh pass/fail counts,
+the oldest and newest contributing times, and the count of expected locations
+without a fresh result. Without an inventory it displays `missing_fresh=unmeasured`.
+The minimum quorum alone cannot identify how many configured locations are absent.
+
+### Inspect a historical window
+
+With read access to the Monitoring project, export one host and interval to a
+private working directory. Supply the actual project, host and offset-qualified
+times. Omit `--check-id` on the first pass to see every ID on that host.
+
+```sh
+umask 077
+python3 ops/scripts/stream_v3_external_blackbox_export.py \
+  --project "$STREAM_V3_GCP_MONITORING_PROJECT" --host "$STATUS_HOST" \
+  --start "$START" --end "$END" > regional-evidence.json
+```
+
+The export preserves the original check ID, location and point end time for
+`check_passed`, `http_status`, `error_code`, `content_mismatch` and
+`request_latency`. A query error appears under `errors` and gives a nonzero
+exit. An empty series supplies no observation. Compare the same check ID, path
+and interval with Worker request logs, R2 errors, and the snapshot publication
+time. HTTP success with a content mismatch and a connection failure call for
+different investigations.
+
+For notification replay, retain the import service's journal with its receipt
+timestamps, the notifier's verified observations and its delivery audit. Use
+the first send attempt as the cutoff. Count a possible combined notification
+only when the same episode already had a newer successful regional quorum and
+the notifier had verified recovery by that cutoff. A late backfill, a single
+successful region or an unverified recovery leaves the case undecided. Compare
+the proposed and observed message counts and first-warning latency separately.
+
 ## Unknown, Failure, And Notification Timing
 
 The notification policy deliberately distinguishes uncertainty from failure:

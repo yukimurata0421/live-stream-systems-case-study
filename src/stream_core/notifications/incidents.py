@@ -828,6 +828,29 @@ def operational_reliability_incidents(*, status_file: Path | None, now_ts: int) 
     return [item for item in results if not permits(payload, item['id'], now=now_ts)]
 
 
+def public_status_region_summary(payload: dict) -> str:
+    targets = payload.get("targets")
+    target = targets.get("public_status") if isinstance(targets, dict) else None
+    if not isinstance(target, dict) or "failed_locations" not in target:
+        return ""
+    missing = target.get("missing_fresh_locations")
+    missing_count = len(missing) if isinstance(missing, list) else "unmeasured"
+    locations = target.get("locations")
+    if not isinstance(locations, dict):
+        locations = {}
+    failed = sorted(name for name, row in locations.items()
+                    if isinstance(row, dict) and row.get("fresh") is True and row.get("passed") is False)
+    failed_names = ",".join(failed[:4])
+    if len(failed) > 4:
+        failed_names += f",+{len(failed) - 4}"
+    return (f"public_status={target.get('status')} check_id={target.get('check_id') or 'unresolved'} "
+            f"pass={target.get('passed_locations')} fail={target.get('failed_locations')} "
+            f"nonfresh={target.get('nonfresh_locations')} missing_fresh={missing_count} "
+            f"quorum_shortfall={target.get('quorum_shortfall')} "
+            f"fresh_utc={target.get('fresh_from_utc') or 'none'}..{target.get('fresh_through_utc') or 'none'}"
+            + (f" failed_regions={failed_names}" if failed_names else ""))
+
+
 def external_blackbox_incidents(*, status_file: Path | None, now_ts: int) -> list[dict]:
     if status_file is None:
         return []
@@ -867,22 +890,27 @@ def external_blackbox_incidents(*, status_file: Path | None, now_ts: int) -> lis
     else:
         summary = "external black-box evidence is unknown"
         recovery_type = "external_evidence_collection_recovery"
-    return [
-        incident(
-            ident=f"external:blackbox_{status}",
-            severity="warning",
-            component="external_blackbox_evidence",
-            summary=summary,
-            evidence=(
-                f"reason={payload.get('reason')} consecutive_samples={consecutive} "
-                f"targets={target_states or 'none'}"
-            ),
-            recovery_type=recovery_type,
-            follow_up="Correlate regional external-checker samples with local raw evidence; neither alone authorizes availability burn or restart",
-            observed_ts=parse_utc_ts(str(payload.get("status_since_utc") or "")) or observed_ts or now_ts,
-            repeat_sec=900 if status == "unknown" else 300,
-        )
-    ]
+    item = incident(
+        ident=f"external:blackbox_{status}",
+        severity="warning",
+        component="external_blackbox_evidence",
+        summary=summary,
+        evidence=(
+            f"reason={payload.get('reason')} consecutive_samples={consecutive} "
+            f"targets={target_states or 'none'}"
+        ),
+        recovery_type=recovery_type,
+        follow_up="Correlate regional external-checker samples with local raw evidence; neither alone authorizes availability burn or restart",
+        observed_ts=parse_utc_ts(str(payload.get("status_since_utc") or "")) or observed_ts or now_ts,
+        repeat_sec=900 if status == "unknown" else 300,
+        diagnostic_context=public_status_region_summary(payload),
+    )
+    if (status == "failed" and "public_status" in targets
+            and all(isinstance(target, dict) and target.get("status") == ("failed" if name == "public_status" else "ok")
+                    for name, target in targets.items())):
+        item["blackbox_scope"] = "public_status"
+        item["summary"] = "Public status endpoint failed its external uptime check"
+    return [item]
 
 
 def collect_notification_incidents(
